@@ -30,7 +30,8 @@
 <!ELEMENT FilterDescription (Option|Enable|Disable|Enable|Option|Disable)*>
 <!ATTLIST FilterDescription
                    %desc_data;
-                   type          (boolean | boolean_list | boolean_num | drop_down_basic_filter | list | text | text_entry_basic_filter | tree) "list"
+                   type          (boolean | boolean_list | boolean_num
+		   | drop_down_basic_filter | list | id_list | text | text_entry_basic_filter | tree) "list"
                    field          CDATA #IMPLIED
                    qualifier      CDATA #IMPLIED
                    legal_qualifiers          CDATA #IMPLIED
