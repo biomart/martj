@@ -2746,11 +2746,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
         if (cname.endsWith("_key"))
           continue;
         
-        // if column only contains nulls
-        if (isAllNull(cname, fullTableName, dsource)){
-          System.out.println("IGNORING");
-          continue;
-        }
+
         // if the column already seen in a higher resolution
         // main table ignore
         
@@ -2765,6 +2761,12 @@ System.out.println("database type: "+ dsource.getDatabaseType());
           logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
+          
+          
+			// if column only contains nulls
+			if (isAllNull(cname, fullTableName, dsource)){
+			  continue;
+			}
           
 		  if (isMainTable(tableName)) {
 		  	tableName = "main";
@@ -2950,11 +2952,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 			if (cname.endsWith("_key"))
 			  continue;
         
-			// if column only contains nulls
-			if (isAllNull(cname, fullTableName, dsource)){
-			  System.out.println("IGNORING");
-			  continue;
-			}        
+       
         
         
 			// if the column already seen in a higher resolution
@@ -2972,6 +2970,11 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 
 			if (isMainTable(tableName) || isDimensionTable(tableName)) {
           
+				// if column only contains nulls
+				if (isAllNull(cname, fullTableName, dsource)){
+				  continue;
+				} 
+            
 			  if (isMainTable(tableName)) {
 				tableName = "main";
 				allCols.add(cname);
