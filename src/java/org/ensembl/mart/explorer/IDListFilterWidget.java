@@ -21,12 +21,17 @@ package org.ensembl.mart.explorer;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractButton;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -37,6 +42,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
+import javax.swing.text.JTextComponent;
 
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Filter;
@@ -56,6 +62,64 @@ import org.ensembl.mart.util.LoggingUtil;
 public class IDListFilterWidget
   extends FilterWidget
   implements ActionListener {
+
+  /**
+   * "Listens" to changes in component and performs button.doClick() in response. 
+   * coClick() is perfomred if "enter" is pressed in the component or the text changed between 
+   * the component gaining and losing focus.
+   * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+   */
+  private class ModificationListener
+    extends KeyAdapter
+    implements FocusListener {
+
+    private AbstractButton button;
+
+    private JTextComponent component;
+
+    private int textHashCode = -1;
+
+    /**
+     * Adds self to component as both key and focus listener.
+     * @param component
+     * @param button
+     */
+    public ModificationListener(JTextComponent component, AbstractButton button) {
+      this.component = component;
+      this.button = button;
+
+      component.addKeyListener(this);
+      component.addFocusListener(this);
+    }
+
+    /**
+     * doClick() if "enter" pressed.
+     */
+    public void keyReleased(KeyEvent e) {
+      if (e.getKeyCode() == KeyEvent.VK_ENTER){
+        textHashCode = component.getText().hashCode();
+        button.doClick();
+      }
+        
+    }
+
+    public void focusGained(FocusEvent e) {
+      textHashCode = component.getText().hashCode();
+    }
+
+    /**
+     * doClick() if text changed between gaining and losing focus.
+     */
+    public void focusLost(FocusEvent e) {
+      int tmp = component.getText().hashCode();
+      if (tmp != textHashCode) {
+        textHashCode = tmp;
+        button.doClick();
+      }
+    }
+  }
+
+  protected int lastIDStringHashCode;
 
   private JComboBox list = new JComboBox();
 
@@ -101,11 +165,8 @@ public class IDListFilterWidget
     urlRadioButton.addActionListener(this);
     noneButton.addActionListener(this);
 
-    //  TODO add key and focus listener to idString: change -> remove filter + new filter
-
-    //  TODO add key and focus listener to url: change -> remove filter + new filter
-
-    //  TODO add key and focus listener to file: change -> remove filter + new filter
+    new ModificationListener(idString, idStringRadioButton);
+    new ModificationListener(url, urlRadioButton);
 
     Box b = Box.createVerticalBox();
     b.setBorder(new LineBorder(Color.BLACK));
@@ -279,7 +340,7 @@ public class IDListFilterWidget
         return new IDListFilter(f, tc, k, new URL(url.getText()));
       } catch (MalformedURLException e) {
         feedback.warning("There is a problem with the URL: " + url.getText());
-
+        noneButton.doClick();
       } else if (fileRadioButton.isSelected() && file.getText().length() != 0)
       return new IDListFilter(f, tc, k, new File(file.getText()));
 
