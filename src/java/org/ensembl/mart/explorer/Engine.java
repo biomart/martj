@@ -145,6 +145,7 @@ public class Engine {
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
 		throws SequenceException, FormatException, InvalidQueryException {
     
+    	logger.info(query);
 		  Connection conn = getDatabaseConnection();
 		  QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
 		  qr.execute(limit);
