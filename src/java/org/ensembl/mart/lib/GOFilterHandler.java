@@ -54,95 +54,150 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
-		Connection conn;
+	public Query ModifyQuery(Engine engine, List filters, Query query)
+		throws InvalidQueryException {
+
+		Connection conn = null;
+
 		try {
 			conn = query.getDataSource().getConnection();
-		} catch (SQLException e1) {
-			throw new InvalidQueryException("Recieved SQLException " + e1.getMessage(), e1);
-		}
 
-		Query newQuery = new Query(query);
+			Query newQuery = new Query(query);
 
-		//must get dataset from the first starBase
-		String dataset = null;
-		String[] mainTables = newQuery.getStarBases();
+			//must get dataset from the first starBase
+			String dataset = null;
+			String[] mainTables = newQuery.getStarBases();
 
-		for (int i = 0; i < mainTables.length; i++) {
-			if (mainTables[i].matches(".*gene"))
-				dataset = mainTables[i];
-		}
-
-		if (dataset == null) {
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("Could not determine dataset for query, perhaps it is a snp query " + newQuery);
-			throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
-		}
-
-		List goTables = new ArrayList();
-		StringBuffer selectBuf = new StringBuffer("select ");
-		StringBuffer fromBuf = new StringBuffer(" from ");
-		StringBuffer whereBuf = new StringBuffer(" where ");
-		boolean hasEvidenceCode = false; // set to true if an evidence code Filter is encountered
-		String evidence_code_condition = null;
-		String evidence_code_value = null;
-
-		int filterInt = 0;
-		for (Iterator iter = filters.iterator(); iter.hasNext();) {
-			Filter element = (Filter) iter.next();
-
-			newQuery.removeFilter(element);
-
-			String field = element.getField();
-
-			logger.info("FIELD IS " + field + "\n");
-
-			String condition = element.getCondition();
-
-			if (field.startsWith(EVIDENCE)) {
-				logger.info("ITS AN EVIDENCE CODE\n");
-
-				if (hasEvidenceCode)
-					throw new InvalidQueryException("Only one evidence Code Filter is allowed in a query\n");
-				hasEvidenceCode = true;
-
-				if (condition.equals(BooleanFilter.isNULL))
-					evidence_code_condition = " != ";
-				else
-					evidence_code_condition = " = ";
-
-				evidence_code_value = field.split("\\:")[1];
-			} else {
-				String goTable = dataset + element.getTableConstraint();
-				String value = element.getValue();
-
-				if (!goTables.contains(goTable)) {
-					goTables.add(goTable);
-
-					if (filterInt > 0)
-						whereBuf.append(" and ");
-					else
-						selectBuf.append(goTable).append(".").append(GOFILTERFIELD);
-
-					String newField = (value.startsWith(GOSTART)) ? GODISPLAYIDFIELD : GODESCRIPTIONFIELD;
-					whereBuf.append(goTable).append(".").append(newField).append(" ").append(condition).append(" '").append(
-						value).append(
-						"'");
-				}
-
-				filterInt++; //only increment for non evidence_code filters
+			for (int i = 0; i < mainTables.length; i++) {
+				if (mainTables[i].matches(".*gene"))
+					dataset = mainTables[i];
 			}
-		}
 
-		//build from, and joins between go tables, if there are more than one
-		if (goTables.size() < 1)
-			throw new InvalidQueryException("GO Filters must include one or more non evidence code filters\n");
-		else if (goTables.size() > 1) {
-			int tableInt = 0;
-			for (Iterator iter = goTables.iterator(); iter.hasNext();) {
-				String table = (String) iter.next();
+			if (dataset == null) {
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(
+						"Could not determine dataset for query, perhaps it is a snp query "
+							+ newQuery);
+				throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
+			}
 
-				//add evidence_code, if present
+			List goTables = new ArrayList();
+			StringBuffer selectBuf = new StringBuffer("select ");
+			StringBuffer fromBuf = new StringBuffer(" from ");
+			StringBuffer whereBuf = new StringBuffer(" where ");
+			boolean hasEvidenceCode = false;
+			// set to true if an evidence code Filter is encountered
+			String evidence_code_condition = null;
+			String evidence_code_value = null;
+
+			int filterInt = 0;
+			for (Iterator iter = filters.iterator(); iter.hasNext();) {
+				Filter element = (Filter) iter.next();
+
+				newQuery.removeFilter(element);
+
+				String field = element.getField();
+
+				logger.info("FIELD IS " + field + "\n");
+
+				String condition = element.getCondition();
+
+				if (field.startsWith(EVIDENCE)) {
+					logger.info("ITS AN EVIDENCE CODE\n");
+
+					if (hasEvidenceCode)
+						throw new InvalidQueryException("Only one evidence Code Filter is allowed in a query\n");
+					hasEvidenceCode = true;
+
+					if (condition.equals(BooleanFilter.isNULL))
+						evidence_code_condition = " != ";
+					else
+						evidence_code_condition = " = ";
+
+					evidence_code_value = field.split("\\:")[1];
+				} else {
+					String goTable = dataset + element.getTableConstraint();
+					String value = element.getValue();
+
+					if (!goTables.contains(goTable)) {
+						goTables.add(goTable);
+
+						if (filterInt > 0)
+							whereBuf.append(" and ");
+						else
+							selectBuf.append(goTable).append(".").append(GOFILTERFIELD);
+
+						String newField =
+							(value.startsWith(GOSTART))
+								? GODISPLAYIDFIELD
+								: GODESCRIPTIONFIELD;
+						whereBuf
+							.append(goTable)
+							.append(".")
+							.append(newField)
+							.append(" ")
+							.append(condition)
+							.append(" '")
+							.append(value)
+							.append("'");
+					}
+
+					filterInt++; //only increment for non evidence_code filters
+				}
+			}
+
+			//build from, and joins between go tables, if there are more than one
+			if (goTables.size() < 1)
+				throw new InvalidQueryException("GO Filters must include one or more non evidence code filters\n");
+			else if (goTables.size() > 1) {
+				int tableInt = 0;
+				for (Iterator iter = goTables.iterator(); iter.hasNext();) {
+					String table = (String) iter.next();
+
+					//add evidence_code, if present
+					if (hasEvidenceCode)
+						whereBuf
+							.append(" and ")
+							.append(table)
+							.append(".")
+							.append(EVIDENCECODEFIELD)
+							.append(" ")
+							.append(evidence_code_condition)
+							.append(" '")
+							.append(evidence_code_value)
+							.append("'");
+
+					if (tableInt < 1) {
+						fromBuf.append(table);
+
+						//build joins between the first table and each subsequent table in the list
+						for (Iterator iterator =
+							goTables
+								.subList(goTables.indexOf(table) + 1, goTables.size())
+								.iterator();
+							iterator.hasNext();
+							) {
+							String joinTable = (String) iterator.next();
+
+							whereBuf
+								.append(" and ")
+								.append(table)
+								.append(".")
+								.append(GOKEY)
+								.append(" = ")
+								.append(joinTable)
+								.append(".")
+								.append(GOKEY);
+						}
+					} else {
+						fromBuf.append(", ").append(table);
+					}
+					tableInt++;
+				}
+			} else {
+				String table = (String) goTables.get(0);
+				fromBuf.append(table);
+
 				if (hasEvidenceCode)
 					whereBuf
 						.append(" and ")
@@ -154,72 +209,42 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 						.append(" '")
 						.append(evidence_code_value)
 						.append("'");
-						
-				if (tableInt < 1) {
-					fromBuf.append(table);
-
-					//build joins between the first table and each subsequent table in the list
-					for (Iterator iterator = goTables.subList(goTables.indexOf(table) + 1, goTables.size()).iterator();
-						iterator.hasNext();
-						) {
-						String joinTable = (String) iterator.next();
-
-						whereBuf.append(" and ").append(table).append(".").append(GOKEY).append(" = ").append(joinTable).append(
-							".").append(
-							GOKEY);
-					}
-				} else {
-					fromBuf.append(", ").append(table);
-				}
-				tableInt++;
 			}
-		} else {
-			String table = (String) goTables.get(0);
-			fromBuf.append(table);
 
-			if (hasEvidenceCode)
-				whereBuf
-					.append(" and ")
-					.append(table)
-					.append(".")
-					.append(EVIDENCECODEFIELD)
-					.append(" ")
-					.append(evidence_code_condition)
-					.append(" '")
-					.append(evidence_code_value)
-					.append("'");
+			String sql = selectBuf.append(fromBuf).append(whereBuf).toString();
+
+			if (logger.isLoggable(Level.INFO))
+				logger.info("GO SQL " + sql + "\n");
+
+			List tranIds = new ArrayList();
+
+			PreparedStatement tps = conn.prepareStatement(sql);
+			ResultSet trs = tps.executeQuery();
+
+			while (trs.next())
+				tranIds.add(trs.getString(1));
+
+			tps.close();
+			trs.close();
+
+			if ((tranIds.size() < 1) && logger.isLoggable(Level.INFO))
+				logger.info("Recieved zero transcript ids using GO SQL " + sql + "\n");
+
+			String[] tids = new String[tranIds.size()];
+			tranIds.toArray(tids);
+
+			newQuery.addFilter(new IDListFilter("transcript_stable_id", tids));
+
+			return newQuery;
+
+		} catch (SQLException e) {
+			throw new InvalidQueryException(
+				"Recieved SQL Exception processing request for GO Filters "
+					+ e.getMessage(),
+				e);
+		} finally {
+			DatabaseUtil.close(conn);
 		}
-
-		String sql = selectBuf.append(fromBuf).append(whereBuf).toString();
-
-		if (logger.isLoggable(Level.INFO))
-			logger.info("GO SQL " + sql + "\n");
-
-				List tranIds = new ArrayList();
-		
-				try {
-					PreparedStatement tps = conn.prepareStatement(sql);
-					ResultSet trs = tps.executeQuery();
-					
-					while (trs.next())
-						tranIds.add(trs.getString(1));
-					
-					tps.close();
-					trs.close();
-				} catch (SQLException e) {
-					throw new InvalidQueryException(
-						"Recieved SQL Exception processing request for GO Filters " + e.getMessage(), e);
-				}
-		
-		    if ( (tranIds.size() < 1) && logger.isLoggable(Level.INFO))
-		      logger.info("Recieved zero transcript ids using GO SQL " + sql + "\n");
-		      
-				String[] tids = new String[tranIds.size()];
-				tranIds.toArray(tids);
-		
-				newQuery.addFilter(new IDListFilter("transcript_stable_id", tids));
-
-		return newQuery;
 	}
 
 }

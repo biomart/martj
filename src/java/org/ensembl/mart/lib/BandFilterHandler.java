@@ -15,7 +15,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib;
 
 import java.sql.Connection;
@@ -41,92 +41,116 @@ import java.util.logging.Logger;
 public class BandFilterHandler implements UnprocessedFilterHandler {
 
 	private final String START_FIELD = "band_start";
-	private final String END_FIELD= "band_end";
+	private final String END_FIELD = "band_end";
 	private final String CHRNAME = "chr_name";
 	private Logger logger = Logger.getLogger(BandFilterHandler.class.getName());
-	
+
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
-		Connection conn;
+	public Query ModifyQuery(Engine engine, List filters, Query query)
+		throws InvalidQueryException {
+		
+    Connection conn = null;
+    
 		try {
-			conn = query.getDataSource().getConnection();
-		} catch (SQLException e1) {
-			throw new InvalidQueryException("Recieved SQLException "+e1.getMessage(), e1);
-		}
 		
-		Query newQuery = new Query(query);
+    	conn = query.getDataSource().getConnection();
 
-		String sql, filterName, filterCondition, filterValue;
-		PreparedStatement ps;
-		Filter chrFilter;
-		// must get species focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
-		String species, focus, chrvalue, lookupTable;
-		
-		// species can be parsed from the beginning of the first starBase
-		String starBase = newQuery.getStarBases()[0];
-		StringTokenizer sbtokens = new StringTokenizer(starBase, "_");
-		species = sbtokens.nextToken();
-		String tmp = sbtokens.nextToken();
-		
-		//focus is snp if tmp ends with snp
-		if (tmp.endsWith("snp"))
-			focus = "snp";
-		else
-			focus = "gene";
-		filterName = focus+"_chrom_start";
-		
-		if (species == null || species.equals(""))
-			throw new InvalidQueryException("Species is required for a Band Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
-		lookupTable = species+"_karyotype_lookup";
-		  
-		chrFilter = newQuery.getFilterByName(CHRNAME);
-		if (chrFilter == null)
-			throw new InvalidQueryException("Band Filters require a Chromosome Filter to have been added to the Query.");
-		  
-		chrvalue = chrFilter.getValue();
-				
-		for (int i = 0, n = filters.size(); i < n; i++) {
-			Filter element = (Filter) filters.get(i);
-			newQuery.removeFilter(element);
-			
-			String field = element.getField();
-			String band_value = element.getValue();		
-			if (field.equals(START_FIELD)) {
-				sql = "SELECT chr_start FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
-				filterCondition = ">=";
-			} 
-			else if (field.equals(END_FIELD)){
-				sql = "SELECT chr_end FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
-				filterCondition = "<=";
-			} else
-			  throw new InvalidQueryException("Recieved invalid field for BandFilterHandler " + field + "\n");
-		
-			try {
-				
-				logger.info("sql = " + sql + "\nparameter 1 = " + chrvalue + " parameter2 = " + band_value + "\n");
-				
+			Query newQuery = new Query(query);
+
+			String sql, filterName, filterCondition, filterValue;
+			PreparedStatement ps;
+			Filter chrFilter;
+			// must get species focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
+			String species, focus, chrvalue, lookupTable;
+
+			// species can be parsed from the beginning of the first starBase
+			String starBase = newQuery.getStarBases()[0];
+			StringTokenizer sbtokens = new StringTokenizer(starBase, "_");
+			species = sbtokens.nextToken();
+			String tmp = sbtokens.nextToken();
+
+			//focus is snp if tmp ends with snp
+			if (tmp.endsWith("snp"))
+				focus = "snp";
+			else
+				focus = "gene";
+			filterName = focus + "_chrom_start";
+
+			if (species == null || species.equals(""))
+				throw new InvalidQueryException("Species is required for a Band Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
+			lookupTable = species + "_karyotype_lookup";
+
+			chrFilter = newQuery.getFilterByName(CHRNAME);
+			if (chrFilter == null)
+				throw new InvalidQueryException("Band Filters require a Chromosome Filter to have been added to the Query.");
+
+			chrvalue = chrFilter.getValue();
+
+			for (int i = 0, n = filters.size(); i < n; i++) {
+				Filter element = (Filter) filters.get(i);
+				newQuery.removeFilter(element);
+
+				String field = element.getField();
+				String band_value = element.getValue();
+				if (field.equals(START_FIELD)) {
+					sql =
+						"SELECT chr_start FROM "
+							+ lookupTable
+							+ " WHERE  chr_name = ? AND band = ?";
+					filterCondition = ">=";
+				} else if (field.equals(END_FIELD)) {
+					sql =
+						"SELECT chr_end FROM "
+							+ lookupTable
+							+ " WHERE  chr_name = ? AND band = ?";
+					filterCondition = "<=";
+				} else
+					throw new InvalidQueryException(
+						"Recieved invalid field for BandFilterHandler " + field + "\n");
+
+				logger.info(
+					"sql = "
+						+ sql
+						+ "\nparameter 1 = "
+						+ chrvalue
+						+ " parameter2 = "
+						+ band_value
+						+ "\n");
+
 				ps = conn.prepareStatement(sql);
 				ps.setString(1, chrvalue);
 				ps.setString(2, band_value);
-			
+
 				ResultSet rs = ps.executeQuery();
 				rs.next(); // will only be one result
 				filterValue = rs.getString(1);
-				
+
 				logger.info("Recieved " + filterValue + " from sql\n");
-			} catch (SQLException e) {
-				throw new InvalidQueryException("Recieved SQLException "+e.getMessage(), e);
+
+				if (filterValue != null && filterValue.length() > 0) {
+					Filter posFilter =
+						new BasicFilter(filterName, filterCondition, filterValue);
+					newQuery.addFilter(posFilter);
+				} else
+					throw new InvalidQueryException(
+						"Did not recieve a filterValue for Band Filter "
+							+ band_value
+							+ ", Band may not be on chromosome "
+							+ chrvalue
+							+ "\n");
+
 			}
-		
-		  if (filterValue != null && filterValue.length() > 0) {
-			Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
-			newQuery.addFilter(posFilter);		
-		  } else
-			throw new InvalidQueryException("Did not recieve a filterValue for Band Filter " + band_value + ", Band may not be on chromosome " + chrvalue + "\n");
+      return newQuery;
+		} catch (SQLException e) {
+			throw new InvalidQueryException(
+				"Recieved SQLException " + e.getMessage(),
+				e);
+		} finally {
+			DatabaseUtil.close(conn);
 		}
-	  		
-		return newQuery;
+
+		
 	}
 }

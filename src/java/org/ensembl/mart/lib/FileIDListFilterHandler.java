@@ -2,6 +2,7 @@ package org.ensembl.mart.lib;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.sql.Connection;
 import java.util.List;
 
 /*
@@ -44,12 +45,16 @@ public class FileIDListFilterHandler extends IDListFilterHandlerBase {
 
 			File idFile = idfilter.getFile();
 			String[] unversionedIds = null;
-
+      
+      Connection conn = null;
 			try {
+        conn = query.getDataSource().getConnection();
 				unversionedIds =
-					HarvestStream(query.getDataSource().getConnection(), query, new InputStreamReader(new FileInputStream(idFile)));
+					HarvestStream( conn, query, new InputStreamReader(new FileInputStream(idFile)));
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not parse File IDListFilter: " + e.getMessage(), e);
+			} finally {
+        DatabaseUtil.close( conn );
 			}
 
 			if (unversionedIds.length > 0)

@@ -17,6 +17,7 @@
  */
 package org.ensembl.mart.lib;
 
+import java.sql.Connection;
 import java.util.List;
 
 /**
@@ -38,11 +39,15 @@ public class StringIDListFilterHandler extends IDListFilterHandlerBase {
 			IDListFilter idfilter = (IDListFilter) filters.get(i);
 			newQuery.removeFilter(idfilter);
 			
+      Connection conn = null;
 			try {
-				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), ModifyVersionedIDs(query.getDataSource().getConnection(), newQuery, idfilter.getIdentifiers())));
+        conn = query.getDataSource().getConnection();
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), ModifyVersionedIDs( conn, newQuery, idfilter.getIdentifiers())));
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not process Versions from IDListFilter " + e.getMessage(), e);
-			}			
+			} finally {
+        DatabaseUtil.close( conn );			
+			}
 		}
         
     return newQuery;

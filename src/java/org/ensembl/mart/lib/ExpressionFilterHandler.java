@@ -44,85 +44,99 @@ import java.util.logging.Logger;
  */
 public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
-	private final String VALIDSQL = "select count(*) from evoc_vocabulary_lookup where term = ?";
+	private final String VALIDSQL =
+		"select count(*) from evoc_vocabulary_lookup where term = ?";
 
-	private Logger logger = Logger.getLogger(ExpressionFilterHandler.class.getName());
+	private Logger logger =
+		Logger.getLogger(ExpressionFilterHandler.class.getName());
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
-		Connection conn;
+	public Query ModifyQuery(Engine engine, List filters, Query query)
+		throws InvalidQueryException {
+
+		Connection conn = null;
+
 		try {
 			conn = query.getDataSource().getConnection();
-		} catch (SQLException e1) {
-			throw new InvalidQueryException("Recieved SQLException " + e1.getMessage(), e1);
-		}
 
-		Query newQuery = new Query(query);
-		//must get species and dataset, from the first starBase
-		String species = null;
-		String dataset = null;
+			Query newQuery = new Query(query);
+			//must get species and dataset, from the first starBase
+			String species = null;
+			String dataset = null;
 
-		//resolve dataset, species, and focus
-		String[] mainTables = newQuery.getStarBases();
+			//resolve dataset, species, and focus
+			String[] mainTables = newQuery.getStarBases();
 
-		for (int i = 0; i < mainTables.length; i++) {
-			if (mainTables[i].matches(".*gene"))
-				dataset = mainTables[i];
-		}
+			for (int i = 0; i < mainTables.length; i++) {
+				if (mainTables[i].matches(".*gene"))
+					dataset = mainTables[i];
+			}
 
-		if (dataset == null) {
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("Could not determine dataset for query, perhaps it is a snp query " + newQuery);
-			throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
-		}
-			
-		StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
-		species = tokens.nextToken();
+			if (dataset == null) {
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(
+						"Could not determine dataset for query, perhaps it is a snp query "
+							+ newQuery);
+				throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
+			}
 
-		String trans_lib_table = null;
-		StringBuffer idSQL = new StringBuffer(); // set on first_table, append lidBuf later
-		StringBuffer lidBuf = new StringBuffer(" where lib_id in (");
+			StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
+			species = tokens.nextToken();
 
-		int terms = 0;
-		String firstTable = null;
+			String trans_lib_table = null;
+			StringBuffer idSQL = new StringBuffer();
+			// set on first_table, append lidBuf later
+			StringBuffer lidBuf = new StringBuffer(" where lib_id in (");
 
-		//	will build up SQL
-		StringBuffer selectBuf = new StringBuffer("select ");
-		StringBuffer fromBuf = new StringBuffer(" from ");
-		StringBuffer whereBuf = new StringBuffer(" where ");
+			int terms = 0;
+			String firstTable = null;
 
-		List values = new ArrayList();
-		String edataset = null;
-		
-		try {
+			//	will build up SQL
+			StringBuffer selectBuf = new StringBuffer("select ");
+			StringBuffer fromBuf = new StringBuffer(" from ");
+			StringBuffer whereBuf = new StringBuffer(" where ");
+
+			List values = new ArrayList();
+			String edataset = null;
+
 			for (int i = 0, n = filters.size(); i < n; i++) {
 				Filter element = (Filter) filters.get(i);
 				newQuery.removeFilter(element);
 
 				String field_info = element.getField();
-				if ( !(field_info.indexOf(".") > 0 ) )
-				  throw new InvalidQueryException("Recieved invalid field for Expression Filter, should be of the form x:y where x is the expression dataset name, and y is the term " + field_info + "\n");
-        
+				if (!(field_info.indexOf(".") > 0))
+					throw new InvalidQueryException(
+						"Recieved invalid field for Expression Filter, should be of the form x:y where x is the expression dataset name, and y is the term "
+							+ field_info
+							+ "\n");
+
 				String value = element.getValue();
 				StringTokenizer ptokens = new StringTokenizer(field_info, ".");
-				
+
 				if (edataset == null)
-				  edataset = ptokens.nextToken();
+					edataset = ptokens.nextToken();
 				else {
 					String tmp = ptokens.nextToken();
-				  if ( !( edataset.equals( tmp ) ) )
-				    throw new InvalidQueryException("Sorry, mixing expression datasets not valid, recieved both " + edataset + " and " + tmp + "\n");
+					if (!(edataset.equals(tmp)))
+						throw new InvalidQueryException(
+							"Sorry, mixing expression datasets not valid, recieved both "
+								+ edataset
+								+ " and "
+								+ tmp
+								+ "\n");
 				}
-				
+
 				String term = ptokens.nextToken();
 				values.add(value);
 
 				if (!IsValidTerm(conn, value))
-					throw new InvalidQueryException("Term " + term + " does not exist in the Mart Database\n");
+					throw new InvalidQueryException(
+						"Term " + term + " does not exist in the Mart Database\n");
 
-				String table = species + "_expression_" + edataset + "_" + term + "_support";
+				String table =
+					species + "_expression_" + edataset + "_" + term + "_support";
 				if (terms < 1) {
 					firstTable = table;
 					selectBuf.append(firstTable + ".lib_id");
@@ -133,7 +147,8 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
 				if (terms > 0) {
 					fromBuf.append(" , ");
-					whereBuf.append(" AND " + firstTable + ".lib_id = " + table + ".lib_id AND ");
+					whereBuf.append(
+						" AND " + firstTable + ".lib_id = " + table + ".lib_id AND ");
 				}
 				fromBuf.append(table);
 				whereBuf.append(table + ".term = ?");
@@ -188,11 +203,16 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			return newQuery;
 		} catch (SQLException e) {
 			throw new InvalidQueryException(
-				"Recieved SQL Exception processing request for Expression Filter " + e.getMessage(), e);
+				"Recieved SQL Exception processing request for Expression Filter "
+					+ e.getMessage(),
+				e);
+		} finally {
+      DatabaseUtil.close( conn );
 		}
 	}
 
-	private boolean IsValidTerm(Connection conn, String term) throws SQLException {
+	private boolean IsValidTerm(Connection conn, String term)
+		throws SQLException {
 		boolean valid = true;
 		PreparedStatement ps = conn.prepareStatement(VALIDSQL);
 		ps.setString(1, term);

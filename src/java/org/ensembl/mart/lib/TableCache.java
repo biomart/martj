@@ -77,7 +77,10 @@ public class TableCache {
 		// load all the tables that begin with one of the star names
     DataSource ds = query.getDataSource();
     if ( ds==null ) throw new RuntimeException("query.dataset is null");
-    Connection conn = ds.getConnection();
+    Connection conn = null;
+    try {
+    
+    conn = ds.getConnection();
     String catalog = conn.getCatalog();
 		ResultSet rs = conn.getMetaData().getTables( catalog, null, null, null);
 		while (rs.next()) {
@@ -89,8 +92,11 @@ public class TableCache {
 				}
 			}
     
-		}
-    conn.close();
+		} 
+    } finally {
+      DatabaseUtil.close( conn );
+    }
+    
 
 		Table[] tables = new Table[tablesTmp.size()];
     

@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib;
 
 import java.io.ByteArrayOutputStream;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,10 +71,14 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 		
 			String[] unversionedIds = null;
     
+      Connection conn = null;
 			try {
-				unversionedIds = ModifyVersionedIDs(query.getDataSource().getConnection(), query, ids);
+        conn = query.getDataSource().getConnection();
+				unversionedIds = ModifyVersionedIDs(conn, query, ids);
 			} catch (SQLException e) {
 				throw new InvalidQueryException( "Problem with db connection: ",e );
+			} finally {
+        DatabaseUtil.close( conn );
 			}
 		
 			if (unversionedIds.length > 0)

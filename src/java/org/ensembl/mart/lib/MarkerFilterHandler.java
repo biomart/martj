@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-
-
 /**
  * This UnprocessedFilterHandler implementing object resolves Requests for
  * Genes/Snps located between known chromosomal markers into
@@ -47,63 +45,74 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
-		Connection conn;
+	public Query ModifyQuery(Engine engine, List filters, Query query)
+		throws InvalidQueryException {
+		Connection conn = null;
 		try {
 			conn = query.getDataSource().getConnection();
-		} catch (SQLException e1) {
-			throw new InvalidQueryException("Recieved SQLException " + e1.getMessage(), e1);
-		}
 
-		Query newQuery = new Query(query);
+			Query newQuery = new Query(query);
 
-		String sql, filterName, filterCondition, filterValue;
-		PreparedStatement ps;
-		Filter chrFilter;
-		// must get species, focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
-		String species, focus, chrvalue, lookupTable;
+			String sql, filterName, filterCondition, filterValue;
+			PreparedStatement ps;
+			Filter chrFilter;
+			// must get species, focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
+			String species, focus, chrvalue, lookupTable;
 
-		// species can be parsed from the beginning of the first starBase
-		String starBase = newQuery.getStarBases()[0];
-		StringTokenizer sbtokens = new StringTokenizer(starBase, "_");
-		species = sbtokens.nextToken();
-		String tmp = sbtokens.nextToken();
+			// species can be parsed from the beginning of the first starBase
+			String starBase = newQuery.getStarBases()[0];
+			StringTokenizer sbtokens = new StringTokenizer(starBase, "_");
+			species = sbtokens.nextToken();
+			String tmp = sbtokens.nextToken();
 
-		//focus is snp if tmp ends with snp
-		if (tmp.endsWith("snp"))
-			focus = "snp";
-		else
-			focus = "gene";
-		filterName = focus + "_chrom_start";
+			//focus is snp if tmp ends with snp
+			if (tmp.endsWith("snp"))
+				focus = "snp";
+			else
+				focus = "gene";
+			filterName = focus + "_chrom_start";
 
-		if (species == null || species.equals(""))
-			throw new InvalidQueryException("Species is required for a Marker Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
-		lookupTable = species + "_marker_lookup";
+			if (species == null || species.equals(""))
+				throw new InvalidQueryException("Species is required for a Marker Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
+			lookupTable = species + "_marker_lookup";
 
-		chrFilter = newQuery.getFilterByName(CHRNAME);
-		if (chrFilter == null)
-			throw new InvalidQueryException("Marker Filters require a Chromosome Filter to have already been added to the Query.");
+			chrFilter = newQuery.getFilterByName(CHRNAME);
+			if (chrFilter == null)
+				throw new InvalidQueryException("Marker Filters require a Chromosome Filter to have already been added to the Query.");
 
-		chrvalue = chrFilter.getValue();
+			chrvalue = chrFilter.getValue();
 
-		for (int i = 0, n = filters.size(); i < n; i++) {
-			Filter element = (Filter) filters.get(i);
-			newQuery.removeFilter(element);
+			for (int i = 0, n = filters.size(); i < n; i++) {
+				Filter element = (Filter) filters.get(i);
+				newQuery.removeFilter(element);
 
-			String field = element.getField();
-			String marker_value = element.getValue();
-			if (field.equals(START_FIELD)) {
-				sql = "SELECT chr_start FROM " + lookupTable + " WHERE  chr_name = ? AND id = ?";
-				filterCondition = ">=";
-			} else if (field.equals(END_FIELD)) {
-				sql = "SELECT chr_end FROM " + lookupTable + " WHERE  chr_name = ? AND id = ?";
-				filterCondition = "<=";
-			} else
-				throw new InvalidQueryException("Recieved invalid field for MarkerFilterHandler " + field + "\n");
+				String field = element.getField();
+				String marker_value = element.getValue();
+				if (field.equals(START_FIELD)) {
+					sql =
+						"SELECT chr_start FROM "
+							+ lookupTable
+							+ " WHERE  chr_name = ? AND id = ?";
+					filterCondition = ">=";
+				} else if (field.equals(END_FIELD)) {
+					sql =
+						"SELECT chr_end FROM "
+							+ lookupTable
+							+ " WHERE  chr_name = ? AND id = ?";
+					filterCondition = "<=";
+				} else
+					throw new InvalidQueryException(
+						"Recieved invalid field for MarkerFilterHandler " + field + "\n");
 
-			try {
-				logger.info("SQL: " + sql + "\nparameter 1: " + chrvalue + " parameter 2: " + marker_value + "\n");
-				
+				logger.info(
+					"SQL: "
+						+ sql
+						+ "\nparameter 1: "
+						+ chrvalue
+						+ " parameter 2: "
+						+ marker_value
+						+ "\n");
+
 				ps = conn.prepareStatement(sql);
 				ps.setString(1, chrvalue);
 				ps.setString(2, marker_value);
@@ -112,16 +121,26 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 				rs.next(); // will only be one result
 				filterValue = rs.getString(1);
 				logger.info("Recieved filterValue " + filterValue + " from SQL\n");
-			} catch (SQLException e) {
-				throw new InvalidQueryException("Recieved SQLException " + e.getMessage());
-			}
 
-      if (filterValue != null && filterValue.length() > 0) {
-			Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
-			newQuery.addFilter(posFilter);
-      } else
-        throw new InvalidQueryException("Did not recieve a filterValue for Marker " + marker_value + ", Marker may not be on chromosome " + chrvalue + "\n");
+				if (filterValue != null && filterValue.length() > 0) {
+					Filter posFilter =
+						new BasicFilter(filterName, filterCondition, filterValue);
+					newQuery.addFilter(posFilter);
+				} else
+					throw new InvalidQueryException(
+						"Did not recieve a filterValue for Marker "
+							+ marker_value
+							+ ", Marker may not be on chromosome "
+							+ chrvalue
+							+ "\n");
+			}
+			return newQuery;
+		} catch (SQLException e) {
+			throw new InvalidQueryException(
+				"Recieved SQLException " + e.getMessage());
+		} finally {
+			DatabaseUtil.close(conn);
 		}
-		return newQuery;
+
 	}
 }

@@ -28,6 +28,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
@@ -125,7 +126,9 @@ public class ConfigurationTest extends Base {
 	}
 
 	public void testMartConfiguration() throws Exception {
-		MartConfiguration martconf = new MartConfigurationFactory().getInstance(martJDataSource.getConnection(), XMLTESTID);
+    Connection conn = martJDataSource.getConnection();
+		MartConfiguration martconf = new MartConfigurationFactory().getInstance(conn, XMLTESTID);
+    DatabaseUtil.close( conn );
 
 		//Mart Data Correct
 		String testIName = "ensembl_mart_14_1";
