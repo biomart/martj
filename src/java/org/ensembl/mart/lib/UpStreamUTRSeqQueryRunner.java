@@ -344,7 +344,6 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 				if (rows < batchLength)
 					moreRows = false;
 			}
-			osr.close();
 		} catch (IOException e) {
 			throw new InvalidQueryException(e);
 		} catch (SQLException e) {

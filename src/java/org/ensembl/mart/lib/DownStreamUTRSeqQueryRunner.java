@@ -344,7 +344,6 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 					moreRows = false;
 				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.	      	     
 			}
-			osr.close();
 		} catch (IOException e) {
 			throw new InvalidQueryException(e);
 		} catch (SQLException e) {
