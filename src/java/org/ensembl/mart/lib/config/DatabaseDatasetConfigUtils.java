@@ -123,6 +123,7 @@ public class DatabaseDatasetConfigUtils {
   public DatabaseDatasetConfigUtils(DatasetConfigXMLUtils dscutils, DetailedDataSource dsource) {
     this.dscutils = dscutils;
     this.dsource = dsource;
+    
   }
 
   /**
@@ -1844,6 +1845,10 @@ public class DatabaseDatasetConfigUtils {
     boolean tableValid = false;
 
     String field = description.getField();
+    // oracle case sensitive
+    if(dsource.getDatabaseType().equals("oracle:thin")) field=field.toUpperCase();
+    
+   
     String tableConstraint = description.getTableConstraint();
 
 	// have placeholders for attributes in XML now with no info other than internal_name
@@ -1858,10 +1863,21 @@ public class DatabaseDatasetConfigUtils {
     String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     
     Connection conn = dsource.getConnection();
+    catalog=null;
+    //schema=null;
+    System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
     ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
+    
+    
+    
+    
     while (rs.next()) {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
+      
+      System.out.println ("loop column name: "+ columnName+" table name "+tableName);
+      
+      
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
@@ -3120,12 +3136,9 @@ private String getSchema(){
     try {
 		Connection conn = dsource.getConnection();
 		ResultSet schemas = conn.getMetaData().getSchemas();
-		while (schemas.next()) {
-		  schema = schemas.getString(1);
-
-		  if (logger.isLoggable(Level.FINE))
-		    logger.fine("schema: " + schema + "\n");
-		}
+		  // for oracle, mysql does not care
+		// schema, catalog, user, db and instance handling between oracle and mysql needs to be reorganised
+		  schema=dsource.getUser().toUpperCase();
 		conn.close();
 	} catch (SQLException e) {
 		// TODO Auto-generated catch block
