@@ -39,6 +39,8 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 
 /**
  * DatasetViewTreeWidget extends internal frame.
@@ -58,7 +60,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     private File file = null;
     private MartViewEditor editor;
 
-    public DatasetViewTreeWidget(File file, MartViewEditor editor) {
+    public DatasetViewTreeWidget(File file, MartViewEditor editor, String user, String dataset, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -70,9 +72,27 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 	   //  this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
             DatasetView view = new DatasetView();
             if (file == null) {
-                view = new DatasetView("new", "new", "new");
-                view.addFilterPage(new FilterPage("new"));
-                view.addAttributePage(new AttributePage("new"));
+            	if (user == null){
+            	  if (database == null){	
+                    view = new DatasetView("new", "new", "new");
+                    view.addFilterPage(new FilterPage("new"));
+                    view.addAttributePage(new AttributePage("new"));
+            	  }
+            	  else{
+            	  	view = DatabaseDatasetViewUtils.getNaiveDatasetViewFor(MartViewEditor.getDetailedDataSource(),database,dataset);
+            	  }
+            	}
+            	else{
+					DSViewAdaptor adaptor = new DatabaseDSViewAdaptor(MartViewEditor.getDetailedDataSource(),user);
+					DatasetView views[] = adaptor.getDatasetViews();
+					for (int k =0; k < views.length;k++){
+					  if (views[k].getDataset().equals(dataset)){
+					    view = views[k];
+					    break;
+					  }
+					}
+					
+            	}
             } else {
                 URL url = file.toURL();
                 DSViewAdaptor adaptor = new URLDSViewAdaptor(url, true);
@@ -175,6 +195,10 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     public void save_as(){
            tree.save_as();
        }
+
+	public void export(){
+	    tree.export();
+	}
 
     public void cut(){
         tree.cut();
