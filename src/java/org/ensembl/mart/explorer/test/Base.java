@@ -2,6 +2,8 @@
 
 package org.ensembl.mart.explorer.test;
 
+import java.net.*;
+import java.util.*;
 import org.apache.log4j.*;
 import junit.framework.*;
 import org.ensembl.mart.explorer.*;
@@ -11,13 +13,56 @@ import org.ensembl.mart.explorer.*;
  */
 public abstract class Base extends TestCase {
 
+    private String host = null;
+    private String port = null;
+    private String database = null;
+    private String user = null;
+    private String password = null;
+    private Properties p = new Properties();
+    private String connprops = "data/testconnection.conf"; 
+    private URL connectionconf;
+
   	protected Engine engine = new Engine();
     protected Query query = new Query();
 
+    public void init() {
+        connectionconf = org.apache.log4j.helpers.Loader.getResource(connprops);
+
+        if (connectionconf  != null) {
+            try {
+                p.load(connectionconf.openStream());
+ 
+                host = p.getProperty("mysqlhost");
+                port = p.getProperty("mysqlport");
+                database = p.getProperty("mysqldbase");
+                user = p.getProperty("mysqluser");
+                password = p.getProperty("mysqlpass");
+			} 
+            catch (java.io.IOException e) {
+				System.out.println("Caught IOException when trying to open connection configuration file "+connprops+"\n"+e+"\n\nusing default connection parameters");
+			}
+		}
+        else {
+            System.out.println("Failed to find connection configuration file "+connprops+" using default connection parameters");
+
+            host = "kaka.sanger.ac.uk";
+            database = "ensembl_mart_11_1";
+            user = "anonymous";
+		}
+	}
+
     public void setUp() {
-	    query.setHost("kaka.sanger.ac.uk");
-      query.setUser("anonymous");
-      query.setDatabase( "ensembl_mart_10_1" );
+	  init();
+
+      query.setHost(host);
+      query.setUser(user);
+      query.setDatabase(database);
+      if (password != null) {
+		  query.setPassword(password);
+	  }
+      if (port != null) {
+          query.setPort(port);
+	  }
       query.setSpecies( "homo_sapiens" );
       query.setFocus( "gene" );
     }
