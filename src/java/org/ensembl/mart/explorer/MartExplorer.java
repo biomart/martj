@@ -78,7 +78,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
 	private static final String IMAGE_DIR = "data/image";
 
-	private AdaptorManager datasetViewSettings = new AdaptorManager();
+	private AdaptorManager adaptorManager = new AdaptorManager();
 
 	private final static String TITLE =
 		" MartExplorer(Developement version- incomplete and unstable)";
@@ -124,7 +124,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 			//				.setDatasetView(dsv);
 		}
 
-		if (me.datasetViewSettings.getRootAdaptor().getDatasetViews().length > 0)
+		if (me.adaptorManager.getRootAdaptor().getDatasetViews().length > 0)
 			me.doNewQuery();
 
 	}
@@ -294,10 +294,11 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 		});
 
 		final JCheckBox views = new JCheckBox("Enable Optional Views");
+    views.setSelected( adaptorManager.isOptionalDatasetViewsEnabled() );
 		settings.add( views );
     views.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
-        datasetViewSettings.setOptionalDatasetViewsEnabled( views.isSelected() );			 
+        adaptorManager.setOptionalDatasetViewsEnabled( views.isSelected() );			 
         logger.warning( "state="+views.isSelected());
 			}
 		});
@@ -359,7 +360,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 	 * 
 	 */
 	protected void doDatasetViewSettings() {
-		datasetViewSettings.showDialog(this);
+		adaptorManager.showDialog(this);
 
 	}
 
@@ -377,7 +378,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(this, datasetViewSettings);
+			qe = new QueryEditor(this, adaptorManager);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -401,7 +402,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
 		try {
 
-			if (datasetViewSettings.getRootAdaptor().getDatasetViews().length == 0) {
+			if (adaptorManager.getRootAdaptor().getDatasetViews().length == 0) {
 				feedback.warning(
 					"You need to add an "
 						+ "adaptor containing dataset views before you can create a query.");
@@ -409,7 +410,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(this, datasetViewSettings);
+				qe = new QueryEditor(this, adaptorManager);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 				tabs.setSelectedComponent(qe);
