@@ -138,7 +138,7 @@ public class FilterCollection extends BaseConfigurationObject {
 						if (element.containsOption(testRefName)) {
 							Option superOption = element.getOptionByName(testRefName);
 							
-							PushAction[] pos = superOption.getPushOptions();
+							PushAction[] pos = superOption.getPushActions();
 							for (int i = 0, n = pos.length; i < n; i++) {
 								PushAction po = pos[i];
 								if (po.containsOption(testIname)) {

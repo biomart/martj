@@ -30,12 +30,13 @@ import java.util.TreeMap;
  */
 public class Option extends QueryFilterSettings {
 
-  private QueryFilterSettings parent;
+  private String qualifier;
+	private QueryFilterSettings parent;
 	private String field;
 	private String tableConstraint;
 	private String value;
 	private String ref;
-	private String qualifiers;
+	private String legalQualifiers;
 	private String type;
 	private String handler;
 	private int hashcode = -1;
@@ -52,7 +53,7 @@ public class Option extends QueryFilterSettings {
 	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
 
 	public Option(String internalName, boolean isSelectable) throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "", "", "", "", "", null);
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", null);
 	}
 
 	public Option(
@@ -65,7 +66,8 @@ public class Option extends QueryFilterSettings {
 		String value,
 		String ref,
 		String type,
-		String qualifiers,
+		String qualifier,
+		String legalQualifiers,
 		String handler)
 		throws ConfigurationException {
 
@@ -74,7 +76,8 @@ public class Option extends QueryFilterSettings {
 		this.isSelectable = isSelectable;
 		this.field = field;
 		this.tableConstraint = tableConstraint;
-		this.qualifiers = qualifiers;
+		this.qualifier = qualifier;
+		this.legalQualifiers = legalQualifiers;
 		this.type = type;
 
 		this.value = value;
@@ -316,14 +319,14 @@ public class Option extends QueryFilterSettings {
 	 * Get all PushOption objects available as an array.  OptionPushes are returned in the order they were added.
 	 * @return PushOption[]
 	 */
-	public PushAction[] getPushOptions() {
+	public PushAction[] getPushActions() {
 		return (PushAction[]) uiOptionPushes.toArray(new PushAction[uiOptionPushes.size()]);
 	}
 
 	/**
 	 * @param object
 	 */
-	public void addPushOption(PushAction optionPush) {
+	public void addPushAction(PushAction optionPush) {
 		uiOptionPushes.add(optionPush);
 		hashcode = -1;
 	}
@@ -331,8 +334,8 @@ public class Option extends QueryFilterSettings {
 	/**
 	 * @return
 	 */
-	public String getQualifiers() {
-		return qualifiers;
+	public String getLegalQualifiers() {
+		return legalQualifiers;
 	}
 
 	public String getQualifiers(String refIname) {
@@ -345,7 +348,7 @@ public class Option extends QueryFilterSettings {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
 					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
-						return element.getOptionByInternalName(refIname).getQualifiers();
+						return element.getOptionByInternalName(refIname).getLegalQualifiers();
 				}
 				return null; // nothing found
 			}
@@ -443,7 +446,8 @@ public class Option extends QueryFilterSettings {
 		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append(", value=").append(value);
 		buf.append(", ref=").append(ref);
-		buf.append(", qualifiers=").append(qualifiers);
+		buf.append(", qualifier=").append(qualifier);
+		buf.append(", legalQualifiers=").append(legalQualifiers);
 		buf.append(", type=").append(type);
 		buf.append(", handler=");
 		if (handler != null)
@@ -478,7 +482,8 @@ public class Option extends QueryFilterSettings {
 			hashcode = (31 * hashcode) + tableConstraint.hashCode();
 			hashcode = (31 * hashcode) + value.hashCode();
 			hashcode = (31 * hashcode) + ref.hashCode();
-			hashcode = (31 * hashcode) + qualifiers.hashCode();
+			hashcode = (31 * hashcode) + qualifier.hashCode();
+			hashcode = (31 * hashcode) + legalQualifiers.hashCode();
 			hashcode = (31 * hashcode) + type.hashCode();
 			hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
@@ -530,7 +535,7 @@ public class Option extends QueryFilterSettings {
     if ( type!=null ) return type;
     else return getParent().getTypeFromContext();
 	}
-
+  
   /**
    * Returns handler based on context. 
    * @return handler if set otherwise getParent().getHandlerFromContext().
@@ -549,4 +554,21 @@ public class Option extends QueryFilterSettings {
     else return getParent().getTableConstraintFromContext();
   }
   
+	/**
+	 * Returns the qualifier
+	 * @return String qualifier
+	 */
+	public String getQualifier() {
+		return qualifier;
+	}
+
+	/**
+	 * Returns the qualifier based on context.
+	 * @return qualifier if set otherwise getParent().getQualifierFromContext().
+	 */
+	public String getQualifierFromContext() {
+		if ( qualifier!=null ) return qualifier;
+		else return getParent().getQualifierFromContext();
+	}
+
 }

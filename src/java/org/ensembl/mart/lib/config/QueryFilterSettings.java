@@ -55,11 +55,6 @@ public abstract class QueryFilterSettings extends BaseConfigurationObject {
   
   // These will break the build - Darin to implement methods in derived class
   public abstract String getQualifier();
-  public abstract String getQualiferFromContext();
+  public abstract String getQualifierFromContext();
     
-  // Rename Qualifiers to LegalQualifiers in DB
-  public abstract String getLegalQualifiers();
-  public abstract String getLegalQualifersFromContext();
-   
-
 }

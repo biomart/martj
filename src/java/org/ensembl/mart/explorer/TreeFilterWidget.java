@@ -278,7 +278,7 @@ public class TreeFilterWidget extends FilterWidget {
 
 			Option option = (Option) valueToOption.get(filter.getValue());
 			updateDisplay(option);
-			assignPushOptions(option.getPushOptions());
+			assignPushOptions(option.getPushActions());
 
 		}
 	}
@@ -336,7 +336,7 @@ public class TreeFilterWidget extends FilterWidget {
 
 				setNodeLabel(fieldName, option.getDisplayName());
 
-				assignPushOptions(option.getPushOptions());
+				assignPushOptions(option.getPushActions());
 			}
 		}
 

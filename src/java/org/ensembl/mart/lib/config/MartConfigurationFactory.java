@@ -74,7 +74,8 @@ public class MartConfigurationFactory {
 	private final String DESCRIPTION = "description";
 	private final String TYPE = "type";
 	private final String FIELD = "field";
-	private final String QUALIFIERS = "qualifiers";
+	private final String QUALIFIER = "qualifier";
+	private final String LEGALQUALIFIERS = "legal_qualifiers";
 	private final String TABLECONSTRAINT = "tableConstraint";
 	private final String MAXSELECT = "maxSelect";
 	private final String MAXLENGTH = "maxLength";
@@ -346,12 +347,13 @@ public class MartConfigurationFactory {
     String field = thisElement.getAttributeValue(FIELD, "");
     String tableConstraint = thisElement.getAttributeValue(TABLECONSTRAINT, "");
     String type = thisElement.getAttributeValue(TYPE, "");
-		String qual = thisElement.getAttributeValue(QUALIFIERS, "");
+    String qualifier = thisElement.getAttributeValue(QUALIFIER, "");
+		String lquals = thisElement.getAttributeValue(LEGALQUALIFIERS, "");
     String value = thisElement.getAttributeValue(VALUE, "");
     String ref = thisElement.getAttributeValue(REF, "");
 		String handler = thisElement.getAttributeValue(HANDLER);
 		
-		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref, type, qual, handler);
+		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref, type, qualifier, lquals, handler);
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();
@@ -365,7 +367,7 @@ public class MartConfigurationFactory {
     for (Iterator iter = thisElement.getChildElements(PUSHOPTIONS).iterator();
           iter.hasNext();
           ) {
-          o.addPushOption( getPushOptions( (Element) iter.next() ) );
+          o.addPushAction( getPushOptions( (Element) iter.next() ) );
         }
 
 		return o;
@@ -397,15 +399,16 @@ public class MartConfigurationFactory {
 		String fieldnm = thisElement.getAttributeValue(FIELD, "");
 		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
 		String handler = thisElement.getAttributeValue(HANDLER);
-
-		String qual = thisElement.getAttributeValue(QUALIFIERS, "");
+    String qualifier = thisElement.getAttributeValue(QUALIFIER);
+		String lquals = thisElement.getAttributeValue(LEGALQUALIFIERS, "");
 
 		FilterDescription f =
 			new FilterDescription(
 				intName,
 				fieldnm,
 				typeval,
-				qual,
+				qualifier,
+				lquals,
 				dispname,
 				tableconst,
 				handler,

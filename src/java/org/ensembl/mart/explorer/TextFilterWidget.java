@@ -126,7 +126,7 @@ public class TextFilterWidget
       new InputPageAwareBasicFilter(
         filterDescription.getField(),
         filterDescription.getTableConstraint(),
-        filterDescription.getQualifiers(),
+        filterDescription.getLegalQualifiers(),
         value,
         this ));
 
@@ -185,7 +185,7 @@ public class TextFilterWidget
     if (filter != null)
       rhs =
         filterDescription.getDisplayName()
-          + filterDescription.getQualifiers()
+          + filterDescription.getLegalQualifiers()
           + filter.getValue();
     setNodeLabel(null, rhs);
     

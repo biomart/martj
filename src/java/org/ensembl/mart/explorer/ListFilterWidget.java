@@ -107,7 +107,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
       OptionWrapper ow =
         (OptionWrapper) filterValueToItem.get(filter.getValue());
       setSelectedItem(ow);
-      assignPushOptions(ow.option.getPushOptions());
+      assignPushOptions(ow.option.getPushActions());
 
     }
   }
@@ -165,7 +165,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
           null,
           filterDescription.getField() + " = " + option.getValue());
 
-        assignPushOptions(option.getPushOptions());
+        assignPushOptions(option.getPushActions());
       }
     }
 

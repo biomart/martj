@@ -34,22 +34,23 @@ import java.util.TreeMap;
  */
 public class FilterDescription extends QueryFilterSettings {
 
+	private String qualifier;
 	/**
-	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and qualifiers.
+	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and legalQualifiers.
 	 * 
 	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param field String name of the field to reference in the mart.
 	 * @param type String type of filter.  Must not be null or empty.
-	 * @param qualifiers String, comma-separated list of qualifiers to use in a MartShell MQL
+	 * @param legalQualifiers String, comma-separated list of legalQualifiers to use in a MartShell MQL
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public FilterDescription(
 		String internalName,
 		String field,
 		String type,
-		String qualifiers)
+		String legalQualifiers)
 		throws ConfigurationException {
-		this(internalName, field, type, qualifiers, "", "", null, "");
+		this(internalName, field, type, "", legalQualifiers, "", "", null, "");
 	}
 
 	/**
@@ -58,7 +59,8 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param field String name of the field to reference in the mart.
 	 * @param type String type of filter.  Must not be null or empty.
-	 * @param qualifiers String, comma-separated list of qualifiers to use in a MartShell MQL
+	 * @param qualifier String qualifier to apply to a filter for this Filter.
+	 * @param legal_qualifiers String, comma-separated list of legalQualifiers to use in a MartShell MQL
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL field
 	 * @param handler String, specifying the handler to use for a FilterDescription
@@ -72,7 +74,8 @@ public class FilterDescription extends QueryFilterSettings {
 		String internalName,
 		String field,
 		String type,
-		String qualifiers,
+		String qualifier,
+		String legalQualifiers,
 		String displayName,
 		String tableConstraint,
 		String handler,
@@ -86,7 +89,8 @@ public class FilterDescription extends QueryFilterSettings {
 
 		this.field = field;
 		this.type = type;
-		this.qualifiers = qualifiers;
+		this.qualifier = qualifier;
+		this.legalQualifiers = legalQualifiers;
 		this.handler = handler;
 		this.tableConstraint = tableConstraint;
 	}
@@ -330,22 +334,22 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Returns the qualifiers to use in MartShell.
+	 * Returns the legalQualifiers to use in MartShell.
 	 * 
-	 * @return String qualifiers
+	 * @return String legalQualifiers
 	 */
-	public String getQualifiers() {
-		return qualifiers;
+	public String getLegalQualifiers() {
+		return legalQualifiers;
 	}
 
 	public String getQualifiers(String internalName) {
 		if (this.internalName.equals(internalName))
-			return qualifiers;
+			return legalQualifiers;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return (
 					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
-					.getQualifiers();
+					.getLegalQualifiers();
 			else if (
 				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
@@ -430,7 +434,8 @@ public class FilterDescription extends QueryFilterSettings {
 		buf.append(super.toString());
 		buf.append(", field=").append(field);
 		buf.append(", type=").append(type);
-		buf.append(", qualifiers=").append(qualifiers);
+		buf.append(", qualifier=").append(qualifier);
+		buf.append(", legalQualifiers=").append(legalQualifiers);
 		buf.append(", tableConstraint=").append(tableConstraint);
 
 		if (hasOptions)
@@ -453,7 +458,8 @@ public class FilterDescription extends QueryFilterSettings {
 			hshcode = super.hashCode();
 			hshcode = (31 * hshcode) + field.hashCode();
 			hshcode = (31 * hshcode) + type.hashCode();
-			hshcode = (31 * hshcode) + qualifiers.hashCode();
+			hshcode = (31 * hshcode) + qualifier.hashCode();
+			hshcode = (31 * hshcode) + legalQualifiers.hashCode();
 			hshcode = (31 * hshcode) + tableConstraint.hashCode();
 			hshcode = (31 * hshcode) + description.hashCode();
 
@@ -636,18 +642,18 @@ public class FilterDescription extends QueryFilterSettings {
 		List quals = new ArrayList();
 
 		if (this.internalName.equals(internalName)) {
-			//filterDescription has qualifiers
-			if (this.qualifiers != null && this.qualifiers.length() > 0)
-				quals.addAll(Arrays.asList(qualifiers.split(",")));
+			//filterDescription has legalQualifiers
+			if (this.legalQualifiers != null && this.legalQualifiers.length() > 0)
+				quals.addAll(Arrays.asList(legalQualifiers.split(",")));
 		} else if (
 			(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
-			//PushOption Filter Option has qualifiers 
+			//PushOption Filter Option has legalQualifiers 
 			String[] iname_info = internalName.split("\\.");
 			String supername = iname_info[0];
 			String refname = iname_info[1];
 
 			Option superOption = getOptionByName(supername);
-			PushAction[] pos = superOption.getPushOptions();
+			PushAction[] pos = superOption.getPushActions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
 				PushAction po = pos[i];
@@ -657,7 +663,7 @@ public class FilterDescription extends QueryFilterSettings {
 
 					for (int j = 0, l = os.length; j < l; j++) {
 						Option option = os[j];
-						String opquals = option.getQualifiers();
+						String opquals = option.getLegalQualifiers();
 
 						if (opquals != null && opquals.length() > 0) {
 							List theseQs = Arrays.asList(opquals.split(","));
@@ -671,10 +677,10 @@ public class FilterDescription extends QueryFilterSettings {
 				}
 			}
 		} else {
-			//subOption has qualifiers
+			//subOption has legalQualifiers
 			if (containsOption(internalName)) {
 				Option option = getOptionByName(internalName);
-				String opquals = option.getQualifiers();
+				String opquals = option.getLegalQualifiers();
 
 				if (opquals != null && opquals.length() > 0) {
 					quals.addAll(Arrays.asList(opquals.split(",")));
@@ -708,7 +714,7 @@ public class FilterDescription extends QueryFilterSettings {
 			String refname = iname_info[1];
 
 			Option superOption = getOptionByName(supername);
-			PushAction[] pos = superOption.getPushOptions();
+			PushAction[] pos = superOption.getPushActions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
 				PushAction po = pos[i];
@@ -798,7 +804,7 @@ public class FilterDescription extends QueryFilterSettings {
 		for (int i = 0, n = options.length; i < n; i++) {
 
 			Option option = options[i];
-			PushAction[] pushOptions = option.getPushOptions();
+			PushAction[] pushOptions = option.getPushActions();
 
 			for (int j = 0; j < pushOptions.length; j++) {
 
@@ -865,6 +871,24 @@ public class FilterDescription extends QueryFilterSettings {
 		return handler;
 	}
 
+
+	/**
+	 * Returns the qualifier
+	 * @return String qualifier
+	 */
+	public String getQualifier() {
+		return qualifier;
+	}
+	
+	/**
+	 * Same as getQualifier.  Included to make FilterDescription impliment QueryFilterSettings
+	 * interface.
+	 * @return qualifier
+	 */
+	public String getQualifierFromContext() {
+		return qualifier;
+	}
+	
   /**
    * Same as getTableConstraint(). Included to make FilterDescription implement QueryFilterSettings
    * interface.
@@ -884,12 +908,11 @@ public class FilterDescription extends QueryFilterSettings {
 	private String handler;
 	private String field;
 	private String type;
-	private String qualifiers;
+	private String legalQualifiers;
 	private String tableConstraint;
 	private String value;
 	private int hshcode = -1;
 
 	//cache one supporting Option for call to supports
 	Option lastSupportingOption = null;
-
 }

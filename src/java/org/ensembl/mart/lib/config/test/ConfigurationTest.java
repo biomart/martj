@@ -16,6 +16,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
 
+//TODO: test qualifier
 package org.ensembl.mart.lib.config.test;
 
 import java.io.ByteArrayOutputStream;
@@ -252,7 +253,7 @@ public class ConfigurationTest extends Base {
   private void datasetDefaultFilterTest(DefaultFilter df) throws Exception {
     String testValue = "1";
     String Value = df.getValue();
-    FilterDescription testFDesc = new FilterDescription("testDefaultFilterDescription", "test_id", TESTTYPE, TESTQUALIFIERS,  "A TEST ID, DOESNT EXIST", "gene_main", null, TESTDESC);
+    FilterDescription testFDesc = new FilterDescription("testDefaultFilterDescription", "test_id", TESTTYPE, "", TESTQUALIFIERS,  "A TEST ID, DOESNT EXIST", "gene_main", null, TESTDESC);
                                                             
     assertEquals("value not correctly set for Dataset DefaultFilter\n", testValue, Value);
     assertEquals("FilterDescription not correct for Dataset DefaultFilter\n", testFDesc, df.getUIFilterDescription());
@@ -531,7 +532,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "test_id";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
@@ -595,7 +596,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "enable_test_id";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
@@ -663,7 +664,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "disable_test_id";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
@@ -730,7 +731,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "handlerField";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String handler = f.getHandler();
 
 		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
@@ -793,7 +794,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "value_option_id";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
@@ -861,7 +862,7 @@ public class ConfigurationTest extends Base {
 		String Type = f.getType();
 		String testField = "test_id";
 		String Field = f.getField();
-		String qualifiers = f.getQualifiers();
+		String qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "tree_value_dm";
 		String TableConstraint = f.getTableConstraint();
 
@@ -1091,7 +1092,7 @@ public class ConfigurationTest extends Base {
 		String Type = option.getType();
 		String testField = "test_id";
 		String Field = option.getField();
-		String qualifiers = option.getQualifiers();
+		String qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "filterOne_dm";
 		String TableConstraint = option.getTableConstraint();
 
@@ -1153,7 +1154,7 @@ public class ConfigurationTest extends Base {
 		String Type = option.getType();
 		String testField = "test_id";
 		String Field = option.getField();
-		String qualifiers = option.getQualifiers();
+		String qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "filterTwo_dm";
 		String TableConstraint = option.getTableConstraint();
 
@@ -1214,7 +1215,7 @@ public class ConfigurationTest extends Base {
 		String Type = option.getType();
 		String testField = "pushOptionOption_id";
 		String Field = option.getField();
-		String qualifiers = option.getQualifiers();
+		String qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = option.getTableConstraint();
 
@@ -1265,7 +1266,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 		
-		PushAction[] pos = option.getPushOptions();
+		PushAction[] pos = option.getPushActions();
 		assertEquals("pushOptionOption should have one PushOption\n", 1, pos.length);
 		PushOptionValueTest(d, option, pos[0]);	 		
 	}
@@ -1325,7 +1326,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("PushOptionFilterOption displayName incorrect\n", testDName, DName);
 		assertEquals("PushOptionFilterOption Description incorrect\n", TESTDESC, Desc);
 		
-		PushAction[] pos = option.getPushOptions();
+		PushAction[] pos = option.getPushActions();
 		assertEquals("PushOptionFilterOption should have one PushOption\n", 1, pos.length);
 		PushOptionFilterOptionPushOptionTest(d, fp, fg, fc, f, option, pos[0]);
 	}
@@ -1358,7 +1359,7 @@ public class ConfigurationTest extends Base {
 		String Type = o.getType();
 		String testField = "pushOptionFilterOption_id";
 		String Field = o.getField();
-		String qualifiers = o.getQualifiers();
+		String qualifiers = o.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = o.getTableConstraint();
 		
