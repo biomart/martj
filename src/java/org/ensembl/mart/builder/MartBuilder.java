@@ -123,7 +123,8 @@ public class MartBuilder {
 			
 			System.out.println("");
 			for (int j=0;j<units.length;j++){
-				System.out.println(units[j].toSQL());	    	
+				System.out.println(units[j].toSQL());
+				System.out.println(units[j].addIndex());
 			}
 			for (int j=0;j<units.length;j++){
 				System.out.println(units[j].dropTempTable());	    	

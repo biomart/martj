@@ -34,8 +34,7 @@ public abstract class TransformationUnit {
 		
 	}
 	
-	
-	
+
 	public abstract String toSQL ();
 	public abstract void transform (Table temp_start, String temp_end_name);
 	
@@ -47,6 +46,19 @@ public abstract class TransformationUnit {
 		return sql;	
 	}
 		
+	
+	
+	public String addIndex(){
+		
+		String sql = "";
+		sql = "ALTER TABLE "+temp_end.getName()+" ADD INDEX ("+temp_end.key+");";
+		return sql;
+		
+	}
+	
+	
+	
+	
 	
 	protected Table copyTable(Table old_table){
 		

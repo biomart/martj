@@ -120,7 +120,6 @@ public class Transformation {
 				if (i==1){
 					temp_start = start_table;
 					unit.ref_table=converted_ref;
-					System.out.println("and now alis "+unit.ref_table.getColumns()[0].hasAlias());
 				}
 			}
 			
