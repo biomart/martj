@@ -62,7 +62,7 @@ public class SimpleLibraryUsageExample {
 		Query query = new Query();
 		DataSource ds =
 			DatabaseUtil.createDataSource(
-				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_17_1",
+				"jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_mart_17_1",
 				"anonymous",
 				null,
 				10,
