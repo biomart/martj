@@ -77,7 +77,7 @@ public class DatabaseDatasetConfigUtils {
 
   private HashMap configInfo = new HashMap();
   
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible from ";
+  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version from ";
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
@@ -94,8 +94,8 @@ public class DatabaseDatasetConfigUtils {
   private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
-    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible) values (?, ?, ?, ?, ?, ?, ?, ?)";
-  private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned)";
+    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
@@ -246,13 +246,14 @@ public class DatabaseDatasetConfigUtils {
     Document doc,
     boolean compress,
     String type,
-    String visible)
+    String visible,
+    String version)
     throws ConfigurationException {
 
     int rowsupdated = 0;
 
     if (compress)
-      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, type, visible);
+      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, type, visible, version);
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
@@ -419,7 +420,8 @@ public class DatabaseDatasetConfigUtils {
     String description,
     Document doc,
     String type,
-    String visible)
+    String visible,
+    String version)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
       return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible);
@@ -464,6 +466,7 @@ public class DatabaseDatasetConfigUtils {
       ps.setBytes(6, md5);
 	  ps.setString(7, type);
 	  ps.setString(8, visible);
+	  ps.setString(9,version);
 
       int ret = ps.executeUpdate();
       ps.close();
@@ -605,8 +608,9 @@ public class DatabaseDatasetConfigUtils {
         String description = rs.getString(4);
         String type = rs.getString(6);
         String visible = rs.getString(7);
+		String version = rs.getString(8);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible);
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version);
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -2360,6 +2364,9 @@ public class DatabaseDatasetConfigUtils {
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
       //System.out.println("getting table name "+tableName);
+      // can have single main tables with no keys so add here now
+	  finalStarbases.add(starbases.get(i));
+      
       TableDescription table = getTableDescriptionFor(databaseName, tableName);
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
@@ -2369,7 +2376,7 @@ public class DatabaseDatasetConfigUtils {
         if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname))){
           primaryKeys.add(cname);
           // fix for Star schema - multiple keys per l main table
-          finalStarbases.add(starbases.get(i));
+          //finalStarbases.add(starbases.get(i));
         }
       }
     }

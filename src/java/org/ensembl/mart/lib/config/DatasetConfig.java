@@ -52,6 +52,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String datasetKey = "dataset";
   private final String typeKey = "type";
   private final String visibleKey = "visible";
+  private final String versionKey = "version";
   private final String optParameterKey = "optional_parameters";
   
   private DSConfigAdaptor adaptor = null;
@@ -186,6 +187,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setAttribute(typeKey,null);
     setAttribute(visibleKey,null);
     setAttribute(optParameterKey, null);
+	setAttribute(versionKey,null);
   }
 
   /**
@@ -214,7 +216,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description)
     throws ConfigurationException {
     //super(internalName, displayName, description);
-	this(internalName, displayName, dataset, description, "", "0", null);
+	this(internalName, displayName, dataset, description, "", "0", "", null);
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
     //setAttribute(datasetKey, dataset);
@@ -232,9 +234,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param pub String flag showing whether DatasetConfig is public or not.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version)
   throws ConfigurationException {
-    this(internalName, displayName, dataset, description, type, pub, null);
+    this(internalName, displayName, dataset, description, type, pub, version, null);
   }
   
   /**
@@ -251,7 +253,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    *        implementation specific manipulation.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String optParameters)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String optParameters)
 	throws ConfigurationException {
 	super(internalName, displayName, description);
 
@@ -260,6 +262,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(datasetKey, dataset);
 	setAttribute(typeKey, type);
 	setAttribute(visibleKey, pub);
+	setAttribute(versionKey, version);
     setAttribute(optParameterKey, optParameters);
   }
 
@@ -290,6 +293,13 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public String getVisible() {
 	return attributes.getProperty(visibleKey);
+  }
+  
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public String getVersion() {
+	return attributes.getProperty(versionKey);
   }
 
   public void setOptionalParameter(String optParam) {

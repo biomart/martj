@@ -880,7 +880,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig),
 			true,
 			dsConfig.getType(),
-			dsConfig.getVisible());
+			dsConfig.getVisible(),
+			dsConfig.getVersion());
 	}
 
 	//public void lostOwnership(Clipboard c, Transferable t) {
