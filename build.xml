@@ -213,8 +213,8 @@
       <formatter type="xml" />
 
       <classpath>
-        <path refid="${build.classes}" />
-        <fileset refid="${lib.classpath}" />
+        <fileset dir="${build.classes}" />
+        <fileset refid="lib.classpath" />
       </classpath>
 
       <!-- The junit task doesn't support 'if' so we test for JUnit here -->
