@@ -179,9 +179,6 @@ public class MartRegistryXMLUtils {
 	public static void cleanRegistryTable(DetailedDataSource dsource) throws ConfigurationException {
 		Connection conn = null;
 
-		if (logger.isLoggable(Level.WARNING))
-			logger.warning("Deleting old RegistryXML with " + CLEANREGISTRYTABLE + "\n");
-
 		try {
 			conn = dsource.getConnection();
 			PreparedStatement ps = conn.prepareStatement(CLEANREGISTRYTABLE);
@@ -217,9 +214,6 @@ public class MartRegistryXMLUtils {
 			return storeCompressedRegistryXMLOracle(dsource, doc);
 		Connection conn = null;
 		try {
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("\nupdating with SQL " + UPDATECOMPRESSEDREGISTRYXML + "\n");
-
 			conn = dsource.getConnection();
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
