@@ -205,42 +205,44 @@ public class MartViewEditor extends JFrame {
         ImageIcon icon = createImageIcon(IMAGE_DIR+"new.gif");
         
 		
-		menuItem = new JMenuItem("Database Connection");
+		menuItem = new JMenuItem("Database Connection ");
 		MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_D);
 		menu.add(menuItem);  
 		
-		menuItem = new JMenuItem("Import XML from database");
+                menu.addSeparator();
+
+		menuItem = new JMenuItem("Import ");
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_I);
 		menu.add(menuItem);       
 		
-		menuItem = new JMenuItem("Export XML to database");
+		menuItem = new JMenuItem("Export ");
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_I);
 		menu.add(menuItem);       
 		
-		menuItem = new JMenuItem("Naive XML from database");
+		menuItem = new JMenuItem("Naive ");
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_M);
 		menu.add(menuItem);       
 
-                menuItem = new JMenuItem("Delete XML from database");
-		menuItem.addActionListener(menuActionListener);
-		menuItem.setMnemonic(KeyEvent.VK_I);
-		menu.add(menuItem);  		
-
-
-		menuItem = new JMenuItem("Update XML");
+		menuItem = new JMenuItem("Update ");
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_I);
 		menu.add(menuItem);
 
+                menuItem = new JMenuItem("Delete ");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem); 
+
+
 		          								
       
 		menu.addSeparator();
-        menuItem = new JMenuItem("New Dataset View", icon);
+        menuItem = new JMenuItem("New", icon);
         
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -251,7 +253,7 @@ public class MartViewEditor extends JFrame {
         menu.add(menuItem);
 
         icon = createImageIcon(IMAGE_DIR+"open.gif");
-        menuItem = new JMenuItem("Open Dataset View", icon);
+        menuItem = new JMenuItem("Open", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_O);
         menu.add(menuItem);
@@ -269,7 +271,7 @@ public class MartViewEditor extends JFrame {
 
         //a group of radio button menu items
         menu.addSeparator();
-        menuItem = new JMenuItem("Print XML");
+        menuItem = new JMenuItem("Print");
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_P);
         menu.add(menuItem);
@@ -340,13 +342,6 @@ public class MartViewEditor extends JFrame {
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "inserts");
         menu.add(menuItem);
-
-        //Build view menu in the menu bar.
-        menu = new JMenu("View");
-        menu.setMnemonic(KeyEvent.VK_V);
-        menu.getAccessibleContext().setAccessibleDescription(
-                "this is the view menu");
-        menuBar.add(menu);
 
         //Build help menu in the menu bar.
         icon = createImageIcon(IMAGE_DIR+"help.gif");
@@ -571,7 +566,7 @@ public class MartViewEditor extends JFrame {
 		
 		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
 		  String dataset = (String) JOptionPane.showInputDialog(null,
-				   "Choose one", "Dataset",
+				   "Choose one", "Dataset Config",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);		
 		  if (dataset == null)
@@ -682,7 +677,7 @@ public class MartViewEditor extends JFrame {
 		
 		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
 		  String dataset = (String) JOptionPane.showInputDialog(null,
-				   "Choose one", "Dataset",
+				   "Choose one", "Dataset Config",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);		
 		  if (dataset == null)
