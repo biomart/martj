@@ -4,8 +4,6 @@
 # copyright EBI, GRL 2003
 
 
-# TODO implement SequencePage.updateXXXX() / clear()
-
 # editor.queryChanged / only execute if queryChanged or db settings changed.
 
 
@@ -41,7 +39,7 @@ from java.lang import System, String, ClassLoader, RuntimeException
 from java.lang import Thread
 from java.io import File, FileOutputStream, ByteArrayOutputStream
 from java.net import URL
-from java.util import Arrays, Vector
+from java.util import Arrays, Vector, Collections
 from java.awt import CardLayout, Dimension, BorderLayout, Rectangle, Cursor
 from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
@@ -67,6 +65,140 @@ DEFAULT_PASSWORD = ""
 GAP = 5
 SPACE=" &nbsp;"
         
+
+
+
+class TmpAtributesPage(JPanel):
+    attributes = (
+    ( "Features",
+      ( "REGION",
+        ( ("Chromosome Attributes", None),
+          ( "Chromosome Name",
+            "Start Position (bp)",
+            "End Position (bp)",
+            "Band",
+            "Strand"
+            )
+          )
+        ), # REGION
+      
+      ( "GENE",
+        ( ("Ensembl Attributes", None),
+          ( "Ensembl Gene ID",
+            "Ensembl Transcript ID",
+            "External Gene ID",
+            "Description",
+            "Ensembl Peptide ID",
+            "External Gene DB"
+            )
+          ),
+
+        ( ("External Reference Attributes (max 3)", 3 ),
+          ( "Protein ID",
+            "GO ID",
+            "SPTrEMBL ID",
+            "SWISSPROT ID",
+            "MIM ID",
+            "LocusLink ID",
+            "HUGO ID",
+            "GO Description",
+            "EMBL ID",
+            "PDB ID",
+            "RefSeq ID",
+            "GKB ID",
+            )
+          ),
+
+        ( ("Microarray Attributes", 1),
+          ( "AFFY HG U9",
+            "Sanger HVER 1 2 1",
+            "AFFY HG U133",
+            "UMCU 19Kv1",
+            )
+          ),
+        
+        ( ("Disease Attributes", None),
+          ( "Disease OMIM ID",
+            "Disease Description"
+            )
+          ),
+        
+        ), # GENE
+
+      # TODO EXPRESSION
+
+      # TODO MULTI SPECIES COMPARISON
+
+      # PROTEIN
+
+      ), # FEATURES
+    
+    
+    ( "SNPs",
+      ( "REGION",
+        ( ( "Chromosome Attributes",  None),
+          ( "Chromosome Name",
+            "Start Position (bp)",
+            "End Position (bp)",
+            "Band",
+            "Strand"
+            )
+          )
+        ) # REGION
+      ), # SNPS
+    )
+    
+
+    def __init__(self):
+        p = JTabbedPane()
+        self.add( p )
+        
+        for g1 in TmpAtributesPage.attributes:
+            print g1[0]
+            # tab level
+            p1 = Box.createVerticalBox()
+            p.add( JScrollPane(p1), g1[0] )
+            for g2 in g1[1:]:
+                # group level
+                groupPanel = Box.createVerticalBox()
+                groupPanel.border=BorderFactory.createTitledBorder( g2[0] ) 
+                p1.add( groupPanel ) 
+                for optionGroup in g2[1:]:
+                    # option group level
+                    groupTitle = optionGroup[0][0]
+                    #groupPanel.add( JLabel( optionGroup[0][0], foreground=Color.RED ) )
+            
+                    # Support 2 column lists of options
+                    list = ( Box.createVerticalBox(), Box.createVerticalBox() )
+                    listPanel = Box.createHorizontalBox()
+                    listPanel.border = BorderFactory.createTitledBorder( optionGroup[0][0] )
+                    listPanel.add( list[0] )
+                    listPanel.add( list[1] )
+                    groupPanel.add( listPanel )
+                    
+                    # handle radio button lists
+                    radio = optionGroup[0][1]==1
+                    if radio:
+                        radioGroup = ButtonGroup()
+                        button = JRadioButton( "None", selected=1 )
+                        radioGroup.add( button )
+                        list[0].add( button )
+                        
+                    i = 0
+                    for option in optionGroup[1]:
+                        # individual option
+                        if radio:
+                            button = JRadioButton( option )
+                            radioGroup.add( button )
+                        else:
+                            button = JCheckBox(option)
+                            # add button to left or right column
+                        list[i%2].add( button )
+                        i = i+1
+
+
+
+
 def toVector(list):
     return Vector( Arrays.asList( list ) )
 
@@ -392,6 +524,10 @@ class ResultsPage(Page):
         self.textArea = JTextArea(25,60)
         self.add( JScrollPane(self.textArea) )
         self.outputStream = GUIOutputStream( self.textArea ) 
+
+
+    def clear( self ):
+        self.textArea.text=""
 
 
     def htmlSummary(self):
@@ -730,10 +866,18 @@ class SequencePage(Page):
 
 
     def updateQuery(self, query):
-        print "TODO query from page"
+        sd = None
+        if self.transcript.selected and self.includeCodingSequence.selected:
+            sd = SequenceDescription("coding") 
+        elif self.transcript.selected and self.includePeptide.selected:
+            sd = SequenceDescription("peptide")
+        else:
+            raise InvalidQueryException("Unsupported sequence configuration")
+
+        query.addSequenceDescription( sd )
 
 
-
+        
     def updatePage(self, query):
 
         if query.sequenceDescription.type=="coding":
@@ -746,6 +890,8 @@ class SequencePage(Page):
             self.includePeptide.selected = 1
         else:
             raise InvalidQueryException("Unsupported sequence description")
+
+
 
 
 
@@ -763,7 +909,7 @@ class AttributeManagerPage(Page):
     def __init__(self):
         Page.__init__(self)
         self.selected = Vector()
-        self.available = toVector(["gene_stable_id", "chr_name", "end", "strand"
+        self.available = toVector(["gene_stable_id", "chr_name", "gene_chrom_end", "chrom_strand"
                                    , "sequence"])
         self.availableWidget = JList( self.available,
                                       valueChanged=self.valueChanged,
@@ -777,6 +923,11 @@ class AttributeManagerPage(Page):
         self.node = None
         self.tree = None
         self.path = None
+
+        # tmp code
+        self.add( JLabel("fred") )
+        self.add( JScrollPane( TmpAtributesPage()) )
+        self.add( JLabel("bob") )
 
 
     def valueChanged(self, event=None):
@@ -837,6 +988,7 @@ class AttributeManagerPage(Page):
 
         # must explicitly call setListData() rather than .listData=
         # to avoid conversion problems on linux and windows
+        Collections.sort( self.available )
         self.availableWidget.setListData( self.available )
 
         self.tree.expandPath( self.path )
@@ -940,13 +1092,13 @@ class RegionPage(Page):
 	if chr and chr!="": query.addFilter( BasicFilter("chr_name","=",chr) )
 
 	start = self.start.getText()
-	if start and start!="": query.addFilter( BasicFilter("start",">=",start) )
+	if start and start!="": query.addFilter( BasicFilter("gene_chrom_start",">=",start) )
 
 	end = self.end.getText()
-	if end and end!="": query.addFilter( BasicFilter("end","<=",end) )
+	if end and end!="": query.addFilter( BasicFilter("gene_chrom_end","<=",end) )
 
         strand = self.strand.getText()
-	if strand and strand!="": query.addFilter( BasicFilter("strand","<=",strand) )
+	if strand and strand!="": query.addFilter( BasicFilter("chrom_strand","<=",strand) )
 
 	
     def updatePage(self, query):
@@ -954,11 +1106,11 @@ class RegionPage(Page):
 	    if isinstance(f, BasicFilter):
 		if f.type=="chr_name":
 		    self.chr.setText( f.value )
-		elif f.type=="start":
+		elif f.type=="gene_chrom_start":
 		    self.start.setText( f.value )
-		elif f.type=="end":
+		elif f.type=="gene_chrom_end":
 		    self.end.setText( f.value )
-		elif f.type=="strand":
+		elif f.type=="chrom_strand":
 		    self.strand.setText( f.value )		    
 
 
@@ -1223,7 +1375,7 @@ class MartGUIApplication(JFrame):
     def doInsertKakaQuery(self, event=None):
         self.databasePage.host.setText( "kaka.sanger.ac.uk" )
         self.databasePage.user.setText( "anonymous" )
-        self.databasePage.database.setText( "ensembl_mart_11_1" )
+        self.databasePage.database.setText( "ensembl_mart_13_1" )
 
         self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, ",") )
 
@@ -1231,18 +1383,21 @@ class MartGUIApplication(JFrame):
                   
                   ,focus = "gene" )
 	q.addFilter( BasicFilter("chr_name", "=", "22") )
-	#q.addFilter( BasicFilter("start", "=", "1") )
-	#q.addFilter( BasicFilter("end", "=", "1000") )
-	#q.addFilter( BasicFilter("strand", "=", "1") )
+	#q.addFilter( BasicFilter("gene_chrom_start", "=", "1") )
+	q.addFilter( BasicFilter("gene_chrom_end", "=", "14000000") )
+	#q.addFilter( BasicFilter("chrom_strand", "=", "1") )
+
 
         # load test data file via classpath; this works from a
         # deployed jar and from normal directory in developement
         # situations.
+
         url = ClassLoader.getSystemResource("data/gene_stable_id.test")
-        q.addFilter( IDListFilter("gene_stable_id", url ) )
-        q.addFilter( IDListFilter("gene_stable_id",
-                                  array( ("ENSG00000177741"), String) ) )
-        q.addAttribute( FieldAttribute("gene_stable_id") )
+        #q.addFilter( IDListFilter("gene_stable_id", url ) )
+        #q.addFilter( IDListFilter("gene_stable_id",
+        #                          array( ("ENSG00000177741"), String) ) )
+        #q.addAttribute( FieldAttribute("gene_stable_id") )
+
         #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
         #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") )
         # TODO need a result window
@@ -1258,6 +1413,7 @@ class MartGUIApplication(JFrame):
     def viewResults( self ):
 	self.editor.showPage( ResultsPage.name )
         # execute query in new thread and pipe results to window.
+        self.resultsPage.clear()
         os = self.resultsPage.getOutputStream()
 	thread.start_new_thread( self.executeQuery, (self, os) )
 
