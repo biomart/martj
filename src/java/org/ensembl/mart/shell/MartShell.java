@@ -463,8 +463,10 @@ public class MartShell {
 			Initialize();
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(batchScriptFile)));
 
-			for (String line = reader.readLine(); line != null; line = reader.readLine())
-				parse(line);
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				if (! line.startsWith("#") )
+				  parse(line);
+			}
 		} catch (Exception e) {
 			setBatchError(e.getMessage());
 			valid = false;
