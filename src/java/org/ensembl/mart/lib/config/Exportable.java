@@ -168,7 +168,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	 * Allows Equality Comparisons manipulation of Importable objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof Importable && hashCode() == o.hashCode();
+		return o instanceof Exportable && hashCode() == o.hashCode();
 	}
 
 	/**
