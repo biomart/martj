@@ -58,6 +58,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.BooleanFilter;
@@ -243,12 +244,11 @@ public class QueryTreeView extends JTree implements QueryListener {
       int index = parent.getIndex(child);
 
       if (parent == attributesNode) {
-        if (index<query.getAttributes().length)
+        if (index < query.getAttributes().length)
           query.removeAttribute(query.getAttributes()[index]);
-        else if (query.getSequenceDescription()!=null) 
+        else if (query.getSequenceDescription() != null)
           query.setSequenceDescription(null);
-      }
-      else if (parent == filtersNode)
+      } else if (parent == filtersNode)
         query.removeFilter(query.getFilters()[index]);
 
     }
@@ -383,7 +383,7 @@ public class QueryTreeView extends JTree implements QueryListener {
     });
 
     // ---------
-    
+
     box = Box.createHorizontalBox();
     c.add(box);
     b = new JButton("Add sequence attribute");
@@ -394,7 +394,8 @@ public class QueryTreeView extends JTree implements QueryListener {
         int index = (int) (query.getAttributes().length * Math.random());
         Attribute a = new FieldAttribute("attribute" + count++);
         try {
-          query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
+          query.setSequenceDescription(
+            new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
         } catch (InvalidQueryException e1) {
           e1.printStackTrace();
         }
@@ -404,8 +405,8 @@ public class QueryTreeView extends JTree implements QueryListener {
     box.add(b);
     b.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-          query.setSequenceDescription(null);
-        }
+        query.setSequenceDescription(null);
+      }
     });
 
     // ---------
@@ -447,22 +448,13 @@ public class QueryTreeView extends JTree implements QueryListener {
 
     c.add(new JScrollPane(qtv));
 
-    JFrame f = new JFrame("QueryTreeView unit test");
-    f.getContentPane().add(c);
-    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+    JFrame f = new QuickFrame("QueryTreeView unit test", c);
 
     // preload some default settings
     //query.setDatasetConfig( adaptor.getDatasetConfigs()[0] );
-    query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+    //query.addAttribute(new FieldAttribute("ensembl_gene_id"));
     query.addFilter(new BasicFilter("ensembl_gene_id", "=", "ENSG001"));
     query.addFilter(new BasicFilter("chr_name", "=", "3"));
-
-    f.setVisible(true);
-    f.pack();
-    int x = screen.width / 2 - f.getWidth() / 2;
-    int y = screen.height / 2 - f.getHeight() / 2;
-    f.setLocation(x, y);
 
   }
 
@@ -547,7 +539,6 @@ public class QueryTreeView extends JTree implements QueryListener {
 
   }
 
-
   /**
    * Select a node. 
    * @param treeNode
@@ -628,14 +619,13 @@ public class QueryTreeView extends JTree implements QueryListener {
     Filter newFilter) {
 
     DefaultMutableTreeNode node =
-      new DefaultMutableTreeNode(
-        new TreeNodeData(sourceQuery, newFilter));
-    
-      filtersNode.remove(index);
-      filtersNode.insert(node, index);
-      treeModel.reload(filtersNode);
-    
-      select(filtersNode, index, false);
+      new DefaultMutableTreeNode(new TreeNodeData(sourceQuery, newFilter));
+
+    filtersNode.remove(index);
+    filtersNode.insert(node, index);
+    treeModel.reload(filtersNode);
+
+    select(filtersNode, index, false);
   }
 
   /**
@@ -653,27 +643,31 @@ public class QueryTreeView extends JTree implements QueryListener {
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
 
-      System.out.println("sd = " + newSequenceDescription);
-     
-      int index = Math.max(0, attributesNode.getChildCount()-1);
-      if (oldSequenceDescription!=null)
-        attributesNode.remove(index);
-    
-      if (newSequenceDescription!=null){
+    System.out.println("sd = " + newSequenceDescription);
 
-        DefaultMutableTreeNode node =
-          new DefaultMutableTreeNode( new TreeNodeData(newSequenceDescription));
-        attributesNode.insert(node, index);
+    if (oldSequenceDescription != null) {
+      attributesNode.remove(attributesNode.getChildCount() - 1);
+      treeModel.reload(attributesNode); 
+    }
 
-      } else {
+    DefaultMutableTreeNode node = null;
+    if (newSequenceDescription != null) {
 
-        index--;
-
-      }
+      node =
+        new DefaultMutableTreeNode(new TreeNodeData(newSequenceDescription));
+      attributesNode.add(node);
 
       treeModel.reload(attributesNode);
+      select(attributesNode, attributesNode.getIndex(node), true);
 
-      select(attributesNode, index, false);
+    } else {
+      int last = attributesNode.getChildCount() - 1;
+      if (last > -1)
+        select(attributesNode, last, true);
+      else
+        select(rootNode, rootNode.getIndex(attributesNode), true);
+    }
+
   }
 
   /**
