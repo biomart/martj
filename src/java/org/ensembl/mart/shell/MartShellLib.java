@@ -253,7 +253,7 @@ public class MartShellLib {
 	 */
 	public String QueryToMQL(Query query) throws InvalidQueryException, ConfigurationException {
 		String commandEnd = ";";
-		LoadMaps();
+		//LoadMaps();
 
 		StringBuffer mqlbuf = new StringBuffer();
 		boolean success = false;
@@ -1092,6 +1092,8 @@ public class MartShellLib {
 			throw new InvalidQueryException("Could not parse Nested Query : " + e.getMessage(), e);
 		}
 
+    subQuery.setQueryName(storedCommandName);
+    
 		Filter f = null;
 		if (handler != null)
 			f = new IDListFilter(fieldName, tableConstraint, subQuery, handler);
