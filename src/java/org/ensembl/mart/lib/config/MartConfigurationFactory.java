@@ -62,6 +62,7 @@ public class MartConfigurationFactory {
 	private final String ATTRIBUTEDESCRIPTION = "UIAttributeDescription";
 	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 	private final String OPTION = "Option";
+  private final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names
 	private final String INTERNALNAME = "internalName";
@@ -83,6 +84,7 @@ public class MartConfigurationFactory {
 	private final String OBJECTCODE = "objectCode";
 	private final String ISSELECTABLE = "isSelectable";
 	private final String OPTIONNAME = "optionName";
+  private final String VALUE = "value";
 
 	private MartConfiguration martconf = null;
 
@@ -173,6 +175,16 @@ public class MartConfigurationFactory {
 
 		Dataset d = new Dataset(intName, dispname, desc);
 
+    for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
+      Element option = (Element) iter.next();
+      d.addOption(getOption(option));
+    }
+    
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(DEFAULTFILTER)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      d.addDefaultFilter(getDefaultFilter(element));
+    }
+    
 		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(STARBASE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			d.addStarBase(element.getTextNormalize());
@@ -195,6 +207,12 @@ public class MartConfigurationFactory {
 		return d;
 	}
 
+  private DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
+    UIFilterDescription desc = getUIFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
+    String value = thisElement.getAttributeValue(VALUE);
+    return new DefaultFilter(desc, value);
+  }
+  
 	private FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");

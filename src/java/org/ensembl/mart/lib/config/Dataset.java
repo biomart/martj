@@ -34,13 +34,13 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Dataset {
+public class Dataset extends BaseConfigurationObject {
 
 	/*
 	 * Datasets must have an internalName, so dont allow parameterless construction
 	 */
-	private Dataset() throws ConfigurationException {
-		this("", "", ""); // will never happen
+	public Dataset() throws ConfigurationException {
+		this("", "", "");
 	}
 	/**
 	 * Constructs a Dataset named by internalName and displayName.
@@ -50,8 +50,8 @@ public class Dataset {
 	 * @param internalName String name to represent this Dataset
 	 * @param displayName String name to display.
 	 */
-	public Dataset(String martName, String displayName) throws ConfigurationException {
-		this(martName, displayName, "");
+	public Dataset(String internalName, String displayName) throws ConfigurationException {
+		this(internalName, displayName, "");
 	}
 
 	/**
@@ -63,16 +63,60 @@ public class Dataset {
 	 * @param description String description of the Dataset.
 	 * @throws ConfigurationException if required values are null.
 	 */
-	public Dataset(String martName, String displayName, String description) throws ConfigurationException {
-		if (martName == null)
-			throw new ConfigurationException("Datasets must contain a displayName");
-
-		this.internalName = martName;
-		this.displayName = displayName;
-		this.description = description;
+	public Dataset(String internalName, String displayName, String description) throws ConfigurationException {
+		super(internalName, displayName, description);
 	}
 
-	/**
+  /**
+   * add a Option object to this FilterCollection.  Options are stored in the order that they are added.
+   * @param o - an Option object
+   */
+  public void addOption(Option o) {
+    Integer oRankInt = new Integer(oRank);
+    uiOptions.put(oRankInt, o);
+    uiOptionNameMap.put(o.getInternalName(), oRankInt);
+    oRank++;
+    hasOptions = true;
+  }
+  
+  /**
+   * Set a group of Option objects in one call.  Subsequent calls to
+   * addOption or setOptions will add to what was added before, in the order that they are added.
+   * @param o - an array of Option objects
+   */
+  public void setOptions(Option[] o) {
+    for (int i = 0, n = o.length; i < n; i++) {
+      Integer oRankInt = new Integer(oRank);
+      uiOptions.put(oRankInt, o[i]);
+      uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
+      oRank++;      
+    }   
+    hasOptions = true;
+  }
+  
+  /**
+   * Add a DefaultFilter object to this Dataset.
+   * @param df - A DefaultFilter object
+   */
+  public void addDefaultFilter(DefaultFilter df) {
+    hasDefaultFilters = true;
+    if (!defaultFilters.contains(df))
+      defaultFilters.add(df);
+  }
+  
+  /**
+   * Add a set of DefaultFilter objects in one call.
+   * Note, subsequent calls to addDefaultFilter or setDefaultFilter
+   * will add to what was added before.
+   * @param df - An Array of DefaultFilter objects
+   */
+  public void setDefaultFilters(DefaultFilter[] df) {
+    for (int i = 0, n = df.length; i < n; i++) {
+			addDefaultFilter(df[i]);
+		}
+  }
+  
+ 	/**
 	 * Adds a star name to the list for this Dataset.  A star name is the
 	 * name of a central, or main, table to which all mart facts are tied.
 	 * Datasets can contain more than one star name.
@@ -171,33 +215,43 @@ public class Dataset {
 		}
 	}
 
-	/**
-	 * Returns the displayName of the Dataset.
-	 * 
-	 * @return displayName String.
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName to represent this dataset.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the Description of the Dataset.
-	 * 
-	 * @return description String
-	 */
-	public String getDescription() {
-		return description;
-	}
-
+  /**
+   * Determine if this Dataset has Options Available.
+   * 
+   * @return boolean, true if Options are available, false if not.
+   */
+  public boolean hasOptions() {
+    return hasOptions;
+  }
+  
+  /**
+   * Get all Option objects available as an array.  Options are returned in the order they were added.
+   * @return Option[]
+   */
+  public Option[] getOptions() {
+    Option[] ret = new Option[uiOptions.size()];
+    uiOptions.values().toArray(ret);
+    return ret;    
+  }
+  
+  /**
+   * Determine if this Dataset has DefaultFilters available.
+   * @return boolean, true if DefaultFilter(s) are available, false if not
+   */
+  public boolean hasDefaultFilters() {
+    return hasDefaultFilters;
+  }
+  
+  /**
+   * Returns all DefaultFilter Objects added to the Dataset.
+   * @return DefaultFilter[] array of DefaultFilter objects.
+   */
+  public DefaultFilter[] getDefaultFilters() {
+    DefaultFilter[] ret = new DefaultFilter[defaultFilters.size()];
+    defaultFilters.toArray(ret);
+    return ret;
+  }
+  
 	/**
 	 * Returns the list of star names for this Dataset.
 	 * 
@@ -577,9 +631,7 @@ public class Dataset {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append(super.toString());
 		buf.append(", starnames=").append(starBases);
 		buf.append(", primarykeys=").append(primaryKeys);
 		buf.append(", filterPages=").append(filterPages);
@@ -635,8 +687,15 @@ public class Dataset {
 	private Hashtable filterPageNameMap = new Hashtable();
 	private List starBases = new ArrayList();
 	private List primaryKeys = new ArrayList();
-	private final String internalName, displayName, description;
-
+  
+  private List defaultFilters = new ArrayList();
+  private boolean hasDefaultFilters = false;
+  
+  private int oRank = 0;
+  private TreeMap uiOptions = new TreeMap();
+  private Hashtable uiOptionNameMap = new Hashtable();
+  private boolean hasOptions = false;  
+	
 	// cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
 	private UIAttributeDescription lastAtt = null;
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName

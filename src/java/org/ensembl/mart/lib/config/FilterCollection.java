@@ -170,7 +170,7 @@ public class FilterCollection {
 	}
 
   /**
-   * adda Option object to this FilterCollection.  Options are stored in the order that they are added.
+   * add a Option object to this FilterCollection.  Options are stored in the order that they are added.
    * @param o - an Option object
    */
   public void addOption(Option o) {
