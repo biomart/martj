@@ -97,16 +97,11 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
   }
 
   /**
-   * Synchronises the state of this Filter with the specified filter.
-   * Sets the filter on this widget and the query. If a filter was already set
-   * this is removed first. Any already assigned PushOptions are unassigned
-   * and new ones are assigned.
+   * Attempts to select an item from the list corresponding to the filter.
    * @param filter filter to assign, or null if filter is to be removed.
    */
   protected void setFilter(Filter filter) {
 
-    if (this.filter!=null ) query.removeFilter( this.filter );
-    
     this.filter = filter;
 
     if (filter == null) {
@@ -120,8 +115,6 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         (OptionWrapper) filterValueToItem.get(filter.getValue());
       setSelectedItem(ow);
       assignPushOptions(ow.option.getPushActions());
-      
-      query.addFilter( filter );
       
     }
   }
@@ -152,7 +145,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     if (selectedItem == emptySelection) {
 
-      setFilter( null );
+      if ( filter!=null ) query.removeFilter( filter );
 
     } else if (selectedItem != emptySelection) {
 
@@ -166,14 +159,15 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
         if (value != null) {
 
-          Filter f =
+          filter =
             new BasicFilter(
               filterDescription.getField(),
               option.getTableConstraint(),
               "=",
               value);
-              
-          setFilter( f );
+          query.addFilter( filter );              
+                  
+
         }
 
         assignPushOptions(option.getPushActions());
