@@ -25,6 +25,7 @@ import java.security.MessageDigest;
 import junit.framework.TestCase;
 
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;
@@ -32,7 +33,7 @@ import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLLocation;
 
 /**
- * Loads sample dataset config configuration file via an adaptor (searches the classpath) 
+ * Loads sample dataset view configuration file via an adaptor (searches the classpath) 
  * and reads some data from it to ensure the adaptor worked.
  * 
  * Sample file is: "data/XML/homo_sapiens__ensembl_genes.xml"
@@ -55,25 +56,25 @@ public class URLDSConfigAdaptorTest extends TestCase {
 
     URLDSConfigAdaptor adaptor = getSampleDSConfigAdaptor();
 
-		DatasetConfig[] configs = adaptor.getDatasetConfigs();
-		assertTrue("No datasets loaded.", configs.length > 0);
-		DatasetConfig config = configs[0];
-		assertNotNull(config.getDescription());
-		assertNotNull(config.getDisplayName());
-		assertNotNull(config.getInternalName());
-		assertTrue(config.getAllFilterDescriptions().size() > 0);
-		assertTrue(config.getAllFilterDescriptions().size() > 0);
+		DatasetConfigIterator views = adaptor.getDatasetConfigs();
+		assertTrue("No datasets loaded.", views.hasNext());
+		DatasetConfig view = (DatasetConfig) views.next();
+		assertNotNull(view.getDescription());
+		assertNotNull(view.getDisplayName());
+		assertNotNull(view.getInternalName());
+		assertTrue(view.getAllFilterDescriptions().size() > 0);
+		assertTrue(view.getAllFilterDescriptions().size() > 0);
     
     File testFile = new File(TESTFILEPATH);
-    URLDSConfigAdaptor.StoreDatasetConfig(config, testFile);
+    URLDSConfigAdaptor.StoreDatasetConfig(view, testFile);
     
     assertTrue("Test File Doesnt Exist after URLDSConfigAdaptor.store\n", testFile.exists());
     
     URLDSConfigAdaptor nadapt = new URLDSConfigAdaptor(testFile.toURL());
-    DatasetConfig nconfig = nadapt.getDatasetConfigs()[0];
+    DatasetConfig nview = (DatasetConfig) nadapt.getDatasetConfigs().next();
     
-    byte[] odigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(config);
-    byte[] ndigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nconfig);
+    byte[] odigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(view);
+    byte[] ndigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nview);
     
     assertTrue("Digests from DatasetConfig loaded from test file differs from original DatasetConfig\n", MessageDigest.isEqual(odigest, ndigest));
     

@@ -38,33 +38,33 @@ public class CompositeDSConfigAdaptorTest extends Base {
     CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
   
     //assertTrue( "Initial CompositeDSConfigAdaptor should be empty\n", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue( "Initial CompositeDSConfigAdaptor should be empty\n", adaptor.getDatasetConfigs().length==0 );
+    assertTrue( "Initial CompositeDSConfigAdaptor should be empty\n", adaptor.getNumDatasetConfigs() ==0 );
     
     URLDSConfigAdaptor urlAdaptor = URLDSConfigAdaptorTest.getSampleDSConfigAdaptor();
     
     adaptor.add( urlAdaptor );
-    assertTrue( "Adaptor should return 1 DatasetConfig after add(urlAdaptor)\n", adaptor.getDatasetConfigs().length==1 );
+    assertTrue( "Adaptor should return 1 DatasetConfig after add(urlAdaptor)\n", adaptor.getNumDatasetConfigs() == 1 );
     //assertTrue( "Adaptor should return 1 DatasetConfig after add(urlAdaptor)\n", adaptor.getDatasetDisplayNames().length==1 );
-    DatasetConfig config = adaptor.getDatasetConfigs()[0];
-    assertNotNull( "DatasetConfig returned from URLDSConfigAdaptor based adaptor is null\n", config );
-    assertTrue( "DatasetConfig should have filter descriptions but doesnt\n", config.getAllFilterDescriptions().size()>0 );
+    DatasetConfig view = (DatasetConfig) adaptor.getDatasetConfigs().next();
+    assertNotNull( "DatasetConfig returned from URLDSConfigAdaptor based adaptor is null\n", view );
+    assertTrue( "DatasetConfig should have filter descriptions but doesnt\n", view.getAllFilterDescriptions().size()>0 );
     
     assertTrue( "Could not remove Adaptor\n", adaptor.remove( urlAdaptor ) );
     //assertTrue( "getDatasetDisplayNames should return zero elements after remove\n", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue( "getDatasetConfigs should return zero elements after remove\n", adaptor.getDatasetConfigs().length==0 );
+    assertTrue( "getDatasetConfigs should return zero elements after remove\n", adaptor.getNumDatasetConfigs()==0 );
 
     adaptor.add( urlAdaptor );
     adaptor.clear();
     //assertTrue( "adaptor should be empty after clear\n", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue( "adaptor should be empty after clear\n", adaptor.getDatasetConfigs().length==0 );
+    assertTrue( "adaptor should be empty after clear\n", adaptor.getNumDatasetConfigs()==0 );
 
     adaptor.add( urlAdaptor );
-    assertTrue( "Could not removeDatasetConfig\n" , adaptor.removeDatasetConfig(config) );
-    assertTrue( "There should be no DatasetConfig objects left after removeDatasetConfig\n", adaptor.getDatasetConfigs().length == 0 );
+    assertTrue( "Could not removeDatasetConfig\n" , adaptor.removeDatasetConfig(view) );
+    assertTrue( "There should be no DatasetConfig objects left after removeDatasetConfig\n", adaptor.getNumDatasetConfigs() == 0 );
     
     adaptor.clear();
     //assertTrue( "adaptor should be empty after clear after removeDatasetConfig\n", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue( "adaptor should be empty after clear after removeDatasetConfig\n", adaptor.getDatasetConfigs().length==0 );
+    assertTrue( "adaptor should be empty after clear after removeDatasetConfig\n", adaptor.getNumDatasetConfigs()==0 );
     
     // this falls over if meta_DatasetConfig_DatabaseDSConfigAdaptorTest.USER doesnt exist
     DatabaseDSConfigAdaptor dbAdaptor = DatabaseDSConfigAdaptorTest.getSampleDatasetConfigAdaptor(martJDataSource);
@@ -74,26 +74,26 @@ public class CompositeDSConfigAdaptorTest extends Base {
     dbAdaptor.update();
     
     adaptor.add( dbAdaptor );
-    assertTrue( "Adaptor should return one DatasetConfig after add(dbAdaptor)\n", adaptor.getDatasetConfigs().length==1 );
+    assertTrue( "Adaptor should return one DatasetConfig after add(dbAdaptor)\n", adaptor.getNumDatasetConfigs()==1 );
     //assertTrue( "Adaptor should return one DatasetConfig after add(dbAdaptor)\n", adaptor.getDatasetDisplayNames().length==1 );
     
-    config = adaptor.getDatasetConfigs()[0];
-    assertNotNull( "DatasetConfig returned by getDatasetConfigs is null\n", config );
-    assertTrue( "DatasetConfig should have filter descriptions but doesnt\n", config.getAllFilterDescriptions().size()>0 );
+    view = (DatasetConfig) adaptor.getDatasetConfigs().next();
+    assertNotNull( "DatasetConfig returned by getDatasetConfigs is null\n", view );
+    assertTrue( "DatasetConfig should have filter descriptions but doesnt\n", view.getAllFilterDescriptions().size()>0 );
     
     //clean up the meta_DatasetConfig table
     String metatable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, DatabaseDSConfigAdaptorTest.USER);
-    DatabaseDatasetConfigUtils.DeleteOldDSConfigEntriesFor(martJDataSource, metatable, config.getDataset(), config.getInternalName(), config.getDisplayName());
+    DatabaseDatasetConfigUtils.DeleteOldDSConfigEntriesFor(martJDataSource, metatable, view.getDataset(), view.getInternalName(), view.getDisplayName());
     
     assertTrue( "Could not remove dbAdaptor\n", adaptor.remove( dbAdaptor ));
     //assertTrue("getDatasetDisplayNames should return zero elements after remove\n", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue("getDatasetConfigs should return zero elements after remove\n", adaptor.getDatasetConfigs().length==0 );
+    assertTrue("getDatasetConfigs should return zero elements after remove\n", adaptor.getNumDatasetConfigs()==0 );
     
     adaptor.add( urlAdaptor );
     adaptor.add( dbAdaptor );
     adaptor.clear();
     //assertTrue( "adaptor should be empty after clear", adaptor.getDatasetDisplayNames().length==0 );
-    assertTrue( "adaptor should be empty after clear", adaptor.getDatasetConfigs().length==0 );
+    assertTrue( "adaptor should be empty after clear", adaptor.getNumDatasetConfigs()==0 );
     
     adaptor.add (urlAdaptor );
     adaptor.add( dbAdaptor );

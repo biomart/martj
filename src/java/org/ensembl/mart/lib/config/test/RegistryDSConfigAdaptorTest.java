@@ -25,6 +25,7 @@ import java.sql.Connection;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
@@ -39,11 +40,11 @@ public class RegistryDSConfigAdaptorTest extends Base {
   private final String TESTFILEPATH = "RegistryDSConfigAdaptorTestFile.xml";
   
   private final String TESTMARTREGISTRYFILE = "data/XML/testMartRegistryFile.xml";
-  private final String TESTMARTREGFILEINAME = "test_datasetconfig_registry_file";
+  private final String TESTMARTREGFILEINAME = "test_datasetview_registry_file";
   
   private final String TESTMARTREGISTRYDB = "data/XML/testMartRegistryDB.xml";
-  private final String TESTMARTREGDBINAME = "test_datasetconfig_db";
-  private final String TESTDBDSCONFIG = "data/XML/testDatasetConfigRegDB.xml";
+  private final String TESTMARTREGDBINAME = "test_datasetview_db";
+  private final String TESTDBDSVIEW = "data/XML/testDatasetConfigRegDB.xml";
   private final String USER = "ensro";
   
   private final String TESTMARTREGISTRYREGISTRY = "data/XML/testMartRegistryRegistry.xml";
@@ -67,7 +68,7 @@ public class RegistryDSConfigAdaptorTest extends Base {
     //set URL to load File, just to test if it has a DatasetConfig
     regadaptor.setRegistryURL(getURL(TESTMARTREGISTRYFILE));
     
-    assertEquals("File RegistryDSConfigAdaptor should have 1 DatasetConfig after setRegistryURL on empty\n", 1, regadaptor.getDatasetConfigs().length);
+    assertEquals("File RegistryDSConfigAdaptor should have 1 DatasetConfig after setRegistryURL on empty\n", 1, regadaptor.getNumDatasetConfigs());
     
     //testMartRegistryFile
     regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYFILE));
@@ -80,17 +81,17 @@ public class RegistryDSConfigAdaptorTest extends Base {
     
     regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB));
     //assertEquals("DB RegistryDSConfigAdaptor should be empty before store and update\n", 0, regadaptor.getDatasetInternalNames().length);
-    DatasetConfig dbdsconfig = new URLDSConfigAdaptor(getURL(TESTDBDSCONFIG)).getDatasetConfigs()[0];
-    DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, dbdsconfig, true);
+    DatasetConfig dbdsview = (DatasetConfig) new URLDSConfigAdaptor(getURL(TESTDBDSVIEW)).getDatasetConfigs().next();
+    DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, dbdsview, true);
     
     regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB));
     
     //assertEquals("DB RegistryDSConfigAdaptor should have 1 DatasetConfig after store, recreate\n", 1, regadaptor.getDatasetDisplayNames().length);
-    assertEquals("DB RegistryDSConfigAdaptor Dataset internalName is incorrect\n", TESTMARTREGDBINAME, regadaptor.getDatasetConfigs()[0].getInternalName());
+    assertEquals("DB RegistryDSConfigAdaptor Dataset internalName is incorrect\n", TESTMARTREGDBINAME, ((DatasetConfig) regadaptor.getDatasetConfigs().next()).getInternalName());
     
     //testMartRegistryRegistry
     regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYREGISTRY));
-    assertEquals("Registry RegistryDSConfigAdaptor should have 1 DatasetConfig\n", 1, regadaptor.getDatasetConfigs().length);
+    assertEquals("Registry RegistryDSConfigAdaptor should have 1 DatasetConfig\n", 1, regadaptor.getNumDatasetConfigs());
     //assertEquals("Registry RegistryDSConfigAdaptor Dataset internalName is incorrect\n", TESTMARTREGISTRYREGINAME, regadaptor.getDatasetInternalNames()[0]);
     
 
@@ -111,22 +112,20 @@ public class RegistryDSConfigAdaptorTest extends Base {
     //testMartRegistryComposite
     regadaptor = new RegistryDSConfigAdaptor( getURL( TESTMARTREGISTRYCOMPOSITE ) );
     
-    assertEquals("Composite RegistryDSConfigAdaptor should have 3 DatasetConfigs\n", 3, regadaptor.getDatasetConfigs().length);
-    assertTrue("Composite RegistryDSConfigAdaptor should support File DatasetConfig internalName\n", regadaptor.supportsInternalName(TESTMARTREGFILEINAME));
-    assertTrue("Composite RegistryDSConfigAdaptor should support DB DatasetConfig internalName\n", regadaptor.supportsInternalName(TESTMARTREGDBINAME));
-    assertTrue("Composite RegistryDSConfigAdaptor should support Registry DatasetConfig internalName\n", regadaptor.supportsInternalName(TESTMARTREGISTRYREGINAME));
+    assertEquals("Composite RegistryDSConfigAdaptor should have 3 DatasetConfigs\n", 3, regadaptor.getNumDatasetConfigs());
     
     //getMartRegistry
     MartRegistry mr = regadaptor.getMartRegistry();
     assertEquals("MartRegistry from Composite RegistryDSConfigAdaptor should have 3 MartLocations\n", 3, mr.getMartLocations().length);
     
-    //Store new datasetConfig to DB, and update
-    DatasetConfig newDatasetConfig = URLDSConfigAdaptorTest.getSampleDSConfigAdaptor().getDatasetConfigs()[0];
+    //Store new datasetView to DB, and update
+    DatasetConfigIterator dsvi = URLDSConfigAdaptorTest.getSampleDSConfigAdaptor().getDatasetConfigs();
+    assertTrue("URLDSConfigAdaptor should have one DatasetConfig\n", dsvi.hasNext());
+    DatasetConfig newDatasetConfig = (DatasetConfig) dsvi.next();
     DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, newDatasetConfig, true);
     
     regadaptor.update();
-    assertEquals("Composite RegistryDSConfigAdaptor should contain 4 DatasetConfigs after store and update\n", 4, regadaptor.getDatasetConfigs().length);
-    assertTrue("Composite RegistryDSConfigAdaptor should now support newDatasetConfig after store and update\n", regadaptor.supportsInternalName(newDatasetConfig.getInternalName()));
+    assertEquals("Composite RegistryDSConfigAdaptor should contain 4 DatasetConfigs after store and update\n", 4, regadaptor.getNumDatasetConfigs());
 
 //TODO: sameness issue    
 //    // new registry, no URL

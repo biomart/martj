@@ -40,7 +40,7 @@ import org.ensembl.mart.util.BigPreferences;
 public class DatabaseDSConfigAdaptorTest extends Base {
 	private Logger logger = Logger.getLogger(DatabaseDSConfigAdaptorTest.class.getName());
 	public static final String USER = "test";
-	private static final String MODTESTDATASETCONFIGFILE = "data/XML/testDatasetConfigMod.xml";
+	private static final String MODTESTDATASETVIEWFILE = "data/XML/testDatasetConfigMod.xml";
 
 	/**
 	 * Returns an instance of a DatabaseDSConfigAdaptor from the given DataSource, for
@@ -72,7 +72,7 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 
 		DatabaseDSConfigAdaptor refdbdsva = getSampleDatasetConfigAdaptor(martJDataSource);
 
-		assertTrue("meta_DatasetConfig_test must be empty for test to run\n", refdbdsva.getDatasetConfigs().length == 0);
+		assertTrue("meta_DatasetConfig_test must be empty for test to run\n", refdbdsva.getNumDatasetConfigs() == 0);
 
 		DatasetConfig refdsv = DatasetConfigXMLUtilsTest.TestDatasetConfigInstance(false);
 		byte[] refDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(refdsv);
@@ -81,11 +81,11 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 
 		refdbdsva.update();
 
-		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after store and update\n", refdbdsva.getDatasetConfigs().length == 1);
+		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after store and update\n", refdbdsva.getNumDatasetConfigs() == 1);
 //		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig internalName after store and update\n", refdbdsva.getDatasetInternalNames().length == 1);
 //		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig displayName after store and update\n", refdbdsva.getDatasetDisplayNames().length == 1);
 
-		DatasetConfig ndsv = refdbdsva.getDatasetConfigs()[0];
+		DatasetConfig ndsv = (DatasetConfig) refdbdsva.getDatasetConfigs().next();
 
 		//use assertSame, as this tests the object reference.  Does not test actual equality, as this may be a stub DatasetConfig
 //		assertSame(
@@ -105,17 +105,17 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 //		assertTrue("DatabaseDSConfigAdaptor should support displayName of reference DatasetConfig\n", refdbdsva.supportsDisplayName(refdsv.getDisplayName()));
 
 		DatasetConfig modDSV =
-			DatasetConfigXMLUtils.XMLStreamToDatasetConfig(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(MODTESTDATASETCONFIGFILE), false);
+			DatasetConfigXMLUtils.XMLStreamToDatasetConfig(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(MODTESTDATASETVIEWFILE), false);
 		modDSV.setMessageDigest(DatasetConfigXMLUtils.DatasetConfigToMessageDigest(modDSV));
 
 		DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, modDSV, true);
 		refdbdsva.update();
 
-		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after mod, store and update\n", refdbdsva.getDatasetConfigs().length == 1);
+		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after mod, store and update\n", refdbdsva.getNumDatasetConfigs() == 1);
 //		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig internalName after mod, store and update\n", refdbdsva.getDatasetInternalNames().length == 1);
 //		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig displayName after mod, store and update\n", refdbdsva.getDatasetDisplayNames().length == 1);
 
-		DatasetConfig newestDSV = refdbdsva.getDatasetConfigs()[0];
+		DatasetConfig newestDSV = (DatasetConfig) refdbdsva.getDatasetConfigs().next();
 
 		assertTrue(
 			"DatasetConfig in DatabaseDatasetConfigAdaptor after mod, store, and update should equal modified DatasetConfig loaded in from file system based on message digest\n",
@@ -129,11 +129,11 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 		assertTrue("Could not removeDatasetConfig\n", refdbdsva.removeDatasetConfig(newestDSV));
 //		assertTrue("Adaptor should be empty after removeDatasetConfig\n", refdbdsva.getDatasetInternalNames().length == 0);
 //		assertTrue("Adaptor should be empty after removeDatasetConfig\n", refdbdsva.getDatasetDisplayNames().length == 0);
-		assertTrue("Adaptor should be empty after removeDatasetConfig\n", refdbdsva.getDatasetConfigs().length == 0);
+		assertTrue("Adaptor should be empty after removeDatasetConfig\n", refdbdsva.getNumDatasetConfigs() == 0);
 
 		refdbdsva.update();
 
-		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after removeDatasetConfig and update\n", refdbdsva.getDatasetConfigs().length == 1);
+		assertTrue("DatabaseDSConfigAdaptor should have 1 DatasetConfig after removeDatasetConfig and update\n", refdbdsva.getNumDatasetConfigs() == 1);
 //		assertTrue(
 //			"DatabaseDSConfigAdaptor should have 1 DatasetConfig internalName after removeDatasetConfig and update\n",
 //			refdbdsva.getDatasetInternalNames().length == 1);
