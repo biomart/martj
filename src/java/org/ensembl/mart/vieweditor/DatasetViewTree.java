@@ -246,7 +246,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 				    Enable enable = new Enable();
 				    enable.setAttribute("ref", "new");
 				    insert(enable, "Enable");
-				}else if (e.getActionCommand().equals("add push action")) {
+				}else if (e.getActionCommand().equals("insert push action")) {
+					PushAction pa = new PushAction();
+					pa.setAttribute("ref", "new");
+					insert(pa, "PushAction");				    
+				}else if (e.getActionCommand().equals("automate push action")) {
 				    addPushAction();  
 				}else if (e.getActionCommand().equals("make drop down")) {
 				    makeDropDown();       
@@ -481,11 +485,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert option", "make drop down", "insert enable", "automate push action", "delete", "save","save as"};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
-					menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","add push action", "delete", "save","save as"};            
+					menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert push action", "automate push action", "delete", "save","save as"};            
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
-			menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","delete", "save","save as"};
+			menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert push action", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","delete", "save","save as"};
 
