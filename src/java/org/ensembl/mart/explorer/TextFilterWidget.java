@@ -152,11 +152,15 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
    */
   public void actionPerformed(ActionEvent e) {
 
-    if (filter != null)
+    String value = textField.getText();
+
+    // Do nothing if value hasn't changed
+    if ( filter != null && filter.getValue().equals( value ) ) 
+      return;
+
+    if (filter != null ) 
       query.removeFilter(filter);
     filter = null;
-
-    String value = textField.getText();
 
     // remove filter
     if (value != null && !"".equals(value)) {
