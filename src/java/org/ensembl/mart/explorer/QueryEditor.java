@@ -303,7 +303,7 @@ public class QueryEditor
     //editor.showDatasetOptions();
     
    // TODO support programmatically selecting homosapiens ensembl gene option
-   Option o = config.getLayout().getOptionByName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
+   Option o = config.getLayout().getOptionByInternalName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
     editor.datasetSelectionPage.setOption( o );
     
 	}

@@ -503,7 +503,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param internalName - String name of the requested Option.   * 
 	 * @return Option object named by internalName
 	 */
-	public Option getOptionByName(String internalName) {
+	public Option getOptionByInternalName(String internalName) {
 		if (uiOptionNameMap.containsKey(internalName))
 			return (Option) uiOptions.get(
 				(Integer) uiOptionNameMap.get(internalName));
@@ -652,7 +652,7 @@ public class FilterDescription extends QueryFilterSettings {
 			String supername = iname_info[0];
 			String refname = iname_info[1];
 
-			Option superOption = getOptionByName(supername);
+			Option superOption = getOptionByInternalName(supername);
 			PushAction[] pos = superOption.getPushActions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
@@ -679,7 +679,7 @@ public class FilterDescription extends QueryFilterSettings {
 		} else {
 			//subOption has legalQualifiers
 			if (containsOption(internalName)) {
-				Option option = getOptionByName(internalName);
+				Option option = getOptionByInternalName(internalName);
 				String opquals = option.getLegalQualifiers();
 
 				if (opquals != null && opquals.length() > 0) {
@@ -713,7 +713,7 @@ public class FilterDescription extends QueryFilterSettings {
 			String supername = iname_info[0];
 			String refname = iname_info[1];
 
-			Option superOption = getOptionByName(supername);
+			Option superOption = getOptionByInternalName(supername);
 			PushAction[] pos = superOption.getPushActions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
@@ -749,7 +749,7 @@ public class FilterDescription extends QueryFilterSettings {
 			}
 		} else {
 			if (containsOption(internalName)) {
-				Option[] ops = getOptionByName(internalName).getOptions();
+				Option[] ops = getOptionByInternalName(internalName).getOptions();
 
 				for (int i = 0, n = ops.length; i < n; i++) {
 					Option option = ops[i];

@@ -136,7 +136,7 @@ public class FilterCollection extends BaseConfigurationObject {
 						FilterDescription element = (FilterDescription) iter.next();
 
 						if (element.containsOption(testRefName)) {
-							Option superOption = element.getOptionByName(testRefName);
+							Option superOption = element.getOptionByInternalName(testRefName);
 							
 							PushAction[] pos = superOption.getPushActions();
 							for (int i = 0, n = pos.length; i < n; i++) {
