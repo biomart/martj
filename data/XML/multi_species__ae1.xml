@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
+  <DatasetView description="ArrayExpress Experiment Mart Dataset" displayName="Array Express__Experiment" internalName="ae1" dataset="multi_species_ae1">
+    
+    <StarBase>multi_ae1_experiment</StarBase>
+    <StarBase>multi_ae1_assay</StarBase>
+    <StarBase>multi_ae1_sample</StarBase>
+    
+    <!--these need to be in this order for the atts to work -->
+    <PrimaryKey>experiment_id</PrimaryKey>	
+    <PrimaryKey>assay_id</PrimaryKey>
+    <PrimaryKey>sample_id</PrimaryKey>
+    <PrimaryKey>array_id</PrimaryKey>
+
+    <FilterPage description="" displayName="Filter" internalName="default_page">
+      <FilterGroup description="Filter for AE Experimental Data" displayName="Experimental Data:" internalName="experimental">
+        <FilterCollection internalName="id_limit">
+          <FilterDescription internalName="id_limit_filters" type="list">
+            <Option description="Filter to include/exclude samples based on whether they do or don't have particualr data" displayName="Cell Line" field="has_CellLine" internalName="sample_has_CellLine" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Filter to include/exclude samples based on whether they do or don't have particualr data" displayName="Cell Density" field="has_CellDensity" internalName="sample_has_CellDensity" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Filter to include/exclude samples based on whether they do or don't have particualr data" displayName="Cell Type" field="has_CellType" internalName="sample_has_CellType" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          </FilterDescription>
+          <FilterDescription description="Experiment IDs" displayName="Experiment ID" field="experiment_id"  internalName="experiment_id" legal_qualifiers="in" qualifier="in" tableConstraint="experiment_main" type="text">
+          </FilterDescription>
+          <FilterDescription description="Number Features" displayName="Number Features" field="value"  internalName="array_number_features" legal_qualifiers=">" qualifier=">" type="text">
+          </FilterDescription>
+          <FilterDescription description="Assay type" displayName="Assay Type" field="assay_type"  internalName="assay_type" legal_qualifiers="=" qualifier="=" tableConstraint="_sample_main" type="text">
+          </FilterDescription>
+          <FilterDescription description="Sample species" displayName="Sample Species" field="sample_species"  internalName="sample_species" legal_qualifiers="=" qualifier="=" tableConstraint="main" type="text">
+          </FilterDescription>
+          <FilterDescription description="Organism Part" displayName="Organism Part" field="value"  internalName="sample_organism_part" legal_qualifiers="=" qualifier="=" tableConstraint="_sample_OrganismPart" type="text">
+          </FilterDescription>
+          <FilterDescription description="Experiment accessions" displayName="Experiment Accession" field="experiment_accession"  internalName="experiment_accession" legal_qualifiers="=" qualifier="=" type="text">
+          </FilterDescription>
+          <FilterDescription description="Experiment Performer" displayName="Experiment Performer" field="experiment_performer"  internalName="experiment_performer" legal_qualifiers="=" qualifier="=" type="text">
+          </FilterDescription>
+          <FilterDescription description="Array name" displayName="Array name" field="array_name"  internalName="array_name" legal_qualifiers="=" qualifier="=" type="text">
+          </FilterDescription>
+          <FilterDescription description="Array ID" displayName="Array ID" field="array_id"  internalName="array_id" legal_qualifiers="in" qualifier="in" type="text">
+          </FilterDescription>
+          
+        </FilterCollection>
+      </FilterGroup>
+    </FilterPage>
+
+    <AttributePage description="General Sample Features" displayName="Features" internalName="feature_page">
+
+      <AttributeGroup description="Attributes relating to the experiments, arrays, assays and samples." displayName="Sample" internalName="sample">
+
+         <AttributeCollection description="Attributes related to experiment." displayName="Experiment and Array Attributes:" internalName="experiment_attributes">
+           <AttributeDescription description="Experimental Factor" displayName="Experimental Factor" field="value" internalName="experiment_experimental_factor" tableConstraint="_experimentalFactor_dm" maxLength="12"/>
+           <AttributeDescription description="Experiment ID" displayName="Experiment ID" field="experiment_id" internalName="experiment_id" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Experiment Type" displayName="Experiment Type" field="experiment_type" internalName="experiment_type" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Experiment Accession" displayName="Experiment Accession" field="experiment_accession" internalName="experiment_accession" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Array Accession" displayName="Array Accession" field="array_accession" internalName="array_accession" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Array ID" displayName="Array ID" field="array_id" internalName="array_id" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Array Type" displayName="Array Type" field="array_type" internalName="array_type" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Experiment Performer" displayName="Experiment Performer" field="experiment_performer" internalName="experiment_performer" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Experiment Lab" displayName="Experiment Lab" field="experiment_lab" internalName="experiment_lab" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Array Name" displayName="Array Name" field="array_name" internalName="array_name" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Array Provider" displayName="Array Provider" field="array_provider" internalName="array_provider" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Number of Features" displayName="Number of Features" field="value" internalName="array_number_features" tableConstraint="_numberOfFeatures_dm" maxLength="12"/>
+         </AttributeCollection>
+         <AttributeCollection description="Attributes related to assay." displayName="Assay Attributes:" internalName="assay_attributes">
+           <AttributeDescription description="Assay ID" displayName="Assay ID" field="assay_id" internalName="assay_id" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Assay Type" displayName="Assay Type" field="assay_type" internalName="assay_type" tableConstraint="main" maxLength="12"/>
+           <AttributeDescription description="Assay Compound" displayName="Assay Compound" field="value" internalName="assay_compound" tableConstraint="_compound_dm" maxLength="12"/>
+         </AttributeCollection>
+         <AttributeCollection description="Attributes related to sample." displayName="sample Attributes:" internalName="sample_attributes" maxSelect="3">
+          
+          <AttributeDescription description="Sample ID" displayName="Sample ID" field="sample_id" internalName="sample_id" tableConstraint="main" maxLength="12"/>
+         <AttributeDescription description="Sample Type" displayName="Sample Type" field="sample_type" internalName="sample_type" tableConstraint="main" maxLength="12"/>
+         
+        <AttributeDescription description="Sample Species" displayName="Sample Species" field="sample_species" internalName="sample_species" tableConstraint="main" maxLength="12"/>
+        
+          <AttributeDescription description="Cell Line" displayName="Cell Line" field="value" internalName="sample_cell_line" tableConstraint="_CellLine_dm" maxLength="12"/>
+          <AttributeDescription description="Organism Part" displayName="Organism Part" field="value" internalName="sample_organism_part" tableConstraint="_OrganismPart_dm" maxLength="12"/>
+          <AttributeDescription description="Treatment Compound" displayName="Treatment Compound" field="value" internalName="sample_treatment_compound" tableConstraint="_treatmentCompound_dm" maxLength="12"/>
+          <AttributeDescription description="Sample Sex" displayName="Sample Sex" field="value" internalName="sample_sex" tableConstraint="_Sex_dm" maxLength="12"/>
+          <AttributeDescription description="Developmental Stage" displayName="Developmental Stage" field="value" internalName="sample_developmental_stage" tableConstraint="_DevelopmentalStage_dm" maxLength="12"/>
+          <AttributeDescription description="Cell Type" displayName="Cell Type" field="value" internalName="sample_cell_type" tableConstraint="_CellType_dm" maxLength="12"/>
+          <AttributeDescription description="Cell Density" displayName="Cell Density" field="value" internalName="sample_cell_density" tableConstraint="_CellDensity_dm" maxLength="12"/>
+          
+        </AttributeCollection>
+      </AttributeGroup>
+    </AttributePage>
+  </DatasetView>
