@@ -36,7 +36,8 @@
                    %desc_data;
                    type               CDATA #REQUIRED
                    field          CDATA #IMPLIED
-                   qualifiers          CDATA #IMPLIED
+                   qualifier      CDATA #IMPLIED
+                   legal_qualifiers          CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED
                    handler            CDATA #IMPLIED>
 
@@ -81,7 +82,8 @@
 		         ref           CDATA #IMPLIED
                  type          CDATA #IMPLIED
                  field     CDATA #IMPLIED
-                 qualifiers     CDATA #IMPLIED
+                 qualifier CDATA #IMPLIED
+                 legal_qualifiers     CDATA #IMPLIED
                  tableConstraint    CDATA #IMPLIED
                  handler        CDATA #IMPLIED>
 
