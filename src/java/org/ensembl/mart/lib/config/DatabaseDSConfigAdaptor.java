@@ -517,9 +517,9 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   }
 
   /**
-   * Allows client to store a single DatasetConfig object as a DatasetView.dtd compliant XML document into a Mart Database.
+   * Allows client to store a single DatasetConfig object as a DatasetConfig.dtd compliant XML document into a Mart Database.
    * Client can choose whether to compress (GZIP) the resulting XML before it is stored in the Database.
-   * @param ds -- DataSource of the Mart Database where the DatasetView.dtd compliant XML is to be stored.
+   * @param ds -- DataSource of the Mart Database where the DatasetConfig.dtd compliant XML is to be stored.
    * @param user -- RDBMS user for meta_configuration_[user] table to store the document.  If null, or if meta_configuration_[user] does not exist, meta_configuration will be the target of the document.
    * @param dsv -- DatasetConfig object to store
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.

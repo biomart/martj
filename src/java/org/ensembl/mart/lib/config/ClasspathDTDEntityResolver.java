@@ -53,10 +53,10 @@ public class ClasspathDTDEntityResolver implements EntityResolver {
    * 'classpath:' to get the entity represented in the path component of the URL from the martj.jar file. 
    * If the systemID does not contain classpath: as the protocal, then it returns
    * a null InputSource, allowing JDOM to locate the requested Entity in its default manner.
-   * (eg. if you want the system to fetch DatasetView.dtd from the martj.jar use 'classpath:DatasetView.dtd', 
-   * but if you want it to fetch 'DatasetView.dtd' from the file system, or some other URL, 
-   * use 'file:DatasetView.dtd', 'DatasetView.dtd', 
-   * or 'http://url_to_DatasetView.dtd'). 
+   * (eg. if you want the system to fetch DatasetConfig.dtd from the martj.jar use 'classpath:DatasetConfig.dtd', 
+   * but if you want it to fetch 'DatasetConfig.dtd' from the file system, or some other URL, 
+   * use 'file:DatasetConfig.dtd', 'DatasetConfig.dtd', 
+   * or 'http://url_to_DatasetConfig.dtd'). 
    * 
 	 * @see org.xml.sax.EntityResolver#resolveEntity(java.lang.String, java.lang.String)
 	 */

@@ -5,8 +5,8 @@
                    hidden      CDATA #IMPLIED">
 
                    
-<!ELEMENT DatasetView (Option*, DefaultFilter*, MainTable+, Key+, FilterPage+, AttributePage+)>
-<!ATTLIST DatasetView %desc_data;
+<!ELEMENT DatasetConfig (Option*, DefaultFilter*, MainTable+, Key+, FilterPage+, AttributePage+)>
+<!ATTLIST DatasetConfig %desc_data;
                       dataset CDATA #REQUIRED>
 
 <!ELEMENT MainTable (#PCDATA)>

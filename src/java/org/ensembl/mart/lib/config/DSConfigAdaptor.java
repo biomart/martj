@@ -22,7 +22,7 @@ import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
  * Interface for Objects providing access to one or more DatasetConfig Objects via
- * implimentation specific methods for accessing and parsing DatasetView.dtd compliant
+ * implimentation specific methods for accessing and parsing DatasetConfig.dtd compliant
  * documents from a target source.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>

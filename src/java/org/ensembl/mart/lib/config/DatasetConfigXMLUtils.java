@@ -56,8 +56,8 @@ public class DatasetConfigXMLUtils {
 	public static String DEFAULTDIGESTALGORITHM = "MD5";
 
 	// element names
-	private static final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
-	private static final String DATASETCONFIG = "DatasetView";
+	private static final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetConfig.dtd";
+	private static final String DATASETCONFIG = "DatasetConfig";
 	private static final String STARBASE = "MainTable";
 	private static final String PRIMARYKEY = "Key";
 	private static final String ENABLE = "Enable";
@@ -102,9 +102,9 @@ public class DatasetConfigXMLUtils {
   }
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object.
+	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object.
 	 * 
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
 	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
@@ -113,10 +113,10 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object,
-	 * with optional validation of the XML against the DatasetView.dtd contained in the Java CLASSPATH.
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
-	 * @param validate -- if true, XML is validated against the DatasetView.dtd contained in the Java CLASSPATH.
+	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object,
+	 * with optional validation of the XML against the DatasetConfig.dtd contained in the Java CLASSPATH.
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
+	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
 	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions.
 	 */
@@ -126,9 +126,9 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object, with
+	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object, with
 	 * a precomputed Message Digest using a given Algorithm.
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
 	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
@@ -142,10 +142,10 @@ public class DatasetConfigXMLUtils {
 	 * Takes an InputStream containing XML, and creates a DatasetConfig object.
 	 * Optional parameters exist for creating a DatasetConfig with a message digest
 	 * created by a sun.security.MessageDigest object, and for validating the xml against
-	 * the DatasetView.dtd stored in the java CLASSPATH. 
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
+	 * the DatasetConfig.dtd stored in the java CLASSPATH. 
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
-	 * @param validate -- if true, XML is validated against the DatasetView.dtd contained in the Java CLASSPATH.
+	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
 	 * @return
 	 * @throws ConfigurationException for all underlying Exceptions
 	 * @see java.security.MessageDigest
@@ -156,9 +156,9 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a JDOM Document.
-	 * @param xmlinput -- InputStream containin DatasetView.dtd compliant XML
-	 * @param validate -- if true, JDOM validates the XML against the DatasetView.dtd in the CLASSPATH
+	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a JDOM Document.
+	 * @param xmlinput -- InputStream containin DatasetConfig.dtd compliant XML
+	 * @param validate -- if true, JDOM validates the XML against the DatasetConfig.dtd in the CLASSPATH
 	 * @return org.jdom.Document
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
@@ -180,9 +180,9 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes a org.jdom.Document Object representing a DatasetView.dtd compliant
+	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
 	 * XML document, and returns a DatasetConfig object.
-	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
+	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
@@ -191,10 +191,10 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes a org.jdom.Document Object representing a DatasetView.dtd compliant
+	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
 	 * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
 	 * Message Digest are supplied, these are added to the DatasetConfig.
-	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
+	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @param digest -- a digest computed with the given digestAlgorithm
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
@@ -228,7 +228,7 @@ public class DatasetConfigXMLUtils {
 	 * Takes a reference to a DatasetConfig, and a JDOM Document, and parses the JDOM document to add all of the information
 	 * from the XML for a particular DatasetConfig object into the existing DatasetConfig reference passed into the method.
 	 * @param dsv -- DatasetConfig reference to be updated
-	 * @param doc -- Document containing DatasetView.dtd compliant XML for dsv
+	 * @param doc -- Document containing DatasetConfig.dtd compliant XML for dsv
 	 * @throws ConfigurationException when the internalName returned by the JDOM Document does not match
 	 *         that of the dsv reference, and for any other underlying Exception
 	 */
@@ -479,7 +479,7 @@ public class DatasetConfigXMLUtils {
 
 	/**
 	 * Writes a JDOM Document as XML to a given File.  Handles opening and closing of the OutputStream.
-	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
+	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @param file -- File to write.
 	 * @throws ConfigurationException for underlying Exceptions.
 	 */
@@ -500,10 +500,10 @@ public class DatasetConfigXMLUtils {
 	}
 
 	/**
-	 * Takes a JDOM Document and writes it as DatasetView.dtd compliant XML to a given OutputStream.
+	 * Takes a JDOM Document and writes it as DatasetConfig.dtd compliant XML to a given OutputStream.
 	 * Does NOT close the OutputStream after writing.  If you wish to write a Document to a File,
 	 * use DocumentToFile instead, as it handles opening and closing the OutputStream. 
-	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
+	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @param out -- OutputStream to write to, not closed after writing
 	 * @throws ConfigurationException for underlying IOException
 	 */
@@ -756,7 +756,7 @@ public class DatasetConfigXMLUtils {
 	 * Given a Document object, converts the given document to an DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM digest using the 
 	 * JDOM XMLOutputter writing to a java.security.DigestOutputStream.  This is the default method for calculating the MessageDigest 
 	 * of a DatasetConfig Object used in various places in the MartJ system.
-	 * @param doc -- Document object representing a DatasetView.dtd compliant XML document. 
+	 * @param doc -- Document object representing a DatasetConfig.dtd compliant XML document. 
 	 * @return byte[] digest algorithm
 	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
 	 * @see java.security.DigestOutputStream
@@ -770,7 +770,7 @@ public class DatasetConfigXMLUtils {
 	 * a digest using the JDOM XMLOutputter writing to a DigestOutputStream.  This is the default
 	 * method for calculating the MessageDigest of a DatasetConfig object used in various places in the MartJ system.
 	 * If the digestAlgorithm is null, defaults to DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM.
-	 * @param doc -- Document object representing a DatasetView.dtd compliant XML document.
+	 * @param doc -- Document object representing a DatasetConfig.dtd compliant XML document.
 	 * @param digestAlgorithm -- Algorithm to use to compute the MessageDigest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
 	 * @return byte[] digest algorithm
 	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
@@ -831,7 +831,7 @@ public class DatasetConfigXMLUtils {
 	 * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
 	 * It does this by first converting the InputStream into a DatasetConfig Object (using XMLStreamToDatasetConfig(is)), and then calculating the 
 	 * digest on the resulting DatasetConfig Object (using DatasetConfigToMessageDigest(dsv, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM)).
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
@@ -846,7 +846,7 @@ public class DatasetConfigXMLUtils {
 	 * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
 	 * It does this by first converting the InputStream into a DatasetConfig Object (using XMLStreamToDatasetConfig(is)), and then calculating the 
 	 * digest on the resulting DatasetConfig Object (using DatasetConfigToMessageDigest(dsv, digestAlgorithm)).
-	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
+	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
 	 * @param digestAlgorithm -- MessageDigest Algorithm to compute the digest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions

@@ -46,9 +46,9 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   private String adaptorName;
 
   /**
-   * Construct a DSConfigAdaptor from a url containing a DatasetView.dtd compliant XML Document.
+   * Construct a DSConfigAdaptor from a url containing a DatasetConfig.dtd compliant XML Document.
    * JDOM validation is set to false.
-   * @param url -- url containing a DatasetView.dtd compliant XML document
+   * @param url -- url containing a DatasetConfig.dtd compliant XML document
    * @throws ConfigurationException for all underlying Exceptions
    */
   public URLDSConfigAdaptor(URL url) throws ConfigurationException {
@@ -56,10 +56,10 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   }
 
   /**
-   * Construct a DSConfigAdaptor from a url containing a DatasetView.dtd compliant XML Document,
+   * Construct a DSConfigAdaptor from a url containing a DatasetConfig.dtd compliant XML Document,
    * with optional JDOM validation.
-   * @param url -- url containing a DatasetView.dtd compliant XML document
-   * @param validate -- if true, JDOM validates the Document against the DatasetView.dtd contained in the CLASSPATH
+   * @param url -- url containing a DatasetConfig.dtd compliant XML document
+   * @param validate -- if true, JDOM validates the Document against the DatasetConfig.dtd contained in the CLASSPATH
    * @throws ConfigurationException for all underlying Exceptions.
    */
   public URLDSConfigAdaptor(URL url, boolean validate) throws ConfigurationException {
@@ -164,7 +164,7 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   }
 
   /**
-   * Writes a DatasetConfig object as DatasetView.dtd compliant XML to a File.
+   * Writes a DatasetConfig object as DatasetConfig.dtd compliant XML to a File.
    * @param dsv -- DatasetConfig object to store to the file system
    * @param file -- File to write XML
    * @throws ConfigurationException for underlying Exceptions
