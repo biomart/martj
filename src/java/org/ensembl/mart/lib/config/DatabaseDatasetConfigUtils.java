@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import javax.swing.JOptionPane;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -3090,20 +3091,14 @@ System.out.println("Going to null ");
 
     PushAction[] pas = ops[0].getPushActions();
 
-
- PushAction[] pas2 = null;
+    PushAction[] pas2 = null;
     if (pas.length > 0){
       Option[] paOps = pas[0].getOptions();
       if (paOps.length > 0)
         pas2 = paOps[0].getPushActions();
     }
 
-
-
-
-
-
-
+    
     for (int i = 0; i < ops.length; i++) {
       fd1.removeOption(ops[i]);
     }
@@ -3156,6 +3151,10 @@ System.out.println("Going to null ");
     String pushField = fd2.getField();
     String pushInternalName = fd2.getInternalName();
     String pushTableName = fd2.getTableConstraint();
+
+	String orderSQL = JOptionPane.showInputDialog("ORDER BY FOR " + pushInternalName + " :");		
+	
+
     // can add push actions to existing push actions so need to know the class of the node
     String className = bo.getClass().getName();
     String field;
@@ -3178,12 +3177,13 @@ System.out.println("Going to null ");
       options = pa1.getOptions();
     }
 
+
     for (int i = 0; i < options.length; i++) {
       Option op = options[i];
       String opName = op.getInternalName();
       PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName);
 
-      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName));
+      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
 
       if (pa.getOptions().length > 0) {
         //System.out.println("ADDING PA\t" + op.getInternalName());
@@ -3328,11 +3328,16 @@ System.out.println("Going to null ");
     return retOptions;
   }
 
-  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue)
+  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL)
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
     Connection conn = dsource.getConnection();
+    if (orderSQL.equals(""))
+      orderSQL = "\" ORDER BY " + columnName;
+    else
+      orderSQL = "\" ORDER BY " + orderSQL;
+        
     String sql =
       "SELECT "
         + columnName
@@ -3342,8 +3347,7 @@ System.out.println("Going to null ");
         + whereName
         + "=\""
         + whereValue
-        + "\" ORDER BY "
-        + columnName;
+        + orderSQL;
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
     String value;
