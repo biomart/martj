@@ -20,9 +20,12 @@ package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ContainerAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
@@ -31,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -114,12 +118,15 @@ public class QueryEditor
 
 		// don't use default FlowLayout manager because it won't resize components if
 		// QueryEditor is resized.
-		setLayout(new BorderLayout());
+		setLayout( new BorderLayout() );
+    
+
 
 		addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				resizeSplits();
 			}
+             
 		});
 
 		this.martConfiguration = config;
@@ -142,12 +149,23 @@ public class QueryEditor
 	 * the relative size of the panes.
 	 */
 	private void resizeSplits() {
-		Dimension parentSize = getParent().getSize();
-		top.setDividerLocation(TREE_WIDTH);
-		topAndBottom.setDividerLocation(1 - TREE_WIDTH);
+
+    // must set divider by explicit values rather than
+    // proportions because the proportion approach fails
+    // on winxp jre 1.4 when the component is FIRST added.
+    // (It does work when the component is resized).
+    Dimension size = getParent().getSize();
+    int treeWidth = (int)(TREE_WIDTH * size.width);
+    int treeHeight = (int)((1 - TREE_WIDTH) * size.height);
+    top.setDividerLocation( treeWidth );
+    topAndBottom.setDividerLocation( treeHeight );
+
+//    top.setDividerLocation( TREE_WIDTH );
+//    topAndBottom.setDividerLocation( 1 - TREE_WIDTH );
+
 		// this doesn't actually set the size to the minumum but
 		// cause it to resize correctly. 
-		inputPanel.setPreferredSize(MINIMUM_SIZE);
+		//inputPanel.setMinimumSize(MINIMUM_SIZE);
 	}
 
 	private void showInputPage(InputPage page) {
@@ -260,11 +278,11 @@ public class QueryEditor
 
 		QueryEditor editor = new QueryEditor(config);
 		JFrame f = new JFrame("Query Editor");
-		f.getContentPane().add(editor);
+    f.getContentPane().add(editor);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//f.pack();
-		f.setSize(950, 750);
-		f.setVisible(true);
+    f.setSize(950, 750);
+    f.setVisible(true);
+    
 	}
 
 	/**
@@ -291,6 +309,7 @@ public class QueryEditor
 						"Change Attributes",
 						JOptionPane.YES_NO_OPTION);
 
+        // undo if user changes mind
 				if (option != JOptionPane.OK_OPTION) {
 
 					datasetSelectionPage.removePropertyChangeListener(this);
@@ -304,7 +323,7 @@ public class QueryEditor
 			lastDatasetOption = (Option)newValue;
 
 			datasetChanged(  martConfiguration.getDatasetByName( lastDatasetOption.getRef() ) );
-
+      treeModel.nodeChanged( datasetSelectionPage.getNode() );
 		}
 
 		if (evt.getSource() == query) {
@@ -473,5 +492,6 @@ public class QueryEditor
 	public MartConfiguration getMartConfiguration() {
 		return martConfiguration;
 	}
+
 
 }
