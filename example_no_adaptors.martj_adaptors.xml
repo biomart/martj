@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
+<MartRegistry>
+
+    <!-- 
+
+    It is possible to override the default initialisation behaviour of
+    MartExplorer by creating a ".martj_adaptor.xml" file in your home
+    directory.
+
+    By copying this file to your home directory as
+    ".martj_adaptors.xml" you will prevent the default initialisation
+    file from being used.
+
+    Note that MartExplorer remembers any datasources and files that
+    you loaded before so you will need to remove these via "Settings |
+    Adaptors | Delete All".
+
+
+    --> 
+
+
+
+
+</MartRegistry>
