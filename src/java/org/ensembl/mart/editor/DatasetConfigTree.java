@@ -501,6 +501,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 			menuItems = new String[]{"copy", "cut", "paste", "delete", "hide toggle","insert option", "insert push action"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "delete", "hide toggle"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
+					menuItems = new String[]{"copy", "cut", "paste", "delete"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
+					menuItems = new String[]{"copy", "cut", "paste", "delete"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
+					menuItems = new String[]{"copy", "cut", "paste", "delete"};
 
         for (int i = 0; i < menuItems.length; i++) {
             JMenuItem menuItem = new JMenuItem(menuItems[i]);
@@ -562,6 +568,14 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
             copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new PushAction((PushAction) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
+			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new SeqModule((SeqModule) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
+			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Importable((Importable) editingNode.getUserObject()));
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
+			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Exportable((Exportable) editingNode.getUserObject()));
+
+
         DatasetConfigTreeNodeSelection ss = new DatasetConfigTreeNodeSelection(copiedNode);
         //clipboard.setContents(ss, this);
         //try to set owner as the MartEditor object so can copy and paste between trees
@@ -634,7 +648,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 					while (children.hasMoreElements()){
 						childNode = (DatasetConfigTreeNode) children.nextElement();
 						BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
-							
 						BaseNamedConfigurationObject sel = (BaseNamedConfigurationObject) selnode.getUserObject();
 						if (sel.getInternalName().equals(ch.getInternalName())){
 						   sel.setInternalName(sel.getInternalName() + "_copy");

@@ -78,7 +78,19 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
                 config = (DatasetConfig) parentNode.getUserObject();
                 config.addAttributePage((AttributePage) editingNode.getUserObject());
 
-            } 
+            } else if (childClassName.equals("org.ensembl.mart.lib.config.SeqModule")) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.addSeqModule((SeqModule) editingNode.getUserObject());
+
+            } else if (childClassName.equals("org.ensembl.mart.lib.config.Importable")) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.addImportable((Importable) editingNode.getUserObject());
+
+			} else if (childClassName.equals("org.ensembl.mart.lib.config.Exportable")) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.addExportable((Exportable) editingNode.getUserObject());
+
+			}  
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
                 FilterPage fp = (FilterPage) parentNode.getUserObject();
@@ -289,12 +301,19 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
             if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
                 config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                 config.removeFilterPage((FilterPage) node.getUserObject());
-
             } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
                 config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                 config.removeAttributePage((AttributePage) node.getUserObject());
-
-            }
+            } else if (child instanceof org.ensembl.mart.lib.config.SeqModule) {
+				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				config.removeSeqModule((SeqModule) node.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.Exportable) {
+				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				config.removeExportable((Exportable) node.getUserObject());
+			} else if (child instanceof org.ensembl.mart.lib.config.Importable) {
+				config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+				config.removeImportable((Importable) node.getUserObject());
+            }            
         } else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
             if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
                 FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

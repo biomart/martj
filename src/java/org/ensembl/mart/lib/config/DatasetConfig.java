@@ -411,6 +411,36 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Remove an Importable from the DatasetConfig.
+   * @param a -- Importable to be removed.
+   */
+  public void removeImportable(Importable a) {
+	lazyLoad();
+//	attributePageNameMap.remove(a.getInternalName());
+	importables.remove(a);
+  }
+  
+  /**
+   * Remove an Exportable from the DatasetConfig.
+   * @param a -- Exportable to be removed.
+   */
+  public void removeExportable(Exportable a) {
+	lazyLoad();
+//	attributePageNameMap.remove(a.getInternalName());
+	exportables.remove(a);
+  }
+  
+  /**
+   * Remove an SeqModule from the DatasetConfig.
+   * @param a -- SeqModule to be removed.
+   */
+  public void removeSeqModule(SeqModule a) {
+	lazyLoad();
+//	attributePageNameMap.remove(a.getInternalName());
+	seqModules.remove(a);
+  }
+
+  /**
    * Insert an AttributePage at a particular Position within the List
    * of AttributePages contained in the DatasetConfig. AttributePages at
    * or after the given position are shifted right.
