@@ -1704,9 +1704,9 @@ def main(args, quitOnExit):
                 print "ERROR: No logging file URL specified."
                 print usage
                 System.exit(0)
-        else:
-            BasicConfigurator.configure()
-            Logger.getRoot().setLevel(Level.WARN)
+    else:
+        BasicConfigurator.configure()
+        Logger.getRoot().setLevel(Level.WARN)
 
     if quitOnExit:
         closeAction = JFrame.EXIT_ON_CLOSE
