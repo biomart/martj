@@ -18,8 +18,10 @@
 
 package org.ensembl.mart.explorer.config;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -116,8 +118,8 @@ public class AttributeCollection {
 	}
 
 	/**
-	 * Set a group of UIAttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute or setUIAttribute
-	 * will add to what was added before.
+	 * Set a group of UIAttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute, setUIAttribute,
+	 * addUIDSAttribute or setUIDSAttributes will add to what was added before.
 	 * 
 	 * @param a an Array of UIAttributeDescription objects.
 	 */
@@ -131,26 +133,51 @@ public class AttributeCollection {
 	}
 
 	/**
-	 * Returns an array of UIAttributeDescription objects, in the order they were added.
+	 * Add a UIDSAttributeDescription to the AtttributeCollection.
 	 * 
-	 * @return array of UIAttributeDescription objects.
+	 * @param a a UIDSAttributeDescription object.
 	 */
-	public UIAttributeDescription[] getUIAttributeDescriptions() {
-		UIAttributeDescription[] a = new UIAttributeDescription[uiAttributes.size()];
-		uiAttributes.values().toArray(a);
-		return a;
+	public void addUIDSAttribute(UIDSAttributeDescription a) {
+		Integer aRankInt = new Integer(aRank);
+		uiAttributes.put(aRankInt, a);
+		uiAttributeNameMap.put(a.getInternalName(), aRankInt);
+		aRank++;
+	}
+
+	/**
+	 * Set a group of UIAttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute, setUIAttribute,
+	 * addUIDSAttribute or setUIDSAttributes will add to what was added before.
+	 * 
+	 * @param a an Array of UIAttributeDescription objects.
+	 */
+	public void setUIDSAttributes(UIDSAttributeDescription[] a) {
+		for (int i = 0, n = a.length; i < n; i++) {
+			Integer aRankInt = new Integer(aRank);
+			uiAttributes.put(aRankInt, a[i]);
+			uiAttributeNameMap.put(a[i].getInternalName(), aRankInt);
+			aRank++;
+		}
+	}
+	
+	/**
+	 * Returns a List of UIAttributeDescription/UIDSAttributeDescription objects, in the order they were added.
+	 * 
+	 * @return List of UIAttributeDescription objects.
+	 */
+	public List getUIAttributeDescriptions() {
+		return new ArrayList(uiAttributes.values());
 	}
 
 
 	/**
-		* Get a specific UIAttributeDescription, named by internalName.
+		* Get a specific UIAttributeDescription/ UIDSAttributeDescription, named by internalName.
 		*  
 		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription object
+		* @return Object requested, or null (one of UIAttributeDescription or UIDSAttributeDescription)
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public Object getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
-			return (UIAttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
+			return uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
 		else
 			return null;
 	}
@@ -174,7 +201,7 @@ public class AttributeCollection {
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", maxSelect=").append(maxSelect);
-		buf.append(", UIAttributeDescriptions=").append(uiAttributes);
+		buf.append(", AttributeDescriptions=").append(uiAttributes);
 		buf.append("]");
 
 		return buf.toString();
@@ -193,8 +220,11 @@ public class AttributeCollection {
 		tmp = (31 * tmp) + description.hashCode();
 		
 		for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
-			UIAttributeDescription element = (UIAttributeDescription) iter.next();
-			tmp = (31 * tmp) + element.hashCode();	
+			Object element = (Object) iter.next();
+			if (element instanceof UIAttributeDescription)
+			  tmp = (31 * tmp) + ( (UIAttributeDescription) element).hashCode();
+			else
+			  tmp = (31 * tmp) + ( (UIDSAttributeDescription) element).hashCode();	
 		}
 		
 		return tmp;

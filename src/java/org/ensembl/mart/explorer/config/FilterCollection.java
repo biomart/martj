@@ -253,8 +253,11 @@ public class FilterCollection {
 		tmp = (31 * tmp) + description.hashCode();
 
 		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-			UIFilterDescription element = (UIFilterDescription) iter.next();
-			tmp = (31 * tmp) + element.hashCode();
+			Object element = iter.next();
+			if (element instanceof UIFilterDescription) 
+			  tmp = (31 * tmp) + ( (UIFilterDescription) element).hashCode();
+			else
+			  tmp = (31 * tmp) + ( (UIDSFilterDescription) element).hashCode();
 		}
 
 		return tmp;

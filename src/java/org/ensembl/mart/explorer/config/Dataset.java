@@ -295,9 +295,9 @@ public class Dataset {
 		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		* 
 		* @param displayName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription object
+		* @return Object (either UIAttributeDescription or UIDSAttributeDescription)
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public Object getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -315,9 +315,7 @@ public class Dataset {
 	public boolean containsUIAttributeDescription(String internalName) {
 		boolean found = false;
 
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributePages.keySet().iterator();
 				iter.hasNext();
 				) {
@@ -328,6 +326,20 @@ public class Dataset {
 					found = true;
 					break;
 				}
+			}
+		}
+		else {
+			String lastAttName;
+			if (lastAtt instanceof UIAttributeDescription)
+			  lastAttName =  ((UIAttributeDescription) lastAtt).getInternalName();
+			else
+			  lastAttName =  ((UIDSAttributeDescription) lastAtt).getInternalName();
+			
+			if (lastAttName.equals(internalName))
+			  found = true;
+			else {
+				lastAtt = null;
+				found = containsUIAttributeDescription(internalName);
 			}
 		}
 		return found;
@@ -463,20 +475,18 @@ public class Dataset {
 	/**
 	 * Convenience Method to get all UIAttributeDescription objects in all Pages/Groups/Collections within a Dataset.
 	 * 
-	 * @return UIAttributeDescription[]
+	 * @return List of UIAttributeDescription/UIDSAttributeDescription objects
 	 */
-	public UIAttributeDescription[] getAllUIAttributeDescriptions() {
+	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
   	
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
 			AttributePage ap = (AttributePage) filterPages.get((Integer) iter.next());
   		
-			atts.addAll(Arrays.asList(ap.getAllUIAttributeDescriptions()));
+			atts.addAll(ap.getAllUIAttributeDescriptions());
 		}
 		
-		UIAttributeDescription[] a = new UIAttributeDescription[atts.size()];
-		atts.toArray(a);
-		return a;  	
+		return atts;  	
 	}
 
    /**
@@ -565,8 +575,8 @@ public class Dataset {
 	private List primaryKeys = new ArrayList();
 	private final String internalName, displayName, description;
 
-	// cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	// cache one UIAttributeDescription/UIDSAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private Object lastAtt = null;
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
 }

@@ -175,7 +175,7 @@ public class UIAttributeDescription {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
+		buf.append("[ UIAttributeDescription:");
 		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
 		buf.append(", fieldName=").append(fieldName);

@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -163,7 +162,7 @@ public final class AttributeGroup {
 		* @param internalName name of the requested UIAttributeDescription
 		* @return UIAttributeDescription object, or null
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public Object getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -181,9 +180,7 @@ public final class AttributeGroup {
 	public boolean containsUIAttributeDescription(String internalName){
 		boolean found = false;
 
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+    if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
 				AttributeCollection collection = (AttributeCollection) attributeCollections.get((Integer) iter.next());
 				if (collection.containsUIAttributeDescription(internalName)) {
@@ -191,28 +188,41 @@ public final class AttributeGroup {
 					found = true;
 					break;
 				}
-			}
+			}    	
+    }
+    else {
+    	String lastAttName;
+    	if (lastAtt instanceof UIAttributeDescription)
+    	  lastAttName =  ( (UIAttributeDescription) lastAtt).getInternalName();
+    	else
+			  lastAttName =  ( (UIDSAttributeDescription) lastAtt).getInternalName();
+			
+			if (lastAttName.equals(internalName))
+			  found = true;
+			else {
+			  lastAtt = null;
+			  found = containsUIAttributeDescription(internalName);
+			} 
 		}
 		return found;
 	}
 
   /**
-   * Convenience method. Returns all of the UIAttributeDescriptions contained in all of the AttributeCollections.
+   * Convenience method. Returns all of the UIAttributeDescription/UIDSAttributeDescription objects 
+   * contained in all of the AttributeCollections.
    * 
-   * @return UIAttributeDescription[]
+   * @return List of UIAttributeDescription/UIDSAttributeDescription objects
    */
-  public UIAttributeDescription[] getAllUIAttributeDescriptions() {
+  public List getAllUIAttributeDescriptions() {
   	List atts = new ArrayList();
   	
   	for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
   		AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
   		
-			atts.addAll(Arrays.asList(ac.getUIAttributeDescriptions()));
+			atts.addAll(ac.getUIAttributeDescriptions());
 		}
 		
-		UIAttributeDescription[] a = new UIAttributeDescription[atts.size()];
-		atts.toArray(a);
-		return a;
+		return atts;
   }
   
 	public String toString() {
@@ -253,6 +263,6 @@ public final class AttributeGroup {
 	private TreeMap attributeCollections = new TreeMap();
 	private Hashtable attributeCollectionNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	//cache one UIAttributeDescription/UIDSAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private Object lastAtt = null;
 }

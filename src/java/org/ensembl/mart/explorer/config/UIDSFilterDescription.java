@@ -157,8 +157,8 @@ public class UIDSFilterDescription {
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
-		buf.append("internalName=").append(internalName);
+		buf.append("[ UIDSFilterDescription:");
+		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", type=").append(type);

@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -162,9 +161,9 @@ public class AttributePage {
 		*  as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		*  
 		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription object, or null
+		* @return Object (either UIAttributeDescription or UIDSAttributeDescription), or null
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public Object getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -182,9 +181,7 @@ public class AttributePage {
 	public boolean containsUIAttributeDescription(String internalName){
 		boolean found = false;
 
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
 				AttributeGroup group = (AttributeGroup) attributeGroups.get((Integer) iter.next());
 				if (group.containsUIAttributeDescription(internalName)) {
@@ -192,6 +189,20 @@ public class AttributePage {
 					found = true;
 					break;
 				}
+			} 
+		}
+		else {
+			String lastAttName;
+			if (lastAtt instanceof UIAttributeDescription)
+			  lastAttName = ( (UIAttributeDescription) lastAtt).getInternalName();
+			else
+			  lastAttName = ( (UIDSAttributeDescription) lastAtt).getInternalName();
+			
+			if (lastAttName.equals(internalName))
+			  found = true;
+			else {
+				lastAtt = null;
+				found = containsUIAttributeDescription(internalName);			
 			}
 		}
 		return found;
@@ -200,20 +211,18 @@ public class AttributePage {
 	/**
 	 * Convenience method. Returns all of the UIAttributeDescriptions contained in all of the AttributeGroups.
 	 * 
-	 * @return UIAttributeDescription[]
+	 * @return List of UIAttributeDescription/UIDSAttributeDescription objects
 	 */
-	public UIAttributeDescription[] getAllUIAttributeDescriptions() {
+	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
   	
 		for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
 			AttributeGroup ag = (AttributeGroup) attributeGroups.get((Integer) iter.next());
   		
-			atts.addAll(Arrays.asList(ag.getAllUIAttributeDescriptions()));
+			atts.addAll(ag.getAllUIAttributeDescriptions());
 		}
 		
-		UIAttributeDescription[] a = new UIAttributeDescription[atts.size()];
-		atts.toArray(a);
-		return a;
+		return atts;
 	}
 
 	public String toString() {
@@ -254,6 +263,6 @@ public class AttributePage {
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	//cache one UIAttributeDescription/UIDSAttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private Object lastAtt = null;
 }

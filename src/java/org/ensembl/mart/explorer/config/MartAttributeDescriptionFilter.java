@@ -22,28 +22,28 @@ import org.jdom.filter.Filter;
 import org.jdom.Element;
 
 /**
- * JDOM Filter specific to UIFilterDescription/UIDSFilterDescription objects in a Mart FilterCollection.
- * Allows MartConfigurationFactory to harvest all FilterDescription objects of both types, in the order
+ * JDOM Filter specific to UIAttributeDescription/UIDSAttributeDescription objects in a Mart AttributeCollection.
+ * Allows MartConfigurationFactory to harvest all AttributeDescription objects of both types, in the order
  * they occur in the xml configuration document.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartFilterDescriptionFilter implements Filter {
+public class MartAttributeDescriptionFilter implements Filter {
 
 	/* (non-Javadoc)
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
 	public boolean matches(Object obj) {
 		if (obj instanceof Element) {
-			Element e = (Element) obj;
+		  Element e = (Element) obj;
 			
-			if (e.getName().equals(uifilter) || e.getName().equals(uidsfilter))
-				return true;
+		  if (e.getName().equals(uiattribute) || e.getName().equals(uidsattribute))
+			  return true;
 		}
 		return false;
 	}
 
-  private final String uifilter = "UIFilterDescription";
-  private final String uidsfilter = "UIDSFilterDescription";
+  private final String uiattribute = "UIAttributeDescription";
+  private final String uidsattribute = "UIDSAttributeDescription";
 }
