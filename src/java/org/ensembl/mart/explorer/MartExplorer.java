@@ -124,6 +124,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   private Feedback feedback = new Feedback(this);
 
+  final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
+
   private Help help = new Help();
 
   public static void main(String[] args) throws ConfigurationException {
@@ -367,7 +369,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
     });
 
-    final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
     advanced.setToolTipText(
       "Enables optional DatasetConfigs, ability to change dataset name and datasource.");
     advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
@@ -381,19 +382,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     JMenuItem reset = new JMenuItem("Reset");
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        try {
-          prefs.clear();
-          adaptorManager.clearCache();
-          tabs.removeAll();
-
-          adaptorManager.reset();
-          loadDefaultAdaptors();
-          advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
-        } catch (BackingStoreException e1) {
-          feedback.warning(e1);
-        }
-      }
-    });
+        doReset();
+        }});
     settings.add(reset);
 
     JMenu help = new JMenu("Help");
@@ -437,6 +427,27 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     all.add(help);
     return all;
   }
+
+
+  public void doReset() {
+
+    try {
+      prefs.clear();
+    } catch (BackingStoreException e1) {
+      feedback.warning(e1);
+    }
+    adaptorManager.clearCache();
+    tabs.removeAll();
+
+    adaptorManager.reset();
+    loadDefaultAdaptors();
+    advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
+
+    if (getNumDatasetConfigsAvailable() > 0)
+      doNewQuery();
+
+  }
+    
 
   protected void doDocumentation() {
     help.showDialog(this);
@@ -511,7 +522,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       } else {
 
         try {
-   
+
           disableCursor();
           final QueryEditor qe = new QueryEditor(this, adaptorManager);
           qe.setName(nextQueryBuilderTabLabel());
