@@ -145,6 +145,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       addMainTables(ds.getStarBases());
       addPrimaryKeys(ds.getPrimaryKeys());
 
+	  Importable[] imps = ds.getImportables();
+	  for (int i = 0, n = imps.length; i < n; i++) {
+		addImportable(new Importable(imps[i]));
+	  }
+	  
+	  Exportable[] exps = ds.getExportables();
+	  for (int i = 0, n = exps.length; i < n; i++) {
+		addExportable(new Exportable(exps[i]));
+	  }
 
       Option[] os = ds.getOptions();
       for (int i = 0, n = os.length; i < n; i++) {

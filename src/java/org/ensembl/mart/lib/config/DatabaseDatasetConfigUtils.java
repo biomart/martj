@@ -1231,11 +1231,7 @@ public class DatabaseDatasetConfigUtils {
 
     boolean hasBrokenDefaultFilters = false;
     
-    List brokenFilters = new ArrayList();
-
-    
-
-    
+    List brokenFilters = new ArrayList();   
 
     boolean hasBrokenOptions = false;
     Option[] options = dsv.getOptions();
@@ -1850,20 +1846,26 @@ public class DatabaseDatasetConfigUtils {
     String field = description.getField();
     String tableConstraint = description.getTableConstraint();
 
+	// have placeholders for attributes in XML now with no info other than internal_name
+	if (tableConstraint == null){
+		return validatedAttribute;
+		
+	}
+
+
     // if the tableConstraint is null, this field must be available in one of the main tables
     //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-
+    
     Connection conn = dsource.getConnection();
     ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     while (rs.next()) {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
-
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
-
+      System.out.println(fieldValid + "\t" + tableValid);
       if (valid[0] && valid[1]) {
 
         break;
@@ -1871,7 +1873,6 @@ public class DatabaseDatasetConfigUtils {
     }
 
     conn.close();
-
     if (!(fieldValid) || !(tableValid)) {
       validatedAttribute.setHidden("true");
 
