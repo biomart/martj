@@ -76,6 +76,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 		}
 	}
 
+	private Filter filter;
+
 	private Map filterValueToItem;
 
 	private OptionPusher[] optionPushers;
@@ -83,27 +85,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 	private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
 	private JComboBox list;
-	private Filter filter;
 	private Object lastSelectedItem;
-	private OptionWrapper emptySelection = new OptionWrapper(null);
-
-	/**
-	 * Holds an Option and returns option.getDisplayName() from
-	 * toString(). This class is used to add Options to the
-	 * combo box.
-	 */
-	private class OptionWrapper {
-		private Option option;
-
-		private OptionWrapper(Option option) {
-			this.option = option;
-		}
-
-		public String toString() {
-			return (option == null) ? "No Filter" : option.getDisplayName();
-		}
-	}
-
 	/**
 	 * @param query model to bv synchronised
 	 * @param filterDescription parameters for this widget
@@ -148,7 +130,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
 	/**
 	 * Responds to the removal or addition of relevant filters from the query. Updates the state of
-   * this widget by changing the currently selected item in the list.
+	 * this widget by changing the currently selected item in the list.
 	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
 	 */
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -181,19 +163,19 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 	 * @param filter
 	 */
 	private void setFilter(Filter filter) {
-		
-    this.filter = filter;
-    setSelectedItem( (OptionWrapper) filterValueToItem.get( filter.getValue() ) );
 
-  }
+		this.filter = filter;
+		setSelectedItem((OptionWrapper) filterValueToItem.get(filter.getValue()));
+
+	}
 
 	/**
 	 * @param emptySelection
 	 */
-	private void setSelectedItem(OptionWrapper wrapper ) {
-    list.removeActionListener(this);
-    list.setSelectedItem( wrapper );
-    list.addActionListener(this);
+	private void setSelectedItem(OptionWrapper wrapper) {
+		list.removeActionListener(this);
+		list.setSelectedItem(wrapper);
+		list.addActionListener(this);
 	}
 
 	/**
@@ -208,12 +190,9 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
 		this.filter = null;
 
-    setSelectedItem( emptySelection );
-		
+		setSelectedItem(emptySelection);
+
 	}
-
-
-  
 
 	/**
 	 * Handles user selecting an item from the list.
@@ -230,7 +209,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 		if (lastSelectedItem != emptySelection) {
 			query.removeFilter(filter);
 
-			removePushOptions();
+			removePushOptions( optionPushers );
 		}
 
 		lastSelectedItem = selectedItem;
@@ -260,7 +239,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 	/**
 	 * Removes all options from the push targets.
 	 */
-	private void removePushOptions() {
+	private void removePushOptions(OptionPusher[] optionPushers) {
 
 		int n = (optionPushers == null) ? 0 : optionPushers.length;
 		for (int i = 0; i < n; i++)
@@ -281,50 +260,81 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 		}
 	}
 
+	private void removeFilter() {
+	
+  	if (filter != null) {
+
+			query.removePropertyChangeListener(this);
+			query.removeFilter(filter);
+			query.addPropertyChangeListener(this);
+			filter = null;
+
+		}
+
+	}
+
+  /**
+   * Removes items from list and adds the empty selection to the empty selection.
+   * @param list list to reset
+   * @param options array of options to add to list. If null the list is reset to
+   * contain just the emptySelection entry.
+   * @return map from option.value to the item in the list it corresponds to. 
+   */
+  private Map resetList(JComboBox list, Option[] options) {
+    
+    Map valueToItem = new HashMap();
+    
+    //  must stop listening otherwise propertyChange() is called fore every change we make
+    // to the list.
+    list.removeActionListener(this);
+    
+    list.removeAllItems();
+    
+    // make first option be empty
+    list.addItem(emptySelection);
+    
+    
+    // Add any options to list
+    if (options != null && options.length>0 ) {
+
+      valueToItem = new HashMap();
+
+      for (int i = 0; i < options.length; i++) {
+
+        Option option = options[i];
+
+        String value = option.getValue();
+        if (value == null || "".equals(value))
+          throw new RuntimeException(
+            "Option.value invalid: >" + value + "<\noption = " + option);
+
+        // add each option, via a surrogate, to the list. 
+        OptionWrapper ow = new OptionWrapper(option);
+        valueToItem.put(value, ow);
+        list.addItem(ow);
+
+      }
+
+    }
+
+    list.addActionListener(this);
+    
+    return valueToItem;
+  }
+
+
 	/**
 	 * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
 	 */
 	public void setOptions(Option[] options) {
 
-		// if our options change then any other filter we have provided
-		// options for may now be invalid.
-		removePushOptions();
+		removePushOptions( optionPushers );
 
-		query.removePropertyChangeListener(this);
-		query.removeFilter(filter);
-		query.addPropertyChangeListener(this);
-		filter = null;
+		removeFilter();
 
-		//  stop listening while we update the list  otherwise propertyChange() is called.
-		list.removeActionListener(this);
-		list.removeAllItems();
-		// make first option be empty
-		list.addItem(emptySelection);
-
-		if (options != null) {
-      
-      filterValueToItem = new HashMap();
-      
-			for (int i = 0; i < options.length; i++) {
-
-				Option option = options[i];
-
-				String value = option.getValue();
-				if (value == null || "".equals(value))
-					throw new RuntimeException(
-						"Option.value invalid: >" + value + "<\noption = " + option);
-
-				// add each option, via a surrogate, to the list. 
-        OptionWrapper ow = new OptionWrapper(option);
-        filterValueToItem.put( value, ow );    
-				list.addItem( ow );
-
-			}
-
-		}
-
-		list.addActionListener(this);
-
+    filterValueToItem = resetList( list, options );
+		
 	}
+
 
 }

@@ -43,11 +43,10 @@ public class TextFilterWidget
   extends FilterWidget
   implements ActionListener, PropertyChangeListener {
 
-  private JTextField textField;
   private BasicFilter filter;
 
-
-	/**
+  private JTextField textField;
+  /**
 	   * BooleanFilter that has contains a tree node.
 	   */
 	private class InputPageAwareBasicFilter

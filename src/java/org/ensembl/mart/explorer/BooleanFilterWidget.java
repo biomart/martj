@@ -25,7 +25,9 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JRadioButton;
 
 import org.ensembl.mart.lib.BooleanFilter;
@@ -38,28 +40,37 @@ import org.ensembl.mart.lib.config.FilterDescription;
  * "require", "ignore", "irrelevant". The state of these buttons is 
  * synchronised with that of the query.
  */
-public class BooleanFilterWidget extends FilterWidget 
-implements PropertyChangeListener , ActionListener{
+public class BooleanFilterWidget
+	extends FilterWidget
+	implements PropertyChangeListener, ActionListener {
 
-  private JRadioButton require = new JRadioButton("require");
-  private JRadioButton exclude = new JRadioButton("exclude");
-  private JRadioButton irrelevant = new JRadioButton("irrelevant");
-  
-  private Object currentButton = null;
-  
+	private Box panel = Box.createHorizontalBox();
+
+	private JRadioButton require = new JRadioButton("require");
+	private JRadioButton exclude = new JRadioButton("exclude");
+	private JRadioButton irrelevant = new JRadioButton("irrelevant");
+	private JComboBox list = null;
+
   private BooleanFilter filter;
-  private String requireCondition;
-  private String excludeCondition;
-  
 
-  /**
-   * BooleanFilter that has contains an InputPage, this page is used by the QueryEditor
-   * when it detects the filter has been added or removed from the query.
-   */
-  private class InputPageAwareNullableFilter extends BooleanFilter implements InputPageAware {
-    private InputPage inputPage;
+	private Object currentButton = null;
 
-		public InputPageAwareNullableFilter(String field, String condition, InputPage inputPage) {
+	private String requireCondition;
+	private String excludeCondition;
+
+	/**
+	 * BooleanFilter that has contains an InputPage, this page is used by the QueryEditor
+	 * when it detects the filter has been added or removed from the query.
+	 */
+	private class InputPageAwareNullableFilter
+		extends BooleanFilter
+		implements InputPageAware {
+		private InputPage inputPage;
+
+		public InputPageAwareNullableFilter(
+			String field,
+			String condition,
+			InputPage inputPage) {
 			super(field, condition);
 			this.inputPage = inputPage;
 		}
@@ -68,67 +79,72 @@ implements PropertyChangeListener , ActionListener{
 			String field,
 			String tableConstraint,
 			String condition,
-      InputPage inputPage) {
+			InputPage inputPage) {
 			super(field, tableConstraint, condition);
 			this.inputPage = inputPage;
 		}
 
-    public InputPage getInputPage() {
-      return inputPage;
-    }
-  }
+		public InputPage getInputPage() {
+			return inputPage;
+		}
+	}
 
-  /**
-   * @param query
-   * @param filterDescription
-   */
-  public BooleanFilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
-    super(filterGroupWidget, query, filterDescription);
-    
-    
-    if ( "boolean".equals( filterDescription.getType() ) ) {
-      requireCondition = BooleanFilter.isNotNULL;
-      excludeCondition = BooleanFilter.isNULL;
-    } else {
-      requireCondition = BooleanFilter.isNotNULL_NUM;
-      excludeCondition = BooleanFilter.isNULL_NUM;
-    }
-    
-    irrelevant.setSelected( true );
-    currentButton = irrelevant;
-    
-    ButtonGroup group = new ButtonGroup();
-    group.add( require );
-    group.add( exclude );
-    group.add( irrelevant );
-    
-    require.addActionListener( this );
-    exclude.addActionListener( this );
-    irrelevant.addActionListener( this );
-    
-    Box panel = Box.createHorizontalBox();
-    panel.add( new JLabel( filterDescription.getDisplayName() ) );
-    panel.add( Box.createHorizontalGlue() );
-    panel.add( require );
-    panel.add( exclude );
-    panel.add( irrelevant );
-    
-    add( panel );
-  }
+	/**
+	 * @param query
+	 * @param filterDescription
+	 */
+	public BooleanFilterWidget(
+		FilterGroupWidget filterGroupWidget,
+		Query query,
+		FilterDescription filterDescription) {
+		super(filterGroupWidget, query, filterDescription);
 
+		if ("boolean".equals(filterDescription.getType())) {
+			requireCondition = BooleanFilter.isNotNULL;
+			excludeCondition = BooleanFilter.isNULL;
+		} else {
+			requireCondition = BooleanFilter.isNotNULL_NUM;
+			excludeCondition = BooleanFilter.isNULL_NUM;
+		}
 
-  /**
-   * Respond to a change in the query if necessary.
-   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-   */
-  public void propertyChange(PropertyChangeEvent evt) {
-    // TODO Auto-generated method stub
-    System.out.println( "change " + evt);
-  }
+		irrelevant.setSelected(true);
+		currentButton = irrelevant;
 
-  /* (non-Javadoc)
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-   */
+		ButtonGroup group = new ButtonGroup();
+		group.add(require);
+		group.add(exclude);
+		group.add(irrelevant);
+
+		require.addActionListener(this);
+		exclude.addActionListener(this);
+		irrelevant.addActionListener(this);
+
+		panel.add(new JLabel(filterDescription.getDisplayName()));
+		if (list != null)
+			panel.add(list);
+		panel.add(Box.createHorizontalGlue());
+		panel.add(require);
+		panel.add(exclude);
+		panel.add(irrelevant);
+		add(panel);
+
+		// adds list component if necessary  
+		setOptions(filterDescription.getOptions());
+
+	}
+
+	/**
+	 * Respond to a change in the query if necessary.
+	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+	 */
+	public void propertyChange(PropertyChangeEvent evt) {
+		// TODO Auto-generated method stub
+		System.out.println("change " + evt);
+	}
+
+	/* (non-Javadoc)
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent evt) {
 
 		// user clicked currently selected button
@@ -139,9 +155,12 @@ implements PropertyChangeListener , ActionListener{
 
 		BooleanFilter oldFilter = filter;
 
-		if (currentButton == require) resetFilter( requireCondition );
-    else if (currentButton == exclude) resetFilter( excludeCondition );
-    else filter = null;
+		if (currentButton == require)
+			resetFilter(requireCondition);
+		else if (currentButton == exclude)
+			resetFilter(excludeCondition);
+		else
+			filter = null;
 
 		updateQueryFilters(oldFilter, filter);
 	}
@@ -156,21 +175,32 @@ implements PropertyChangeListener , ActionListener{
 				filterDescription.getFieldName(),
 				filterDescription.getTableConstraint(),
 				condition,
-        this );
+				this);
 
 		setNodeLabel(
 			null,
 			filterDescription.getFieldName() + filter.getRightHandClause());
 	}
 
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+	 */
+	public void setOptions(Option[] options) {
 
+		if (options == null) {
+			// TODO remove list.
+		} else if (options.length > 0) {
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
-   */
-  public void setOptions(Option[] options) {
-    // TODO Auto-generated method stub
+			if (list == null) {
+				list = new JComboBox();
+				list.addActionListener(this);
+				panel.add(list, 1); 
+			}
 
-  }
+      // TODO add options to list.
+      
+		}
+
+	}
 
 }

@@ -80,4 +80,24 @@ implements PropertyChangeListener {
 
   public abstract void setOptions(Option[] options);
 
+
+	protected OptionWrapper emptySelection = new OptionWrapper(null);
+
+	/**
+	 * Holds an Option and returns option.getDisplayName() from
+	 * toString(). This class is used to add Options to the
+	 * combo box.
+	 */
+	protected class OptionWrapper {
+		protected Option option;
+	
+		protected OptionWrapper(Option option) {
+			this.option = option;
+		}
+	
+		public String toString() {
+			return (option == null) ? "No Filter" : option.getDisplayName();
+		}
+	}
+
 }
