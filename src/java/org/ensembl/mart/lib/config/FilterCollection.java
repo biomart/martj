@@ -232,7 +232,9 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 				for (Iterator iter = filters.iterator(); iter.hasNext();) {
 					FilterDescription element = (FilterDescription) iter.next();
 					if (element.containsOption(internalName)) {
-						lastFilt = element;
+						// changed to return the filter stored as an option instead ? if breaks anything
+						//lastFilt = element; 
+						lastFilt = new FilterDescription(element.getOptionByInternalName(internalName));
 						contains = true;
 						break;
 					}
