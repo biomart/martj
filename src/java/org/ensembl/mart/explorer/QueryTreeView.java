@@ -269,12 +269,12 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     JFrame f = new JFrame("QueryTreeView unit test");
     f.getContentPane().add(c);
     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-    int x = screen.width / 2 - f.getWidth() / 2;
-    int y = screen.height / 2 - f.getHeight() / 2;
-    f.setLocation(x, y);
     f.setVisible(true);
     f.pack();
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		int x = screen.width / 2 - f.getWidth() / 2;
+		int y = screen.height / 2 - f.getHeight() / 2;
+		f.setLocation(x, y);
 
   }
 
