@@ -302,6 +302,11 @@
         <exclude name="**/*Test*" />
       </fileset>
 
+      <classpath>
+        <pathelement path="${build.classes}" />
+        <fileset refid="lib.classpath" />
+      </classpath>
+
     </javadoc>    
 
     <!-- insert some magic at the top of each javadoc page to prevent
