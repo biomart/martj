@@ -84,7 +84,7 @@ import org.ensembl.util.ExtensionFileFilter;
  */
 public class QueryEditor extends JPanel {
 
-  private int previewLimit    = 10000;
+  private int previewLimit    = 1000;
   private int maxPreviewBytes = 100000;
   
   private AdaptorManager adaptorManager;

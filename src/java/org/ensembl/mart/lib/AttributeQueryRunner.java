@@ -283,11 +283,11 @@ public final class AttributeQueryRunner implements QueryRunner {
   //batching 
   private final int[] batchModifiers = { 2, 2 };
   private int modIter = 0; //start at 0 
-  private int batchLimit = 50000;
-  private final int maxBatchLimit = 200000;
+  private int batchLimit = 5000;
+  private final int maxBatchLimit = 50000;
   
   // total number of rows execute will ever return
-  private final int MAXTOTALROWS = 200000;
+  private final int MAXTOTALROWS = 50000;
   
 //allow batchLength to increase by this amount after maxBatchLength has been reached
 //this will result in slow response for queries where each id returns a resultset
