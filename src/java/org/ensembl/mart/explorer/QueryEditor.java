@@ -228,7 +228,7 @@ public class QueryEditor
 			new JSplitPane(
 				JSplitPane.HORIZONTAL_SPLIT,
 				new JScrollPane(treeView),
-				new JScrollPane(inputPanel));
+        inputPanel); 
 		top.setOneTouchExpandable(true);
 
 		topAndBottom =
