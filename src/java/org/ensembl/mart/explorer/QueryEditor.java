@@ -184,7 +184,8 @@ public class QueryEditor
       new ExtensionFileFilter("mql", "MQL Files"));
 
     tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
-
+    tmpFile.deleteOnExit();
+    
   }
 
   private void initToolbar() {
@@ -888,9 +889,5 @@ public class QueryEditor
     }
   }
 
-  public void finalize() {
-    System.out.println("finalize");
-    if (tmpFile.exists())
-      logger.fine("deleted:" + tmpFile.delete());
-  }
+
 }
