@@ -776,9 +776,9 @@ public class MartShellLib {
 					whereClause = true;
 					whereFilterName = true;
 				} else {
-					StringTokenizer atts = new StringTokenizer(thisToken, ",");
-					while (atts.hasMoreTokens())
-						query = addAttribute(query, dset, atts.nextToken().trim());
+					StringTokenizer attToks = new StringTokenizer(thisToken, ",");
+					while (attToks.hasMoreTokens())
+						query = addAttribute(query, dset, attToks.nextToken().trim());
 				}
 			} else if (sequenceClause) {
 				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
@@ -1179,8 +1179,6 @@ public class MartShellLib {
 								+ " together in the same query.  Use show attributes for a list of attributes that can be selected together\n");
 				}
 			}
-
-			atts.add(attname);
 		}
 
 		//check maxSelect
@@ -1199,6 +1197,8 @@ public class MartShellLib {
 			} else
 				maxSelects.put(colname, new Integer(1));
 		}
+		
+		atts.add(attname);
 	}
 
 	private Query addBooleanFilter(Query inquery, Dataset dset, String filterName, String filterCondition)
