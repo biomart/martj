@@ -7,6 +7,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Component;
+import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
 
@@ -30,9 +31,29 @@ public class Feedback {
 	 * @param message
 	 */
 	public void warn(String message) {
+    
+      // split long mesages onto multiple lines with of approximately
+      // max chars
+      StringBuffer buf = new StringBuffer();
+      StringTokenizer tokens = new StringTokenizer(message);
+      int len = 0;
+      int max = 80;
+      while ( tokens.hasMoreTokens() ) {
+        
+        if ( len>max ) {
+          buf.append("\n");
+          len = 0;
+        }
+        if ( len>0 ) buf.append(" ");
+        
+        String token = tokens.nextToken();
+        buf.append( token );
+        len += token.length();
+      }
+    
 			JOptionPane.showMessageDialog(
 				src,
-				message,
+				buf.toString(),
 				"Warning",
 				JOptionPane.WARNING_MESSAGE);
 		}
@@ -55,4 +76,9 @@ public class Feedback {
 			warn(e.getMessage());
 			e.printStackTrace();
 		}
+    
+    public static void main(String[] args) {
+      Feedback f = new Feedback(null);
+      f.warn("A very long test message that goes on and on. It should have been reformated for better display. If not the code needs fixing!");
+    }
 }
