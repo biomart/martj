@@ -54,20 +54,48 @@ public class MartBuilder {
 				source_schema.addLinkedTables(linked_tables);
 				output=getUserInput(prompt);
 			}
-		
-		
-	    // Reset final table names if you want to
-	    LinkedTables [] newlinked = source_schema.getLinkedTables();
-	    
-	    for (int i=0;i<newlinked.length;i++){
-		String newname = getUserInput("CHANGE FINAL TABLE NAME: "+newlinked[i].final_table_name+" TO: " );
-	    if (newname != null && ! newname.equals("\n") && !newname.equals(""))
-		newlinked[i].final_table_name=newname;
-	    }
+			
+			
 		
 		// Transform	
 		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
+		
+		
+//		 Include extensions
+		
+		LinkedTables [] extlinked = source_schema.getLinkedTables();
+		
+		for (int i=0;i<extlinked.length;i++){
+			String name = extlinked[i].final_table_name;
+			String input = getUserInput("ADD EXTENSION: "+name+" [Y|N]: " );
+			if (input.equals("Y")){
+		    
+				String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
+				
+				String final_table_key = getUserInput(name+ "KEY: ");
+				String final_table_extension = getUserInput(name+ "EXTENSION: ");
+				String new_table_name = getUserInput("EXTRA TABLE NAME: ");
+				String new_table_key = getUserInput("EXTRA TABLE KEY: ");
+				String new_table_extension = getUserInput("EXTRA TABLE EXTENSION");
+				String new_table_cardinality = getUserInput(name+": "+new_table_name + card_string);
+				
+				target_schema.addTransformationUnit(name, new_table_name,final_table_key,final_table_extension,
+						new_table_key, new_table_extension, new_table_cardinality);
+				
+			}
+		}
+		
+		
+//		 Reset final table names if you want to
+	    
+	    for (int i=0;i<transformations.length;i++){
+		String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].getFinalUnitName()+" TO: " );
+	    if (newname != null && ! newname.equals("\n") && !newname.equals(""))
+		transformations[i].setFinalUnitName(newname);
+	    }
+		
+		
 		
 		// Dump to SQL
 		for (int i=0;i<transformations.length;i++){

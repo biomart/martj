@@ -30,19 +30,6 @@ public class SourceSchema {
 		
 	}
 	
-	/**
-	public ArrayList getExportedKeyTables(String main_name){
-
-		return resolver.getExportedKeyTables(main_name);		
-	}
-	
-	
-	public ArrayList getImportedKeyTables(String main_name){
-
-		return resolver.getImportedKeyTables(main_name);		
-	}
-	
-	*/
 	
 	
 	public LinkedTables createLinkedTables(String main_name,Table [] tables){
@@ -56,17 +43,13 @@ public class SourceSchema {
 	}
 	
 	
-	public LinkedTables addTableToLink (String name, String key, String extension, String cardinality, LinkedTables linked){
+	public Table getTableColumns (String name){
 		
 		Table table = new Table();
 		table.setName(name);
-		table.setKey(key);
-		table.setExtension(extension);
-		table.setCardinality(cardinality);		
 		table.setColumns(resolver.getReferencedColumns(table));
-		linked.addTable(table);
 		
-		return linked;
+		return table;
 	}
 	
 	

@@ -19,13 +19,57 @@ public class Transformation {
 	ArrayList units = new ArrayList();
 	ArrayList unwanted = new ArrayList();
 	String dataset;
+	String final_table_name;
+	
+	
+	public Transformation (){
+		
+	}
+	
+	
 	
 	public Transformation (LinkedTables linked){
-		this.unwanted = createUnits(linked);	
+		this.unwanted = createUnits(linked);
+		this.final_table_name=linked.final_table_name;
 		//String [] b = new String [unwanted.size()];
 		//this.unwanted = (String []) unwanted.toArray(b);
 	}
 	
+	
+	
+	public void addAdditionalUnit(Table ref_table,String final_table_key,String final_table_extension){
+		
+		Table temp_start = getFinalUnit().temp_end;
+		temp_start.key=final_table_key;
+		temp_start.extension=final_table_extension;
+		
+		TransformationUnit unit = transform (temp_start, ref_table, temp_start.getName());
+		unit.setJoinType("simple");
+		addUnit(unit);
+		
+	}
+	
+	public String getFinalUnitName(){
+		
+		String name = getFinalUnit().temp_end.getName();
+		return name;
+	}
+	
+	
+	public void setFinalUnitName(String name){
+		
+		getFinalUnit().temp_end.setName(name);
+	}
+	
+	
+	
+	
+	private TransformationUnit getFinalUnit(){
+	
+	TransformationUnit unit = (TransformationUnit) units.get(units.size()-1);
+	return unit;
+	
+	}
 	
 	private ArrayList createUnits (LinkedTables linked) {
 		
@@ -41,7 +85,6 @@ public class Transformation {
 				unwanted.add(ref_table.getName());
 			}
 			
-			TransformationUnit unit = new TransformationUnit();
 			Table temp_start = new Table();
 			
 			if (i == 0){
@@ -53,34 +96,22 @@ public class Transformation {
 			boolean final_table = false;
 			temp_end_name ="TEMP"+i;
 			
-			Table new_ref=copyTable(ref_table);
 			
-			assignAliases(temp_start, new_ref, temp_end_name);
-			assignAliases(temp_start, ref_table, temp_end_name);
-			
-			temp_end = copyTable(temp_start);
-			temp_end.setColumns(appendColumns(temp_end,new_ref));
-			
-			setNamesToAliases(temp_end);
+			TransformationUnit unit = transform (temp_start, ref_table, temp_end_name);
 			
 			
 			if (i== linked.getReferencedTables().length-1){
-				temp_end.setName(linked.final_table_name);
+				unit.temp_end.setName(linked.final_table_name);
 			final_table=true;
 			} else {
-				temp_end.setName(temp_end_name);
+				unit.temp_end.setName(temp_end_name);
 			}
-			temp_end.final_table=final_table;
+			unit.temp_end.final_table=final_table;
+			temp_end=unit.temp_end;
 			
-			
-			
-			
-			
-			unit.setTemp_start(temp_start);
-			unit.setTemp_end(temp_end);
-			unit.setRef_table(ref_table);
 			unit.setJoinType("simple");
 			units.add(unit);
+			
 		}
 	
 		return unwanted;
@@ -147,5 +178,31 @@ public class Transformation {
 		
 		return temp_col;
 	}
+
+	
+	private TransformationUnit transform (Table temp_start, Table ref_table, String temp_end_name){
+		
+		TransformationUnit unit = new TransformationUnit();
+		
+		Table new_ref=copyTable(ref_table);
+		
+		assignAliases(temp_start, new_ref, temp_end_name);
+		assignAliases(temp_start, ref_table, temp_end_name);
+		
+		Table temp_end = copyTable(temp_start);
+		temp_end.setColumns(appendColumns(temp_end,new_ref));
+		
+		setNamesToAliases(temp_end);
+		
+		unit.setTemp_start(temp_start);
+		unit.setTemp_end(temp_end);
+		unit.setRef_table(ref_table);
+		
+	
+		return unit;
+		
+	}
+	
+	
 	
 }
