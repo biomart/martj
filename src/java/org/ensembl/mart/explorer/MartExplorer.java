@@ -241,7 +241,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   }
 
   private Action newQueryAction =
-    new AbstractAction("New Query", createImageIcon("new.gif")) {
+    new AbstractAction("New", createImageIcon("new.gif")) {
     public void actionPerformed(ActionEvent event) {
       doNewQuery();
     }
@@ -261,7 +261,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   };
 
   private Action saveResultsAction =
-    new AbstractAction("Save Results", createImageIcon("save.gif")) {
+    new AbstractAction("Save", createImageIcon("save.gif")) {
     public void actionPerformed(ActionEvent event) {
       if (isQueryEditorSelected())
         getSelectedQueryEditor().doSaveResults();
@@ -282,11 +282,12 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    */
   private JMenuBar createMenuBar() {
 
-    JMenu file = new JMenu("File");
+    JMenu query = new JMenu("Query");
 
     JMenuItem newQuery = new JMenuItem(newQueryAction);
-    file.add(newQuery).setAccelerator(
+    query.add(newQuery).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK));
+
 
     JMenuItem open = new JMenuItem("Open");
     open.setEnabled(false);
@@ -296,20 +297,26 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
 
     });
-    file.add(open).setAccelerator(
+    query.add(open).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_O, Event.CTRL_MASK));
+ 
 
-    JMenuItem save = new JMenuItem(saveAction);
-    save.setEnabled(false);
-    file.add( save );
-    
+  
+    JMenuItem saveQueryAsMQL = new JMenuItem("Save as MQL");
+    saveQueryAsMQL.setEnabled(false);
+    query.add( saveQueryAsMQL );
+
+    JMenuItem saveQueryAsSQL = new JMenuItem("Save as SQL");
+    saveQueryAsSQL.setEnabled(false);
+    query.add( saveQueryAsSQL );
+
     JMenuItem close = new JMenuItem("Close");
     close.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doRemoveQuery();
       }
     });
-    file.add(close).setAccelerator(
+    query.add(close).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_K, Event.CTRL_MASK));
 
     JMenuItem closeAll = new JMenuItem("Close All");
@@ -319,24 +326,32 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
           doRemoveQuery();
       }
     });
-    file.add(closeAll);
+    query.add(closeAll);
 
-    file.addSeparator();
 
-    JMenuItem exportRegistry = new JMenuItem("Export registry file");
-    exportRegistry.setEnabled(false);
-    file.add(exportRegistry);
-    file.addSeparator();
+   JMenuItem execute = new JMenuItem(executeAction);
+    query.add(execute).setAccelerator(
+      KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
 
-    JMenuItem exit = new JMenuItem("Exit");
-    exit.addActionListener(new ActionListener() {
+
+
+    JMenu results = new JMenu("Results"); 
+    JMenuItem saveResults = new JMenuItem(saveResultsAction);
+    results.add(saveResults).setAccelerator(
+      KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK));
+ 
+    JMenuItem saveResultsAs = new JMenuItem("Save As");
+    saveResultsAs.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        doExit();
+        if (isQueryEditorSelected())
+          getSelectedQueryEditor().doSaveResultsAs();
       }
-
+ 
     });
-    file.add(exit).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
+    results.add(saveResultsAs);
+
+
+
 
     JMenu settings = new JMenu("Settings");
 
@@ -373,26 +388,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
     });
     settings.add( reset );
-    
-    JMenu query = new JMenu("Query");
-
-    JMenuItem execute = new JMenuItem(executeAction);
-    query.add(execute).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
-
-    JMenuItem saveResults = new JMenuItem(saveResultsAction);
-    query.add(saveResults).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK));
-
-    JMenuItem saveResultsAs = new JMenuItem("Save Results As");
-    saveResultsAs.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        if (isQueryEditorSelected())
-          getSelectedQueryEditor().doSaveResultsAs();
-      }
-
-    });
-    query.add(saveResultsAs);
+   
 
     JMenu help = new JMenu("Help");
     JMenuItem about = new JMenuItem("About");
@@ -414,13 +410,27 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     });
     help.add(docs);
+   
+   JMenu exit = new JMenu("Exit");
+   JMenuItem exit_explorer = new JMenuItem("Exit Mart Explorer");
+    exit_explorer.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doExit();
+      }
+ 
+    });
+
+      exit.add(exit_explorer).setAccelerator(
+      KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
     
-    
+
+
     JMenuBar all = new JMenuBar();
-    all.add(file);
-    all.add(settings);
     all.add(query);
+    all.add(results);
+    all.add(settings);
     all.add(help);
+    all.add(exit);
     return all;
   }
 
