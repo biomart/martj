@@ -24,6 +24,7 @@
       <AttributeGroup description="For Testing Purposes Only" displayName="test of an Attribute Group:" internalName="testAttributeGroup">
         <AttributeCollection description="For Testing Purposes Only" displayName="Test of an AttributeCollection:" internalName="testAttributeCollection" maxSelect="1">
           <UIAttributeDescription description="For Testing Purposes Only" displayName="Test of a UIAttributeDescription" fieldName="test_id" homepageURL="http://test.org" internalName="testUIAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>
+          <UIDSAttributeDescription description="For Testing Purposes Only" displayName="Test of a UIDSAttributeDescription" homepageURL="http://test.org" internalName="testUIDSAttributeDescription" linkoutURL="http://test.org?test" objectCode="testObjectCode" source="test source"/>
         </AttributeCollection>
       </AttributeGroup>
     </AttributePage>

@@ -61,7 +61,7 @@
 <!ELEMENT AttributeGroup (AttributeCollection+)>
 <!ATTLIST AttributeGroup %desc_data;>
 
-<!ELEMENT AttributeCollection (UIAttributeDescription+)>
+<!ELEMENT AttributeCollection (UIAttributeDescription|UIDSAttributeDescription|UIDSAttributeDescription|UIAttributeDescription)+>
 <!ATTLIST AttributeCollection
                   %desc_data;
                    maxSelect    CDATA #IMPLIED>
@@ -73,5 +73,13 @@
                     tableConstraint  CDATA #IMPLIED
                     maxLength         NMTOKEN #IMPLIED
                     source                CDATA #IMPLIED
+                    homepageURL  CDATA #IMPLIED
+                    linkoutURL          CDATA #IMPLIED>
+
+<!ELEMENT UIDSAttributeDescription EMPTY>
+<!ATTLIST UIDSAttributeDescription
+                    %desc_data;
+                    objectCode   CDATA #REQUIRED
+                    source       CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
