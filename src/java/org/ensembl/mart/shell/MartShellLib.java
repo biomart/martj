@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -170,79 +169,6 @@ public class MartShellLib {
 	 */
 	public void setDSViewAdaptor(DSViewAdaptor adaptor) {
 		this.adaptor = adaptor;
-	}
-
-	private void LoadMaps() throws ConfigurationException {
-		if (!mapsLoaded) {
-			DatasetView[] dsets = adaptor.getDatasetViews();
-
-			for (int i = 0, n = dsets.length; i < n; i++) {
-				DatasetView dataset = dsets[i];
-				String datasetName = dataset.getInternalName();
-				starBase_Dataset.put(dataset.getStarBases()[0], datasetName);
-				// first starbase only
-
-				if (!field_Attribute.containsKey(datasetName))
-					field_Attribute.put(datasetName, new ArrayList());
-
-				List attMaps = (ArrayList) field_Attribute.get(datasetName);
-
-				List attributes = dataset.getAllAttributeDescriptions();
-				for (int j = 0, k = attributes.size(); j < k; j++) {
-					Object attribute = attributes.get(j);
-					if (attribute instanceof AttributeDescription) {
-						AttributeDescription uiattribute = (AttributeDescription) attribute;
-
-						String iname = uiattribute.getInternalName();
-						String fname = uiattribute.getField();
-						String tconstraint = uiattribute.getTableConstraint();
-
-						UIMapper attMap = null;
-						if (tconstraint != null && !(tconstraint.equals("")))
-							attMap = new UIMapper(fname, tconstraint, iname);
-						else
-							attMap = new UIMapper(fname, iname);
-
-						if (!attMaps.contains(attMap))
-							attMaps.add(attMap);
-					}
-					//else { UIDSAttributeDescription code goes here}
-				}
-
-				// get FilterSetDescription mappings
-				if (!field_FilterSet.containsKey(datasetName))
-					field_FilterSet.put(datasetName, new ArrayList());
-
-				List fsetMaps = (ArrayList) field_FilterSet.get(datasetName);
-
-				FilterPage[] fpages = dataset.getFilterPages();
-
-				if (!field_Filter.containsKey(datasetName))
-					field_Filter.put(datasetName, new ArrayList());
-
-				List fieldMaps = (ArrayList) field_Filter.get(datasetName);
-
-				List filters = dataset.getAllFilterDescriptions();
-				for (Iterator iter = filters.iterator(); iter.hasNext();) {
-					FilterDescription uifilter = (FilterDescription) iter.next();
-
-					String iname = uifilter.getInternalName();
-					String fname = uifilter.getField();
-					String tconstraint = uifilter.getTableConstraint();
-
-					UIMapper fieldMap = null;
-					if (tconstraint != null && !(tconstraint.equals("")))
-						fieldMap = new UIMapper(fname, tconstraint, iname);
-					else
-						fieldMap = new UIMapper(fname, iname);
-
-					if (!fieldMaps.contains(fieldMap))
-						fieldMaps.add(fieldMap);
-				}
-				field_Attribute.put(datasetName, new ArrayList());
-				field_Filter.put(datasetName, new ArrayList());
-			}
-		}
 	}
 
 	/**
