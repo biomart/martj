@@ -70,10 +70,14 @@ public class AttributesWidget extends InputPage {
       tabbedPane.removeAll();
       AttributePage[] aps = newDatasetConfig.getAttributePages();
       for (int i = 0; i < aps.length; i++)
+      { 
+      	// hack for skipping link pages
+      	if (aps[i].getInternalName().equals("link_attributes")) continue;
         tabbedPane.add(
           new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree));
       add(tabbedPane);
       validate();
+    }
     }
   }
 

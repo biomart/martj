@@ -68,12 +68,15 @@ public class FiltersWidget extends InputPage {
       remove( unavailableLabel );
       tabbedPane.removeAll();
       FilterPage[] fps = newDatasetConfig.getFilterPages();
-      for (int i = 0; i < fps.length; i++)
+      for (int i = 0; i < fps.length; i++) {
+      	// hack for skipping link pages
+      	if (fps[i].getInternalName().equals("link_filters")) continue;	
         tabbedPane.add(
           new FilterPageWidget(query, fps[i].getDisplayName(), fps[i], tree));
       add(tabbedPane);
       validate();
-    }
+      }
+      }
   }
 
 
