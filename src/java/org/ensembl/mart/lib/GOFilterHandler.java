@@ -185,8 +185,9 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 					.append(EVIDENCECODEFIELD)
 					.append(" ")
 					.append(evidence_code_condition)
-					.append(" ")
-					.append(evidence_code_value);
+					.append(" '")
+					.append(evidence_code_value)
+					.append("'");
 		}
 
 		String sql = selectBuf.append(fromBuf).append(whereBuf).toString();
