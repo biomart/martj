@@ -252,6 +252,21 @@ class OptionPage(JPanel):
           )
         ) # REGION
       ), # SNPS
+
+
+    ( "Structures",
+      ( "REGION",
+        ( ( "Chromosome Attributes",  None),
+          ( "Chromosome Name",
+            "Start Position (bp)",
+            "End Position (bp)",
+            "Band",
+            "Strand"
+            )
+          )
+        ) # REGION
+      ),
+
     )
     
 
@@ -259,7 +274,8 @@ class OptionPage(JPanel):
         p = JTabbedPane()
         self.add( p )
         self.attributeManager = attributeManager
-        
+
+        # Add all attributes in appropriatte hierarchy
         for g1 in OptionPage.attributes:
             print g1[0]
             # tab level
@@ -306,6 +322,9 @@ class OptionPage(JPanel):
                             # add button to left or right column
                         list[i%2].add( button )
                         i = i+1
+
+        # Sequence page is hard-coded
+        p.add( SequencePage( self.attributeManager ), "Sequence" )
 
 
     def select(self, option ):
