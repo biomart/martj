@@ -28,8 +28,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
@@ -42,7 +43,8 @@ public class MartXMLutils {
 
 	private static final String GETSQL = "select stream from _meta_martConfiguration_XML where system_id = ?";
 	private static final String EXISTSQL = "select count(system_id) from _meta_martConfiguration_XML where system_id = ?";
-	private static final String UPDATEXMLSQL = "update _meta_martConfiguration_XML set stream = ? where system_id = ?"; // if EXISTSQL returns 1
+	private static final String UPDATEXMLSQL = "update _meta_martConfiguration_XML set stream = ? where system_id = ?";
+	// if EXISTSQL returns 1
 	private static final String INSERTXMLSQL = "insert into _meta_martConfiguration_XML (system_id, stream) values (?,?)";
 
 	public static InputSource getInputSourceFor(Connection conn, String systemID) throws ConfigurationException {
@@ -67,13 +69,13 @@ public class MartXMLutils {
 	public static InputSource getInputSourceFor(URL systemID) throws ConfigurationException {
 		try {
 			InputSource is = new InputSource(systemID.toString()); // use the URL as the system id
-			is.setByteStream(systemID.openStream()); 
+			is.setByteStream(systemID.openStream());
 			return is;
 		} catch (Exception e) {
 			throw new ConfigurationException("Caught Exception during fetch of requested InputSource: " + e.getMessage());
 		}
 	}
-	
+
 	public static void storeConfiguration(Connection conn, String systemID, Document doc) throws ConfigurationException {
 		Logger logger = Logger.getLogger(MartXMLutils.class.getName()); // may need to log some warnings
 		int rowsupdated = 0;
@@ -119,7 +121,8 @@ public class MartXMLutils {
 		}
 
 		if (rowsupdated < 1)
-			logger.warn("Warning, xml for " + systemID + " not stored"); //throw an exception?	
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?	
 	}
 
 	public static void storeDTD(Connection conn, String systemID, URL dtdurl) throws ConfigurationException {
@@ -169,6 +172,7 @@ public class MartXMLutils {
 		}
 
 		if (rowsupdated < 1)
-			logger.warn("Warning, xml for " + systemID + " not stored"); //throw an exception?						
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?						
 	}
 }
