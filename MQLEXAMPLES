@@ -1,99 +1,47 @@
-# A really quick query.  This should return very fast.
-using ensembl_genes_homo_sapiens get ensembl_gene_id limit 10;
+# List mart databases
+list marts;
 
-# Store a named query returning gene ids for mouse genes homologous
-# with human disease genes with transmembrane domains on chromosome 21
-using ensembl_genes_homo_sapiens get mouse_homologue_ensembl_gene_id 
-where chromosome_name=21 and 
-      disease_genes only and 
-      transmembrane_domains only as MouseHomologsForHumanDiseaseTransMembraneGenes;
+# List all available datasets
+list datasets all;
 
-# Get coding sequences for mouse genes
-# on either chromosome 10 or 16 which are included in the 
-# gene ids returned from the above named query
-using ensembl_genes_mus_musculus get sequence coding where  
-ensembl_gene_id in MouseHomologsForHumanDiseaseTransMembraneGenes and 
-chromosome_name in (10,16);
+# List datasets for a given mart
+list datasets Ensembl
 
-# get H. sapiens ensembl genes with their AFFY HG_U133 Ids for genes with 
-# transmembrande domains and nonsynonymous snps only
-use ensembl_genes_homo_sapiens ;
-get ensembl_gene_id , 
-    affy_hg_u133_all_id 
-where transmembrane_domains only and 
-      nonsynonymous_snps only ;
+# or
+set mart Ensembl;
+list datasets;
 
-# store ensembl gene ids for human genes homologous to
-# mouse genes with transmembrane domains into a file.
-set Output format='tabulated',file='humanHomologsForMouseTransmembrane.txt';
-using ensembl_genes_mus_musculus get human_homologue_ensembl_gene_id where transmembrane_domains only;
+# sets dataset;
+use Ensembl.ensembl_genes_homo_sapiens;
 
-# grab H. sapiens ensembl genes using ensembl gene ids
-# stored in the humanHomologsForMouseTransmembrane.txt file
+# or, if mart is set
 use ensembl_genes_homo_sapiens;
-get ensembl_gene_id 
-where ensembl_gene_id in humanHomologsForMouse.txt;
 
-# do the above easier, with a named query
-using ensembl_genes_mus_musculus
-get human_homologue_ensembl_gene_id
-where transmembrane_domains only
-as humanHomologsForMouseTransmembrane;
+# now list availble attributes and filters;
+# <tab><tab> will do the same thing
 
-using ensembl_genes_homo_sapiens
-get ensembl_gene_id
-where ensembl_gene_id in humanHomologsForMouseTransMembrane;
+list attributes;
+list filters;
 
-# get vega transcript ids with their swissprot ids in tab delimited format
-# for a specific Transcript id
-set Output format='tabulated',file='-',separator='	';
-get xref_swissprot_id, vega_transcript_id where vega_transcript_id = OTTHUMT00006010077;
+# now a real query
+using MSD.structures get pdb_id where resolution_greater > 2; 
 
-# Determine which, if any, genes in a specified list of ensembl gene stable ids are disease genes
-use ensembl_genes_homo_sapiens;
-get ensembl_gene_id
-where ensembl_gene_id in (ENSG00000185391, ENSG00000185421, ENSG00000185423) and
-      disease_genes only;
+# chain examples
+using MSD.structures  get pdb_id where resolution_greater > 3 and experiment_type and has_ec_info only as q;   
+using Ensembl.ensembl_genes_homo_sapiens get sequence transcript_flanks+1000 where pdb_id in q;
 
-# More stored named Query examples
-using ensembl_genes_homo_sapiens
-get mouse_homologue_ensembl_gene_id
-where disease_genes only
-as mouseHomologsForHumanDiseaseGenes;
+using Ensembl.ensembl_genes_homo_sapiens get xref_swissprot_acc where disease_genes only and chromosome_name=22 as q;
+using Uniprot.proteomes get prot_seq where sprot_list in q;  
 
-using ensembl_genes_mus_musculus 
-get ensembl_gene_id 
-where ensembl_gene_id in mouseHomologsForHumanDiseaseGenes and 
-      snp_ka_ks_ratio > 0.1;
+using Ensembl.ensembl_genes_homo_sapiens get xref_swissprot_acc where nonsynonymous_snps only and disease_genes only as q;
+using Uniprot.proteomes get uniprot_ac ,protein_name where sprot_list in q;
 
-# bind variables
-# a generic query that can be applied in different contexts
-using ? get ?_homologue_ensembl_gene_id where ?_homologs only and transmembrane_domains only limit 10 as transMembraneHomologsFor;
+# homology chain from ensembl
+using Ensembl.ensembl_genes_homo_sapiens get mouse_homologue_ensembl_gene_id where chromosome_name=21 and  disease_genes only 
+and transmembrane_domains only as q;
+using Ensembl.ensembl_genes_mus_musculus get sequence coding where ensembl_gene_id in q and chromosome_name in (10,16);
 
-# use it to get human genes for mouse human homologues
-use ensembl_genes_homo_sapiens ;
-get ensembl_gene_id where ensembl_gene_id in transMembraneHomologsFor(ensembl_genes_mus_musculus, human, human);
+# outputting to a file
+set output file='myfile';
+using Ensembl.ensembl_genes_homo_sapiens get ensembl_gene_id; 
 
-# or use it to get mouse genes for human mouse homologues
-use ensembl_genes_mus_musculus ;
-get ensembl_gene_id
-where ensembl_gene_id in transMembraneHomologsFor(ensembl_genes_homo_sapiens,mouse, mouse);
-
-#SEQUENCE EXAMPLES
-# get vega peptide sequeces for genes with stop snps, 
-# with the swissprot display_id in the description portion of 
-# the fasta header line
-set Output format='fasta';
-get xref_swissprot_id sequence peptide where stop_snps only ;
-
-# get peptide sequence for mouse, in tabulated format (always
-# includes sequence as the last field), using a double
-# pipe as the separator, to standard out.
-set Output file='-',format='tabulated',separator='||';
-using ensembl_genes_mus_musculus get sequence peptide ;
-
-# get 1000 bp of transcript upstream flanking sequence for each
-# vega transcript with nonsynonymous snps, into a file of fasta format.
-set Output file='vegatranscripts.fa',format='fasta';
-use vega_genes_homo_sapiens ;
-get sequence 1000+transcript_flanks where nonsynonymous_snps only ;
