@@ -398,6 +398,7 @@ public class IDListFilter implements Filter {
     buf.append("[");
     buf.append(" field=").append(field);
     buf.append(", tableConstraint=").append(tableConstraint);
+    buf.append(", key=").append(key);
     buf.append(", handler=").append(handler);
     buf.append(", identifiers=").append(identifiers);
     buf.append(", File=").append(file);
