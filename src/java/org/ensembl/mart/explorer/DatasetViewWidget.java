@@ -379,69 +379,6 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
   }
 
 
-  public void queryNameChanged(
-    Query sourceQuery,
-    String oldName,
-    String newName) {
-  }
-
-  public void datasetChanged(
-    Query sourceQuery,
-    String oldDatasetInternalName,
-    String newDatasetInternalName) {
-
-  }
-
-  public void datasourceChanged(
-    Query sourceQuery,
-    DataSource oldDatasource,
-    DataSource newDatasource) {
-  }
-
-  public void attributeAdded(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
-  }
-
-  public void attributeRemoved(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
-  }
-
-  public void filterAdded(Query sourceQuery, int index, Filter filter) {
-  }
-
-  public void filterRemoved(Query sourceQuery, int index, Filter filter) {
-  }
-
-  public void filterChanged(
-    Query sourceQuery,
-    Filter oldFilter,
-    Filter newFilter) {
-  }
-
-  public void sequenceDescriptionChanged(
-    Query sourceQuery,
-    SequenceDescription oldSequenceDescription,
-    SequenceDescription newSequenceDescription) {
-  }
-
-  public void limitChanged(Query query, int oldLimit, int newLimit) {
-  }
-
-  public void starBasesChanged(
-    Query sourceQuery,
-    String[] oldStarBases,
-    String[] newStarBases) {
-  }
-
-  public void primaryKeysChanged(
-    Query sourceQuery,
-    String[] oldPrimaryKeys,
-    String[] newPrimaryKeys) {
-  }
 
   /**
    * Runs a test; an instance of this class is shown in a Frame.

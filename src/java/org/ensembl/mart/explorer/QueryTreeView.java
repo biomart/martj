@@ -67,7 +67,6 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -452,17 +451,17 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
   }
 
   /**
-   * Update the name of the datasetview shown in the tree and load the datasetview it
-   * specifies.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+   * Update the name of the dataset shown in the tree.
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
   public void datasetChanged(
-    Query sourceQuery,
-    String oldDatasetInternalName,
-    String newDatasetInternalName) {
+    Query source,
+    String oldDataset,
+    String newDataset) {
 
-    // TODO set dataset name
-
+    String s = ( newDataset!=null ) ? newDataset : "";
+    ((TreeNodeData) datasetNode.getUserObject()).setRightText(s);
+    treeModel.reload();
   }
 
   /**
