@@ -1,3 +1,0 @@
-setMart mysqlhost=kaka.sanger.ac.uk,mysqluser=anonymous,mysqldbase=ensembl_mart_15_1;
-select gene_stable_id from hsapiens_ensemblgene;
-exit;
