@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.Box;
@@ -74,18 +75,32 @@ public class GridPanel extends Box {
     }
 
     int nPadingCells = components.length % nColumns;
-    for ( int i=0; i<nPadingCells; ++i ) {
+    for (int i = 0; i < nPadingCells; ++i) {
       JComponent c = new JLabel();
-      setComponentSize( c );
-      row.add( c );
+      setComponentSize(c);
+      row.add(c);
     }
+
   }
 
-
   private void setComponentSize(JComponent c) {
-    c.setPreferredSize(componentSize);
-    c.setMinimumSize(componentSize);
-    c.setMaximumSize(componentSize);
+
+    Dimension d = componentSize;
+
+    int ph = c.getPreferredSize().height;
+    if (ph > d.height) {
+      d = new Dimension(componentSize);
+
+      // note: box layout's calculation of the preferred height is incorrect in some cases.
+      // We add 35 (a hack) to ensure the component is tall enough
+      // to show all elements. It is possible that some components will 
+      // still not have enough room to be displayed.
+      d.height = ph+35;
+    }
+
+    c.setPreferredSize(d);
+    c.setMinimumSize(d);
+    c.setMaximumSize(d);
   }
 
 }

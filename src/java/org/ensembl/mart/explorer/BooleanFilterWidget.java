@@ -110,6 +110,7 @@ public class BooleanFilterWidget
       list.setMaximumSize(s);
       //    we need to set preferred because maximum is ignored by Boxcontainer (at least on JVM1.4@linux)
       list.setPreferredSize(s); 
+      list.setMinimumSize(s); 
 
       setOptions(fd.getOptions());
     } else
@@ -132,11 +133,11 @@ public class BooleanFilterWidget
     irrelevant.addActionListener(this);
 
     if (list != null) {
-//      Box left = Box.createVerticalBox();
-//      left.add(createLabel());
-//      left.add(list);
-//      panel.add(left);
-      panel.add(list);
+      Box left = Box.createVerticalBox();
+      left.add(createLabel());
+      left.add(list);
+      panel.add(left);
+      //panel.add(list);
     } else {
       panel.add(createLabel());
     }
