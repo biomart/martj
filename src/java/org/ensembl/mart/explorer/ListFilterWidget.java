@@ -90,7 +90,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
   /**
    * Synchronises the state of this Filter with the specified filter.
-   * Sets the appropriate selercted item and assigns / unassigns any PushOptions.
+   * Sets the appropriate selercted item and assigns / unassigns any PushOption.
    * @param filter filter to assign, or null if filter is to be removed.
    */
   protected void setFilter(Filter filter) {

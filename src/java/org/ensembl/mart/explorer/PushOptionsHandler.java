@@ -20,10 +20,10 @@ package org.ensembl.mart.explorer;
 
 import java.util.logging.Logger;
 
-import org.ensembl.mart.lib.config.PushOptions;
+import org.ensembl.mart.lib.config.PushAction;
 
 /**
- * Active wrapper for a PushOptions instance. It is able to fetch the 
+ * Active wrapper for a PushOption instance. It is able to fetch the 
  * named target from the group and push / remove options from it. 
  * Targets are retrieved when needed because they might not exist when 
  * the component is created.
@@ -34,7 +34,7 @@ public class PushOptionsHandler {
 
 	private FilterGroupWidget group;
 
-	private PushOptions optionPush;
+	private PushAction optionPush;
   
   
   private FilterWidget getTargetFilterWidget() {
@@ -46,7 +46,7 @@ public class PushOptionsHandler {
    * and the options to be pushed onto it or removed from it.
 	 * @param group filter group from which the target filter can be retrieved.
 	 */
-	public PushOptionsHandler(PushOptions optionPush, FilterGroupWidget group) {
+	public PushOptionsHandler(PushAction optionPush, FilterGroupWidget group) {
 		this.optionPush = optionPush;
     this.group = group;
 	}

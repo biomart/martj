@@ -27,7 +27,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.PushOptions;
+import org.ensembl.mart.lib.config.PushAction;
 
 /**
  * Base class for FilterWidgets.
@@ -135,7 +135,7 @@ public abstract class FilterWidget
 	/**
 	   * @param pushs
 	   */
-	protected void assignPushOptions(PushOptions[] optionPushes) {
+	protected void assignPushOptions(PushAction[] optionPushes) {
 
 		pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
 
@@ -143,7 +143,7 @@ public abstract class FilterWidget
 			pushOptionHandlers[i] =
 				new PushOptionsHandler(optionPushes[i], filterGroupWidget);
 			pushOptionHandlers[i].push();
-			//System.out.println( "Pushing options" + optionPushes[i]);
+			System.out.println( "Pushing options" + optionPushes);
 		}
 	}
 

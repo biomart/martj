@@ -262,8 +262,8 @@ public class TreeFilterWidget extends FilterWidget {
 
 	/**
 	 * Sets filter and also causes the appropriate item in the tree to be selected and any relevant
-	 * PushOptions to be assigned. If filter is null then "No Filter" is selected
-	 * and and PushOptions are unassigned.
+	 * PushOption to be assigned. If filter is null then "No Filter" is selected
+	 * and and PushOption are unassigned.
 	 * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
 	 */
 	protected void setFilter(Filter filter) {
@@ -290,6 +290,8 @@ public class TreeFilterWidget extends FilterWidget {
    * @throws IllegalArgumentException if option unavailable in filter.
    */
 	public void setOption(Option option) {
+
+    System.out.println("parent=" + option.getParent());
 
     if ( !allOptions.contains( option ) )
       throw new IllegalArgumentException("Option is unailable in filter: " + option);
