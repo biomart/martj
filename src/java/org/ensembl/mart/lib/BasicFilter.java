@@ -128,9 +128,10 @@ public class BasicFilter implements Filter {
 
 		buf.append("[");
 		buf.append(" field=").append(field);
+    buf.append(", tableConstraint=").append(tableConstraint);
+    buf.append(", key=").append(key);
 		buf.append(" ,condition=").append(condition);
 		buf.append(" ,value=").append(value);
-		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append(", handler=").append(handler);
 		buf.append("]");
 
