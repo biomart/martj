@@ -519,9 +519,6 @@ public class MartShell {
 		if (martHost == null || martHost.length() < 5) {
 			validQuery = false;
 			setBatchError("Must set Host");
-		} else if (martPort.length() < 1) {
-			validQuery = false;
-			setBatchError("Must set a Port");
 		} else if (martUser.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a User");
