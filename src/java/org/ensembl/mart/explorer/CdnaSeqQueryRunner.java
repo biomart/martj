@@ -16,9 +16,9 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
  
-package org.ensembl.mart.explorer;
+package org.ensembl.mart.explorer; 
 
-import java.io.IOException;
+import java.io.IOException; 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.sql.Connection;
@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
+import java.util.regex.*; 
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;

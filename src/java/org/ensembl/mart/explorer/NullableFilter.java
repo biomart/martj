@@ -17,7 +17,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.explorer;
 
 /**
@@ -28,15 +28,16 @@ package org.ensembl.mart.explorer;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class NullableFilter implements Filter {
-	
+
 	public static final String isNULL = " ";
 	public static final String isNotNULL = " not ";
-	
+
 	/**
 	 * default constructor
 	 */
-	public NullableFilter() {}
-	
+	public NullableFilter() {
+	}
+
 	/**
 	 * constructor for a fully defined NullableFilter.
 	 * static isNULL and isNotNull variables can be used
@@ -46,47 +47,51 @@ public class NullableFilter implements Filter {
 	 * @param condition - String, one of isNULL or isNotNull
 	 */
 	public NullableFilter(String type, String condition) {
-	     this.type = type;
-	     this.condition = "is"+condition+"null ";
+		this.type = type;
+		this.condition = "is" + condition + "null ";
 	}
 	/**
 	 * returns the type specified
 	 * 
 	 * @return String type
 	 */
-    public String getType(){ return type; }
+	public String getName() {
+		return type;
+	}
 
-    /**
-     * sets the type
-     * 
-     * @param type -- String type of the query (roughly corresponds to
-     * a field in a mart table).
-     */
-    public void setType(String type){ this.type = type; }
+	/**
+	 * sets the type
+	 * 
+	 * @param type -- String type of the query (roughly corresponds to
+	 * a field in a mart table).
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    /**
-     * returns the where clause for the SQL as type is null
-     */
-    public String getWhereClause() {
-      return type + condition;
-    }
+	/**
+	 * returns the where clause for the SQL as type is null
+	 */
+	public String getWhereClause() {
+		return type + condition;
+	}
 
-    /**
-     * sets the condition.  condition can be specified by explicit use
-     * of the static isNULL and isNotNull variables.
-     * 
-     * @param condition - String
-     */
-    public void setCondition(String condition) {
-  	    this.condition = "is"+condition+"null ";
-    }
-  
-    /**
-     * returns the right side of an SQL where clause
-     */
-    public String getRightHandClause() {
-      return condition;
-    }
+	/**
+	 * sets the condition.  condition can be specified by explicit use
+	 * of the static isNULL and isNotNull variables.
+	 * 
+	 * @param condition - String
+	 */
+	public void setCondition(String condition) {
+		this.condition = "is" + condition + "null ";
+	}
+
+	/**
+	 * returns the right side of an SQL where clause
+	 */
+	public String getRightHandClause() {
+		return condition;
+	}
 
 	/*
 	 * @see org.ensembl.mart.explorer.Filter#getValue()
@@ -94,7 +99,16 @@ public class NullableFilter implements Filter {
 	public String getValue() {
 		return null;
 	}
-	
-    private String type;
-    private String condition;
+
+	public void setTableConstraint(String tableConstraint) {
+		this.tableConstraint = tableConstraint;
+	}
+
+	public String getTableConstraint() {
+		return tableConstraint;
+	}
+
+	private String tableConstraint;
+	private String type;
+	private String condition;
 }

@@ -25,8 +25,8 @@ public class AttributeTest extends Base {
 
 	public static Test suite() {
 		TestSuite suite = new TestSuite();
-		//ite.addTest( new AttributeTest("testDisambiguationQueries") );
-		suite.addTestSuite( AttributeTest.class );
+		suite.addTest( new AttributeTest("testDisambiguationQueries") );
+		//suite.addTestSuite( AttributeTest.class );
 		return suite;		
 	}
 

@@ -200,7 +200,7 @@ public class IDListFilter implements Filter {
      * 
      * @return String type
      */
-    public String getType(){
+    public String getName(){
         return type;
     }
 
@@ -246,8 +246,21 @@ public class IDListFilter implements Filter {
     public String getValue() {
       return null;
     }
-  
-    private String type;
+    
+    
+	
+	public void setTableConstraint(String tableConstraint) {
+		this.tableConstraint = tableConstraint;
+	}
+	
+	
+	
+	public String getTableConstraint() {
+		return tableConstraint;
+	}
+	 
+	private String tableConstraint;
+     private String type;
     private String[] identifiers = new String[0];
     private File file;
     private URL url;

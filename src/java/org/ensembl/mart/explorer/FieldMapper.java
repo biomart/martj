@@ -29,7 +29,7 @@ import java.util.*;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
-public class ColumnMapper {
+public class FieldMapper {
 
 	private String primaryKey = null;
 	
@@ -45,7 +45,7 @@ public class ColumnMapper {
    *@param tables list of tables to create mappings for. 
    *
    */
-  public ColumnMapper (Table[] tables, String primaryKey){
+  public FieldMapper (Table[] tables, String primaryKey){
 
 		this.primaryKey = primaryKey;
 
@@ -82,12 +82,12 @@ public class ColumnMapper {
   /**
    * @return table.column if mapping is available, otherwise null.
    */
-  public String qualifiedName(String column) {
+  public String qualifiedName(Field field) {
 
-    String table = map.getProperty( column );
+    String table = map.getProperty( field.getName() );
 
     if ( table==null ) return null;
-    else return table + "." + strippedColumn( column );
+    else return table + "." + strippedColumn( field.getName() );
     
   }
 
@@ -106,25 +106,26 @@ public class ColumnMapper {
   /**
    * @return table name if mapping is available, otherwise null.
    */
-  public String tableName(String column) {
-    return map.getProperty( column );
+  public String tableName(Field field) {
+    return map.getProperty( field.getName() );
   }
   
 
   /**
    * @return true if the column is mapped to a table.
    */
-  public boolean canMap(String column) {
-    return map.containsKey( column );
+  public boolean canMap(Field field) {
+    return map.containsKey( field.getName() );
   }
   
   /**
    * @return true if all the columns are mapped to a table.
    */
-  public boolean canMap(String[] columns) {
-    for(int i=0; i<columns.length; ++i)
-      if ( !canMap( columns[i] ) ) return false;
-    return true;
+  public boolean canMap(Field[] fields) {
+  	for (int i = 0; i < fields.length; i++) 
+			if ( !canMap( fields[i] ) ) return false;
+		  	
+  	return true;
   }
 
 

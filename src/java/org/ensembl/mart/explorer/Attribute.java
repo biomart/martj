@@ -27,17 +27,6 @@ package org.ensembl.mart.explorer;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
-public interface Attribute {
-	/**
-	 * @return name of the attribute
-	 */
-    String getName();
-    
-    
-    /**
-     * Sub string that must appear in the name of any table containing 
-     * the column __name__.
-     * @return null or part of a tablename.
-     */
-    String getTableConstraint();
+public interface Attribute extends Field {
+	
 }

@@ -106,7 +106,7 @@ public class CompiledSQLQuery {
 	 * @return true if all attributes in the query could be mapped to tables by
 	 * the mapper, otherwise false.
 	 */
-	private boolean selectClause(StringBuffer buf, ColumnMapper mapper)
+	private boolean selectClause(StringBuffer buf, FieldMapper mapper)
 		throws InvalidQueryException {
 
 		final int nAttributes = query.getAttributes().length;
@@ -119,11 +119,9 @@ public class CompiledSQLQuery {
 		for (int i = 0; i < nAttributes; ++i) {
 
 			Attribute a = query.getAttributes()[i];
-			String colName = a.getName();
-
-			if (!mapper.canMap(colName))
+			if (!mapper.canMap( a ))
 				return false;
-			buf.append(mapper.qualifiedName(colName));
+			buf.append(mapper.qualifiedName( a ));
 
 			if (i + 1 < nAttributes)
 				buf.append(", ");
@@ -139,25 +137,27 @@ public class CompiledSQLQuery {
 	 * @return true if all attributes and filter 'columns' in the query could
 	 * be mapped to tables by the mapper, otherwise false.
 	 */
-	private boolean fromClause(StringBuffer buf, ColumnMapper mapper)
+	private boolean fromClause(StringBuffer buf, FieldMapper mapper)
 		throws InvalidQueryException {
 
 		Set relevantTables = new HashSet();
 
 		for (int i = 0; i < query.getAttributes().length; ++i) {
-			String colName = query.getAttributes()[i].getName();
-			if (!mapper.canMap(colName))
+			Attribute attribute = query.getAttributes()[i];
+			String colName = attribute.getName();
+			if (!mapper.canMap( attribute ))
 				return false;
 
-			relevantTables.add(mapper.tableName(colName));
+			relevantTables.add(mapper.tableName( attribute ));
 		}
 
 		for (int i = 0; i < query.getFilters().length; ++i) {
-			String colName = query.getFilters()[i].getType();
-			if (!mapper.canMap(colName))
+			Filter filter = query.getFilters()[i];
+			String colName = filter.getName();
+			if (!mapper.canMap( filter ))
 				return false;
 
-			relevantTables.add(mapper.tableName(colName));
+			relevantTables.add(mapper.tableName( filter ));
 		}
 
 		fromTables = new String[relevantTables.size()];
@@ -177,7 +177,7 @@ public class CompiledSQLQuery {
 	 * @return true if all filter condition 'columns' in the query could be mapped to tables by
 	 * the mapper, otherwise false.
 	 */
-	private boolean whereClause(StringBuffer buf, ColumnMapper mapper)
+	private boolean whereClause(StringBuffer buf, FieldMapper mapper)
 		throws InvalidQueryException {
 
 		final int nFilters = query.getFilters().length;
@@ -193,17 +193,15 @@ public class CompiledSQLQuery {
 			for (int i = 0; i < nFilters; ++i) {
 
 				Filter f = query.getFilters()[i];
-				String colName = f.getType();
 				// don't need this next check because already checked in "fromClause"
 				// but leave incase this method is ever called without calling that
 				// method previously.
-				if (!mapper.canMap(colName))
+				if (!mapper.canMap( f ))
 					return false;
 
 				if (and)
 					buf.append(" AND ");
-				colName = mapper.qualifiedName(colName);
-				buf.append(colName).append(f.getRightHandClause()).append(" ");
+				buf.append( mapper.qualifiedName( f ) ).append(f.getRightHandClause()).append(" ");
 				and = true;
 			}
 		}
@@ -291,7 +289,7 @@ public class CompiledSQLQuery {
 				String starName = starNames[j];
 				if (tableName.startsWith(starName) && tableName.endsWith("_dm")) {
 					Table table = table(tableName, starName);
-					dimensionMappers.add(new ColumnMapper(new Table[] { table }, null));
+					dimensionMappers.add(new FieldMapper(new Table[] { table }, null));
 					dimensionTables.add(table);
 					break;
 				}
@@ -314,7 +312,7 @@ public class CompiledSQLQuery {
 						"Star has no _main table in database" + starName);
 
 				Table table = table(tableName, starName);
-				mainMappers.add(new ColumnMapper(new Table[] { table }, primaryKey));
+				mainMappers.add(new FieldMapper(new Table[] { table }, primaryKey));
 				mainTables.add(table);
 
 				// Create a mapper for each main containing main + all dm tables
@@ -325,7 +323,7 @@ public class CompiledSQLQuery {
 				mainAndDimensionTables.addAll(dimensionTables);
 				Table[] tableArray = new Table[mainAndDimensionTables.size()];
 				mainAndDimensionTables.toArray(tableArray);
-				joinMappers.add(new ColumnMapper(tableArray, primaryKey));
+				joinMappers.add(new FieldMapper(tableArray, primaryKey));
 
 			}
 		}
@@ -336,8 +334,8 @@ public class CompiledSQLQuery {
 		mappersList.addAll( joinMappers );
 
 		mappers =
-			(ColumnMapper[]) mappersList.toArray(
-				new ColumnMapper[mappersList.size()]);
+			(FieldMapper[]) mappersList.toArray(
+				new FieldMapper[mappersList.size()]);
 		
 		StringBuffer buf = new StringBuffer();
 		if ( logger.isDebugEnabled()) {
@@ -355,5 +353,5 @@ public class CompiledSQLQuery {
 	private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
 	private String starName = null;
 	private String[] fromTables = null;
-	private ColumnMapper[] mappers = null;
+	private FieldMapper[] mappers = null;
 }
