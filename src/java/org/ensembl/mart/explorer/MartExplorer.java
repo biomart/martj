@@ -278,6 +278,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK));
 
     JMenuItem open = new JMenuItem("Open");
+    open.setEnabled(false);
     open.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doLoadQueryFromMQL();
@@ -288,7 +289,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       KeyStroke.getKeyStroke(KeyEvent.VK_O, Event.CTRL_MASK));
 
     JMenuItem save = new JMenuItem(saveAction);
-
+    save.setEnabled(false);
+    file.add( save );
+    
     JMenuItem close = new JMenuItem("Close");
     close.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
