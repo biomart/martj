@@ -196,7 +196,7 @@ public class IDListFilterWidget
       public void actionPerformed(ActionEvent event) {
         if (fileChooser.showOpenDialog(parent)
           == JFileChooser.APPROVE_OPTION) {
-          file.setText(fileChooser.getSelectedFile().getName());
+          file.setText(fileChooser.getSelectedFile().getAbsolutePath());
           fileRadioButton.doClick();
         }
       }
