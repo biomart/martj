@@ -19,6 +19,7 @@ public class SourceSchema {
 	ArrayList linked_tables = new ArrayList();
 	DBAdaptor adaptor;
 	MetaDataResolverOracle resolver;
+	String dataset;
 	
 	public SourceSchema (String config){
 		
@@ -93,7 +94,7 @@ public class SourceSchema {
 	 */
 	public LinkedTables [] getLinkedTables() {
 		
-		LinkedTables [] b = new LinkedTables[1];
+		LinkedTables [] b = new LinkedTables[linked_tables.size()];
 		return (LinkedTables []) linked_tables.toArray(b);	
 		
 	}

@@ -19,6 +19,8 @@ public class Table  implements Cloneable {
 	public String cardinality = null;
 	public String extension;
 	public String status;
+	public boolean skip;
+	public boolean final_table;
 	private  String Name = null;
 	private Column [] columns;
 	

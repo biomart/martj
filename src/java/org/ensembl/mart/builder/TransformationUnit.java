@@ -15,7 +15,7 @@ public class TransformationUnit {
 	
 	Table temp_start;
 	Table temp_end;
-	Table ref;
+	Table ref_table;
 	String join;
 	
 	
@@ -23,10 +23,24 @@ public class TransformationUnit {
 		
 		String sql="";
 		if (join.equals("simple"))
-			sql=simpleJoin(temp_start, ref, temp_end.getName());
+			sql=simpleJoin(temp_start, ref_table, temp_end.getName());
 		
 		return sql;
 	}
+	
+	
+	public String dropTempTable (){
+		
+		String sql="";
+		if (!temp_end.final_table == true)
+		sql = "drop table "+ temp_end.getName()+";";
+		return sql;
+		
+	}
+	
+	
+	
+	
 	
 	
 	private static String simpleJoin(Table temp_start, Table ref_table, String temp){
@@ -66,14 +80,14 @@ public class TransformationUnit {
 	/**
 	 * @return Returns the ref.
 	 */
-	public Table getRef() {
-		return ref;
+	public Table getRef_table() {
+		return ref_table;
 	}
 	/**
 	 * @param ref The ref to set.
 	 */
-	public void setRef(Table ref) {
-		this.ref = ref;
+	public void setRef_table(Table ref) {
+		this.ref_table = ref;
 	}
 	/**
 	 * @return Returns the temp_end.

@@ -20,6 +20,8 @@ public class LinkedTables {
 	Table main_table;
 	ArrayList referenced_tables = new ArrayList();
 	String next_main;
+	String type;
+	String dataset;
 	
 	
 	public void addTable (Table table){	

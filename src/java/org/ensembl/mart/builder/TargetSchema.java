@@ -18,6 +18,20 @@ import java.util.*;
 public class TargetSchema {
 	
 	ArrayList transformations = new ArrayList();
+	String dataset;
+	
+	public TargetSchema (SourceSchema source_schema){
+		
+		dataset= source_schema.dataset;
+		
+		for (int j=0;j<source_schema.getLinkedTables().length;j++){
+	    Transformation final_table = new Transformation(source_schema.getLinkedTables()[j]);	
+		final_table.dataset = dataset;
+	    addTransformation(final_table);
+		}
+	}
+	
+	
 	
 	
 	public Transformation [] getTransformations() {
