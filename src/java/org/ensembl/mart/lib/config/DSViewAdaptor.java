@@ -15,7 +15,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib.config;
 
 /**
@@ -27,7 +27,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public interface DSViewAdaptor {
-  
+
   /**
    * Returns a String[] consisting of the displayNames of all DatasetView objects provided by
    * a particular DSViewAdaptor object. 
@@ -35,7 +35,7 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException for all underlying exceptions
    */
   public String[] getDatasetDisplayNames() throws ConfigurationException;
-  
+
   /**
    * Returns a String[] consisting of the internalNames of all DatasetView objects provided by
    * a particular DSViewAdaptor object.
@@ -43,7 +43,7 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException
    */
   public String[] getDatasetInternalNames() throws ConfigurationException;
-  
+
   /**
    * Returns a DatasetView[] consisting of all DatasetView objects provided by a particular
    * DSViewAdaptor object.
@@ -51,7 +51,7 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException  for all underlying exceptions
    */
   public DatasetView[] getDatasetViews() throws ConfigurationException;
-  
+
   /**
    * Determine if a DSViewAdaptor object contains a DatasetView with the given
    * displayName.
@@ -59,16 +59,18 @@ public interface DSViewAdaptor {
    * @return true if supported, false otherwise
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public boolean supportsDisplayName(String name) throws ConfigurationException ;
-  
+  public boolean supportsDisplayName(String name)
+    throws ConfigurationException;
+
   /**
    * Returns a specific DatasetView object, named by the given displayName 
    * @param name -- String displayName
    * @return DatasetView named by the given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException;
-  
+  public DatasetView getDatasetViewByDisplayName(String name)
+    throws ConfigurationException;
+
   /**
    * Determine if a DSViewAdaptor object contains a DatasetView with the given
    * internalName.
@@ -76,24 +78,44 @@ public interface DSViewAdaptor {
    * @return true if supported, false otherwise
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public boolean supportsInternalName(String name) throws ConfigurationException;
-  
+  public boolean supportsInternalName(String name)
+    throws ConfigurationException;
+
   /**
    * Returns a specific DatasetView object, named by the given internalName.
    * @param name -- String internalName
    * @return DatasetView named by the given internalName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException;
-  
+  public DatasetView getDatasetViewByInternalName(String name)
+    throws ConfigurationException;
+
   /**
-   * If a DSViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
-   * based on a comparison with the information stored in the object's target source.  May not actually do anything for some implimentations.
-   * 
+   * Determine if the DSViewAdaptor contains a DatasetView with the given
+   * dataset name.
+   * @param dataset -- dataset name
+   * @return true if supported, false otherwise
    * @throws ConfigurationException for all underlying Exceptions
    */
+  public boolean supportsDataset(String dataset) throws ConfigurationException;
+
+  /**
+   * Returns specific DatasetViews with the given dataset name 
+   * @param dataset -- dataset name
+   * @return DatasetViews with the given dataset name, empty array if non found
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public DatasetView[] getDatasetViewByDataset(String dataset)
+    throws ConfigurationException;
+
+  /**
+    * If a DSViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
+    * based on a comparison with the information stored in the object's target source.  May not actually do anything for some implimentations.
+    * 
+    * @throws ConfigurationException for all underlying Exceptions
+    */
   public void update() throws ConfigurationException;
-  
+
   /**
    * Method to allow DatasetView objects to be instantiated with a minimum of information, but then be lazy loaded with the rest of their
    * XML data when needed.  This method is intended primarily to be used by the DatasetView object itself, which automatically lazy loads itself
@@ -102,7 +124,7 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public void lazyLoad(DatasetView dsv) throws ConfigurationException;
-  
+
   /**
    * All implimentations should be able to create MartLocation objects which can be added to 
    * a MartRegistry object when RegistryDSViewAdaptor.getMartRegistry method is called.

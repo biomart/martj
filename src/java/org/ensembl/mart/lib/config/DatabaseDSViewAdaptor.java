@@ -278,4 +278,31 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 		return hashcode - ((DSViewAdaptor) o).hashCode();
 	}
 
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
+   */
+  public boolean supportsDataset(String dataset)
+    throws ConfigurationException {
+    return getDatasetViewByDataset(dataset).length>0;
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
+   */
+  public DatasetView[] getDatasetViewByDataset(String dataset)
+    throws ConfigurationException {
+
+    ArrayList l = new ArrayList();
+    DatasetView[] views = getDatasetViews();
+    for (int i = 0, n = views.length; i < n; i++) {
+      DatasetView view = views[i];
+      if (view.getDataset().equals( dataset )) {
+        l.add( view );
+      }
+    }
+    
+    return (DatasetView[]) l.toArray(new DatasetView[l.size()]);
+
+  }
+
 }

@@ -211,4 +211,24 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   public static void StoreDatasetView(DatasetView dsv, File file) throws ConfigurationException {
     DatasetViewXMLUtils.DatasetViewToFile(dsv, file);
   }
+  
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
+   */
+  public boolean supportsDataset(String dataset)
+    throws ConfigurationException {
+    return dsv.getDataset().equals(dataset);
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
+   */
+  public DatasetView[] getDatasetViewByDataset(String dataset)
+    throws ConfigurationException {
+
+    if (supportsDataset(dataset))
+      return new DatasetView[] { dsv };
+    else
+      return new DatasetView[0];
+  }
 }

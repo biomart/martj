@@ -27,116 +27,122 @@ package org.ensembl.mart.lib.config;
  */
 public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
 
-	private final DatasetView dsv;
-	private final String[] inames;
-	private final String[] dnames;
+  private final DatasetView dsv;
+  private final String[] inames;
+  private final String[] dnames;
   private final int hashcode;
 
-	/**
-	 * Constructor for an immutable SimpleDSViewAdaptor object.
-	 * @param dset -- DatasetView object
-	 * @throws ConfigurationException when the DatasetView is null
-	 */
-	public SimpleDSViewAdaptor(DatasetView dset) throws ConfigurationException {
-		if (dset == null)
-			throw new ConfigurationException("SimpleDatasetView objects must be instantiated with a DatasetView object");
-		inames = new String[] { dset.getInternalName()};
-		dnames = new String[] { dset.getDisplayName()};
-		dsv = dset;
-    
+  /**
+   * Constructor for an immutable SimpleDSViewAdaptor object.
+   * @param dset -- DatasetView object
+   * @throws ConfigurationException when the DatasetView is null
+   */
+  public SimpleDSViewAdaptor(DatasetView dset) throws ConfigurationException {
+    if (dset == null)
+      throw new ConfigurationException("SimpleDatasetView objects must be instantiated with a DatasetView object");
+    inames = new String[] { dset.getInternalName()};
+    dnames = new String[] { dset.getDisplayName()};
+    dsv = dset;
+
     dsv.setDSViewAdaptor(this);
     hashcode = dsv.hashCode();
-	}
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
-	 */
-	public String[] getDatasetDisplayNames() throws ConfigurationException {
-		return dnames;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
+   */
+  public String[] getDatasetDisplayNames() throws ConfigurationException {
+    return dnames;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
-	 */
-	public String[] getDatasetInternalNames() throws ConfigurationException {
-		return inames;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
+   */
+  public String[] getDatasetInternalNames() throws ConfigurationException {
+    return inames;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
-	 */
-	public DatasetView[] getDatasetViews() throws ConfigurationException {
-		return new DatasetView[] { dsv };
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
+   */
+  public DatasetView[] getDatasetViews() throws ConfigurationException {
+    return new DatasetView[] { dsv };
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
-	 */
-	public boolean supportsDisplayName(String name) {
-		if (dnames[0].equals(name))
-			return true;
-		else
-			return false;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
+   */
+  public boolean supportsDisplayName(String name) {
+    if (dnames[0].equals(name))
+      return true;
+    else
+      return false;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
-	 */
-	public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
-		if (!supportsDisplayName(name))
-			throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
-		return dsv;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
+   */
+  public DatasetView getDatasetViewByDisplayName(String name)
+    throws ConfigurationException {
+    if (!supportsDisplayName(name))
+      throw new ConfigurationException(
+        name
+          + " does not match the displayName of this SimpleDatasetView object\n");
+    return dsv;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
-	 */
-	public boolean supportsInternalName(String name) {
-		if (inames[0].equals(name))
-			return true;
-		else
-			return false;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
+   */
+  public boolean supportsInternalName(String name) {
+    if (inames[0].equals(name))
+      return true;
+    else
+      return false;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
-	 */
-	public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
-		if (!supportsInternalName(name))
-			throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
-		return dsv;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
+   */
+  public DatasetView getDatasetViewByInternalName(String name)
+    throws ConfigurationException {
+    if (!supportsInternalName(name))
+      throw new ConfigurationException(
+        name
+          + " does not match the internalName of this SimpleDatasetView object\n");
+    return dsv;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
-	 */
-	public void update() throws ConfigurationException {
-		//immutable object, cannot be updated.
-	}
-  
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
+   */
+  public void update() throws ConfigurationException {
+    //immutable object, cannot be updated.
+  }
+
   public String toString() {
-		StringBuffer buf = new StringBuffer();
+    StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
-		buf.append(" dataset DisplayName=").append(dsv.getDisplayName());
-		buf.append("]");
+    buf.append("[");
+    buf.append(" dataset DisplayName=").append(dsv.getDisplayName());
+    buf.append("]");
 
-		return buf.toString();
-	}
-  
+    return buf.toString();
+  }
+
   /**
-	 * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
-	 */
-	public boolean equals(Object o) {
-		return o instanceof SimpleDSViewAdaptor && hashCode() == o.hashCode();
-	}
-  
+   * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
+   */
+  public boolean equals(Object o) {
+    return o instanceof SimpleDSViewAdaptor && hashCode() == o.hashCode();
+  }
+
   /**
    * Calculated from the underlying DataSetView hashCode.
    */
-	public int hashCode() {
-		return hashcode;
-	}
+  public int hashCode() {
+    return hashcode;
+  }
 
   /**
    * allows any DSViewAdaptor implimenting object to be compared to any other
@@ -144,25 +150,45 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   public int compareTo(Object o) {
-    return hashCode() - ( (DSViewAdaptor) o).hashCode();
+    return hashCode() - ((DSViewAdaptor) o).hashCode();
   }
-  
-/**
- * Currently doesnt do anything, as Simple DatasetView objects are fully loaded
- * at instantiation.  Could change in the future.
- * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad()
- */
-	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
-		// Doesnt do anything, should be fully instantiated
-	}
+
+  /**
+   * Currently doesnt do anything, as Simple DatasetView objects are fully loaded
+   * at instantiation.  Could change in the future.
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad()
+   */
+  public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+    // Doesnt do anything, should be fully instantiated
+  }
 
   /**
    * Throws a ConfigurationException, as this doesnt have a compatible MartLocation element.
    * Client code should create one of the supported Adaptors from the DatasetView for this adaptor,
    * and use that one to create the MartRegistry object instead.
    */
-	public MartLocation[] getMartLocations() throws ConfigurationException {
-		  throw new ConfigurationException("Cannot create a MartLocation from a SimpleDatasetViewAdaptor\n");
-	}
+  public MartLocation[] getMartLocations() throws ConfigurationException {
+    throw new ConfigurationException("Cannot create a MartLocation from a SimpleDatasetViewAdaptor\n");
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
+   */
+  public boolean supportsDataset(String dataset)
+    throws ConfigurationException {
+    return dsv.getDataset().equals(dataset);
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
+   */
+  public DatasetView[] getDatasetViewByDataset(String dataset)
+    throws ConfigurationException {
+
+    if (supportsDataset(dataset))
+      return new DatasetView[] { dsv };
+    else
+      return new DatasetView[0];
+  }
 
 }
