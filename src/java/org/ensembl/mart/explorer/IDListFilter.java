@@ -70,7 +70,7 @@ public class IDListFilter implements Filter {
       return buf.toString();
     }
 
-    public String sqlRepr(){
+    public String getWhereClause(){
       StringBuffer buf = new StringBuffer();
       buf.append( type).append( " IN (");
 			for(int i=0; i<identifiers.length; ++i ) {
@@ -100,6 +100,14 @@ public class IDListFilter implements Filter {
   }
 
   public void setUrl(URL url){ this.url = url; }
+
+  public String sqlValue() {
+	  return null;
+}
+
+  public String getValue() {
+		return null;
+}
   
   private String type;
   private String[] identifiers = new String[0];

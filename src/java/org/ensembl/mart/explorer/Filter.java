@@ -5,5 +5,13 @@ package org.ensembl.mart.explorer;
 public interface Filter {
     String getType();
 
-    String sqlRepr();
+    /**
+     * Value, null if not needed. This can be added to the prepared statment.
+     */
+    String getValue();
+
+    /**
+     * String to be included in where clause.
+     */
+    String getWhereClause();
 }

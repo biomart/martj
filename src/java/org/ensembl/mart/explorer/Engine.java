@@ -81,7 +81,16 @@ public class Engine {
       String sql = csql.toSQL();
       logger.warn( "SQL = " +sql );
       Connection conn = getDatabaseConnection( query );
-      ResultSet rs = conn.createStatement().executeQuery( sql );
+      PreparedStatement ps = conn.prepareStatement( sql );
+      List filters = query.getFilters();
+      int p=0;
+      for( int i=0; i<filters.size(); ++i) {
+				Filter f = (Filter)filters.get(i);
+        String value = f.getValue();
+				if ( value!=null ) ps.setString( p++, value);
+      }
+
+      ResultSet rs = ps.executeQuery();
       query.getResultTarget().output( rs );
     }
 

@@ -38,8 +38,12 @@ public class BasicFilter implements Filter {
       return buf.toString();
     }
 
-    public String sqlRepr(){
-			return type +condition+value;
+    public String getWhereClause(){
+			return type +condition+"?";
+    }
+
+		public String sqlValue() {
+			return value;
     }
 
     private String type;

@@ -61,7 +61,7 @@ public class CompiledSQLQuery {
     buf.append( " WHERE " );
     for( int i=0; i<nFilters; ++i ) {
       Filter f = (Filter)filters.get(i);
-      buf.append( f.sqlRepr() );
+      buf.append( f.getWhereClause() );
       if ( i+1 < nFilters ) buf.append( " AND " );
     }
   }
