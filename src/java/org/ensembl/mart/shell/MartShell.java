@@ -764,7 +764,7 @@ public class MartShell {
    * 
    */
   public void addMartRegistry(String confFile) throws ConfigurationException, MalformedURLException {
-    msl.addMartRegistry(confFile);
+    msl.addMartRegistry(confFile, false);
   }
 
   /**

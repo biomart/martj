@@ -143,8 +143,9 @@ public class MartShellLib {
    * to be managed with add/remove/update commands.
    */
   public MartShellLib() {
+      adaptorManager = new RegistryDSConfigAdaptor(false, false, false);
   }
-
+  
   /**
    * Create a MartShellLib object with a previously populated
    * adaptorManager.
@@ -154,13 +155,25 @@ public class MartShellLib {
     adaptorManager = adaptor;
   }
 
-  public void addMartRegistry(String confFile) throws ConfigurationException, MalformedURLException {
+  /**
+   * Add a MartRegistry to this MartShellLib instance. Optionally, instruct
+   * the system to bypass the caching system and fully load all DatasetConfig objects into
+   * memory (This option is not used by MartShell, but is available for users who wish
+   * to run this on a server with adequate memory).
+   * @param confFile - String path to a configuration file, either absolute, or relative to the ClASSPATH
+   * @param loadFully - boolean, if false, all DatasetConfig objects are cached to the filesystem. If true
+   *                    all DatasetConfig objects are fully loaded into memory, with no lazy loading.
+   * @throws ConfigurationException if confFile is not correctly parsed into a proper URL, and for all Configuration
+   *         loading exceptions.
+   * @throws MalformedURLException if confFile is a malformed URL.
+   */
+  public void addMartRegistry(String confFile, boolean loadFully) throws ConfigurationException, MalformedURLException {
     URL confURL = InputSourceUtil.getURLForString(confFile);
 
     if (confURL == null)
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
-    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, false);
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, loadFully, false);
     //see notes to adaptorManager for boolean settings
     harvestAdaptorsFrom(adaptor);
   }
@@ -2491,7 +2504,7 @@ public class MartShellLib {
   private String MQLError = null;
 
   //these allow the MartShellLib to act as controller to the MartShell and MartCompleter
-  protected RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor(false, false, false);
+  protected RegistryDSConfigAdaptor adaptorManager = null;
   //dont ignore cache, dont validate, and dont include hidden Members (these are for MartEditor only)
   protected DatasetConfig envDataset = null;
   protected DetailedDataSource envMart = null;
