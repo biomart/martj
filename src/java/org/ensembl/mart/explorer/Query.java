@@ -104,6 +104,22 @@ public class Query {
       return buf.toString();
     }
 
+    public String getSpecies(){
+            return species;
+        }
+
+    public void setSpecies(String species){
+            this.species = species;
+        }
+
+    public String getFocus(){
+            return Focus;
+        }
+
+    public void setFocus(String Focus){
+            this.Focus = Focus;
+        }
+
     private List attributes = new Vector();
     private List filters = new Vector();
 
@@ -120,4 +136,6 @@ public class Query {
   private String user;
   private String password;
   private ResultTarget resultTarget;
+  private String species;
+  private String Focus;
 }

@@ -18,6 +18,8 @@ public abstract class Base extends TestCase {
 	    query.setHost("kaka.sanger.ac.uk");
       query.setUser("anonymous");
       query.setDatabase( "ensembl_mart_10_1" );
+      query.setSpecies( "homo_sapiens" );
+      query.setFocus( "gene" );
     }
 
     public Base(String name) {

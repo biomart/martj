@@ -48,7 +48,7 @@ public class CompiledSQLQuery {
   private void fromClause( StringBuffer buf ) {
     buf.append( " FROM " );
     // tmp
-		buf.append( " homo_sapiens_core_gene " );
+		buf.append( query.getSpecies() ).append( "_core_" ).append( query.getFocus() );
   }
 
   private void whereClause( StringBuffer buf ) {
