@@ -65,8 +65,51 @@ DEFAULT_PASSWORD = ""
 
 GAP = 5
 SPACE=" &nbsp;"
+
+
+        
+class OptionTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListener): 
+
+    """A TreeNode which: (1) causes the OptionPage to be displayed if
+    node is selected , (2) derives it's label from Option.label the
+    contained Option (via toString()), (3) Listens to changes in
+    targetComponent and cause the tree to be redrawn when changes
+    detected. """
+
+
+    def __init__(self, tree, parent, cardContainer, targetCardName, label):
+        
+        """ Adds targetComponent to cardContainer with the name
+        targetCardName. Makes this a tree listener and inserts self as
+        child of parent at specified position."""
+
+        DefaultMutableTreeNode.__init__(self)
+        self.label = label
+	self.cardContainer = cardContainer
+	self.targetCardName = targetCardName
+        self.tree = tree
+        self.tree.addTreeSelectionListener( self )
+        self.tree.model.insertNodeInto( self, parent, parent.childCount)
         
 
+    def toString(self):
+        return self.label
+        
+
+
+    def valueChanged(self, event):
+
+	""" Brings the targetComponent to the front of the
+	cardContainer if this was the node selected in the tree"""
+	if event.newLeadSelectionPath and self == event.newLeadSelectionPath.lastPathComponent:
+	    self.cardContainer.show( self.targetCardName )
+
+    def stateChanged(self, event=None):
+        # redraw tree
+        self.tree.repaint()
+
+
+        
 class Option(JPanel, ChangeListener ):
 
     """ Listens for statechange events; these occur when a button is
@@ -74,10 +117,15 @@ class Option(JPanel, ChangeListener ):
     this option to be added to the tree and conversely, deselection
     causes it to be removed. """
 
-    def __init__(self, label, group=None, clearButton=None):
+    def __init__(self, label,
+                 attributeManager,
+                 group=None, clearButton=None):
 
         JPanel.__init__( self, BorderLayout() )
         self.preferredSize = (170, 30)
+        self.name = str(self)
+
+        self.attributeManager = attributeManager 
 
         if group:
             self.button = JRadioButton(label)
@@ -92,7 +140,16 @@ class Option(JPanel, ChangeListener ):
         self.node = None
 
 
+    def addChangeListener(self, listener):
+        
+        # This might cause the screen to flicker if there are too many
+        # calls per action
+
+        self.button.model.addChangeListener( listener )
+
+
     def stateChanged( self, event=None):
+        """ Called when the buttons model changes. """
         if self.button.selected : self.select()
         else : self.deselect()
 
@@ -101,23 +158,23 @@ class Option(JPanel, ChangeListener ):
     def select( self ):
         if not self.node:
             print "selected", self.button.text
-            self.node = 1
-        # todo add to tree
-
+            self.node = self.attributeManager.select( self )
 
 
 
     def deselect( self ):
         if self.node:
             print "deselected", self.button.text
-            node = None
-        # todo remove from tree
-        
+            self.attributeManager.deselect( self )
+            self.node = None
+
+
+    def label(self):
+        return String(self.button.text)
 
 
 
-
-class TmpAtributesPage(JPanel):
+class OptionPage(JPanel):
     attributes = (
     ( "Features",
       ( "REGION",
@@ -198,11 +255,12 @@ class TmpAtributesPage(JPanel):
     )
     
 
-    def __init__(self):
+    def __init__(self, attributeManager):
         p = JTabbedPane()
         self.add( p )
+        self.attributeManager = attributeManager
         
-        for g1 in TmpAtributesPage.attributes:
+        for g1 in OptionPage.attributes:
             print g1[0]
             # tab level
             p1 = Box.createVerticalBox()
@@ -239,17 +297,33 @@ class TmpAtributesPage(JPanel):
                     for option in optionGroup[1]:
                         # individual option
                         if radio:
-                            button = Option( option, radioGroup, clearButton )
+                            button = Option( option, self, radioGroup, clearButton )
                             #button = JRadioButton( option )
                             #radioGroup.add( button )
                         else:
-                            button = Option( option )
+                            button = Option( option, self )
                             #button = JCheckBox(option)
                             # add button to left or right column
                         list[i%2].add( button )
                         i = i+1
 
 
+    def select(self, option ):
+        print "select ", option.label()
+        node = OptionTreeNode( self.attributeManager.tree
+                               ,self.attributeManager.node # parent
+                               ,self.attributeManager.cardContainer
+                               ,"attribute_manager_page"
+                               ,option.label()
+                               )
+        self.attributeManager.refreshView()
+        return node
+
+    def deselect( self, option ):
+        print "deselect ", option.label()
+        self.attributeManager.tree.model.removeNodeFromParent( option.node )
+        self.attributeManager.refreshView()
+        
 
 
 def toVector(list):
@@ -978,9 +1052,8 @@ class AttributeManagerPage(Page):
         self.path = None
 
         # tmp code
-        self.add( JLabel("fred") )
-        self.add( JScrollPane( TmpAtributesPage()) )
-        self.add( JLabel("bob") )
+        self.tmpAttributesPage =  OptionPage( self )
+        self.add( self.tmpAttributesPage )
 
 
     def valueChanged(self, event=None):
@@ -1005,7 +1078,10 @@ class AttributeManagerPage(Page):
         self.selected.add( value )
         self.available.remove( value )
 
-        if value=="sequence":
+        if isinstance( value, Option):
+            value = value.button.text
+            attributePage = self.tmpAttributesPage
+        elif value=="sequence":
             attributePage = SequencePage( self )
             self.sequencePage = attributePage
         else:
@@ -1275,7 +1351,7 @@ class QueryEditor(JPanel):
 	scrollPane = JScrollPane(tree)
 	scrollPane.setPreferredSize( Dimension(350,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( self.cardContainer , BorderLayout.CENTER )
+	self.add( JScrollPane( self.cardContainer ) , BorderLayout.CENTER )
 
 
 
