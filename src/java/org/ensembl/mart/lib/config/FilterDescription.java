@@ -88,6 +88,62 @@ public class FilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Returns the description, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
+	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
+	 * @return String description
+	 */
+	public String getDescription(String internalName) {
+		if (this.internalName.equals(internalName))
+			return description;
+		else {
+			if (uiOptionNameMap.containsKey(internalName))
+				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDescription();
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return description;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getDescription(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
+		}
+	}
+	
+	/**
+	 * Returns the displayName, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
+	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
+	 * @return String displayName
+	 */
+  public String getDisplayname(String internalName) {
+		if (this.internalName.equals(internalName))
+			return displayName;
+		else {
+			if (uiOptionNameMap.containsKey(internalName))
+				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDisplayName();
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return displayName;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getDisplayName(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
+		}
+  }
+	
+	/**
 	 * returns the field.
 	 * @return String field
 	 */

@@ -161,6 +161,39 @@ public class Option extends BaseConfigurationObject {
 		return hasOptions;
 	}
 
+  public String getDisplayName(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDisplayName(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getDisplayName();
+				}
+				return null; // nothing found
+			}
+		}
+  }
+  
+  public String getDescription(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDescription(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getDescription();
+				}
+				return null; // nothing found
+			}
+		}
+  }
 	/**
 	  * @return
 	  */
