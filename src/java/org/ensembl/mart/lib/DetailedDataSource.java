@@ -136,7 +136,7 @@ public class DetailedDataSource implements DataSource {
 		this.password = password;
 		this.maxPoolSize = maxPoolSize;
 		this.jdbcDriverClassName = jdbcDriverClassName;
-
+    this.displayName = user + "/" + databaseName + "@" + host + ":" + port; 
 	}
 
 	/**
@@ -410,6 +410,13 @@ public class DetailedDataSource implements DataSource {
 		return displayName;
 	}
 
+  /**
+   * @return
+   */
+  public String getUser() {
+    return user;
+  }
+  
 	/**
 	 * @return
 	 */
@@ -430,5 +437,28 @@ public class DetailedDataSource implements DataSource {
 	public String getPort() {
 		return port;
 	}
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  public String toString() {
+    StringBuffer buf = new StringBuffer();
+    
+    buf.append("[");
+    buf.append(" databaseType=").append(databaseType);
+    buf.append(", host=").append(host);
+    buf.append(", port=").append(port);
+    buf.append(", databaseName=").append(databaseName);
+    buf.append(", maxPoolSize=").append(maxPoolSize);
+    buf.append(", password=").append(password);
+    buf.append(", user=").append(user);
+    buf.append(", jdbcDriverClassName=").append(jdbcDriverClassName);
+    buf.append(", displayName=").append(displayName);
+    buf.append(", dataSource=").append(dataSource);
+    buf.append(", connectionString=").append(connectionString);    
+    buf.append("]");
+    
+    return buf.toString();
+  }
 
 }
