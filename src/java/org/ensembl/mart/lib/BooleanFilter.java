@@ -64,7 +64,7 @@ public class BooleanFilter implements Filter {
 		this.handler = handler;
     
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
-		hashcode = (this.tableConstraint == null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
+		hashcode = (this.tableConstraint != null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
 		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
 		hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
   }
