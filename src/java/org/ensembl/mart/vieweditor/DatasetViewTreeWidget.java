@@ -67,7 +67,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                 true);//iconifiable
         this.editor = editor;
         try {
-            this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
+	   //  this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
             DatasetView view = new DatasetView();
             if (file == null) {
                 view = new DatasetView("new", "new", "new");

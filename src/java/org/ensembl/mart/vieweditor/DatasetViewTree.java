@@ -69,17 +69,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.lib.config.AttributeCollection;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.AttributeGroup;
-import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.BaseConfigurationObject;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
-import org.ensembl.mart.lib.config.FilterCollection;
-import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.FilterGroup;
-import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.*;
 
 /**
  * Class DatasetViewTree extends JTree.
@@ -245,7 +235,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     AttributeDescription ad = new AttributeDescription();
                     ad.setAttribute("internalName", "new");
                     insert(ad, "AttributeDescription");
-                } else if (e.getActionCommand().equals("delete"))
+                } else if (e.getActionCommand().equals("insert option")) {
+                    Option option = new Option();
+                    option.setAttribute("internalName", "new");
+                    insert(option, "Option");
+                }else if (e.getActionCommand().equals("delete"))
                     delete();
                 else if (e.getActionCommand().equals("save"))
                     save();
@@ -469,7 +463,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
             menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert option", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
 
@@ -514,7 +508,8 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             copiedNode = new DatasetViewTreeNode(editingNode.toString(), new FilterDescription((FilterDescription) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             copiedNode = new DatasetViewTreeNode(editingNode.toString(), new AttributeDescription((AttributeDescription) editingNode.getUserObject()));
-
+        else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Option"))
+            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
         DatasetViewTreeNodeSelection ss = new DatasetViewTreeNodeSelection(copiedNode);
         clipboard.setContents(ss, this);
     }

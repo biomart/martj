@@ -19,19 +19,11 @@
 package org.ensembl.mart.vieweditor;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.ensembl.mart.lib.config.AttributeCollection;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.AttributeGroup;
-import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.FilterCollection;
-import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.FilterGroup;
-import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.*;
 
 /**
  * Class DatasetViewTreeNode extends DefaultMutableTreeNode.
@@ -87,21 +79,37 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                             String grName = fiGroup.getInternalName();
                             DatasetViewTreeNode grNode = new DatasetViewTreeNode("FilterGroup:" + grName);
                             grNode.setUserObject(fiGroup);
-                            //fpNode.add(grNode);
                             FilterCollection[] collections = fiGroup.getFilterCollections();
                             for (int z = 0; z < collections.length; z++) {
                                 FilterCollection fiCollection = collections[z];
                                 String colName = fiCollection.getInternalName();
                                 DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
                                 colNode.setUserObject(fiCollection);
-                                //grNode.add(colNode);
                                 List descriptions = fiCollection.getFilterDescriptions();
                                 for (int y = 0; y < descriptions.size(); y++) {
                                     FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                                     String desName = fiDescription.getInternalName();
                                     DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
                                     desNode.setUserObject(fiDescription);
-                                    //colNode.add(desNode);
+                                    Enable[] enables = fiDescription.getEnables();
+                                    Disable[] disables = fiDescription.getDisables();
+                                    Option[] options = fiDescription.getOptions();
+                                    for (int k = 0; k < enables.length; k++) {
+                                        Enable enable = enables[k];
+                                        DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                                        enableNode.setUserObject(enable);
+                                    }
+                                    for (int k = 0; k < disables.length; k++) {
+                                        Disable disable = disables[k];
+                                        DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                                        disableNode.setUserObject(disable);
+                                    }
+                                    for (int k = 0; k < options.length; k++) {
+                                        Option option = options[k];
+                                        String optionName = option.getInternalName();
+                                        DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                                        optionNode.setUserObject(option);
+                                    }
                                 }
                             }
                         }
@@ -123,13 +131,11 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                             String grName = atGroup.getInternalName();
                             DatasetViewTreeNode grNode = new DatasetViewTreeNode("AttributeGroup:" + grName);
                             grNode.setUserObject(atGroup);
-                            //apNode.add(grNode);
                             AttributeCollection[] collections = atGroup.getAttributeCollections();
                             for (int z = 0; z < collections.length; z++) {
                                 AttributeCollection atCollection = collections[z];
                                 String colName = atCollection.getInternalName();
                                 DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
-                                //grNode.add(colNode);
                                 colNode.setUserObject(atCollection);
                                 List descriptions = atCollection.getAttributeDescriptions();
                                 for (int y = 0; y < descriptions.size(); y++) {
@@ -137,7 +143,6 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                                     String desName = atDescription.getInternalName();
                                     DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
                                     desNode.setUserObject(atDescription);
-                                    //colNode.add(desNode);
                                 }
                             }
                         }
@@ -161,14 +166,31 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         String colName = fiCollection.getInternalName();
                         DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
                         colNode.setUserObject(fiCollection);
-                       // grNode.add(colNode);
                         List descriptions = fiCollection.getFilterDescriptions();
                         for (int y = 0; y < descriptions.size(); y++) {
                             FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                             String desName = fiDescription.getInternalName();
                             DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
                             desNode.setUserObject(fiDescription);
-                            //colNode.add(desNode);
+                            Enable[] enables = fiDescription.getEnables();
+                            Disable[] disables = fiDescription.getDisables();
+                            Option[] options = fiDescription.getOptions();
+                            for (int k = 0; k < enables.length; k++) {
+                                Enable enable = enables[k];
+                                DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                                enableNode.setUserObject(enable);
+                            }
+                            for (int k = 0; k < disables.length; k++) {
+                                Disable disable = disables[k];
+                                DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                                disableNode.setUserObject(disable);
+                            }
+                            for (int k = 0; k < options.length; k++) {
+                                Option option = options[k];
+                                String optionName = option.getInternalName();
+                                DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                                optionNode.setUserObject(option);
+                            }
                         }
                     }
                 }
@@ -190,7 +212,6 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         AttributeCollection atCollection = collections[z];
                         String colName = atCollection.getInternalName();
                         DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
-                        //grNode.add(colNode);
                         colNode.setUserObject(atCollection);
                         List descriptions = atCollection.getAttributeDescriptions();
                         for (int y = 0; y < descriptions.size(); y++) {
@@ -198,7 +219,6 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                             String desName = atDescription.getInternalName();
                             DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
                             desNode.setUserObject(atDescription);
-                            //colNode.add(desNode);
                         }
                     }
                 }
@@ -219,7 +239,25 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                     String desName = fiDescription.getInternalName();
                     DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
                     desNode.setUserObject(fiDescription);
-                    //colNode.add(desNode);
+                    Enable[] enables = fiDescription.getEnables();
+                    Disable[] disables = fiDescription.getDisables();
+                    Option[] options = fiDescription.getOptions();
+                    for (int k = 0; k < enables.length; k++) {
+                        Enable enable = enables[k];
+                        DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                        enableNode.setUserObject(enable);
+                    }
+                    for (int k = 0; k < disables.length; k++) {
+                        Disable disable = disables[k];
+                        DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                        disableNode.setUserObject(disable);
+                    }
+                    for (int k = 0; k < options.length; k++) {
+                        Option option = options[k];
+                        String optionName = option.getInternalName();
+                        DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                        optionNode.setUserObject(option);
+                    }
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
@@ -251,6 +289,25 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
                 desNode.setUserObject(fiDescription);
                 this.add(desNode);
+                Enable[] enables = fiDescription.getEnables();
+                Disable[] disables = fiDescription.getDisables();
+                Option[] options = fiDescription.getOptions();
+                for (int k = 0; k < enables.length; k++) {
+                    Enable enable = enables[k];
+                    DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                    enableNode.setUserObject(enable);
+                }
+                for (int k = 0; k < disables.length; k++) {
+                    Disable disable = disables[k];
+                    DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                    disableNode.setUserObject(disable);
+                }
+                for (int k = 0; k < options.length; k++) {
+                    Option option = options[k];
+                    String optionName = option.getInternalName();
+                    DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                    optionNode.setUserObject(option);
+                }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
             setName("AttributeCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
@@ -265,12 +322,40 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
             setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+            FilterDescription fiDescription = (FilterDescription) obj;
+            Enable[] enables = fiDescription.getEnables();
+            Disable[] disables = fiDescription.getDisables();
+            Option[] options = fiDescription.getOptions();
+            for (int k = 0; k < enables.length; k++) {
+                Enable enable = enables[k];
+                DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                enableNode.setUserObject(enable);
+                this.add(enableNode);
+            }
+            for (int k = 0; k < disables.length; k++) {
+                Disable disable = disables[k];
+                DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                disableNode.setUserObject(disable);
+                this.add(disableNode);
+            }
+            for (int k = 0; k < options.length; k++) {
+                Option option = options[k];
+                String optionName = option.getInternalName();
+                DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                optionNode.setUserObject(option);
+                this.add(optionNode);
+            }
 
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
             setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
+        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Enable")) {
+            setName("Enable");
+        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {
+            setName("Disable");
+        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Option")) {
+            setName("Option: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         }
-
     }
 
 }

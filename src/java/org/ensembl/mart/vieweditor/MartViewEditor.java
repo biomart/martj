@@ -348,8 +348,8 @@ public class MartViewEditor extends JFrame {
         //Create and set up the window.
         MartViewEditor frame = new MartViewEditor();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        ImageIcon icon = createImageIcon(IMAGE_DIR+"MartView_cube.gif");
-        frame.setIconImage(icon.getImage());
+        //ImageIcon icon = createImageIcon(IMAGE_DIR+"MartView_cube.gif");
+        //frame.setIconImage(icon.getImage());
         //Display the window.
         frame.setVisible(true);
     }
