@@ -63,6 +63,7 @@ DEFAULT_PORT = ""
 DEFAULT_USER  = "anonymous"
 DEFAULT_PASSWORD = ""
 
+APPLICATION_SIZE = (1000,700)
 GAP = 5
 SPACE=" &nbsp;"
 
@@ -724,6 +725,32 @@ class SimpleAttributePage(Page):
         return self.field
 
 
+class ColumnContainer(JPanel):
+
+    def __init__(self, nColumns=2, components=None):
+        JPanel.__init__(self)
+
+        self.nColumns = nColumns
+        self.columns = []
+        self.index = 0
+
+        box = Box.createHorizontalBox()
+        for i in range(nColumns):
+            self.columns.append( Box.createVerticalBox() )
+        map( box.add, self.columns )
+        JPanel.add(self, box)
+
+        if components:
+            map(self.add, components)
+
+
+    def add( self, component):
+        nColumns = len( self.columns )
+        self.columns[ self.index%nColumns ].add( component ) 
+        self.index = self.index + 1
+
+    def freezeMaximumSize(self):
+        self.maximumSize = self.preferredSize
 
 
 class SequencePage(Page):
@@ -735,7 +762,7 @@ class SequencePage(Page):
         self.name = self.field + "_attribute_page"
 	self.node = DefaultMutableTreeNode( self )
 	self.nodeInTree = None
-        self.remove = JButton("Remove", actionPerformed=self.removeAction)
+        self.remove = JButton("Clear", actionPerformed=self.removeAction)
 
         self.transcript = JRadioButton( "Transcripts/proteins"
                                         ,actionPerformed=self.actionPerformed)
@@ -811,12 +838,13 @@ class SequencePage(Page):
         self.flank5Label = JLabel("5' Flanking region")
         self.flank5 = JTextField(10)
 	self.flank5.maximumSize=max
+        flank5Panel = ColumnContainer(2,(self.flank5Label, self.flank5))
 
 	self.flank3Label = JLabel("3' Flanking region")
         self.flank3 = JTextField(10)
         self.flank3.maximumSize=max
-	
-
+        flank3Panel = ColumnContainer(2,(self.flank3Label, self.flank3))
+        
         self.typeGroup = ButtonGroup()
         self.includeGroup = ButtonGroup()
 	self.noInclude = JRadioButton()
@@ -825,13 +853,23 @@ class SequencePage(Page):
         map( self.typeGroup.add, ( self.transcript, self.gene, self.noType) )
         self.dependencies()
 
-        # add components to panel
-        includePanel = Box.createVerticalBox()
+        includePanel = ColumnContainer()
 	includePanel.border = BorderFactory.createEmptyBorder( 0,30,0,0 )
-        map( includePanel.add, self.includeButtons + ( self.flank5Label, self.flank5, 
-						       self.flank3Label, self.flank3 ) )
-        map( self.add, (self.remove, self.gene, self.transcript
-                        , includePanel, Box.createVerticalGlue()) )
+        map( includePanel.add, self.includeButtons
+             + ( flank3Panel, flank5Panel) )
+        includePanel.freezeMaximumSize()
+
+        # hPanel is capable of displaying primary buttons in top
+        # left of panel it is added to.
+        hPanel = Box.createHorizontalBox()
+        vPanel = Box.createVerticalBox()
+        map( vPanel.add, (self.remove, self.gene, self.transcript) )
+        hPanel.add( vPanel )
+        hPanel.add( Box.createHorizontalGlue() )
+        
+        map( self.add, (hPanel
+                        , includePanel
+                        , Box.createVerticalGlue()) )
 	self.changeEvent = ChangeEvent( self )
 	
 
@@ -1278,7 +1316,8 @@ class QueryEditor(JPanel):
 class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
-        JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
+        JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation
+                        , size=APPLICATION_SIZE)
 
 	self.cursorUtil = CursorUtil()
 	self.chooser = JFileChooser( System.getProperty("user.home") )
