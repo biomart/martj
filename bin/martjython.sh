@@ -25,7 +25,9 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/log4j-1.2.6.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jython.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/junit.jar
 
-CMD="java -classpath ${TMP_CLASSPATH} -Dpython.cachedir=${CACHE_DIR} org.python.util.jython $1"
+TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-#echo $CMD
+CMD="java -classpath ${TMP_CLASSPATH} -Dpython.cachedir=${CACHE_DIR} -Dpython.path=${TMP_JYTHON_LIB} org.python.util.jython $1"
+
+echo $CMD
 $CMD
