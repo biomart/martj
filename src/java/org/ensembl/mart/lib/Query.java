@@ -223,7 +223,7 @@ public class Query {
   }
 
   /**
-   * Add filter to end of filter list. 
+   * Add filter to the filters array at the specified index. 
    * 
    * @param index position where to insert the filter in the filters array.
    * @param filter filter to be added
