@@ -2058,6 +2058,7 @@ public class DatabaseDatasetViewUtils {
 
     String[] dsList = new String[retSet.size()];
     retSet.toArray(dsList);
+    Arrays.sort(dsList);
     return dsList;
   }
 
@@ -2114,6 +2115,7 @@ public class DatabaseDatasetViewUtils {
 
     String[] retList = new String[potentials.size()];
     potentials.toArray(retList);
+    //Arrays.sort(retList);
     return retList;
   }
   
@@ -2404,6 +2406,18 @@ public class DatabaseDatasetViewUtils {
     allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(dsource, databaseName, datasetName)));
     List allCols = new ArrayList();
 
+    // ID LIST FC and FDs
+    FilterCollection fcList = new FilterCollection();
+    fcList.setInternalName("id_list");
+    fcList.setDisplayName("ID LIST");
+    
+    FilterDescription fdBools= new FilterDescription();
+    fdBools.setInternalName("id_list_filters");
+    fdBools.setType("list");
+	FilterDescription fdLists= new FilterDescription();
+	fdLists.setInternalName("id_list_limit_filters");
+	fdLists.setType("list");
+		
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
 	  String content = null;
@@ -2471,10 +2485,25 @@ public class DatabaseDatasetViewUtils {
 		  if (isMainTable(tableName)) {
 		  	tableName = "main";
 		  	allCols.add(cname);
-			fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
+			if (!cname.endsWith("_bool"))
+			  fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
+		    else{
+		      FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
+		      Option opBool = new Option(fdBool);
+		      fdBools.addOption(opBool);
+		      
+		    }
 		  }
-          if (!cname.endsWith("_bool"))
+          if (!cname.endsWith("_bool")){
             ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize, joinKey));
+            if (cname.endsWith("_list")){
+            	
+				FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
+				Option op = new Option(fdList);
+				fdLists.addOption(op);
+            	
+            }
+          }
           
         }
         else if (isLookupTable(tableName)){     	
@@ -2500,7 +2529,11 @@ public class DatabaseDatasetViewUtils {
       if (fc != null)
         fg.addFilterCollection(fc);
     }
-
+    
+    fcList.addFilterDescription(fdBools);
+	fcList.addFilterDescription(fdLists);
+	fg.addFilterCollection(fcList);
+    
     ap.addAttributeGroup(ag);
     fp.addFilterGroup(fg);
 
@@ -2574,7 +2607,16 @@ public class DatabaseDatasetViewUtils {
 	    filt.setQualifier("only");
 	    filt.setLegalQualifiers("only,excluded");
 	  }
-	
+	  else if (columnName.endsWith("_list")){
+	    descriptiveName = columnName.replaceFirst("_list", "");
+	    filt.setType("list");
+	    filt.setQualifier("=");
+	    filt.setLegalQualifiers("=,in");
+	    // hack for multiple display_id in ensembl xref tables
+	    if (descriptiveName.equals("display_id")){
+	    	descriptiveName = tableName.split("__")[1].replaceFirst("xref_","");
+	    }
+	  }
 	  else{
 	    filt.setType(DEFAULTTYPE);
 	    filt.setQualifier(DEFAULTQUALIFIER);
