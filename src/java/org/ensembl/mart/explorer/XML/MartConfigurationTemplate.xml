@@ -648,13 +648,13 @@
         </FilterCollection>
         <FilterCollection displayName="From" internalName="Start" type="select">
           <UIFilterDescription description="Choose this to disable any bp, marker, or band starts that you have chosen" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;=" tableConstraint="gene_main" type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="snp_chrom_start" internalName="bp_start" qualifier="&gt;=" tableConstraint="snp_main" type="range"/>
           <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_start" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Band" internalName="band_start" objectCode="Band" type="range"/>
         </FilterCollection>
         <FilterCollection displayName="To" internalName="End" type="select">
           <UIFilterDescription description="Choose this to disable any bp_end, marker_end, or band_end filters" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;=" tableConstraint="gene_main" type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="snp_chrom_end" internalName="bp_end" qualifier="&lt;=" tableConstraint="snp_main" type="range"/>
           <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_end" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="Band" internalName="band_end" objectCode="Band" type="range"/>
         </FilterCollection>
