@@ -19,7 +19,7 @@ import java.util.*;
 public class MartBuilder {
 	
 	
-	private static String config ="data/builder_connection_mysql.properties";
+	private static String config ="data/builder/builder_connection_mysql.properties";
 	private static ArrayList schemas = new ArrayList();
 	private static TargetSchema target_schema = null;
 	
@@ -40,7 +40,7 @@ public class MartBuilder {
 		
 		if (config_info.equals("C")){
 			String output_file=getUserInput("OUTPUT CONFIG FILE: ");
-			output_file = "data/"+output_file;
+			output_file = "data/builder/"+output_file;
 			
 			File f = new File(output_file);
 			f.delete();
@@ -58,7 +58,7 @@ public class MartBuilder {
 			
 		} else {
 			String input_file=getUserInput("INPUT CONFIG FILE: ");
-			input_file = "data/"+input_file;
+			input_file = "data/builder/"+input_file;
 			readConfiguration(input_file);
 		}
 		
