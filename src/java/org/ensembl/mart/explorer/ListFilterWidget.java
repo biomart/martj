@@ -31,6 +31,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
@@ -39,7 +40,6 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.mart.util.TestFrame;
 
 /**
  * Represents a list of user options. Some options cause the
@@ -302,7 +302,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
     // use internalID>displayName?
     // fd.addOption( new Option("optionInternalName3","true") );           
 
-    new TestFrame("List Filter Widget",new ListFilterWidget(fgw, q, fd, null));
+    new QuickFrame("List Filter Widget",new ListFilterWidget(fgw, q, fd, null));
 
   }
 }

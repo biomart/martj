@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.ensembl.mart.util;
+package org.ensembl.mart.guiutils;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -38,7 +38,7 @@ import javax.swing.border.TitledBorder;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  *
  */
-public class TestFrame extends JFrame {
+public class QuickFrame extends JFrame {
 
   /**
    * Create frame with specified title and add userComponent then set visible and pack.
@@ -46,7 +46,7 @@ public class TestFrame extends JFrame {
    * @param userComponent component to add to frame.
    * @throws java.awt.HeadlessException
    */
-  public TestFrame(String title, Component userComponent)
+  public QuickFrame(String title, Component userComponent)
     throws HeadlessException {
     super(title);
 

@@ -31,6 +31,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
+import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
@@ -38,7 +39,6 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.mart.util.TestFrame;
 
 /**
  * A boolean filter widget has a description and three radio buttons;
@@ -333,7 +333,7 @@ public class BooleanFilterWidget
     p.add(bfw2);
     p.add(bfw3);
 
-    new TestFrame("BooleanFilterWidget test", p);
+    new QuickFrame("BooleanFilterWidget test", p);
 
   }
 
