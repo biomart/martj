@@ -430,21 +430,26 @@ public class MartConfigurationFactory {
 
   private MapFilterDescription getUIDSFilterDescription(Element thisElement)
 		throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+      
+		String internalName = thisElement.getAttributeValue(INTERNALNAME, "");
+    String fieldName = thisElement.getAttributeValue(FIELDNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String objCode = thisElement.getAttributeValue(HANDLER, "");
+		String handler = thisElement.getAttributeValue(HANDLER, "");
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 
 		MapFilterDescription f =
 			new MapFilterDescription(
-				intName,
+				internalName,
+        fieldName,
 				typeval,
-				objCode,
-				filterSetReq,
+        "", // TODO support qualifier
 				dispname,
-				desc);
+        "", // TODO support table constraint
+        filterSetReq,
+        desc,
+        handler);
 
 		return f;
 	}

@@ -789,7 +789,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, Type not set correctly for MapFilterDescription\n", TESTTYPE, Type);
 		assertEquals("Warning, filterSetReq not set correctly for UIDSFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
 		assertEquals("Warning, Handler not set correctly for MapFilterDescription\n", TESTHANDLER, Handler);
-		assertTrue("Warning, third MapFilterDescription should be in a FilterSet\n", dsfTable.IsInFilterSet());
+		assertTrue("Warning, third MapFilterDescription should be in a FilterSet\n", dsfTable.inFilterSet());
 	}
 
 	private void thirdFColFirstOptiontest(FilterCollection fc, Option option) throws Exception {

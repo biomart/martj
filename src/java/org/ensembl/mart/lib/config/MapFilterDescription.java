@@ -26,68 +26,76 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see org.ensembl.mart.lib.DSFilterHandler
  */
-public class MapFilterDescription extends BaseConfigurationObject {
+public class MapFilterDescription extends FilterDescription {
 	
-	/**
-	 * This will throw a ConfigurationException
-	 * 
-	 * @throws ConfigurationException
-	 */
-	public MapFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "", "");
-	}
-	
-	/**
-	 * Constructor for a minimal MapFilterDescription, with internalName, type, and handler set.
-	 * 
-	 * @param internalName - String name to internally reference this Description
-	 * @param type - String type of UI Display
-	 * @param handler - String type of DomainSpecificFilterHandler to use to resolve this Filter
-	 * 
-	 * @throws ConfigurationException when internalName or type are null, or when the handler == 0
-	 */
-	public MapFilterDescription(String internalName, String type, String handler) throws ConfigurationException {
-	  this(internalName, type, handler, "", "", "");	
-	}
+  /**
+   * @throws ConfigurationException
+   */
+  public MapFilterDescription() throws ConfigurationException {
+    this("", "", "", "", "", "", "", "", "");
+  }
+
+  /**
+   * Constructor for a minimal MapFilterDescription.
+   * @param internalName
+   * @param fieldName
+   * @param type
+   * @param qualifier
+   * @throws ConfigurationException
+   */
+  public MapFilterDescription(
+    String internalName,
+    String fieldName,
+    String type,
+    String qualifier,
+    String handler)
+    throws ConfigurationException {
+
+    this(internalName, fieldName, type, qualifier, "", "", "", "", handler);
+  }
 
   /**
    * Constructor for a fully defined MapFilterDescription.
-   * 
-	 * @param internalName - String name to internally reference this FilterDescription
-	 * @param type - String type of UI Display
-	 * @param handler - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription
-	 * @param filterSetReq - String FilterSet Modification Requirement.  If this is not null, inFilterSet is set to true.
-   * @param displayName - String name to display in a UI for this FilterDescription
-   * @param description - String descriptive information for this FilterDescription
-   * @param optionName String name represention an Option that holds Options for this MapFilterDescription
-   * 
-   * @throws ConfigurationException when internalName, type, or handler are null
+   * @param internalName
+   * @param fieldName
+   * @param type
+   * @param qualifier
+   * @param displayName
+   * @param tableConstraint
+   * @param filterSetReq
+   * @param description
+   * @param handler - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription  
+   * @throws ConfigurationException
    */
-  public MapFilterDescription(String internalName, String type, String handler, String filterSetReq, String displayName, String description) throws ConfigurationException {
-  	
-    super( internalName, displayName, description );
+  public MapFilterDescription(
+    String internalName,
+    String fieldName,
+    String type,
+    String qualifier,
+    String displayName,
+    String tableConstraint,
+    String filterSetReq,
+    String description,
+    String handler
+    )
+    throws ConfigurationException {
+    super(
+      internalName,
+      fieldName,
+      type,
+      qualifier,
+      displayName,
+      tableConstraint,
+      filterSetReq,
+      description);
     
-    if ( type == null || type.equals("")
-  	  || handler == null || handler.equals(""))
-  	  throw new ConfigurationException("MapFilterDescription object must have a type and handler");
-  	  
-  	this.type = type;
-  	this.handler = handler;
-  	
-  	if (! ( filterSetReq == null || filterSetReq.equals("")  ) )
-  	  inFilterSet = true;
-  	  
-  	this.filterSetReq = filterSetReq;
-  	
-  	//generate hashcode for immutable object
-  	hshcode = inFilterSet ? 1 : 0;
-		hshcode = (31 * hshcode) + this.internalName.hashCode();
-		hshcode = (31 * hshcode) + this.displayName.hashCode();
-		hshcode = (31 * hshcode) + this.type.hashCode();
-	  hshcode = (31 * hshcode) + this.description.hashCode();
-	  hshcode = (31 * hshcode) + this.handler.hashCode();
-	  hshcode = (31 * hshcode) + this.filterSetReq.hashCode();
-  }  
+    this.handler = handler;
+    hashcode = super.hashCode();
+    hashcode = (31 * hashcode) + this.handler.hashCode();
+  
+  }
+
+ 
   
 	/**
 	 * Returns the handler of this MapFilterDescription
@@ -98,30 +106,6 @@ public class MapFilterDescription extends BaseConfigurationObject {
 		return handler;
 	}
 
-	/**
-	 * Returns the Type of this MapFilterDescription
-	 * 
-	 * @return String type
-	 */
-	public String getType() {
-		return type;
-	}
-
-	/**
-	 * Returns filterSetReq
-	 * @return String filterSetReq
-	 */
-	public String getFilterSetReq() {
-		return filterSetReq;
-	}
-
-	/**
-	 * Check if this MapFilterDescription is in a FilterSet.
-	 * @return boolean, true if filterSetReq is set, false if null or empty.
-	 */
-	public boolean IsInFilterSet() {
-		return inFilterSet;
-	}
   
   /**
    * Used for debugging output.
@@ -131,13 +115,7 @@ public class MapFilterDescription extends BaseConfigurationObject {
 
 		buf.append("[ MapFilterDescription:");
 		buf.append( super.toString() );
-		buf.append(", type=").append(type);
 		buf.append(", handler=").append(handler);
-		
-		if (inFilterSet)
-		  buf.append(", filterSetReq=").append(filterSetReq);
-		  
-		  
 		buf.append("]");
 
 		return buf.toString();
@@ -154,12 +132,9 @@ public class MapFilterDescription extends BaseConfigurationObject {
 	 * Allows Collections manipulation of UIDSFIlterDescription objects
 	 */
 	public int hashCode() {
-		 return hshcode;
+		 return hashcode;
 	}
 	
-  private String type;
   private String handler;
-  private String filterSetReq;
-  private boolean inFilterSet = false;
-  private int hshcode = 0;
+  private int hashcode = 0;
 }

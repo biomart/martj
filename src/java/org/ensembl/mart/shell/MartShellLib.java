@@ -1307,7 +1307,7 @@ public class MartShellLib {
 
 						MapFilterDescription fds = (MapFilterDescription) dset.getUIFilterDescriptionByName(filterName);
 
-						if (fds.IsInFilterSet()) {
+						if (fds.inFilterSet()) {
 							if (fset == null)
 								throw new InvalidQueryException(
 									"Request for this filter must be specified with a filterset via filtersetname.filtername: " + filterName + "\n");

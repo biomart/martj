@@ -57,8 +57,11 @@
 <!ATTLIST MapFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
-                   filterSetReq       CDATA #IMPLIED
-                   optionName         CDATA #IMPLIED
+                   fieldName          CDATA #REQUIRED
+			qualifier          CDATA #IMPLIED
+			filterSetReq       CDATA #IMPLIED
+                   tableConstraint    CDATA #IMPLIED
+			optionName         CDATA #IMPLIED
                    handler            CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup|DSAttributeGroup|DSAttributeGroup|AttributeGroup)+>
