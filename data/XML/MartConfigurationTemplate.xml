@@ -866,7 +866,7 @@
                   <Option displayName="Myelocyte" internalName="myelocyte" isSelectable="true" value="myelocyte"/>
                   <Option displayName="Myeloid cell" internalName="myeloid_cell" isSelectable="true" value="myeloid cell"/>
                   <Option displayName="Myeloid stem cell" internalName="myeloid_stem_cell" isSelectable="true" value="myeloid stem cell"/>
-                  <Option displayName="Müller cell" internalName="Müller cell" isSelectable="true" value="Müller cell"/>
+                  <Option displayName="Muller cell" internalName="Muller cell" isSelectable="true" value="Muller cell"/>
                   <Option displayName="Myoblast" internalName="myoblast" isSelectable="true" value="myoblast"/>
                   <Option displayName="Myoepithelial cell" internalName="myoepithelial_cell" isSelectable="true" value="myoepithelial cell"/>
                   <Option displayName="Myofibrobast" internalName="myofibrobast" isSelectable="true" value="myofibrobast"/>
@@ -1645,7 +1645,7 @@
                   <Option displayName="Myelocyte" internalName="myelocyte" isSelectable="true" value="myelocyte"/>
                   <Option displayName="Myeloid cell" internalName="myeloid_cell" isSelectable="true" value="myeloid cell"/>
                   <Option displayName="Myeloid stem cell" internalName="myeloid_stem_cell" isSelectable="true" value="myeloid stem cell"/>
-                  <Option displayName="Müller cell" internalName="Müller cell" isSelectable="true" value="Müller cell"/>
+                  <Option displayName="Muller cell" internalName="Muller cell" isSelectable="true" value="Muller cell"/>
                   <Option displayName="Myoblast" internalName="myoblast" isSelectable="true" value="myoblast"/>
                   <Option displayName="Myoepithelial cell" internalName="myoepithelial_cell" isSelectable="true" value="myoepithelial cell"/>
                   <Option displayName="Myofibrobast" internalName="myofibrobast" isSelectable="true" value="myofibrobast"/>
