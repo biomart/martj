@@ -34,7 +34,7 @@ public class FilterPage {
  * Constructor for a nameless, descriptionless FilterPage.
  */
 public FilterPage() {
-	this("", ""); // will never get here
+	this("", "");
 }
 
 /**
