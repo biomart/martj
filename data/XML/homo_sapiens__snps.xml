@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
-<DatasetView dataset="homo_sapiens_snps" description="Snp Data for Homo Sapiens, with Gene Function Annotation for ensemblgene and vegagene." displayName="SNPs__Homo sapiens (NCBI 34 dbSNP 117)" internalName="snp_homo_sapiens">
+<DatasetView dataset="homo_sapiens_snps" description="Snp Data for Homo Sapiens, with Gene Function Annotation for ensemblgene and vegagene." displayName="SNPs__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
   <StarBase>hsapiens_snp</StarBase>
   <PrimaryKey>snp_id</PrimaryKey>
   <FilterPage description="" displayName="Filter" internalName="DefaultPage">

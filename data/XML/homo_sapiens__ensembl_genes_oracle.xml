@@ -2,7 +2,7 @@
 <!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
 
 <!-- This is specific to a test ensembl mart hosted in an EBI Oracle Database -->
-<DatasetView dataset="homo_sapiens_ensembl_genes_oracle" description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Ensembl Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="ensembl_genes_homo_sapiens_oracle">
+<DatasetView dataset="homo_sapiens_ensembl_genes_oracle" description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Ensembl Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
   <StarBase>hs_gn_</StarBase>
   <StarBase>hs_ensembltranscript</StarBase>
   <PrimaryKey>gene_id</PrimaryKey>
