@@ -1887,7 +1887,7 @@
       </FilterCollection>
       <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
         <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" legal_qualifiers="&gt;=,&gt;" qualifier="&gt;=" type="text"/>
-        <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" legal_qualifiers="&lt;=,&lt;" qualifier="&lt;=" type="text"/>
+        <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_end" internalName="base_pair_end" legal_qualifiers="&lt;=,&lt;" qualifier="&lt;=" type="text"/>
       </FilterCollection>
       <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
         <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" legal_qualifiers="=" qualifier="=" type="text_entry_basic_filter"/>
