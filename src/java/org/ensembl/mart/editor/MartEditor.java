@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.ensembl.mart.vieweditor;
+package org.ensembl.mart.editor;
 
 
 import java.awt.BorderLayout;
@@ -48,7 +48,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
- * Class MartViewEditor extends JFrame..
+ * Class MartEditor extends JFrame..
  *
  * <p>This class contains the main function, it draws the external frame, toolsbar, menus.
  * </p>
@@ -57,7 +57,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  * //@see org.ensembl.mart.config.DatasetView
  */
 
-public class MartViewEditor extends JFrame {
+public class MartEditor extends JFrame {
 
     private JDesktopPane desktop;
     static private final String newline = "\n";
@@ -83,7 +83,7 @@ public class MartViewEditor extends JFrame {
 	private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
 	
 	
-    public MartViewEditor() {
+    public MartEditor() {
         super("Mart Editor (Development version)");
         JFrame.setDefaultLookAndFeelDecorated(true);
         fc = new JFileChooser();
@@ -206,7 +206,7 @@ public class MartViewEditor extends JFrame {
         
 		
 		menuItem = new JMenuItem("Database Connection ");
-		MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
+		MartEditor.MenuActionListener menuActionListener = new MartEditor.MenuActionListener();
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_D);
 		menu.add(menuItem);  
@@ -410,7 +410,7 @@ public class MartViewEditor extends JFrame {
         JFrame.setDefaultLookAndFeelDecorated(true);
 
         //Create and set up the window.
-        MartViewEditor frame = new MartViewEditor();
+        MartEditor frame = new MartEditor();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //ImageIcon icon = createImageIcon(IMAGE_DIR+"MartView_cube.gif");
         //frame.setIconImage(icon.getImage());

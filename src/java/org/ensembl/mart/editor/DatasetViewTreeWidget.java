@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.ensembl.mart.vieweditor;
+package org.ensembl.mart.editor;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -61,9 +61,9 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     private GridBagConstraints constraints;
     private DatasetViewTree tree;
     private File file = null;
-    private MartViewEditor editor;
+    private MartEditor editor;
 
-    public DatasetViewTreeWidget(File file, MartViewEditor editor, DatasetView dsv, String user, String dataset, String database) {
+    public DatasetViewTreeWidget(File file, MartEditor editor, DatasetView dsv, String user, String dataset, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -74,7 +74,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
         try {
 		  DatasetView view = null;	
           if (dsv == null){	
-	   //  this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
+	   //  this.setFrameIcon(createImageIcon(MartEditor.IMAGE_DIR+"MartView_cube.gif"));
             
             if (file == null) {
             	if (user == null){
@@ -84,11 +84,11 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                     view.addAttributePage(new AttributePage("new"));
             	  }
             	  else{
-            	  	view = DatabaseDatasetViewUtils.getNaiveDatasetViewFor(MartViewEditor.getDetailedDataSource(),database,dataset);
+            	  	view = DatabaseDatasetViewUtils.getNaiveDatasetViewFor(MartEditor.getDetailedDataSource(),database,dataset);
             	  }
             	}
             	else{
-					DSViewAdaptor adaptor = new DatabaseDSViewAdaptor(MartViewEditor.getDetailedDataSource(),user);
+					DSViewAdaptor adaptor = new DatabaseDSViewAdaptor(MartEditor.getDetailedDataSource(),user);
 					DatasetView views[] = adaptor.getDatasetViews();
 					for (int k =0; k < views.length;k++){
 					  if (views[k].getDataset().equals(dataset)){

@@ -27,7 +27,7 @@ TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
 echo "This is a DEMO of MartEditor (development version) " 
 
-java -ea -cp $TMP_CLASSPATH org.ensembl.mart.vieweditor.MartViewEditor $@
+java -ea -cp $TMP_CLASSPATH org.ensembl.mart.editor.MartEditor $@
 
 
 

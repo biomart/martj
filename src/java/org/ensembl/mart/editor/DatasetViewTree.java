@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.ensembl.mart.vieweditor;
+package org.ensembl.mart.editor;
 
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -576,7 +576,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         Transferable t = clipboard.getContents(this);
         try {
 
-            DatasetViewTreeNode selnode = (DatasetViewTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.vieweditor.DatasetViewTreeNode"), "treeNode"));
+            DatasetViewTreeNode selnode = (DatasetViewTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetViewTreeNode"), "treeNode"));
             DatasetViewTreeNode dropnode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
             String result = new String();
             if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
@@ -663,7 +663,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 			String opName = op.getInternalName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,MartViewEditor.getDetailedDataSource()));
+			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,MartEditor.getDetailedDataSource()));
 			
 			if (pa.getOptions().length > 0){  
 			  Enumeration children = parentNode.children();
@@ -700,7 +700,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 
-		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, MartViewEditor.getDetailedDataSource(), dsView);
+		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, MartEditor.getDetailedDataSource(), dsView);
 		for (int k = options.length - 1; k > -1; k-- ){
 			insert(options[k], "Option");
 		}
@@ -749,7 +749,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 	public void export() {
 		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
 		try {
-			DatabaseDSViewAdaptor.storeDatasetView(MartViewEditor.getDetailedDataSource(), MartViewEditor.getUser() ,dsView, true);
+			DatabaseDSViewAdaptor.storeDatasetView(MartEditor.getDetailedDataSource(), MartEditor.getUser() ,dsView, true);
 
 		} catch (Exception e) {
 			e.printStackTrace();
