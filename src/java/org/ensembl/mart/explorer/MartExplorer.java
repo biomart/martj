@@ -478,7 +478,7 @@ public class MartExplorer
     
     
     
-    settings.addSeparator();
+    //settings.addSeparator();
 
     JMenuItem reset = new JMenuItem("Reset");
     reset.addActionListener(new ActionListener() {
