@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
 <MartConfiguration internalName='ensembl_mart_15_1' displayName='Ensembl Mart version 15.1' description='First Ensembl Mart Built upon Ensembl version 15 datasets'>
-  <FilterDescription field='none' internalName='dataset_layout' displayName='Datasets' description='All available datasets' type='tree'>
+  <FilterDescription field='Dataset' internalName='dataset_layout' displayName='Datasets' description='All available datasets' type='tree'>
     <Option isSelectable='false' internalName='homo_sapiens' displayName='Homo sapiens (NCBI 31) '>
-      <Option isSelectable='true' internalName='homo_sapiens_ensembl_genes' ref='homo_sapiens_ensembl_genes' displayName='Ensembl Genes'/>
-      <Option isSelectable='true' internalName='homo_sapiens_vega_genes' ref='homo_sapiens_vega_genes' displayName='VEGA Genes'/>
-      <Option isSelectable='true' internalName='homo_sapiens_est_genes' ref='homo_sapiens_est_genes' displayName='EST Genes'/>
-      <Option isSelectable='true' internalName='homo_sapiens_snp' ref='homo_sapiens_snp' displayName='SNP'/>
+      <Option isSelectable='true' internalName='homo_sapiens_ensembl_genes' value='homo_sapiens_ensembl_genes' ref='homo_sapiens_ensembl_genes' displayName='Ensembl Genes'/>
+      <Option isSelectable='true' internalName='homo_sapiens_vega_genes' value='homo_sapiens_vega_genes'  ref='homo_sapiens_vega_genes' displayName='VEGA Genes'/>
+      <Option isSelectable='true' internalName='homo_sapiens_est_genes' value='homo_sapiens_est_genes' ref='homo_sapiens_est_genes' displayName='EST Genes'/>
+      <Option isSelectable='true' internalName='homo_sapiens_snp' value='homo_sapiens_snp' ref='homo_sapiens_snp' displayName='SNP'/>
     </Option>
     <Option isSelectable='false' internalName='mus_musculus' displayName='Mus musculus (NCBIM 30)'>
-      <Option isSelectable='true' internalName='mus_musculus_ensembl_genes' ref='mus_musculus_ensembl_genes' displayName='Ensembl Genes'/>
+      <Option isSelectable='true' internalName='mus_musculus_ensembl_genes' value='mus_musculus_ensembl_genes' ref='mus_musculus_ensembl_genes' displayName='Ensembl Genes'/>
     </Option>
   </FilterDescription>
   <Dataset internalName='homo_sapiens_ensembl_genes' displayName='Homo sapiens (NCBI 31) -- Ensembl Genes' description='Ensembl Mart Dataset comprised of the Ensembl Core Data'>
