@@ -92,7 +92,7 @@ public class MartCompleter implements ReadlineCompleter {
 	private SortedSet describeBaseSet = new TreeSet(); // will hold describe base completions
 	private SortedSet executeBaseSet = new TreeSet(); // will hold execute base completions
 
-	private SortedSet dataSourceSet = new TreeSet(); // will hold DataSource String names for remove, and set 
+	private SortedSet martSet = new TreeSet(); // will hold  String names for remove, and set 
 	private SortedSet adaptorLocationSet = new TreeSet(); // will hold adaptor names for update and remove
 	private SortedSet datasetViewSet = new TreeSet(); // will hold DatasetView names for use, set, remove, and describe 
 
@@ -202,7 +202,7 @@ public class MartCompleter implements ReadlineCompleter {
 					setHelpMode();
 				else if (currentCommand.startsWith(USEC)) {
 					if (currentCommand.endsWith(">"))
-						setDataSourceMode();
+						setMartReqMode();
 					else
 						setDatasetViewMode();
 				} else {
@@ -242,7 +242,7 @@ public class MartCompleter implements ReadlineCompleter {
 
 					if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd) && (usingInd > limitInd)) {
 						if (currentCommand.endsWith(">"))
-							setDataSourceMode();
+							setMartReqMode();
 						else
 							setDatasetViewMode();
 					}
@@ -497,11 +497,11 @@ public class MartCompleter implements ReadlineCompleter {
 			if (toks[1].equalsIgnoreCase("DatasetViews"))
 				setFromMode();
 			else {
-				if (toks[1].equalsIgnoreCase("DataSource") || toks[1].equalsIgnoreCase("DatasetView"))
+				if (toks[1].equalsIgnoreCase("Mart") || toks[1].equalsIgnoreCase("DatasetView"))
 					setEmptyMode();
 			}
 		} else if (toks.length == 3 && toks[2].equalsIgnoreCase("from"))
-			setDataSourceMode();
+			setMartReqMode();
 		else
 			setEmptyMode();
 	}
@@ -524,8 +524,8 @@ public class MartCompleter implements ReadlineCompleter {
 		else if (toks.length == 2) {
 			String request = toks[1];
 
-			if (request.equalsIgnoreCase("DataSource"))
-				setDataSourceMode();
+			if (request.equalsIgnoreCase("Mart"))
+				setMartReqMode();
 			else if (request.equalsIgnoreCase("DatasetViews"))
 				setFromMode();
 			else if (request.equalsIgnoreCase("DatasetView"))
@@ -575,14 +575,14 @@ public class MartCompleter implements ReadlineCompleter {
 
 		if (toks.length == 1)
 			setSetBaseMode();
-		else if (toks.length == 2 && toks[1].equalsIgnoreCase("DataSource")) {
+		else if (toks.length == 2 && toks[1].equalsIgnoreCase("Mart")) {
 			if (toks[0].equals(SETC))
-				setDataSourceMode();
+				setMartReqMode();
 			else
 				setDatasetViewMode();
 		} else {
 			if (toks[0].equals(SETC) && toks.length == 3) {
-				if (dataSourceSet.contains(toks[2]))
+				if (martSet.contains(toks[2]))
 					setDatasetViewMode();
 				else
 					setEmptyMode();
@@ -600,8 +600,14 @@ public class MartCompleter implements ReadlineCompleter {
 
 		if (toks.length == 1)
 			setExecuteBaseMode();
-		else if (toks.length == 2 && toks[1].equalsIgnoreCase("Procedure"))
-			setProcedureNameMode();
+		else if (toks.length == 2) {
+      if (toks[1].equalsIgnoreCase("Procedure"))
+			  setProcedureNameMode();
+       else {
+         if (executeBaseSet.contains(toks[1]))
+         setEmptyMode();
+       }
+    }
 	}
 
 	private void setExecuteBaseMode() {
@@ -618,6 +624,8 @@ public class MartCompleter implements ReadlineCompleter {
 
 			if (request.equalsIgnoreCase("DatasetView"))
 				setDatasetViewMode();
+      else if (request.equalsIgnoreCase("Mart"))
+        setMartReqMode();
 			else if (request.equalsIgnoreCase("Filter"))
 				setDescribeFilterMode();
 			else if (request.equalsIgnoreCase("Attribute"))
@@ -737,9 +745,9 @@ public class MartCompleter implements ReadlineCompleter {
 		currentSet.addAll(adaptorLocationSet);
 	}
 
-	private void setDataSourceMode() {
+	private void setMartReqMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(dataSourceSet);
+		currentSet.addAll(martSet);
 	}
 
 	private void setDatasetViewMode() {
@@ -848,9 +856,9 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Set the String names (path, url, DataSource name) used to refer
+	 * Set the String names (path, url, Mart name) used to refer
 	 * to locations from whence DSViewAdaptor objects were loaded.
-	 * @param names -- names of path, url, or DataSource names from whence DSViewAdaptor Objects were loaded 
+	 * @param names -- names of path, url, or Mart names from whence DSViewAdaptor Objects were loaded 
 	 */
 	public void setAdaptorLocations(Collection names) {
 		adaptorLocationSet = new TreeSet();
@@ -863,12 +871,12 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Set the Names used to refer to DataSource Objects in the Shell.
-	 * @param names -- names used to refer to DataSource Objects in the Shell.
+	 * Set the Names used to refer to Mart Objects in the Shell.
+	 * @param names -- names used to refer to Mart Objects in the Shell.
 	 */
-	public void setDataSourceNames(Collection names) {
-		dataSourceSet = new TreeSet();
-		dataSourceSet.addAll(names);
+	public void setMartNames(Collection names) {
+		martSet = new TreeSet();
+		martSet.addAll(names);
 	}
 
 	/**
