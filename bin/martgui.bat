@@ -1,0 +1,1 @@
+java -cp ..\lib\mart-explorer.jar;..\lib\log4j-1.2.6.jar;..\lib\ecp1_0beta.jar;..\lib\mysql-connector-java-2.0.14-bin.jar;..\lib\ensj-util.jar;..\lib\jython.jar org.ensembl.mart.explorer.Runner 
