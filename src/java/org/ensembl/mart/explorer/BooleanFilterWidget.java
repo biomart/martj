@@ -101,18 +101,14 @@ public class BooleanFilterWidget
 
       requireFilterType = BooleanFilter.isNotNULL;
       excludeFilterType = BooleanFilter.isNULL;
-      list = new JComboBox() {
-        public Dimension getMaximumSize() {
-            return super.getMaximumSize();
-        }
       
-      };
+      list = new JComboBox();
       
       Dimension s = new Dimension(
       Constants.LIST_MAX_PIXEL_WIDTH,
       Constants.LIST_MAX_PIXEL_HEIGHT); 
       list.setMaximumSize(s);
-      //    we need to set preferred because maximum is ignored by Box@linux JVM
+      //    we need to set preferred because maximum is ignored by Boxcontainer (at least on JVM1.4@linux)
       list.setPreferredSize(s); 
 
       setOptions(fd.getOptions());
