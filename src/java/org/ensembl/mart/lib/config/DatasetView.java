@@ -29,8 +29,11 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * Container for a mart dataset.   A dataset contains information about the
- *  main (or star) table(s) that it provides, the primary key(s) for these table(s),
+ * Provides a view of a mart dataset.A dataset is one or more main tables plus zero 
+ * or more dimension tables.
+ * 
+ * A DatasetView contains information about the
+ * main (or star) table(s) that it provides, the primary key(s) for these table(s),
  * and a List of AttributePages and FilterPages containing all of the attributes 
  * and filters that it provides. DatasetView Objects support a lazy load optimization strategy.
  * They can be instantiated with a miniumum of information (internalName), and lazy loaded when
