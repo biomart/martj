@@ -319,11 +319,9 @@ public class TreeFilterWidget extends FilterWidget {
 					value = tmp;
 				}
 
-				if (value != null) {
-
+				if (value != null) 
 					filter = new InputPageAwareBasicFilter(option, this);
-          System.out.println("field == "+ option.getFieldFromContext() );
-				}
+				
 
 				setNodeLabel(fieldName, option.getDisplayName());
 
