@@ -132,6 +132,16 @@ public class MartShellLib {
 	}
 
 	/**
+	 * Sets the environmental dataset for the session.  This
+	 * dataset can only be over ridden with another call to setDataset,
+	 * or with a 'using' clause in the MQL.
+	 * @param dset - String name of the dataset to use for queries
+	 */
+	public void setDataset(String dsetname) {
+		this.envDataset = dsetname;
+	}
+
+	/**
 	 * Set or Reset the MartConfiguration object to use in parsing Queries and MQL
 	 * statements.
 	 * 
@@ -177,24 +187,24 @@ public class MartShellLib {
 					//else { UIDSAttributeDescription code goes here}
 				}
 
-        // get FilterSetDescription mappings
-        if (!field_FilterSet.containsKey(datasetName))
-          field_FilterSet.put(datasetName, new ArrayList());
+				// get FilterSetDescription mappings
+				if (!field_FilterSet.containsKey(datasetName))
+					field_FilterSet.put(datasetName, new ArrayList());
 
-        List fsetMaps = (ArrayList) field_FilterSet.get(datasetName);
-        
-        FilterPage[] fpages = dataset.getFilterPages();
-        for (int j = 0, u = fpages.length; j < u; j++) {
+				List fsetMaps = (ArrayList) field_FilterSet.get(datasetName);
+
+				FilterPage[] fpages = dataset.getFilterPages();
+				for (int j = 0, u = fpages.length; j < u; j++) {
 					FilterPage page = fpages[j];
-					
-          FilterSetDescription[] fsetdescs = page.getAllFilterSetDescriptions();
-          for (int m = 0, b = fsetdescs.length; j < b; j++) {
-            FilterSetDescription description = fsetdescs[m];
-            fsetMaps.add(new UIMapper(description.getFieldNameModifier(), description.getInternalName()));
-            fsetMaps.add(new UIMapper(description.getTableConstraintModifier(), description.getInternalName()));
-          }          
+
+					FilterSetDescription[] fsetdescs = page.getAllFilterSetDescriptions();
+					for (int m = 0, b = fsetdescs.length; j < b; j++) {
+						FilterSetDescription description = fsetdescs[m];
+						fsetMaps.add(new UIMapper(description.getFieldNameModifier(), description.getInternalName()));
+						fsetMaps.add(new UIMapper(description.getTableConstraintModifier(), description.getInternalName()));
+					}
 				}
-        
+
 				if (!field_Filter.containsKey(datasetName))
 					field_Filter.put(datasetName, new ArrayList());
 
@@ -470,7 +480,7 @@ public class MartShellLib {
 		Filter[] filters = query.getFilters();
 
 		if (success && filters.length > 0) {
-			for (int i = 0, n = filters.length; ( success && ( i < n ) ); i++) {
+			for (int i = 0, n = filters.length;(success && (i < n)); i++) {
 				Filter filter = filters[i];
 				boolean thisMapped = false;
 
@@ -569,17 +579,17 @@ public class MartShellLib {
 					MQLError = ("Could not map subquery:\n" + subq + "\n" + e);
 				}
 				break;
-			
-			case IDListFilter.STRING:
-			  String[] ids = idfilter.getIdentifiers();
-			  mqlbuf.append("(");
-			  
-			  for (int i = 0, n = ids.length; i < n; i++) {
+
+			case IDListFilter.STRING :
+				String[] ids = idfilter.getIdentifiers();
+				mqlbuf.append("(");
+
+				for (int i = 0, n = ids.length; i < n; i++) {
 					if (i > 0)
-					  mqlbuf.append(", ");
+						mqlbuf.append(", ");
 					mqlbuf.append(ids[i]);
 				}
-				
+
 				mqlbuf.append(")");
 		}
 		return success;
@@ -588,22 +598,20 @@ public class MartShellLib {
 	private boolean mapBasicFilter(Filter filter, StringBuffer mqlbuf) {
 		boolean success = true;
 
-    if (filter instanceof NullableFilter) {
-    	String condition = ( (NullableFilter) filter).getRightHandClause();
-    	if (condition.equals(NullableFilter.isNULL) || condition.equals(NullableFilter.isNULL_NUM))
-    	  mqlbuf.append("excluded");
-    	else
-    	  mqlbuf.append("exclusive");
-    }      
-    else if (filter instanceof IDListFilter) {
-    	success = mapIDListFilter((IDListFilter) filter, mqlbuf.append("in "));
-    }
-    else if (filter instanceof BasicFilter) {
-    	BasicFilter bfilter = (BasicFilter) filter;
-    	mqlbuf.append( bfilter.getCondition() ).append(" ").append(bfilter.getValue());
-    }
-    //dont need else
-    
+		if (filter instanceof NullableFilter) {
+			String condition = ((NullableFilter) filter).getRightHandClause();
+			if (condition.equals(NullableFilter.isNULL) || condition.equals(NullableFilter.isNULL_NUM))
+				mqlbuf.append("excluded");
+			else
+				mqlbuf.append("exclusive");
+		} else if (filter instanceof IDListFilter) {
+			success = mapIDListFilter((IDListFilter) filter, mqlbuf.append("in "));
+		} else if (filter instanceof BasicFilter) {
+			BasicFilter bfilter = (BasicFilter) filter;
+			mqlbuf.append(bfilter.getCondition()).append(" ").append(bfilter.getValue());
+		}
+		//dont need else
+
 		return success;
 	}
 
@@ -616,7 +624,8 @@ public class MartShellLib {
 	 */
 	public Query MQLtoQuery(String newquery) throws InvalidQueryException {
 		boolean start = true;
-		boolean selectClause = false;
+		boolean getClause = false;
+		boolean usingClause = false;
 		boolean sequenceClause = false;
 		boolean fromClause = false;
 		boolean whereClause = false;
@@ -637,78 +646,86 @@ public class MartShellLib {
 		while (cTokens.hasMoreTokens()) {
 			String thisToken = cTokens.nextToken();
 			if (start) {
-				if (!(thisToken.equalsIgnoreCase(QSTART)))
-					throw new InvalidQueryException("Invalid Query Recieved, should begin with select: " + newquery + "\n");
-				else {
+				if (!(thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)))
+					throw new InvalidQueryException("Invalid Query Recieved, should begin with either 'using' or 'get': " + newquery + "\n");
+				else if (thisToken.equalsIgnoreCase(GETQSTART)) {
 					start = false;
-					selectClause = true;
-				}
-			} else if (selectClause) {
-				if (thisToken.equalsIgnoreCase(QSTART))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of a select statement: " + newquery + "\n");
-				if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + newquery + "\n");
-				if (thisToken.equalsIgnoreCase(QLIMIT))
-					throw new InvalidQueryException("Invalid Query Recieved, limit statement before from statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QSEQUENCE)) {
-					selectClause = false;
-					sequenceClause = true;
-					//else if (thisToken.equalsIgnoreCase(USER_SUPPLIED_KEYWORDS) {
-					//  selectClause = false;
-					//  USERSUPPLIEDMODE = true;
-					//}
-				} else if (thisToken.equalsIgnoreCase(QFROM)) {
-					selectClause = false;
-					fromClause = true;
-				} else
-					attString.append(thisToken);
-			} else if (sequenceClause) {
-				if (thisToken.equalsIgnoreCase(QSTART))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of an into statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QLIMIT))
-					throw new InvalidQueryException("Invalid Query Recieved, limit statement before from statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QFROM)) {
-					sequenceClause = false;
-					fromClause = true;
-				} else
-					sequenceString.append(thisToken);
-				// else if (USERSUPPLIEDMODE) {
-				//   user code goes here to parse new modes
-				//}
-			} else if (fromClause) {
-				if (thisToken.equalsIgnoreCase(QSTART))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement after from statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
-					throw new InvalidQueryException("Invalid Query Recieved, with statement after from statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QWHERE)) {
-					fromClause = false;
-					whereClause = true;
-				} else if (thisToken.equalsIgnoreCase(QLIMIT)) {
-					fromClause = false;
-					limitClause = true;
+					getClause = true;
 				} else {
+					start = false;
+					usingClause = true;
+				}
+			} else if (usingClause) {
+        if (thisToken.endsWith(LINEEND))
+          throw new InvalidQueryException("Invalid Query Recieved, using clause with no " + GETQSTART + " clause: " + newquery + "\n");
+        else if (thisToken.equalsIgnoreCase(QSEQUENCE))
+					throw new InvalidQueryException("Invalid Query Recieved, sequence clause before " + GETQSTART + " clause: " + newquery + "\n");
+				else if (thisToken.equalsIgnoreCase(QWHERE))
+          throw new InvalidQueryException("Invalid Query Recieved, where clause before " + GETQSTART + " clause: " + newquery + "\n");
+				else if (thisToken.equalsIgnoreCase(QLIMIT))
+          throw new InvalidQueryException("Invalid Query Recieved, limit clause before " + GETQSTART + " clause: " + newquery + "\n");
+				else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)) {
+          usingClause = false;
+          getClause = true;
+        } else {
 					if (dataset != null)
 						throw new InvalidQueryException("Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
 					else
 						dataset = thisToken;
 				}
+			} else if (getClause) {
+        if (thisToken.endsWith(LINEEND))
+          thisToken = thisToken.substring(0, thisToken.indexOf(LINEEND));
+          
+				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+					throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause in the middle of a " + GETQSTART + " clause: " + newquery + "\n");
+				else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+          getClause = false;
+          limitClause = true;
+				} else if (thisToken.equalsIgnoreCase(QSEQUENCE)) {
+					getClause = false;
+					sequenceClause = true;
+					//else if (thisToken.equalsIgnoreCase(USER_SUPPLIED_KEYWORDS) {
+					//  selectClause = false;
+					//  USERSUPPLIEDMODE = true;
+					//}
+        } else if (thisToken.equalsIgnoreCase(QWHERE)) {
+          getClause = false;
+          whereClause = true;
+        } else
+					attString.append(thisToken);
+			} else if (sequenceClause) {
+        if (thisToken.endsWith(LINEEND))
+          thisToken = thisToken.substring(0, thisToken.indexOf(LINEEND));
+          
+				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+					throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause in the middle of a sequence clause: " + newquery + "\n");
+        else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+          sequenceClause = false;
+          limitClause = true;
+        } else if (thisToken.equalsIgnoreCase(QWHERE)) {
+          sequenceClause = false;
+          whereClause = true;
+				} else
+					sequenceString.append(thisToken);
+				// else if (USERSUPPLIEDMODE) {
+				//   user code goes here to parse new modes
+				//}
 			} else if (whereClause) {
 				if (listLevel < 1 && thisToken.equalsIgnoreCase(QSEQUENCE))
-					throw new InvalidQueryException("Invalid Query Recieved, with statement after where statement: " + newquery + "\n");
+					throw new InvalidQueryException("Invalid Query Recieved, sequence clause after where clause: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(LSTART) || thisToken.startsWith(LSTART)) {
 					listLevel++;
 
 					if (thisToken.endsWith(LEND) || thisToken.endsWith(LEND + ",") || thisToken.endsWith(LEND + LINEEND)) {
 						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == LENDCHAR)
+							if (thisToken.charAt(i) == LISTENDCHR)
 								listLevel--;
 						}
 						whereString.append(" ").append(thisToken);
 					} else if (thisToken.equalsIgnoreCase(LINEEND) || thisToken.endsWith(LINEEND)) {
 						System.out.println("Token = " + thisToken);
-						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + newquery + "\n");
+						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where clause: " + newquery + "\n");
 					} else
 						whereString.append(" ").append(thisToken);
 				} else if (listLevel > 0) {
@@ -716,35 +733,31 @@ public class MartShellLib {
 						listLevel--;
 					} else if (thisToken.endsWith(LEND) || thisToken.endsWith(LEND + ",") || thisToken.endsWith(LEND + LINEEND)) {
 						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == LENDCHAR)
+							if (thisToken.charAt(i) == LISTENDCHR)
 								listLevel--;
 						}
 						whereString.append(" ").append(thisToken);
 					} else if (thisToken.equalsIgnoreCase(LINEEND) || thisToken.endsWith(LINEEND)) {
 						System.out.println("Token = " + thisToken);
-						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + newquery + "\n");
+						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where clause: " + newquery + "\n");
 					} else
 						whereString.append(" ").append(thisToken);
-				} else if (thisToken.equalsIgnoreCase(QSTART))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement after where statement, not in subquery: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QFROM))
-					throw new InvalidQueryException("Invalid Query Recieved, from statement after where statement, not in subquery: " + newquery + "\n");
+				} else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+					throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause after where clause, not in subquery: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement after where statement, not in subquery: " + newquery + "\n");
+					throw new InvalidQueryException("Invalid Query Recieved, where clause after where clause, not in subquery: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(QLIMIT)) {
 					whereClause = false;
 					limitClause = true;
 				} else
 					whereString.append(" ").append(thisToken);
 			} else if (limitClause) {
-				if (thisToken.equalsIgnoreCase(QSTART))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement after limit statement: " + newquery + "\n");
+				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+					throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause in limit clause: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
-					throw new InvalidQueryException("Invalid Query Recieved, with statement after limit statement: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QFROM))
-					throw new InvalidQueryException("Invalid Query Recieved, from statement into limit statement: " + newquery + "\n");
+					throw new InvalidQueryException("Invalid Query Recieved, sequence clause in limit clause: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement into limit statement: " + newquery + "\n");
+					throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
 				else {
 					if (limit > 0)
 						throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + newquery + "\n");
@@ -758,8 +771,12 @@ public class MartShellLib {
 			// else not needed, as these are the only states present
 		}
 
-		if (dataset == null)
-			throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
+		if (dataset == null) {
+      if (envDataset == null)
+			  throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
+      else
+        dataset = envDataset;
+    }
 
 		if (attString.length() == 0 && sequenceString.length() == 0)
 			throw new InvalidQueryException("Invalid Query Recieved, no attributes or sequence request found: " + newquery + "\n");
@@ -807,8 +824,8 @@ public class MartShellLib {
 
 		//validate, then call parseQuery on the subcommand
 		String[] tokens = nestedQuery.split("\\s");
-		if (!tokens[0].trim().equals(QSTART))
-			throw new InvalidQueryException("Invalid Nested Query Recieved: no select statement " + "recieved " + tokens[0].trim() + " in " + nestedQuery + "\n");
+		if (!tokens[0].trim().equals(USINGQSTART))
+			throw new InvalidQueryException("Invalid Nested Query Recieved: no using statement " + "recieved " + tokens[0].trim() + " in " + nestedQuery + "\n");
 
 		for (int i = 1, n = tokens.length; i < n; i++) {
 			String tok = tokens[i];
@@ -880,7 +897,7 @@ public class MartShellLib {
 		Query newQuery = new Query(inquery);
 
 		List atts = new ArrayList();
-    Hashtable maxSelects = new Hashtable(); // will hold max-select keyed by collection.internalName
+		Hashtable maxSelects = new Hashtable(); // will hold max-select keyed by collection.internalName
 		StringTokenizer attTokens = new StringTokenizer(attString.toString(), ",");
 
 		while (attTokens.hasMoreTokens()) {
@@ -905,26 +922,25 @@ public class MartShellLib {
 								"Cannot request attributes from different Attribute Pages " + attname + " in " + currentApage + " intName is not\n");
 					}
 				}
-      }
-      
-      //check maxSelect
-      AttributeCollection collection = currentApage.getCollectionForAttribute(attname);
-      String colname = collection.getInternalName();
-      int maxSelect = collection.getMaxSelect();
-      
-      if ( maxSelect > 0) {
-        if (maxSelects.containsKey(colname)) {
-          int oldMax = ( (Integer) maxSelects.get(colname)).intValue();
-          oldMax++;
-          if (oldMax > maxSelect)
-            throw new InvalidQueryException("You cannot select more than "+ maxSelect + " attributes from AttributeCollection " + colname + "\n");
-          else
-            maxSelects.put(colname, new Integer(oldMax));
-        }
-        else
-          maxSelects.put(colname, new Integer(1));
-      }
-      
+			}
+
+			//check maxSelect
+			AttributeCollection collection = currentApage.getCollectionForAttribute(attname);
+			String colname = collection.getInternalName();
+			int maxSelect = collection.getMaxSelect();
+
+			if (maxSelect > 0) {
+				if (maxSelects.containsKey(colname)) {
+					int oldMax = ((Integer) maxSelects.get(colname)).intValue();
+					oldMax++;
+					if (oldMax > maxSelect)
+						throw new InvalidQueryException("You cannot select more than " + maxSelect + " attributes from AttributeCollection " + colname + "\n");
+					else
+						maxSelects.put(colname, new Integer(oldMax));
+				} else
+					maxSelects.put(colname, new Integer(1));
+			}
+
 			atts.add(dset.getUIAttributeDescriptionByName(attname));
 		}
 
@@ -1144,7 +1160,7 @@ public class MartShellLib {
 						newQuery.addFilter(thisFilter);
 						start = true;
 						value = false;
-					} else if (thisToken.equals(QSTART)) {
+					} else if (thisToken.equals(USINGQSTART)) {
 						isList = false;
 						isNested = true;
 						subquery.append(" ").append(thisToken);
@@ -1204,7 +1220,7 @@ public class MartShellLib {
 					if (thisToken.indexOf(LEND) >= 0) {
 						subquery.append(" ");
 						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == LENDCHAR)
+							if (thisToken.charAt(i) == LISTENDCHR)
 								listLevel--;
 							if (listLevel > 0)
 								subquery.append(thisToken.charAt(i));
@@ -1240,7 +1256,9 @@ public class MartShellLib {
 							// subquery will overwrite page states, need to return them to original after it is parsed
 							AttributePage bakApage = currentApage;
 							FilterPage bakFpage = currentFpage;
-
+              currentApage = null;
+              currentFpage = null;
+              
 							Filter thisFilter = getIDFilterForSubQuery(thisFieldName, thisTableConstraint, subquery.toString());
 							newQuery.addFilter(thisFilter);
 
@@ -1326,18 +1344,20 @@ public class MartShellLib {
 
 	//MartShellLib instance variables
 	private MartConfiguration martconf;
+	private String envDataset = null;
 	private AttributePage currentApage = null; // keeps track of the AttributePage
 	private FilterPage currentFpage = null; // keeps track of the FilterPage
 
 	// query instructions
-	private final String QSTART = "select";
-	private final String QSEQUENCE = "sequence";
-	private final String QFROM = "from";
-	private final String QWHERE = "where";
+	public static final String GETQSTART = "get";
+	public static final String USINGQSTART = "using";
+	public static final String QSEQUENCE = "sequence";
+	public static final String QWHERE = "where";
 	private final String QLIMIT = "limit";
-	private final String LSTART = "(";
-	private final String LEND = ")";
-	private final char LENDCHAR = LEND.charAt(0);
+	public static final char LISTSTARTCHR = '(';
+  private final String LSTART = String.valueOf(LISTSTARTCHR);
+	public static final char LISTENDCHR = ')';
+  private final String LEND = String.valueOf(LISTENDCHR);
 	private final String LINEEND = ";";
 	private final String ID = "id";
 	private final String SEQDELIMITER = "+";
@@ -1345,7 +1365,7 @@ public class MartShellLib {
 	private final String TABULATED = "tabulated";
 	private final String FASTA = "fasta";
 
-	protected final List availableCommands = Collections.unmodifiableList(Arrays.asList(new String[] { QSEQUENCE, QFROM, QWHERE, QLIMIT, FASTA }));
+	protected final List availableCommands = Collections.unmodifiableList(Arrays.asList(new String[] { QSEQUENCE, QWHERE, QLIMIT, FASTA }));
 
 	// variables for subquery
 	private int nestedLevel = 0;

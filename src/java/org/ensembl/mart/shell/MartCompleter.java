@@ -18,7 +18,10 @@
 
 package org.ensembl.mart.shell;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,9 +62,9 @@ import org.gnu.readline.ReadlineCompleter;
  * <li><p>Command Mode: keyword: "command". Only available MartShell commands, and other names added by the client for this mode, are made available.</p>
  * <li><p>Describe Mode: keyword: "describe". This is a special mode, and requires a Map be added, which further categorizes the describe system commands based on successive keys.</p>
  * <li><p>Help Mode: keyword: "help". Only names added by the client for this mode are made available.</p>
- * <li><p>Select Mode: keyword: "select".  Only attribute internal_names, and other names added by the client for this mode, are made available.</p>
+ * <li><p>Get Mode: keyword: "get".  Only attribute_names, and other names added by the client for this mode are made available.</p>
  * <li><p>Sequence Mode: keyword: "sequence".  Only names added by the client for this mode are made available.</p>
- * <li><p>From Mode: keyword: "from".  Only dataset names, and other names added by the client for this mode, are made available.</p>
+ * <li><p>Dataset Mode: keyword: "datasets".  Only dataset names, and other names added by the client for this mode, are made available.</p>
  * <li><p>Where Mode: keyword: "where".  Only filter_names, filter_set_names, and other names added by the client for this mode, are made available.</p>
  * </ul>
  * <br>
@@ -88,33 +91,44 @@ public class MartCompleter implements ReadlineCompleter {
 	private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
 	private Map setMapper = new HashMap(); // will hold special sets, with String keys
 
-	private SortedSet selectSet = new TreeSet(); // will hold attribute names
+	private SortedSet getSet = new TreeSet(); // will hold user supplied values to add to attribte names during completion
 	private SortedSet sequenceSet = new TreeSet(); // will hold sequences
-	private SortedSet fromSet = new TreeSet(); // will hold datasets
+	private SortedSet datasetSet = new TreeSet(); // will hold datasets
 	private SortedSet whereSet = new TreeSet(); // will hold filters 
 	private SortedSet helpSet = new TreeSet(); // will hold help keys available
 
-	private SortedSet backupSet = new TreeSet();
+	private final List NODATASETWARNING = Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
 
 	//describe Mode variables
-	private boolean describeMode = false; // special, allows context switching within describe mode
-	Pattern describeStart = Pattern.compile("^describe\\s\\w*$");
-	Pattern describePageStart = Pattern.compile("^describe\\s(\\w+)\\s\\w*$");
-	Pattern describePage = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeGroupStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeGroup = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeCollectionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeCollection = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeDescriptionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	Pattern describeDescription = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeStart = Pattern.compile("^describe\\s\\w*$");
+	private Pattern describePageStart = Pattern.compile("^describe\\s(\\w+)\\s\\w*$");
+	private Pattern describePage = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeGroupStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeGroup = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeCollectionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeCollection = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeDescriptionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeDescription = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+
+	//Query Mode Patterns
+	private Pattern qModeStartPattern = Pattern.compile("^using\\s$");
+	public Pattern qModePattern = Pattern.compile("^using\\s(\\w+).*");
 
 	private final String COMMANDS = "commands";
 	private final String DESCRIBE = "describe";
 	private final String HELP = "help";
-	private final String SELECT = "select";
-	private final String SEQUENCE = "sequence";
-	private final String FROM = "from";
-	private final String WHERE = "where";
+	private final String USE = "use";
+	private final String DATASETS = "datasets";
+
+	private Dataset envDataset = null;
+	private Dataset lastLocalDataset = null;
+	private List LocalDatasetStack = new ArrayList();
+
+	//listlevel characters
+	public int listLevel = 0;
+	private String lastLine = null;
+
+	private Logger logger = Logger.getLogger(MartCompleter.class.getName());
 
 	/**
 	 * Creates a MartCompleter Object.  The MartCompleter processes the MartConfiguration
@@ -124,19 +138,17 @@ public class MartCompleter implements ReadlineCompleter {
 	public MartCompleter(MartConfiguration martconf) {
 		setMapper.put(COMMANDS, commandSet);
 		setMapper.put(HELP, helpSet);
-		setMapper.put(SELECT, selectSet);
-		setMapper.put(SEQUENCE, sequenceSet);
-		setMapper.put(FROM, fromSet);
-		setMapper.put(WHERE, whereSet);
+		setMapper.put(MartShellLib.GETQSTART, getSet);
+		setMapper.put(MartShellLib.QSEQUENCE, sequenceSet);
+		setMapper.put(DATASETS, datasetSet);
+		setMapper.put(MartShellLib.QWHERE, whereSet);
 
 		this.martconf = martconf;
 
 		Dataset[] dsets = martconf.getDatasets();
 		for (int i = 0, n = dsets.length; i < n; i++) {
 			Dataset dataset = dsets[i];
-			fromSet.add(dataset.getInternalName());
-
-			getPages(dataset);
+			datasetSet.add(dataset.getInternalName());
 		}
 
 		SetCommandMode();
@@ -156,26 +168,8 @@ public class MartCompleter implements ReadlineCompleter {
 	public String completer(String text, int state) {
 		if (state == 0) {
 			// first call to completer(): initialize our choices-iterator
-
-			if (Readline.getLineBuffer().indexOf(DESCRIBE) >= 0)
-				SetDescribeMode();
-			if (Readline.getLineBuffer().indexOf(HELP) >= 0)
-				SetHelpMode();
-
-			int selectInd = Readline.getLineBuffer().lastIndexOf(SELECT);
-			int seqInd = Readline.getLineBuffer().lastIndexOf(SEQUENCE);
-			int fromInd = Readline.getLineBuffer().lastIndexOf(FROM);
-			int whereInd = Readline.getLineBuffer().lastIndexOf(WHERE);
-
-			if ((selectInd > seqInd) && (selectInd > fromInd) && (selectInd > whereInd))
-				SetSelectMode();
-			if ((seqInd > selectInd) && (seqInd > fromInd) && (seqInd > whereInd))
-				SetSequenceMode();
-			if ((fromInd > selectInd) && (fromInd > seqInd) && (fromInd > whereInd))
-				SetFromMode();
-			if ((whereInd > selectInd) && (whereInd > seqInd) && (whereInd > fromInd))
-				SetWhereMode();
-
+			String currentCommand = Readline.getLineBuffer();
+			SetModeForLine(Readline.getLineBuffer());
 			possibleValues = currentSet.tailSet(text).iterator();
 		}
 
@@ -188,53 +182,125 @@ public class MartCompleter implements ReadlineCompleter {
 		return null; // we reached the last choice.
 	}
 
-	private void getPages(Dataset dset) {
-		FilterPage[] fps = dset.getFilterPages();
-		for (int i = 0, n = fps.length; i < n; i++)
-			getNames(fps[i]);
+	public void SetModeForLine(String currentCommand) {
+		if (lastLine == null || !(lastLine.equals(currentCommand))) {
+			if (currentCommand.indexOf(DESCRIBE) >= 0)
+				SetDescribeMode();
+			if (currentCommand.indexOf(HELP) >= 0)
+				SetHelpMode();
+			if (currentCommand.indexOf(USE) >= 0)
+				SetDatasetMode();
 
-		AttributePage[] aps = dset.getAttributePages();
-		for (int i = 0, n = aps.length; i < n; i++)
-			getNames(aps[i]);
+			int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
+			int len = MartShellLib.USINGQSTART.length();
+
+			if (usingInd >= 0) {
+				//try pushing any local datasets available
+				int index = currentCommand.indexOf(MartShellLib.USINGQSTART);
+
+				while (index >= 0) {
+					String testString = currentCommand.substring(index);
+
+					Matcher qModeMatcher = qModePattern.matcher(testString);
+					if (qModeMatcher.matches()) {
+						String datasetName = qModeMatcher.group(1);
+						pushLocalDataset(datasetName);
+					}
+
+					index = currentCommand.substring(index + len).indexOf(MartShellLib.USINGQSTART);
+				}
+			}
+
+			if (lastLine == null) {
+				checkListChars(currentCommand);
+			} else {
+				if (!currentCommand.equals(lastLine)) {
+          if (currentCommand.startsWith(lastLine)) {
+						String newBits = currentCommand.substring(lastLine.length());
+						checkListChars(newBits);
+					} else {
+            checkListChars(currentCommand);
+					}
+				}
+			}
+
+			// determine which mode to be in during a query
+			int getInd = currentCommand.lastIndexOf(MartShellLib.GETQSTART);
+			int seqInd = currentCommand.lastIndexOf(MartShellLib.QSEQUENCE);
+			int whereInd = currentCommand.lastIndexOf(MartShellLib.QWHERE);
+
+			if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd))
+				SetDatasetMode();
+			if ((seqInd > usingInd) && (seqInd > getInd) && (seqInd > whereInd))
+				SetSequenceMode();
+			if ((getInd > usingInd) && (getInd > seqInd) && (getInd > whereInd))
+				SetGetMode();
+			if ((whereInd > usingInd) && (whereInd > seqInd) && (whereInd > getInd))
+				SetWhereMode();
+
+			lastLine = currentCommand;
+		}
 	}
 
-	private void getNames(Object page) {
-		if (page instanceof FilterPage) {
-			FilterPage fpage = (FilterPage) page;
-
-			//get FilterSetDescriptions
-			FilterSetDescription[] fsets = fpage.getAllFilterSetDescriptions();
-			for (int i = 0, n = fsets.length; i < n; i++) {
-				FilterSetDescription description = fsets[i];
-				String intName = description.getInternalName();
-				if (!whereSet.contains(intName))
-					whereSet.add(intName);
+	private void checkListChars(String currentCommand) {
+		//test for listLevel characters, and popLocalDataset if needed
+		if (currentCommand.indexOf(MartShellLib.LISTSTARTCHR) >= 0) {
+			for (int i = currentCommand.indexOf(MartShellLib.LISTSTARTCHR), n = currentCommand.length(); i < n; i++) {
+				if (currentCommand.charAt(i) == MartShellLib.LISTSTARTCHR)
+					listLevel++;
 			}
+		}
 
-			//get FilterDescriptions
-			List fdesc = fpage.getAllUIFilterDescriptions();
-			for (int i = 0, n = fdesc.size(); i < n; i++) {
-				Object element = fdesc.get(i);
+		if (currentCommand.indexOf(MartShellLib.LISTENDCHR) >= 0) {
+			for (int i = currentCommand.indexOf(MartShellLib.LISTENDCHR), n = currentCommand.length(); i < n; i++) {
+				if (currentCommand.charAt(i) == MartShellLib.LISTENDCHR)
+					listLevel--;
 
-				String intName = null;
-				if (element instanceof UIFilterDescription)
-					intName = ((UIFilterDescription) element).getInternalName();
-				else
-					intName = ((UIDSFilterDescription) element).getInternalName();
+				while (LocalDatasetStack.size() > listLevel)
+					popLocalDataset();
+			}
+      SetWhereMode();
+		}
+	}
 
-				if (!whereSet.contains(intName))
-					whereSet.add(intName);
+	/**
+	 * Sets the Environment Dataset for the session.  This dataset remains in effect
+	 * for the duration of the MartCompleter objects existence, and can only be over ridden
+	 * by a subsequent call to setEnvDataset, or a local dataset in the command
+	 * 
+	 * @param datasetName - String Name of the dataset
+	 */
+	public void setEnvDataset(String datasetName) {
+		envDataset = martconf.getDatasetByName(datasetName); // might return null, but that is ok
+	}
+
+	/**
+	 * Pushes a localDataset onto the stack.
+	 * @param datasetName - String name of the requested dataset
+	 */
+	public void pushLocalDataset(String datasetName) {
+		if (lastLocalDataset != null) {
+			if (!lastLocalDataset.getInternalName().equals(datasetName)) {
+				if (martconf.containsDataset(datasetName)) {
+					LocalDatasetStack.add(lastLocalDataset);
+					lastLocalDataset = martconf.getDatasetByName(datasetName);
+				}
 			}
 		} else {
-			AttributePage apage = (AttributePage) page;
-			List as = apage.getAllUIAttributeDescriptions();
-			for (int i = 0, n = as.size(); i < n; i++) {
-				UIAttributeDescription element = (UIAttributeDescription) as.get(i);
-				String intName = element.getInternalName();
-
-				if (!selectSet.contains(intName))
-					selectSet.add(intName);
+			if (martconf.containsDataset(datasetName)) {
+				lastLocalDataset = martconf.getDatasetByName(datasetName);
 			}
+		}
+	}
+
+	/**
+	 * Removes the first localDataset from the stack.
+	 */
+	public void popLocalDataset() {
+		if (LocalDatasetStack.size() > 0) {
+			lastLocalDataset = (Dataset) LocalDatasetStack.remove(0);
+		} else {
+			lastLocalDataset = null;
 		}
 	}
 
@@ -260,7 +326,7 @@ public class MartCompleter implements ReadlineCompleter {
 
 			if (StartMatcher.matches()) {
 				// same as fromMode, note, describeMode is set to true at end
-				SetFromMode();
+				SetDatasetMode();
 			} else if (PageStartMatcher.matches()) {
 				// wants the potential page keys
 				currentSet = new TreeSet();
@@ -387,11 +453,11 @@ public class MartCompleter implements ReadlineCompleter {
 				}
 			} else if (CollectionStartMatcher.matches()) { //wants the potential collection keys
 				String pageKey = CollectionStartMatcher.group(2);
-        
+
 				if (keyMap.containsKey(pageKey)) {
 					Map groupKeyMap = (Map) keyMap.get(pageKey);
 					String groupKey = CollectionStartMatcher.group(4);
-          
+
 					if (groupKeyMap.containsKey(groupKey)) {
 						currentSet = new TreeSet();
 						Map collectionKeyMap = (Map) groupKeyMap.get(groupKey);
@@ -492,15 +558,15 @@ public class MartCompleter implements ReadlineCompleter {
 
 			} else if (DescriptionStartMatcher.matches()) { //wants the potential description keys
 				String pageKey = DescriptionStartMatcher.group(2);
-        
+
 				if (keyMap.containsKey(pageKey)) {
 					Map groupKeyMap = (Map) keyMap.get(pageKey);
 					String groupKey = DescriptionStartMatcher.group(4);
-          
+
 					if (groupKeyMap.containsKey(groupKey)) {
 						Map collectionKeyMap = (Map) groupKeyMap.get(groupKey);
 						String collectionKey = DescriptionStartMatcher.group(6);
-            
+
 						if (collectionKeyMap.containsKey(collectionKey)) {
 							currentSet = new TreeSet();
 							Map descriptionKeyMap = (Map) collectionKeyMap.get(collectionKey);
@@ -516,134 +582,195 @@ public class MartCompleter implements ReadlineCompleter {
 				String pageName = Descriptionmatcher.group(3);
 				String groupName = Descriptionmatcher.group(5);
 				String collectionKey = Descriptionmatcher.group(6);
-        String collectionName = Descriptionmatcher.group(7);
-        
-        if (martconf.containsDataset(datasetName)) {
-          if (pageKey.equals("FilterPage")) {
-            if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-              if ( ( martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).containsFilterGroup(groupName) ) && ( martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName) instanceof FilterGroup )) {
-                FilterGroup group = (FilterGroup)martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
-                
-                if (collectionKey.equals("FilterSet")) {
-                  if (group.containsFilterSet(collectionName)) {
-                    currentSet = new TreeSet();
-                    
-                    FilterSetDescription[] descs = group.getFilterSetByName(collectionName).getFilterSetDescriptions();
-                    for (int i = 0, n = descs.length; i < n; i++) {
+				String collectionName = Descriptionmatcher.group(7);
+
+				if (martconf.containsDataset(datasetName)) {
+					if (pageKey.equals("FilterPage")) {
+						if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
+							if ((martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).containsFilterGroup(groupName))
+								&& (martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName) instanceof FilterGroup)) {
+								FilterGroup group = (FilterGroup) martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
+
+								if (collectionKey.equals("FilterSet")) {
+									if (group.containsFilterSet(collectionName)) {
+										currentSet = new TreeSet();
+
+										FilterSetDescription[] descs = group.getFilterSetByName(collectionName).getFilterSetDescriptions();
+										for (int i = 0, n = descs.length; i < n; i++) {
 											FilterSetDescription description = descs[i];
 											currentSet.add(description.getInternalName());
 										}
-                  }
-                } else {
-                   if (group.containsFilterCollection(collectionName)) {
-                     currentSet = new TreeSet();
-                      
-                     List descs = group.getFilterCollectionByName(collectionName).getUIFilterDescriptions();
-                     for (int i = 0, n = descs.size(); i < n; i++) {
+									}
+								} else {
+									if (group.containsFilterCollection(collectionName)) {
+										currentSet = new TreeSet();
+
+										List descs = group.getFilterCollectionByName(collectionName).getUIFilterDescriptions();
+										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
-                      if (desc instanceof UIFilterDescription)
-                        currentSet.add( ( (UIFilterDescription) desc).getInternalName() );
-                      else
-                        currentSet.add( ( (UIDSFilterDescription) desc).getInternalName() );											
+											if (desc instanceof UIFilterDescription)
+												currentSet.add(((UIFilterDescription) desc).getInternalName());
+											else
+												currentSet.add(((UIDSFilterDescription) desc).getInternalName());
 										}
-                   }
-                }
-              }
-            }
-          } else {
-            //must be AttributePage
-            if (martconf.containsDataset(datasetName)) {
-              if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-                if ( ( martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).containsAttributeGroup(groupName) ) && ( martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName) instanceof AttributeGroup ) ) {
-                  AttributeGroup group = (AttributeGroup) martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName);
-                  
-                  if (group.containsAttributeCollection(collectionName)) {
-                    currentSet = new TreeSet();
-                    
-                    List descs = group.getAttributeCollectionByName(collectionName).getUIAttributeDescriptions();
-                    for (int i = 0, n = descs.size(); i < n; i++) {
+									}
+								}
+							}
+						}
+					} else {
+						//must be AttributePage
+						if (martconf.containsDataset(datasetName)) {
+							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
+								if ((martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).containsAttributeGroup(groupName))
+									&& (martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName) instanceof AttributeGroup)) {
+									AttributeGroup group =
+										(AttributeGroup) martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName);
+
+									if (group.containsAttributeCollection(collectionName)) {
+										currentSet = new TreeSet();
+
+										List descs = group.getAttributeCollectionByName(collectionName).getUIAttributeDescriptions();
+										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
-                      if (desc instanceof UIAttributeDescription)
-                        currentSet.add( ( (UIAttributeDescription) desc).getInternalName() );
-                      // else, if we add UIDSAttributeDescriptions, put them here
-                      											
+											if (desc instanceof UIAttributeDescription)
+												currentSet.add(((UIAttributeDescription) desc).getInternalName());
+											// else, if we add UIDSAttributeDescriptions, put them here
+
 										}
-                  }
-                }
-              }
-            }
-          }
-        }
+									}
+								}
+							}
+						}
+					}
+				}
 
 			} // else ?
-			describeMode = true;
-		}
-	} /**
-									 * Sets the MartCompleter into Help Mode.
-									 *
-									 */
-	public void SetHelpMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(HELP));
-	} /**
-										 * Sets the MartCompleter into COMMAND mode
-										 *
-										 */
-	public void SetCommandMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(COMMANDS));
-	} /**
-										 * Sets the MartCompleter into Select Mode
-										 *
-										 */
-	public void SetSelectMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(SELECT));
-	} /**
-										 * Sets the MartCompleter into Sequence Mode
-										 *
-										 */
-	public void SetSequenceMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(SEQUENCE));
-	} /**
-										 * Sets the MartCompleter into the From Mode 
-										 *
-										 */
-	public void SetFromMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(FROM));
-	} /**
-										 * Sets the MartCompleter into the Where Mode
-										 *
-										 */
-	public void SetWhereMode() {
-		describeMode = false;
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(WHERE));
-	} /**
-										 * Adds a Collection of String names to a specific list specified by a keyword.
-										 * If the keyword is not available, a warning is sent to the logging system, and
-										 * the Collection is ignored.
-										 * @param key - one of the available keywords for a specific Mode.
-										 * @param commands - Collection of names to make available in that Mode.
-										 */
-	public void AddAvailableCommandsTo(String key, Object commands) {
-		if (setMapper.containsKey(key)) {
-      SortedSet set = (SortedSet) setMapper.get(key);
-      set.addAll((Collection) commands);
-      setMapper.put(key, set);
-		} else if (key.equals(DESCRIBE)) {
-			setMapper.put(key, commands);
-		} else {
-      logger.warn("Key " + key + " is not a member of the command completion system\n");
 		}
 	}
 
-	private Logger logger = Logger.getLogger(MartCompleter.class.getName());
+	/**
+	 * Sets the MartCompleter into Help Mode.
+	 *
+	 */
+	public void SetHelpMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll((SortedSet) setMapper.get(HELP));
+	}
+
+	/**
+	 * Sets the MartCompleter into COMMAND mode
+	 *
+	 */
+	public void SetCommandMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll((SortedSet) setMapper.get(COMMANDS));
+		lastLocalDataset = null;
+	}
+
+	/**
+	 * Sets the MartCompleter into Get Mode
+	 *
+	 */
+	public void SetGetMode() {
+		if (lastLocalDataset != null) {
+			currentSet = new TreeSet();
+			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
+
+			List attributes = lastLocalDataset.getAllUIAttributeDescriptions();
+			for (int i = 0, n = attributes.size(); i < n; i++) {
+				Object attribute = attributes.get(i);
+				if (attribute instanceof UIAttributeDescription)
+					currentSet.add(((UIAttributeDescription) attribute).getInternalName());
+				//else, if we impliment UIDSAttributeDescription
+			}
+		} else if (envDataset != null) {
+			currentSet = new TreeSet();
+			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
+
+			List attributes = envDataset.getAllUIAttributeDescriptions();
+			for (int i = 0, n = attributes.size(); i < n; i++) {
+				Object attribute = attributes.get(i);
+				if (attribute instanceof UIAttributeDescription)
+					currentSet.add(((UIAttributeDescription) attribute).getInternalName());
+				//else, if we impliment UIDSAttributeDescription
+			}
+
+		} else {
+			currentSet = new TreeSet();
+			currentSet.addAll(NODATASETWARNING);
+		}
+	}
+
+	/**
+	 * Sets the MartCompleter into Sequence Mode
+	 *
+	 */
+	public void SetSequenceMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QSEQUENCE));
+	}
+
+	/**
+	 * Sets the MartCompleter into the Dataset Mode 
+		*
+		*/
+	public void SetDatasetMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll((SortedSet) setMapper.get(DATASETS));
+	}
+
+	/**
+	 * Sets the MartCompleter into the Where Mode
+	 *
+	 */
+	public void SetWhereMode() {
+
+		if (lastLocalDataset != null) {
+			currentSet = new TreeSet();
+			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
+
+			List filters = lastLocalDataset.getAllUIFilterDescriptions();
+			for (int i = 0, n = filters.size(); i < n; i++) {
+				Object filter = filters.get(i);
+
+				if (filter instanceof UIDSFilterDescription)
+					currentSet.add(((UIDSFilterDescription) filter).getInternalName());
+				else
+					currentSet.add(((UIFilterDescription) filter).getInternalName());
+			}
+		} else if (envDataset != null) {
+			currentSet = new TreeSet();
+			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
+
+			List filters = envDataset.getAllUIFilterDescriptions();
+			for (int i = 0, n = filters.size(); i < n; i++) {
+				Object filter = filters.get(i);
+
+				if (filter instanceof UIDSFilterDescription)
+					currentSet.add(((UIDSFilterDescription) filter).getInternalName());
+				else
+					currentSet.add(((UIFilterDescription) filter).getInternalName());
+			}
+		} else
+			currentSet.add(NODATASETWARNING);
+	}
+
+	/**
+	 * Adds a Collection of String names to a specific list specified by a keyword.
+	 * If the keyword is not available, a warning is sent to the logging system, and
+	 * the Collection is ignored.
+	 * @param key - one of the available keywords for a specific Mode.
+	 * @param commands - Collection of names to make available in that Mode.
+	 */
+	public void AddAvailableCommandsTo(String key, Object commands) {
+		if (setMapper.containsKey(key)) {
+			SortedSet set = (SortedSet) setMapper.get(key);
+			set.addAll((Collection) commands);
+			setMapper.put(key, set);
+		} else if (key.equals(DESCRIBE)) {
+			setMapper.put(key, commands);
+		} else {
+			logger.warn("Key " + key + " is not a member of the command completion system\n");
+		}
+	}
 }

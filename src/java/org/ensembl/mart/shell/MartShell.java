@@ -77,7 +77,6 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
-
 /**
  * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a description of the Mart Query Language).
  * The system can be used to run script files containing valid Mart Query Language commands, or individual queries from the commandline.
@@ -100,7 +99,7 @@ public class MartShell {
 
 	// main variables
 	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
-	private static String COMMAND_LINE_SWITCHES = "h:AC:M:H:T:P:U:p:d:vl:e:O:F:R:E:";
+	private static String COMMAND_LINE_SWITCHES = "h:AC:M:H:T:P:U:p:D:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
 	private static String mainHost = null;
@@ -109,6 +108,7 @@ public class MartShell {
 	private static String mainDatabaseType = null;
 	private static String mainUser = null;
 	private static String mainPassword = null;
+	private static String mainDataset = null;
 	private static boolean mainBatchMode = false; // if -e is passed, true
 	private static String mainBatchSQL = null;
 	private static String mainBatchScriptFile = null;
@@ -116,7 +116,7 @@ public class MartShell {
 	private static String mainBatchFile = null;
 	private static String mainBatchFormat = null;
 	private static String mainBatchSeparator = null;
-  private static String helpCommand = null;
+	private static String helpCommand = null;
 	private static Logger mainLogger = Logger.getLogger(MartShell.class.getName());
 
 	/**
@@ -135,7 +135,8 @@ public class MartShell {
 			+ "\n-P PORT                                 - database port"
 			+ "\n-U USER                                 - database user name"
 			+ "\n-p PASSWORD                             - database password"
-			+ "\n-d DATABASE                             - database name"
+			+ "\n-D DATABASE                             - database name"
+			+ "\n-d DATASET                              - dataset name"
 			+ "\n-v                                      - verbose logging output"
 			+ "\n-l LOGGING_FILE_URL                     - logging file, defaults to console if none specified"
 			+ "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
@@ -267,7 +268,7 @@ public class MartShell {
 
 					case 'h' :
 						help = true;
-            helpCommand = g.getOptarg();            
+						helpCommand = g.getOptarg();
 						break;
 
 					case 'C' :
@@ -303,8 +304,12 @@ public class MartShell {
 						mainPassword = g.getOptarg();
 						break;
 
-					case 'd' :
+					case 'D' :
 						mainDatabase = g.getOptarg();
+						break;
+
+					case 'd' :
+						mainDataset = g.getOptarg();
 						break;
 
 					case 'v' :
@@ -361,18 +366,18 @@ public class MartShell {
 
 		// check for help
 		if (help) {
-      if (helpCommand.equals(""))
-        System.out.println(usage());
-      else {
-        MartShell ms = new MartShell();
-        ms.UnsetCommandCompletion();
-        try {
+			if (helpCommand.equals(""))
+				System.out.println(usage());
+			else {
+				MartShell ms = new MartShell();
+				ms.UnsetCommandCompletion();
+				try {
 					System.out.println(ms.Help(helpCommand));
 				} catch (InvalidQueryException e) {
 					System.out.println("Couldnt provide Help for " + helpCommand + e.getMessage());
 					e.printStackTrace();
 				}
-      }
+			}
 			return;
 		}
 
@@ -391,11 +396,13 @@ public class MartShell {
 			ms.setDBDatabase(mainDatabase);
 		if (mainConfiguration != null)
 			ms.setAlternateMartConfiguration(mainConfiguration);
+		if (mainDataset != null)
+			ms.setDatasetName(mainDataset);
 
 		if (mainBatchMode) {
 			boolean validQuery = true;
-      ms.UnsetCommandCompletion();
-      
+			ms.UnsetCommandCompletion();
+
 			if (mainBatchSQL == null && mainBatchScriptFile == null) {
 				System.out.println("Must supply either a Query command or a query script\n" + usage());
 				System.exit(0);
@@ -499,65 +506,65 @@ public class MartShell {
 				mcl.AddAvailableCommandsTo("commands", msl.availableCommands);
 
 				// add sequences
-				mcl.AddAvailableCommandsTo(QSEQUENCE, SequenceDescription.SEQS);
+				mcl.AddAvailableCommandsTo(MartShellLib.QSEQUENCE, SequenceDescription.SEQS);
 
 				// add describe
-        HashMap describeCommands = new HashMap();
-        
-        //      set up FilterPage keys
-        HashMap FilterMap = new HashMap();
-        FilterMap.put(FILTERKEY, new HashMap());
-        
-        describeCommands.put(FILTERKEY, FilterMap);
-        
-        HashMap FpageMap = new HashMap();
-        FpageMap.put(FILTERKEY, FilterMap);
-        
-        HashMap FgroupMap = new HashMap();
-        FgroupMap.put(FILTERKEY, FilterMap);
-        
-        HashMap FColMap = new HashMap();
-        FColMap.put(FILTERKEY, FilterMap);
-        
-        HashMap FDescMap = new HashMap();
-        FDescMap.put(FILTERKEY, FilterMap);
-        
-        HashMap FsetMap = new HashMap();
-        FsetMap.put(FILTERSETDESCRIPTIONKEY, new HashMap());
-        
-        FColMap.put(FILTERSETKEY, FsetMap);
-        FColMap.put(FILTERKEY, FDescMap);
-        
-        FgroupMap.put(FILTERCOLLECTIONKEY, FColMap);
-        
-        FpageMap.put(FILTERGROUPKEY, FgroupMap);
-        
-        describeCommands.put(FILTERPAGEKEY, FpageMap);
-        
-        // set up AttributePage Keys
-        HashMap AttMap = new HashMap();
-        AttMap.put(ATTRIBUTEKEY, new HashMap());
-        describeCommands.put(ATTRIBUTEKEY, AttMap);
-        
-        HashMap ApageMap = new HashMap();
-        ApageMap.put(ATTRIBUTEKEY, AttMap);
-        
-        HashMap AgroupMap = new HashMap();
-        AgroupMap.put(ATTRIBUTEKEY, AttMap);
-        
-        HashMap AColMap = new HashMap();
-        AColMap.put(ATTRIBUTEKEY, AttMap);
-        
-        HashMap AdescMap = new HashMap();
-        AdescMap.put(ATTRIBUTEKEY, AttMap);
-        
-        AColMap.put(ATTRIBUTEKEY, AdescMap);
-        AgroupMap.put(ATTRIBUTECOLLECTIONKEY, AColMap);
-        ApageMap.put(ATTRIBUTEGROUPKEY, AgroupMap);
-        
-        describeCommands.put(FILTERPAGEKEY, FpageMap);
-        describeCommands.put(ATTRIBUTEPAGEKEY, ApageMap);
-        
+				HashMap describeCommands = new HashMap();
+
+				//      set up FilterPage keys
+				HashMap FilterMap = new HashMap();
+				FilterMap.put(FILTERKEY, new HashMap());
+
+				describeCommands.put(FILTERKEY, FilterMap);
+
+				HashMap FpageMap = new HashMap();
+				FpageMap.put(FILTERKEY, FilterMap);
+
+				HashMap FgroupMap = new HashMap();
+				FgroupMap.put(FILTERKEY, FilterMap);
+
+				HashMap FColMap = new HashMap();
+				FColMap.put(FILTERKEY, FilterMap);
+
+				HashMap FDescMap = new HashMap();
+				FDescMap.put(FILTERKEY, FilterMap);
+
+				HashMap FsetMap = new HashMap();
+				FsetMap.put(FILTERSETDESCRIPTIONKEY, new HashMap());
+
+				FColMap.put(FILTERSETKEY, FsetMap);
+				FColMap.put(FILTERKEY, FDescMap);
+
+				FgroupMap.put(FILTERCOLLECTIONKEY, FColMap);
+
+				FpageMap.put(FILTERGROUPKEY, FgroupMap);
+
+				describeCommands.put(FILTERPAGEKEY, FpageMap);
+
+				// set up AttributePage Keys
+				HashMap AttMap = new HashMap();
+				AttMap.put(ATTRIBUTEKEY, new HashMap());
+				describeCommands.put(ATTRIBUTEKEY, AttMap);
+
+				HashMap ApageMap = new HashMap();
+				ApageMap.put(ATTRIBUTEKEY, AttMap);
+
+				HashMap AgroupMap = new HashMap();
+				AgroupMap.put(ATTRIBUTEKEY, AttMap);
+
+				HashMap AColMap = new HashMap();
+				AColMap.put(ATTRIBUTEKEY, AttMap);
+
+				HashMap AdescMap = new HashMap();
+				AdescMap.put(ATTRIBUTEKEY, AttMap);
+
+				AColMap.put(ATTRIBUTEKEY, AdescMap);
+				AgroupMap.put(ATTRIBUTECOLLECTIONKEY, AColMap);
+				ApageMap.put(ATTRIBUTEGROUPKEY, AgroupMap);
+
+				describeCommands.put(FILTERPAGEKEY, FpageMap);
+				describeCommands.put(ATTRIBUTEPAGEKEY, ApageMap);
+
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
 				mcl.SetCommandMode();
@@ -794,6 +801,14 @@ public class MartShell {
 	}
 
 	/**
+	 * sets the DatasetName to the provided String
+	 * @param datasetName - string internalName of the dataset
+	 */
+	public void setDatasetName(String datasetName) {
+		this.envDataset = datasetName;
+	}
+
+	/**
 	 * Get any error message, if the runBatch or runBatchScript command returns
 	 * false.
 	 * 
@@ -841,6 +856,7 @@ public class MartShell {
 			line = subPrompt();
 		else
 			line = mainPrompt();
+      
 		return line;
 	}
 
@@ -855,6 +871,9 @@ public class MartShell {
 		else
 			prompt = "> ";
 
+    if (completionOn)
+      mcl.SetCommandMode();
+      
 		line = Readline.readline(prompt, historyOn);
 		return line;
 	}
@@ -875,9 +894,9 @@ public class MartShell {
 	}
 
 	public String Help(String command) throws InvalidQueryException {
-    if (!helpLoaded)
-      LoadHelpFile();
-      
+		if (!helpLoaded)
+			LoadHelpFile();
+
 		StringBuffer buf = new StringBuffer();
 
 		if (command.equals(HELPC)) {
@@ -888,31 +907,31 @@ public class MartShell {
 				buf.append("\t\t" + element).append("\n");
 			}
 			buf.append("\n");
-      return buf.toString();
-      
+			return buf.toString();
+
 		} else if (command.startsWith(HELPC)) {
 			buf.append("\n");
 			StringTokenizer hToks = new StringTokenizer(command, " ");
 			hToks.nextToken(); // skip help
 			String comm = hToks.nextToken();
 
-      return Help(comm);
+			return Help(comm);
 		} else {
 			if (commandHelp.containsKey(command)) {
-        // if this is a help call, make sure and check for domain specific bits in the help input to substitute
-        String output = commandHelp.getProperty(command);
-        for (int i = 0, n = dsCommands.length; i < n; i++) {
-          Pattern pat = dsCommands[i];
-          Matcher m = pat.matcher(output);
-          
-          if (m.matches())
-            buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
-          else
-            buf.append(output).append("\n");
-        }
-      } else
+				// if this is a help call, make sure and check for domain specific bits in the help input to substitute
+				String output = commandHelp.getProperty(command);
+				for (int i = 0, n = dsCommands.length; i < n; i++) {
+					Pattern pat = dsCommands[i];
+					Matcher m = pat.matcher(output);
+
+					if (m.matches())
+						buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
+					else
+						buf.append(output).append("\n");
+				}
+			} else
 				buf.append("Sorry, no information available for item: ").append(command).append("\n");
-      return buf.toString(); 
+			return buf.toString();
 		}
 	}
 
@@ -1142,8 +1161,8 @@ public class MartShell {
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
-            System.out.println();
-            
+						System.out.println();
+
 					} else if (arg2key.equals(FILTERKEY)) {
 						if (!fpage.containsUIFilterDescription(arg2value))
 							throw new InvalidQueryException(
@@ -1160,12 +1179,12 @@ public class MartShell {
 								+ fpage.getDisplayName()
 								+ "\n");
 
-            System.out.println();
+						System.out.println();
 						String[] lines = DescribeFilter(fpage.getUIFilterDescriptionByName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
-            System.out.println();
+						System.out.println();
 
 					} else {
 						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
@@ -1216,12 +1235,12 @@ public class MartShell {
 								+ apage.getDisplayName()
 								+ "\n");
 
-            System.out.println();
+						System.out.println();
 						String[] lines = DescribeAttribute(apage.getUIAttributeDescriptionByName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
-              
-            System.out.println();
+
+						System.out.println();
 
 					} else {
 						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
@@ -1292,43 +1311,43 @@ public class MartShell {
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
-                System.out.println();
-                
-							} else if (arg3key.equals(FILTERSETKEY)) {
-                if (!group.containsFilterSet(arg3value))
-                throw new InvalidQueryException(
-                  "Dataset "
-                    + dset.getInternalName()
-                    + " FilterPage "
-                    + fpage.getInternalName()
-                    + " FilterGroup "
-                    + group.getInternalName()
-                    + " does not contain FilterSet "
-                    + arg3value
-                    + "\n");
-                
-                System.out.print(
-                  "Dataset "
-                    + dset.getInternalName()
-                    + " - "
-                    + dset.getDisplayName()
-                    + "\nFilterPage: "
-                    + fpage.getInternalName()
-                    + " - "
-                    + fpage.getDisplayName()
-                    + "\n\tFilterGroup: "
-                    + group.getInternalName()
-                    + " - "
-                    + group.getDisplayName()
-                    + "\n\n");  
-                  
-                String[] lines = DescribeFilterSet(group.getFilterSetByName(arg3value));
-                for (int i = 0, n = lines.length; i < n; i++)
-                  System.out.println("\t\t" + lines[i]);
+								System.out.println();
 
-                System.out.println();
-                
-              } else if (arg3key.equals(FILTERKEY)) {							
+							} else if (arg3key.equals(FILTERSETKEY)) {
+								if (!group.containsFilterSet(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " FilterPage "
+											+ fpage.getInternalName()
+											+ " FilterGroup "
+											+ group.getInternalName()
+											+ " does not contain FilterSet "
+											+ arg3value
+											+ "\n");
+
+								System.out.print(
+									"Dataset "
+										+ dset.getInternalName()
+										+ " - "
+										+ dset.getDisplayName()
+										+ "\nFilterPage: "
+										+ fpage.getInternalName()
+										+ " - "
+										+ fpage.getDisplayName()
+										+ "\n\tFilterGroup: "
+										+ group.getInternalName()
+										+ " - "
+										+ group.getDisplayName()
+										+ "\n\n");
+
+								String[] lines = DescribeFilterSet(group.getFilterSetByName(arg3value));
+								for (int i = 0, n = lines.length; i < n; i++)
+									System.out.println("\t\t" + lines[i]);
+
+								System.out.println();
+
+							} else if (arg3key.equals(FILTERKEY)) {
 								if (!group.containsUIFilterDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1360,8 +1379,8 @@ public class MartShell {
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
-                System.out.println();
-                
+								System.out.println();
+
 							} else {
 								throw new InvalidQueryException(
 									"Recieved describe command with request key: "
@@ -1431,8 +1450,8 @@ public class MartShell {
 								String[] lines = DescribeAttributeCollection(group.getAttributeCollectionByName(arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
-                  
-                System.out.println();
+
+								System.out.println();
 
 							} else if (arg3key.equals(ATTRIBUTEKEY)) {
 								if (!group.containsUIAttributeDescription(arg3value))
@@ -1466,7 +1485,7 @@ public class MartShell {
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
-                System.out.println();
+								System.out.println();
 							} else {
 								throw new InvalidQueryException(
 									"Recieved describe command with request key: "
@@ -1578,7 +1597,7 @@ public class MartShell {
 									for (int i = 0, n = lines.length; i < n; i++)
 										System.out.println("\t\t\t" + lines[i]);
 
-                  System.out.println();
+									System.out.println();
 
 								} else {
 									throw new InvalidQueryException(
@@ -1594,77 +1613,77 @@ public class MartShell {
 								}
 
 							} else if (arg3key.equals(FILTERSETKEY)) {
-                if (!group.containsFilterSet(arg3value))
-                  throw new InvalidQueryException(
-                    "Dataset "
-                      + dset.getInternalName()
-                      + " FilterPage "
-                      + fpage.getInternalName()
-                      + " FilterGroup "
-                      + group.getInternalName()
-                      + " does not contain FilterSet "
-                      + arg3value
-                      + "\n");
+								if (!group.containsFilterSet(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " FilterPage "
+											+ fpage.getInternalName()
+											+ " FilterGroup "
+											+ group.getInternalName()
+											+ " does not contain FilterSet "
+											+ arg3value
+											+ "\n");
 
-                arg4 = (String[]) args.get(3);
-                FilterSet fset = group.getFilterSetByName(arg3value);
-                String arg4key = arg4[0];
-                String arg4value = arg4[1];
-                
-                if (arg4key.equals(FILTERSETDESCRIPTIONKEY)) {
-                   if(!fset.containsFilterSetDescription(arg4value))
-                  throw new InvalidQueryException(
-                    "Dataset "
-                      + dset.getInternalName()
-                      + " FilterPage "
-                      + fpage.getInternalName()
-                      + " FilterGroup "
-                      + group.getInternalName()
-                      + " FilterSet "
-                      + fset.getInternalName()
-                      + " does not contain FilterSetDescription "
-                      + arg4value
-                      + "\n");
+								arg4 = (String[]) args.get(3);
+								FilterSet fset = group.getFilterSetByName(arg3value);
+								String arg4key = arg4[0];
+								String arg4value = arg4[1];
 
-                System.out.print(
-                  "Dataset "
-                    + dset.getInternalName()
-                    + " - "
-                    + dset.getDisplayName()
-                    + "\nFilterPage: "
-                    + fpage.getInternalName()
-                    + " - "
-                    + fpage.getDisplayName()
-                    + "\n\tFilterGroup: "
-                    + group.getInternalName()
-                    + " - "
-                    + group.getDisplayName()
-                    + "\n\t\tFilterSet: "
-                    + fset.getInternalName()
-                    + " - "
-                    + fset.getDisplayName()
-                    + "\n\n");
-                   
-                 String[] lines = DescribeFilterSetDescription(fset.getFilterSetDescriptionByName(arg4value));
-                 for (int i = 0, n = lines.length; i < n; i++)
-                   System.out.println("\t\t\t" + lines[i]);
+								if (arg4key.equals(FILTERSETDESCRIPTIONKEY)) {
+									if (!fset.containsFilterSetDescription(arg4value))
+										throw new InvalidQueryException(
+											"Dataset "
+												+ dset.getInternalName()
+												+ " FilterPage "
+												+ fpage.getInternalName()
+												+ " FilterGroup "
+												+ group.getInternalName()
+												+ " FilterSet "
+												+ fset.getInternalName()
+												+ " does not contain FilterSetDescription "
+												+ arg4value
+												+ "\n");
 
-                 System.out.println();
-                    
-                } else {
-                  throw new InvalidQueryException(
-                    "Recieved describe command with request key: "
-                      + arg1key
-                      + " and second request key: "
-                      + arg2key
-                      + " with third request key: "
-                      + arg3key
-                      + " and invalid fourth request key: "
-                      + arg4key
-                      + "\n");
-                }
-                                
-              } else {
+									System.out.print(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " - "
+											+ dset.getDisplayName()
+											+ "\nFilterPage: "
+											+ fpage.getInternalName()
+											+ " - "
+											+ fpage.getDisplayName()
+											+ "\n\tFilterGroup: "
+											+ group.getInternalName()
+											+ " - "
+											+ group.getDisplayName()
+											+ "\n\t\tFilterSet: "
+											+ fset.getInternalName()
+											+ " - "
+											+ fset.getDisplayName()
+											+ "\n\n");
+
+									String[] lines = DescribeFilterSetDescription(fset.getFilterSetDescriptionByName(arg4value));
+									for (int i = 0, n = lines.length; i < n; i++)
+										System.out.println("\t\t\t" + lines[i]);
+
+									System.out.println();
+
+								} else {
+									throw new InvalidQueryException(
+										"Recieved describe command with request key: "
+											+ arg1key
+											+ " and second request key: "
+											+ arg2key
+											+ " with third request key: "
+											+ arg3key
+											+ " and invalid fourth request key: "
+											+ arg4key
+											+ "\n");
+								}
+
+							} else {
 								throw new InvalidQueryException(
 									"Recieved describe command with request key: "
 										+ arg1key
@@ -1756,8 +1775,8 @@ public class MartShell {
 									String[] lines = DescribeAttribute(collection.getUIAttributeDescriptionByName(arg4value));
 									for (int i = 0, n = lines.length; i < n; i++)
 										System.out.println("\t\t\t\t" + lines[i]);
-                    
-                  System.out.println();
+
+									System.out.println();
 
 								} else {
 									throw new InvalidQueryException(
@@ -1912,8 +1931,8 @@ public class MartShell {
 		} else {
 			AttributeGroup group = (AttributeGroup) groupo;
 			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
-      lines.add(DASHES);
-      
+			lines.add(DASHES);
+
 			AttributeCollection[] attcs = group.getAttributeCollections();
 			for (int i = 0, n = attcs.length; i < n; i++) {
 				if (i > 0)
@@ -1921,7 +1940,7 @@ public class MartShell {
 
 				lines.addAll(Arrays.asList(DescribeAttributeCollection(attcs[i])));
 			}
-      lines.add(DASHES);
+			lines.add(DASHES);
 		}
 
 		String[] ret = new String[lines.size()];
@@ -1929,25 +1948,25 @@ public class MartShell {
 		return ret;
 	}
 
-  private String[] DescribeFilterSet(FilterSet fset) {
-    List lines = new ArrayList();
-    
-    String setheader = "\tFilterSet: " + fset.getInternalName();
-    if (!fset.getDisplayName().equals(""))
-      setheader += " - " + fset.getDisplayName();
-    
-    setheader += " Contains the following FilterSetDescriptions:\n";
-    lines.add(setheader);
-    
-    FilterSetDescription[] fsetdescs = fset.getFilterSetDescriptions();
-    for (int i = 0, n = fsetdescs.length; i < n; i++)
-      lines.addAll(Arrays.asList(DescribeFilterSetDescription(fsetdescs[i])));
-      
-    String[] ret = new String[lines.size()];
-    lines.toArray(ret);
-    return ret;
-  }
-  
+	private String[] DescribeFilterSet(FilterSet fset) {
+		List lines = new ArrayList();
+
+		String setheader = "\tFilterSet: " + fset.getInternalName();
+		if (!fset.getDisplayName().equals(""))
+			setheader += " - " + fset.getDisplayName();
+
+		setheader += " Contains the following FilterSetDescriptions:\n";
+		lines.add(setheader);
+
+		FilterSetDescription[] fsetdescs = fset.getFilterSetDescriptions();
+		for (int i = 0, n = fsetdescs.length; i < n; i++)
+			lines.addAll(Arrays.asList(DescribeFilterSetDescription(fsetdescs[i])));
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
 	private String[] DescribeFilterCollection(FilterCollection collection) {
 		List lines = new ArrayList();
 
@@ -1978,44 +1997,44 @@ public class MartShell {
 		return ret;
 	}
 
-  private String[] DescribeAttributeCollection(AttributeCollection collection) {
-    List lines = new ArrayList();
+	private String[] DescribeAttributeCollection(AttributeCollection collection) {
+		List lines = new ArrayList();
 
-    String colheader = "\tCollection: " + collection.getInternalName();
-    if (!collection.getDisplayName().equals(""))
-      colheader += " - " + collection.getDisplayName();
-    
-    lines.add(colheader);
+		String colheader = "\tCollection: " + collection.getInternalName();
+		if (!collection.getDisplayName().equals(""))
+			colheader += " - " + collection.getDisplayName();
 
-    if (collection.getMaxSelect() > 0) {
-      String[] clines = ColumnIze("(Note: Only " + collection.getMaxSelect() + " of the following attributes can be selected in the same query)");
-      for (int j = 0, k = clines.length; j < k; j++)
-        lines.add("\t" + clines[j]);
-      lines.add("");
-    }
+		lines.add(colheader);
 
-    List adescs = collection.getUIAttributeDescriptions();
-    for (int i = 0, n = adescs.size(); i < n; i++)
-      lines.addAll(Arrays.asList(DescribeAttribute(adescs.get(i))));
+		if (collection.getMaxSelect() > 0) {
+			String[] clines = ColumnIze("(Note: Only " + collection.getMaxSelect() + " of the following attributes can be selected in the same query)");
+			for (int j = 0, k = clines.length; j < k; j++)
+				lines.add("\t" + clines[j]);
+			lines.add("");
+		}
 
-    String[] ret = new String[lines.size()];
-    lines.toArray(ret);
-    return ret;
-  }
+		List adescs = collection.getUIAttributeDescriptions();
+		for (int i = 0, n = adescs.size(); i < n; i++)
+			lines.addAll(Arrays.asList(DescribeAttribute(adescs.get(i))));
 
-  private String[] DescribeFilterSetDescription(FilterSetDescription desc) {
-    List lines = new ArrayList();
-    
-    String disp = "\t\t" + desc.getInternalName();
-    if (desc.getDisplayName().length() > 0)
-      disp += " - " + desc.getDisplayName();
-    
-    lines.add(disp);
-    String[] ret = new String[lines.size()];
-    lines.toArray(ret);
-    return ret;
-  }
-  
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private String[] DescribeFilterSetDescription(FilterSetDescription desc) {
+		List lines = new ArrayList();
+
+		String disp = "\t\t" + desc.getInternalName();
+		if (desc.getDisplayName().length() > 0)
+			disp += " - " + desc.getDisplayName();
+
+		lines.add(disp);
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
 	private String[] DescribeFilter(Object filtero) {
 		List lines = new ArrayList();
 
@@ -2262,6 +2281,31 @@ public class MartShell {
 				+ thisFile);
 	}
 
+	private void useCommand(String command) throws InvalidQueryException {
+		if (command.startsWith(USEC)) {
+			StringTokenizer tokens = new StringTokenizer(command, " ");
+			if (tokens.countTokens() == 2) {
+				tokens.nextToken();
+				useCommand(tokens.nextToken());
+			} else
+				throw new InvalidQueryException("invalid use command: does not contain a dataset to use: " + command + " has " + tokens.countTokens() + " tokens\n");
+
+		} else {
+			if (martconf.containsDataset(command))
+				envDataset = command;
+			else
+				throw new InvalidQueryException("MartConfiguration does not contain dataset " + command + "\n");
+		}
+
+		if (completionOn)
+			mcl.setEnvDataset(envDataset);
+	}
+
+	private void showDataset() {
+		String dsetName = (envDataset != null) ? envDataset : "not set";
+		System.out.println("Current Dataset " + dsetName);
+	}
+
 	private void WriteHistory(String command) throws InvalidQueryException {
 		try {
 			StringTokenizer com = new StringTokenizer(command, " ");
@@ -2496,8 +2540,6 @@ public class MartShell {
 			String command = conline.append(line).toString().trim();
 			continueQuery = false;
 			conline = new StringBuffer();
-			if (completionOn)
-				mcl.SetCommandMode();
 
 			parseCommand(command);
 		} else if (line.endsWith(LINEEND)) {
@@ -2505,34 +2547,28 @@ public class MartShell {
 			continueQuery = false;
 			conline = new StringBuffer();
 
-			if (completionOn)
-				mcl.SetCommandMode();
-
 			parseCommand(command);
 		} else {
 			conline.append(" " + line);
 			continueQuery = true;
 
 			//MartCompleter Mode
-			if (completionOn) {
-				if (line.indexOf(QSTART) >= 0)
-					mcl.SetSelectMode();
-				else if (line.indexOf(QFROM) >= 0)
-					mcl.SetFromMode();
-				else if (line.indexOf(QWHERE) >= 0)
-					mcl.SetWhereMode();
-				//else not needed
-			}
+			if (completionOn)
+        mcl.SetModeForLine(line);
 		}
 	}
 
 	private void parseCommand(String command) throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
 		int cLen = command.length();
 
-		command = command.replaceAll("\\s;$", ";");
+		command = command.replaceAll("\\s;$", ";"); // removes any whitespace before the ; character
 
 		if (cLen == 0)
 			return;
+		else if (command.startsWith(USEC))
+			useCommand(NormalizeCommand(command));
+		else if (command.startsWith(SHOWDATASETC))
+			showDataset();
 		else if (command.startsWith(HELPC))
 			System.out.print(Help(NormalizeCommand(command)));
 		else if (command.startsWith(DESCC))
@@ -2561,7 +2597,10 @@ public class MartShell {
 			WriteHistory(NormalizeCommand(command));
 		else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
 			ExitShell();
-		else if (command.startsWith(QSTART)) {
+		else if (command.startsWith(MartShellLib.GETQSTART) || command.startsWith(MartShellLib.USINGQSTART)) {
+			if (envDataset != null)
+				msl.setDataset(envDataset);
+
 			Query query = msl.MQLtoQuery(command);
 
 			OutputStream os = null;
@@ -2637,6 +2676,8 @@ public class MartShell {
 	private final String QUITC = "quit";
 	private final String HELPC = "help";
 	private final String DESCC = "describe";
+	private final String USEC = "use";
+	private final String SHOWDATASETC = "showDataset";
 	private final String SETOUTSETSC = "setOutputSettings";
 	private final String SHOWOUTSETSC = "showOutputSettings";
 	private final String SETCONSETSC = "setConnectionSettings";
@@ -2649,7 +2690,6 @@ public class MartShell {
 	private final String LOADSCRIPTC = "loadScript";
 	private final String SAVETOSCRIPTC = "saveToScript";
 	private final String HISTORYC = "history";
-	private final String QSTART = "select";
 
 	protected final List availableCommands =
 		Collections.unmodifiableList(
@@ -2671,14 +2711,16 @@ public class MartShell {
 					LOADSCRIPTC,
 					SAVETOSCRIPTC,
 					HISTORYC,
-					QSTART }));
+					USEC,
+					MartShellLib.GETQSTART,
+					MartShellLib.USINGQSTART }));
 
 	// describe instructions
 	private final String FILTERPAGEKEY = "FilterPage";
 	private final String FILTERGROUPKEY = "FilterGroup";
 	private final String FILTERCOLLECTIONKEY = "FilterCollection";
-  private final String FILTERSETKEY = "FilterSet";
-  private final String FILTERSETDESCRIPTIONKEY = "FilterSetDescription";
+	private final String FILTERSETKEY = "FilterSet";
+	private final String FILTERSETDESCRIPTIONKEY = "FilterSetDescription";
 	private final String FILTERKEY = "Filter";
 	private final String ATTRIBUTEPAGEKEY = "AttributePage";
 	private final String ATTRIBUTEGROUPKEY = "AttributeGroup";
@@ -2689,6 +2731,9 @@ public class MartShell {
 	private final String FILE = "file";
 	private final String FORMAT = "format";
 	private final String SEPARATOR = "separator";
+
+	//environment dataset
+	private String envDataset = null;
 
 	// strings used to show/set mart connection settings
 	private final String DBHOST = "host";
@@ -2714,8 +2759,5 @@ public class MartShell {
 	private StringBuffer conline = new StringBuffer();
 
 	//other strings needed
-	private final String QFROM = "from";
-	private final String QWHERE = "where";
 	private final String LINEEND = ";";
-	private final String QSEQUENCE = "sequence";
 }
