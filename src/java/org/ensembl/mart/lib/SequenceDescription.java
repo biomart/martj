@@ -452,8 +452,8 @@ public final class SequenceDescription {
                                                                                                         "Transcript Exons (with optional flanking sequences)",
                                                                                                         "Transcripts with Exons and Intronic Sequence (with optional flanking sequences)",
                                                                                                         "Left or Right Flanking Sequence of Transcripts (must specify a left or right flanking length)",
-		                                                                                                    "Gene Exons (with optional flanking sequences)",
 		                                                                                                    "Genes with Exons and Intronic Sequence (with optional flanking sequences)",
+                                                                                                        "Gene Exons (with optional flanking sequences)",                                                                                                        
 		                                                                                                    "Left or Right Flanking Sequence of Genes (must specify a left or right flanking length)",
 		                                                                                                    "Downstream Untranslated Region (must specify a right flank length. Note, some genes do not have UTR categorized)",
 		                                                                                                    "Upstream Untranslated Region (must specify a left flank length. Note, some genes do not have UTR categorized)"                                                              
