@@ -60,12 +60,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     protected Clipboard clipboard;
     protected boolean cut = false;
     protected int editingNodeIndex;
+    protected File file = null;
 
     public DatasetViewTree(DatasetView dsView, DatasetViewTreeWidget frame, DatasetViewAttributesTable attrTable) {
         super((TreeModel) null);
         this.dsView = dsView;
         this.frame = frame;
         this.attrTable = attrTable;
+        file = frame.getFileChooserPath();
         addMouseListener(new DatasetViewTreeMouseListener());
         addTreeSelectionListener(new DatasetViewTreeSelectionListener());
         // Use horizontal and vertical lines
@@ -157,7 +159,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         public void tableChanged(TableModelEvent evt) {
 
             // treemodel.reload(attrTableModel.getNode(),(DatasetViewTreeNode)attrTableModel.getNode().getParent());
-            treemodel.reload(attrTableModel.getNode().getParent());
+            treemodel.reload(attrTableModel.getParentNode());
         }
 
         public void treeCollapsed(TreeExpansionEvent evt) {
@@ -327,8 +329,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                         if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
-                        } else
+                        } else  {
+                            DatasetViewTreeNode parent = (DatasetViewTreeNode)selnode.getParent();
+                            treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, dropnode, 0);
+                        }
                         if (result.startsWith("Error")) {
                             JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
                             //treemodel.insertNodeInto(selnode, editingNodeParent, editingNodeIndex);
@@ -501,13 +506,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     public void save() {
         dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-        JFileChooser fc = new JFileChooser();
+        JFileChooser fc = new JFileChooser(frame.getFileChooserPath());
         XMLFileFilter filter = new XMLFileFilter();
         fc.addChoosableFileFilter(filter);
         int returnVal = fc.showSaveDialog(frame.getContentPane());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             try {
                 DatasetViewXMLUtils.DatasetViewToFile(dsView, fc.getSelectedFile());
+                frame.setFileChooserPath(fc.getSelectedFile());
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -42,15 +42,17 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     private JDesktopPane desktop;
     private GridBagConstraints constraints;
     private DatasetViewTree tree;
+    private File file = null;
+    private MartViewEditor editor;
 
-    public DatasetViewTreeWidget(File file) {
+    public DatasetViewTreeWidget(File file, MartViewEditor editor) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
                 true, //closable
                 true, //maximizable
                 true);//iconifiable
-
+        this.editor = editor;
         try {
             this.setFrameIcon(createImageIcon("MartView_cube.gif"));
             DatasetView view = new DatasetView();
@@ -176,6 +178,16 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     public void delete(){
         tree.delete();
     }
+
+    public void setFileChooserPath(File file){
+        this.file = file;
+        editor.setFileChooserPath(file);
+    }
+
+    public File getFileChooserPath(){
+        return editor.getFileChooserPath();
+    }
+
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
         java.net.URL imgURL = DatasetViewTreeWidget.class.getResource(path);

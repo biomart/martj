@@ -39,7 +39,7 @@ import java.net.URL;
 
 public class MartViewEditor extends JFrame {
 
-    JDesktopPane desktop;
+    private JDesktopPane desktop;
     static private final String newline = "\n";
     private JFileChooser fc;
     static final private String NEW = "New";
@@ -52,6 +52,7 @@ public class MartViewEditor extends JFrame {
     static final private String UNDO = "Undo";
     static final private String REDO = "Redo";
     static final private String HELP = "Copy";
+    private File file = null;
     //static final private String CUT = "cut";
     //static final private String PASTE = "paste";
 
@@ -90,13 +91,13 @@ public class MartViewEditor extends JFrame {
         //first button
         button = makeNavigationButton("new", NEW,
                 "Create a new dataset view",
-                "Previous");
+                "New");
         toolBar.add(button);
 
         //second button
         button = makeNavigationButton("open", OPEN,
                 "Open a dataset view",
-                "Up");
+                "Open");
         toolBar.add(button);
 
         //third button
@@ -107,27 +108,27 @@ public class MartViewEditor extends JFrame {
 
         button = makeNavigationButton("copy", COPY,
                 "Copy a tree node",
-                "Previous");
+                "Copy");
         toolBar.add(button);
 
         button = makeNavigationButton("cut", CUT,
                 "Cut a tree node",
-                "Up");
+                "Cut");
         toolBar.add(button);
 
         button = makeNavigationButton("paste", PASTE,
                 "Paste tree node",
-                "Next");
+                "Paste");
         toolBar.add(button);
 
         button = makeNavigationButton("undo", UNDO,
                 "Undo",
-                "Up");
+                "Undo");
         toolBar.add(button);
 
         button = makeNavigationButton("redo", REDO,
                 "Redo",
-                "Next");
+                "Redo");
         toolBar.add(button);
 
     }
@@ -310,7 +311,7 @@ public class MartViewEditor extends JFrame {
     //Create a new internal frame.
     protected void createFrame(File file) {
 
-            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file);
+            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this);
             frame.setVisible(true);
             desktop.add(frame);
             try {
@@ -423,6 +424,13 @@ public class MartViewEditor extends JFrame {
         createFrame(null);
     }
 
+    public void setFileChooserPath(File file){
+        this.file = file;
+    }
+
+    public File getFileChooserPath(){
+        return file;
+    }
     public void openDatasetView() {
 
         XMLFileFilter filter = new XMLFileFilter();

@@ -46,6 +46,7 @@ public class DatasetViewAttributeTableModel implements TableModel {
   protected String objClass;
   protected String[] firstColumnData;
   protected DatasetViewTreeNode node;
+  protected DatasetViewTreeNode parent;
 
   public DatasetViewAttributeTableModel(DatasetViewTreeNode node, String[] firstColumnData, String objClass) {
     this.node = node;
@@ -53,6 +54,7 @@ public class DatasetViewAttributeTableModel implements TableModel {
     this.firstColumnData = firstColumnData;
     this.objClass = objClass;
     tableModelListenerList = new Vector();
+    parent = (DatasetViewTreeNode)node.getParent();
   }
 
   public void addTableModelListener(TableModelListener l) {
@@ -204,7 +206,11 @@ public class DatasetViewAttributeTableModel implements TableModel {
           }
         }
       }
-      node.setUserObject(obj);
+      DatasetViewTreeNode newNode = new DatasetViewTreeNode(obj.getAttribute("internalName"),obj);
+
+      int index = parent.getIndex(node);
+      node.removeFromParent();
+      parent.insert(newNode,index);
       TableModelEvent tme = new TableModelEvent(this, rowIndex);
 
       fireEvent(tme);
@@ -215,8 +221,8 @@ public class DatasetViewAttributeTableModel implements TableModel {
     this.obj = obj;
   }
 
-  public DatasetViewTreeNode getNode() {
-    return node;
+  public DatasetViewTreeNode getParentNode() {
+    return parent;
   }
 
   private void fireEvent(TableModelEvent tme) {
