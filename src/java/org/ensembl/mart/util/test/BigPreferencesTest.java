@@ -17,6 +17,8 @@
  */
 package org.ensembl.mart.util.test;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +29,9 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
+import org.ensembl.mart.lib.config.test.URLDSViewAdaptorTest;
 import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.util.BigPreferences;
 
@@ -38,8 +43,8 @@ public class BigPreferencesTest extends Base {
 
   private Logger logger = Logger.getLogger(BigPreferencesTest.class.getName());
   private final String TEST_NODE = "test";
-  private Preferences userPref = BigPreferences.userNodeForPackage(BigPreferences.class);
-  private Preferences sysPref = BigPreferences.systemNodeForPackage(BigPreferences.class);
+  private Preferences userPref = BigPreferences.userNodeForPackage(BigPreferences.class).node(TEST_NODE);
+  private Preferences sysPref = BigPreferences.systemNodeForPackage(BigPreferences.class).node(TEST_NODE);
   private Random rand = new Random();
   
   private final int MAX_BYTE_LENGTH = (3 * BigPreferences.MAX_VALUE_LENGTH ) / 4;
@@ -112,6 +117,27 @@ public class BigPreferencesTest extends Base {
     
     pref.remove(TEST_KEY);
     pref.flush();
+  }
+  
+  public void testDatasetViewStorage() throws Exception {
+    URL testurl = URLDSViewAdaptorTest.getTestDatasetURL();
+    InputStream testinput = testurl.openStream();
+    DatasetView testDsv = DatasetViewXMLUtils.XMLStreamToDatasetView( testinput );
+    testinput.close();
+    
+    byte[] dsvOut = DatasetViewXMLUtils.DatasetViewToByteArray(testDsv);
+
+    userPref.remove(TEST_KEY);
+    userPref.flush();
+    userPref.putByteArray(TEST_KEY, dsvOut);
+    
+    byte[] dsvBack = userPref.getByteArray(TEST_KEY, null);
+    
+    assertEquals("Byte Lengths differ between dsvOut and dsvBack\n", dsvOut.length, dsvBack.length);
+    
+    DatasetView newDsv = DatasetViewXMLUtils.ByteArrayToDatasetView(dsvBack);
+    
+    assertTrue("testDsv and newDsv differ\n", testDsv.equals(newDsv));    
   }
   
   /* (non-Javadoc)
