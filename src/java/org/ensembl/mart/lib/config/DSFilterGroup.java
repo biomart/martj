@@ -29,11 +29,10 @@ package org.ensembl.mart.lib.config;
 public class DSFilterGroup extends BaseConfigurationObject {
 
   /**
-   * This will throw a ConfigurationException
-   * @throws ConfigurationException
+   *  Empty Constructor should only be used by DatasetViewEditor
    */
-  public DSFilterGroup() throws ConfigurationException {
-  	this("", "", "", "");
+  public DSFilterGroup() {
+  	super();
   }
   
   /**
@@ -57,11 +56,6 @@ public class DSFilterGroup extends BaseConfigurationObject {
   	
     super( internalName, displayName, description );
     this.handler = handler;
-    
-    hashcode = this.internalName.hashCode();
-  	hashcode = (31 * hashcode) + this.displayName.hashCode();
-  	hashcode = (31 * hashcode) + this.description.hashCode();
-  	hashcode = (31 * hashcode) + this.handler.hashCode();
   }
  
 	/**
@@ -72,6 +66,14 @@ public class DSFilterGroup extends BaseConfigurationObject {
 		return handler;
 	}
 
+  /**
+   * Sets the handler for this DSFilterGroup.
+   * @param handler - should be a string capable of being fed as a parameter to the Java ClassLoader system.
+   */
+  public void setHandler(String handler) {
+    this.handler = handler;
+  }
+  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -94,10 +96,10 @@ public class DSFilterGroup extends BaseConfigurationObject {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
+    int hashcode = super.hashCode();
+    hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 		return hashcode;
 	}
 
- 
   private String handler;
-	private int hashcode = 0;
 }

@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,12 +45,58 @@ import javax.sql.DataSource;
  */
 public class DatasetView extends BaseConfigurationObject {
 
-	/*
-	 * Datasets must have an internalName, and dataset so dont allow parameterless construction
-	 */
-	public DatasetView() throws ConfigurationException {
-		this("", "", "", "");
+  private Logger logger = Logger.getLogger(DatasetView.class.getName()); // TODO: remove me after testing within UI to make sure no un intended lazy loading is occuring
+  
+  private String dataset = null;
+  private DSViewAdaptor adaptor = null;
+  private DataSource datasource = null;
+  private byte[] digest = null;
+
+  private List attributePages = new ArrayList();
+  private List filterPages = new ArrayList();
+  private Hashtable attributePageNameMap = new Hashtable();
+  private Hashtable filterPageNameMap = new Hashtable();
+  private List starBases = new ArrayList();
+  private List primaryKeys = new ArrayList();
+
+  private List defaultFilters = new ArrayList();
+  private boolean hasDefaultFilters = false;
+
+  private List uiOptions = new ArrayList();
+  private Hashtable uiOptionNameMap = new Hashtable();
+  private boolean hasOptions = false;
+
+  // cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
+  private AttributeDescription lastAtt = null;
+
+  //cache one AttributeDescription for call to supportsAttributeDescription/getAttributeDescriptionByFieldNameTableConstraint
+  private AttributeDescription lastSupportingAttribute = null;
+
+  //cache one FilterDescription Object for call to containsFilterDescription or getFiterDescriptionByInternalName
+  private FilterDescription lastFilt = null;
+
+  //cache one FilterGroup for call to getGroupForFilter
+  private FilterGroup lastFiltGroup = null;
+
+  //cache one FilterCollection for call to getCollectionForFilter
+  private FilterCollection lastFiltColl = null;
+
+  //cache one AttributeGroup for call to getGroupForAttribute
+  private AttributeGroup lastAttGroup = null;
+
+  //cache one AttributeCollection for call to getCollectionForAttribute
+  private AttributeCollection lastAttColl = null;
+
+  //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
+  private FilterDescription lastSupportingFilter = null;
+  
+  /**
+   * Empty constructor.  Should really only be used by the DatasetViewEditor
+   */
+	public DatasetView() {
+     super();
 	}
+  
 	/**
 	 * Constructs a DatasetView named by internalName and displayName.
 	 *  internalName is a single word that references this dataset, used to get the dataset from the MartConfiguration by name.
@@ -83,29 +128,89 @@ public class DatasetView extends BaseConfigurationObject {
     this.dataset = dataset;
 	}
 
+  /**
+   * Sets the dataset for this DatasetView object
+   * @param dataset -- Dataset that this view represnets.
+   */
+  public void setDataset(String dataset) {
+    this.dataset = dataset;
+  }
+
 	/**
-	 * add a Option object to this FilterCollection.  Options are stored in the order that they are added.
+	 * @return the prefix for the mart database tables in this Dataset
+	 */
+	public String getDataset() {
+	  return dataset;
+	}
+  
+	/**
+	 * add a Option object to this DatasetView.  Options are stored in the order that they are added.
 	 * @param o - an Option object
 	 */
 	public void addOption(Option o) {
-		Integer oRankInt = new Integer(oRank);
-		uiOptions.put(oRankInt, o);
-		uiOptionNameMap.put(o.getInternalName(), oRankInt);
-		oRank++;
+		uiOptions.add(o);
+		uiOptionNameMap.put(o.getInternalName(), o);
 		hasOptions = true;
 	}
 
+  /**
+   * Remove a Option objectfrom this DatasetView.  Maintains order of other objects as they were added.
+   * @param o - An option to remove.
+   */
+  public void removeOption(Option o) {
+    uiOptionNameMap.remove(o.getInternalName());
+    uiOptions.remove(o);
+    if (uiOptions.size() < 1 )
+      hasOptions = false;
+  }
+  
+  /**
+   * Insert an Option at a specific position within the option list.  Options
+   * at or after this position are shifted right.
+   * @param position - position within the list of options in the DatasetView.
+   * @param o - Option to be inserted
+   */
+  public void insertOption(int position, Option o) {
+    uiOptionNameMap.put(o.getInternalName(), o);
+    uiOptions.add(position, o);     
+    hasOptions = true;
+  }
+  
+  /**
+   * Insert an Option before an existing Option, defined by internalName.
+   * @param internalName -- name of the Option before which the new option should be inserted.
+   * @param o -- Option to be inserted
+   * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
+   */
+  public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
+    if (! uiOptionNameMap.containsKey(internalName))
+      throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
+    
+    insertOption( uiOptions.indexOf( uiOptionNameMap.get( internalName ) ), o);     
+  }
+  
+  /**
+   * Insert an Option after an existing Option, defined by internalName.
+   * @param internalName -- name of the Option after which the new option should be inserted.
+   * @param o -- Option to be inserted
+   * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
+   */
+  public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
+    if (! uiOptionNameMap.containsKey(internalName))
+      throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
+      
+    insertOption( uiOptions.indexOf( uiOptionNameMap.get( internalName ) ) + 1, o);
+  }
+  
 	/**
-	 * Set a group of Option objects in one call.  Subsequent calls to
-	 * addOption or setOptions will add to what was added before, in the order that they are added.
+	 * Add a group of Option objects in one call.  Subsequent calls to
+	 * addOption or addOptions will add to what was added before, in the order that they are added.
 	 * @param o - an array of Option objects
 	 */
-	public void setOptions(Option[] o) {
+	public void addOptions(Option[] o) {
 		for (int i = 0, n = o.length; i < n; i++) {
-			Integer oRankInt = new Integer(oRank);
-			uiOptions.put(oRankInt, o[i]);
-			uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
-			oRank++;
+			uiOptions.add(o[i]);
+			uiOptionNameMap.put(o[i].getInternalName(), o[i]);
 		}
 		hasOptions = true;
 	}
@@ -120,13 +225,19 @@ public class DatasetView extends BaseConfigurationObject {
 			defaultFilters.add(df);
 	}
 
+  public void removeDefaultFilter(DefaultFilter df) {
+    defaultFilters.remove(df);
+    if (defaultFilters.size() < 1)
+      hasDefaultFilters = false;
+  }
+  
 	/**
 	 * Add a set of DefaultFilter objects in one call.
-	 * Note, subsequent calls to addDefaultFilter or setDefaultFilter
+	 * Note, subsequent calls to addDefaultFilter or addDefaultFilters
 	 * will add to what was added before.
 	 * @param df - An Array of DefaultFilter objects
 	 */
-	public void setDefaultFilters(DefaultFilter[] df) {
+	public void addDefaultFilters(DefaultFilter[] df) {
 		for (int i = 0, n = df.length; i < n; i++) {
 			addDefaultFilter(df[i]);
 		}
@@ -143,14 +254,18 @@ public class DatasetView extends BaseConfigurationObject {
 		starBases.add(starname);
 	}
 
+  public void removeStarBase(String starname) {
+    starBases.remove(starname);
+  }
+  
 	/**
-	 * Set all star names for a DatasetView with one call.
-	 * Note, subsequent calls to setStars or addStar will add
+	 * Add a group of star names for a DatasetView with one call.
+	 * Note, subsequent calls to addStarBases or addStarBase will add
 	 * starBases to what has been added before.
 	 * 
 	 * @param starnames String[] Array of star names.
 	 */
-	public void setStarBases(String[] starnames) {
+	public void addStarBases(String[] starnames) {
 		starBases.addAll(Arrays.asList(starnames));
 	}
 
@@ -164,42 +279,89 @@ public class DatasetView extends BaseConfigurationObject {
 		primaryKeys.add(primaryKey);
 	}
 
+  public void removePrimaryKey(String primaryKey) {
+    primaryKeys.remove(primaryKey);
+  }
+  
 	/**
-	 * Set all primary keys in one method.
-	 * Note, subsequent calls to addPrimaryKey or setPrimaryKeys
+	 * Add a group of primary keys at once.
+	 * Note, subsequent calls to addPrimaryKey or addPrimaryKeys
 	 * will add primary keys to what has been added before.
 	 * 
 	 * @param pkeys String[] array of primary keys.
 	 */
-	public void setPrimaryKeys(String[] pkeys) {
+	public void addPrimaryKeys(String[] pkeys) {
 		primaryKeys.addAll(Arrays.asList(pkeys));
 	}
 
 	/**
 	 * Add an AttributePage to the DatasetView.
 	 * 
-	 * @param a
+	 * @param a -- AttributePage to be added.
 	 */
 	public void addAttributePage(AttributePage a) {
-		Integer rankInt = new Integer(apageRank);
-		attributePages.put(rankInt, a);
-		attributePageNameMap.put(a.getInternalName(), rankInt);
-		apageRank++;
+		attributePages.add(a);
+		attributePageNameMap.put(a.getInternalName(), a);
 	}
 
+  /**
+   * Remove an AttributePage from the DatasetView.
+   * @param a -- AttributePage to be removed.
+   */
+  public void removeAttributePage(AttributePage a) {
+    attributePageNameMap.remove(a.getInternalName());
+    attributePages.remove(a);
+  }
+  
+  /**
+   * Insert an AttributePage at a particular Position within the List
+   * of AttributePages contained in the DatasetView. AttributePages at
+   * or after the given position are shifted right.
+   * @param position -- position to insert the AttributePage.
+   * @param a -- AttributePage to be inserted.
+   */
+  public void insertAttributePage(int position, AttributePage a) {
+    attributePages.add(position, a);
+    attributePageNameMap.put(a.getInternalName(), a);
+  }
+  
+  /**
+   * Insert an AttributePage before another AttributePage, named by internalName.
+   * @param internalName -- internalName of the AttributePage before which the given AttributePage should be inserted.
+   * @param a -- AttributePage to be inserted.
+   * @throws ConfigurationException when the DatasetView does not contain an AttributePage named by the given internalName.
+   */
+  public void insertAttributePageBeforeAttributePage(String internalName, AttributePage a) throws ConfigurationException {
+    if (!attributePageNameMap.containsKey(internalName))
+      throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
+    
+    insertAttributePage( attributePages.indexOf( attributePageNameMap.get(internalName) ), a );
+  }
+  
+  /**
+   * Insert an AttributePage after another AttributePage, named by internalName.
+   * @param internalName -- internalName of the AttributePage after which the given AttributePage should be inserted.
+   * @param a -- AttributePage to be inserted.
+   * @throws ConfigurationException when the DatasetView does not contain an AttributePage named by the given internalName.
+   */
+  public void insertAttributePageAfterAttributePage(String internalName, AttributePage a) throws ConfigurationException {
+    if (!attributePageNameMap.containsKey(internalName))
+      throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
+    
+    insertAttributePage( attributePages.indexOf( attributePageNameMap.get(internalName) ) + 1 , a );
+  }
+  
 	/**
-	 * Set a group of AttributePage objects in one call.
+	 * Add a group of AttributePage objects at once.
 	 * Note, subsequent calls to addAttributePage or
-	 * setAttributePages will add to what has been added before.
+	 * addAttributePages will add to what has been added before.
 	 * 
 	 * @param a AttributePage[] array of AttributePages.
 	 */
-	public void setAttributePages(AttributePage[] a) {
+	public void addAttributePages(AttributePage[] a) {
 		for (int i = 0; i < a.length; i++) {
-			Integer rankInt = new Integer(apageRank);
-			attributePages.put(rankInt, a[i]);
-			attributePageNameMap.put(a[i].getInternalName(), rankInt);
-			apageRank++;
+			attributePages.add(a[i]);
+			attributePageNameMap.put(a[i].getInternalName(), a[i]);
 		}
 	}
 
@@ -209,34 +371,67 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @param f FiterPage object.
 	 */
 	public void addFilterPage(FilterPage f) {
-		Integer rankInt = new Integer(fpageRank);
-		filterPages.put(rankInt, f);
-		filterPageNameMap.put(f.getInternalName(), rankInt);
-		fpageRank++;
+		filterPages.add(f);
+		filterPageNameMap.put(f.getInternalName(), f);
 	}
 
+  /**
+   * Remove a FilterPage from the DatasetView.
+   * @param f -- FilterPage to be removed.
+   */
+  public void removeFilterPage(FilterPage f) {
+    filterPageNameMap.remove(f.getInternalName());
+    filterPages.remove(f);
+  }
+  
+  /**
+   * Insert a FilterPage at a specific Position within the FilterPage list.
+   * FilterPages at or after the given position will be shifted right).
+   * @param position -- Position to insert the FilterPage
+   * @param f -- FilterPage to insert.
+   */
+  public void insertFilterPage(int position, FilterPage f) {
+    filterPages.add(position, f);
+    filterPageNameMap.put(f.getInternalName(), f);
+  }
+  
+  /**
+   * Insert a FilterPage before a specified FilterPage, named by internalName.
+   * @param internalName -- name of the FilterPage before which the given FilterPage should be inserted.
+   * @param f -- FilterPage to be inserted.
+   * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
+   */
+  public void insertFilterPageBeforeFilterPage(String internalName, FilterPage f) throws ConfigurationException {
+    if (!filterPageNameMap.containsKey(internalName))
+      throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
+    insertFilterPage( filterPages.indexOf( filterPageNameMap.get(internalName) ), f );
+  }
+  
+  /**
+   * Insert a FilterPage after a specified FilterPage, named by internalName.
+   * @param internalName -- name of the FilterPage after which the given FilterPage should be inserted.
+   * @param f -- FilterPage to be inserted.
+   * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
+   */
+  public void insertFilterPageAfterFilterPage(String internalName, FilterPage f) throws ConfigurationException {
+    if (!filterPageNameMap.containsKey(internalName))
+      throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
+    insertFilterPage( filterPages.indexOf( filterPageNameMap.get(internalName) ) + 1, f );
+  }
+  
 	/**
-	 * Set a group of FilterPage objects in one call.
-	 * Note, subsequent calls to addFilterPage or setFilterPages
+	 * Add a group of FilterPage objects in one call.
+	 * Note, subsequent calls to addFilterPage or addFilterPages
 	 * will add to what has been added before.
 	 * 
 	 * @param f FilterPage[] array of FilterPage objects.
 	 */
-	public void setFilterPages(FilterPage[] f) {
+	public void addFilterPages(FilterPage[] f) {
 		for (int i = 0, n = f.length; i < n; i++) {
-			Integer rankInt = new Integer(fpageRank);
-			filterPages.put(rankInt, f[i]);
-			filterPageNameMap.put(f[i].getInternalName(), rankInt);
-			fpageRank++;
+			filterPages.add(f[i]);
+			filterPageNameMap.put(f[i].getInternalName(), f);
 		}
 	}
-
-  /**
-   * @return the prefix for the mart database tables in this Dataset
-   */
-  public String getDataset() {
-    return dataset;
-  }
   
 	/**
 	 * Determine if this DatasetView has Options Available.
@@ -255,7 +450,7 @@ public class DatasetView extends BaseConfigurationObject {
 	public Option[] getOptions() {
     lazyLoad();
 		Option[] ret = new Option[uiOptions.size()];
-		uiOptions.values().toArray(ret);
+		uiOptions.toArray(ret);
 		return ret;
 	}
 
@@ -311,7 +506,7 @@ public class DatasetView extends BaseConfigurationObject {
 	public AttributePage[] getAttributePages() {
     lazyLoad();
 		AttributePage[] as = new AttributePage[attributePages.size()];
-		attributePages.values().toArray(as);
+		attributePages.toArray(as);
 		return as;
 	}
 
@@ -324,7 +519,7 @@ public class DatasetView extends BaseConfigurationObject {
 	public AttributePage getAttributePageByInternalName(String internalName) {
     lazyLoad();
 		if (attributePageNameMap.containsKey(internalName))
-			return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
+			return (AttributePage) attributePageNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -347,7 +542,7 @@ public class DatasetView extends BaseConfigurationObject {
 	public FilterPage[] getFilterPages() {
     lazyLoad();
 		FilterPage[] fs = new FilterPage[filterPages.size()];
-		filterPages.values().toArray(fs);
+		filterPages.toArray(fs);
 		return fs;
 	}
 
@@ -360,7 +555,7 @@ public class DatasetView extends BaseConfigurationObject {
 	public FilterPage getFilterPageByName(String internalName) {
     lazyLoad();
 		if (filterPageNameMap.containsKey(internalName))
-			return (FilterPage) filterPages.get((Integer) filterPageNameMap.get(internalName));
+			return (FilterPage) filterPageNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -405,8 +600,8 @@ public class DatasetView extends BaseConfigurationObject {
 		boolean found = false;
 
 		if (lastAtt == null) {
-			for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
-				AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
+			for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
+				AttributePage page = (AttributePage) iter.next();
 				if (page.containsAttributeDescription(internalName)) {
 					lastAtt = page.getAttributeDescriptionByInternalName(internalName);
 					found = true;
@@ -466,7 +661,7 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		boolean supports = false;
 
-		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
 			AttributePage element = (AttributePage) iter.next();
 
 			if (element.supports(field, tableConstraint)) {
@@ -499,8 +694,8 @@ public class DatasetView extends BaseConfigurationObject {
 			}
 
 			if (!contains) {
-				for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
-					FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
+				for (Iterator iter = (Iterator) filterPages.iterator(); iter.hasNext();) {
+					FilterPage page = (FilterPage) iter.next();
 					if (page.containsFilterDescription(internalName)) {
 						lastFilt = page.getFilterDescriptionByInternalName(internalName);
 						contains = true;
@@ -551,7 +746,7 @@ public class DatasetView extends BaseConfigurationObject {
 		boolean supports = false;
 
 		if (lastSupportingFilter == null) {
-			for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+			for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
 				FilterPage element = (FilterPage) iter.next();
 				if (element.supports(field, tableConstraint)) {
 					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
@@ -582,8 +777,8 @@ public class DatasetView extends BaseConfigurationObject {
 	 */
 	public FilterPage getPageForFilter(String internalName) {
     lazyLoad();
-		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
-			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
+		for (Iterator iter = (Iterator) filterPages.iterator(); iter.hasNext();) {
+			FilterPage page = (FilterPage) iter.next();
 
 			if (page.containsFilterDescription(internalName))
 				return page;
@@ -600,8 +795,8 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List pages = new ArrayList();
 
-		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
-			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
+		for (Iterator iter = (Iterator) filterPages.iterator(); iter.hasNext();) {
+			FilterPage page = (FilterPage)  iter.next();
 
 			if (page.containsFilterDescription(internalName))
 				pages.add(page);
@@ -620,8 +815,8 @@ public class DatasetView extends BaseConfigurationObject {
 	 */
 	public AttributePage getPageForAttribute(String internalName) {
     lazyLoad();
-		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
-			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
+		for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
+			AttributePage page = (AttributePage) iter.next();
 
 			if (page.containsAttributeDescription(internalName))
 				return page;
@@ -638,8 +833,8 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List pages = new ArrayList();
 
-		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
-			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
+		for (Iterator iter = (Iterator) attributePages.iterator(); iter.hasNext();) {
+			AttributePage page = (AttributePage) iter.next();
 
 			if (page.containsAttributeDescription(internalName))
 				pages.add(page);
@@ -657,8 +852,8 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List filts = new ArrayList();
 
-		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
-			Object fpo = filterPages.get((Integer) iter.next());
+		for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
+			Object fpo = iter.next();
 
 			if (fpo instanceof FilterPage) {
 				FilterPage fp = (FilterPage) fpo;
@@ -678,8 +873,8 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List atts = new ArrayList();
 
-		for (Iterator iter = attributePages.keySet().iterator(); iter.hasNext();) {
-			Object apo = attributePages.get((Integer) iter.next());
+		for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
+			Object apo = iter.next();
 
 			if (apo instanceof AttributePage) {
 				AttributePage ap = (AttributePage) apo;
@@ -815,7 +1010,7 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List names = new ArrayList();
 
-		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
 			AttributePage page = (AttributePage) iter.next();
 			List pagenames = page.getCompleterNames();
 			for (int i = 0, n = pagenames.size(); i < n; i++) {
@@ -835,7 +1030,7 @@ public class DatasetView extends BaseConfigurationObject {
     lazyLoad();
 		List names = new ArrayList();
 
-		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
 			FilterPage page = (FilterPage) iter.next();
 			List pagenames = page.getCompleterNames();
 			for (int i = 0, n = pagenames.size(); i < n; i++) {
@@ -987,7 +1182,7 @@ public class DatasetView extends BaseConfigurationObject {
 	  lazyLoad();
 
 		int tmp = super.hashCode();
-    tmp = (31 * tmp) + dataset.hashCode();
+    tmp = (dataset != null) ? (31 * tmp) + dataset.hashCode() : tmp;
 
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);
@@ -999,66 +1194,16 @@ public class DatasetView extends BaseConfigurationObject {
 			tmp = (31 * tmp) + element.hashCode();
 		}
 
-		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
 			FilterPage element = (FilterPage) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 
-		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
 			AttributePage element = (AttributePage) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 
 		return tmp;
 	}
-
-  private Logger logger = Logger.getLogger(DatasetView.class.getName()); // TODO: remove me after testing within UI to make sure no un intended lazy loading is occuring
-  
-  private String dataset = null;
-	private DSViewAdaptor adaptor = null;
-	private DataSource datasource = null;
-	private byte[] digest = null;
-
-	//keep track of ordering of filter and attribute pages
-	private int apageRank = 0;
-	private int fpageRank = 0;
-
-	private TreeMap attributePages = new TreeMap();
-	private TreeMap filterPages = new TreeMap();
-	private Hashtable attributePageNameMap = new Hashtable();
-	private Hashtable filterPageNameMap = new Hashtable();
-	private List starBases = new ArrayList();
-	private List primaryKeys = new ArrayList();
-
-	private List defaultFilters = new ArrayList();
-	private boolean hasDefaultFilters = false;
-
-	private int oRank = 0;
-	private TreeMap uiOptions = new TreeMap();
-	private Hashtable uiOptionNameMap = new Hashtable();
-	private boolean hasOptions = false;
-
-	// cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
-	private AttributeDescription lastAtt = null;
-
-	//cache one AttributeDescription for call to supportsAttributeDescription/getAttributeDescriptionByFieldNameTableConstraint
-	private AttributeDescription lastSupportingAttribute = null;
-
-	//cache one FilterDescription Object for call to containsFilterDescription or getFiterDescriptionByInternalName
-	private FilterDescription lastFilt = null;
-
-	//cache one FilterGroup for call to getGroupForFilter
-	private FilterGroup lastFiltGroup = null;
-
-	//cache one FilterCollection for call to getCollectionForFilter
-	private FilterCollection lastFiltColl = null;
-
-	//cache one AttributeGroup for call to getGroupForAttribute
-	private AttributeGroup lastAttGroup = null;
-
-	//cache one AttributeCollection for call to getCollectionForAttribute
-	private AttributeCollection lastAttColl = null;
-
-	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
-	private FilterDescription lastSupportingFilter = null;
 }

@@ -26,6 +26,10 @@ package org.ensembl.mart.lib.config;
  */
 public class BaseConfigurationObject {
 
+  protected String internalName;
+  protected String displayName;
+  protected String description;
+  
 	/**
 	 * Determines if string is an invalid attribute value.
 	 * @param s
@@ -45,8 +49,10 @@ public class BaseConfigurationObject {
     return s!=null && !"".equals(s);
   }
 
-
-
+  public BaseConfigurationObject() {
+    //doesnt do anything, but returns an empty object
+  }
+  
 	public BaseConfigurationObject(
 		String internalName,
 		String displayName,
@@ -58,12 +64,6 @@ public class BaseConfigurationObject {
 		this.internalName = internalName;
 		this.displayName = displayName;
 		this.description = description;
-
-		int tmp = 17;
-		tmp = tmp * 37 + ((internalName != null) ? internalName.hashCode() : 0);
-		tmp = tmp * 37 + ((displayName != null) ? displayName.hashCode() : 0);
-		tmp = tmp * 37 + ((description != null) ? description.hashCode() : 0);
-		hashCode = tmp;
 	}
 
 	/**
@@ -90,8 +90,36 @@ public class BaseConfigurationObject {
 		return internalName;
 	}
 
+  /**
+   * Sets the description for this object
+   * @param string
+   */
+  public void setDescription(String string) {
+    description = string;
+  }
+
+  /**
+   * Sets the displayName for this object
+   * @param string
+   */
+  public void setDisplayName(String string) {
+    displayName = string;
+  }
+
+  /**
+   * Sets the internalName for this object
+   * @param string
+   */
+  public void setInternalName(String string) {
+    internalName = string;
+  }
+  
 	public int hashCode() {
-		return hashCode;
+    int tmp = 17;
+    tmp = tmp * 37 + ((internalName != null) ? internalName.hashCode() : 0);
+    tmp = tmp * 37 + ((displayName != null) ? displayName.hashCode() : 0);
+    tmp = tmp * 37 + ((description != null) ? description.hashCode() : 0);
+    return tmp;
 	}
 
 	public boolean equals(Object o) {
@@ -109,7 +137,4 @@ public class BaseConfigurationObject {
 
 		return buf.toString();
 	}
-
-	protected final String internalName, displayName, description;
-	protected final int hashCode;
 }

@@ -19,10 +19,10 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.logging.Logger;
 
 /**
@@ -31,9 +31,9 @@ import java.util.logging.Logger;
  */
 public class Option extends QueryFilterSettings {
 
-  private Logger logger = Logger.getLogger(Option.class.getName());
+	private Logger logger = Logger.getLogger(Option.class.getName());
 
-  private String qualifier;
+	private String qualifier;
 	private QueryFilterSettings parent;
 	private String field;
 	private String tableConstraint;
@@ -42,18 +42,25 @@ public class Option extends QueryFilterSettings {
 	private String legalQualifiers;
 	private String type;
 	private String handler;
-	private int hashcode = -1;
 
-	private final boolean isSelectable;
+	private boolean isSelectable;
 	private boolean hasOptions = false;
 
 	//options can contain options
-	private int oRank = 0;
-	private TreeMap uiOptions = new TreeMap();
+	private List uiOptions = new ArrayList();
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private List uiOptionPushes = new ArrayList();
-	private Option lastSupportingOption = null;
+
 	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
+	private Option lastSupportingOption = null;
+
+	/**
+	 * Empty Constructor should only be used by DatasetViewEditor.
+	 *
+	 */
+	public Option() {
+		super();
+	}
 
 	public Option(String internalName, boolean isSelectable) throws ConfigurationException {
 		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", null);
@@ -93,28 +100,70 @@ public class Option extends QueryFilterSettings {
 	 * @param o - an Option object
 	 */
 	public void addOption(Option o) {
-		Integer oRankInt = new Integer(oRank);
-		uiOptions.put(oRankInt, o);
-		uiOptionNameMap.put(o.getInternalName(), oRankInt);
-		oRank++;
+		uiOptions.add(o);
+		uiOptionNameMap.put(o.getInternalName(), o);
 		hasOptions = true;
-		hashcode = -1;
 	}
 
 	/**
-	 * Set a group of Option objects in one call.  Subsequent calls to
+	 * Remove an Option from this Option.
+	 * @param o -- Option to be removed.
+	 */
+	public void removeOption(Option o) {
+		uiOptionNameMap.remove(o.getInternalName());
+		uiOptions.remove(o);
+
+		if (uiOptions.size() < 1)
+			hasOptions = false;
+	}
+
+	/**
+	 * Insert an Option at a specific position within the Option list for this Option.
+	 * Options occuring at or after this position are shifted right.
+	 * @param position -- position to insert the given Option
+	 * @param o -- Option to insert.
+	 */
+	public void insertOption(int position, Option o) {
+		uiOptions.add(position, o);
+		uiOptionNameMap.put(o.getInternalName(), o);
+		hasOptions = true;
+	}
+
+	/**
+	 * Insert an Option before a specific Option in the list, named by internalName.
+	 * @param internalName -- internalName of Option before which the given Option is to be inserted.
+	 * @param o -- Option to be inserted
+	 * @throws ConfigurationExction when the Option does not contain an Option named by internalName
+	 */
+	public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
+		if (!uiOptionNameMap.containsKey(internalName))
+			throw new ConfigurationException("Option does not contain an Option " + internalName + "\n");
+		insertOption(uiOptions.indexOf(uiOptionNameMap.get(internalName)), o);
+	}
+
+	/**
+	 * Insert an Option after a specific Option in the list, named by internalName.
+	 * @param internalName -- internalName of Option after which the given Option is to be inserted.
+	 * @param o -- Option to be inserted
+	 * @throws ConfigurationExction when the Option does not contain an Option named by internalName
+	 */
+	public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
+		if (!uiOptionNameMap.containsKey(internalName))
+			throw new ConfigurationException("Option does not contain an Option " + internalName + "\n");
+		insertOption(uiOptions.indexOf(uiOptionNameMap.get(internalName)) + 1, o);
+	}
+
+	/**
+	 * Add a group of Option objects in one call.  Subsequent calls to
 	 * addOption or setOptions will add to what was added before, in the order that they are added.
 	 * @param o - an array of Option objects
 	 */
-	public void setOptions(Option[] o) {
+	public void addOptions(Option[] o) {
 		for (int i = 0, n = o.length; i < n; i++) {
-			Integer oRankInt = new Integer(oRank);
-			uiOptions.put(oRankInt, o[i]);
-			uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
-			oRank++;
+			uiOptions.add(o[i]);
+			uiOptionNameMap.put(o[i].getInternalName(), o[i]);
 		}
 		hasOptions = true;
-		hashcode = -1;
 	}
 
 	/**
@@ -123,7 +172,7 @@ public class Option extends QueryFilterSettings {
 	 */
 	public Option[] getOptions() {
 		Option[] ret = new Option[uiOptions.size()];
-		uiOptions.values().toArray(ret);
+		uiOptions.toArray(ret);
 		return ret;
 	}
 
@@ -147,11 +196,19 @@ public class Option extends QueryFilterSettings {
 	 */
 	public Option getOptionByInternalName(String internalName) {
 		if (uiOptionNameMap.containsKey(internalName))
-			return (Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName));
+			return (Option) uiOptionNameMap.get(internalName);
 		else
 			return null;
 	}
 
+  /**
+   * Set the selectability of this Option (true or false)
+   * @param isSelectable -- boolean, true if this Option is selectable, false otherwise
+   */
+  public void setSelectable(boolean isSelectable) {
+    this.isSelectable = isSelectable;
+  }
+  
 	/**
 	 * Determine if this Option is Selectable in the UI.
 	 * @return boolean, true if selectable, false otherwise
@@ -168,9 +225,9 @@ public class Option extends QueryFilterSettings {
 		return hasOptions;
 	}
 
-  public String getDisplayName(String refIname) {
+	public String getDisplayName(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDisplayName(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getDisplayName(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -183,11 +240,11 @@ public class Option extends QueryFilterSettings {
 				return null; // nothing found
 			}
 		}
-  }
-  
-  public String getDescription(String refIname) {
+	}
+
+	public String getDescription(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDescription(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getDescription(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -200,17 +257,33 @@ public class Option extends QueryFilterSettings {
 				return null; // nothing found
 			}
 		}
+	}
+
+  /**
+   * Set the field for this Option
+   * @param field -- String field of the Option.
+   */
+  public void setField(String field) {
+    this.field = field;
   }
+  
 	/**
-	  * @return
-	  */
+	 * Returns the field for this Option
+	 * @return String field
+	 */
 	public String getField() {
 		return field;
 	}
 
+	/**
+	 * Returns the field for this Option, or the field for a child Option (possibly within a PushAction) 
+	 * of this Option, named by refIname
+	 * @param refIname -- name of Option for which Field is desired.
+	 * @return String field
+	 */
 	public String getField(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getField(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getField(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -226,15 +299,30 @@ public class Option extends QueryFilterSettings {
 	}
 
 	/**
-	 * @return
+	 * Set the tableConstraint.
+	 * @param tableConstraint -- String table name pattern.
+	 */
+	public void setTableConstraint(String tableConstraint) {
+		this.tableConstraint = tableConstraint;
+	}
+
+	/**
+	 * Returns the tableConstraint for this Option
+	 * @return String tableConstraint
 	 */
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
 
+	/**
+	 * Returns the tableConstraint for this Option, or a child Option (possibly within a PushAction),
+	 * named by refIname.
+	 * @param refIname -- name of Option for which tableConstraint is desired.
+	 * @return String tableConstraint
+	 */
 	public String getTableConstraint(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getTableConstraint(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getTableConstraint(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -250,15 +338,30 @@ public class Option extends QueryFilterSettings {
 	}
 
 	/**
-	 * @return
+	 * Set the handler
+	 * @param handler -- String handler.  Should be a Java package name, that can be fed to the ClassLoader.
+	 */
+	public void setHandler(String handler) {
+		this.handler = handler;
+	}
+
+	/**
+	 * Returns the handler for this Option
+	 * @return String handler
 	 */
 	public String getHandler() {
 		return handler;
 	}
 
+	/**
+	 * Get the Handler for this Option, or a child Option (possibly within a PushAction),
+	 * named by refIname.
+	 * @param refIname -- String name Option for which Handler is desired.
+	 * @return String handler
+	 */
 	public String getHandler(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getHandler(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getHandler(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -273,46 +376,64 @@ public class Option extends QueryFilterSettings {
 		}
 	}
 
-  /**
-   * Searches each PushOption for potential completer names.  If it contains Options acting as Filters 
-   * (eg, to be pushed to some other FilterDescription), adds 'internalName.option.getInternalName()' to the list of potential completer names.
-   * If it references another FilterDescription, and contains value Options, adds 'internalName.pushOptions.getRef()' to the list.
-   * @return List of potential completer names
-   */
-  public List getCompleterNames() {
-  	List names = new ArrayList();
-  	for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+	/**
+	 * Searches each PushAction for potential completer names.  If it contains Options acting as Filters 
+	 * (eg, to be pushed to some other FilterDescription), adds 'internalName.option.getInternalName()' to the list of potential completer names.
+	 * If it references another FilterDescription, and contains value Options, adds 'internalName.pushOptions.getRef()' to the list.
+	 * @return List of potential completer names
+	 */
+	public List getCompleterNames() {
+		List names = new ArrayList();
+		for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
 			PushAction element = (PushAction) uiOptionPushes.get(i);
 			Option[] ops = element.getOptions();
 
 			for (int j = 0, o = ops.length; j < o; j++) {
 				Option option = ops[j];
 				String completer = null;
-				
+
 				if (option.getField() != null && option.getField().length() > 0 && option.getType() != null && option.getType().length() > 0) {
 					//push option filter, should get superoption.subotion as name
-					completer = internalName+"."+option.getInternalName();
-				} else if (option.getValue() != null && option.getValue().length() > 0 ) {
+					completer = internalName + "." + option.getInternalName();
+				} else if (option.getValue() != null && option.getValue().length() > 0) {
 					//push option value, should get superoption.pushoptionref as name
-					completer = internalName+"."+element.getRef();
+					completer = internalName + "." + element.getRef();
 				} // else not needed
-				
-				if (! ( completer == null || names.contains(completer) ) )
-				  names.add(completer);
+
+				if (!(completer == null || names.contains(completer)))
+					names.add(completer);
 			}
 		}
 		return names;
-  }
-  
+	}
+
 	/**
-	 * @return
+	 * Sets the ref for this Option.
+	 * @param ref -- String ref, which refers to another FilterDescription or Option internalName.
+	 */
+	public void setRef(String ref) {
+		this.ref = ref;
+	}
+
+	/**
+	 * Get the Ref for this Option.
+	 * @return String ref.
 	 */
 	public String getRef() {
 		return ref;
 	}
 
 	/**
-	 * @return
+	 * Set the value for this Option.
+	 * @param value -- Value for the Option.
+	 */
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	/**
+	 * Returns the Value for this Option
+	 * @return String value for the Option
 	 */
 	public String getValue() {
 		return value;
@@ -327,23 +448,53 @@ public class Option extends QueryFilterSettings {
 	}
 
 	/**
-	 * @param object
+	 * Add a PushAction to this Option.
+	 * @param PushAction object to be added.
 	 */
 	public void addPushAction(PushAction optionPush) {
 		uiOptionPushes.add(optionPush);
-		hashcode = -1;
+	}
+
+  /**
+   * Add a group of PushAction objects in one call.
+   * @param pushactions  Array of PushActions
+   */
+  public void addPushActions(PushAction[] pushactions) {
+    uiOptionPushes.addAll(Arrays.asList(pushactions));
+  }
+  
+	/**
+	 * Remove a PushAction from this Option.
+	 * @param pa -- PushAction to be removed.
+	 */
+	public void removePushAction(PushAction pa) {
+		uiOptionPushes.remove(pa);
 	}
 
 	/**
-	 * @return
+	 * Set the legalQualifiers for this Option.
+	 * @param legalQualifiers -- String comma separated list of legal Qualifiers for this Option.
+	 */
+	public void setLegalQualifiers(String legalQualifiers) {
+		this.legalQualifiers = legalQualifiers;
+	}
+
+	/**
+	 * Get the legal Qualifiers for this Option.
+	 * @return String legalQualifiers
 	 */
 	public String getLegalQualifiers() {
 		return legalQualifiers;
 	}
 
+	/**
+	 * Get the legalQualifiers for this Option, or a child Option (possibly in a PushAction) named by refIname.
+	 * @param refIname -- internalName of Option for which legalQualifiers is desired.
+	 * @return String legalQualifiers.
+	 */
 	public String getLegalQualifiers(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getLegalQualifiers(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getLegalQualifiers(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -359,15 +510,30 @@ public class Option extends QueryFilterSettings {
 	}
 
 	/**
-	 * @return
+	 * Set the type for this Option.
+	 * @param type -- String type of Option.
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	/**
+	 * Get the type of this Option
+	 * @return String type.
 	 */
 	public String getType() {
 		return type;
 	}
 
+	/**
+	 * Get the type for this Option, or a child Option (possibly within a PushAction) named by
+	 * refIname.
+	 * @param refIname -- String name of Option for which type is desired.
+	 * @return String type.
+	 */
 	public String getType(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getType(refIname);
+			return ((Option) uiOptionNameMap.get(internalName)).getType(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;
@@ -390,15 +556,11 @@ public class Option extends QueryFilterSettings {
 	 * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
 	 */
 	public boolean supports(String field, String tableConstraint) {
-		boolean supports =
-			(this.field != null
-				&& this.field.equals(field)
-				&& this.tableConstraint != null
-				&& this.tableConstraint.equals(tableConstraint));
+		boolean supports = (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint));
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
-				for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+				for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 					Option element = (Option) iter.next();
 					if (element.supports(field, tableConstraint)) {
 						lastSupportingOption = element;
@@ -429,6 +591,12 @@ public class Option extends QueryFilterSettings {
 		return supports;
 	}
 
+	/**
+	 * Get an Option by its field and tableConstraint.
+	 * @param field -- Field for desired Option
+	 * @param tableConstraint -- tableConstraint for desired Option.
+	 * @return Option supporting this field and tableConstraint (eg, getOptionByFieldNameTableConstraint(f,t).supports(f,t) will always be true).
+	 */
 	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint) {
 		if (supports(field, tableConstraint))
 			return lastSupportingOption;
@@ -436,24 +604,27 @@ public class Option extends QueryFilterSettings {
 			return null;
 	}
 
-  public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
-    if      (this.field != null
-    && this.field.equals(field)
-    && this.tableConstraint != null
-    && this.tableConstraint.equals(tableConstraint))
-      return internalName;
-    else {
-      for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-        PushAction element = (PushAction) uiOptionPushes.get(i);
-        if (element.supports(field, tableConstraint)) {
-          return internalName + "." + element.geOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
-        }
-      }      
-    }
-    
-    return null;
-  }
-  
+	/**
+	 * Get the internalName of an Option by a given field and tableConstraint.
+	 * @param field -- field for Option for which internalName is desired
+	 * @param tableConstraint -- tableConstraint for Option for which internalName is desired
+	 * @return String internalName
+	 */
+	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint))
+			return internalName;
+		else {
+			for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+				PushAction element = (PushAction) uiOptionPushes.get(i);
+				if (element.supports(field, tableConstraint)) {
+					return internalName + "." + element.geOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
+				}
+			}
+		}
+
+		return null;
+	}
+
 	/**
 		* Debug output
 		*/
@@ -494,28 +665,26 @@ public class Option extends QueryFilterSettings {
 		*/
 	public int hashCode() {
 
-		if (hashcode == -1) {
+		int hashcode = super.hashCode();
 
-			hashcode = super.hashCode();
+		hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
+		hashcode = (31 * hashcode) + field.hashCode();
+		hashcode = (31 * hashcode) + tableConstraint.hashCode();
+		hashcode = (31 * hashcode) + value.hashCode();
+		hashcode = (31 * hashcode) + ref.hashCode();
+		hashcode = (31 * hashcode) + qualifier.hashCode();
+		hashcode = (31 * hashcode) + legalQualifiers.hashCode();
+		hashcode = (31 * hashcode) + type.hashCode();
+		hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
-			hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
-			hashcode = (31 * hashcode) + field.hashCode();
-			hashcode = (31 * hashcode) + tableConstraint.hashCode();
-			hashcode = (31 * hashcode) + value.hashCode();
-			hashcode = (31 * hashcode) + ref.hashCode();
-			hashcode = (31 * hashcode) + qualifier.hashCode();
-			hashcode = (31 * hashcode) + legalQualifiers.hashCode();
-			hashcode = (31 * hashcode) + type.hashCode();
-			hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
-
-			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
-				hashcode = (31 * hashcode) + iter.next().hashCode();
-			}
-
-			for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
-				hashcode = (31 * hashcode) + iter.next().hashCode();
-			}
+		for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
+			hashcode = (31 * hashcode) + iter.next().hashCode();
 		}
+
+		for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
+			hashcode = (31 * hashcode) + iter.next().hashCode();
+		}
+
 		return hashcode;
 	}
 
@@ -526,53 +695,79 @@ public class Option extends QueryFilterSettings {
 	public QueryFilterSettings getParent() {
 		return parent;
 	}
-  
-  
-  /**
-   * Returns field based on context. 
-   * @return field if set otherwise getParent().getFieldFromContext().
-   */
-  public String getFieldFromContext() {
-    if ( valid( field) ) return field;
-    else return getParent().getFieldFromContext();
-  }
-  
-  
-  /**
-   * Returns value based on context. 
-   * @return value if set otherwise getParent().getValueFromContext().
-   */
-  public String getValueFromContext() {
-      if ( valid(value) ) return value;
-      else return getParent().getValueFromContext();
-    }
-    
 
-  /**
-   * Returns type based on context. 
-   * @return type if set otherwise getParent().getTypeFromContext().
-   */
+	/**
+	 * Returns field based on context. 
+	 * @return field if set otherwise getParent().getFieldFromContext().
+	 */
+	public String getFieldFromContext() {
+		if (valid(field))
+			return field;
+		else
+			return getParent().getFieldFromContext();
+	}
+
+	/**
+	 * Returns value based on context. 
+	 * @return value if set otherwise getParent().getValueFromContext().
+	 */
+	public String getValueFromContext() {
+		if (valid(value))
+			return value;
+		else
+			return getParent().getValueFromContext();
+	}
+
+	/**
+	 * Returns type based on context. 
+	 * @return type if set otherwise getParent().getTypeFromContext().
+	 */
 	public String getTypeFromContext() {
-    if ( valid(type) ) return type;
-    else return getParent().getTypeFromContext();
+		if (valid(type))
+			return type;
+		else
+			return getParent().getTypeFromContext();
 	}
   
   /**
-   * Returns handler based on context. 
-   * @return handler if set otherwise getParent().getHandlerFromContext().
+   * Returns the legalQualifiers based on context.
+   * @return legalQualifiers if set, otherwise getParent().getLegalQualifiersFromContext().
    */
+  public String getLegalQualifiersFromContext() {
+    if (valid(legalQualifiers))
+      return legalQualifiers;
+    else
+      return getParent().getLegalQualifiersFromContext();
+  }
+
+	/**
+	 * Returns handler based on context. 
+	 * @return handler if set otherwise getParent().getHandlerFromContext().
+	 */
 	public String getHandlerFromContext() {
-    if ( valid(handler) ) return handler;
-    else return getParent().getHandlerFromContext();
+		if (valid(handler))
+			return handler;
+		else
+			return getParent().getHandlerFromContext();
+	}
+
+	/**
+	 * Returns tableContraint based on context. 
+	 * @return tableConstraint if set otherwise getParent().getTableConstraintFromContext().
+	 */
+	public String getTableConstraintFromContext() {
+		if (valid(tableConstraint))
+			return tableConstraint;
+		else
+			return getParent().getTableConstraintFromContext();
 	}
 
   /**
-   * Returns tableContraint based on context. 
-   * @return tableConstraint if set otherwise getParent().getTableConstraintFromContext().
+   * Set the qualifier for this Option
+   * @param qualifier -- Qualifier to use in BasicFilter objects for this Option.
    */
-	public String getTableConstraintFromContext() {
-    if ( valid(tableConstraint) ) return tableConstraint;
-    else return getParent().getTableConstraintFromContext();
+  public void setQualifier(String qualifier) {
+    this.qualifier = qualifier;
   }
   
 	/**
@@ -588,8 +783,10 @@ public class Option extends QueryFilterSettings {
 	 * @return qualifier if set otherwise getParent().getQualifierFromContext().
 	 */
 	public String getQualifierFromContext() {
-		if ( valid(qualifier) ) return qualifier;
-		else return getParent().getQualifierFromContext();
+		if (valid(qualifier))
+			return qualifier;
+		else
+			return getParent().getQualifierFromContext();
 	}
 
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Container for a set of Mart FilterCollections.
@@ -32,11 +31,26 @@ import java.util.TreeMap;
  */
 public class FilterPage extends BaseConfigurationObject {
 
-	/*
-	* FilterPages must have an internalName, so disable parameterless construction
-	*/
-	private FilterPage() throws ConfigurationException {
-		this("", "", "");
+  private List filterGroups = new ArrayList();
+  private Hashtable filterGroupNameMap = new Hashtable();
+
+  //cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
+  private FilterDescription lastFilt = null;
+
+  //cache one FilterGroup for call to getGroupForFilter
+  private FilterGroup lastGroup = null;
+
+  //cache one FilterCollection for call to getCollectionForFilter
+  private FilterCollection lastColl = null;
+
+  //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
+  private FilterDescription lastSupportingFilter = null;
+  
+ /**
+  * Empty Constructor should only be used by DatasetViewEditory
+  */
+	public FilterPage() {
+		super();
 	}
 
 	/**
@@ -67,25 +81,65 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @param fg a FilterGroup object.
 	 */
 	public void addFilterGroup(FilterGroup fg) {
-		Integer fgRankInt = new Integer(fcRank);
-		filterGroups.put(fgRankInt, fg);
-		filterGroupNameMap.put(fg.getInternalName(), fgRankInt);
-		fcRank++;
+		filterGroups.add(fg);
+		filterGroupNameMap.put(fg.getInternalName(), fg);
 	}
 
-	/**
-	 * Sets a group of FilterGroup objects in one call.
-	 * Note, subsequent calls to addFilterGroup and setFilterGroups will add to what
+  /**
+   * Remove a FilterGroup from this FilterPage.
+   * @param fg -- FilterGroup to be removed.
+   */
+  public void removeFilterGroup(FilterGroup fg) {
+    filterGroupNameMap.remove(fg.getInternalName());
+    filterGroups.remove(fg);
+  }
+  
+  /**
+   * Insert a FilterGroup at a particular position within the list of FilterGroups/DSFilterGroups.
+   * FilterGroup/DSFilterGroup Objects occurring at or after the given position are shifted right.
+   * @param position -- position at which to insert the FilterGroup
+   * @param fg -- FilterGroup to insert
+   */
+  public void insertFilterGroup(int position, FilterGroup fg) {
+    filterGroups.add(position, fg);
+    filterGroupNameMap.put(fg.getInternalName(), fg);
+  }
+  
+  /**
+   * Insert a FilterGroup before a specific FilterGroup/DSFilterGroup, named by internalName.
+   * @param internalName -- String internalName of FilterGroup/DSFilterGroup before which the given FilterGroup should be inserted.
+   * @param fg -- FilterGroup to insert.
+   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup named by internalName.
+   */
+  public void insertFilterGroupBeforeFilterGroup(String internalName, FilterGroup fg) throws ConfigurationException {
+    if (!filterGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n" );
+    insertFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ), fg );
+  }
+
+  /**
+   * Insert a FilterGroup after a specific FilterGroup, named by internalName.
+   * @param internalName -- String internalName of FilterGroup/DSFilterGroup after which the given FilterGroup should be inserted.
+   * @param fg -- FilterGroup to insert.
+   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup named by internalName.
+   */
+  public void insertFilterGroupAfterFilterGroup(String internalName, FilterGroup fg) throws ConfigurationException {
+    if (!filterGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n" );
+    insertFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ) + 1, fg );
+  }
+  
+ 	/**
+	 * Adds a group of FilterGroup objects in one call.
+	 * Note, subsequent calls to addFilterGroup/DSFilterGroup, insertFilterGroup/DSFilterGroup, and addFilterGroups/DSFilterGroups will add to what
 	 * has already been aded.
 	 * 
 	 * @param fg An Array of FilterGroup objects.
 	 */
-	public void setFilterGroups(FilterGroup[] fg) {
+	public void addFilterGroups(FilterGroup[] fg) {
 		for (int i = 0, n = fg.length; i < n; i++) {
-			Integer fgRankInt = new Integer(fcRank);
-			filterGroups.put(fgRankInt, fg[i]);
-			filterGroupNameMap.put(fg[i].getInternalName(), fgRankInt);
-			fcRank++;
+			filterGroups.add(fg[i]);
+			filterGroupNameMap.put(fg[i].getInternalName(), fg[i]);
 		}
 	}
 
@@ -95,25 +149,65 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @param fg a DSFilterGroup object.
 	 */
 	public void addDSFilterGroup(DSFilterGroup fg) {
-		Integer fgRankInt = new Integer(fcRank);
-		filterGroups.put(fgRankInt, fg);
-		filterGroupNameMap.put(fg.getInternalName(), fgRankInt);
-		fcRank++;
+		filterGroups.add(fg);
+		filterGroupNameMap.put(fg.getInternalName(), fg);
 	}
 
+  /**
+   * Removes a DSFilterGroup from the List of FilterGroups/DSFilterGroups.
+   * @param fg -- DSFilterGroup to be removed.
+   */
+  public void removeDSFilterGroup(DSFilterGroup fg) {
+    filterGroupNameMap.remove(fg.getInternalName());
+    filterGroups.remove(fg);
+  }
+  
+  /**
+   * Inserts a DSFilterGroup object at a specific position within the list of FilterGroup/DSFilterGroup objects.
+   * FilterGroups/DSFilterGroups occuring at or after the given position are shifted right.
+   * @param position -- position at which to insert the DSFilterGroup
+   * @param fg -- DSFilterGroup to insert.
+   */
+  public void insertDSFilterGroup(int position, DSFilterGroup fg) {
+    filterGroups.add(position, fg);
+    filterGroupNameMap.put(fg.getInternalName(), fg);
+  }
+  
+  /**
+   * Insert a DSFilterGroup object before a specific FilterGroup/DSFilterGroup named by internalName.
+   * @param internalName -- String internalName of the FilterGroup/DSFilterGroup before which the given DSFilterGroup should be inserted.
+   * @param fg -- DSFilterGroup to be inserted.
+   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup/DSFilterGroup named by internalName
+   */
+  public void insertDSFilterGroupBeforeFilterGroup(String internalName, DSFilterGroup fg) throws ConfigurationException {
+    if (!filterGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n");
+    insertDSFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ) , fg);
+  }
+  
+  /**
+   * Insert a DSFilterGroup object after a specific FilterGroup/DSFilterGroup named by internalName.
+   * @param internalName -- String internalName of the FilterGroup/DSFilterGroup after which the given DSFilterGroup should be inserted.
+   * @param fg -- DSFilterGroup to be inserted.
+   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup/DSFilterGroup named by internalName
+   */
+  public void insertDSFilterGroupAfterFilterGroup(String internalName, DSFilterGroup fg) throws ConfigurationException {
+    if (!filterGroupNameMap.containsKey(internalName) )
+      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n");
+    insertDSFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ) + 1, fg);
+  }
+  
 	/**
-	 * Sets a group of DSFilterGroup objects in one call.
-	 * Note, subsequent calls to addFilterGroup/addDSFilterGroup and setFilterGroups/setDSFilterGroups will add to what
+	 * Adds a group of DSFilterGroup objects in one call.
+	 * Note, subsequent calls to addFilterGroup/addDSFilterGroup and addFilterGroups/addDSFilterGroups will add to what
 	 * has already been aded.
 	 * 
 	 * @param fg An Array of DSFilterGroup objects.
 	 */
-	public void setDSFilterGroups(DSFilterGroup[] fg) {
+	public void addDSFilterGroups(DSFilterGroup[] fg) {
 		for (int i = 0, n = fg.length; i < n; i++) {
-			Integer fgRankInt = new Integer(fcRank);
-			filterGroups.put(fgRankInt, fg[i]);
-			filterGroupNameMap.put(fg[i].getInternalName(), fgRankInt);
-			fcRank++;
+			filterGroups.add(fg[i]);
+			filterGroupNameMap.put(fg[i].getInternalName(), fg[i]);
 		}
 	}
 
@@ -123,7 +217,7 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @return List of FilterGroup/DSFilterGroup objects.
 	 */
 	public List getFilterGroups() {
-		return new ArrayList(filterGroups.values());
+		return new ArrayList(filterGroups);
 	}
 
 	/**
@@ -134,7 +228,7 @@ public class FilterPage extends BaseConfigurationObject {
 	 */
 	public Object getFilterGroupByName(String internalName) {
 		if (filterGroupNameMap.containsKey(internalName))
-			return filterGroups.get((Integer) filterGroupNameMap.get(internalName));
+			return filterGroupNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -183,8 +277,8 @@ public class FilterPage extends BaseConfigurationObject {
 			}
 
 			if (!contains) {
-				for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-					Object group = filterGroups.get((Integer) iter.next());
+				for (Iterator iter = (Iterator) filterGroups.iterator(); iter.hasNext();) {
+					Object group = iter.next();
 
 					if (group instanceof FilterGroup && ((FilterGroup) group).containsFilterDescription(internalName)) {
 						lastFilt = ((FilterGroup) group).getFilterDescriptionByInternalName(internalName);
@@ -234,7 +328,7 @@ public class FilterPage extends BaseConfigurationObject {
 		boolean supports = false;
 
 		if (lastSupportingFilter == null) {
-			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+			for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 				Object element = iter.next();
 
 				if (element instanceof FilterGroup) {
@@ -267,8 +361,8 @@ public class FilterPage extends BaseConfigurationObject {
 	public List getAllFilterDescriptions() {
 		List filts = new ArrayList();
 
-		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
-			Object fg = filterGroups.get((Integer) iter.next());
+		for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
+			Object fg = iter.next();
 			if (fg instanceof FilterGroup)
 				filts.addAll(((FilterGroup) fg).getAllFilterDescriptions());
 		}
@@ -287,7 +381,7 @@ public class FilterPage extends BaseConfigurationObject {
 		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
-			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+			for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 				Object groupo = iter.next();
 
 				if (groupo instanceof FilterGroup) {
@@ -339,7 +433,7 @@ public class FilterPage extends BaseConfigurationObject {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 
-		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 			Object group = iter.next();
 
 			if (group instanceof FilterGroup) {
@@ -420,7 +514,7 @@ public class FilterPage extends BaseConfigurationObject {
 	public int hashCode() {
 		int tmp = super.hashCode();
 
-		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof FilterGroup)
 				tmp = (31 * tmp) + ((FilterGroup) element).hashCode();
@@ -430,20 +524,4 @@ public class FilterPage extends BaseConfigurationObject {
 
 		return tmp;
 	}
-
-	private int fcRank = 0;
-	private TreeMap filterGroups = new TreeMap();
-	private Hashtable filterGroupNameMap = new Hashtable();
-
-	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private FilterDescription lastFilt = null;
-
-	//cache one FilterGroup for call to getGroupForFilter
-	private FilterGroup lastGroup = null;
-
-	//cache one FilterCollection for call to getCollectionForFilter
-	private FilterCollection lastColl = null;
-
-	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
-	private FilterDescription lastSupportingFilter = null;
 }

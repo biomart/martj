@@ -703,8 +703,8 @@ public class DatasetViewXMLUtils {
     if (validString(attribute.getSource()))
       att.setAttribute(SOURCE, attribute.getSource());
     
-    if (validString(attribute.getHomePageURL()))
-      att.setAttribute(HOMEPAGEURL, attribute.getHomePageURL());
+    if (validString(attribute.getHomepageURL()))
+      att.setAttribute(HOMEPAGEURL, attribute.getHomepageURL());
     
     if (validString(attribute.getLinkoutURL()))  
       att.setAttribute(LINKOUTURL, attribute.getLinkoutURL());
@@ -810,7 +810,7 @@ public class DatasetViewXMLUtils {
         
     def.setAttribute(VALUE, filter.getValue());
     
-    def.addContent(getFilterDescriptionElement(filter.getUIFilterDescription()));
+    def.addContent(getFilterDescriptionElement(filter.getFilterDescription()));
     
     return def;
 	}

@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.lib.config.test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -51,13 +52,18 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	public static final String TESTDATASETVIEWFILE = "data/XML/testDatasetView.xml";
 
-  private static final String TESTDESC = "For Testing Purposes Only";
-  private static final String TESTHANDLER = "testHandler";
-  private static final String TESTTYPE = "list";
-  private static final String TESTQUALIFIER = "in";
-  private static final String TESTLEGALQUALIFIERS = "in,=";
-  private static final String REFINAME = "testFilterDescription";
-  
+	private static final String TESTDESC = "For Testing Purposes Only";
+	private static final String TESTHANDLER = "testHandler";
+	private static final String TESTTYPE = "list";
+	private static final String TESTQUALIFIER = "in";
+	private static final String TESTLEGALQUALIFIERS = "in,=";
+	private static final String REFINAME = "testFilterDescription";
+	private static final String TESTINSERTINAME = "testInsert";
+	private static final String TESTINSERTFIELD = "testInsertField";
+	private static final String TESTINSERTTYPE = "testInsertType";
+	private static final String TESTINSERTQUALIFIERS = "testInsertQualifiers";
+	private static final boolean TESTISSELECTABLE = true;
+
 	/**
 	 * Returns an instance of the testDatasetView.xml based XML object
 	 * @param validate -- if true, XML is validated against DatasetView.dtd in the Classpath
@@ -73,37 +79,38 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	}
 
 	public void testDatasetView() throws Exception {
-    DatasetView dsv = TestDatasetViewInstance(true);
+		DatasetView dsv = TestDatasetViewInstance(true);
 		validateDatasetView(dsv);
-    validateDatasetViewSynchronization(dsv);
+		validateDatasetViewSynchronization(dsv);
+		validateDatasetViewMutability(dsv);
 	}
 
-  public static void validateDatasetViewSynchronization(DatasetView rDSV) throws Exception {
-    Document rDoc = DatasetViewXMLUtils.DatasetViewToDocument(rDSV);
-    byte[] rDigest = DatasetViewXMLUtils.DocumentToMessageDigest(rDoc);
-    
-    DatasetView nDSV = DatasetViewXMLUtils.DocumentToDatasetView(rDoc);
-    
-    assertTrue("reference DatasetView does not equal DatasetView after synchronization\n", rDSV.equals(nDSV));
-    
-    byte[] nDigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nDSV);
-    
-    assertTrue("Message Digests do not equal for same DatasetView object after synchronization\n", java.security.MessageDigest.isEqual(rDigest, nDigest));    
-  }
-  
+	public static void validateDatasetViewSynchronization(DatasetView rDSV) throws Exception {
+		Document rDoc = DatasetViewXMLUtils.DatasetViewToDocument(rDSV);
+		byte[] rDigest = DatasetViewXMLUtils.DocumentToMessageDigest(rDoc);
+
+		DatasetView nDSV = DatasetViewXMLUtils.DocumentToDatasetView(rDoc);
+
+		assertTrue("reference DatasetView does not equal DatasetView after synchronization\n", rDSV.equals(nDSV));
+
+		byte[] nDigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nDSV);
+
+		assertTrue("Message Digests do not equal for same DatasetView object after synchronization\n", java.security.MessageDigest.isEqual(rDigest, nDigest));
+	}
+
 	public static void validateDatasetView(DatasetView d) throws Exception {
 		String testIName = "test_dataset";
 		String IName = d.getInternalName();
 		String testDName = "Test of a DatasetView";
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
-    String testDatasetPrefix = "test";
-    String DatasetPrefix = d.getDataset();
+		String testDatasetPrefix = "test";
+		String DatasetPrefix = d.getDataset();
 
 		assertEquals("Internal Name not correctly set for DatasetView\n", testIName, IName);
 		assertEquals("Display Name not correctly set for DatasetView\n", testDName, DName);
 		assertEquals("Description not correctly set for DatasetView\n", TESTDESC, Desc);
-    assertEquals("DatasetPrefix not correctly set for DatasetView\n", testDatasetPrefix, DatasetPrefix);
+		assertEquals("DatasetPrefix not correctly set for DatasetView\n", testDatasetPrefix, DatasetPrefix);
 
 		String[] sbs = d.getStarBases();
 		assertEquals("should only get one starbase\n", 1, sbs.length);
@@ -158,10 +165,19 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String testValue = "1";
 		String Value = df.getValue();
 		FilterDescription testFDesc =
-			new FilterDescription("testDefaultFilterDescription", "test_id", TESTTYPE, TESTQUALIFIER, TESTLEGALQUALIFIERS, "A TEST ID, DOESNT EXIST", "gene_main", null, TESTDESC);
+			new FilterDescription(
+				"testDefaultFilterDescription",
+				"test_id",
+				TESTTYPE,
+				TESTQUALIFIER,
+				TESTLEGALQUALIFIERS,
+				"A TEST ID, DOESNT EXIST",
+				"gene_main",
+				null,
+				TESTDESC);
 
 		assertEquals("value not correctly set for DatasetView DefaultFilter\n", testValue, Value);
-		assertEquals("FilterDescription not correct for DatasetView DefaultFilter\n", testFDesc, df.getUIFilterDescription());
+		assertEquals("FilterDescription not correct for DatasetView DefaultFilter\n", testFDesc, df.getFilterDescription());
 	}
 
 	private static void filterPageTest(DatasetView d, FilterPage fp) throws Exception {
@@ -437,7 +453,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "test_id";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
@@ -447,7 +463,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
@@ -503,7 +519,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "enable_test_id";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
@@ -513,7 +529,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
@@ -573,7 +589,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "disable_test_id";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
@@ -583,7 +599,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
@@ -642,7 +658,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "handlerField";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String handler = f.getHandler();
 
@@ -651,7 +667,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("Handler not set correctly for FilterDescription\n", TESTHANDLER, handler);
 
@@ -707,7 +723,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "value_option_id";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
@@ -717,8 +733,8 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
-    assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
 		//  contains/get for FilterCollection-FilterDescription
@@ -777,7 +793,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = f.getType();
 		String testField = "test_id";
 		String Field = f.getField();
-    String qualifier = f.getQualifier();
+		String qualifier = f.getQualifier();
 		String legal_qualifiers = f.getLegalQualifiers();
 		String testTableConstraint = "tree_value_dm";
 		String TableConstraint = f.getTableConstraint();
@@ -787,7 +803,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
-    assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for UIFitlerDescription\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
@@ -1009,7 +1025,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = option.getType();
 		String testField = "test_id";
 		String Field = option.getField();
-    String qualifier = option.getQualifier();
+		String qualifier = option.getQualifier();
 		String legal_qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "filterOne_dm";
 		String TableConstraint = option.getTableConstraint();
@@ -1019,7 +1035,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for Option\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for Option\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for Option\n", testField, Field);
-    assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for Option\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for Option\n", testTableConstraint, TableConstraint);
 		assertTrue("filterOptionOne should be Selectable\n", option.isSelectable());
@@ -1073,7 +1089,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = option.getType();
 		String testField = "test_id";
 		String Field = option.getField();
-    String qualifier = option.getQualifier();
+		String qualifier = option.getQualifier();
 		String legal_qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "filterTwo_dm";
 		String TableConstraint = option.getTableConstraint();
@@ -1083,7 +1099,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for Option\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for Option\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for Option\n", testField, Field);
-    assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for Option\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for Option\n", testTableConstraint, TableConstraint);
 		assertTrue("filterOptionTwo should be Selectable\n", option.isSelectable());
@@ -1136,7 +1152,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = option.getType();
 		String testField = "pushActionOption_id";
 		String Field = option.getField();
-    String qualifier = option.getQualifier();
+		String qualifier = option.getQualifier();
 		String legal_qualifiers = option.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = option.getTableConstraint();
@@ -1146,7 +1162,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Description not correctly set for pushActionOption\n", TESTDESC, Desc);
 		assertEquals("Type not set correctly for pushActionOption\n", TESTTYPE, Type);
 		assertEquals("FieldName not set correctly for pushActionOption\n", testField, Field);
-    assertEquals("Qualifier not set correctly for pushActionOption\n", TESTQUALIFIER, qualifier);
+		assertEquals("Qualifier not set correctly for pushActionOption\n", TESTQUALIFIER, qualifier);
 		assertEquals("Legal Qualifiers not set correctly for pushActionOption\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("TableConstraint not set correctly for pushActionOption\n", testTableConstraint, TableConstraint);
 		assertTrue("pushActionOption should be Selectable\n", option.isSelectable());
@@ -1255,7 +1271,15 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		PushActionFilterOptionPushActionTest(d, fp, fg, fc, f, option, pos[0]);
 	}
 
-	private static void PushActionFilterOptionPushActionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f ,Option o, PushAction p) throws Exception {
+	private static void PushActionFilterOptionPushActionTest(
+		DatasetView d,
+		FilterPage fp,
+		FilterGroup fg,
+		FilterCollection fc,
+		FilterDescription f,
+		Option o,
+		PushAction p)
+		throws Exception {
 		String testIName = "OptionFilterPushAction";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHACTION WITH OPTION FILTER";
@@ -1274,7 +1298,15 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		OptionFilterPushActionOptionTest(d, fp, fg, fc, f, o, options[0]);
 	}
 
-	private static void OptionFilterPushActionOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option superoption, Option o) throws Exception {
+	private static void OptionFilterPushActionOptionTest(
+		DatasetView d,
+		FilterPage fp,
+		FilterGroup fg,
+		FilterCollection fc,
+		FilterDescription f,
+		Option superoption,
+		Option o)
+		throws Exception {
 		String testIName = "PushActionFilterOption";
 		String IName = o.getInternalName();
 		String testDName = "A TEST FILTER OPTION IN A PUSHACTION";
@@ -1283,7 +1315,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String Type = o.getType();
 		String testField = "pushActionFilterOption_id";
 		String Field = o.getField();
-    String qualifier = o.getQualifier();
+		String qualifier = o.getQualifier();
 		String legal_qualifiers = o.getLegalQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = o.getTableConstraint();
@@ -1294,7 +1326,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("PushActionFilterOption description incorrect\n", TESTDESC, Desc);
 		assertEquals("PushActionFilterOption type incorrect\n", TESTTYPE, Type);
 		assertEquals("PushActionFilterOption field incorrect\n", testField, Field);
-    assertEquals("PushActionFilterOption qualifier incorrect\n", TESTQUALIFIER, qualifier);
+		assertEquals("PushActionFilterOption qualifier incorrect\n", TESTQUALIFIER, qualifier);
 		assertEquals("PushActionFilterOption legal qualifiers incorrect\n", TESTLEGALQUALIFIERS, legal_qualifiers);
 		assertEquals("PushActionFilterOption tableConstraint incorrect\n", testTableConstraint, TableConstraint);
 
@@ -1334,7 +1366,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
-		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("AttributeGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 
 		String testINameGetByName = superoption.getInternalName() + "." + IName;
@@ -1372,7 +1404,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String testSource = "test source";
 		String Source = a.getSource();
 		String testHPage = "http://test.org";
-		String HPage = a.getHomePageURL();
+		String HPage = a.getHomepageURL();
 		String testLPage = "http://test.org?test";
 		String LPage = a.getLinkoutURL();
 
@@ -1412,6 +1444,744 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 			"AttributePage should return testAttributeDescription for Field TableConstraint\n",
 			a,
 			d.getAttributeDescriptionByFieldNameTableConstraint(Field, TableConstraint));
+	}
+
+	private void validateDatasetViewMutability(DatasetView reference) throws Exception {
+		//Rebuild a DatasetView from scratch, with empty constructors and set/add methods
+		DatasetView newDSV = new DatasetView();
+		newDSV.setInternalName(reference.getInternalName());
+		newDSV.setDisplayName(reference.getDisplayName());
+		newDSV.setDescription(reference.getDescription());
+    newDSV.setDataset(reference.getDataset());
+    
+		Option[] os = reference.getOptions();
+		//dont test Option mutability until FilterDescriptionMutability sub test
+		for (int i = 0, n = os.length; i < n; i++)
+			newDSV.addOption(os[i]);
+
+		DefaultFilter[] df = reference.getDefaultFilters();
+		for (int i = 0, n = df.length; i < n; i++) {
+			DefaultFilter rfilter = df[i];
+
+			DefaultFilter newDF = validateDefaultFilterMutability(rfilter);
+			newDSV.addDefaultFilter(newDF);
+		}
+
+		newDSV.addStarBases(reference.getStarBases());
+		newDSV.addPrimaryKeys(reference.getPrimaryKeys());
+
+		FilterPage[] fpages = reference.getFilterPages();
+		for (int i = 0, n = fpages.length; i < n; i++) {
+			FilterPage rpage = fpages[i];
+
+			FilterPage newFP = validateFilterPageMutability(rpage);
+			newDSV.addFilterPage(newFP);
+		}
+
+		AttributePage[] apages = reference.getAttributePages();
+		for (int i = 0, n = apages.length; i < n; i++) {
+			AttributePage rpage = apages[i];
+
+			AttributePage newAP = validateAttributePageMutability(rpage);
+			newDSV.addAttributePage(newAP);
+		}
+
+		assertEquals("Warning, newDSV not equal to reference DSV after build up!\n", reference, newDSV);
+
+		//test remove
+		newDSV.removeOption(os[0]);
+		newDSV.removeStarBase(reference.getStarBases()[0]);
+		newDSV.removePrimaryKey(reference.getPrimaryKeys()[0]);
+		newDSV.removeDefaultFilter(df[0]);
+		newDSV.removeFilterPage(fpages[0]);
+		newDSV.removeAttributePage(apages[0]);
+
+		//test insert* functionality after a remove
+		newDSV.insertOption(0, os[0]);
+		newDSV.addStarBase(reference.getStarBases()[0]);
+		newDSV.addPrimaryKey(reference.getPrimaryKeys()[0]);
+		newDSV.addDefaultFilter(df[0]);
+		newDSV.insertFilterPage(0, fpages[0]);
+		newDSV.insertAttributePage(0, apages[0]);
+		assertEquals("Warning, newDSV not equal to reference DSV after remove/insert up!\n", reference, newDSV);
+
+		//insert new testinsert versions of 
+		Option testInsertOption = new Option(TESTINSERTINAME, true);
+		newDSV.insertOption(1, testInsertOption);
+		assertEquals("insertOption position 1 did not work\n", testInsertOption, newDSV.getOptions()[1]);
+		newDSV.removeOption(testInsertOption);
+
+		newDSV.insertOptionBeforeOption(os[0].getInternalName(), testInsertOption);
+		List newOs = Arrays.asList(newDSV.getOptions());
+		assertEquals("insertOptionBeforeOption did not work\n", newOs.indexOf(testInsertOption), newOs.indexOf(os[0]) - 1);
+		newDSV.removeOption(testInsertOption);
+
+		newDSV.insertOptionAfterOption(os[0].getInternalName(), testInsertOption);
+		newOs = Arrays.asList(newDSV.getOptions());
+		assertEquals("insertOptionAfterOption did not work\n", newOs.indexOf(testInsertOption), newOs.indexOf(os[0]) + 1);
+		newDSV.removeOption(testInsertOption);
+
+		//FilterPage
+		FilterPage testInsertFPage = new FilterPage(TESTINSERTINAME);
+		newDSV.insertFilterPage(1, testInsertFPage);
+		assertEquals("insertFilterPage position 1 did not work correctly\n", testInsertFPage, newDSV.getFilterPages()[1]);
+		newDSV.removeFilterPage(testInsertFPage);
+
+		newDSV.insertFilterPageBeforeFilterPage(fpages[0].getInternalName(), testInsertFPage);
+		List newFPs = Arrays.asList(newDSV.getFilterPages());
+		assertEquals("insertFilterPageBeforeFilterPage did not work\n", newFPs.indexOf(testInsertFPage), newFPs.indexOf(fpages[0]) - 1);
+		newDSV.removeFilterPage(testInsertFPage);
+
+		newDSV.insertFilterPageAfterFilterPage(fpages[0].getInternalName(), testInsertFPage);
+		newFPs = Arrays.asList(newDSV.getFilterPages());
+		assertEquals("insertFilterPageAfterFilterPage did not work\n", newFPs.indexOf(testInsertFPage), newFPs.indexOf(fpages[0]) + 1);
+		newDSV.removeFilterPage(testInsertFPage);
+
+		//AttributePage
+		AttributePage testInsertAPage = new AttributePage(TESTINSERTINAME);
+		newDSV.insertAttributePage(1, testInsertAPage);
+		assertEquals("insertAttributePage position 1 did not work correctly\n", testInsertAPage, newDSV.getAttributePages()[1]);
+		newDSV.removeAttributePage(testInsertAPage);
+
+		newDSV.insertAttributePageBeforeAttributePage(apages[0].getInternalName(), testInsertAPage);
+		List newAPs = Arrays.asList(newDSV.getAttributePages());
+		assertEquals("insertAttributePageBeforeAttributePage did not work\n", newAPs.indexOf(testInsertAPage), newAPs.indexOf(apages[0]) - 1);
+		newDSV.removeAttributePage(testInsertAPage);
+
+		newDSV.insertAttributePageAfterAttributePage(apages[0].getInternalName(), testInsertAPage);
+		newAPs = Arrays.asList(newDSV.getAttributePages());
+		assertEquals("insertAttributePageAfterAttributePage did not work\n", newAPs.indexOf(testInsertAPage), newAPs.indexOf(apages[0]) + 1);
+		newDSV.removeAttributePage(testInsertAPage);
+
+		for (int i = 0, n = os.length; i < n; i++) {
+			newDSV.removeOption(os[i]);
+		}
+		newDSV.addOptions(os);
+
+		for (int i = 0, n = fpages.length; i < n; i++) {
+			newDSV.removeFilterPage(fpages[i]);
+		}
+		newDSV.addFilterPages(fpages);
+
+		for (int i = 0, n = df.length; i < n; i++) {
+			newDSV.removeDefaultFilter(df[i]);
+		}
+		newDSV.addDefaultFilters(df);
+
+		for (int i = 0, n = apages.length; i < n; i++) {
+			newDSV.removeAttributePage(apages[i]);
+		}
+		newDSV.addAttributePages(apages);
+		assertEquals("Warning, newDSV not equal to reference DSV after remove/add[]!\n", reference, newDSV);
+	}
+
+	private AttributePage validateAttributePageMutability(AttributePage rpage) throws Exception {
+		AttributePage newAPage = new AttributePage();
+		newAPage.setInternalName(rpage.getInternalName());
+		newAPage.setDisplayName(rpage.getDisplayName());
+		newAPage.setDescription(rpage.getDescription());
+
+		List groups = rpage.getAttributeGroups();
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			Object group = groups.get(i);
+			if (group instanceof AttributeGroup) {
+				AttributeGroup newAG = validateAttributeGroupMutability((AttributeGroup) group);
+				newAPage.addAttributeGroup(newAG);
+			} else {
+				DSAttributeGroup newDSAG = validateDSAttributeGroupMutability((DSAttributeGroup) group);
+				newAPage.addDSAttributeGroup(newDSAG);
+			}
+		}
+
+		assertEquals("newAPage does not equal reference AP after build up!\n", rpage, newAPage);
+
+		//remove/insert* functionality
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			Object group = groups.get(i);
+			if (group instanceof AttributeGroup)
+				newAPage.removeAttributeGroup((AttributeGroup) group);
+			else
+				newAPage.removeDSAttributeGroup((DSAttributeGroup) group);
+		}
+
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			Object group = groups.get(i);
+			if (group instanceof AttributeGroup)
+				newAPage.insertAttributeGroup(i, (AttributeGroup) group);
+			else
+				newAPage.insertDSAttributeGroup(i, (DSAttributeGroup) group);
+		}
+		assertEquals("newAPage does not equals AP after remove/insert\n", rpage, newAPage);
+
+		AttributeGroup testAttributeGroup = new AttributeGroup(TESTINSERTINAME);
+		DSAttributeGroup testDSAttributeGroup = new DSAttributeGroup(TESTINSERTINAME);
+
+		newAPage.insertDSAttributeGroupBeforeAttributeGroup(((DSAttributeGroup) groups.get(0)).getInternalName(), testDSAttributeGroup);
+		newAPage.insertAttributeGroupBeforeAttributeGroup(((AttributeGroup) groups.get(1)).getInternalName(), testAttributeGroup);
+		List newAGs = newAPage.getAttributeGroups();
+		assertEquals("insertDSAttributeGroupBeforeAttributeGroup did not work correctly\n", newAGs.indexOf(testDSAttributeGroup), newAGs.indexOf(groups.get(0)) - 1);
+		assertEquals("insertAttributeGroupBeforeAttributeGroup did not work correctly\n",	newAGs.indexOf(testAttributeGroup),	newAGs.indexOf(groups.get(1)) - 1);
+		newAPage.removeAttributeGroup(testAttributeGroup);
+		newAPage.removeDSAttributeGroup(testDSAttributeGroup);
+
+		newAPage.insertAttributeGroupBeforeAttributeGroup(((AttributeGroup) groups.get(1)).getInternalName(), testAttributeGroup);
+		newAPage.insertDSAttributeGroupBeforeAttributeGroup(((DSAttributeGroup) groups.get(0)).getInternalName(), testDSAttributeGroup);
+		newAGs = newAPage.getAttributeGroups();
+		assertEquals("insertAttributeGroupBeforeAttributeGroup did not work correctly\n", newAGs.indexOf(testAttributeGroup), newAGs.indexOf(groups.get(1)) - 1);
+		assertEquals("insertDSAttributeGroupBeforeAttributeGroup did not work correctly\n",	newAGs.indexOf(testDSAttributeGroup),	newAGs.indexOf(groups.get(0)) - 1);
+		newAPage.removeAttributeGroup(testAttributeGroup);
+		newAPage.removeDSAttributeGroup(testDSAttributeGroup);
+
+		newAPage.insertDSAttributeGroupAfterAttributeGroup(((DSAttributeGroup) groups.get(0)).getInternalName(), testDSAttributeGroup);
+		newAPage.insertAttributeGroupAfterAttributeGroup(((AttributeGroup) groups.get(1)).getInternalName(), testAttributeGroup);
+		newAGs = newAPage.getAttributeGroups();
+		assertEquals("insertDSAttributeGroupAfterAttributeGroup did not work correctly\n", newAGs.indexOf(testDSAttributeGroup), newAGs.indexOf(groups.get(0)) + 1);
+		assertEquals("insertAttributeGroupAfterAttributeGroup did not work correctly\n", newAGs.indexOf(testAttributeGroup), newAGs.indexOf(groups.get(1)) + 1);
+		newAPage.removeAttributeGroup(testAttributeGroup);
+		newAPage.removeDSAttributeGroup(testDSAttributeGroup);
+
+		newAPage.insertAttributeGroupAfterAttributeGroup(((AttributeGroup) groups.get(1)).getInternalName(), testAttributeGroup);
+		newAPage.insertDSAttributeGroupAfterAttributeGroup(((DSAttributeGroup) groups.get(0)).getInternalName(), testDSAttributeGroup);
+		newAGs = newAPage.getAttributeGroups();
+		assertEquals("insertAttributeGroupAfterAttributeGroup did not work correctly\n", newAGs.indexOf(testAttributeGroup), newAGs.indexOf(groups.get(1)) + 1);
+		assertEquals("insertDSAttributeGroupAfterAttributeGroup did not work correctly\n", newAGs.indexOf(testDSAttributeGroup), newAGs.indexOf(groups.get(0)) + 1);
+		newAPage.removeAttributeGroup(testAttributeGroup);
+		newAPage.removeDSAttributeGroup(testDSAttributeGroup);
+
+		//add[] after remove
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			Object group = groups.get(i);
+			if (group instanceof AttributeGroup)
+				newAPage.removeAttributeGroup((AttributeGroup) group);
+			else
+				newAPage.removeDSAttributeGroup((DSAttributeGroup) group);
+		}
+		newAPage.addDSAttributeGroups(new DSAttributeGroup[] {(DSAttributeGroup) groups.get(0)});
+		newAPage.addAttributeGroups(new AttributeGroup[] {(AttributeGroup) groups.get(1)});
+		assertEquals("Warning, newAPage does not equal reference AP after remove/add[]!\n", rpage, newAPage);
+
+		return newAPage;
+	}
+
+	private DSAttributeGroup validateDSAttributeGroupMutability(DSAttributeGroup group) throws Exception {
+		DSAttributeGroup newDSAG = new DSAttributeGroup(TESTINSERTINAME);
+		newDSAG.setInternalName(group.getInternalName());
+		newDSAG.setDisplayName(group.getDisplayName());
+		newDSAG.setDescription(group.getDescription());
+		newDSAG.setHandler(group.getHandler());
+		assertEquals("newDSA does not equals reference DSAG after buildup!", group, newDSAG);
+
+		return newDSAG;
+	}
+
+	private AttributeGroup validateAttributeGroupMutability(AttributeGroup group) throws Exception {
+		AttributeGroup newAG = new AttributeGroup(TESTINSERTINAME);
+		newAG.setInternalName(group.getInternalName());
+		newAG.setDisplayName(group.getDisplayName());
+		newAG.setDescription(group.getDescription());
+
+		AttributeCollection[] cols = group.getAttributeCollections();
+		for (int i = 0, n = cols.length; i < n; i++) {
+			AttributeCollection newCol = validateAttributeCollectionMutability(cols[i]);
+			newAG.addAttributeCollection(newCol);
+		}
+		assertEquals("newAG not equal to reference AG after buildup!", group, newAG);
+
+		//remove/insert* functionality
+		for (int i = 0, n = cols.length; i < n; i++) {
+			newAG.removeAttributeCollection(cols[i]);
+			newAG.insertAttributeCollection(i, cols[i]);
+		}
+		assertEquals("newAG not equal to reference AG after remove/insert!", group, newAG);
+
+		AttributeCollection testCollection = new AttributeCollection(TESTINSERTINAME);
+
+		newAG.insertAttributeCollectionBeforeAttributeCollection(cols[0].getInternalName(), testCollection);
+		List newACs = Arrays.asList(newAG.getAttributeCollections());
+		assertEquals("insertAttributeCollectionBeforeAttributeCollection did not work!\n", newACs.indexOf(testCollection), newACs.indexOf(cols[0]) - 1);
+		newAG.removeAttributeCollection(testCollection);
+
+		newAG.insertAttributeCollectionAfterAttributeCollection(cols[0].getInternalName(), testCollection);
+		newACs = Arrays.asList(newAG.getAttributeCollections());
+		assertEquals("insertAttributeCollectionAfterAttributeCollection did not work!\n", newACs.indexOf(testCollection), newACs.indexOf(cols[0]) + 1);
+		newAG.removeAttributeCollection(testCollection);
+
+		//remove/add[] functionality
+		for (int i = 0, n = cols.length; i < n; i++)
+			newAG.removeAttributeCollection(cols[i]);
+
+		newAG.addAttributeCollections(cols);
+		assertEquals("newAG not equal to referenece AG after remove/add[]!\n", group, newAG);
+
+		return newAG;
+	}
+
+	private AttributeCollection validateAttributeCollectionMutability(AttributeCollection collection) throws Exception {
+		AttributeCollection newAC = new AttributeCollection();
+		newAC.setInternalName(collection.getInternalName());
+		newAC.setDisplayName(collection.getDisplayName());
+		newAC.setDescription(collection.getDescription());
+		newAC.setMaxSelect(collection.getMaxSelect());
+
+		List descs = collection.getAttributeDescriptions();
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			//    there isnt currently a DSAttributeDescription
+			AttributeDescription desc = (AttributeDescription) descs.get(i);
+			AttributeDescription newAD = validateAttributeDescriptionMutability(desc);
+			newAC.addAttributeDescription(newAD);
+		}
+		assertEquals("newAC not equal reference AC after buildup!\n", collection, newAC);
+
+		//remove/insert* functionality
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			AttributeDescription desc = (AttributeDescription) descs.get(i);
+			newAC.removeAttributeDescription(desc);
+			newAC.insertAttributeDescription(i, desc);
+		}
+		assertEquals("newAC not equal reference AC after remove/insert!\n", collection, newAC);
+
+		AttributeDescription testAD = new AttributeDescription(TESTINSERTINAME, "testInsertField");
+
+		newAC.insertAttributeDescriptionBeforeAttributeDescription(((AttributeDescription) descs.get(0)).getInternalName(), testAD);
+		List newADs = newAC.getAttributeDescriptions();
+		assertEquals("insertAttributeDescriptionBeforeAttributeDescription did not work!\n", newADs.indexOf(testAD), newADs.indexOf(descs.get(0)) - 1);
+		newAC.removeAttributeDescription(testAD);
+
+		newAC.insertAttributeDescriptionAfterAttributeDescription(((AttributeDescription) descs.get(0)).getInternalName(), testAD);
+		newADs = newAC.getAttributeDescriptions();
+		assertEquals("insertAttributeDescriptionAfterAttributeDescription did not work!\n", newADs.indexOf(testAD), newADs.indexOf(descs.get(0)) + 1);
+		newAC.removeAttributeDescription(testAD);
+
+		//remove/add[] functionality
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			AttributeDescription desc = (AttributeDescription) descs.get(i);
+			newAC.removeAttributeDescription(desc);
+		}
+		newAC.addAttributeDescriptions((AttributeDescription[]) descs.toArray(new AttributeDescription[descs.size()]));
+
+		assertEquals("newAC not equal reference AC after remove/add[]!\n", collection, newAC);
+
+		return newAC;
+	}
+
+	private AttributeDescription validateAttributeDescriptionMutability(AttributeDescription desc) throws Exception {
+		AttributeDescription newAD = new AttributeDescription();
+		newAD.setInternalName(desc.getInternalName());
+		newAD.setDisplayName(desc.getDisplayName());
+		newAD.setDescription(desc.getDescription());
+		newAD.setField(desc.getField());
+		newAD.setTableConstraint(desc.getTableConstraint());
+		newAD.setMaxLength(desc.getMaxLength());
+		newAD.setSource(desc.getSource());
+		newAD.setLinkoutURL(desc.getLinkoutURL());
+		newAD.setHomepageURL(desc.getHomepageURL());
+		assertEquals("newAD does not equal reference AD after buildup!\n", desc, newAD);
+
+		return newAD;
+	}
+
+	private DefaultFilter validateDefaultFilterMutability(DefaultFilter rfilter) throws Exception {
+		DefaultFilter newDF = new DefaultFilter();
+		newDF.setValue(rfilter.getValue());
+		//dont worry about testing FilterDescription mutability twice
+		newDF.setFilterDescription(rfilter.getFilterDescription());
+
+		assertEquals("newDF not eqaul to reference DF after buildup!\n", rfilter, newDF);
+		return newDF;
+	}
+
+	private FilterPage validateFilterPageMutability(FilterPage rpage) throws Exception {
+		FilterPage newFP = new FilterPage();
+
+		newFP.setInternalName(rpage.getInternalName());
+		newFP.setDescription(rpage.getDescription());
+		newFP.setDisplayName(rpage.getDisplayName());
+
+		List fgroups = rpage.getFilterGroups();
+		for (int i = 0, n = fgroups.size(); i < n; i++) {
+			Object rgroupo = fgroups.get(i);
+
+			if (rgroupo instanceof FilterGroup) {
+				FilterGroup newFG = validateFilterGroupMutability((FilterGroup) rgroupo);
+				newFP.addFilterGroup(newFG);
+			} else {
+				DSFilterGroup newFG = validateDSFilterGroupMutability((DSFilterGroup) rgroupo);
+				newFP.addDSFilterGroup(newFG);
+			}
+		}
+
+		assertEquals("newFP does not equal reference FP after build up!\n", rpage, newFP);
+
+		//remove
+		for (int i = 0, n = fgroups.size(); i < n; i++) {
+			Object group = fgroups.get(i);
+			if (group instanceof FilterGroup)
+				newFP.removeFilterGroup((FilterGroup) group);
+			else
+				newFP.removeDSFilterGroup((DSFilterGroup) group);
+		}
+
+		//insert* functionality after remove
+		for (int i = 0, n = fgroups.size(); i < n; i++) {
+			Object rgroupo = fgroups.get(i);
+
+			if (rgroupo instanceof FilterGroup)
+				newFP.insertFilterGroup(i, (FilterGroup) rgroupo);
+			else
+				newFP.insertDSFilterGroup(i, (DSFilterGroup) rgroupo);
+		}
+		assertEquals("newFP does not equal reference FP after remove/insert!\n", rpage, newFP);
+
+		FilterGroup testFilterGroup = new FilterGroup(TESTINSERTINAME);
+		DSFilterGroup testDSFilterGroup = new DSFilterGroup(TESTINSERTINAME);
+
+		newFP.insertDSFilterGroupBeforeFilterGroup(((DSFilterGroup) fgroups.get(0)).getInternalName(), testDSFilterGroup);
+		newFP.insertFilterGroupBeforeFilterGroup(((FilterGroup) fgroups.get(1)).getInternalName(), testFilterGroup);
+		List newFGs = newFP.getFilterGroups();
+		assertEquals("insertDSFilterGroupBeforeFilterGroup did not work correctly\n", newFGs.indexOf(testDSFilterGroup), newFGs.indexOf(fgroups.get(0)) - 1);
+		assertEquals("insertFilterGroupBeforeFilterGroup did not work correctly\n", newFGs.indexOf(testFilterGroup), newFGs.indexOf(fgroups.get(1)) - 1);
+		newFP.removeFilterGroup(testFilterGroup);
+		newFP.removeDSFilterGroup(testDSFilterGroup);
+
+		newFP.insertFilterGroupBeforeFilterGroup(((FilterGroup) fgroups.get(1)).getInternalName(), testFilterGroup);
+		newFP.insertDSFilterGroupBeforeFilterGroup(((DSFilterGroup) fgroups.get(0)).getInternalName(), testDSFilterGroup);
+		newFGs = newFP.getFilterGroups();
+		assertEquals("insertFilterGroupBeforeFilterGroup did not work correctly\n", newFGs.indexOf(testFilterGroup), newFGs.indexOf(fgroups.get(1)) - 1);
+		assertEquals("insertDSFilterGroupBeforeFilterGroup did not work correctly\n", newFGs.indexOf(testDSFilterGroup), newFGs.indexOf(fgroups.get(0)) - 1);
+		newFP.removeFilterGroup(testFilterGroup);
+		newFP.removeDSFilterGroup(testDSFilterGroup);
+
+		newFP.insertDSFilterGroupAfterFilterGroup(((DSFilterGroup) fgroups.get(0)).getInternalName(), testDSFilterGroup);
+		newFP.insertFilterGroupAfterFilterGroup(((FilterGroup) fgroups.get(1)).getInternalName(), testFilterGroup);
+		newFGs = newFP.getFilterGroups();
+		assertEquals("insertDSFilterGroupAfterFilterGroup did not work correctly\n", newFGs.indexOf(testDSFilterGroup), newFGs.indexOf(fgroups.get(0)) + 1);
+		assertEquals("insertFilterGroupAfterFilterGroup did not work correctly\n", newFGs.indexOf(testFilterGroup), newFGs.indexOf(fgroups.get(1)) + 1);
+		newFP.removeFilterGroup(testFilterGroup);
+		newFP.removeDSFilterGroup(testDSFilterGroup);
+
+		newFP.insertFilterGroupAfterFilterGroup(((FilterGroup) fgroups.get(1)).getInternalName(), testFilterGroup);
+		newFP.insertDSFilterGroupAfterFilterGroup(((DSFilterGroup) fgroups.get(0)).getInternalName(), testDSFilterGroup);
+		newFGs = newFP.getFilterGroups();
+		assertEquals("insertFilterGroupAfterFilterGroup did not work correctly\n", newFGs.indexOf(testFilterGroup), newFGs.indexOf(fgroups.get(1)) + 1);
+		assertEquals("insertDSFilterGroupAfterFilterGroup did not work correctly\n", newFGs.indexOf(testDSFilterGroup), newFGs.indexOf(fgroups.get(0)) + 1);
+		newFP.removeFilterGroup(testFilterGroup);
+		newFP.removeDSFilterGroup(testDSFilterGroup);
+
+		//add[] functionality (remove all then add[])
+		for (int i = 0, n = fgroups.size(); i < n; i++) {
+			Object rgroupo = fgroups.get(i);
+
+			if (rgroupo instanceof FilterGroup)
+				newFP.removeFilterGroup((FilterGroup) rgroupo);
+			else
+				newFP.removeDSFilterGroup((DSFilterGroup) rgroupo);
+		}
+		newFP.addDSFilterGroups(new DSFilterGroup[] {(DSFilterGroup) fgroups.get(0)});
+		newFP.addFilterGroups(new FilterGroup[] {(FilterGroup) fgroups.get(1)});
+		assertEquals("Warning, newFP does not equal reference FP after remove/add[]!\n", rpage, newFP);
+
+		return newFP;
+	}
+
+	private DSFilterGroup validateDSFilterGroupMutability(DSFilterGroup group) throws Exception {
+		DSFilterGroup newDSFG = new DSFilterGroup();
+		newDSFG.setInternalName(group.getInternalName());
+		newDSFG.setDisplayName(group.getDisplayName());
+		newDSFG.setDescription(group.getDescription());
+		newDSFG.setHandler(group.getHandler());
+		assertEquals("newDSFG not equal to reference DSFG after buildup!\n", group, newDSFG);
+
+		return newDSFG;
+	}
+
+	private FilterGroup validateFilterGroupMutability(FilterGroup group) throws Exception {
+		FilterGroup newFG = new FilterGroup();
+		newFG.setInternalName(group.getInternalName());
+		newFG.setDisplayName(group.getDisplayName());
+		newFG.setDescription(group.getDescription());
+
+		FilterCollection[] cols = group.getFilterCollections();
+		for (int i = 0, n = cols.length; i < n; i++) {
+			FilterCollection newCol = validateFilterCollectionMutability(cols[i]);
+			newFG.addFilterCollection(newCol);
+		}
+		assertEquals("newFG not equal to reference FG after buildup!\n", group, newFG);
+
+		//remove/insert* functionality
+		for (int i = 0, n = cols.length; i < n; i++) {
+			newFG.removeFilterCollection(cols[i]);
+			newFG.insertFilterCollection(i, cols[i]);
+		}
+		assertEquals("newFG not equal to reference FG after remove/insert!\n", group, newFG);
+
+		FilterCollection testCol = new FilterCollection(TESTINSERTINAME);
+
+		newFG.insertFilterCollectionBeforeFilterCollection(cols[0].getInternalName(), testCol);
+		List newFCs = Arrays.asList(newFG.getFilterCollections());
+		assertEquals("insertFilterCollectionBeforeFilterCollection did not work\n", newFCs.indexOf(testCol), newFCs.indexOf(cols[0]) - 1);
+		newFG.removeFilterCollection(testCol);
+
+		newFG.insertFilterCollectionAfterFilterCollection(cols[0].getInternalName(), testCol);
+		newFCs = Arrays.asList(newFG.getFilterCollections());
+		assertEquals("insertFilterCollectionAfterFilterCollection did not work\n", newFCs.indexOf(testCol), newFCs.indexOf(cols[0]) + 1);
+		newFG.removeFilterCollection(testCol);
+
+		//remove/add[] functionality
+		for (int i = 0, n = cols.length; i < n; i++)
+			newFG.removeFilterCollection(cols[i]);
+
+		newFG.addFilterCollections(cols);
+		assertEquals("newFG not equal to reference FG after remove/add[]!\n", group, newFG);
+
+		return newFG;
+	}
+
+	private FilterCollection validateFilterCollectionMutability(FilterCollection collection) throws Exception {
+		FilterCollection newFC = new FilterCollection();
+		newFC.setInternalName(collection.getInternalName());
+		newFC.setDisplayName(collection.getDisplayName());
+		newFC.setDescription(collection.getDescription());
+
+		List descs = collection.getFilterDescriptions();
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			//currently there is only one type of FilterDescription, could change
+			Object desc = descs.get(i);
+			if (desc instanceof FilterDescription) {
+				FilterDescription newDesc = validateFilterDescriptionMutability((FilterDescription) desc);
+				newFC.addFilterDescription(newDesc);
+			} //else
+		}
+		assertEquals("newFC not equal to reference FC after buildup!\n", collection, newFC);
+
+		//remove/insert* functionality
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			//currently there is only one type of FilterDescription, could change
+			Object desc = descs.get(i);
+			if (desc instanceof FilterDescription) {
+				newFC.removeFilterDescription((FilterDescription) desc);
+				newFC.insertFilterDescription(i, (FilterDescription) desc);
+			} //else
+		}
+		assertEquals("newFC not equal to reference FC after remove/insert!\n", collection, newFC);
+
+		FilterDescription testFilterDescription = new FilterDescription(TESTINSERTINAME, TESTINSERTFIELD, TESTINSERTTYPE, TESTINSERTQUALIFIERS);
+
+		newFC.insertFilterDescriptionBeforeFilterDescription(((FilterDescription) descs.get(0)).getInternalName(), testFilterDescription);
+		List newFDs = newFC.getFilterDescriptions();
+		assertEquals("insertFilterDescriptionBeforeFilterDescription did not work\n", newFDs.indexOf(testFilterDescription), newFDs.indexOf(descs.get(0)) - 1);
+		newFC.removeFilterDescription(testFilterDescription);
+
+		newFC.insertFilterDescriptionAfterFilterDescription(((FilterDescription) descs.get(0)).getInternalName(), testFilterDescription);
+		newFDs = newFC.getFilterDescriptions();
+		assertEquals("insertFilterDescriptionAfterFilterDescription did not work\n", newFDs.indexOf(testFilterDescription), newFDs.indexOf(descs.get(0)) + 1);
+		newFC.removeFilterDescription(testFilterDescription);
+
+		//remove/add[] functionality
+		for (int i = 0, n = descs.size(); i < n; i++) {
+			//currently there is only one type of FilterDescription, could change
+			Object desc = descs.get(i);
+			if (desc instanceof FilterDescription)
+				newFC.removeFilterDescription((FilterDescription) desc);
+			//else
+		}
+		newFC.addFilterDescriptions((FilterDescription[]) descs.toArray(new FilterDescription[descs.size()]));
+		assertEquals("newFC not equal to reference FC after remove/add[]!\n", collection, newFC);
+
+		return newFC;
+	}
+
+	private FilterDescription validateFilterDescriptionMutability(FilterDescription reference) throws Exception {
+		FilterDescription newFD = new FilterDescription();
+		newFD.setInternalName(reference.getInternalName());
+		newFD.setDisplayName(reference.getDisplayName());
+		newFD.setDescription(reference.getDescription());
+		newFD.setType(reference.getType());
+		newFD.setField(reference.getField());
+		newFD.setTableConstraint(reference.getTableConstraint());
+		newFD.setQualifier(reference.getQualifier());
+		newFD.setLegalQualifiers(reference.getLegalQualifiers());
+		newFD.setHandler(reference.getHandler());
+
+		Enable[] ens = reference.getEnables();
+		for (int i = 0, n = ens.length; i < n; i++) {
+			Enable newEn = validateEnableMutability(ens[i]);
+			newFD.addEnable(newEn);
+		}
+
+		Disable[] diss = reference.getDisables();
+		for (int i = 0, n = diss.length; i < n; i++) {
+			Disable newDis = validateDisableMutability(diss[i]);
+			newFD.addDisable(newDis);
+		}
+
+		Option[] os = reference.getOptions();
+		for (int i = 0, n = os.length; i < n; i++) {
+			Option newO = validateOptionMutability(os[i]);
+			newFD.addOption(newO);
+		}
+		assertEquals("newFD not equal to reference description after buildup!\n", reference, newFD);
+
+		//remove/insert option
+		for (int i = 0, n = os.length; i < n; i++) {
+			newFD.removeOption(os[i]);
+			newFD.insertOption(i, os[i]);
+		}
+		assertEquals("newFD not equal to reference description after remove/insert option!\n", reference, newFD);
+
+		//only test for those with an option in the first place
+		if (os.length > 0) {
+			Option testIOption = new Option(TESTINSERTINAME, TESTISSELECTABLE);
+
+			newFD.insertOptionBeforeOption(os[0].getInternalName(), testIOption);
+			List newOs = Arrays.asList(newFD.getOptions());
+			assertEquals("insertOptionBeforeOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) - 1);
+			newFD.removeOption(testIOption);
+
+			newFD.insertOptionAfterOption(os[0].getInternalName(), testIOption);
+			newOs = Arrays.asList(newFD.getOptions());
+			assertEquals("insertOptionAfterOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) + 1);
+			newFD.removeOption(testIOption);
+		}
+
+		//remove/add[]
+		for (int i = 0, n = ens.length; i < n; i++)
+			newFD.removeEnable(ens[i]);
+		newFD.addEnables(ens);
+
+		for (int i = 0, n = diss.length; i < n; i++)
+			newFD.removeDisable(diss[i]);
+		newFD.addDisables(diss);
+
+		for (int i = 0, n = os.length; i < n; i++)
+			newFD.removeOption(os[i]);
+		newFD.addOptions(os);
+
+		assertEquals("newFD not equal to reference description after remove/add[]!\n", reference, newFD);
+
+		return newFD;
+	}
+
+	private Disable validateDisableMutability(Disable disable) throws Exception {
+		Disable newDis = new Disable();
+		newDis.setRef(disable.getRef());
+		newDis.setValueCondition(disable.getValueCondition());
+
+		return newDis;
+	}
+
+	private Enable validateEnableMutability(Enable enable) throws Exception {
+		Enable newEn = new Enable();
+		newEn.setRef(enable.getRef());
+		newEn.setValueCondition(enable.getValueCondition());
+
+		return newEn;
+	}
+
+	private Option validateOptionMutability(Option reference) throws Exception {
+		Option newOP = new Option();
+		newOP.setInternalName(reference.getInternalName());
+		newOP.setDisplayName(reference.getDisplayName());
+		newOP.setDescription(reference.getDescription());
+		newOP.setSelectable(reference.isSelectable());
+		newOP.setValue(reference.getValue());
+		newOP.setRef(reference.getRef());
+		newOP.setType(reference.getType());
+		newOP.setField(reference.getField());
+		newOP.setTableConstraint(reference.getTableConstraint());
+		newOP.setQualifier(reference.getQualifier());
+		newOP.setLegalQualifiers(reference.getLegalQualifiers());
+		newOP.setHandler(reference.getHandler());
+
+		PushAction[] pas = reference.getPushActions();
+		for (int i = 0, n = pas.length; i < n; i++) {
+			PushAction newPA = validatePushActionMutability(pas[i]);
+			newOP.addPushAction(newPA);
+		}
+
+		Option[] os = reference.getOptions();
+		for (int i = 0, n = os.length; i < n; i++) {
+			Option newO = validateOptionMutability(os[i]);
+			newOP.addOption(newO);
+		}
+		assertEquals("newOP not equal to reference option after buildup!\n", reference, newOP);
+
+		//remove/insert* Option
+		for (int i = 0, n = os.length; i < n; i++) {
+			newOP.removeOption(os[i]);
+			newOP.insertOption(i, os[i]);
+		}
+		assertEquals("newOP not equal to reference option after remove/insert option!\n", reference, newOP);
+
+		Option testIOption = new Option(TESTINSERTINAME, TESTISSELECTABLE);
+
+		//only test for those with Options in the first place
+		if (os.length > 0) {
+			newOP.insertOptionBeforeOption(os[0].getInternalName(), testIOption);
+			List newOs = Arrays.asList(newOP.getOptions());
+			assertEquals("insertOptionBeforeOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) - 1);
+			newOP.removeOption(testIOption);
+
+			newOP.insertOptionAfterOption(os[0].getInternalName(), testIOption);
+			newOs = Arrays.asList(newOP.getOptions());
+			assertEquals("insertOptionAfterOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) + 1);
+			newOP.removeOption(testIOption);
+		}
+
+		//remove/add[]
+		for (int i = 0, n = pas.length; i < n; i++)
+			newOP.removePushAction(pas[i]);
+		newOP.addPushActions(pas);
+
+		for (int i = 0, n = os.length; i < n; i++)
+			newOP.removeOption(os[i]);
+		newOP.addOptions(os);
+
+		assertEquals("newOP not equal to reference option after remove/add[]!\n", reference, newOP);
+
+		return newOP;
+	}
+
+	private PushAction validatePushActionMutability(PushAction action) throws Exception {
+		PushAction newPA = new PushAction();
+		newPA.setInternalName(action.getInternalName());
+		newPA.setDisplayName(action.getDisplayName());
+		newPA.setDescription(action.getDescription());
+		newPA.setRef(action.getRef());
+
+		Option[] os = action.getOptions();
+		for (int i = 0, n = os.length; i < n; i++) {
+			Option newOP = validateOptionMutability(os[i]);
+			newPA.addOption(newOP);
+		}
+		assertEquals("newPA not equal to reference action after buildup!\n", action, newPA);
+
+		//remove/insert* Option
+		for (int i = 0, n = os.length; i < n; i++) {
+			newPA.removeOption(os[i]);
+			newPA.insertOption(i, os[i]);
+		}
+		assertEquals("newPA not equal to reference action after remove/insert option!\n", action, newPA);
+
+		Option testIOption = new Option(TESTINSERTINAME, TESTISSELECTABLE);
+
+		newPA.insertOptionBeforeOption(os[0].getInternalName(), testIOption);
+		List newOs = Arrays.asList(newPA.getOptions());
+		assertEquals("insertOptionBeforeOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) - 1);
+		newPA.removeOption(testIOption);
+
+		newPA.insertOptionAfterOption(os[0].getInternalName(), testIOption);
+		newOs = Arrays.asList(newPA.getOptions());
+		assertEquals("insertOptionAfterOption did not work!\n", newOs.indexOf(testIOption), newOs.indexOf(os[0]) + 1);
+		newPA.removeOption(testIOption);
+
+		//remove/add[]
+		for (int i = 0, n = os.length; i < n; i++)
+			newPA.removeOption(os[i]);
+		newPA.addOptions(os);
+
+		assertEquals("newPA not equal to reference action after remove/add[]!\n", action, newPA);
+
+		return newPA;
 	}
 
 	public static void main(String[] args) {

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Container for a group of Mart FilterCollections.
@@ -32,6 +31,25 @@ import java.util.TreeMap;
  */
 public class FilterCollection extends BaseConfigurationObject {
 
+  // FilterDescriptions
+  private List filters = new ArrayList();
+  private Hashtable filterNameMap = new Hashtable();
+
+  //cache one FilterDescription for call to containsFilterDescription or getFiterDescriptionByInternalName
+  private FilterDescription lastFilt = null;
+
+  //cache one FilterDescription for call to supports
+  private FilterDescription lastSupportFilt = null;
+  
+  
+  /**
+   * Empty Constructor should only be used by DatasetViewEditor.
+   *
+   */
+  public FilterCollection() {
+    super();
+  }
+  
 	/**
 	 * Constructor for a FilterCollection named by intenalName, with a displayName, type.
 	 * 
@@ -61,25 +79,65 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * @param f a FilterDescription object
 	 */
 	public void addFilterDescription(FilterDescription f) {
-		Integer fRankInt = new Integer(fRank);
-		uiFilters.put(fRankInt, f);
-		uiFilterNameMap.put(f.getInternalName(), fRankInt);
-		fRank++;
+		filters.add(f);
+		filterNameMap.put(f.getInternalName(), f);
 	}
 
+  /**
+   * Remove a FilterDescription from the FilterCollection.
+   * @param f -- FilterDescription to remove.
+   */
+  public void removeFilterDescription(FilterDescription f) {
+    filterNameMap.remove(f.getInternalName());
+    filters.remove(f);
+  }
+  
+  /**
+   * Insert a FilterDescription at a specific position within the List of FilterDescriptions within this FilterCollection.
+   * FilterDescription Objects occuring at or after the given position will be shifted right.
+   * @param position -- position at which to insert the FilterDescription 
+   * @param f -- FilterDescription to be inserted.
+   */
+  public void insertFilterDescription(int position, FilterDescription f) {
+    filters.add(position, f);
+    filterNameMap.put(f.getInternalName(), f);
+  }
+  
+  /**
+   * Insert a FilterDescription before a specific FilterDescription, named by internalName.
+   * @param internalName -- internalName of FilterDescription before which the given FilterDescription should be inserted.
+   * @param f -- FilterDescription to insert.
+   * @throws ConfigurationException when the FilterCollection does not contain a FilterDescription named by internalName.
+   */
+  public void insertFilterDescriptionBeforeFilterDescription(String internalName, FilterDescription f) throws ConfigurationException {
+    if (!filterNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterCollection does not contain FilterDescription " + internalName + "\n");
+    insertFilterDescription( filters.indexOf( filterNameMap.get(internalName) ), f );
+  }
+  
+  /**
+   * Insert a FilterDescription after a specific FilterDescription, named by internalName.
+   * @param internalName -- internalName of FilterDescription after which the given FilterDescription should be inserted.
+   * @param f -- FilterDescription to insert.
+   * @throws ConfigurationException when the FilterCollection does not contain a FilterDescription named by internalName.
+   */
+  public void insertFilterDescriptionAfterFilterDescription(String internalName, FilterDescription f) throws ConfigurationException {
+    if (!filterNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterCollection does not contain FilterDescription " + internalName + "\n");
+    insertFilterDescription( filters.indexOf( filterNameMap.get(internalName) ) + 1, f );
+  }
+  
 	/**
-	 * Set a group of FilterDescription objects in one call.
-	 * Note, subsequent calls to addUIFilter and setUIFilter will add to what has
+	 * Add a group of FilterDescription objects in one call.
+	 * Note, subsequent calls to addFilterDescription and addFilterDescriptions will add to what has
 	 * been added previously.
 	 * 
 	 * @param f an array of FilterDescription objects.
 	 */
-	public void setFilterDescriptions(FilterDescription[] f) {
+	public void addFilterDescriptions(FilterDescription[] f) {
 		for (int i = 0, n = f.length; i < n; i++) {
-			Integer fRankInt = new Integer(fRank);
-			uiFilters.put(fRankInt, f[i]);
-			uiFilterNameMap.put(f[i].getInternalName(), fRankInt);
-			fRank++;
+			filters.add(f[i]);
+			filterNameMap.put(f[i].getInternalName(), f[i]);
 		}
 	}
 
@@ -90,7 +148,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * @return List of FilterDescription objects
 	 */
 	public List getFilterDescriptions() {
-		return new ArrayList(uiFilters.values());
+		return new ArrayList(filters);
 	}
 
 	/**
@@ -117,22 +175,22 @@ public class FilterCollection extends BaseConfigurationObject {
 		boolean contains = false;
 
 		if (lastFilt == null) {
-			contains = uiFilterNameMap.containsKey(internalName);
+			contains = filterNameMap.containsKey(internalName);
 
 			if (contains)
-				lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(internalName));
+				lastFilt = (FilterDescription) filterNameMap.get(internalName);
 			else if ( ( internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
 				String[] testNames = internalName.split("\\.");
 				String testRefName = testNames[0]; // x in x.y
 				String testIname = testNames[1]; // y in x.y
 
-        if (uiFilterNameMap.containsKey(testIname)) {
+        if (filterNameMap.containsKey(testIname)) {
         	// y is an actual filter, with its values stored in a PushOption in another Filter					
-					lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(testIname));
+					lastFilt = (FilterDescription) filterNameMap.get(testIname);
 					contains = true;
 				} else {
 					// y may be a Filter stored in a PushOption within another Filter
-					for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+					for (Iterator iter = filters.iterator(); iter.hasNext();) {
 						FilterDescription element = (FilterDescription) iter.next();
 
 						if (element.containsOption(testRefName)) {
@@ -154,7 +212,7 @@ public class FilterCollection extends BaseConfigurationObject {
 					}
 				}
 			} else {
-				for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+				for (Iterator iter = filters.iterator(); iter.hasNext();) {
 					FilterDescription element = (FilterDescription) iter.next();
 					if (element.containsOption(internalName)) {
 						lastFilt = element;
@@ -202,7 +260,7 @@ public class FilterCollection extends BaseConfigurationObject {
 		boolean supports = false;
 
 		if (lastSupportFilt == null) {
-			for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+			for (Iterator iter = filters.iterator(); iter.hasNext();) {
 				Object element = iter.next();
 
 				if (element instanceof FilterDescription) {
@@ -233,7 +291,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 
-		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filters.iterator(); iter.hasNext();) {
 			FilterDescription element = (FilterDescription) iter.next();
 			names.addAll(element.getCompleterNames());
 		}
@@ -275,7 +333,7 @@ public class FilterCollection extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", UIFilterDescriptions=").append(uiFilters);
+		buf.append(", UIFilterDescriptions=").append(filters);
 		buf.append("]");
 
 		return buf.toString();
@@ -291,22 +349,11 @@ public class FilterCollection extends BaseConfigurationObject {
 	public int hashCode() {
 		int hashcode = super.hashCode();
 
-		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filters.iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			hashcode = (31 * hashcode) + element.hashCode();
 		}
 
 		return hashcode;
 	}
-
-	// uiFilters
-	private int fRank = 0;
-	private TreeMap uiFilters = new TreeMap();
-	private Hashtable uiFilterNameMap = new Hashtable();
-
-	//cache one FilterDescription for call to containsFilterDescription or getFiterDescriptionByInternalName
-	private FilterDescription lastFilt = null;
-
-	//cache one FilterDescription for call to supports
-	private FilterDescription lastSupportFilt = null;
 }

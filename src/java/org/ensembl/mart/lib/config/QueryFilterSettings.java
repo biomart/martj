@@ -27,6 +27,14 @@ package org.ensembl.mart.lib.config;
 public abstract class QueryFilterSettings extends BaseConfigurationObject {
   
   /**
+   * Empty Constructor should only be used by DatasetViewEditor
+   *
+   */
+  public QueryFilterSettings() {
+    super();
+  }
+  
+  /**
 	 * @param internalName
 	 * @param displayName
 	 * @param description
@@ -36,25 +44,31 @@ public abstract class QueryFilterSettings extends BaseConfigurationObject {
 		super(internalName, displayName, description);
 	}
 	
-
-  
+  public abstract void setField(String field);
   public abstract String getField();
   public abstract String getFieldFromContext();
   
+  public abstract void setValue(String value);
   public abstract String getValue();
   public abstract String getValueFromContext();
   
+  public abstract void setHandler(String handler);
   public abstract String getHandler();
   public abstract String getHandlerFromContext();
   
+  public abstract void setTableConstraint(String tableConstraint);
   public abstract String getTableConstraint();
   public abstract String getTableConstraintFromContext();
   
+  public abstract void setType(String type);
   public abstract String getType();
   public abstract String getTypeFromContext();
   
-  // These will break the build - Darin to implement methods in derived class
+  public abstract void setQualifier(String qualifier);
   public abstract String getQualifier();
   public abstract String getQualifierFromContext();
-    
+  
+  public abstract void setLegalQualifiers(String legalQualifiers);
+  public abstract String getLegalQualifiers();
+  public abstract String getLegalQualifiersFromContext();  
 }

@@ -25,9 +25,11 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class Enable {
-  private final String ref;
-  private final String valueCondition;
-  private int hshcode = 0;
+  private String ref;
+  private String valueCondition;
+  
+  public Enable() {
+  }
   
   /**
    * Construct an Enable Object with a ref.
@@ -49,9 +51,7 @@ public class Enable {
   	  throw new ConfigurationException("Enable objects must have a ref.\n");
   	  
   	this.ref = ref;
-  	hshcode = ref.hashCode();
   	this.valueCondition = valueCondition;
-  	hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
   }
 
 	/**
@@ -70,6 +70,22 @@ public class Enable {
 		return valueCondition;
 	}
 
+  /**
+   * Set the internalName of the Filter to Enable when this Filter is used
+   * @param string -- internalName of the filter to enable
+   */
+  public void setRef(String string) {
+    ref = string;
+  }
+
+  /**
+   * Set a value at which the referenced Filter should be enabled.
+   * @param string -- value at which the referenced Filter should be enabled.
+   */
+  public void setValueCondition(String string) {
+    valueCondition = string;
+  }
+  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -92,6 +108,8 @@ public class Enable {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
+    int hshcode = ref.hashCode();
+    hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
 		return hshcode;
-	}
+  }
 }

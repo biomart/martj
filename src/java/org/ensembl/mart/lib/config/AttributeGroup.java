@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Container for a set of Mart AttributeCollections.
@@ -32,11 +31,21 @@ import java.util.TreeMap;
  */
 public final class AttributeGroup extends BaseConfigurationObject {
 
-	/*
-	 * AttributeGroups must have an internalName, so disable parameterless constructor.
-	 */
-	private AttributeGroup() throws ConfigurationException {
-		this("", "", ""); // will never happen
+  private List attributeCollections = new ArrayList();
+  private Hashtable attributeCollectionNameMap = new Hashtable();
+
+  //cache one AttributeDescription for call to containsUIAttributeDescription or getAttributeDescriptionByName
+  private AttributeDescription lastAtt = null;
+  //cache one AttributeCollecton for call to getCollectionForAttribute
+  private AttributeCollection lastColl = null;
+  //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+  private AttributeDescription lastSupportingAttribute = null;
+  
+ /**
+  * Empty Constructor should only be used by DatasetViewEditory
+  */
+	public AttributeGroup() {
+		super();
 	}
 
 	/**
@@ -68,24 +77,63 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	 * @param c an AttributeCollection object.
 	 */
 	public void addAttributeCollection(AttributeCollection c) {
-		Integer cRankInt = new Integer(cRank);
-		attributeCollections.put(cRankInt, c);
-		attributeCollectionNameMap.put(c.getInternalName(), cRankInt);
-		cRank++;
+		attributeCollections.add(c);
+		attributeCollectionNameMap.put(c.getInternalName(), c);
 	}
 
+  /**
+   * Remove an AttributeCollection from the AttributeGroup
+   * @param c -- AttributeCollection to be removed.
+   */
+  public void removeAttributeCollection(AttributeCollection c) {
+    attributeCollectionNameMap.remove(c.getInternalName());
+    attributeCollections.remove(c);
+  }
+  
+  /**
+   * Insert an AttributeCollection at a particular position.  AttributeCollection Objects
+   * at or after the given position are shifted right.
+   * @param position -- position to insert AttributeCollection
+   * @param c -- AttributeCollection to insert
+   */
+  public void insertAttributeCollection(int position, AttributeCollection c) {
+    attributeCollections.add(position, c);
+    attributeCollectionNameMap.put(c.getInternalName(), c);
+  }
+  
+  /**
+   * Insert an AttributeCollection before a specific AttributeCollection named by internalName.
+   * @param internalName -- internalName of AttributeCollection before which the given AttributeCollection is to be inserted.
+   * @param c -- AttributeCollection to be inserted.
+   * @throws ConfigurationException when the AttributeGroup does not contain an AttributeCollection named by internalName
+   */
+  public void insertAttributeCollectionBeforeAttributeCollection(String internalName, AttributeCollection c) throws ConfigurationException {
+    if (!attributeCollectionNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributeGroup does not contain AttributeCollection " + internalName + "\n");
+    insertAttributeCollection( attributeCollections.indexOf( attributeCollectionNameMap.get(internalName) ) , c);
+  }
+  
+  /**
+   * Insert an AttributeCollection after a specific AttributeCollection named by internalName.
+   * @param internalName -- internalName of AttributeCollection after which the given AttributeCollection is to be inserted.
+   * @param c -- AttributeCollection to be inserted.
+   * @throws ConfigurationException when the AttributeGroup does not contain an AttributeCollection named by internalName
+   */
+  public void insertAttributeCollectionAfterAttributeCollection(String internalName, AttributeCollection c) throws ConfigurationException {
+    if (!attributeCollectionNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributeGroup does not contain AttributeCollection " + internalName + "\n");
+    insertAttributeCollection( attributeCollections.indexOf( attributeCollectionNameMap.get(internalName) ) + 1, c);
+  }
+  
 	/**
-	 * Set a group of AttributeCollection objects with one call.  Note, subsequent calls to addAttributeCollection
-	 * or setAttributeCollections will add to what has been added before.
+	 * Add a group of AttributeCollection objects with one call.
 	 * 
 	 * @param c an Array of AttributeCollection objects.
 	 */
-	public void setAttributeCollections(AttributeCollection[] c) {
+	public void addAttributeCollections(AttributeCollection[] c) {
 		for (int i = 0; i < c.length; i++) {
-			Integer cRankInt = new Integer(cRank);
-			attributeCollections.put(cRankInt, c[i]);
-			attributeCollectionNameMap.put(c[i].getInternalName(), cRankInt);
-			cRank++;
+			attributeCollections.add(c[i]);
+			attributeCollectionNameMap.put(c[i].getInternalName(), c[i]);
 		}
 	}
 
@@ -96,7 +144,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	 */
 	public AttributeCollection[] getAttributeCollections() {
 		AttributeCollection[] a = new AttributeCollection[attributeCollections.size()];
-		attributeCollections.values().toArray(a);
+		attributeCollections.toArray(a);
 		return a;
 	}
 
@@ -108,7 +156,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	 */
 	public AttributeCollection getAttributeCollectionByName(String internalName) {
 		if (attributeCollectionNameMap.containsKey(internalName))
-			return (AttributeCollection) attributeCollections.get((Integer) attributeCollectionNameMap.get(internalName));
+			return (AttributeCollection) attributeCollectionNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -150,8 +198,8 @@ public final class AttributeGroup extends BaseConfigurationObject {
 		boolean found = false;
 
     if (lastAtt == null) {
-			for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
-				AttributeCollection collection = (AttributeCollection) attributeCollections.get((Integer) iter.next());
+			for (Iterator iter = (Iterator) attributeCollections.iterator(); iter.hasNext();) {
+				AttributeCollection collection = (AttributeCollection) iter.next();
 				if (collection.containsAttributeDescription(internalName)) {
 					lastAtt = collection.getAttributeDescriptionByInternalName(internalName);
 					found = true;
@@ -193,7 +241,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	public boolean supports(String field, String tableConstraint) {
 		boolean supports = false;
   	
-		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
 			AttributeCollection element = (AttributeCollection) iter.next();
 			
 			if (element.supports(field, tableConstraint)) {
@@ -214,8 +262,8 @@ public final class AttributeGroup extends BaseConfigurationObject {
   public List getAllAttributeDescriptions() {
   	List atts = new ArrayList();
   	
-  	for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
-  		AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
+  	for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
+  		AttributeCollection ac = (AttributeCollection) iter.next();
   		
 			atts.addAll(ac.getAttributeDescriptions());
 		}
@@ -234,8 +282,8 @@ public final class AttributeGroup extends BaseConfigurationObject {
   	if (! containsAttributeDescription(internalName))
   	  return null;
   	else if (lastColl == null) {
-			for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
-				AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
+			for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
+				AttributeCollection ac = (AttributeCollection) iter.next();
 				if (ac.containsAttributeDescription(internalName)) {
 					lastColl = ac;
 					break;
@@ -260,7 +308,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
   public List getCompleterNames() {
   	List names = new ArrayList();
   	
-  	for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+  	for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
 			AttributeCollection acol = (AttributeCollection) iter.next();
 			names.addAll(acol.getCompleterNames());
 		}
@@ -291,22 +339,11 @@ public final class AttributeGroup extends BaseConfigurationObject {
   public int hashCode() {
 		int tmp = super.hashCode();
 		
-		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributeCollections.iterator(); iter.hasNext();) {
 			AttributeCollection element = (AttributeCollection) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		
 		return tmp;
   }
-  
-	private int cRank = 0;
-	private TreeMap attributeCollections = new TreeMap();
-	private Hashtable attributeCollectionNameMap = new Hashtable();
-
-	//cache one AttributeDescription for call to containsUIAttributeDescription or getAttributeDescriptionByName
-	private AttributeDescription lastAtt = null;
-	//cache one AttributeCollecton for call to getCollectionForAttribute
-	private AttributeCollection lastColl = null;
-	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
-	private AttributeDescription lastSupportingAttribute = null;
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -30,6 +29,24 @@ import java.util.TreeMap;
  */
 public class AttributeCollection extends BaseConfigurationObject {
 
+  private int maxSelect;
+  private List uiAttributes = new ArrayList();
+  private Hashtable uiAttributeNameMap = new Hashtable();
+
+  //cache one AttributeDescription for call to containsAttributeDescriptionDescription or getAttributeDescriptionByInternalName
+  private AttributeDescription lastAtt = null;
+  
+  //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+  private AttributeDescription lastSupportingAttribute = null;
+  
+  /**
+   * Empty Constructor should only be used by DatasetViewEditor.
+   *
+   */
+  public AttributeCollection() {
+    super();
+  }
+  
 	/**
 	 * Constructor for an AttributeCollection named by internalName, with a type.
 	 * 
@@ -56,6 +73,14 @@ public class AttributeCollection extends BaseConfigurationObject {
 		this.maxSelect = maxSelect;
 	}
 
+  /**
+   * Set the maxSelect value for this AttributeCollection
+   * @param i -- int value to limit selections of Attributes in groups.
+   */
+  public void setMaxSelect(int i) {
+    maxSelect = i;
+  }
+  
 	/**
 	 * Returns the maxSelect value for attributes in this AttributeCollection.
 	 * 
@@ -71,24 +96,64 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * @param a a AttributeDescription object.
 	 */
 	public void addAttributeDescription(AttributeDescription a) {
-		Integer aRankInt = new Integer(aRank);
-		uiAttributes.put(aRankInt, a);
-		uiAttributeNameMap.put(a.getInternalName(), aRankInt);
-		aRank++;
+		uiAttributes.add(a);
+		uiAttributeNameMap.put(a.getInternalName(), a);
 	}
 
+  /**
+   * Remove an AttributeDescription from this AttributeCollection.
+   * @param a -- AttributeDescription to be removed.
+   */
+  public void removeAttributeDescription(AttributeDescription a) {
+    uiAttributeNameMap.remove(a.getInternalName());
+    uiAttributes.remove(a);
+  }
+  
+  /**
+   * Insert an AttributeDescription at a particular position within the AttributeCollection.
+   * AttributeDescriptions set at or after the given position are shift right.
+   * @param position -- position at which to insert the given AttributeDescription
+   * @param a -- AttributeDescription to insert
+   */
+  public void insertAttributeDescription(int position, AttributeDescription a) {
+    uiAttributes.add(position, a);
+    uiAttributeNameMap.put(a.getInternalName(), a);
+  }
+  
+  /**
+   * Insert an AttributeDescription before a specific AttributeDescription, named by internalName.
+   * @param internalName -- AttributeDescription before which the given AttributeDescription should be inserted.
+   * @param a -- AttributeDescription to insert.
+   * @throws ConfigurationException when the AttributeCollection does not contain an AttributeDescription named by internalName.
+   */
+  public void insertAttributeDescriptionBeforeAttributeDescription(String internalName, AttributeDescription a) throws ConfigurationException {
+    if (!uiAttributeNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributeCollection does not contain AttributeDescription " + internalName + "\n");
+    insertAttributeDescription( uiAttributes.indexOf( uiAttributeNameMap.get(internalName) ), a );
+  }
+  
+  /**
+   * Insert an AttributeDescription after a specific AttributeDescription, named by internalName.
+   * @param internalName -- AttributeDescription after which the given AttributeDescription should be inserted.
+   * @param a -- AttributeDescription to insert.
+   * @throws ConfigurationException when the AttributeCollection does not contain an AttributeDescription named by internalName.
+   */
+  public void insertAttributeDescriptionAfterAttributeDescription(String internalName, AttributeDescription a) throws ConfigurationException {
+    if (!uiAttributeNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributeCollection does not contain AttributeDescription " + internalName + "\n");
+    insertAttributeDescription( uiAttributes.indexOf( uiAttributeNameMap.get(internalName) ) + 1, a );
+  }
+  
 	/**
-	 * Set a group of AttributeDescription objects in one call.  Note, subsequent calls to addAttributeDescription, setAttributeDescription,
-	 * addUIDSAttribute or setUIDSAttributes will add to what was added before.
+	 * Add a group of AttributeDescription objects in one call.  Note, subsequent calls to addAttributeDescription or addAttributeDescriptions
+   * will add to what was added before.
 	 * 
 	 * @param a an Array of AttributeDescription objects.
 	 */
-	public void setAttributeDescriptions(AttributeDescription[] a) {
+	public void addAttributeDescriptions(AttributeDescription[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
-			Integer aRankInt = new Integer(aRank);
-			uiAttributes.put(aRankInt, a[i]);
-			uiAttributeNameMap.put(a[i].getInternalName(), aRankInt);
-			aRank++;
+			uiAttributes.add(a[i]);
+			uiAttributeNameMap.put(a[i].getInternalName(), a[i]);
 		}
 	}
 	
@@ -98,7 +163,8 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * @return List of AttributeDescription objects.
 	 */
 	public List getAttributeDescriptions() {
-		return new ArrayList(uiAttributes.values());
+    //return a copy
+		return new ArrayList(uiAttributes);
 	}
 
 
@@ -110,7 +176,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 		*/
 	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
 		if ( containsAttributeDescription(internalName) )
-			return (AttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
+			return (AttributeDescription) uiAttributeNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -149,7 +215,7 @@ public class AttributeCollection extends BaseConfigurationObject {
   public boolean supports(String field, String tableConstraint) {
   	boolean supports = false;
   	
-  	for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+  	for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			
 			if (element.supports(field, tableConstraint)) {
@@ -168,7 +234,7 @@ public class AttributeCollection extends BaseConfigurationObject {
   public List getCompleterNames() {
   	List names = new ArrayList();
   	
-  	for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+  	for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			names.add(element.getInternalName());
 		}
@@ -197,21 +263,10 @@ public class AttributeCollection extends BaseConfigurationObject {
 	public int hashCode() {
 		int tmp = super.hashCode();
 		
-		for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		return tmp;
 	}
-  
-	private final int maxSelect;
-	private int aRank = 0;
-	private TreeMap uiAttributes = new TreeMap();
-	private Hashtable uiAttributeNameMap = new Hashtable();
-
-	//cache one AttributeDescription for call to containsAttributeDescriptionDescription or getAttributeDescriptionByInternalName
-	private AttributeDescription lastAtt = null;
-	
-	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
-	private AttributeDescription lastSupportingAttribute = null;
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Container for a set of Mart AttributeCollections
@@ -32,11 +31,26 @@ import java.util.TreeMap;
  */
 public class AttributePage extends BaseConfigurationObject {
 
-	/*
-	 * AttributePages must have an internalName. So disable paremeterless construction
-	 */
-	private AttributePage() throws ConfigurationException {
-		this("", "", "");
+  private List attributeGroups = new ArrayList();
+  private Hashtable attGroupNameMap = new Hashtable();
+
+  //cache one AttributeDescription object for call to containsAttributeDescription or getAttributeDescriptionByName
+  private AttributeDescription lastAtt = null;
+
+  //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+  private AttributeDescription lastSupportingAttribute = null;
+
+  //cache one AttributeGroup for call to getGroupForAttribute
+  private AttributeGroup lastGroup = null;
+
+  //cache one AttributeCollection for call to getCollectionForAttribute
+  private AttributeCollection lastColl = null;
+  
+/**
+ * Empty Constructor should really only be used by the DatasetViewEditor
+ */
+	public AttributePage() {
+		super();
 	}
 
 	/**
@@ -69,24 +83,66 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @param a An AttributeGroup object
 	 */
 	public void addAttributeGroup(AttributeGroup a) {
-		Integer rankInt = new Integer(agroupRank);
-		attributeGroups.put(rankInt, a);
-		attGroupNameMap.put(a.getInternalName(), rankInt);
-		agroupRank++;
+		attributeGroups.add(a);
+		attGroupNameMap.put(a.getInternalName(), a);
 	}
 
+  /**
+   * Remove an AttributeGroup from the AttributePage
+   * @param a -- AttributeGroup to be removed.
+   */
+  public void removeAttributeGroup(AttributeGroup a) {
+    attGroupNameMap.remove(a.getInternalName());
+    attributeGroups.remove(a); 
+  }
+  
+  /**
+   * Insert an AttributeGroup at a particular position within the List of AttributeGroup/DSAttributeGroup objects
+   * contained in the AttributePage. AttributeGroup/DSAttributeGroup objects at or after this position are shifted right.
+   * @param position -- position to insert the given AttributeGroup
+   * @param a -- AttributeGroup to insert.
+   */
+  public void insertAttributeGroup(int position, AttributeGroup a) {
+    attributeGroups.add(position, a);
+    attGroupNameMap.put(a.getInternalName(), a);
+  }
+  
+  /**
+   * Insert an AttributeGroup before a specific AttributeGroup/DSAttributeGroup, named by internalName.
+   * @param internalName -- name of the AttributeGroup/DSAttributeGroup before which the given AttributeGroup should be inserted.
+   * @param a -- AttributeGroup to insert.
+   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
+   */
+  public void insertAttributeGroupBeforeAttributeGroup(String internalName, AttributeGroup a) throws ConfigurationException {
+    if (!attGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
+    
+    insertAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ), a );
+  }
+  
+  /**
+   * Insert an AttributeGroup after a specific AttributeGroup/DSAttributeGroup, named by internalName.
+   * @param internalName -- name of the AttributeGroup/DSAttributeGroup after which the given AttributeGroup should be inserted.
+   * @param a -- AttributeGroup to insert.
+   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
+   */
+  public void insertAttributeGroupAfterAttributeGroup(String internalName, AttributeGroup a) throws ConfigurationException {
+    if (!attGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
+    
+    insertAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ) + 1, a );
+  }
+  
 	/**
 	 * Add a group of AttributeGroup objects at once.  Note, subsequent calls
 	 * to addAttributeGroup or setAttributeGroup will add to what has already been added.
 	 * 
 	 * @param a an array of AttributeGroup objects
 	 */
-	public void setAttributeGroups(AttributeGroup[] a) {
+	public void addAttributeGroups(AttributeGroup[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
-			Integer rankInt = new Integer(agroupRank);
-			attributeGroups.put(rankInt, a[i]);
-			attGroupNameMap.put(a[i].getInternalName(), rankInt);
-			agroupRank++;
+			attributeGroups.add(a[i]);
+			attGroupNameMap.put(a[i].getInternalName(), a[i]);
 		}
 	}
 
@@ -96,24 +152,67 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @param a A DSAttributeGroup object
 	 */
 	public void addDSAttributeGroup(DSAttributeGroup a) {
-		Integer rankInt = new Integer(agroupRank);
-		attributeGroups.put(rankInt, a);
-		attGroupNameMap.put(a.getInternalName(), rankInt);
-		agroupRank++;
+		attributeGroups.add(a);
+		attGroupNameMap.put(a.getInternalName(), a);
 	}
 
+  /**
+   * Remove a DSAttributeGroup from the AttributePage.
+   * @param a -- DSAttributeGroup to be removed.
+   */
+  public void removeDSAttributeGroup(DSAttributeGroup a) {
+    attGroupNameMap.remove(a.getInternalName());
+    attributeGroups.remove(a);
+  }
+  
+  /**
+   * Insert a DSAttributeGroup into the List of AttributeGroups/DSAttributeGroups contained within
+   * the AttributePage.  AttributeGroup/DSAttributeGroup objects at or after the specified position will be
+   * shifted right.
+   * @param position -- position to be inserted
+   * @param a -- DSAttributeGroup to insert
+   */
+  public void insertDSAttributeGroup(int position, DSAttributeGroup a) {
+    attributeGroups.add(position, a);
+    attGroupNameMap.put(a.getInternalName(), a);
+  }
+  
+  /**
+   * Insert an DSAttributeGroup before a specific AttributeGroup/DSAttributeGroup, named by internalName.
+   * @param internalName -- name of the AttributeGroup/DSAttributeGroup before which the given AttributeGroup should be inserted.
+   * @param a -- DSAttributeGroup to insert.
+   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
+   */
+  public void insertDSAttributeGroupBeforeAttributeGroup(String internalName, DSAttributeGroup a) throws ConfigurationException {
+    if (!attGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
+    
+    insertDSAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ), a );
+  }
+  
+  /**
+   * Insert an DSAttributeGroup after a specific AttributeGroup/DSAttributeGroup, named by internalName.
+   * @param internalName -- name of the AttributeGroup/DSAttributeGroup after which the given AttributeGroup should be inserted.
+   * @param a -- DSAttributeGroup to insert.
+   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
+   */
+  public void insertDSAttributeGroupAfterAttributeGroup(String internalName, DSAttributeGroup a) throws ConfigurationException {
+    if (!attGroupNameMap.containsKey(internalName))
+      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
+    
+    insertDSAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ) + 1, a );
+  }
+   
 	/**
 	 * Add a group of DSAttributeGroup objects at once.  Note, subsequent calls
 	 * to addAttributeGroup/addDSAttributeGroup or setAttributeGroup/setDSAttributeGroup will add to what has already been added.
 	 * 
 	 * @param a an array of DSAttributeGroup objects
 	 */
-	public void setDSAttributeGroups(DSAttributeGroup[] a) {
+	public void addDSAttributeGroups(DSAttributeGroup[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
-			Integer rankInt = new Integer(agroupRank);
-			attributeGroups.put(rankInt, a[i]);
-			attGroupNameMap.put(a[i].getInternalName(), rankInt);
-			agroupRank++;
+			attributeGroups.add(a[i]);
+			attGroupNameMap.put(a[i].getInternalName(), a[i]);
 		}
 	}
 
@@ -123,7 +222,8 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @return A List of AttributeGroup/DSAttributeGroup objects
 	 */
 	public List getAttributeGroups() {
-		return new ArrayList(attributeGroups.values());
+    //return a copy
+		return new ArrayList(attributeGroups);
 	}
 
 	/**
@@ -134,7 +234,7 @@ public class AttributePage extends BaseConfigurationObject {
 	 */
 	public Object getAttributeGroupByName(String internalName) {
 		if (attGroupNameMap.containsKey(internalName))
-			return attributeGroups.get((Integer) attGroupNameMap.get(internalName));
+			return attGroupNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -176,8 +276,8 @@ public class AttributePage extends BaseConfigurationObject {
 		boolean found = false;
 
 		if (lastAtt == null) {
-			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
-				Object group = attributeGroups.get((Integer) iter.next());
+			for (Iterator iter = (Iterator) attributeGroups.iterator(); iter.hasNext();) {
+				Object group = iter.next();
 				if (group instanceof AttributeGroup && ((AttributeGroup) group).containsAttributeDescription(internalName)) {
 					lastAtt = ((AttributeGroup) group).getAttributeDescriptionByInternalName(internalName);
 					found = true;
@@ -218,7 +318,7 @@ public class AttributePage extends BaseConfigurationObject {
 	public boolean supports(String field, String tableConstraint) {
 		boolean supports = false;
 
-		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof AttributeGroup) {
 				AttributeGroup attgroup = (AttributeGroup) element;
@@ -241,8 +341,8 @@ public class AttributePage extends BaseConfigurationObject {
 	public List getAllAttributeDescriptions() {
 		List atts = new ArrayList();
 
-		for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
-			Object ag = attributeGroups.get((Integer) iter.next());
+		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
+			Object ag = iter.next();
 
 			if (ag instanceof AttributeGroup)
 				atts.addAll(((AttributeGroup) ag).getAllAttributeDescriptions());
@@ -262,8 +362,7 @@ public class AttributePage extends BaseConfigurationObject {
 		if (!containsAttributeDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
-			for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
-
+			for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 				Object groupo = iter.next();
 
 				if (groupo instanceof AttributeGroup) {
@@ -317,7 +416,7 @@ public class AttributePage extends BaseConfigurationObject {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 		
-		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 			Object group = iter.next();
 			if (group instanceof AttributeGroup)
 			  names.addAll( ( (AttributeGroup) group).getCompleterNames() );
@@ -349,7 +448,7 @@ public class AttributePage extends BaseConfigurationObject {
 	public int hashCode() {
 		int tmp = super.hashCode();
 
-		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof AttributeGroup)
 				tmp = (31 * tmp) + ((AttributeGroup) element).hashCode();
@@ -359,20 +458,4 @@ public class AttributePage extends BaseConfigurationObject {
 
 		return tmp;
 	}
-
-	private int agroupRank = 0;
-	private TreeMap attributeGroups = new TreeMap();
-	private Hashtable attGroupNameMap = new Hashtable();
-
-	//cache one AttributeDescription object for call to containsAttributeDescription or getAttributeDescriptionByName
-	private AttributeDescription lastAtt = null;
-
-	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
-	private AttributeDescription lastSupportingAttribute = null;
-
-	//cache one AttributeGroup for call to getGroupForAttribute
-	private AttributeGroup lastGroup = null;
-
-	//cache one AttributeCollection for call to getCollectionForAttribute
-	private AttributeCollection lastColl = null;
 }

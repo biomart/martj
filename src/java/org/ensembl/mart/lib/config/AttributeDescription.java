@@ -26,6 +26,21 @@ package org.ensembl.mart.lib.config;
  */
 public class AttributeDescription extends BaseConfigurationObject {
 
+  private String field;
+  private String tableConstraint;
+  private String source;
+  private String homepageURL;
+  private String linkoutURL;
+  private int maxLength = 0;
+  
+  /**
+   * Empty Constructor should only be used by DatasetViewEditor
+   *
+   */
+  public AttributeDescription() {
+    super();
+  }
+  
 	/**
 	 * Constructs a AttributeDescription with just the internalName and field.
 	 * 
@@ -73,18 +88,45 @@ public class AttributeDescription extends BaseConfigurationObject {
 		this.source = source;
 		this.homepageURL = homePageURL;
 		this.linkoutURL = linkoutURL;
-
-		hshcode = internalName.hashCode();
-		hshcode = (31 * hshcode) + displayName.hashCode();
-		hshcode = (31 * hshcode) + field.hashCode();
-		hshcode = (31 * hshcode) + maxLength;
-		hshcode = (31 * hshcode) + tableConstraint.hashCode();
-		hshcode = (31 * hshcode) + description.hashCode();
-		hshcode = (31 * hshcode) + source.hashCode();
-		hshcode = (31 * hshcode) + homepageURL.hashCode();
-		hshcode = (31 * hshcode) + linkoutURL.hashCode();
 	}
 
+  /**
+   * @param string
+   */
+  public void setHomepageURL(String string) {
+    homepageURL = string;
+  }
+
+  /**
+   * @return
+   */
+  public String getHomepageURL() {
+    return homepageURL;
+  }
+
+  /**
+   * @param string
+   */
+  public void setTableConstraint(String string) {
+    tableConstraint = string;
+  }
+
+  /**
+   * Returns the TableConstraint.
+   * 
+   * @return String tableConstraint.
+   */
+  public String getTableConstraint() {
+    return tableConstraint;
+  }
+
+  /**
+   * @param string
+   */
+  public void setField(String string) {
+    field = string;
+  }
+  
 	/**
 	 * Returns the field.
 	 * 
@@ -93,6 +135,13 @@ public class AttributeDescription extends BaseConfigurationObject {
 	public String getField() {
 		return field;
 	}
+ 
+  /**
+   * @param i
+   */
+  public void setMaxLength(int i) {
+    maxLength = i;
+  }
 
 	/**
 	 * Returns the maxLength.
@@ -103,14 +152,12 @@ public class AttributeDescription extends BaseConfigurationObject {
 		return maxLength;
 	}
 
-	/**
-	 * Returns the TableConstraint.
-	 * 
-	 * @return String tableConstraint.
-	 */
-	public String getTableConstraint() {
-		return tableConstraint;
-	}
+  /**
+   * @param string
+   */
+  public void setSource(String string) {
+    source = string;
+  }
 
 	/**
 	 * Returns the source.
@@ -121,15 +168,13 @@ public class AttributeDescription extends BaseConfigurationObject {
 		return source;
 	}
 
-	/**
-	 * Returns the homePageURL.
-	 * 
-	 * @return String homePageURL.
-	 */
-	public String getHomePageURL() {
-		return homepageURL;
-	}
-
+  /**
+   * @param string
+   */
+  public void setLinkoutURL(String string) {
+    linkoutURL = string;
+  }
+  
 	/**
 	 * Returns the linkoutURL.
 	 * @return String linkoutURL.
@@ -173,15 +218,15 @@ public class AttributeDescription extends BaseConfigurationObject {
 	}
 
 	public int hashCode() {
+    int hshcode = internalName.hashCode();
+    hshcode = (displayName != null) ? (31 * hshcode) + displayName.hashCode() : hshcode;
+    hshcode = (field != null) ? (31 * hshcode) + field.hashCode() : hshcode;
+    hshcode = (31 * hshcode) + maxLength;
+    hshcode = (tableConstraint != null) ? (31 * hshcode) + tableConstraint.hashCode() : hshcode;
+    hshcode = (description != null) ? (31 * hshcode) + description.hashCode() : hshcode;
+    hshcode = (source != null) ? (31 * hshcode) + source.hashCode() : hshcode;
+    hshcode = (homepageURL != null) ? (31 * hshcode) + homepageURL.hashCode() : hshcode;
+    hshcode = (linkoutURL != null) ? (31 * hshcode) + linkoutURL.hashCode() : hshcode;
 		return hshcode;
 	}
-
-  private String field;
-  private String tableConstraint;
-  private String source;
-  private String homepageURL;
-  private String linkoutURL;
-	private final int maxLength;
-	private int hshcode = 0;
-
 }

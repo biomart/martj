@@ -27,13 +27,13 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class DefaultFilter {
-   
+  private String value;
+  private FilterDescription fdesc;
+  
    /**
-    * This will throw an exception
-    * @throws ConfigurationException
+    * Empty Constructor.  Should really only be used by the DatasetViewEditor
     */
-   public DefaultFilter() throws ConfigurationException {
-     this(null, "");  
+   public DefaultFilter() {  
    }
    
    /**
@@ -50,19 +50,30 @@ public class DefaultFilter {
        throw new ConfigurationException("DefaultFilter Objects must be instantiated with a FilterDescription and a value for that filter\n");
      
      this.fdesc = fdesc;
-     int tmp = fdesc.hashCode();
-     
      this.value = value;
-     tmp = (31 * tmp) + value.hashCode();
-     
-     hashcode = tmp;
    }
 
+  /**
+   * Sets the FilterDescription for this DefaultFilter
+   * @param description -- FilterDescription
+   */
+  public void setFilterDescription(FilterDescription description) {
+    fdesc = description;
+  }
+
+  /**
+   * Sets the value for this DefaultFilter
+   * @param string
+   */
+  public void setValue(String string) {
+    value = string;
+  }
+  
   /**
    * Returns the FilterDescription
    * @return FilterDescription object
    */
-  public FilterDescription getUIFilterDescription() {
+  public FilterDescription getFilterDescription() {
     return fdesc;
   }
 
@@ -96,10 +107,9 @@ public class DefaultFilter {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-		return hashcode;
+    int tmp = fdesc.hashCode();
+    tmp = (31 * tmp) + value.hashCode();
+     
+    return tmp;
 	}
-
-   private final String value;
-   private final FilterDescription fdesc;
-   private final int hashcode;
 }

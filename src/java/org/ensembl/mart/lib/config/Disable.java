@@ -24,9 +24,14 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class Disable {
-	private final String ref;
-	private final String valueCondition;
-	private int hshcode = 0;
+	private String ref;
+	private String valueCondition;
+  
+  /**
+   * Empty Constructor should only be used by DatasetViewEditor
+   */
+  public Disable() {
+  }
   
 	/**
 	 * Construct a Disable Object with a ref.
@@ -48,9 +53,7 @@ public class Disable {
 			throw new ConfigurationException("Enable objects must have a ref.\n");
   	  
 		this.ref = ref;
-		hshcode = ref.hashCode();
 		this.valueCondition = valueCondition;
-		hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
 	}
 
 	/**
@@ -69,6 +72,22 @@ public class Disable {
 		return valueCondition;
 	}
 
+  /**
+   * Set the Reference for this Disable.  This should refer to the internalName of another FilterDescription
+   * @param string internalName of a Filter to Disable
+   */
+  public void setRef(String string) {
+    ref = string;
+  }
+
+  /**
+   * Set the value at which the filter referred to by ref should be disabled
+   * @param string -- value at which another Filter should be disabled
+   */
+  public void setValueCondition(String string) {
+    valueCondition = string;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -91,6 +110,8 @@ public class Disable {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
+    int hshcode = ref.hashCode();
+    hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
 		return hshcode;
 	}
 }

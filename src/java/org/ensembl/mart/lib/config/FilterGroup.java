@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeMap;
 
 /**
  * Container for a group of Mart FilterCollections.  Allows categorical grouping of collections
@@ -33,6 +32,22 @@ import java.util.TreeMap;
  */
 public class FilterGroup extends BaseConfigurationObject {
 
+  private List filterCollections = new ArrayList();
+  private Hashtable filterCollectionNameMap = new Hashtable();
+
+  //cache one FilterDescription for call to containsFilterDescription or getUIFiterDescriptionByName
+  private FilterDescription lastFilt = null;
+
+  //cache one FilterCollection for call to getCollectionForFilter
+  private FilterCollection lastColl = null;
+
+  //cache one FilterDescription for call to supports
+  private FilterDescription lastSupportingFilter = null;
+  
+  public FilterGroup() {
+    super();
+  }
+  
 	/**
 	 * Constructor for a FilterGroup represented internally by internalName.
 	 * 
@@ -61,24 +76,64 @@ public class FilterGroup extends BaseConfigurationObject {
 	 * @param f a FilterCollection object
 	 */
 	public void addFilterCollection(FilterCollection f) {
-		Integer cRankInt = new Integer(cRank);
-		filterCollections.put(cRankInt, f);
-		filterCollectionNameMap.put(f.getInternalName(), cRankInt);
-		cRank++;
+		filterCollections.add(f);
+		filterCollectionNameMap.put(f.getInternalName(), f);
 	}
 
+  /**
+   * Remove a FilterCollection from this FilterGroup.
+   * @param f -- FilterCollection to be removed.
+   */
+  public void removeFilterCollection(FilterCollection f) {
+    filterCollectionNameMap.remove(f.getInternalName());
+    filterCollections.remove(f);
+  }
+  
+  /**
+   * Insert a FilterCollection at a specific position within the List of FilterCollections.
+   * FilterCollection Objects occuring at or after the specified position are shifted right.
+   * @param position -- position at which to insert the FilterCollection
+   * @param f -- FilterCollection to insert.
+   */
+  public void insertFilterCollection(int position, FilterCollection f) {
+    filterCollections.add(position, f);
+    filterCollectionNameMap.put(f.getInternalName(), f);
+  }
+  
+  /**
+   * Insert a FilterCollection before a specific FilterCollection, named by internalName.
+   * @param internalName -- internalName of FilterCollection before which the given FilterCollection should be inserted.
+   * @param f -- FilterCollection to be inserted.
+   * @throws ConfigurationException when the FilterGroup does not contain a FilterCollection named by internalName.
+   */
+  public void insertFilterCollectionBeforeFilterCollection(String internalName, FilterCollection f) throws ConfigurationException {
+    if (!filterCollectionNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterGroup does not contain a FilterCollection named by " + internalName +"\n");
+    insertFilterCollection( filterCollections.indexOf( filterCollectionNameMap.get(internalName) ) , f);
+  }
+  
+  /**
+   * Insert a FilterCollection after a specific FilterCollection, named by internalName.
+   * @param internalName -- internalName of FilterCollection after which the given FilterCollection should be inserted.
+   * @param f -- FilterCollection to be inserted.
+   * @throws ConfigurationException when the FilterGroup does not contain a FilterCollection named by internalName.
+   */
+  public void insertFilterCollectionAfterFilterCollection(String internalName, FilterCollection f) throws ConfigurationException {
+    if (!filterCollectionNameMap.containsKey(internalName))
+      throw new ConfigurationException("FilterGroup does not contain a FilterCollection named by " + internalName +"\n");
+    insertFilterCollection( filterCollections.indexOf( filterCollectionNameMap.get(internalName) ) + 1, f);
+  }
+  
 	/**
-	 * Set a group of FilterCollection objects in one call.  Note, subsequent calls
-	 * to addFilterCollection or setFilterCollections will add to what was previously added.
+	 * Add a group of FilterCollection objects in one call.  Note, subsequent calls
+	 * to addFilterCollection or addFilterCollections will add to what was previously added.
 	 * 
 	 * @param f an Array of FilterCollection objects
 	 */
-	public void setFilterCollections(FilterCollection[] f) {
+	public void addFilterCollections(FilterCollection[] f) {
 		for (int i = 0, n = f.length; i < n; i++) {
-			Integer cRankInt = new Integer(cRank);
-			filterCollections.put(cRankInt, f[i]);
-			filterCollectionNameMap.put(f[i].getInternalName(), cRankInt);
-			cRank++;
+			filterCollections.add(f[i]);
+			filterCollectionNameMap.put(f[i].getInternalName(), f[i]);
 		}
 	}
 
@@ -89,7 +144,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	 */
 	public FilterCollection[] getFilterCollections() {
 		FilterCollection[] fc = new FilterCollection[filterCollections.size()];
-		filterCollections.values().toArray(fc);
+		filterCollections.toArray(fc);
 		return fc;
 	}
 
@@ -102,7 +157,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	 */
 	public FilterCollection getFilterCollectionByName(String internalName) {
 		if (filterCollectionNameMap.containsKey(internalName))
-			return (FilterCollection) filterCollections.get((Integer) filterCollectionNameMap.get(internalName));
+			return (FilterCollection) filterCollectionNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -151,8 +206,8 @@ public class FilterGroup extends BaseConfigurationObject {
 			}
 
 			if (!contains) {
-				for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
-					FilterCollection collection = (FilterCollection) filterCollections.get((Integer) iter.next());
+				for (Iterator iter = (Iterator) filterCollections.iterator(); iter.hasNext();) {
+					FilterCollection collection = (FilterCollection) iter.next();
 					
 					if (collection.containsFilterDescription(internalName)) {
 						lastFilt = collection.getFilterDescriptionByInternalName(internalName);
@@ -185,8 +240,8 @@ public class FilterGroup extends BaseConfigurationObject {
 	public List getAllFilterDescriptions() {
 		List filts = new ArrayList();
 
-		for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
-			FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
+		for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
+			FilterCollection fc = (FilterCollection) iter.next();
 
 			filts.addAll(fc.getFilterDescriptions());
 		}
@@ -205,8 +260,8 @@ public class FilterGroup extends BaseConfigurationObject {
 		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastColl == null) {
-			for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
-				FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
+			for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
+				FilterCollection fc = (FilterCollection) iter.next();
 
 				if (fc.containsFilterDescription(internalName)) {
 					lastColl = fc;
@@ -250,7 +305,7 @@ public class FilterGroup extends BaseConfigurationObject {
 		boolean supports = false;
 
 		if (lastSupportingFilter == null) {
-			for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+			for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
 				FilterCollection element = (FilterCollection) iter.next();
 				if (element.supports(field, tableConstraint)) {
 					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
@@ -276,7 +331,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 
-		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
 			FilterCollection element = (FilterCollection) iter.next();
 			names.addAll(element.getCompleterNames());
 		}
@@ -337,25 +392,11 @@ public class FilterGroup extends BaseConfigurationObject {
 	public int hashCode() {
 		int tmp = super.hashCode();
 
-		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
 			FilterCollection element = (FilterCollection) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 
 		return tmp;
 	}
-
-	private int cRank = 0; //keep track of collection order
-
-	private TreeMap filterCollections = new TreeMap();
-	private Hashtable filterCollectionNameMap = new Hashtable();
-
-	//cache one FilterDescription for call to containsFilterDescription or getUIFiterDescriptionByName
-	private FilterDescription lastFilt = null;
-
-	//cache one FilterCollection for call to getCollectionForFilter
-	private FilterCollection lastColl = null;
-
-	//cache one FilterDescription for call to supports
-	private FilterDescription lastSupportingFilter = null;
 }
