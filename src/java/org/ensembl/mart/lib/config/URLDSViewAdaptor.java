@@ -64,6 +64,9 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
     if (url == null)
       throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
     dsvurl = url;
+    
+    adaptorName = dsvurl.toString();
+    
     this.validate = validate;
 
     hashcode = dsvurl.hashCode();

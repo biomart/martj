@@ -57,6 +57,8 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	public RegistryDSViewAdaptor(URL url) throws ConfigurationException {
 		super();
 		setRegistryURL(url);
+    
+    adaptorName = url.toString();
 	}
 
 	/**
@@ -78,8 +80,10 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	public RegistryDSViewAdaptor(MartRegistry martreg, URL url) throws ConfigurationException {
 		this.martreg = martreg;
 
-		if (url != null)
+		if (url != null) {
 			this.url = url;
+      adaptorName = url.toString();
+    }
 
 		loadAdaptorsFromRegistry();
 	}
@@ -100,8 +104,10 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	 */
 	public RegistryDSViewAdaptor(DSViewAdaptor adaptor, URL url) throws ConfigurationException {
 		adaptors.add(adaptor);
-		if (url != null)
+		if (url != null) {
 			this.url = url;
+      adaptorName = url.toString();
+    }
 
 		martreg = getMartRegistry();
 	}
@@ -117,7 +123,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	public void setRegistryURL(URL url) throws ConfigurationException {
 		if (url == null)
 			throw new ConfigurationException("Attempt to set url with a null URL\n");
-
+      
 		if (this.url != null)
 			throw new ConfigurationException("A RegistryAdaptor can only work with one MartRegistry document URL\n");
 
@@ -131,6 +137,9 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 				loadAdaptorsFromRegistry();
 			}
 		}
+    
+    if (adaptorName == null)
+      adaptorName = url.toString();
 	}
 
 	private void loadMartRegistryFromURL() throws ConfigurationException {
@@ -307,4 +316,12 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	public int hashCode() {
 		return super.hashCode();
 	}
+  
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
+   */
+  public String getName() {
+      return super.getName();
+  }
+
 }

@@ -33,6 +33,11 @@ import org.ensembl.util.StringUtil;
  */
 public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
+  //instanceCount for default adaptorName
+  private static int count = 0;
+  
+  private final String DEFAULT_ADAPTOR_NAME = "Composite";
+  
   protected Set adaptors = new HashSet();
   protected Set adaptorNameMap = new HashSet();
   protected String adaptorName = null;
@@ -41,6 +46,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * Creates instance of CompositeDSViewAdaptor.
    */
   public CompositeDSViewAdaptor() {
+    adaptorName = DEFAULT_ADAPTOR_NAME + count++; 
   }
 
   /**
