@@ -61,7 +61,7 @@ public class IDListFilter implements Filter {
    * @see StringIDListFilterHandler
    */
   public IDListFilter(String field, String[] identifiers) {
-    this(field, null, identifiers, null);
+    this(field, null, null, identifiers, null);
   }
 
   /**
@@ -73,8 +73,8 @@ public class IDListFilter implements Filter {
    * @param String[] identifiers
    * @see StringIDListFilterHandler
    */
-  public IDListFilter(String field, String tableConstraint, String[] identifiers) {
-    this(field, tableConstraint, identifiers, null);
+  public IDListFilter(String field, String tableConstraint, String key, String[] identifiers) {
+    this(field, tableConstraint, key, identifiers, null);
   }
 
   /**
@@ -87,9 +87,10 @@ public class IDListFilter implements Filter {
    * @param handler -- handler object to process this Filter, default is used if null
    * @see StringIDListFilterHandler
    */
-  public IDListFilter(String field, String tableConstraint, String[] identifiers, String handler) {
+  public IDListFilter(String field, String tableConstraint, String key, String[] identifiers, String handler) {
     this.field = field;
     this.tableConstraint = tableConstraint;
+	this.key = key;
     this.identifiers.addAll(Arrays.asList(identifiers));
     this.file = null;
     this.url = null;
@@ -112,7 +113,7 @@ public class IDListFilter implements Filter {
    * @see FileIDListFilterHandler
    */
   public IDListFilter(String field, File file) {
-    this(field, null, file, null);
+    this(field, null, null, file, null);
   }
 
   /**
@@ -121,11 +122,12 @@ public class IDListFilter implements Filter {
    * 
    * @param String name - field name
    * @param String tableConstraint - table constraint for field name
-   * @param File file
+   * @param String key - join field key for field
+   * * @param File file
    * @see FileIDListFilterHandler
    */
-  public IDListFilter(String name, String tableConstraint, File file) {
-    this(name, tableConstraint, file, null);
+  public IDListFilter(String name, String tableConstraint, String key, File file) {
+    this(name, tableConstraint, key, file, null);
   }
 
   /**
@@ -139,9 +141,10 @@ public class IDListFilter implements Filter {
    * @param handler -- handler object to process this Filter, default is used if null
    * @see FileIDListFilterHandler
    */
-  public IDListFilter(String name, String tableConstraint, File file, String handler) {
+  public IDListFilter(String name, String tableConstraint, String key, File file, String handler) {
     this.field = name;
     this.tableConstraint = tableConstraint;
+    this.key = key;
     this.file = file;
     this.url = null;
     this.subQuery = null;
@@ -163,7 +166,7 @@ public class IDListFilter implements Filter {
    * @see URLIDListFilterHandler
    */
   public IDListFilter(String name, URL url) {
-    this(name, null, url, null);
+    this(name, null, null, url, null);
   }
 
   /**
@@ -175,8 +178,8 @@ public class IDListFilter implements Filter {
    * @param URL url - url pointing to resource with IDs
    * @see URLIDListFilterHandler
    */
-  public IDListFilter(String name, String tableConstraint, URL url) {
-    this(name, tableConstraint, url, null);
+  public IDListFilter(String name, String tableConstraint, String key, URL url) {
+    this(name, tableConstraint, key, url, null);
   }
 
   /**
@@ -188,9 +191,10 @@ public class IDListFilter implements Filter {
    * @param handler -- handler object to process this Filter, default is used if null
    * @see URLIDListFilterHandler
    */
-  public IDListFilter(String name, String tableConstraint, URL url, String handler) {
+  public IDListFilter(String name, String tableConstraint, String key, URL url, String handler) {
     this.field = name;
     this.tableConstraint = tableConstraint;
+    this.key = key;
     this.url = url;
     this.file = null;
     this.subQuery = null;
@@ -210,7 +214,7 @@ public class IDListFilter implements Filter {
    * @see QueryIDListFilterHandler 
    */
   public IDListFilter(String name, Query subQuery) {
-    this(name, null, subQuery, null);
+    this(name, null, null, subQuery, null);
   }
 
   /**
@@ -222,8 +226,8 @@ public class IDListFilter implements Filter {
    * @param Query subQuery - Query that, when evaluated, returns a list of IDs
    * @see QueryIDListFilterHandler 
    */
-  public IDListFilter(String name, String tableConstraint, Query subQuery) {
-    this(name, tableConstraint, subQuery, null);
+  public IDListFilter(String name, String tableConstraint, String key, Query subQuery) {
+    this(name, tableConstraint, key, subQuery, null);
   }
 
   /**
@@ -235,9 +239,10 @@ public class IDListFilter implements Filter {
    * @param handler -- handler object to process this Filter, default is used if null
   	 * @see QueryIDListFilterHandler
    */
-  public IDListFilter(String name, String tableConstraint, Query subQuery, String handler) {
+  public IDListFilter(String name, String tableConstraint, String key, Query subQuery, String handler) {
     this.field = name;
     this.tableConstraint = tableConstraint;
+    this.key = key;
     this.subQuery = subQuery;
     this.file = null;
     this.url = null;
@@ -252,6 +257,7 @@ public class IDListFilter implements Filter {
   private void setHashCode() {
     hashcode = (field == null) ? 0 : field.hashCode();
     hashcode = (tableConstraint != null) ? (31 * hashcode) + tableConstraint.hashCode() : hashcode;
+	hashcode = (key != null) ? (31 * hashcode) + key.hashCode() : hashcode;
     hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
     if (identifiers.size() > 0) {
@@ -341,6 +347,10 @@ public class IDListFilter implements Filter {
     return tableConstraint;
   }
 
+  public String getKey() {
+    return key;
+  }
+
   /**
    * Returns the File object underlying a FILE type IDListFilter Object.
    * 
@@ -418,6 +428,7 @@ public class IDListFilter implements Filter {
 
   private final String field;
   private final String tableConstraint;
+  private final String key;
   private final String handler;
 
   private final Query subQuery; // for Query based Filter

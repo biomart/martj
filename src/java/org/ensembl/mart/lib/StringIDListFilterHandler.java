@@ -42,7 +42,7 @@ public class StringIDListFilterHandler extends IDListFilterHandlerBase {
       Connection conn = null;
 			try {
         conn = query.getDataSource().getConnection();
-				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), ModifyVersionedIDs( conn, newQuery, idfilter.getIdentifiers())));
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), idfilter.getKey(),ModifyVersionedIDs( conn, newQuery, idfilter.getIdentifiers())));
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not process Versions from IDListFilter " + e.getMessage(), e);
 			} finally {

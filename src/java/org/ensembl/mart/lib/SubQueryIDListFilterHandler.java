@@ -71,7 +71,7 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			}
 		      
 			if (ids.length > 0)
-				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), ids));
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), idfilter.getKey(),ids));
 		}
 						
 		return newQuery;

@@ -35,7 +35,7 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String condition, String value) {
-		this(field, null, condition, value);
+		this(field, null, null, condition, value);
 	}
 
 	/**
@@ -46,8 +46,8 @@ public class BasicFilter implements Filter {
 	 * @param condition -- String condition of the clause, eg. =<>
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
-	public BasicFilter(String field, String tableConstraint, String condition, String value) {
-		this(field, tableConstraint, condition, value, null);
+	public BasicFilter(String field, String tableConstraint, String key, String condition, String value) {
+		this(field, tableConstraint, key, condition, value, null);
 	}
 
 	/**
@@ -61,9 +61,10 @@ public class BasicFilter implements Filter {
 	 * @param handler -- name of UnprocessedFilterHandler implimenting class to load to handle this Filter, or null if
 	 *                                  no processing is required.
 	 */
-	public BasicFilter(String field, String tableConstraint, String condition, String value, String handler) {
+	public BasicFilter(String field, String tableConstraint, String key, String condition, String value, String handler) {
 		this.field = field;
 		this.tableConstraint = tableConstraint;
+		this.key = key;
 		this.condition = condition;
 		this.value = value;
 		this.handler = handler;
@@ -72,6 +73,7 @@ public class BasicFilter implements Filter {
 		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
 		hashcode = (this.value != null) ? (31 * hashcode) + ((this.value == null) ? 0 : this.value.hashCode()) : hashcode;
 		hashcode = (this.tableConstraint != null) ? (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
+		hashcode = (this.key != null) ? (31 * hashcode) + this.key.hashCode() : hashcode;
 		hashcode = (this.handler != null) ? (31 * hashcode) + this.handler.hashCode() : hashcode; 
 	}
 
@@ -103,6 +105,10 @@ public class BasicFilter implements Filter {
 
 	public String getTableConstraint() {
 		return tableConstraint;
+	}
+
+	public String getKey() {
+	  return key;
 	}
 
 	/* (non-Javadoc)
@@ -173,6 +179,7 @@ public class BasicFilter implements Filter {
 	private final String condition;
 	private final String value;
 	private final String tableConstraint;
+	private final String key;
 	private final String handler;
 	private int hashcode = 0; //hashcode for immutable object
 }

@@ -41,7 +41,7 @@ public class BooleanFilter implements Filter {
 	 * @param condition - String, one of isNULL or isNotNull
  */
 	public BooleanFilter(String field, String condition) {
-    this(field, null, condition);
+    this(field, null, null,condition);
 	}
 
 	/**
@@ -53,18 +53,20 @@ public class BooleanFilter implements Filter {
 	 * @param tableConstraint - String, tableConstraint for the Filter
 	 * @param condition - String, one of isNULL or isNotNull
 	 */	
-	public BooleanFilter(String field, String tableConstraint, String condition) {
-		this(field, tableConstraint, condition, null);
+	public BooleanFilter(String field, String tableConstraint, String key,String condition) {
+		this(field, tableConstraint, key, condition, null);
 	}
 
-  public BooleanFilter(String field, String tableConstraint, String condition, String handler) {	
+  public BooleanFilter(String field, String tableConstraint, String key, String condition, String handler) {	
 		this.field = field;
 		this.tableConstraint = tableConstraint;
+	    this.key = key;
 		this.condition = condition;
 		this.handler = handler;
     
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
 		hashcode = (this.tableConstraint != null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
+	    hashcode = (this.key != null) ?  (31 * hashcode) + this.key.hashCode() : hashcode;
 		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
 		hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
   }
@@ -102,7 +104,9 @@ public class BooleanFilter implements Filter {
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
-
+	public String getKey() {
+		return key;
+	}
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.Filter#getCondition()
 	 */
@@ -146,6 +150,7 @@ public class BooleanFilter implements Filter {
 
 	private final String field;
 	private final String tableConstraint; 
+	private final String key; 
 	private final String condition;
 	private final String handler;
   private int hashcode = 0; //hashcode for immutable object
