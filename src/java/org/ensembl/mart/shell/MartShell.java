@@ -1,15 +1,16 @@
 package org.ensembl.mart.shell;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
-
 import gnu.getopt.Getopt;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -17,6 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
+
+import org.gnu.readline.Readline;
+import org.gnu.readline.ReadlineLibrary;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -34,12 +38,21 @@ import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.NullableFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
-import org.ensembl.mart.lib.config.*;
-public class martShell {
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.FilterSetDescription;
+import org.ensembl.mart.lib.config.MartConfiguration;
+import org.ensembl.mart.lib.config.UIAttributeDescription;
+import org.ensembl.mart.lib.config.UIDSFilterDescription;
+import org.ensembl.mart.lib.config.UIFilterDescription;
+
+public class MartShell {
 
 	// main variables
 	private static final String defaultConf = System.getProperty("user.home") + "/.martexplorer";
-	private static String COMMAND_LINE_SWITCHES = "hC:M:H:P:U:p:d:vl:e:O:F:R:E:";
+	private static String COMMAND_LINE_SWITCHES = "hAC:M:H:P:U:p:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
 	private static String mainHost = null;
@@ -54,16 +67,17 @@ public class martShell {
 	private static String mainBatchFile = null;
 	private static String mainBatchFormat = null;
 	private static String mainBatchSeparator = null;
-	private static Logger mainLogger = Logger.getLogger(martShell.class.getName());
+	private static Logger mainLogger = Logger.getLogger(MartShell.class.getName());
 
 	/**
 	 *  @return application usage instructions
 	 * 
 	 */
 	public static String usage() {
-		return "martShell <OPTIONS>"
+		return "MartShell <OPTIONS>"
 			+ "\n"
 			+ "\n-h                             - this screen"
+			+ "\n-A                                          Turn off Commandline Completion (faster startup, less helpful)"
 			+ "\n-C  MART_CONFIGURATION_FILE_URL                           -  URL to Alternate Mart XML Configuration File"
 			+ "\n-M  CONNECTION_CONFIGURATION_FILE_URL            - URL to mysql connection configuration file"
 			+ "\n-H HOST                        - database host"
@@ -136,6 +150,7 @@ public class martShell {
 		String loggingURL = null;
 		boolean help = false;
 		boolean verbose = false;
+		boolean commandComp = true;
 
 		// check for the defaultConf file, and use it, if present.  Some values may be overridden with a user specified file with -g
 		if (new File(defaultConf).exists())
@@ -156,6 +171,10 @@ public class martShell {
 					mainConfiguration = g.getOptarg();
 					break;
 
+        case 'A' :
+          commandComp = false;
+          break;
+          
 					// get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
 				case 'M' :
 					getConnProperties(g.getOptarg());
@@ -232,7 +251,7 @@ public class martShell {
 			return;
 		}
 
-		martShell ms = new martShell();
+		MartShell ms = new MartShell();
 		if (mainHost != null)
 			ms.setDBHost(mainHost);
 		if (mainPort != null)
@@ -271,21 +290,52 @@ public class martShell {
 				System.exit(0);
 			}
 		} else
+		  if (! commandComp)
+		    ms.UnsetCommandCompletion();
 			ms.runInteractive();
-
 	}
 
-	public martShell() {
+	public MartShell() {
 	}
 
 	public void runInteractive() {
-		reader = new BufferedReader(new InputStreamReader(System.in));
+		try {
+			Readline.load(ReadlineLibrary.Getline);
+//		Getline doesnt support completion, or history manipulation/files
+			completionOn = false;
+			historyOn = false;
+			readlineLoaded = true;
+		}
+		catch (UnsatisfiedLinkError ignore_me) {
+			try {
+				Readline.load(ReadlineLibrary.GnuReadline);
+				historyOn = true;
+				readlineLoaded = true;
+			}
+			catch (UnsatisfiedLinkError ignore_me2) {
+				mainLogger.warn("Could not load Readline Library, commandline editing, completion will not be available"
+				+ "\nConsult MartShell documentation for methods to resolve this error.");
+				readlineLoaded = false;
+				Readline.load(ReadlineLibrary.PureJava);
+			}
+		}
+		
+		Readline.initReadline("MartShell");
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+				 public void run() {
+					 Readline.cleanup();
+				 }
+			 });
+			 		
 		String thisline = null;
 
 		try {
 			if (martHost == null || martHost.length() < 5)
 				setConnectionSettings(setConnectionSettings);
 			initEngine();
+			if (completionOn)
+				Readline.setCompleter(new MartCompleter(martconf));
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 			e1.printStackTrace();
@@ -294,12 +344,11 @@ public class martShell {
 
 		while (true) {
 			try {
-				Prompt();
-				thisline = reader.readLine();
+				thisline = Prompt();
 				if (thisline.equals(exit) || thisline.equals(quit))
 					break;
 
-				if (thisline.length() != 0) {
+				if (thisline != null) {
 					parse(thisline);
 					thisline = null;
 				}
@@ -368,9 +417,14 @@ public class martShell {
 		return validQuery;
 	}
 
+  public void UnsetCommandCompletion() {
+		completionOn = false;
+  }
+  
 	public void setAlternateMartConfiguration(String confFile) {
 		altConfigurationFileURL = confFile;
 	}
+	
 	public void setDBHost(String dbhost) {
 		this.martHost = dbhost;
 	}
@@ -443,30 +497,34 @@ public class martShell {
 	}
 
 	private void ExitShell() throws IOException {
-		reader.close();
+		Readline.cleanup();
 		System.exit(0);
 	}
 
-	private void Prompt() {
+	private String Prompt() throws EOFException, UnsupportedEncodingException, IOException {
+		String line = null;
 		if (continueQuery)
-			subPrompt();
+			line = subPrompt();
 		else
-			mainPrompt();
+			line = mainPrompt();
+	  return line;
 	}
 
-	private void mainPrompt() {
+	private String mainPrompt() throws EOFException, UnsupportedEncodingException, IOException {
 		String prompt = null;
-
+    String line = null;
+    
 		if (martUser != null && martDatabase != null)
 			prompt = martUser + "@" + martHost + " : " + martDatabase + "> ";
 		else
 			prompt = "> ";
 
-		System.out.print(prompt);
+		line = Readline.readline(prompt, historyOn);
+		return line;
 	}
 
-	private void subPrompt() {
-		System.out.print("% ");
+	private String subPrompt() throws EOFException, UnsupportedEncodingException, IOException {
+		return Readline.readline("% ", historyOn);
 	}
 
 	private void help(String command) {
@@ -582,51 +640,40 @@ public class martShell {
 			if (mainBatchMode)
 				throw new InvalidQueryException(martConnectionUsage(command));
 
-			//interactive
-			if (reader == null)
-				throw new InvalidQueryException("Interactive request to set mart connection parameters recieved without valid input reader\n");
-
 			String thisLine = null;
 
 			try {
-				System.out.println("\nPlease enter the host address of the mart database (press enter to leave unchaged): ");
-				thisLine = reader.readLine();
-				if (thisLine.length() >= 5)
+				thisLine = Readline.readline("\nPlease enter the host address of the mart database (press enter to leave unchaged): ", false);
+				if (thisLine != null)
 					martHost = thisLine;
 
-				System.out.println("\nPlease enter the port on which the mart database is running (press enter to leave unchaged): ");
-				thisLine = reader.readLine();
-				if (thisLine.length() > 1)
+				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave unchaged): ", false);
+				if (thisLine != null)
 					martPort = thisLine;
 
-				System.out.println("\nPlease enter the user name used to connect to the mart database (press enter to leave unchaged): ");
-				thisLine = reader.readLine();
-				if (thisLine.length() > 1)
+				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database (press enter to leave unchaged): ", false);
+				if (thisLine != null)
 					martUser = thisLine;
 
-				System.out.println("\nPlease enter the password used to connect to the mart database (press enter to leave unchaged): ");
-				thisLine = reader.readLine();
-				if (thisLine.length() > 1)
+				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database (press enter to leave unchaged): ", false);
+				if (thisLine != null)
 					martPass = thisLine;
 
-				System.out.println("\nPlease enter the name of the mart database you wish to query (press enter to leave unchaged): ");
-				thisLine = reader.readLine();
-				if (thisLine.length() > 1)
+				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query (press enter to leave unchaged): ", false);
+				if (thisLine != null)
 					martDatabase = thisLine;
 
-				System.out.println(
-					"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave unchaged,\n enter '-' to use configuration provided by "
-						+ martDatabase
-						+ "):");
-				thisLine = reader.readLine();
-				if (thisLine.length() >= 1) {
+				thisLine = Readline.readline("\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave unchaged,\n enter '-' to use configuration provided by "
+				+ martDatabase
+				+ "):", false);
+				if (thisLine != null) {
 					if (thisLine.equals("-"))
 						altConfigurationFileURL = null;
 					else
 						altConfigurationFileURL = thisLine;
 				}
 
-			} catch (IOException e) {
+			} catch (Exception e) {
 				throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
 			}
 		}
@@ -1520,7 +1567,7 @@ public class martShell {
 		return f;
 	}
 
-	// martShell instance variables
+	// MartShell instance variables
 	private Engine engine;
 	private MartConfiguration martconf;
 	private BufferedReader reader;
@@ -1529,7 +1576,10 @@ public class martShell {
 	private String martUser = null;
 	private String martPass = null;
 	private String martDatabase = null;
-
+  private boolean historyOn = true; // commandline history, default to on
+  private boolean completionOn = true; // command completion, default to on
+  private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
+  
 	private String altConfigurationFileURL = null;
 	private String outputFile = null;
 	private final String defOutputFormat = "tabulated"; // default to tabulated output
