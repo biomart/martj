@@ -18,9 +18,9 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -84,7 +84,6 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
 	 */
 	public boolean supportsDisplayName(String name) {
-		// TODO Auto-generated method stub
 		return dnameMap.containsKey(name);
 	}
 
@@ -117,28 +116,48 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
 		}
 	}
 
+  /**
+   * Remove a DatasetView from the DatabaseDSViewAdaptor
+   * @param dsv -- DatasetView to be removed
+   */
+  public void removeDatasetView(DatasetView dsv) {
+    inameMap.remove(dsv.getInternalName());
+    dnameMap.remove(dsv.getDisplayName());
+    dsviews.remove(dsv);
+  }
+
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
 	 */
-   //TODO:impliment caching and MD5SUM based updates
+   //TODO:impliment caching
 	public void update() throws ConfigurationException {
-		//iterate over the iname map
-		for (Iterator iter = inameMap.keySet().iterator(); iter.hasNext();) {
-			String internalName = (String) iter.next();
-
-			DatasetView newdsv = ConfigurationUtils.getDatasetView(MartXMLutils.getDatasetViewXMLStreamByInternalName(dsvsource, user, internalName), false);
-
-			if (!dsviews.contains(newdsv)) {
-				for (Iterator iterator = dsviews.iterator(); iterator.hasNext();) {
-					DatasetView olddsv = (DatasetView) iterator.next();
-
-					if (olddsv.getInternalName().equals(newdsv.getInternalName())) {
-            dsviews.remove(olddsv);
-            dsviews.add(newdsv);
-            break;
-					}
+    String[] inms = DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
+    for (int i = 0, n = inms.length; i < n; i++) {
+			String iname = inms[i];
+			
+      if ( inameMap.containsKey( iname ) ) {
+        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
+        byte[] oDigest = ( (DatasetView) inameMap.get(iname) ).getMessageDigest();
+        
+        if (!MessageDigest.isEqual(oDigest, nDigest)) {
+          removeDatasetView( (DatasetView) inameMap.get(iname) );
+          addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname));
         }
-			}
+      } else
+        addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname));
 		}
 	}
+  
+  /**
+   * Allows client to store a single DatasetView object as a DatasetView.dtd compliant XML document into a Mart Database.
+   * Client can choose whether to compress (GZIP) the resulting XML before it is stored in the Database.
+   * @param ds -- DataSource of the Mart Database where the DatasetView.dtd compliant XML is to be stored.
+   * @param user -- RDBMS user for _meta_DatasetView_[user] table to store the document.  If null, or if _meta_DatasetView_[user] does not exist, _meta_DatasetView will be the target of the document.
+   * @param dsv -- DatasetView object to store
+   * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress) throws ConfigurationException {
+    DatabaseDatasetViewUtils.storeConfiguration(ds, user, dsv.getInternalName(), dsv.getDisplayName(), DatasetViewXMLUtils.DatasetViewToDocument(dsv), compress);
+  }
 }
