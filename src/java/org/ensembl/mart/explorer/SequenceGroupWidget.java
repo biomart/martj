@@ -360,7 +360,9 @@ public class SequenceGroupWidget
     } else if (transcript.isSelected()) {
 
       if (src == transcript) {
-
+        // a bit of hack; use this image because the method requires one. The image on screen
+        // will be replaced by a blank one during reset().
+        updateState("data/image/gene_schematic_gene_only.gif", NONE, 0, 0);
         reset();
         enableTranscriptButtons();
 
@@ -518,6 +520,9 @@ public class SequenceGroupWidget
 
       if (src == gene) {
 
+        // a bit of hack; use this image because the method requires one. The image on screen
+        // will be replaced by a blank one during reset().
+        updateState("data/image/gene_schematic_gene_only.gif", NONE, 0, 0);
         reset();
         enableGeneButtons();
 
