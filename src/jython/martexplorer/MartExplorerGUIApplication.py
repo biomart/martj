@@ -1644,11 +1644,12 @@ class MartGUIApplication(JFrame):
                             user,
                             password,
                             database)
-            print query
             engine.execute( query, formatSpec, outputStream )
-	    
+	    outputStream.close()
+
 	    # scroll to top of results
 	    self.resultsPage.scrollToTop()
+
         except (InvalidQueryException), ex:
             message = ex.message
             if len(message)>80:
