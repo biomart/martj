@@ -1766,9 +1766,9 @@
         </FilterCollection>
         <FilterCollection internalName="synonomy">
           <FilterDescription internalName="synonomy_filters" type="boolean_num">
-            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="is_synonymous" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="is_nonsynonymous" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="is_stop" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="has_synsnp" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="has_nonsynsnp" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="has_stopsnp" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
@@ -2242,9 +2242,9 @@
         </FilterCollection>
         <FilterCollection internalName="synonomy">
           <FilterDescription internalName="synonomy_filters" type="boolean_num">
-            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="is_synonymous" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="is_nonsynonymous" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="is_stop" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="has_synsnp" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="has_nonsynsnp" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="has_stopsnp" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
@@ -2863,9 +2863,9 @@
         </FilterCollection>
         <FilterCollection internalName="synonomy">
           <FilterDescription internalName="synonomy_filters" type="boolean_num">
-            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="is_synonymous" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="is_nonsynonymous" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="is_stop" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="gene_snp_dm" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="has_synsnp" internalName="synonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="has_nonsynsnp" internalName="nonsynonymous_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="has_stopsnp" internalName="stop_snps" isSelectable="true" qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
