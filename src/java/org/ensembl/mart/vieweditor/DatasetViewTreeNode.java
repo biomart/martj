@@ -58,10 +58,10 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 
     public void setUserObject(Object obj) {
         super.setUserObject(obj);
-        BaseConfigurationObject nodeObject = (BaseConfigurationObject) obj;
-        String nodeObjectClass = nodeObject.getClass().getName();
+
+        String nodeObjectClass = obj.getClass().getName();
         if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetView")) {
-            setName("DatasetView: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("DatasetView: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             DatasetView dsv = (DatasetView) obj;
             FilterPage[] fpages = dsv.getFilterPages();
             for (int i = 0; i < fpages.length; i++) {
@@ -136,7 +136,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterPage")) {
-            setName("FilterPage: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterPage: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             FilterPage fp = (FilterPage) obj;
             List groups = fp.getFilterGroups();
             for (int j = 0; j < groups.size(); j++) {
@@ -166,7 +166,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             }
 
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributePage")) {
-            setName("AttributePage: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributePage: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             AttributePage atPage = (AttributePage) obj;
             List groups = atPage.getAttributeGroups();
             for (int j = 0; j < groups.size(); j++) {
@@ -195,7 +195,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterGroup")) {
-            setName("FilterGroup: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             FilterGroup fiGroup = (FilterGroup) obj;
             FilterCollection[] collections = fiGroup.getFilterCollections();
             for (int z = 0; z < collections.length; z++) {
@@ -214,7 +214,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
-            setName("AttributGroup: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             AttributeGroup atGroup = (AttributeGroup) obj;
             AttributeCollection[] collections = atGroup.getAttributeCollections();
             for (int z = 0; z < collections.length; z++) {
@@ -233,7 +233,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection")) {
-            setName("FilterCollection: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             FilterCollection fiCollection = (FilterCollection) obj;
             List descriptions = fiCollection.getFilterDescriptions();
             for (int y = 0; y < descriptions.size(); y++) {
@@ -244,7 +244,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 this.add(desNode);
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
-            setName("AttributeCollection: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributeCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             AttributeCollection atCollection = (AttributeCollection) obj;
             List descriptions = atCollection.getAttributeDescriptions();
             for (int y = 0; y < descriptions.size(); y++) {
@@ -255,10 +255,10 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 this.add(desNode);
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
-            setName("FilterDescription: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
-            setName("AttributeDescription: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
         }
 

@@ -212,27 +212,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         lastSelectedNode = (DatasetViewTreeNode) this.getLastSelectedPathComponent();
 
         if (lastSelectedNode == null) return;
-        String[] data = null;
         BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
         String nodeObjectClass = nodeObject.getClass().getName();
-        if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetView") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterPage") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributePage") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterGroup") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection") ||
-                nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
-            data = new String[]{"Description", "DisplayName", "InternalName"};
-        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
-            data = new String[]{
-                "Description", "DisplayName", "InternalName", "Type", "Field", "Qualifier", "Legal Qualifiers",
-                "Table Constraint", "Handler"};
-        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
-            data = new String[]{
-                "Description", "DisplayName", "InternalName", "Field",
-                "Table Constraint", "Max Length", "Source", "Homepage URL", "Linkout URL"};
-        }
+        String[] data = nodeObject.getXmlAttributeTitles();
 
         attrTableModel = new DatasetViewAttributeTableModel((DatasetViewTreeNode) this.getLastSelectedPathComponent(), data, nodeObjectClass);
         attrTableModel.addTableModelListener(new AttrTableModelListener());

@@ -139,7 +139,7 @@ public class MartViewEditor extends JFrame {
         //Look for the image.
         String imgLocation = imageName
                 + ".gif";
-        URL imageURL = ToolBarDemo.class.getResource(imgLocation);
+        URL imageURL = DatasetViewTree.class.getResource(imgLocation);
 
         //Create and initialize the button.
         JButton button = new JButton();
