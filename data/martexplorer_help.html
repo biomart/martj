@@ -1,138 +1,271 @@
-<h1>MartExplorer documentation</h1>
-
-This file: <code>data/martexplorer_help.html</code>
-
-<a href="#bugs">Bugs</a>
-
+<html>
+<head>
+<title>MartExplorer</title>
+</head>
+<body>
+<a name="top"></a>
+<h1>MartExplorer</h1>
 
 <ul>
-<li>Point one
-<li>Point two
+<li><a href="#overview">Overview</a></li>
+<li><a href="#running">Running MartExplorer</a></li>
+<li><a href="#building">Building and executing a query</a></li>
+<li><a href="#marts">Adding and removing Marts</a></li>
+<li><a href="#advanced">Advanced Features</a></li>
+<li><a href="#problem">Problem Solver</a></li>
 </ul>
 
-<pre>
-Random
+<a name="overview"></a><h2>Overview</h2> 
+
+MartExplorer provides a graphical user interface that enables the user
+to quickly and easily construct queries and execute them against
+mart datasets. 
 
+<p>
+Each query is built and modified in a separate QueryEditor and the
+main window usually contains one or more of these. The QueryEditor
+contains three panels; a tree (top left), an input panel (top right)
+and a preview panel (bottom).The tree shows the current state of the
+query and can be used to change the contents of the input panel by
+clicking on the appropriate item; Attributes,Filters or Format.
+Attributes and filters can be added and removed using the appropriate
+input pages and the output format can be set via the format page.
+Attributes and Filters can also be deleted via the tree. Simply click
+on them and then press the delete key. The order of attributes can also
+be changed by dragging and dropping them.
+</p>
 
+<p>Once the user is ready to execute a query the results can be
+previewed in the preview panel or all of the results can be saved to a
+file. It is easy to modify and rerun the query allowing for iterative
+development of complex queries.
+</p>
 
-text
+<p>It is also possible to add and remove marts.</p>
 
 
 
-to test the
+<a href="#top">top</a>
 
+<a name="running"></a><h2>Running MartExplorer</h2>
 
+MartExplorer can be started by executing the appropriate script from
+the distribution's bin/ directory:
 
+<dl>
 
-scroll bars
+<dt><i>martexplorer_JRE.bat</i></dt> <dd> Windows users who want to use the
+ java virtual machine supplied with the distribution. </dd>
 
+<dt><i>martexplorer.bat</i></dt> <dd>Windows user who wants to use a
+pre-installed java virtual machine.</dd>
 
+<dt><i>martexplorer_JRE.sh</i></dt> <dd> *nix users who want to use the
+ java virtual machine supplied with the distribution.</dd>
 
-are working.
+<dt><i>martexplorer.sh</i></dt> <dd> *nix user who wants to use a
+pre-installed java virtual machine.</dd>
 
+</dl>
 
-If you can't 
 
+<a href="#top">top</a>
 
-scroll then 
 
+<a name="building"></a><h2>Building and executing a query</h2>
 
+<p>When MartExplorer starts up the user is presented with a QueryEditor
+with some datasets to choose between. The first thing the user must do
+when building a query is select the dataset that the query is about.
+</p>
 
-they aren't.
-Random
+<p>Once the dataset is selected the user can select the attributes,
+filters and output format. The attribute panel is shown first but the
+user can switch to the filter and output panels by clicking on the
+corresponding nodes in the tree view. The user can return to the
+attributes page by clicking the Attributes item in the tree.
+</p>
 
+<p>
+Once the user has built the query it can be run in one of two ways.
+Either it is executed (<b>Execute</b> tool bar button or <b>File -> Execute</b>
+menu item) or the results can be saved (<b>Save</b> tool bar button or
+<b>File -> Save / Save As</b> menu items).  Executing the query causes a
+preview of the results to be displayed in the in the preview panel
+while save results causes all the results to be written to a file
+specified by the user. Results for the query can be saved to different
+files by using the <b>File -> Save As</b> menu item.
+</p>
 
+<p>
+Attributes and filters can also be removed, the attribute order
+changed and the output format altered. There are two ways to delete
+items: (a) select the item in the tree and
+then press delete, (b) Remove it using the appropriate
+input page; for attributes this is done by unchecking the check box
+for the attribute in the data entry area. The order of the attributes
+in the results corresponds to their order in the tree. This can be
+changed by dragging and dropping them in the tree. Finally, the format
+can be changed via the Format page which can be shown by clicking on
+<b>Format</b> in the tree.
+</p>
 
-text
+<p>Additional queries can be created by clicking the <b>New</b> query
+button or selecting the menu item <b>File -> New Query</b>. Conversely the
+currently selected query can be removed by with <b>File -> Close
+Query</b> and all queries by <b>File -> Close All Queries</b>.
+</p>
 
+<a href="#top">top</a>
 
 
-to test the
 
+<a name="marts"></a><h2>Adding and Removing Marts</h2>
 
+MartExplorer uses adaptors to connect to marts and load dataset
+configurations and the available adaptors determine which datasets are
+available for building queries. Adaptors can be created from registry
+files, connecting to a database or from a dataset configuration
+file. Adaptors (and therefore marts) can be added and removed using
+the Adaptors window which can be opened with the menu item <b>Settings
+-> Adaptors</b>. The window contains a drop down list of loaded adaptors
+plus several buttons for adding and removing them:
 
+<dl>
 
-scroll bars
 
+<dt><b>Add Database</b></dt><dd>This button opens the database connection
+window from which the user can specify a database containing
+marts. Once this is done the marts will be available for use in new
+queries. Note that some values are "pre-loaded" into the drop down lists that are
+available by pressing the small downward arrow at the end of each text
+entry box. This can save you typing the entries.
 
+<p>This is a brief description of the parameters together with
+some example values:
 
-are working.
+<dl>
 
+<dt><b>Database type</b></dt><dd>Type of database server, e.g. mysql</dd>
 
-If you can't 
+<dt><b>Database Driver</b></dt><dd>This is the JDBC driver that the program
+uses to connect to the database. For mysql databases this should
+probably be set to com.mysql.jdbc.Driver</dd>
 
+<dt><b>Host</b></dt><dd>This is the name of the computer on which the
+database server is running, e.g. martdb.ebi.ac.uk. </dd>
 
-scroll then 
+<dt><b>Port</b></dt><dd>This is the port on the host computer that the
+database server is running on. The default port for MySQL servers is
+3306. </dd>
 
+<dt><b>Database</b></dt><dd>This is the name of the database on the database
+server. It is also the name of the mart.</dd>
 
+<dt><b>User</b></dt><dd>This is the user name to use when connecting to the
+database, the user name "anonymous" works with martdb.ebi.ac.uk.</dd>
 
-they aren't.
+<dt><b>Password</b></dt><dd>If the database requires a password then it can
+be entered here. MartExplorer can remember the password by checking
+the box next to the password field but it is stored unencrypted so
+this should not be used for sensitive passwords.</dd>
 
+<dt><b>Connection Name</b></dt><dd>This optional field can be used to give
+the mart a user fiendly name. The connection name is adaptor name that
+appears in the dataset selection page of the QueryEditor. If the value
+is left blank then a default name is used.</dd>
 
+</p></dl>
 
+</dd>
 
-Random
 
+<dt><b>Add Registry File</b></dt> <dd>This button opens a file selection
+dialog box from which the user can select a registry file. Once the
+registry file has been imported the marts it specifies will be
+available.  </dd>
 
 
-text
+<dt><b>Add Dataset Configuration File</b></dt><dd>This is only really useful
+for people developing there own dataset configuration files. The
+button opens a file selection dialog box from which the user can
+select a dataset configuration file. Once the dataset configuration
+has been loaded the mart it specifies will be available for building
+queries but they can not be executed unless a database is associated
+with the query. See <a href="#advanced">Advanced Features</a> for the
+method to do this.</dd>
 
 
+<dt><b>Remove</b></dt><dd>Remove the adaptor currently displayed in the
+drop-down list. Note that it is not possible to create a new query
+while there are no adaptors available.</dd>
 
-to test the
+<dt><b>Remove All</b></dt><dd>Remove all available adaptors. Note that it is
+not possible to create a new query while there are no adaptors
+available.</dd>
 
 
 
+</dl>
 
-scroll bars
+<a href="#top">top</a>
 
 
 
-are working.
+<a name="advanced"></a><h2>Advanced Features</h2>
 
+These are a variety of features that most users will probably not
+use. They allow a user to specify alternative marts to be loaded at
+start up, logging output to be displayed and several more options for
+constructing queries.
 
-If you can't 
+<p>Part of the MartExplorer initialisation process it to load the
+marts and datasets specified in a registry file. If a file named
+.martj_adaptors.xml exists in the user's home directory then this is
+loaded instead of the default one. See documentation for details about
+valid registry files.
+<p>
 
+<p>Logging output can be enabled / disabled via <b>Settings -> Advanced
+-> Logging</b>. The log messages are printed to the console where
+MartExplorer was started from.
+</p>
 
-scroll then 
+<p>Several advanced options can be enabled / disabled via <b>Settings
+-> Advanced -> Enable Advanced Options</b>. The advanced options are:
+<ul>
 
+<li>All datasets available in a mart become available when building
+queries rather just the default ones. The system administrator who
+publishes the mart determines which datasets are default and which are
+not. Marts will often only contain default datasets.  </li>
 
+<li>The mart database a query is executed against can be changed. This
+is normally not possible. This feature is useful for testing a query
+against several (compatible) datasets and when developing a
+dataset configuration file locally and testing it against an existing
+database. The database can be changed by clicking on the <b>Mart
+Database</b> item in the tree view and then selecting the database using
+the data entry area.  </li>
 
-they aren't.
+<li>The dataset a query is about can be changed.  The dataset
+configuration can be changed by first clicking on the <b>Dataset</b> item
+in the tree view and then selecting the dataset in the input page that
+appears. All existing attributes and filters will be removed.  </li>
 
+</ul>
+</p>
 
 
+<a href="#top">top</a>
 
-Random
 
 
+<a name="problem"></a><h2>Problem solver</h2>
 
-text
 
+<a href="#top">top</a>
 
 
-to test the
-
-
-
-
-scroll bars
-
-
-
-are working.
-
-
-If you can't 
-
-
-scroll then 
-
-
-
-they aren't.
-
-
-<a name="bugs"></a>
-
-</pre>
+</body>
+</html>
