@@ -162,7 +162,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         logger.warning(e.getMessage());
       throw new InvalidQueryException(e);
     } finally {
-      DatabaseUtil.close(conn);
+      DetailedDataSource.close(conn);
     }
   }
 
@@ -248,7 +248,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         logger.warning(e.getMessage());
       throw new InvalidQueryException(e);
     } finally {
-      DatabaseUtil.close(conn);
+      DetailedDataSource.close(conn);
     }
   }
 
@@ -334,7 +334,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         logger.warning(e.getMessage());
       throw new InvalidQueryException(e);
     } finally {
-      DatabaseUtil.close(conn);
+      DetailedDataSource.close(conn);
     }
   }
 

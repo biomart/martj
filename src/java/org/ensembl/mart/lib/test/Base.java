@@ -4,7 +4,6 @@ package org.ensembl.mart.lib.test;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -14,7 +13,7 @@ import javax.sql.DataSource;
 
 import junit.framework.TestCase;
 
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.Query;
 
@@ -48,19 +47,21 @@ public abstract class Base extends TestCase {
 	private final String DEFAULTDBTYPE = "mysql";
 	private final String DEFAULTHOST = "ensembldb.ensembl.org";
 	private final String DEFAULTPORT = "3306";
-	private final String DEFAULTDATABASE = "ensembl_mart_17_1";
+	private final String DEFAULTDATABASE = "ensembl_mart_19_2";
+  private final String DEFAULT_CONNECTION_STRING = "jdbc:mysql://kaka.sanger.ac.uk/ensembl_mart_19_1";
 	private final String DEFAULTUSER = "anonymous";
   private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
 
 
-	private String databaseType = null;
+	private String databaseType;
 	// default, override in testconnection.conf
-	private String host = null;
-	private String port = null;
-	private String databaseName = null;
-	private String user = null;
-	private String password = null;
+	private String host;
+	private String port;
+	private String databaseName;
+  private String connectionString;
+  private String user;
+	private String password;
 	private Properties p = new Properties();
 	private URL connectionconf;
 
@@ -90,6 +91,9 @@ public abstract class Base extends TestCase {
 				tmp = p.getProperty("databaseName");
 				databaseName =
 					(tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
+
+        tmp = p.getProperty("connection_string");
+                connectionString = (tmp != null && tmp.length() > 1) ? tmp : DEFAULT_CONNECTION_STRING;
 
 				tmp = p.getProperty("user");
         user = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
@@ -126,12 +130,12 @@ public abstract class Base extends TestCase {
 	public void setUp() throws Exception {
 		init();
 
-		martJDataSource =
-			DatabaseUtil.createDataSource(
+		martJDataSource = new DetailedDataSource(
 				databaseType,
 				host,
 				port,
         databaseName,
+      connectionString,
 				user,
 				password,
 				10,
@@ -171,16 +175,5 @@ public abstract class Base extends TestCase {
 		}
 	}
 
-	public Connection getDBConnection() throws Exception {
 
-		Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-
-		return DatabaseUtil.getConnection(
-			"mysql",
-			host,
-			port,
-			databaseName,
-			user,
-			password);
-	}
 }

@@ -28,7 +28,7 @@ import javax.sql.DataSource;
 
 import junit.framework.TestCase;
 
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
  * @author craig
@@ -36,21 +36,28 @@ import org.ensembl.mart.lib.DatabaseUtil;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class DatabaseUtilTest extends TestCase {
+public class DetailedDataSourceTest extends TestCase {
 
-	private Logger logger = Logger.getLogger(DatabaseUtilTest.class.getName());
+  private final static String DATABASE_NAME = "homo_sapiens_core_19_34b";
+
+	private Logger logger =
+		Logger.getLogger(DetailedDataSourceTest.class.getName());
 
 	/**
 	 * Constructor for DatabaseUtilTest.
 	 * @param arg0
 	 */
-	public DatabaseUtilTest(String arg0) {
+	public DetailedDataSourceTest(String arg0) {
 		super(arg0);
 	}
 
 	public void testConnectionStringMethodod() throws Exception {
 		DataSource ds =
-			DatabaseUtil.createDataSource(
+			new DetailedDataSource(
+				"mysql",
+				"kaka.sanger.ac.uk",
+				null,
+				"",
 				"jdbc:mysql://kaka.sanger.ac.uk/",
 				"anonymous",
 				null,
@@ -59,21 +66,22 @@ public class DatabaseUtilTest extends TestCase {
 
 		Connection conn = ds.getConnection();
 		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet rs = meta.getTables("homo_sapiens_core_16_33", null, null, null);
+		ResultSet rs = meta.getTables("homo_sapiens_core_19_34b", null, null, null);
 		assertTrue("Failed to get any metadata from database", rs.next());
-    
-    if (logger.isLoggable(Level.FINE)) print(rs);
-		
-    conn.close();
+
+		if (logger.isLoggable(Level.FINE))
+			print(rs);
+
+		conn.close();
 	}
 
 	public void testConvenienceMethod() throws Exception {
 		DataSource ds =
-			DatabaseUtil.createDataSource(
+			new DetailedDataSource(
 				"mysql",
 				"kaka.sanger.ac.uk",
 				"3306",
-				"homo_sapiens_core_16_33",
+    "homo_sapiens_core_19_34b",
 				"anonymous",
 				null,
 				10,
@@ -81,10 +89,11 @@ public class DatabaseUtilTest extends TestCase {
 
 		Connection conn = ds.getConnection();
 		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet rs = meta.getTables("homo_sapiens_core_16_33", null, null, null);
+		ResultSet rs = meta.getTables("homo_sapiens_core_19_34b", null, null, null);
 		assertTrue("Failed to get any metadata from database", rs.next());
 
-    if (logger.isLoggable(Level.FINE)) print(rs);
+		if (logger.isLoggable(Level.FINE))
+			print(rs);
 
 		conn.close();
 	}

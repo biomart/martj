@@ -139,7 +139,7 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 			throw new InvalidQueryException(
 				"Recieved SQLException " + e.getMessage());
 		} finally {
-			DatabaseUtil.close(conn);
+			DetailedDataSource.close(conn);
 		}
 
 	}

@@ -171,7 +171,8 @@ public class AdaptorManager extends Box {
 		// map string -> adaptor
 		for (int i = 0; i < adaptors.length; i++) {
 			DSViewAdaptor a = adaptors[i];
-			optionToView.put(a.toString(), a);
+			optionToView.put(a.getName(), a);
+      System.out.println("Added" + a.getName()+":"+a );
 		}
 
 		// sort
@@ -209,7 +210,7 @@ public class AdaptorManager extends Box {
 				RegistryDSViewAdaptor tmp = new RegistryDSViewAdaptor(reg);
 				DSViewAdaptor[] adaptors = tmp.getAdaptors();
 				for (int i = 0; i < adaptors.length; i++)
-					add(adaptors[i], false);
+					add(adaptors[i]);
 
 			}
 		} catch (ConfigurationException e1) {
@@ -275,7 +276,7 @@ public class AdaptorManager extends Box {
 				// TODO resolve any name clashes, i.e. existing dsv with same name
 				//				this.adaptor.add(adaptor);
 				add(adaptor);
-				combo.setSelectedItem(adaptor.toString());
+				combo.setSelectedItem(adaptor.getName());
 
 			} catch (MalformedURLException e) {
 				JOptionPane.showMessageDialog(
@@ -316,7 +317,7 @@ public class AdaptorManager extends Box {
 				parent,
 				this,
 				"Adaptors",
-				JOptionPane.OK_OPTION,
+				JOptionPane.OK_CANCEL_OPTION,
 				JOptionPane.DEFAULT_OPTION,
 				null,
 				null,
@@ -364,23 +365,11 @@ public class AdaptorManager extends Box {
 	}
 
 	public void add(DSViewAdaptor a) throws ConfigurationException {
-		add(a, true);
+    rootAdaptor.add(a);
+    updateWidget(rootAdaptor.getAdaptors());
 	}
 
-	private void add(DSViewAdaptor a, boolean storePrefs)
-		throws ConfigurationException {
-
-		DatasetView[] dvs = a.getDatasetViews();
-		for (int i = 0; i < dvs.length; i++) {
-			DatasetView view = dvs[i];
-			optionToView.put(view.toString(), view);
-		}
-		rootAdaptor.add(a);
-
-		updateWidget(rootAdaptor.getAdaptors());
-
-	}
-
+	
 	private void storePrefs() throws ConfigurationException {
 
 		MartRegistry reg = rootAdaptor.getMartRegistry();

@@ -54,7 +54,7 @@ public class FileIDListFilterHandler extends IDListFilterHandlerBase {
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not parse File IDListFilter: " + e.getMessage(), e);
 			} finally {
-        DatabaseUtil.close( conn );
+        DetailedDataSource.close( conn );
 			}
 
 			if (unversionedIds.length > 0)

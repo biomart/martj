@@ -46,7 +46,7 @@ public class StringIDListFilterHandler extends IDListFilterHandlerBase {
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not process Versions from IDListFilter " + e.getMessage(), e);
 			} finally {
-        DatabaseUtil.close( conn );			
+        DetailedDataSource.close( conn );			
 			}
 		}
         

@@ -56,7 +56,7 @@ public class URLIDListFilterHandler extends IDListFilterHandlerBase {
 				} catch (IOException e) {
 					throw new InvalidQueryException( "Problem reading from file", e );
 				} finally {
-          DatabaseUtil.close( conn );
+          DetailedDataSource.close( conn );
 				}
 			}
 			else 

@@ -148,7 +148,7 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 				"Recieved SQLException " + e.getMessage(),
 				e);
 		} finally {
-			DatabaseUtil.close(conn);
+			DetailedDataSource.close(conn);
 		}
 
 		

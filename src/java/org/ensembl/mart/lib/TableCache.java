@@ -95,7 +95,7 @@ public class TableCache {
     
 		} 
     } finally {
-      DatabaseUtil.close( conn );
+      DetailedDataSource.close( conn );
     }
     
 
