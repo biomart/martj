@@ -18,22 +18,63 @@
 
 package org.ensembl.mart.explorer;
 
+import javax.swing.JLabel;
+import javax.swing.JTabbedPane;
+
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.FilterPage;
 
 /**
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class FiltersWidget extends InputPage {
 
+  private JTabbedPane tabbedPane = new JTabbedPane();
+  private JLabel unavailableLabel =
+    new JLabel("Unavailable. Choose DatasetView first.");
+  
+  
   /**
+   * Displays the filters grouped according to query.datasetView.
+   * If none are available if displays a message to that effect. 
    * @param query
    */
   public FiltersWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
     super(query);
-    // TODO Auto-generated constructor stub
+    unavailable();
   }
 
-  public static void main(String[] args) {
+  private void unavailable() {
+    remove(tabbedPane);
+    add(unavailableLabel);
+    validate();
   }
+
+  /**
+   * Loads filters from datasetView when a new datasetView is set on
+   * the query.
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   */
+  public void datasetViewChanged(
+    Query query,
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView) {
+
+    if (newDatasetView == null) {
+      unavailable();
+    } else {
+      remove( unavailableLabel );
+      tabbedPane.removeAll();
+      FilterPage[] fps = newDatasetView.getFilterPages();
+      for (int i = 0; i < fps.length; i++)
+        tabbedPane.add(
+          new FilterPageWidget(query, fps[i].getDisplayName(), fps[i]));
+      add(tabbedPane);
+      validate();
+    }
+  }
+
+
 }

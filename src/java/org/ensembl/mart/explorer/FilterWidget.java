@@ -33,8 +33,7 @@ import org.ensembl.mart.lib.config.PushAction;
  * Base class for FilterWidgets.
  */
 public abstract class FilterWidget
-	extends InputPage
-	implements PropertyChangeListener {
+	extends InputPage {
 
 	private final static Logger logger =
 		Logger.getLogger(FilterWidget.class.getName());
@@ -68,26 +67,6 @@ public abstract class FilterWidget
 		return filterDescription;
 	}
 
-	/**
-	   * Updates the filter(s) on the query. Removes oldFilter if set and
-	   * adds newFilter if set.
-	   * @param oldFilter
-	   * @param newFilter
-	   */
-	protected void updateQueryFilters(Filter oldFilter, Filter newFilter) {
-
-		query.removePropertyChangeListener(this);
-
-		if (oldFilter != null && newFilter != null)
-			query.replaceFilter(oldFilter, newFilter);
-		else if (newFilter != null)
-			query.addFilter(newFilter);
-		else if (oldFilter != null)
-			query.removeFilter(oldFilter);
-
-		query.addPropertyChangeListener(this);
-
-	}
 
 	public abstract void setOptions(Option[] options);
 
@@ -138,52 +117,25 @@ public abstract class FilterWidget
 		}
 	}
 
-	/**
-	   * Responds to the removal or addition of relevant filters from the query. Updates the state of
-	   * this widget by changing the currently selected item in the list.
-	   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-	   */
-	public void propertyChange(PropertyChangeEvent evt) {
 
-		if (evt.getSource() == query) {
 
-			if (evt.getPropertyName().equals("filter")) {
-
-				Filter oldFilter = equivalentFilter(evt.getOldValue());
-				if (oldFilter != null)
-					setFilter(null);
-
-				Filter newFilter = equivalentFilter(evt.getNewValue());
-				if (newFilter != null)
-					setFilter(newFilter);
-
-			}
-		}
-
-	}
-
-	protected final Filter equivalentFilter(Object possibleFilter) {
-		Filter filter = null;
-		if (fieldName != null
+  /**
+   * @return true if otherfilter has the same fieldName
+   */
+	protected boolean equivalentFilter(Object possibleFilter) {
+		return fieldName != null
 			&& !"".equals(fieldName)
 			&& possibleFilter != null
 			&& possibleFilter instanceof Filter
-			&& (filter = (Filter) possibleFilter).getField().equals(fieldName)) {
-			return filter;
-		} else {
-			return null;
-		}
+			&& ((Filter) possibleFilter).getField().equals(fieldName); 
 	}
 
 	protected abstract void setFilter(Filter filter);
 	protected void removeFilterFromQuery(Filter filter) {
 
 		if (filter != null) {
-
-			query.removePropertyChangeListener(this);
 			query.removeFilter(filter);
-			query.addPropertyChangeListener(this);
-			filter = null;
+			
 		}
 	} /**
 					 * BasicFilter containing an InputPage, this page is used by the QueryEditor
@@ -226,4 +178,36 @@ public abstract class FilterWidget
 			return inputPage;
 		}
 	}
+
+
+  /** 
+   * Responds to the addition of a relevant filter to the query by 
+   * updates the state of widget to reflect the filter.
+   * @see org.ensembl.mart.lib.QueryChangeListener#filterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+   */
+  public void filterAdded(Query sourceQuery, int index, Filter filter) {
+    if ( equivalentFilter( filter ) )
+      setFilter(filter);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#filterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
+   */
+  public void filterChanged(
+    Query sourceQuery,
+    Filter oldFilter,
+    Filter newFilter) {
+  }
+  
+  
+  /**
+   * Responds to the removal of a relevant filters from the query by 
+   * updates the state of widget to reflect the filter.
+   * @see org.ensembl.mart.lib.QueryChangeListener#filterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+   */
+  public void filterRemoved(Query sourceQuery, int index, Filter filter) {
+    if ( equivalentFilter( filter ) )
+      setFilter(null);
+  }
+
 }

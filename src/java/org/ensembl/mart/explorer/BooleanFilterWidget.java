@@ -21,15 +21,18 @@ package org.ensembl.mart.explorer;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.naming.ConfigurationException;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
 import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
 
@@ -39,183 +42,181 @@ import org.ensembl.mart.lib.config.FilterDescription;
  * synchronised with that of the query.
  */
 public class BooleanFilterWidget
-	extends FilterWidget
-	implements ActionListener {
+  extends FilterWidget
+  implements ActionListener {
 
-	private Box panel = Box.createHorizontalBox();
+  private Box panel = Box.createHorizontalBox();
 
-	private JRadioButton require = new JRadioButton("require");
-	private JRadioButton exclude = new JRadioButton("exclude");
-	private JRadioButton irrelevant = new JRadioButton("irrelevant");
-	private JComboBox list = null;
+  private JRadioButton require = new JRadioButton("require");
+  private JRadioButton exclude = new JRadioButton("exclude");
+  private JRadioButton irrelevant = new JRadioButton("irrelevant");
+  private JComboBox list = null;
 
-  private BooleanFilter filter;
+  private BooleanFilter currentFilter;
 
-	private Object currentButton = null;
+  private BooleanFilter requireFilter;
+  private BooleanFilter excludeFilter;
 
-	private String requireCondition;
-	private String excludeCondition;
-
-	/**
-	 * BooleanFilter that has contains an InputPage, this page is used by the QueryEditor
-	 * when it detects the filter has been added or removed from the query.
-	 */
-	private class InputPageAwareNullableFilter
-		extends BooleanFilter
-		implements InputPageAware {
-		private InputPage inputPage;
-
-		public InputPageAwareNullableFilter(
-			String field,
-			String condition,
-			InputPage inputPage) {
-			super(field, condition);
-			this.inputPage = inputPage;
-		}
-
-		public InputPageAwareNullableFilter(
-			String field,
-			String tableConstraint,
-			String condition,
-			InputPage inputPage) {
-			super(field, tableConstraint, condition);
-			this.inputPage = inputPage;
-		}
-
-		public InputPage getInputPage() {
-			return inputPage;
-		}
-	}
-
-	/**
-	 * @param query
-	 * @param filterDescription
-	 */
-	public BooleanFilterWidget(
-		FilterGroupWidget filterGroupWidget,
-		Query query,
-		FilterDescription filterDescription) {
-		super(filterGroupWidget, query, filterDescription);
-
-		if ("boolean".equals(filterDescription.getType())) {
-			requireCondition = BooleanFilter.isNotNULL;
-			excludeCondition = BooleanFilter.isNULL;
-		} else {
-			requireCondition = BooleanFilter.isNotNULL_NUM;
-			excludeCondition = BooleanFilter.isNULL_NUM;
-		}
-
-		irrelevant.setSelected(true);
-		currentButton = irrelevant;
-
-		ButtonGroup group = new ButtonGroup();
-		group.add(require);
-		group.add(exclude);
-		group.add(irrelevant);
-
-		require.addActionListener(this);
-		exclude.addActionListener(this);
-		irrelevant.addActionListener(this);
-
-		panel.add(new JLabel(filterDescription.getDisplayName()));
-		if (list != null)
-			panel.add(list);
-		panel.add(Box.createHorizontalGlue());
-		panel.add(require);
-		panel.add(exclude);
-		panel.add(irrelevant);
-		add(panel);
-
-		// adds list component if necessary  
-		setOptions(filterDescription.getOptions());
-
-	}
-
-
-	/* (non-Javadoc)
-	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-	 */
-	public void actionPerformed(ActionEvent evt) {
-
-		// user clicked currently selected button
-		if (evt.getSource() == currentButton)
-			return;
-
-		currentButton = evt.getSource();
-
-		BooleanFilter oldFilter = filter;
-
-		if (currentButton == require)
-			resetFilter(requireCondition);
-		else if (currentButton == exclude)
-			resetFilter(excludeCondition);
-		else
-			filter = null;
-
-		updateQueryFilters(oldFilter, filter);
-	}
-
-	/**
-	 * @param filter
-	 */
-	private void resetFilter(String condition) {
-
-		this.filter =
-			new InputPageAwareNullableFilter(
-				filterDescription.getField(),
-				filterDescription.getTableConstraint(),
-				condition,
-				this);
-
-		setNodeLabel(
-			null,
-			filterDescription.getField() + filter.getRightHandClause());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
-	 */
-	public void setOptions(Option[] options) {
-
-		if (options == null) {
-			// TODO remove list.
-		} else if (options.length > 0) {
-
-			if (list == null) {
-				list = new JComboBox();
-				list.addActionListener(this);
-				panel.add(list, 1); 
-			}
-
-      // TODO add options to list.
-      
-		}
-
-	}
-
-
+  private Object currentButton = null;
 
   /**
-   * Sets one of the radio button depending on the filter provided.
-   * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
+   * @param query
+   * @param filterDescription
    */
-  protected void setFilter(Filter filter) {
-    this.filter = (BooleanFilter)filter;
-    setNodeLabel(
-      null,
-      filterDescription.getField() + filter.getRightHandClause());
-      
-    if ( filter==null ) {
-      irrelevant.setSelected( true );
-    }
-    else if ( filter.getValue().equals( requireCondition ) ) {
-      require.setSelected( true );
-    }
-    else if ( filter.getValue().equals( excludeCondition ) ) {
-      exclude.setSelected( true );
+  public BooleanFilterWidget(
+    FilterGroupWidget filterGroupWidget,
+    Query query,
+    FilterDescription fd) {
+
+    super(filterGroupWidget, query, fd);
+
+    if ("boolean".equals(fd.getType())) {
+
+      requireFilter =
+        new BooleanFilter(
+          fd.getField(),
+          fd.getTableConstraint(),
+          BooleanFilter.isNotNULL);
+
+      excludeFilter =
+        new BooleanFilter(
+          fd.getField(),
+          fd.getTableConstraint(),
+          BooleanFilter.isNULL);
+
     } else {
-      throw new RuntimeException( "Unsupported value for a boolean filter: " +        filter.getValue() );
+
+      requireFilter =
+        new BooleanFilter(
+          fd.getField(),
+          fd.getTableConstraint(),
+          BooleanFilter.isNotNULL_NUM);
+
+      excludeFilter =
+        new BooleanFilter(
+          fd.getField(),
+          fd.getTableConstraint(),
+          BooleanFilter.isNULL_NUM);
+
     }
+
+    irrelevant.setSelected(true);
+    currentButton = irrelevant;
+
+    ButtonGroup group = new ButtonGroup();
+    group.add(require);
+    group.add(exclude);
+    group.add(irrelevant);
+
+    require.addActionListener(this);
+    exclude.addActionListener(this);
+    irrelevant.addActionListener(this);
+
+    panel.add(new JLabel(fd.getDisplayName()));
+    if (list != null)
+      panel.add(list);
+    panel.add(Box.createHorizontalGlue());
+    panel.add(require);
+    panel.add(exclude);
+    panel.add(irrelevant);
+    add(panel);
+
+    // adds list component if necessary  
+    setOptions(fd.getOptions());
+
+  }
+
+  /**
+   * Responds to user button actions. Adds and removes filters to/from
+   * query.
+   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   */
+  public void actionPerformed(ActionEvent evt) {
+
+    // user clicked currently selected button
+    if (evt.getSource() == currentButton)
+      return;
+
+    currentButton = evt.getSource();
+
+    if (currentFilter != null)
+      query.removeFilter(currentFilter);
+
+    if (currentButton == require)
+      currentFilter = requireFilter;
+    else if (currentButton == exclude)
+      currentFilter = excludeFilter;
+    else
+      currentFilter = null;
+
+    query.addFilter(currentFilter);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+   */
+  public void setOptions(Option[] options) {
+
+    if (options == null) {
+      // TODO remove list.
+    } else if (options.length > 0) {
+
+      if (list == null) {
+        list = new JComboBox();
+        list.addActionListener(this);
+        panel.add(list, 1);
+      }
+
+      // TODO add options to list.
+
+    }
+
+  }
+
+  /**
+   * Selects the button based on the filter. This is a callback method called by
+   * filterAdded(...) and filterRemoved(...) in FilterWidget base class. 
+   */
+  public void setFilter(Filter filter) {
+
+    if (filter == null)
+      irrelevant.setSelected(true);
+    else if (filter.getValue().equals(requireFilter.getValue()))
+      require.setSelected(true);
+    else if (filter.getValue().equals(excludeFilter.getValue()))
+      exclude.setSelected(true);
+
+  }
+
+  /**
+   * Test program; a simple GUI using test data.
+   * @param args
+   * @throws org.ensembl.mart.lib.config.ConfigurationException
+   */
+  public static void main(String[] args)
+    throws org.ensembl.mart.lib.config.ConfigurationException {
+
+    Query q = new Query();
+    FilterGroup fg = new FilterGroup();
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterDescription fd =
+      new FilterDescription(
+        "someInternalName",
+        "someField",
+        "boolean",
+        "someQualifier",
+        "someLegalQualifiers",
+        "someDisplayName",
+        "someTableConstraint",
+        null,
+        "someDescription");
+    BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd);
+
+    JFrame f = new JFrame("Boolean Filter - test");
+    f.getContentPane().add(bfw);
+    f.pack();
+    f.setVisible(true);
+
   }
 
 }
