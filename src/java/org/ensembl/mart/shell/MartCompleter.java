@@ -198,11 +198,11 @@ public class MartCompleter implements ReadlineCompleter {
 
 	public void SetModeForLine(String currentCommand) {
 		if (lastLine == null || !(lastLine.equals(currentCommand))) {
-			if (currentCommand.indexOf(DESCRIBE) >= 0)
+			if (currentCommand.startsWith(DESCRIBE) )
 				SetDescribeMode();
-			else if (currentCommand.indexOf(HELP) >= 0)
+			else if (currentCommand.startsWith(HELP))
 				SetHelpMode();
-			else if (currentCommand.indexOf(USE) >= 0)
+			else if (currentCommand.startsWith(USE))
 				SetDatasetMode();
 			else {
 				int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
@@ -254,10 +254,15 @@ public class MartCompleter implements ReadlineCompleter {
 				// if none of the key placeholders are present, may still need to further refine the mode
 				if (attributeMode) {
 					if (lineWords.length > 0) {
-
+            
+            logger.info(" in attributeMode\n");
+            
 						String lastWord = lineWords[lineWords.length - 1];
 
 						if ( lastWord.equals(MartShellLib.GETQSTART) ) {
+							
+							logger.info("resetting lastAttributeName and currentApages\n");
+							
 							lastAttributeName = null;
 							currentApages = new ArrayList();
 						} else {
