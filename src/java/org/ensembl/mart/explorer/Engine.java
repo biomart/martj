@@ -95,7 +95,13 @@ public class Engine {
     }
     
     
-    ResultSet rs = ps.executeQuery();
+    ResultSet rs = null;
+    try {
+      ps.executeQuery();
+    } catch (SQLException e) {
+      logger.warn(e.getMessage()+ " : " + sql);
+      throw e;
+    }
     query.getResultTarget().output( rs );
   }
 
