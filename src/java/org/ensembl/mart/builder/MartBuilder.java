@@ -61,6 +61,26 @@ public class MartBuilder {
 		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
 		
+	/**	
+		// final key
+		String key = getUserInput("Final KEY: ");
+		
+		for (int i=0;i<transformations.length; i++){
+			
+			Column [] columns = transformations[i].getFinalUnit().getTemp_end().getColumns();
+			
+			for (int j=0;j<columns.length;j++){
+				
+				if(columns[j].name.equals(key)){
+					columns[j].name = columns[j].name+"_key";
+			
+				System.out.println("resetting "+ columns[j].name);
+				
+				}	
+			}
+		}
+		
+		*/
 		
 		// Include extensions
 		LinkedTables [] extlinked = source_schema.getLinkedTables();

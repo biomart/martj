@@ -56,7 +56,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 			if (columns[i].getName().equals(key)){
 				
 				newcol[0]=columns[i];
-				newcol[0].setAlias(newcol[0].original_table+"__bool");
+				newcol[0].setAlias(newcol[0].original_table+"_bool");
 				newcol[0].bool=true;
 				break;
 			}	
