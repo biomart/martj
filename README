@@ -1,0 +1,33 @@
+README for MartExplorer
+=======================
+
+MartExplorer provides access to Mart databases via several means:
+
+-An application with a graphical user interface and a command line 
+ mode for end users.
+
+-A java (jar) library for programmers.
+
+
+
+
+APPLICATION USER
+----------------
+*nix users: To start the application run the script THIS_DIRECTORY/bin/martexplorer.sh.
+
+
+
+
+LIBRARY USER
+------------
+
+Include these jars in your classpath:
+  - martexplorer.jar
+  - log4j-1.2.6.jar
+  - java-getopt-1.0.9.jar
+  - mysql-connector-java-2.0.14-bin.jar (or some other mysql jdbc driver)
+
+API documentation is available in ./docs/api.
+
+
+
