@@ -366,27 +366,30 @@ public class Option extends QueryFilterSettings {
 	 */
 	public List getCompleterNames() {
 		List names = new ArrayList();
-		for (int i = 0, n = pushActions.size(); i < n; i++) {
-			PushAction element = (PushAction) pushActions.get(i);
-			Option[] ops = element.getOptions();
-
-			for (int j = 0, o = ops.length; j < o; j++) {
-				Option option = ops[j];
-				String completer = null;
-
-				if (option.getField() != null && option.getField().length() > 0 && option.getType() != null && option.getType().length() > 0) {
-					//push option filter, should get superoption.subotion as name
-					completer =  attributes.getProperty(internalNameKey)  + "." + option.getInternalName();
-				} else if (option.getValue() != null && option.getValue().length() > 0) {
-					//push option value, should get superoption.pushoptionref as name
-					completer =  attributes.getProperty(internalNameKey)  + "." + element.getRef();
-				} // else not needed
-
-				if (!(completer == null || names.contains(completer)))
-					names.add(completer);
-			}
-		}
-		return names;
+        return names;
+        
+//  disable pushOptions for now
+//		for (int i = 0, n = pushActions.size(); i < n; i++) {
+//			PushAction element = (PushAction) pushActions.get(i);
+//			Option[] ops = element.getOptions();
+//
+//			for (int j = 0, o = ops.length; j < o; j++) {
+//				Option option = ops[j];
+//				String completer = null;
+//
+//				if (option.getField() != null && option.getField().length() > 0 && option.getType() != null && option.getType().length() > 0) {
+//					//push option filter, should get superoption.subotion as name
+//					completer =  attributes.getProperty(internalNameKey)  + "." + option.getInternalName();
+//				} else if (option.getValue() != null && option.getValue().length() > 0) {
+//					//push option value, should get superoption.pushoptionref as name
+//					completer =  attributes.getProperty(internalNameKey)  + "." + element.getRef();
+//				} // else not needed
+//
+//				if (!(completer == null || names.contains(completer)))
+//					names.add(completer);
+//			}
+//		}
+//		return names;
 	}
 
 	/**
