@@ -5,7 +5,7 @@
   <DefaultFilter value="1">
     <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testDefaultFilterDescription" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list"/>
   </DefaultFilter>
-  <StarBase> test_starbase</StarBase>
+  <StarBase>test_starbase</StarBase>
   <PrimaryKey>test_primaryKey</PrimaryKey>
   <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
     <DSFilterGroup description="For Testing Purposes Only" displayName="Test A DSFilterGroup:" handler="testHandler" internalName="testDSFilterGroup"/>
