@@ -19,8 +19,6 @@
 package org.ensembl.mart.lib;
 
 import java.io.ByteArrayOutputStream;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -46,30 +44,17 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			Query subq = idfilter.getSubQuery();
       
 			ByteArrayOutputStream idstream = new ByteArrayOutputStream();
-			String results = null;
+      String[] ids = null;
     
 			try {
 				engine.execute(subq, FormatSpec.TABSEPARATEDFORMAT, idstream, 0, true);
 
-				results = idstream.toString();
+				ids = idstream.toString().split("\n+");
 				idstream.close();
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not execute subquery: "+ e.getMessage());
 			}
 		
-      String[] ids = results.split("\n+");
-    
-      Connection conn = null;
-			try {
-        conn = newQuery.getDataSource().getConnection();
-        
-				ids = ModifyVersionedIDs(conn, newQuery, ids);
-			} catch (SQLException e) {
-				throw new InvalidQueryException( "Problem with db connection: ",e );
-			} finally {
-        DetailedDataSource.close( conn );
-			}
-		      
 			if (ids.length > 0)
 				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), idfilter.getKey(),ids));
 		}

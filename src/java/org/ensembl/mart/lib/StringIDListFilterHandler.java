@@ -20,6 +20,8 @@ package org.ensembl.mart.lib;
 import java.sql.Connection;
 import java.util.List;
 
+//TODO: remove this class. It is no longer necessary, and actually inefficient
+
 /**
  * UnprocessedFilterHandler implimenting object that checks ids in a String[] IDListFilter Handler for
  * versions, and, if applicable to the dataset, strips the versions off, creating a new String[]
@@ -33,23 +35,7 @@ public class StringIDListFilterHandler extends IDListFilterHandlerBase {
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
 	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
-    Query newQuery = new Query(query);
-    
-    for (int i = 0, n = filters.size(); i < n; i++) {
-			IDListFilter idfilter = (IDListFilter) filters.get(i);
-			newQuery.removeFilter(idfilter);
-			
-      Connection conn = null;
-			try {
-        conn = query.getDataSource().getConnection();
-				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), idfilter.getKey(),ModifyVersionedIDs( conn, newQuery, idfilter.getIdentifiers())));
-			} catch (Exception e) {
-				throw new InvalidQueryException("Could not process Versions from IDListFilter " + e.getMessage(), e);
-			} finally {
-        DetailedDataSource.close( conn );			
-			}
-		}
-        
-    return newQuery;
+    //this doesnt need to do anything. Needs to be removed.
+    return query;
 	}
 }

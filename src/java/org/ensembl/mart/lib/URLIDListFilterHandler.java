@@ -2,8 +2,6 @@ package org.ensembl.mart.lib;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 /*
@@ -47,16 +45,10 @@ public class URLIDListFilterHandler extends IDListFilterHandlerBase {
 			String[] unversionedIds = null;
 		
 			if (idURL.getProtocol().equals("file")) {
-        Connection conn = null;
 				try {
-          conn = query.getDataSource().getConnection();
-					unversionedIds = HarvestStream( conn, query, new InputStreamReader( idURL.openStream() ) );
-				} catch (SQLException e) {
-					throw new InvalidQueryException("Could not parse URL IDListFilter: " + e.getMessage(), e);
+					unversionedIds = HarvestStream( new InputStreamReader( idURL.openStream() ) );
 				} catch (IOException e) {
 					throw new InvalidQueryException( "Problem reading from file", e );
-				} finally {
-          DetailedDataSource.close( conn );
 				}
 			}
 			else 
