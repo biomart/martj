@@ -19,8 +19,6 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,17 +27,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-
-import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.apache.tools.ant.taskdefs.optional.sitraka.StringUtil;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -123,7 +116,9 @@ public class DatasetViewWidget
 				DatasetView view = views[i];
 				String option = toOption( view );
 				logger.fine( Integer.toString(i) + ": "+option + ", " + view.getDisplayName() );
-				optionToView.put(option, view);
+        // add novel options
+        if ( !optionToView.containsKey( option ))
+				  optionToView.put(option, view);
 			}
 		} catch (ConfigurationException e) {
 
