@@ -25,49 +25,37 @@ public class MartBuilder {
 	private static final String data_dir="data/builder/";
 	
 	
-	
-	
 	public static void main(String[] args) {
-		
-		
-		
-		
+	
 		String config_info= "";
+		String file=null;
 		
 		while (! (config_info.equals("C") || config_info.equals("R"))){
 			config_info=getUserInput("Configuration Create [C] Read [R]: ");
 		}
 		
 		if (config_info.equals("C")){
-			String output_file=getUserInput("OUTPUT CONFIG FILE: ");
-			output_file = data_dir+output_file;
+			file=getUserInput("OUTPUT CONFIG FILE: ");
+			file = data_dir+file;
 			
-			File f = new File(output_file);
+			File f = new File(file);
 			f.delete();
-			
 			String user_dataset = getUserInput("NEW DATASET: ");
 			
 			while (!(user_dataset == null || user_dataset.equals(""))){
-				
-				createConfiguration(user_dataset,output_file);
-				user_dataset = getUserInput("NEW DATASET: ");
-				
+				createConfiguration(user_dataset,file);
+				user_dataset = getUserInput("NEW DATASET: ");	
 			} 
-			
-			readConfiguration(output_file);
-			
 		} else {
-			String input_file=getUserInput("INPUT CONFIG FILE: ");
-			input_file = data_dir+input_file;
-			readConfiguration(input_file);
-		}
+			file=getUserInput("INPUT CONFIG FILE: ");
+			file = data_dir+file;
+		}	
+	   System.out.println("Transforming your schema ... please wait ....");	
+	   readConfiguration(file);
 		
 		
-		
-		for (int m=0;m<schemas.size();m++){
-			
+		for (int m=0;m<schemas.size();m++){	
 			target_schema = (TargetSchema) schemas.get(m);
-			
 			
 			/**	
 			
