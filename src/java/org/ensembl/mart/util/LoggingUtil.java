@@ -18,6 +18,10 @@
 
 package org.ensembl.mart.util;
 
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Convenience methods related to java.util.logging package
  * configuration.
@@ -30,5 +34,23 @@ public class LoggingUtil {
    */
   public static boolean isLoggingConfigFileSet() {
     return System.getProperty("java.util.logging.config.file")!=null;
+  }
+  
+  /**
+   * Enable ALL logging messages to
+   * be written to the default log handlers on the root logger. By default these 
+   * handlers logging levels are set to INFO which prevents 
+   * CONFIG, FINE, FINER and FINEST messages being output.
+   *
+   */
+  public static void setAllRootHandlerLevelsToFinest() {
+    setAllHandlerLevel(Logger.getLogger(""), Level.FINEST);
+  }
+
+  public static void setAllHandlerLevel(Logger logger, Level level) {
+    Handler[] handlers = Logger.getLogger("").getHandlers();
+    for (int index = 0; index < handlers.length; index++) {
+      handlers[index].setLevel(level);
+    }
   }
 }
