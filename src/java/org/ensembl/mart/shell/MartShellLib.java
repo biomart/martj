@@ -309,12 +309,14 @@ public class MartShellLib {
   private boolean mapBooleanFilter(BooleanFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
+    String filterCondition = filter.getCondition();
+    
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
-    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
-    String filterCondition = filter.getCondition();
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+
 
     mqlbuf.append(filterName);
 
@@ -329,13 +331,14 @@ public class MartShellLib {
   private boolean mapIDListFilter(IDListFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
+    String filterCondition = filter.getCondition();
+    
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
     boolean success = true;
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
-    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
-    //String filterCondition = filter.getCondition();
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition);
 
     mqlbuf.append(filterName).append(" in ");
 
@@ -374,12 +377,13 @@ public class MartShellLib {
   private boolean mapBasicFilter(BasicFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
+    String filterCondition = filter.getCondition();
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
     mqlbuf
-      .append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint))
+      .append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition))
       .append(" ")
       .append(filter.getCondition())
       .append(" ")
