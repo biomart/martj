@@ -47,8 +47,13 @@ public class LoggingUtil {
     setAllHandlerLevel(Logger.getLogger(""), Level.FINEST);
   }
 
+  /**
+   * Sets the logging level for all loggers handlers.
+   * @param logger logger of interest
+   * @param level logging level
+   */
   public static void setAllHandlerLevel(Logger logger, Level level) {
-    Handler[] handlers = Logger.getLogger("").getHandlers();
+    Handler[] handlers = logger.getHandlers();
     for (int index = 0; index < handlers.length; index++) {
       handlers[index].setLevel(level);
     }

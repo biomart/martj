@@ -259,10 +259,11 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 	 * object added to a Query object back to its MartConfiguration FilterDescription.
 	 * @param field -- String mart database field
 	 * @param tableConstraint -- String mart database tableConstraint
+   * @param condition -- Filter condition
 	 * @return FilterDescription supporting the given field and tableConstraint, or null.
 	 */
-	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
-		if (supports(field, tableConstraint))
+	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
+		if (supports(field, tableConstraint, condition))
 			return lastSupportFilt;
 		else
 			return null;
@@ -272,9 +273,10 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 	 * Determine if this FilterCollection contains a FilterDescription supporting a given field and tableConstraint.
 	 * @param field - String field of a mart database table
 	 * @param TableConstraint -- String tableConstraint of a mart database table
+   * @param condition -- Filter condition
 	 * @return boolean, true if a FilterDescription contained within this collection supports the field and tableConstraint, false otherwise.
 	 */
-	public boolean supports(String field, String TableConstraint) {
+	public boolean supports(String field, String TableConstraint, String condition) {
 		boolean supports = false;
 
 		if (lastSupportFilt == null) {
@@ -282,7 +284,7 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 				Object element = iter.next();
 
 				if (element instanceof FilterDescription) {
-					if (((FilterDescription) element).supports(field, TableConstraint)) {
+					if (((FilterDescription) element).supports(field, TableConstraint,condition)) {
 						lastSupportFilt = (FilterDescription) element;
 						supports = true;
 						break;
@@ -290,11 +292,11 @@ public class FilterCollection extends BaseNamedConfigurationObject {
 				}
 			}
 		} else {
-			if (lastSupportFilt.supports(field, TableConstraint))
+			if (lastSupportFilt.supports(field, TableConstraint, condition))
 				supports = true;
 			else {
 				lastSupportFilt = null;
-				supports = supports(field, TableConstraint);
+				supports = supports(field, TableConstraint,condition);
 			}
 		}
 		return supports;

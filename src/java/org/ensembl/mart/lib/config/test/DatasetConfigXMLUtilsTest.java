@@ -500,19 +500,20 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + REFINAME + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + REFINAME + "\n", 
+    d.supportsFilterDescription(Field, TableConstraint, qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + REFINAME + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + REFINAME + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + REFINAME + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + REFINAME + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + REFINAME + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + REFINAME + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + REFINAME + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + REFINAME + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -566,19 +567,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -636,19 +637,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -705,19 +706,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 
 		String TableConstraint = f.getTableConstraint();
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -770,19 +771,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -840,19 +841,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -1070,20 +1071,20 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
+		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint,qualifier);
 		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", datasetSupports);
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -1134,19 +1135,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -1197,19 +1198,19 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint,qualifier));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
@@ -1360,20 +1361,20 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
+		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint,qualifier);
 		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", datasetSupports);
-		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
-		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint,qualifier));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint));
-		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterGroup should support field and tableConstraint for " + IName + "\n", fg.supports(Field, TableConstraint,qualifier));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint));
-		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		assertTrue("FilterCollection should support field and tableConstraint for " + IName + "\n", fc.supports(Field, TableConstraint,qualifier));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint,qualifier);
 
-		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
+		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint,qualifier));
 
 		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);

@@ -299,10 +299,11 @@ public class FilterGroup extends BaseNamedConfigurationObject {
 	 * added to a Query back to its FilterDescription.
 	 * @param field -- String field of a mart database table
 	 * @param tableConstraint -- String tableConstraint of a mart database
+   * @param condition -- Filter condition
 	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
 	 */
-	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
-		if (supports(field, tableConstraint))
+	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
+		if (supports(field, tableConstraint, condition))
 			return lastSupportingFilter;
 		else
 			return null;
@@ -314,26 +315,27 @@ public class FilterGroup extends BaseNamedConfigurationObject {
 	 * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
 	 * @param field -- String field of a mart database table
 	 * @param tableConstraint -- String tableConstraint of a mart database
+   * @param condition -- Filter condition
 	 * @return boolean, true if the FilterGroup contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
 	 */
-	public boolean supports(String field, String tableConstraint) {
+	public boolean supports(String field, String tableConstraint, String condition) {
 		boolean supports = false;
 
 		if (lastSupportingFilter == null) {
 			for (Iterator iter = filterCollections.iterator(); iter.hasNext();) {
 				FilterCollection element = (FilterCollection) iter.next();
-				if (element.supports(field, tableConstraint)) {
-					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+				if (element.supports(field, tableConstraint, condition)) {
+					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, condition);
 					supports = true;
 					break;
 				}
 			}
 		} else {
-			if (lastSupportingFilter.supports(field, tableConstraint))
+			if (lastSupportingFilter.supports(field, tableConstraint, condition))
 				supports = true;
 			else {
 				lastSupportingFilter = null;
-				supports = supports(field, tableConstraint);
+				supports = supports(field, tableConstraint,condition);
 			}
 		}
 		return supports;

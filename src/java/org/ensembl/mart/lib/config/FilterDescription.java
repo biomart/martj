@@ -388,16 +388,20 @@ public class FilterDescription extends QueryFilterSettings {
 	 * could be this particular FilterDescription, or a child Option (possibly occuring within a PushAction).
 	 * @param field --  String field
 	 * @param tableConstraint -- String table
+   * @param condition -- Filter condition
 	 * @return String internalName of supporting FilterDescription/Option
 	 */
-	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
 		String ret = null;
 
-		if (supports(field, tableConstraint)) {
-			if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint))
+		if (supports(field, tableConstraint,condition)) {
+			if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) 
+      &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint)
+      &&  getAttribute(condition) != null &&  getAttribute(condition).equals(condition)
+            )
 				ret = getAttribute(internalNameKey);
 			else
-				ret = lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
+				ret = lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint, condition);
 		}
 
 		return ret;
@@ -408,16 +412,19 @@ public class FilterDescription extends QueryFilterSettings {
    * could be this particular FilterDescription, or a child Option (possibly occuring within a PushAction).
    * @param field --  String field
    * @param tableConstraint -- String table
+   * @param condition -- Filter condition
    * @return String displayName of supporting FilterDescription/Option
    */
-  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint) {
+  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
     String ret = null;
 
-    if (supports(field, tableConstraint)) {
-      if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint))
+    if (supports(field, tableConstraint, condition)) {
+      if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) 
+      &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint)
+      &&  getAttribute(condition) != null &&  getAttribute(condition).equals(condition))
         ret = getAttribute(displayNameKey);
       else
-        ret = lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint);
+        ret = lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint, condition);
     }
 
     return ret;
@@ -429,27 +436,28 @@ public class FilterDescription extends QueryFilterSettings {
    * to getInternalNameByFieldNameTableConstraint(String, String).
 	 * @param field -- String field
 	 * @param tableConstraint -- String tableConstraint
+   * @param condition -- Filter condition, can be null if irrelevant
 	 * @return boolean, true if this FilterDescription or a child Option supports the given FilterDescription, false otherwise.
 	 */
-	public boolean supports(String field, String tableConstraint) {
-		boolean supports = super.supports(field, tableConstraint);
+	public boolean supports(String field, String tableConstraint, String condition) {
+		boolean supports = super.supports(field, tableConstraint, condition);
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
 				for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 					Option element = (Option) iter.next();
-					if (element.supports(field, tableConstraint)) {
+					if (element.supports(field, tableConstraint, condition)) {
 						lastSupportingOption = element;
 						supports = true;
 						break;
 					}
 				}
 			} else {
-				if (lastSupportingOption.supports(field, tableConstraint))
+				if (lastSupportingOption.supports(field, tableConstraint, condition))
 					supports = true;
 				else {
 					lastSupportingOption = null;
-					return supports(field, tableConstraint);
+					return supports(field, tableConstraint, condition);
 				}
 			}
 		}

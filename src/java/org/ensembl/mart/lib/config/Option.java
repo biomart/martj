@@ -519,16 +519,17 @@ public class Option extends QueryFilterSettings {
 	 * 
 	 * @param field -- String mart database field
 	 * @param tableConstraint -- String mart database table
+   * @param condition - filter condition
 	 * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
 	 */
-	public boolean supports(String field, String tableConstraint) {
-		boolean supports = super.supports(field, tableConstraint);
+	public boolean supports(String field, String tableConstraint, String condition) {
+		boolean supports = super.supports(field, tableConstraint, condition);
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
 				for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 					Option element = (Option) iter.next();
-					if (element.supports(field, tableConstraint)) {
+					if (element.supports(field, tableConstraint, condition)) {
 						lastSupportingOption = element;
 						supports = true;
 						break;
@@ -538,19 +539,19 @@ public class Option extends QueryFilterSettings {
 				if (!supports) {
 					for (int i = 0, n = pushActions.size(); i < n; i++) {
 						PushAction element = (PushAction) pushActions.get(i);
-						if (element.supports(field, tableConstraint)) {
-							lastSupportingOption = element.getOptionByFieldNameTableConstraint(field, tableConstraint);
+						if (element.supports(field, tableConstraint, condition)) {
+							lastSupportingOption = element.getOptionByFieldNameTableConstraint(field, tableConstraint, condition);
 							supports = true;
 							break;
 						}
 					}
 				}
 			} else {
-				if (lastSupportingOption.supports(field, tableConstraint))
+				if (lastSupportingOption.supports(field, tableConstraint, condition))
 					supports = true;
 				else {
 					lastSupportingOption = null;
-					supports = supports(field, tableConstraint);
+					supports = supports(field, tableConstraint, condition);
 				}
 			}
 		}
@@ -561,10 +562,11 @@ public class Option extends QueryFilterSettings {
 	 * Get an Option by its field and tableConstraint.
 	 * @param field -- Field for desired Option
 	 * @param tableConstraint -- tableConstraint for desired Option.
+   * @param condition - filter condition
 	 * @return Option supporting this field and tableConstraint (eg, getOptionByFieldNameTableConstraint(f,t).supports(f,t) will always be true).
 	 */
-	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint) {
-		if (supports(field, tableConstraint))
+	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
+		if (supports(field, tableConstraint, condition))
 			return lastSupportingOption;
 		else
 			return null;
@@ -574,16 +576,19 @@ public class Option extends QueryFilterSettings {
 	 * Get the internalName of an Option by a given field and tableConstraint.
 	 * @param field -- field for Option for which internalName is desired
 	 * @param tableConstraint -- tableConstraint for Option for which internalName is desired
+   * @param condition -- filter condition
 	 * @return String internalName
 	 */
-	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
-		if (getAttribute(fieldKey) != null && getAttribute(fieldKey).equals(field) && getAttribute(tableConstraintKey) != null && getAttribute(tableConstraintKey).equals(tableConstraint))
+	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
+		if (getAttribute(fieldKey) != null && getAttribute(fieldKey).equals(field) 
+    && getAttribute(tableConstraintKey) != null && getAttribute(tableConstraintKey).equals(tableConstraint)
+    &&  getAttribute(condition) != null &&  getAttribute(condition).equals(condition))
 			return  attributes.getProperty(internalNameKey) ;
 		else {
 			for (int i = 0, n = pushActions.size(); i < n; i++) {
 				PushAction element = (PushAction) pushActions.get(i);
-				if (element.supports(field, tableConstraint)) {
-					return  attributes.getProperty(internalNameKey)  + "." + element.getOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
+				if (element.supports(field, tableConstraint, condition)) {
+					return  attributes.getProperty(internalNameKey)  + "." + element.getOptionInternalNameByFieldNameTableConstraint(field, tableConstraint, condition);
 				}
 			}
 		}
@@ -595,16 +600,17 @@ public class Option extends QueryFilterSettings {
    * Get the displayName of an Option by a given field and tableConstraint.
    * @param field -- field for Option for which displayName is desired
    * @param tableConstraint -- tableConstraint for Option for which displayName is desired
+   * @param condition - filter condition
    * @return String displayName
    */
-  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint) {
+  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
     if (getAttribute(fieldKey) != null && getAttribute(fieldKey).equals(field) && getAttribute(tableConstraintKey) != null && getAttribute(tableConstraintKey).equals(tableConstraint))
       return  attributes.getProperty(displayNameKey) ;
     else {
       for (int i = 0, n = pushActions.size(); i < n; i++) {
         PushAction element = (PushAction) pushActions.get(i);
-        if (element.supports(field, tableConstraint)) {
-          return  attributes.getProperty(displayNameKey)  + "." + element.getOptionDisplayNameByFieldNameTableConstraint(field, tableConstraint);
+        if (element.supports(field, tableConstraint, condition)) {
+          return  attributes.getProperty(displayNameKey)  + "." + element.getOptionDisplayNameByFieldNameTableConstraint(field, tableConstraint, condition);
         }
       }
     }

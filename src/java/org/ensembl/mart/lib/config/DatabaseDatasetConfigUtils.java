@@ -2909,10 +2909,10 @@ public class DatabaseDatasetConfigUtils {
             if (!cname.endsWith("_bool")) {
 
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName) != null)
+              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName, null) != null)
 
               	System.out.println("cname "+ cname+ " tableName " + tableName);
-              	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
+              	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
 
               if (currFilt == null) {
                 fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
@@ -2950,8 +2950,8 @@ System.out.println("Going to null ");
 
               // could be present as a FD as well
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName) != null)
-                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
+              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null) != null)
+                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
               if (currFilt != null)
                 newOption = false;
 
@@ -2993,8 +2993,8 @@ System.out.println("Going to null ");
 
               // could be present as a FD as well
               FilterDescription currFilt = null;
-              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName) != null)
-                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
+              if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null) != null)
+                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
               if (currFilt != null)
                 newOption = false;
 
@@ -3012,7 +3012,7 @@ System.out.println("Going to null ");
               fc.setDisplayName(content.replaceAll("_", " "));
             }
 
-            FilterDescription currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
+            FilterDescription currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
             if (currFilt == null)
               fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
 
