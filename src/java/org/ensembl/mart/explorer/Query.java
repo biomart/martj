@@ -4,9 +4,21 @@ import java.util.*;
 
 public class Query {
 
+    /* enums over query types
+     * clients can set type using the constant
+     * and test get results as well
+     */
+    public final int ATTRIBUTE = 1;
+    public final int SEQUENCE = 2;
+
+    // TODO, when implement SEQUENCE, over ride this during the addSequenceDescription method call
+    private int querytype = 1;
+
+    public int getType() {  return querytype; }
+
 	public boolean hasAttribute( Attribute attribute ) {
 		return attributes.contains( attribute );
-  }
+    }
 
 	public void addAttribute( Attribute attribute ) {
 		if ( !attributes.contains( attribute ) )
@@ -46,64 +58,14 @@ public class Query {
       filters.add( filter );
     }
 
-    public String getHost(){
-            return host;
-        }
-
-    public void setHost(String host){
-            this.host = host;
-        }
-
-    public String getPort(){ return port; }
-
-    public void setPort(String port){ this.port = port; }
-
-    public String getDatabase(){
-            return database;
-        }
-
-    public void setDatabase(String database){
-            this.database = database;
-        }
-
-    public String getUser(){
-            return user;
-        }
-
-    public void setUser(String user){
-            this.user = user;
-        }
-
-    public String getPassword(){
-            return password;
-        }
-
-    public void setPassword(String password){
-            this.password = password;
-        }
-
-    public ResultTarget getResultTarget(){
-            return resultTarget;
-        }
-
-    public void setResultTarget(ResultTarget resultTarget){
-            this.resultTarget = resultTarget;
-        }
-
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
 			buf.append("[");
-      buf.append(" host=").append(host);
-      buf.append(" ,port=").append(port);
-      buf.append(" ,user=").append(user);
-      buf.append(" ,password=").append(password);
-      buf.append(" ,database=").append(database);
       buf.append(" ,species=").append(species);
       buf.append(" ,focus=").append(focus);
       buf.append(" ,attributes=").append(attributes);
       buf.append(" ,filters=").append(filters);
-      buf.append(" ,resultTarget=").append(resultTarget);
       buf.append("]");
 
       return buf.toString();
@@ -111,11 +73,11 @@ public class Query {
 
     public String getSpecies(){
             return species;
-        }
+	}
 
     public void setSpecies(String species){
             this.species = species;
-        }
+	}
 
     public String getFocus(){
             return focus;
@@ -135,12 +97,6 @@ public class Query {
     /** @link dependency */
 
   /*# Filter lnkFilter; */
-  private String host;
-  private String port;
-  private String database;
-  private String user;
-  private String password;
-  private ResultTarget resultTarget;
   private String species;
   private String focus;
 }

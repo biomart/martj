@@ -22,7 +22,7 @@ public abstract class Base extends TestCase {
     private String connprops = "data/testconnection.conf"; 
     private URL connectionconf;
 
-  	protected Engine engine = new Engine();
+  	protected Engine engine;
     protected Query query = new Query();
 
     public void init() {
@@ -54,25 +54,18 @@ public abstract class Base extends TestCase {
     public void setUp() {
 	  init();
 
-      query.setHost(host);
-      query.setUser(user);
-      query.setDatabase(database);
-      if (password != null) {
-		  query.setPassword(password);
-	  }
-      if (port != null) {
-          query.setPort(port);
-	  }
+      engine = new Engine(host, port, user, password, database);
+
       query.setSpecies( "homo_sapiens" );
       query.setFocus( "gene" );
     }
 
     public Base(String name) {
         super(name);
-			if ( System.getProperty("log4j.configuration")==null ) {
-        BasicConfigurator.configure();
-        Logger.getRoot().setLevel( Level.WARN );
-      }
+		if ( System.getProperty("log4j.configuration")==null ) {
+            BasicConfigurator.configure();
+            Logger.getRoot().setLevel( Level.WARN );
+        }
     }
 
 }

@@ -2,7 +2,7 @@ package org.ensembl.mart.explorer.test;
 
 import junit.framework.*;
 import org.ensembl.mart.explorer.*;
-import org.apache.log4j.*;
+//import org.apache.log4j.*;
 import java.io.*;
 import java.net.*;
 
@@ -13,11 +13,10 @@ import java.net.*;
  * @testpackage org.ensembl.mart.explorer.test*/
 public class CompiledSQLQueryTest extends Base {
 
-	/*  	public final String STABLE_ID_FILE
-			=System.getProperty("user.home")+"/src/head/mart-explorer/data/gene_stable_id.test";*/
-
     public final String STABLE_ID_REL = "data/gene_stable_id.test";
-
+    private StatOutputStream stats = new StatOutputStream();
+    private FormatSpec formatspec = new FormatSpec(FormatSpec.TABULATED, "\t");
+    
     public CompiledSQLQueryTest(String name) {
         super(name);
     }
@@ -29,36 +28,32 @@ public class CompiledSQLQueryTest extends Base {
         return suite;
     }
 
-  /**
-   * Convenience method for executing query and printing some results.
-   */
-	private void executeQuery( Query query, ResultStats stats ) throws Exception {
-      engine.execute( query);
-			System.out.println( query);
-      System.out.println( stats );
-
-      assertTrue( "No text returned from query", stats.getCharCount()>0 );
-      assertTrue( "No lines returned from query", stats.getLineCount()>0 );
-
-  }
+    /**
+     * Convenience method for executing query and printing some results.
+     */
+	  private void executeQuery( Query query ) throws Exception {
+        engine.execute( query, formatspec, stats);
+	    System.out.println( query );
+        System.out.println( stats );
+      
+        assertTrue( "No text returned from query", stats.getCharCount()>0 );
+        assertTrue( "No lines returned from query", stats.getLineCount()>0 );
+    } 
 
     public void testChrQuery() throws Exception {
 
-			query.addAttribute( new FieldAttribute("gene_stable_id") );
-      query.addFilter( new BasicFilter( "chromosome_id", "=", "3") );
-      ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 0 );
-      query.setResultTarget( stats );
-			executeQuery( query, stats );
+	    query.addAttribute( new FieldAttribute("gene_stable_id") );
+        query.addFilter( new BasicFilter( "chromosome_id", "=", "3") );
+   
+	    executeQuery( query );
     }
 
 
     public void testStableIDQuery() throws Exception {
 
-			query.addAttribute( new FieldAttribute("gene_stable_id") );
+      query.addAttribute( new FieldAttribute("gene_stable_id") );
       query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000005175"}) );
-      ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
-      query.setResultTarget( stats );
-			executeQuery( query, stats );
+      executeQuery( query );
     }
 
 
@@ -70,9 +65,7 @@ public class CompiledSQLQueryTest extends Base {
       query.addAttribute( new FieldAttribute("gene_stable_id") );
 
       query.addFilter( new IDListFilter("gene_stable_id", new File ( org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL ).getFile() ) ) );
-      ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
-      query.setResultTarget( stats );
-			executeQuery( query, stats );
+      executeQuery( query );
     }
 
 
@@ -86,27 +79,16 @@ public class CompiledSQLQueryTest extends Base {
 
       URL stableidurl = org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL );
       query.addFilter( new IDListFilter("gene_stable_id", stableidurl ) );
-      executeWithStats( query, 3 );
+      executeQuery( query );
     }
-
 
 
   public void testJoinToPFAM() throws Exception {
     query.addAttribute( new FieldAttribute("gene_stable_id") );
     query.addAttribute( new FieldAttribute("pfam") );
-    executeWithStats( query, 3 );
+    executeQuery( query );
   }
 
-
-  /**
-   * Convenience method; executes query and print nLines of results to
-  screen. Each line has tab separated values.
-   */
-  private void executeWithStats( Query query, int nLines) throws Exception  {
-    ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
-    query.setResultTarget( stats );
-    executeQuery( query, stats );
-  }
 
   public static void main(String[] args) {
     junit.textui.TestRunner.run( suite() );

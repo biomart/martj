@@ -1,6 +1,5 @@
 package org.ensembl.mart.explorer;
 
-import java.sql.*;
 import org.apache.log4j.*;
 import java.util.*;
 import gnu.getopt.*;
@@ -19,8 +18,9 @@ public class MartExplorerTool {
   private static String password = null;
   private static String species = null;
   private static String focus = null;
-  private static ResultFile resultFile = new ResultFile();
   private static boolean validQuery = true;
+  private static FormatSpec formatspec = new FormatSpec();
+  private static OutputStream os = null;
 
   private static Logger logger = Logger.getLogger(MartExplorerTool.class.getName());
   private static List attributes = new ArrayList();
@@ -28,7 +28,7 @@ public class MartExplorerTool {
 
   private static IDListFilter idFilter = null;
 
-  private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:St:hvs:c:g:";
+  private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:O:F:i:I:St:hvs:c:g:R:";
 
   public MartExplorerTool() {
   }
@@ -64,8 +64,9 @@ public class MartExplorerTool {
       + "\n-c FOCUS                       - focus of query"
       + "\n-a ATTRIBUTE                   - one or more attributes"
       + "\n-f FILTER                      - zero or more filters"
-      + "\n-o OUTPUT_FILE                 - output file, default is standard out"
-      + "\n-F OUTPUT_FORMAT               - output format, default is tab separated values"
+      + "\n-O OUTPUT_FILE                 - output file, default is standard out"
+      + "\n-F OUTPUT_FORMAT               - output format, either tabulated or fasta"
+      + "\n-R OUTPUT_SEPARATOR            - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated" 
       + "\n-i IDENTIFIER_FILTER           - zero or more identifiers "
       + "\n-I URL_CONTAINING_IDENTIFIERS  - url with one or more identifiers"
       + "\n-S                             - if given, reads STDIN for list of ids (newline separated)"
@@ -96,7 +97,7 @@ public class MartExplorerTool {
 
     Getopt g = new Getopt("MartExplorerApplication", args, COMMAND_LINE_SWITCHES);
     int c;
-    String arg;
+
     int argnum = 0;
 
     while ((c = g.getopt()) != -1) {
@@ -157,13 +158,17 @@ public class MartExplorerTool {
           addFilter( g.getOptarg() );
           break;
 
-        case 'o':
+        case 'O':
           nameFile( g.getOptarg() );
           break;
 
         case 'F':
           format( g.getOptarg() ); 
           break;
+
+	    case 'R':
+			formatspec.setSeparator( g.getOptarg() );
+            break;
 
         case 'I':
           addIdFilterURL( g.getOptarg() ); 
@@ -184,7 +189,6 @@ public class MartExplorerTool {
 	  }
     }            
 
-
     // Initialise logging system
     if (loggingURL != null) {
         PropertyConfigurator.configure(loggingURL);
@@ -203,6 +207,7 @@ public class MartExplorerTool {
     // check for help or no args
     if ( help || argnum == 0) {
       System.out.println( usage() );
+      return;
     }
 
     else if (host == null) 
@@ -226,20 +231,21 @@ public class MartExplorerTool {
     else if ( idFilter!=null && idFilter.getType()==null ) 
       validationError("You must set id filter type if you use an id filter (use -t).");
 
+    else if (formatspec.getFormat() == -1 )
+		validationError("You must set a format for the output (use -F).");
+
     else {
-      // Default to writing output to stdout.
-      if ( resultFile.getName()==null )
-        resultFile.setWriter( new BufferedWriter(new OutputStreamWriter(System.out) ) );
-
-      // Default to writing output format as tab separated values.
-      if ( resultFile.getFormatter()==null )
-        resultFile.setFormatter( new SeparatedValueFormatter("\t") );
-
-	  run();
+	    // all required attributes set, may need to set some defaults
+		if (formatspec.getFormat() == FormatSpec.TABULATED && formatspec.getSeparator() == null) {
+            logger.warn("No separator specified for tabulated output, defaulting to tab separated");
+            formatspec.setSeparator("\t");
+		}
 	}
+
+    run();
   }
 
-  private static void validationError( String message ) {
+  public static void validationError( String message ) {
     System.err.println( "Error: " + message );
     validQuery = false;
   }
@@ -247,39 +253,35 @@ public class MartExplorerTool {
   /**
    * Constructs a Query based on the command line parameters and executes it.
    */
-  private static void run() {
+  public static void run() {
 
     if ( !validQuery ) {
       System.err.println( "Run with -h for help." );
       return;
     }
 
+    // default output is stdout
+    if (os == null)
+        os = System.out;
+
     if ( idFilter!=null ) filters.add( idFilter );
 
     Query q = new Query();
-    q.setHost( host );
-    q.setPort( port );
-    q.setDatabase( database );
-    q.setUser( user );
-    q.setPassword( password );
     q.setSpecies( species );
     q.setFocus( focus );
     q.setAttributes( attributes );
 
     q.setFilters( (Filter[])filters.toArray( new Filter[]{}) );
-    q.setResultTarget( resultFile );
 
-    Engine e = new Engine();
+    Engine e = new Engine(host, port, user, password, database);
     try {
-      e.execute( q );
+      e.execute( q, formatspec, os );
     } catch ( Exception ex) {
       ex.printStackTrace();
     }
   }
 
-
-
-  private static void getConnProperties( String connfile ) {
+  public static void getConnProperties( String connfile ) {
       URL confInfo;
       Properties p = new Properties();
 
@@ -302,11 +304,11 @@ public class MartExplorerTool {
       confinUse = connfile;
   }
 
-  private static void addAttribute( String attribute ) {
+  public static void addAttribute( String attribute ) {
     attributes.add( new FieldAttribute( attribute ) );
   }
 
-  private static void addFilter( String filterCondition ) {
+  public static void addFilter( String filterCondition ) {
     
     // currently only support BasicFilters e.g. a=3
     StringTokenizer tokens = new StringTokenizer( filterCondition, "=<>", true);
@@ -318,24 +320,34 @@ public class MartExplorerTool {
   }
 
   
-  private static void nameFile( String fileName ) {
-    resultFile.setName( fileName );
+  public static void nameFile( String fileName ) {
+    try {
+        os = new FileOutputStream( fileName );
+	}
+    catch (FileNotFoundException e) {
+        logger.warn("Could not open file "+fileName+e+"\ndefaulting to stdout\n");
+        os = System.out;
+	}
   }
 
-  private static void format( String format ) {
-    if ( "tsv".equals( format) ) 
-      resultFile.setFormatter( new SeparatedValueFormatter("\t") );
+  public static void format( String format ) {
+    if ( "tabulated".equals( format) ) 
+		formatspec.setFormat(FormatSpec.TABULATED);
+
+    else if ( "fasta".equals( format ) )
+	    formatspec.setFormat(FormatSpec.FASTA);
+     
     else
-      validationError("Unkown format: " + format);
+      validationError("Unkown format: " + format + "\n must be tabulated or fasta");
   }
 
 
-  private static void addIdFilter( String identifier ) {
+  public static void addIdFilter( String identifier ) {
     if ( idFilter==null ) idFilter = new IDListFilter();
     idFilter.addIdentifier( identifier );
   }
   
-  private static void addIdFilterURL( String url ) {
+  public static void addIdFilterURL( String url ) {
     
     try {
 
@@ -351,7 +363,7 @@ public class MartExplorerTool {
 
   /* Currently, this will be used to read from STDIN, but could be used in other ways
    */ 
-  private static void addIdFilterStream( InputStream instream ) {
+  public static void addIdFilterStream( InputStream instream ) {
     
     try {
 
@@ -365,7 +377,7 @@ public class MartExplorerTool {
     }
   }
 
-  private static void identifierType(String type) {
+  public static void identifierType(String type) {
     if ( idFilter==null )
       idFilter = new IDListFilter();
     
