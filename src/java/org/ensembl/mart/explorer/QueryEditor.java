@@ -299,7 +299,8 @@ public class QueryEditor
 			&& datasetSelectionPage.getPropertyName().equals(propertyName)
 			&& !newValue.equals(oldValue)) {
 
-			if (oldValue != null) {
+			if (oldValue != null 
+          && ( query.getAttributes().length>0 || query.getFilters().length>0 )) {
 
         // Confirm user really wants to change dataset
 				int option =
