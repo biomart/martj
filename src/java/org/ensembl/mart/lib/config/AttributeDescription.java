@@ -37,6 +37,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public final int DEFAULTMAXLENGTH = 10;
 
+  private final String martResultSetKey = "martResultSetClassName";
   private final String fieldKey = "field";
   private final String tableConstraintKey = "tableConstraint";
   private final String keyKey = "key";
@@ -66,9 +67,10 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     super();
     
     setAttribute(fieldKey, null);
+    setAttribute(martResultSetKey, null);
     setAttribute(maxLengthKey, null);
     setAttribute(tableConstraintKey, null);
-	setAttribute(keyKey, null);
+	  setAttribute(keyKey, null);
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
@@ -248,6 +250,24 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     return getAttribute(sourceKey);
   }
 
+  /**
+   * Returns the name of the MartResultSet implementing class
+   * required to produce this Attribute.  May be null if the
+   * default Implementation is required.
+   * @return String martResultSet Implementation name, or null if default required
+   */
+  public String getMartResultSetClassName() {
+    return getAttribute(martResultSetKey);
+  }
+  
+  /**
+   * Sets the name of the martResultSet implementing class for this Attribute. 
+   * @param martResultSetClassName - String java class name for martResultSet implementing class.
+   */
+  public void setMartResultSetClassName(String martResultSetClassName) {
+    setAttribute(martResultSetKey, martResultSetClassName);
+  }
+  
   /**
    * @param LinkoutURL - String base for HTML link references
    */

@@ -32,7 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.mart.util.FormattedSequencePrintStream;
 import org.ensembl.util.SequenceUtil;
 
 /**

@@ -27,7 +27,6 @@ import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigCache;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
-import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 
 /** 
 * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>

@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.mart.util.FormattedSequencePrintStream;
 
 /** 
 * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -45,7 +45,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected final int[] batchModifiers = { 5, 2 };
   protected int modIter = 0; //start at 0 
   protected int batchLength = 1000;
-  private final int maxBatchLimit = 50000;
+  private final int maxBatchLimit = 750000;
   
   // total number of rows execute will ever return
 //  private final int MAXTOTALROWS = 999999999;
@@ -165,14 +165,14 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
    * keyID, it should write out the results from the lastID, and reset lastIDRowsProcessed to zero.
    * It should end this loop by incrementing the totalRows, resultSetRowsProcessed and lastIDRowsProcessed
    * integers, and setting the lastID to the current keyID.intValue.
-   * 
+   *  
    * @param conn
    * @param rs
    * @throws IOException
    * @throws SQLException
    */
   protected abstract void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException;
-
+  
   protected void writeLastEntry(Connection conn) throws SequenceException {
     // write the last transcripts data, if present
     if (lastID > -1)
@@ -271,6 +271,113 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   }
 
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    //System.out.println("HARD LIMIT IS\t" + hardLimit);
+
+    DetailedDataSource ds = curQuery.getDataSource();
+    if (ds == null)
+      throw new RuntimeException("curQuery.DataSource is null");
+
+    if (ds.getDatabaseType().equals("mysql")) {
+      //mySQL solution
+      executeQueryMysql(ds, curQuery, hardLimit);
+    } else {
+      //generic solution
+      executeQueryGeneric(ds, curQuery, hardLimit);
+    }
+  }
+  
+  protected void executeQueryMysql(DetailedDataSource ds, Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    boolean moreRows = true;
+    boolean userLimit = false;
+
+    attributes = curQuery.getAttributes();
+    filters = curQuery.getFilters();
+    seqd = curQuery.getSequenceDescription();
+
+    Connection conn = null;
+    String sql = null;
+    try {
+      conn = ds.getConnection();
+
+      CompiledSQLQuery csql = new CompiledSQLQuery(curQuery);
+      String sqlbase = csql.toSQL();
+
+      while (moreRows) {
+        sql = sqlbase;
+
+//      sql += " order by  "
+//        + structureTable
+//        + "."
+//        + GENEID
+//        + ", "
+//        + structureTable
+//        + "."
+//        + TRANID
+//        + ", "
+//        + structureTable
+//        + "."
+//        + RANK;
+
+        sql += " order by "
+            + structureTable
+            + "."
+            + queryID;
+            
+        int maxRows = 0;
+        if (hardLimit > 0) {
+          userLimit = true;
+          maxRows = Math.min(batchLength, hardLimit - totalRows);
+          moreRows = false;
+        } else
+          maxRows = batchLength;
+
+        sql += " LIMIT " + totalRows + "," + maxRows; //;(maxRows - lastIDRowsProcessed);
+        
+        if (logger.isLoggable(Level.INFO))
+          logger.info("SQL : " + sql + "\n");
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        int p = 1;
+        for (int i = 0; i < filters.length; ++i) {
+          Filter f = filters[i];
+          String value = f.getValue();
+
+          if (value != null) {
+            logger.info("SQL (prepared statement value) : " + p + " = " + value);
+            ps.setString(p++, value);
+          }
+        }
+
+        ResultSet rs = ps.executeQuery();
+        resultSetRowsProcessed = 0;
+
+        processResultSet(conn, rs);
+
+        // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
+        if ((!userLimit) && (resultSetRowsProcessed < batchLength))
+          moreRows = false;
+
+        if (batchLength < maxBatchLimit) {
+          batchLength *= batchModifiers[modIter];
+          modIter = (modIter == 0) ? 1 : 0;
+        }
+
+        rs.close();
+      }
+
+      writeLastEntry(conn);
+      conn.close();
+    } catch (IOException e) {
+      throw new SequenceException(e);
+    } catch (SQLException e) {
+      throw new InvalidQueryException(e + " :" + sql);
+    } finally {
+      DetailedDataSource.close(conn);
+    }
+  }
+  
+  protected void executeQueryGeneric(DetailedDataSource ds, Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
     boolean moreRows = true;
     boolean userLimit = false;
 

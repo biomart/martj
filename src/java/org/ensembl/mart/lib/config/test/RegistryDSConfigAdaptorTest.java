@@ -19,15 +19,9 @@
 package org.ensembl.mart.lib.config.test;
 
 import java.net.URL;
-import java.sql.Connection;
 
-import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
-import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.DatasetConfigIterator;
-import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
-import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.lib.test.Base;
 
 /**

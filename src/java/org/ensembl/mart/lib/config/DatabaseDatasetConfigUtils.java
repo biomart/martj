@@ -75,21 +75,12 @@ public class DatabaseDatasetConfigUtils {
    * MessageDigest  blob
    */
 
+  private HashMap configInfo = new HashMap();
+  
   private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest from ";
-  private final String GETALLDATASETSQL = "select dataset from ";
-  private final String GETINTNAMESQL = "select internalName from "; //append table after user test
-  private final String GETDNAMESQL = "select displayName from "; //append table after user test
-  private final String GETANYNAMESWHEREDATASET = " where dataset = ?";
-  private final String GETANYNAMESWHEREDNAME = " where displayName = ? and dataset = ?";
-  // append to GETINTNAMESQL when wanting internalName by displayName
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
-  private final String GETDOCBYDNAMESELECT = "select xml, compressed_xml from "; //append table after user test
-  private final String GETDOCBYDNAMEWHERE = " where displayName = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
-  private final String GETDIGBYNAMESELECT = "select MessageDigest from ";
-  private final String GETDIGBYINAMEWHERE = " where internalName = ? and dataset = ?";
-  private final String GETDIGBYDNAMEWHERE = " where displayName = ? and dataset = ?";
   private final String EXISTSELECT = "select count(*) from "; //append table after user test
   private final String EXISTWHERE = " where internalName = ? and displayName = ? and dataset = ?";
   private final String DELETEOLDXML = "delete from "; //append table after user test
@@ -571,6 +562,53 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
+  private void initMartConfigForUser(String user) throws ConfigurationException {
+    if (!configInfo.containsKey(user)) {
+      HashMap userMap = new HashMap();
+      configInfo.put(user, userMap);
+    }
+    
+    Connection conn = null;
+    try {
+      String metatable = getDSConfigTableFor(user);
+      String sql = GETALLNAMESQL + metatable;
+
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
+          "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
+
+      conn = dsource.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+
+      ResultSet rs = ps.executeQuery();
+      while (rs.next()) {
+        String iname = rs.getString(1);
+        String dname = rs.getString(2);
+        String dset = rs.getString(3);
+        String description = rs.getString(4);
+        byte[] digest = rs.getBytes(5);
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description);
+        dsv.setMessageDigest(digest);
+        
+        HashMap userMap = (HashMap) configInfo.get(user);
+        
+        if (!userMap.containsKey(dset)) {
+          HashMap dsetMap = new HashMap();
+          userMap.put(dset, dsetMap);
+        }
+        
+        HashMap dsetMap = (HashMap) userMap.get(dset);
+        dsetMap.put(iname, dsv);
+      }
+      rs.close();
+      
+    } catch (SQLException e) {
+      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
+    } finally {
+      DetailedDataSource.close(conn);
+    }
+  }
+  
   /**
    * Returns all dataset names from the meta_configuration table for the given user.
    * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
@@ -578,30 +616,13 @@ public class DatabaseDatasetConfigUtils {
    * @throws ConfigurationException when valid meta_configuration table does not exist, and for all underlying SQL Exceptions
    */
   public String[] getAllDatasetNames(String user) throws ConfigurationException {
-    SortedSet names = new TreeSet();
-    String metatable = getDSConfigTableFor(user);
-    String sql = GETALLDATASETSQL + metatable;
-
-    if (logger.isLoggable(Level.FINE))
-      logger.fine("Getting all dataset names with sql: " + sql + "\n");
-
-    Connection conn = null;
-    try {
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-
-      ResultSet rs = ps.executeQuery();
-
-      while (rs.next()) {
-        String name = rs.getString(1);
-        names.add(name);
-      }
-      rs.close();
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQLException during attempt to fetch InternalNames for " + sql + "\n", e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
+    if (!configInfo.containsKey(user))
+      initMartConfigForUser(user);
+    
+    HashMap userMap = (HashMap) configInfo.get(user);
+    
+    //sort the names alphabetically  
+    SortedSet names = new TreeSet(userMap.keySet());       
 
     String[] ret = new String[names.size()];
     names.toArray(ret);
@@ -617,73 +638,21 @@ public class DatabaseDatasetConfigUtils {
    * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying Exceptons.
    */
   public String[] getAllInternalNamesForDataset(String user, String dataset) throws ConfigurationException {
-    List names = new ArrayList();
-    String metatable = getDSConfigTableFor(user);
-    String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDATASET;
-
-    if (logger.isLoggable(Level.FINE))
-      logger.fine("Getting all InternalNames with sql: " + sql + "\n");
-
-    Connection conn = null;
-    try {
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, dataset);
-
-      ResultSet rs = ps.executeQuery();
-
-      while (rs.next()) {
-        String name = rs.getString(1);
-        if (!names.contains(name))
-          names.add(name);
-      }
-      rs.close();
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQLException during attempt to fetch InternalNames for " + sql + "\n", e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-
-    String[] ret = new String[names.size()];
-    names.toArray(ret);
-    return ret;
-  }
-
-  /**
-   * Returns all of the displayNames for the requested dataset, as stored in the meta_configuration table for
-   * the Mart Database for the given user.
-   * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
-   * @param dataset -- dataset for which displayNames are requested
-   * @return String[] containing all of the displayNames for the requested dataset
-   * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying Exceptons.
-   */
-  public String[] getAllDisplayNamesForDataset(String user, String dataset) throws ConfigurationException {
-    List names = new ArrayList();
-    String metatable = getDSConfigTableFor(user);
-    String sql = GETDNAMESQL + metatable + GETANYNAMESWHEREDATASET;
-
-    if (logger.isLoggable(Level.FINE))
-      logger.fine("Getting all displayNames with sql: " + sql + "\n");
-
-    Connection conn = null;
-    try {
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, dataset);
-
-      ResultSet rs = ps.executeQuery();
-
-      while (rs.next()) {
-        String name = rs.getString(1);
-        if (!names.contains(name))
-          names.add(name);
-      }
-      rs.close();
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQLException during attempt to fetch InternalNames for " + sql + "\n", e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
+    if (!configInfo.containsKey(user))
+      initMartConfigForUser(user);
+    
+    HashMap userMap = (HashMap) configInfo.get(user);
+    
+    if (!userMap.containsKey(dataset))
+      initMartConfigForUser(user);
+    
+    if (!userMap.containsKey(dataset))
+      return new String[0];
+    
+    HashMap dsetMap = (HashMap) userMap.get(dataset);
+      
+    //sorted alphabetically  
+    SortedSet names = new TreeSet(dsetMap.keySet());
 
     String[] ret = new String[names.size()];
     names.toArray(ret);
@@ -702,164 +671,26 @@ public class DatabaseDatasetConfigUtils {
   public DatasetConfig getDatasetConfigByDatasetInternalName(String user, String dataset, String internalName)
     throws ConfigurationException {
 
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETALLNAMESQL + metatable + GETANYNAMESWHERINAME;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get displayName for internalName " + internalName + " and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      String iname = rs.getString(1);
-      String dname = rs.getString(2);
-      String dprefix = rs.getString(3);
-      String description = rs.getString(4);
-      byte[] digest = rs.getBytes(5);
-      rs.close();
-
-      DatasetConfig dsv = new DatasetConfig(iname, dname, dprefix, description);
-      dsv.setMessageDigest(digest);
-      return dsv;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  /**
-   * Returns the DatasetConfig XML for a given user, Dataset, and internalName, as a byte[].
-   * @param user -- mart user, which determines which meta table to get its data from
-   * @param dataset -- dataset for required DatasetConfig
-   * @param internalName -- internalName for required DatasetConfig
-   * @return DatasetConfig XML for given user, Dataset, and internalName, as a byte[]
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public byte[] getDatasetConfigByteArrayByDatasetInternalName(String user, String dataset, String internalName)
-    throws ConfigurationException {
-    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetConfigByteArrayByDatasetInternalNameOracle(user, dataset, internalName);
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      byte[] stream = rs.getBytes(1);
-      byte[] cstream = rs.getBytes(2);
-
-      rs.close();
-
-      InputStream rstream = null;
-      if (cstream != null)
-        rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
-      else
-        rstream = new ByteArrayInputStream(stream);
-
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      int i = 0;
-      while ((i = rstream.read()) != -1)
-        bout.write(i);
-      rstream.close();
-
-      return bout.toByteArray();
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } catch (IOException e) {
-      throw new ConfigurationException(
-        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  private byte[] getDatasetConfigByteArrayByDatasetInternalNameOracle(String user, String dataset, String internalName)
-    throws ConfigurationException {
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      CLOB stream = (CLOB) rs.getClob(1);
-      BLOB cstream = (BLOB) rs.getBlob(2);
-
-      InputStream rstream = null;
-      if (cstream != null) {
-        rstream = new GZIPInputStream(cstream.getBinaryStream());
-      } else
-        rstream = stream.getAsciiStream();
-
-      ByteArrayOutputStream bout = new ByteArrayOutputStream();
-      int i = 0;
-      while ((i = rstream.read()) != -1)
-        bout.write(i);
-      rstream.close();
-
-      rs.close();
-      return bout.toByteArray();
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } catch (IOException e) {
-      throw new ConfigurationException(
-        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
+    if (!configInfo.containsKey(user))
+      initMartConfigForUser(user);
+    
+    HashMap userMap = (HashMap) configInfo.get(user);
+    
+    if (!userMap.containsKey(dataset))
+      initMartConfigForUser(user);
+    
+    if (!userMap.containsKey(dataset))
+      return null;
+      
+    HashMap dsetMap = (HashMap) userMap.get(dataset);
+    
+    if (!dsetMap.containsKey(internalName))
+      initMartConfigForUser(user);
+    if (!dsetMap.containsKey(internalName))
+      return null;
+    
+    DatasetConfig dsv = (DatasetConfig) dsetMap.get(internalName);
+    return dsv;      
   }
 
   /**
@@ -982,46 +813,46 @@ public class DatabaseDatasetConfigUtils {
    * @return DatasetConfig with given displayName and dataset
    * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
-  public DatasetConfig getDatasetConfigByDatasetDisplayName(String user, String dataset, String displayName)
-    throws ConfigurationException {
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETALLNAMESQL + metatable + GETANYNAMESWHEREDNAME;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, displayName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      String iname = rs.getString(1);
-      String dname = rs.getString(2);
-      String dprefix = rs.getString(3);
-      String description = rs.getString(4);
-      byte[] digest = rs.getBytes(5);
-      rs.close();
-
-      DatasetConfig dsv = new DatasetConfig(iname, dname, dprefix, description);
-      dsv.setMessageDigest(digest);
-      return dsv;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
+//  public DatasetConfig getDatasetConfigByDatasetDisplayName(String user, String dataset, String displayName)
+//    throws ConfigurationException {
+//    Connection conn = null;
+//    try {
+//      String metatable = getDSConfigTableFor(user);
+//      String sql = GETALLNAMESQL + metatable + GETANYNAMESWHEREDNAME;
+//
+//      if (logger.isLoggable(Level.FINE))
+//        logger.fine(
+//          "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
+//
+//      conn = dsource.getConnection();
+//      PreparedStatement ps = conn.prepareStatement(sql);
+//      ps.setString(1, displayName);
+//      ps.setString(2, dataset);
+//
+//      ResultSet rs = ps.executeQuery();
+//      if (!rs.next()) {
+//        // will only get one result
+//        rs.close();
+//        conn.close();
+//        return null;
+//      }
+//
+//      String iname = rs.getString(1);
+//      String dname = rs.getString(2);
+//      String dprefix = rs.getString(3);
+//      String description = rs.getString(4);
+//      byte[] digest = rs.getBytes(5);
+//      rs.close();
+//
+//      DatasetConfig dsv = new DatasetConfig(iname, dname, dprefix, description);
+//      dsv.setMessageDigest(digest);
+//      return dsv;
+//    } catch (SQLException e) {
+//      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
+//    } finally {
+//      DetailedDataSource.close(conn);
+//    }
+//  }
 
   /**
    * Returns a DatasetConfig JDOM Document for a given user, dataset, and displayName
@@ -1031,116 +862,116 @@ public class DatabaseDatasetConfigUtils {
    * @return JDOM Document for required DatasetConfig XML
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public Document getDatasetConfigDocumentByDatasetDisplayName(String user, String dataset, String displayName)
-    throws ConfigurationException {
-    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetConfigDocumentByDatasetDisplayNameOracle(user, dataset, displayName);
+//  public Document getDatasetConfigDocumentByDatasetDisplayName(String user, String dataset, String displayName)
+//    throws ConfigurationException {
+//    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+//      return getDatasetConfigDocumentByDatasetDisplayNameOracle(user, dataset, displayName);
+//
+//    Connection conn = null;
+//    try {
+//      String metatable = getDSConfigTableFor(user);
+//      String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
+//
+//      if (logger.isLoggable(Level.FINE))
+//        logger.fine(
+//          "Using "
+//            + sql
+//            + " to get DatasetConfig Document for displayName "
+//            + displayName
+//            + " and dataset "
+//            + dataset
+//            + "\n");
+//
+//      conn = dsource.getConnection();
+//      PreparedStatement ps = conn.prepareStatement(sql);
+//      ps.setString(1, displayName);
+//      ps.setString(2, dataset);
+//
+//      ResultSet rs = ps.executeQuery();
+//      if (!rs.next()) {
+//        // will only get one result
+//        rs.close();
+//        conn.close();
+//        return null;
+//      }
+//
+//      byte[] stream = rs.getBytes(1);
+//      byte[] cstream = rs.getBytes(2);
+//
+//      rs.close();
+//
+//      InputStream rstream = null;
+//      if (cstream != null)
+//        rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+//      else
+//        rstream = new ByteArrayInputStream(stream);
+//
+//      return dscutils.getDocumentForXMLStream(rstream);
+//    } catch (SQLException e) {
+//      throw new ConfigurationException(
+//        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
+//        e);
+//    } catch (IOException e) {
+//      throw new ConfigurationException(
+//        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
+//        e);
+//    } catch (ConfigurationException e) {
+//      throw e;
+//    } finally {
+//      DetailedDataSource.close(conn);
+//    }
+//  }
 
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using "
-            + sql
-            + " to get DatasetConfig Document for displayName "
-            + displayName
-            + " and dataset "
-            + dataset
-            + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, displayName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      byte[] stream = rs.getBytes(1);
-      byte[] cstream = rs.getBytes(2);
-
-      rs.close();
-
-      InputStream rstream = null;
-      if (cstream != null)
-        rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
-      else
-        rstream = new ByteArrayInputStream(stream);
-
-      return dscutils.getDocumentForXMLStream(rstream);
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } catch (IOException e) {
-      throw new ConfigurationException(
-        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } catch (ConfigurationException e) {
-      throw e;
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  private Document getDatasetConfigDocumentByDatasetDisplayNameOracle(String user, String dataset, String displayName)
-    throws ConfigurationException {
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, displayName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      CLOB stream = (CLOB) rs.getClob(1);
-      BLOB cstream = (BLOB) rs.getBlob(2);
-
-      InputStream rstream = null;
-      if (cstream != null) {
-        rstream = new GZIPInputStream(cstream.getBinaryStream());
-      } else
-        rstream = stream.getAsciiStream();
-
-      Document ret = dscutils.getDocumentForXMLStream(rstream);
-      rstream.close();
-      rs.close();
-      return ret;
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } catch (IOException e) {
-      throw new ConfigurationException(
-        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
-        e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
+//  private Document getDatasetConfigDocumentByDatasetDisplayNameOracle(String user, String dataset, String displayName)
+//    throws ConfigurationException {
+//
+//    Connection conn = null;
+//    try {
+//      String metatable = getDSConfigTableFor(user);
+//      String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
+//
+//      if (logger.isLoggable(Level.FINE))
+//        logger.fine(
+//          "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
+//
+//      conn = dsource.getConnection();
+//      PreparedStatement ps = conn.prepareStatement(sql);
+//      ps.setString(1, displayName);
+//      ps.setString(2, dataset);
+//
+//      ResultSet rs = ps.executeQuery();
+//      if (!rs.next()) {
+//        // will only get one result
+//        rs.close();
+//        conn.close();
+//        return null;
+//      }
+//
+//      CLOB stream = (CLOB) rs.getClob(1);
+//      BLOB cstream = (BLOB) rs.getBlob(2);
+//
+//      InputStream rstream = null;
+//      if (cstream != null) {
+//        rstream = new GZIPInputStream(cstream.getBinaryStream());
+//      } else
+//        rstream = stream.getAsciiStream();
+//
+//      Document ret = dscutils.getDocumentForXMLStream(rstream);
+//      rstream.close();
+//      rs.close();
+//      return ret;
+//    } catch (SQLException e) {
+//      throw new ConfigurationException(
+//        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
+//        e);
+//    } catch (IOException e) {
+//      throw new ConfigurationException(
+//        "Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
+//        e);
+//    } finally {
+//      DetailedDataSource.close(conn);
+//    }
+//  }
 
   /**
    * Get a message digest for a given DatasetConfig, given by dataset and internalName
@@ -1152,167 +983,12 @@ public class DatabaseDatasetConfigUtils {
    */
   public byte[] getDSConfigMessageDigestByDatasetInternalName(String user, String dataset, String internalName)
     throws ConfigurationException {
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYINAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get Digest for internalName " + internalName + " and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
+      
+      DatasetConfig dsv = getDatasetConfigByDatasetInternalName(user, dataset, internalName);
+      if (dsv == null)
         return null;
-      }
-
-      byte[] digest = rs.getBytes(1);
-      rs.close();
-
-      return digest;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  /**
-   * Get the displayName for a given dataset and internalName.
-   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
-   * @param dataset -- dataset for which displayName is requested
-   * @param internalName -- internalName for DatasetConfig internalName desired.
-   * @return String displayName for given dataset and internalName
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public String getDSConfigDisplayNameByDatasetInternalName(String user, String dataset, String internalName)
-    throws ConfigurationException {
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDNAMESQL + metatable + GETANYNAMESWHERINAME;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine(
-          "Using " + sql + " to get displayName for internalName " + internalName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, internalName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      String dname = rs.getString(1);
-      rs.close();
-
-      return dname;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  /**
-   * Get a message digest for a given DatasetConfig, given by dataset and displayName
-   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
-   * @param dataset -- dataset for which digest is requested
-   * @param displayName -- displayName for DatasetConfig digest desired.
-   * @return byte[] digest for given displayName and dataset
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public byte[] getDSConfigMessageDigestByDatasetDisplayName(String user, String dataset, String displayName)
-    throws ConfigurationException {
-
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYDNAMEWHERE;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, displayName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      byte[] digest = rs.getBytes(1);
-      rs.close();
-
-      return digest;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  /**
-   * Get the internalName for a given dataset and displayName.
-   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
-   * @param dataset -- dataset for which internalName is requested
-   * @param displayName -- displayName for DatasetConfig internalName desired.
-   * @return String internalName for given displayName and dataset
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public String getDSConfigInternalNameByDatasetDisplayName(String user, String dataset, String displayName)
-    throws ConfigurationException {
-    Connection conn = null;
-    try {
-      String metatable = getDSConfigTableFor(user);
-      String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDNAME;
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
-
-      conn = dsource.getConnection();
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, displayName);
-      ps.setString(2, dataset);
-
-      ResultSet rs = ps.executeQuery();
-      if (!rs.next()) {
-        // will only get one result
-        rs.close();
-        conn.close();
-        return null;
-      }
-
-      String iname = rs.getString(1);
-      rs.close();
-
-      return iname;
-    } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
+      
+      return dsv.getMessageDigest();
   }
 
   private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName, String displayName)
