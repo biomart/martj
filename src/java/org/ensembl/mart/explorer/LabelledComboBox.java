@@ -320,4 +320,19 @@ public class LabelledComboBox extends Box implements ActionListener {
     return index;
 	}
 
+	/**
+	 * @param index
+	 * @return
+	 */
+	public Object getItemAt(int index) {
+		return combo.getItemAt(index);
+	}
+
+	/**
+	 * @return
+	 */
+	public int getItemCount() {
+		return combo.getItemCount();
+	}
+
 }
