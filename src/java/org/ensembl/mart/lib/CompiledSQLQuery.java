@@ -364,7 +364,7 @@ public class CompiledSQLQuery {
     //	sort so that we can use Arrays.binarySearch() later	
     Arrays.sort(tables);
 
-    for (int i = 0; i < starNames.length; i++) {
+    for (int i = 0; i < primaryKeys.length; i++) {
       String primaryKey = primaryKeys[i];
       for (int j = 0; j < starNames.length; j++) {
         String starName = starNames[j];
