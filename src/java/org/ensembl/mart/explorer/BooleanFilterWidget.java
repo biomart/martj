@@ -54,8 +54,6 @@ public class BooleanFilterWidget
   private JRadioButton irrelevant = new JRadioButton("irrelevant");
   private JComboBox list = null;
 
-  private BooleanFilter currentFilter;
-
   private BooleanFilter requireFilter;
   private BooleanFilter excludeFilter;
 
@@ -68,9 +66,10 @@ public class BooleanFilterWidget
   public BooleanFilterWidget(
     FilterGroupWidget filterGroupWidget,
     Query query,
-    FilterDescription fd) {
+    FilterDescription fd,
+    QueryTreeView tree) {
 
-    super(filterGroupWidget, query, fd);
+    super(filterGroupWidget, query, fd, tree);
 
     if ("boolean".equals(fd.getType())) {
 
@@ -141,18 +140,18 @@ public class BooleanFilterWidget
 
     currentButton = evt.getSource();
 
-    if (currentFilter != null)
-      query.removeFilter(currentFilter);
+    if (filter != null)
+      query.removeFilter(filter);
 
     if (currentButton == require)
-      currentFilter = requireFilter;
+      filter = requireFilter;
     else if (currentButton == exclude)
-      currentFilter = excludeFilter;
+      filter = excludeFilter;
     else
-      currentFilter = null;
+      filter = null;
 
-    if ( currentFilter!=null )
-      query.addFilter(currentFilter);
+    if ( filter!=null )
+      query.addFilter(filter);
   }
 
   /* (non-Javadoc)
@@ -205,7 +204,7 @@ public class BooleanFilterWidget
     
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
-    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
     FilterDescription fd =
       new FilterDescription(
         "someInternalName",
@@ -217,7 +216,7 @@ public class BooleanFilterWidget
         "someTableConstraint",
         null,
         "someDescription");
-    BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd);
+    BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
     JFrame f = new JFrame("Boolean Filter - test");
     f.getContentPane().add(bfw);

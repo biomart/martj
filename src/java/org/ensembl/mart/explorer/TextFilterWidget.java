@@ -62,7 +62,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
 
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
-    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
     FilterDescription fd =
       new FilterDescription(
         "someInternalName",
@@ -75,7 +75,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         null,
         "someDescription");
 
-    TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd);
+    TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd, null);
 
     JFrame f = new JFrame("Text Filter - test");
     f.getContentPane().add(tfw);
@@ -83,8 +83,6 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
     f.setVisible(true);
 
   }
-
-  private Filter filter;
 
   private JTextField textField;
   /**
@@ -130,9 +128,10 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
   public TextFilterWidget(
     FilterGroupWidget filterGroupWidget,
     Query query,
-    FilterDescription filterDescription) {
+    FilterDescription filterDescription,
+    QueryTreeView tree) {
 
-    super(filterGroupWidget, query, filterDescription);
+    super(filterGroupWidget, query, filterDescription, tree);
     String type = filterDescription.getType();
     if (!"text".equals(type))
       throw new IllegalArgumentException(
@@ -156,7 +155,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
     if (filter != null)
       query.removeFilter(filter);
     filter = null;
-      
+
     String value = textField.getText();
 
     // remove filter
@@ -178,8 +177,10 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
   public void setFilter(Filter filter) {
 
     this.filter = filter;
-    if (filter==null) textField.setText( "" );
-    else textField.setText( filter.getValue() );
+    if (filter == null)
+      textField.setText("");
+    else
+      textField.setText(filter.getValue());
   }
 
   /**

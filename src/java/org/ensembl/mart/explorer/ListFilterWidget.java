@@ -47,8 +47,6 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class ListFilterWidget extends FilterWidget implements ActionListener {
 
-  private Filter filter;
-
   private Map filterValueToItem;
 
   private JComboBox list;
@@ -60,8 +58,9 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
   public ListFilterWidget(
     FilterGroupWidget filterGroupWidget,
     Query query,
-    FilterDescription filterDescription) {
-    super(filterGroupWidget, query, filterDescription);
+    FilterDescription filterDescription,
+    QueryTreeView tree) {
+    super(filterGroupWidget, query, filterDescription, tree);
 
     list = new JComboBox();
     list.addActionListener(this);
@@ -115,7 +114,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         (OptionWrapper) filterValueToItem.get(filter.getValue());
       setSelectedItem(ow);
       assignPushOptions(ow.option.getPushActions());
-      
+
     }
   }
 
@@ -145,7 +144,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     if (selectedItem == emptySelection) {
 
-      if ( filter!=null ) query.removeFilter( filter );
+      if (filter != null)
+        query.removeFilter(filter);
 
     } else if (selectedItem != emptySelection) {
 
@@ -165,8 +165,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
               option.getTableConstraint(),
               "=",
               value);
-          query.addFilter( filter );              
-                  
+          query.addFilter(filter);
 
         }
 
@@ -233,7 +232,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     unassignPushOptions();
 
-    setFilter( null );
+    setFilter(null);
 
     filterValueToItem = resetList(list, options);
 
@@ -253,7 +252,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
-    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
     FilterDescription fd =
       new FilterDescription(
         "someInternalName",
@@ -265,40 +264,40 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "someTableConstraint",
         null,
         "someDescription");
-      fd.addOption(
-        new Option(
-          "optionInternalName1",
-          "true",
-          "displayName1",
-          "description1",
-          "field1",
-          "tableConstraint1",
-          "value1",
-          "ref1",
-          "type1",
-          "qualifier1",
-          "legalQualifiers1",
-           null));
-      fd.addOption(
-        new Option(
-          "optionInternalName2",
-          "true",
-          "displayName2",
-          "description2",
-          "field2",
-          "tableConstraint2",
-          "value2",
-          "ref2",
-          "type2",
-          "qualifier2",
-          "legalQualifiers2",
-           null));
+    fd.addOption(
+      new Option(
+        "optionInternalName1",
+        "true",
+        "displayName1",
+        "description1",
+        "field1",
+        "tableConstraint1",
+        "value1",
+        "ref1",
+        "type1",
+        "qualifier1",
+        "legalQualifiers1",
+        null));
+    fd.addOption(
+      new Option(
+        "optionInternalName2",
+        "true",
+        "displayName2",
+        "description2",
+        "field2",
+        "tableConstraint2",
+        "value2",
+        "ref2",
+        "type2",
+        "qualifier2",
+        "legalQualifiers2",
+        null));
     // TODO handle "simple" Options. 
     // Either throw an exception in the following case OR
     // use internalID>displayName?
     // fd.addOption( new Option("optionInternalName3","true") );           
 
-    ListFilterWidget lfw = new ListFilterWidget(fgw, q, fd);
+    ListFilterWidget lfw = new ListFilterWidget(fgw, q, fd, null);
 
     JFrame f = new JFrame("Boolean Filter - test");
     f.getContentPane().add(lfw);

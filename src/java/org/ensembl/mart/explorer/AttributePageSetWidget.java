@@ -30,9 +30,9 @@ public class AttributePageSetWidget extends PageSetWidget {
   /**
 	 * @param query
 	 */
-	public AttributePageSetWidget(Query query, DatasetView dataset) {
+	public AttributePageSetWidget(Query query, DatasetView dataset, QueryTreeView tree) {
 		
-    super(query, "Attributes");
+    super(query, "Attributes", tree);
     
 		AttributePage[] attributePages = dataset.getAttributePages();
 		for (int i = 0, n = attributePages.length; i < n; i++) {

@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -174,7 +173,6 @@ public class AttributeDescriptionWidget
           TreeNodeData tnd = (TreeNodeData) node.getUserObject();
           Attribute a = tnd.getAttribute();
           if (a != null && a == attribute) {
-            requestFocusInWindow();
             for (Component p, c = this; c != null; c = p) {
               p = c.getParent();
               if (p instanceof JTabbedPane)

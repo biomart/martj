@@ -53,7 +53,7 @@ public class InputPageContainer
     add(new DatasetViewWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
     add(new DatasourceWidget(query), TreeNodeData.DATASOURCE.getLabel());
     add(new AttributesWidget(query, datasetViewAdaptor, tree), TreeNodeData.ATTRIBUTES.getLabel());
-    add(new FiltersWidget(query, datasetViewAdaptor), TreeNodeData.FILTERS.getLabel());
+    add(new FiltersWidget(query, datasetViewAdaptor, tree), TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }
 

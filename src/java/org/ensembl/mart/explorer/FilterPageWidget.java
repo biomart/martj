@@ -27,8 +27,8 @@ public class FilterPageWidget extends PageWidget {
    * @param name name of this page
    * @param filterPage source object this instance represents
    */
-  public FilterPageWidget(Query query, String name, FilterPage filterPage) {
-    super(query, name);
+  public FilterPageWidget(Query query, String name, FilterPage filterPage, QueryTreeView tree) {
+    super(query, name, tree);
     
     List filterGroups = filterPage.getFilterGroups();
         for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
@@ -37,7 +37,7 @@ public class FilterPageWidget extends PageWidget {
             FilterGroup group = (FilterGroup)element;
             String groupName = group.getDisplayName();
     
-            FilterGroupWidget w = new FilterGroupWidget( query, groupName, group );
+            FilterGroupWidget w = new FilterGroupWidget( query, groupName, group, tree );
             tabbedPane.add( groupName, w);  
             leafWidgets.addAll( w.getLeafWidgets() );
           }

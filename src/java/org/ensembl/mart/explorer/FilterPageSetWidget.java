@@ -40,8 +40,8 @@ public class FilterPageSetWidget extends PageSetWidget {
 	/**
 	 * @param query
 	 */
-	public FilterPageSetWidget(Query query, DatasetView dataset) {
-		super(query, "Filters");
+	public FilterPageSetWidget(Query query, DatasetView dataset, QueryTreeView tree) {
+		super(query, "Filters", tree);
 
 		filterDescriptionWidgets = new ArrayList();
 
@@ -49,7 +49,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 		for (int i = 0, n = filterPages.length; i < n; i++) {
 			FilterPage page = filterPages[i];
 			String name = page.getDisplayName();
-			FilterPageWidget p = new FilterPageWidget(query, name, page);
+			FilterPageWidget p = new FilterPageWidget(query, name, page, tree);
 			tabbedPane.add(name, p);
 			filterDescriptionWidgets.addAll(p.getLeafWidgets());
       leafWidgets.addAll( p.getLeafWidgets() );

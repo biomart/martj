@@ -52,8 +52,8 @@ public class FilterGroupWidget extends PageWidget {
 	 * @param name
 	 * @param query
 	 */
-	public FilterGroupWidget(Query query, String name, FilterGroup group) {
-		super(query, name);
+	public FilterGroupWidget(Query query, String name, FilterGroup group, QueryTreeView tree) {
+		super(query, name, tree);
 		
     this.group = group;
 
@@ -125,23 +125,23 @@ public class FilterGroupWidget extends PageWidget {
 
     if ("text".equals(type)) {
     
-      w = new TextFilterWidget( this, query, filterDescription );
+      w = new TextFilterWidget( this, query, filterDescription, tree );
     
     } else if ("list".equals(type)) {
       
-      w = new ListFilterWidget( this, query, filterDescription );
+      w = new ListFilterWidget( this, query, filterDescription, tree );
       
     } else if ("tree".equals(type)) {
       
-      w = new TreeFilterWidget( this, query, filterDescription );
+      w = new TreeFilterWidget( this, query, filterDescription, tree );
       
     } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
     
-      w = new BooleanFilterWidget( this, query, filterDescription );
+      w = new BooleanFilterWidget( this, query, filterDescription, tree );
     
     } else if ("text_entry_basic_filter".equals(type) || "drop_down_basic_filter".equals(type) ) {
     
-      w = new ListFilterWidget( this, query, filterDescription );
+      w = new ListFilterWidget( this, query, filterDescription, tree );
     
     }
     

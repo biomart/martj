@@ -41,8 +41,8 @@ public class FiltersWidget extends InputPage {
    * If none are available if displays a message to that effect. 
    * @param query
    */
-  public FiltersWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
-    super(query);
+  public FiltersWidget(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree) {
+    super(query, null, tree);
     unavailable();
   }
 
@@ -70,7 +70,7 @@ public class FiltersWidget extends InputPage {
       FilterPage[] fps = newDatasetView.getFilterPages();
       for (int i = 0; i < fps.length; i++)
         tabbedPane.add(
-          new FilterPageWidget(query, fps[i].getDisplayName(), fps[i]));
+          new FilterPageWidget(query, fps[i].getDisplayName(), fps[i], tree));
       add(tabbedPane);
       validate();
     }

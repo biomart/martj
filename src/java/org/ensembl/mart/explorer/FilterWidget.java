@@ -18,7 +18,16 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.logging.Logger;
+
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
@@ -28,9 +37,9 @@ import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 
 /**
- * Base class for FilterWidgets.
+ * Base class for FilterWidgets. 
  */
-public abstract class FilterWidget extends InputPage {
+public abstract class FilterWidget extends InputPage implements TreeSelectionListener {
 
   private final static Logger logger =
     Logger.getLogger(FilterWidget.class.getName());
@@ -41,6 +50,8 @@ public abstract class FilterWidget extends InputPage {
 
   protected FilterDescription filterDescription;
 
+  protected Filter filter = null;
+
   /**
    * @param query
    * @param name
@@ -48,9 +59,12 @@ public abstract class FilterWidget extends InputPage {
   public FilterWidget(
     FilterGroupWidget filterGroupWidget,
     Query query,
-    FilterDescription filterDescription) {
+    FilterDescription filterDescription,
+    QueryTreeView tree) {
 
     super(query, filterDescription.getDisplayName());
+    if (tree != null)
+          tree.addTreeSelectionListener(this);
     this.filterDescription = filterDescription;
     this.filterGroupWidget = filterGroupWidget;
     this.fieldName = filterDescription.getField();
@@ -195,5 +209,53 @@ public abstract class FilterWidget extends InputPage {
     if (equivalentFilter(filter))
       setFilter(null);
   }
+
+  /**
+   * Callback method called when an item in the tree is selected.
+   * Brings this widget to the front if the selecte node corresponds to this widget this
+   * TODO get scrolling to a selected attribute working properly
+   * @see javax.swing.event.TreeSelectionListener#valueChanged(javax.swing.event.TreeSelectionEvent)
+   */
+  public void valueChanged(TreeSelectionEvent e) {
+
+    if ( filter!=null ) {
+
+      if (e.getNewLeadSelectionPath() != null
+        && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
+
+        DefaultMutableTreeNode node =
+          (DefaultMutableTreeNode) e
+            .getNewLeadSelectionPath()
+            .getLastPathComponent();
+
+        if (node != null) {
+
+          TreeNodeData tnd = (TreeNodeData) node.getUserObject();
+          Filter f = tnd.getFilter();
+          if (f != null && f == filter) {
+            
+            for (Component p, c = this; c != null; c = p) {
+              p = c.getParent();
+              if (p instanceof JTabbedPane)
+                 ((JTabbedPane) p).setSelectedComponent(c);
+              else if (p instanceof JScrollPane) {
+                // not sure if this is being used
+                Point pt = c.getLocation();
+                Rectangle r = new Rectangle( pt );
+                ((JScrollPane) p).scrollRectToVisible(r);
+              }
+
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  
+
+
+
 
 }

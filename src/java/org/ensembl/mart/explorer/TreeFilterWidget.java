@@ -66,7 +66,7 @@ public class TreeFilterWidget extends FilterWidget {
 
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
-    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
     FilterDescription fd =
       new FilterDescription(
         "someInternalName",
@@ -79,7 +79,7 @@ public class TreeFilterWidget extends FilterWidget {
         null,
         "someDescription");
 
-    TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd);
+    TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd, null);
 
     JFrame f = new JFrame("Tree Filter - test");
     f.getContentPane().add(tfw);
@@ -109,8 +109,6 @@ public class TreeFilterWidget extends FilterWidget {
   private String propertyName;
   private Map valueToOption = new HashMap();
   private Option option = null;
-  private Filter filter = null;
-
   /**
    * 
    * @param query
@@ -119,8 +117,9 @@ public class TreeFilterWidget extends FilterWidget {
   public TreeFilterWidget(
     FilterGroupWidget filterGroupWidget,
     Query query,
-    FilterDescription filterDescription) {
-    super(filterGroupWidget, query, filterDescription);
+    FilterDescription filterDescription,
+  QueryTreeView tree) {
+    super(filterGroupWidget, query, filterDescription, tree);
 
     try {
       nullOption = new Option("No Filter", "true");
