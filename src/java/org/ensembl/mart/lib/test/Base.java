@@ -23,21 +23,29 @@ import org.ensembl.mart.lib.Query;
 /**
  * Base class for tests that sets up the logging system if necessary. 
  * 
- * Loads logging configuration file from data/junit_logging.conf if it exists. Otherwise
+ * <ol>Loads these configuration files from classpath:
+ *   <li>data/test_logging.conf - loads if it exists,otherwise
  * the logging level defaults to WARNING for all classes.
+ *   <li>data/test_connection.properties - mart db connection settings. 
+ * Defaults to latest ensmart db on kaka.sanger.ac.uk if file unavailable.
+ *   <li>data/test_connection_ensj.properties - database connection settings
+ * for ensembl database. Needed to compare output from martj with ensj.
+ *  </ol>
  */
 public abstract class Base extends TestCase {
 
   private Logger logger = Logger.getLogger(Base.class.getName());
-	private final static String connprops = "data/testconnection.conf";
-	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
+	
+  private final static String MARTJ_DB_CONFIG_URL = "data/test_connection.properties";
+	
+  private final static String ENSJ_DB_CONFIG_URL = "data/test_connection_ensj.properties";
   
-  private final static String DEFAULT_LOGGING_CONF_URL = "data/junit_logging.properties";
+  private final static String LOGGING_CONFIG_URL = "data/test_logging.properties";
 
   private final String DEFAULTDBTYPE = "mysql";
   private final String DEFAULTHOST = "kaka.sanger.ac.uk";
   private final String DEFAULTPORT = "3306";
-  private final String DEFAULTDATABASE = "ensembl_mart_15_1";
+  private final String DEFAULTDATABASE = "ensembl_mart_16_1";
   private final String DEFAULTUSER = "anonymous";
   
   private String databaseType = null; // default, override in testconnection.conf
@@ -56,7 +64,7 @@ public abstract class Base extends TestCase {
 
 	public void init() {
     
-		connectionconf = ClassLoader.getSystemResource(connprops);
+		connectionconf = ClassLoader.getSystemResource(MARTJ_DB_CONFIG_URL);
 
 		if (connectionconf != null) {
 			try {
@@ -80,10 +88,10 @@ public abstract class Base extends TestCase {
 				password = p.getProperty("password");
 			} catch (java.io.IOException e) {
 				System.out.println(
-					"Caught IOException when trying to open connection configuration file " + connprops + "\n" + e + "\n\nusing default connection parameters");
+					"Caught IOException when trying to open connection configuration file " + MARTJ_DB_CONFIG_URL + "\n" + e + "\n\nusing default connection parameters");
 			}
 		} else {
-			System.out.println("Failed to find connection configuration file " + connprops + " using default connection parameters");
+			System.out.println("Failed to find connection configuration file " + MARTJ_DB_CONFIG_URL + " using default connection parameters");
 
       databaseType = DEFAULTDBTYPE;
 			host = DEFAULTHOST;
@@ -92,7 +100,7 @@ public abstract class Base extends TestCase {
 		}
 
 		try {
-			ensjDriver = DriverManager.load(connpropsEnsj);
+			ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
 		} catch (ConfigurationException e) {
 			logger.log(Level.WARNING, "", e );
 		}
@@ -111,7 +119,7 @@ public abstract class Base extends TestCase {
 
 	public Base(String name) {
 		super(name);
-    URL loggingConfig = Base.class.getClassLoader().getResource( DEFAULT_LOGGING_CONF_URL );
+    URL loggingConfig = Base.class.getClassLoader().getResource( LOGGING_CONFIG_URL );
     if ( loggingConfig!=null ) {
       try {
         LogManager.getLogManager().readConfiguration( loggingConfig.openStream() );
