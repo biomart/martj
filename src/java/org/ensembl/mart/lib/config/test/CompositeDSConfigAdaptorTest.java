@@ -34,7 +34,6 @@ public class CompositeDSConfigAdaptorTest extends Base {
 
   public void testAll() throws Exception {
     //TODO: major refactor
-    setUp();
     
     DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, true);
     DatabaseDatasetConfigUtils dbutils = new DatabaseDatasetConfigUtils(dscutils, martJDataSource);
@@ -115,5 +114,27 @@ public class CompositeDSConfigAdaptorTest extends Base {
 	public static void main(String[] args) {
 		junit.textui.TestRunner.run(CompositeDSConfigAdaptorTest.class);
 	}
+
+  /* (non-Javadoc)
+   * @see junit.framework.TestCase#setUp()
+   */
+  public void setUp() throws Exception {
+    super.setUp();
+    
+    assertTrue(
+      "Could not create test meta_DatasetConfig table\n"
+        + " please ensure that "
+        + Base.MARTJ_DB_CONFIG_URL
+        + " specifies connection parameters for a user with write access and that the meta_datasetconfig tables exist\n",
+      DatabaseDSConfigAdaptorTest.hasWriteAccessAndTestMetaTable(martJDataSource));
+  }
+
+  /* (non-Javadoc)
+   * @see junit.framework.TestCase#tearDown()
+   */
+  protected void tearDown() throws Exception {
+    DatabaseDSConfigAdaptorTest.dropTestConfigTable(martJDataSource);
+    super.tearDown();
+  }
 
 }

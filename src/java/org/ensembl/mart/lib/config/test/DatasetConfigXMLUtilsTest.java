@@ -41,6 +41,8 @@ import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.SimpleDSConfigAdaptor;
+import org.ensembl.mart.lib.test.Base;
 import org.jdom.Document;
 
 /**
@@ -52,7 +54,7 @@ import org.jdom.Document;
 public class DatasetConfigXMLUtilsTest extends TestCase {
 
   public static final DatasetConfigXMLUtils DEFAULTUTILS = new DatasetConfigXMLUtils(false, true); //doesnt validate, but includes hidden members
-	public static final String TESTDATASETCONFIGFILE = "data/XML/testDatasetConfig.xml";
+	public static final String TESTDATASETCONFIGFILE = Base.UNITTESTDIR + "/testDatasetConfig.xml";
 
 	private static final String TESTDESC = "For Testing Purposes Only";
 	private static final String TESTHANDLER = "testHandler";
@@ -74,7 +76,10 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 	 */
 	public static DatasetConfig TestDatasetConfigInstance(boolean validate) throws Exception {
     DatasetConfigXMLUtils utils = new DatasetConfigXMLUtils(validate, true);
-		return utils.getDatasetConfigForXMLStream(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETCONFIGFILE));
+    Document doc = utils.getDocumentForXMLStream(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETCONFIGFILE));
+    DatasetConfig dsc = utils.getDatasetConfigForDocument(doc);
+    utils.loadDatasetConfigWithDocument(dsc, doc); 
+		return dsc;
 	}
 
 	public DatasetConfigXMLUtilsTest(String arg0) {
@@ -93,7 +98,8 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 		byte[] rDigest = DEFAULTUTILS.getMessageDigestForDocument(rDoc);
 
 		DatasetConfig nDSV = DEFAULTUTILS.getDatasetConfigForDocument(rDoc);
-
+    DEFAULTUTILS.loadDatasetConfigWithDocument(nDSV, rDoc);
+    
 		//assertTrue("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV.equals(nDSV));
 		assertEquals("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV, nDSV);
 
@@ -1462,6 +1468,8 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 	private void validateDatasetConfigMutability(DatasetConfig reference) throws Exception {
 		//Rebuild a DatasetConfig from scratch, with empty constructors and set/add methods
 		DatasetConfig newDSV = new DatasetConfig();
+    newDSV.setDSConfigAdaptor(new SimpleDSConfigAdaptor(newDSV)); //this is necessary to override the lazyLoad functionality
+    
     transferAttributes(reference, newDSV);
         
 		Option[] os = reference.getOptions();

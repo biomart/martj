@@ -86,7 +86,7 @@ public class URLDSConfigAdaptorTest extends TestCase {
     assertEquals("URL returned by MartLocation differs from original test dataset url\n", getTestDatasetURL(), ( (URLLocation) thisLoc).getUrl());
     
     adaptor.setName( TESTFILENAME );
-    assertEquals("adaptor.setName doesnt appear to work: " + TESTFILENAME, adaptor.getName());
+    assertEquals("adaptor.setName doesnt appear to work: ", TESTFILENAME, adaptor.getName());
 	}
 
 	public static URL getTestDatasetURL() throws Exception {
