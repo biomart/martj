@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
@@ -38,12 +37,12 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.QueryFilterSettings;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * A boolean filter widget has a description and three radio buttons;
- * "require", "ignore", "irrelevant". The state of these buttons is 
- * synchronised with that of the query.
+ * A boolean filter widget has a description, an optional list, and three radio buttons;
+ * "require", "ignore", "irrelevant". 
  */
 public class BooleanFilterWidget
   extends FilterWidget
@@ -61,17 +60,19 @@ public class BooleanFilterWidget
     }
   }
 
+  private String excludeFilterType;
+  private String requireFilterType;
+
   private Box panel = Box.createHorizontalBox();
 
   private JRadioButton require = new JRadioButton("require");
   private JRadioButton exclude = new JRadioButton("exclude");
   private JRadioButton irrelevant = new JRadioButton("irrelevant");
   private JComboBox list = null;
+  private ActionListener listSelectionListener = null;
 
-  private BooleanFilter requireFilter;
-  private BooleanFilter excludeFilter;
-
-  private Object currentButton = null;
+  private Object lastSelectedComponent = null;
+  private Object lastSelectedListItem = null;
 
   /**
    * @param query
@@ -85,14 +86,14 @@ public class BooleanFilterWidget
 
     super(filterGroupWidget, query, fd, tree);
 
-    if ("boolean".equals(fd.getType()))
-      initBoolean();
-
-    else if ("boolean_num".equals(fd.getType()))
-      initBooleanNum();
-    else if ("boolean_num".equals(fd.getType()))
-      initBooleanList();
-    else
+    if ("boolean".equals(fd.getType())
+      || "boolean_list".equals(fd.getType())) {
+      requireFilterType = BooleanFilter.isNotNULL;
+      excludeFilterType = BooleanFilter.isNULL;
+    } else if ("boolean_num".equals(fd.getType())) {
+      requireFilterType = BooleanFilter.isNotNULL_NUM;
+      excludeFilterType = BooleanFilter.isNULL_NUM;
+    } else
       new RuntimeException(
         "BooleanFilterWidget does not support filter description: "
           + fd
@@ -100,7 +101,7 @@ public class BooleanFilterWidget
           + fd.getType());
 
     irrelevant.setSelected(true);
-    currentButton = irrelevant;
+    lastSelectedComponent = irrelevant;
 
     ButtonGroup group = new ButtonGroup();
     group.add(require);
@@ -126,143 +127,144 @@ public class BooleanFilterWidget
   }
 
   /**
+   * Responds to user selecting a button or selecting an item in the list.
    * 
-   */
-  private void initBooleanList() {
-    // load options into list
-
-    setOptions(filterDescription.getOptions());
-  }
-
-  /**
+   * Adds and removes filters to/from query.
    * 
-   */
-  private void initBooleanNum() {
-
-    requireFilter =
-      new BooleanFilter(
-        filterDescription.getField(),
-        filterDescription.getTableConstraint(),
-        filterDescription.getKey(),
-        BooleanFilter.isNotNULL_NUM,
-        filterDescription.getHandlerFromContext());
-
-    excludeFilter =
-      new BooleanFilter(
-        filterDescription.getField(),
-        filterDescription.getTableConstraint(),
-        filterDescription.getKey(),
-        BooleanFilter.isNULL_NUM,
-        filterDescription.getHandlerFromContext());
-
-  }
-
-  private void initBoolean() {
-    requireFilter =
-      new BooleanFilter(
-        filterDescription.getField(),
-        filterDescription.getTableConstraint(),
-        filterDescription.getKey(),
-        BooleanFilter.isNotNULL,
-        filterDescription.getHandlerFromContext());
-
-    excludeFilter =
-      new BooleanFilter(
-        filterDescription.getField(),
-        filterDescription.getTableConstraint(),
-        filterDescription.getKey(),
-        BooleanFilter.isNULL,
-        filterDescription.getHandlerFromContext());
-
-  }
-
-  /**
-   * Handles user selcting an item in list.
-   * @param event
-   */
-  private void doSelectIListtem(ActionEvent event) {
-    System.out.println("Handle user selcting item in list.");
-    
-    // TODO convert event to option.
-    
-    // TODO remove filter if set
-    
-    // TODO add filter if "required" selected.
-  }
-
-  /**
-   * Responds to user button actions. Adds and removes filters to/from
-   * query.
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   public void actionPerformed(ActionEvent evt) {
 
-    // user clicked currently selected button
-    if (evt.getSource() == currentButton)
+    Object src = evt.getSource();
+
+    if (src == list) {
+
+      Object item = list.getSelectedItem();
+      if (item == lastSelectedListItem)
+        return;
+      lastSelectedListItem = item;
+
+    } else if (src == lastSelectedComponent)
       return;
 
-    currentButton = evt.getSource();
+    lastSelectedComponent = src;
+
+    // stop listening to the query otherwise we will have changes
+    // we make reflected back to us.
+    query.removeQueryChangeListener(this);
 
     if (filter != null)
       query.removeFilter(filter);
 
-    // TODO dynamically determine require and exclude filter for list
-    // use getRequireFilter() and getExcludeFilter()
-    if (currentButton == require)
-      filter = requireFilter;
-    else if (currentButton == exclude)
-      filter = excludeFilter;
-    else
+    if (src == require || require.isSelected())
+      filter = createFilter(requireFilterType);
+    else if (src == exclude || exclude.isSelected())
+      filter = createFilter(excludeFilterType);
+    else if (src == irrelevant || irrelevant.isSelected())
       filter = null;
 
     if (filter != null)
       query.addFilter(filter);
+
+    query.addQueryChangeListener(this);
+
   }
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
-   */
-  public void setOptions(Option[] options) {
+  private Filter createFilter(String filterType) {
 
-    if (options == null) {
-      // TODO remove list.
-    } else if (options.length > 0) {
+    QueryFilterSettings settings = filterDescription;
+    if (list != null) {
 
-      if (list == null) {
-        list = new JComboBox();
-        list.setMaximumSize(new Dimension(100, 25));
-        list.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent event) {
-            doSelectIListtem(event);
-          }
+      settings = ((OptionToStringProxy) list.getSelectedItem()).option;
+      // The fieldName will change if this is a list 
+      fieldName = settings.getFieldFromContext();
+      tableConstraint = settings.getTableConstraint();
+      key = settings.getKey();
 
-        });
-        panel.add(list, 1);
-      }
-
-      for (int i = 0; i < options.length; i++) {
-        Option o = options[i];
-        if (o.isSelectable())
-          list.addItem(new OptionToStringProxy(o));
-      }
-      panel.validate();
     }
 
+    return new BooleanFilter(
+      settings.getFieldFromContext(),
+      settings.getTableConstraintFromContext(),
+      settings.getKeyFromContext(),
+      filterType,
+      settings.getHandlerFromContext());
+  }
+
+  public void setOptions(Option[] options) {
+
+    if (list != null) {
+      list.removeAll();
+      //list.removeActionListener(listSelectionListener);
+      list.removeActionListener(this);
+    }
+
+    if (options != null) {
+
+      if (options.length > 0) {
+
+        // create and add list and listener if necessary
+        if (list == null) {
+
+          list = new JComboBox();
+          list.setMaximumSize(new Dimension(100, 25));
+          panel.add(list, 1);
+
+          //          listSelectionListener = new ActionListener() {
+          //            public void actionPerformed(ActionEvent event) {
+          //              doSelectIListtem(event);
+          //            }
+          //          };
+        }
+
+        // add items
+        for (int i = 0; i < options.length; i++) {
+          Option o = options[i];
+          if (o.isSelectable())
+            list.addItem(new OptionToStringProxy(o));
+        }
+      }
+    }
+
+    panel.validate();
+    if (list != null) {
+      //list.addActionListener(listSelectionListener);
+      list.addActionListener(this);
+    }
   }
 
   /**
-   * Selects the button based on the filter. This is a callback method called by
-   * filterAdded(...) and filterRemoved(...) in FilterWidget base class. 
+   * Selects the button and item in list (if necessary) when filter changed.
+   * This is a callback method called when a filter with the same fieldName 
+   * as this widget is added or
+   * removed to/from the query. It is called from 
+   * filterAdded(...) and filterRemoved(...) in FilterWidget base class.
+   *  
    */
   public void setFilter(Filter filter) {
 
-    if (filter == null)
-      irrelevant.setSelected(true);
-    else if (filter.getCondition().equals(requireFilter.getCondition()))
-      require.setSelected(true);
-    else if (filter.getCondition().equals(excludeFilter.getCondition()))
-      exclude.setSelected(true);
+    if (filter == null) {
 
+      irrelevant.setSelected(true);
+
+    } else {
+
+      if (list != null) {
+
+        int index = indexOfListItemMatchingFilter(filter);
+        if (index > -1) {
+          list.removeActionListener(this);
+          list.setSelectedIndex(index);
+          list.addActionListener(this);
+        }
+      }
+
+      if (filter.getCondition().equals(requireFilterType))
+        require.setSelected(true);
+
+      else if (filter.getCondition().equals(excludeFilterType))
+        exclude.setSelected(true);
+    }
   }
 
   /**
@@ -297,7 +299,7 @@ public class BooleanFilterWidget
     FilterDescription fd2 =
       new FilterDescription(
         "someInternalName",
-        "someField",
+        "someField_num",
         "boolean_num",
         "someQualifier",
         "someLegalQualifiers",
@@ -311,20 +313,24 @@ public class BooleanFilterWidget
     FilterDescription fd3 =
       new FilterDescription(
         "someInternalName",
-        "someField",
+        "someField_list",
         "boolean_list",
         "someQualifier",
         "someLegalQualifiers",
-        "test boolean_list ",
-        "someTableConstraint",
-        "someKey",
+        "test boolean_list Onfd3 ",
+        "someTableConstraint Onfd3",
+        "someKey Onfd3",
         null,
         "someDescription");
     Option o = new Option("fred_id", "true");
+    o.setParent(fd3);
     o.setDisplayName("Fred");
+    o.setField("fred_field");
     fd3.addOption(o);
     Option o2 = new Option("barney_id", "true");
+    o2.setParent(fd3);
     o2.setDisplayName("Barney");
+    o2.setField("barney");
     fd3.addOption(o2);
     BooleanFilterWidget bfw3 = new BooleanFilterWidget(fgw, q, fd3, null);
 
@@ -335,6 +341,56 @@ public class BooleanFilterWidget
 
     new QuickFrame("BooleanFilterWidget test", p);
 
+  }
+
+  protected boolean equivalentFilter(Object otherFilter) {
+
+    if (super.equivalentFilter(otherFilter))
+      return true;
+
+    if (otherFilter == null || !(otherFilter instanceof Filter))
+      return false;
+
+    if (list != null) {
+
+      if (indexOfListItemMatchingFilter((Filter) otherFilter) > -1)
+        return true;
+
+    }
+
+    return false;
+
+  }
+
+  /**
+   * 
+   * @param otherFilter
+   * @return -1 if filter not relat
+   */
+  private int indexOfListItemMatchingFilter(Filter filter) {
+    // check that otherFilter does not correspond to one of the list items.
+    final int n = list.getItemCount();
+    for (int i = 0; i < n; i++) {
+
+      OptionToStringProxy op = (OptionToStringProxy) list.getItemAt(i);
+      Option o = op.option;
+      String f = filter.getField();
+      String tc = filter.getTableConstraint();
+      String k = filter.getKey();
+
+      if (f != null
+        && tc != null
+        && k != null
+        && !"".equals(f)
+        && !"".equals(k)
+        && !"".equals(tc)
+        && f.equals(o.getFieldFromContext())
+        && tc.equals(o.getTableConstraintFromContext())
+        && f.equals(o.getKeyFromContext()))
+        return i;
+    }
+
+    return -1;
   }
 
 }
