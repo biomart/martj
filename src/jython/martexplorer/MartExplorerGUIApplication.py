@@ -74,7 +74,7 @@ from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
 from org.ensembl.mart.explorer import *
-from org.apache.log4j import Logger, Level, PropertyConfigurator
+from org.apache.log4j import Logger, Level, PropertyConfigurator, BasicConfigurator
 
 # uncomment to use this logging conf file
 #PropertyConfigurator.configure( System.getProperty("user.home")
@@ -84,8 +84,8 @@ from org.apache.log4j import Logger, Level, PropertyConfigurator
 #DEFAULT_DATABASE = "ensembl_mart_11_1"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_DATABASE = "dl_testmart_newnames"
-DEFAULT_PORT = "3310"
-DEFAULT_USER  = "anonymous"
+DEFAULT_PORT = "3307"
+DEFAULT_USER  = "ensro"
 DEFAULT_PASSWORD = ""
 
 APPLICATION_SIZE = (1000,700)
@@ -387,7 +387,11 @@ class LabelledComboBox(Box, ActionListener):
 
 
     def clear(self):
-        Tool.clear( self.box )
+        self.box.removeAllItems()
+
+    def setItems(self, items):
+        self.clear()
+        map(self.box.addItem, items)
 
     def htmlSummary(self):
         item = self.box.selectedItem
@@ -423,85 +427,80 @@ class LabelledComboBox(Box, ActionListener):
 
 
 
+class Dataset:
+
+    def __init__(self, description, starNames, primaryKeys):
+        self.description = description
+        self.starNames = starNames
+        self.primaryKeys = primaryKeys
 
 
+class DatasetPage(Page):
 
-class SpeciesPage(Page):
-
-    name = "speciesPage"
+    name = "dataset_page"
 
     """ Input component manages display and communication between
-    "species" drop down list <-> query.species."""
+    "dataset" drop down list <-> query.dataset."""
 
     def __init__(self):
         Page.__init__(self)
-        self.speciesBox = LabelledComboBox("Species", self)
-        self.add( self.speciesBox )
+        self.datasetBox = LabelledComboBox("Dataset", self)
+        self.add( self.datasetBox )
+        self.configure([])
 
+    def configure(self, datasets):
+        """ Configures this widget using a list of Dataset objects. """
+
+        self.nameToDataset = {} 
+        self.descriptions = []
+        self.datasets = datasets
+        for d in datasets:
+            description = d.description
+            self.descriptions.append( description )
+            self.nameToDataset[ description ] = d
+            for s in d.starNames:
+                # Assume star names are unique to datasets.
+                self.nameToDataset[ s ] = d
+        self.datasetBox.setItems( [""]+self.descriptions )
 
 
     def clear( self ):
-        self.speciesBox.setText("")
-
+        self.datasetBox.setText("")
+        self.datasetBox.clear()
         
 
     def updateQuery(self, query):
-        item = self.speciesBox.getSelectedItem()
-        if item: query.species = item
-        else: raise InvalidQueryException("Species must be set")
+        description = self.datasetBox.getSelectedItem()
+        if description:
+            dataset = self.nameToDataset[ description ]
+            if dataset:
+                query.starBases = dataset.starNames
+                query.primaryKeys = dataset.primaryKeys
+            else:
+                raise InvalidQueryException("Unkown dataset: " + description)
+        else:
+            raise InvalidQueryException("Dataset must be set")
+
 
     def updatePage(self, query):
-        self.speciesBox.setText( query.species )
+        starName = query.starBases[0]
+        dataset = self.nameToDataset[ starName ]
+        if dataset:
+            starNames  = dataset.starNames
+            # note: we ignore the primary keys from the query in preference
+            # for the ones in the dataset.
+            primaryKeys = dataset.primaryKeys
+            self.datasetBox.setText( dataset.description )
+        else:
+           raise InvalidQueryException("No dataset found containing star name: "
+                                       + starName ) 
         
     def htmlSummary(self):
-	desc = "<b>Species</b> "
-        tmp = self.speciesBox.getText()
+	desc = "<b>Dataset</b> "
+        tmp = self.datasetBox.getText()
         if tmp:
 	    desc = desc + tmp
 	return desc
-
-
-
-
-class FocusPage(Page):
-
-    """ Input component manages display and communication between
-    "focus" drop down list <-> query.focus."""
-
-    name = "focus_page"
-
-
-
-    def __init__(self):
-        Page.__init__(self)
-        self.box = LabelledComboBox("Focus", self)
-        self.add( self.box )
-
-
-
-    def clear( self ):
-        self.box.setText("")
-        
-
-    def updateQuery(self, query):
-        item = self.box.getSelectedItem()
-        if item: query.focus = item
-        else: raise InvalidQueryException("Focus must be set")
-
-
-
-    def updatePage(self, query):
-        self.box.setText( query.focus )
-
-
-        
-    def htmlSummary(self):
-        desc = "<b>Focus</b> "
-	tmp = self.box.getText()
-        if tmp:
-	    desc = desc + tmp
-        return desc
-
 
 
 
@@ -1293,13 +1292,13 @@ class RegionPage(Page):
     def updatePage(self, query):
 	for f in query.filters:
 	    if isinstance(f, BasicFilter):
-		if f.type=="chr_name":
+		if f.name=="chr_name":
 		    self.chr.setText( f.value )
-		elif f.type=="gene_chrom_start":
+		elif f.name=="gene_chrom_start":
 		    self.start.setText( f.value )
-		elif f.type=="gene_chrom_end":
+		elif f.name=="gene_chrom_end":
 		    self.end.setText( f.value )
-		elif f.type=="chrom_strand":
+		elif f.name=="chrom_strand":
 		    self.strand.setText( f.value )		    
 
 
@@ -1378,16 +1377,16 @@ class QueryEditor(JPanel):
 
 	self.formatPage = FormatPage()
 	
-        speciesNode = QueryTreeNode( tree, self.rootNode, 0, self.cardContainer,
-				     SpeciesPage())
-        focusNode = QueryTreeNode( tree, self.rootNode, 1, self.cardContainer,
-				   FocusPage())
-        filtersNode = QueryTreeNode( tree, self.rootNode, 2, self.cardContainer,
+        filtersNode = QueryTreeNode( tree, self.rootNode, 0, self.cardContainer,
 				     FilterPage())
-        regionNode = QueryTreeNode( tree, filtersNode, 0, self.cardContainer,
-				    RegionPage())
-        outputNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
+        outputNode = QueryTreeNode( tree, self.rootNode, 1, self.cardContainer,
 				    OutputPage())
+
+        datasetPage = DatasetPage()
+        datasetNode = QueryTreeNode( tree, filtersNode, 0, self.cardContainer,
+				     datasetPage)
+        regionNode = QueryTreeNode( tree, filtersNode, 1, self.cardContainer,
+				    RegionPage())
         attributePage = AttributePage(self.cardContainer)
         attributesNode = QueryTreeNode( tree, outputNode, 0, self.cardContainer,
 					attributePage)
@@ -1403,6 +1402,8 @@ class QueryEditor(JPanel):
 	tree.expandPath( path )
 
         attributePage.configure(attributesNode, path, tree)
+
+        datasetPage.configure( DATASETS )
 
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
@@ -1447,6 +1448,13 @@ class QueryEditor(JPanel):
         return self.formatPage.getFormatSpec()
 
 
+
+DATASETS = [
+    Dataset("Human Ensembl Genes"
+            , ["hsapiens_ensemblgene", "hsapiens_ensembltranscript"]
+            , ["gene_id", "transcript_id"] )
+
+    ]
 
 
 
@@ -1560,15 +1568,16 @@ class MartGUIApplication(JFrame):
 
 
     def doInsertKakaQuery(self, event=None):
-        self.databasePage.host.setText( "kaka.sanger.ac.uk" )
-        self.databasePage.user.setText( "anonymous" )
-        self.databasePage.database.setText( "ensembl_mart_13_1" )
+        self.databasePage.host.setText( DEFAULT_HOST )
+        self.databasePage.user.setText( DEFAULT_USER )
+        self.databasePage.database.setText( DEFAULT_DATABASE )
+        self.databasePage.port.setText( DEFAULT_PORT )
 
         self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, ",") )
 
-        q = Query(species = "homo_sapiens"
-                  
-                  ,focus = "gene" )
+        q = Query()
+        q.starBases = DATASETS[0].starNames
+        q.primaryKeys = DATASETS[0].primaryKeys
 	q.addFilter( BasicFilter("chr_name", "=", "22") )
 	#q.addFilter( BasicFilter("gene_chrom_start", "=", "1") )
 	q.addFilter( BasicFilter("gene_chrom_end", "=", "14000000") )
@@ -1669,6 +1678,7 @@ class MartGUIApplication(JFrame):
 
 def main(args, quitOnExit):
     # default logging level, needed by engine
+    BasicConfigurator.configure()
     Logger.getRoot().setLevel(Level.WARN)
     
     usage = "Usage: MartExplorerGUIApplication [ [-h] [-v] [-l LOGGING_FILE_URL] ]"
