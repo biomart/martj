@@ -185,30 +185,19 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 					throw new ConfigurationException("Caught IOException working with MartRegistryLocation Element URL: " + e.getMessage(), e);
 				}
 
-				if (!martRegs.contains(subreg)) {
-					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(subreg, url);
-          
-					if (!adaptors.contains(adaptor)) {
-						DatasetView[] dsvs = adaptor.getDatasetViews();
-						for (int j = 0, m = dsvs.length; j < m; j++) {
-							DatasetView view = dsvs[j];
 
-							if (supportsInternalName(view.getInternalName()))
-								adaptor.removeDatasetView(view); // assume they are the same
-						}
+				RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(subreg, url);
+				adaptor.setName(location.getName());
+				add(adaptor);
+				martRegs.add(subreg);
 
-            adaptor.setName(location.getName());
-            
-						if (adaptor.getDatasetInternalNames().length > 0)
-							add(adaptor);
-					}
-					martRegs.add(subreg);
-				}
 			} else if (location.getType().equals(MartLocationBase.URL)) {
-				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(((URLLocation) location).getUrl(), false);
+			
+        URLDSViewAdaptor adaptor = new URLDSViewAdaptor(((URLLocation) location).getUrl(), false);
         adaptor.setName(location.getName());
 				add(adaptor);
-			} else if (location.getType().equals(MartLocationBase.DATABASE)) {
+			
+      } else if (location.getType().equals(MartLocationBase.DATABASE)) {
 				DatabaseLocation dbloc = (DatabaseLocation) location;
 
 				String host = dbloc.getHost();
@@ -238,22 +227,10 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 					new DetailedDataSource(databaseType, host, port, instanceName, connectionString, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName, name);
 
 				DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(dsource, user);
-
-				//iterate through this adaptor's datasetviews, checking if they are already represented
-				if (!adaptors.contains(adaptor)) {
-					DatasetView[] dsvs = adaptor.getDatasetViews();
-					for (int j = 0, m = dsvs.length; j < m; j++) {
-						DatasetView view = dsvs[j];
-
-						if (supportsInternalName(view.getInternalName()))
-							adaptor.removeDatasetView(view); // assume they are the same
-					}
-
-          adaptor.setName(location.getName());
-          
-					if (adaptor.getDatasetInternalNames().length > 0)
-						add(adaptor);
-				}
+        adaptor.setName(location.getName());
+				add(adaptor);
+ 
+      
 			} else
 				throw new ConfigurationException("Recieved unsupported MartLocation element of type : " + location.getType() + " in MartRegistry Document\n");
 		}
