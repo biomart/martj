@@ -6,15 +6,21 @@ import javax.swing.JComboBox;
 public class Tool {
     /**
      * Prepends value to the front of the list of items in the combo box.
+     * Does nothing if value is null.
      */
 	static final void prepend( String value, JComboBox combo ) {
-		combo.insertItemAt( value, 0 );
-}
+    if ( value!=null ) {
+			combo.insertItemAt( value, 0 );
+			combo.getModel().setSelectedItem( value );
+    }
+	}
 
     /**
      * Returns the selected item, null if none selected.
      */
 	static final String selected( JComboBox combo ) {
-  return combo.getModel().getSelectedItem().toString();
-}
+    Object item = combo.getModel().getSelectedItem();
+  	if ( item==null ) return null;
+    else return item.toString();
+	}
 }

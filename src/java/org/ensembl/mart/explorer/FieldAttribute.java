@@ -23,5 +23,15 @@ public class FieldAttribute implements Attribute {
         return hashCode() == obj.hashCode() && obj instanceof FieldAttribute;
     }
 
+    public String toString() {
+      StringBuffer buf = new StringBuffer();
+
+			buf.append("[");
+      buf.append(" field=").append(field);
+      buf.append(" ]");
+
+      return buf.toString();
+    }
+
     private String field;
 }

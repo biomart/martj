@@ -32,7 +32,7 @@ public class QueryPanel extends JPanel {
     }
 
     /** Loads a predefined query into the query panel so that the query parameters are displayed in the input pages. */
-    public void loadQuery( Query query) {
+    public void updatePage( Query query) {
 			for (int i=0; i<inputPages.length; i++) {
 				inputPages[i].updatePage( query );
       }

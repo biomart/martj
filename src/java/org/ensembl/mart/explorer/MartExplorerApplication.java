@@ -84,7 +84,7 @@ public class MartExplorerApplication {
         if (commandline)
             new CommandLineFrontEnd(engine, host, port, user, password, cleanArgs).run();
         else
-            new MartExplorerGUI(engine, host, port, user, password).run();
+            new MartExplorerGUI().run();
     }
 
     /** @link dependency */

@@ -37,6 +37,10 @@ public class Query {
 
 
     public void addFilter(Filter filter) {
+      // new filters with the same hashCode() override old ones
+			if ( filters.contains( filter ) )
+      	filters.remove( filter );
+			filters.add( filter );
     }
 
     public String getHost(){
@@ -56,7 +60,7 @@ public class Query {
         }
 
     public void setDatabase(String database){
-            this.host = database;
+            this.database = database;
         }
 
     public String getUser(){
@@ -64,7 +68,7 @@ public class Query {
         }
 
     public void setUser(String user){
-            this.host = user;
+            this.user = user;
         }
 
     public String getPassword(){
@@ -72,11 +76,35 @@ public class Query {
         }
 
     public void setPassword(String password){
-            this.host = password;
+            this.password = password;
         }
 
-    private List attributes;
-    private List filters;
+    public ResultTarget getResultTarget(){
+            return resultTarget;
+        }
+
+    public void setResultTarget(ResultTarget resultTarget){
+            this.resultTarget = resultTarget;
+        }
+
+    public String toString() {
+      StringBuffer buf = new StringBuffer();
+
+			buf.append("[");
+      buf.append(" host=").append(host);
+      buf.append(" ,port=").append(port);
+      buf.append(" ,user=").append(user);
+      buf.append(" ,password=").append(password);
+      buf.append(" ,attributes=").append(attributes);
+      buf.append(" ,filters=").append(filters);
+      buf.append(" ,resultTarget=").append(resultTarget);
+      buf.append("]");
+
+      return buf.toString();
+    }
+
+    private List attributes = new Vector();
+    private List filters = new Vector();
 
     /** @link dependency */
 
@@ -90,4 +118,5 @@ public class Query {
   private String database;
   private String user;
   private String password;
+  private ResultTarget resultTarget;
 }

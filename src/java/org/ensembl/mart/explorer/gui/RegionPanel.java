@@ -9,6 +9,7 @@ import javax.swing.JRadioButton;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import org.ensembl.mart.explorer.*;
+import java.util.Iterator;
 
 /** Input options for specifying region to search. */
 public class RegionPanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
@@ -21,6 +22,7 @@ public class RegionPanel extends JPanel implements org.ensembl.mart.explorer.gui
     private void initGUI() {
         entireGenomeButton.setText("Entire Genome");
         entireGenomeButton.setToolTipText("Get data for whole genome");
+        entireGenomeButton.setSelected(true);
         chromosomePanel.setLayout(new javax.swing.BoxLayout(chromosomePanel, javax.swing.BoxLayout.X_AXIS));
         chromosomePanel.add(chromosomeButton);
         chromosomePanel.add(chromosome);
@@ -33,14 +35,32 @@ public class RegionPanel extends JPanel implements org.ensembl.mart.explorer.gui
         entireGenomePanel.add(entireGenomeButton);
         regionGroup.add(entireGenomeButton);
         regionGroup.add(chromosomeButton);
+        chromosome.setEditable(true);
     }
 
-    public void updateQuery(Query query){
-        // Write your code here
+    public void updateQuery(Query query) {
+        if (entireGenomeButton.isSelected()) {
+            // do nothing in this case
+        }
+        else if (chromosomeButton.isSelected()) {
+            query.addFilter(new BasicFilter("chromosome", "=", Tool.selected(chromosome)));
+        }
     }
 
-    public void updatePage(Query query){
-        // Write your code here
+    public void updatePage(Query query) {
+        boolean regionSet = false;
+        Iterator iter = query.getAttributes().iterator();
+        while (iter.hasNext()) {
+            Object o = iter.next();
+            if (o instanceof BasicFilter) {
+                BasicFilter bf = (BasicFilter)o;
+                if ("chromosome".equals(bf.getField()) && "=".equals(bf.getCondition())) {
+                    chromosome.setSelectedItem(bf.getValue());
+                    chromosomeButton.setSelected(true);
+                }
+            }
+            if (!regionSet) entireGenomeButton.setSelected(true);
+        }
     }
 
     private JPanel chromosomePanel = new JPanel();

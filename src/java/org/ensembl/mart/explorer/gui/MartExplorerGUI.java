@@ -17,19 +17,21 @@ import java.awt.event.ActionListener;
 import javax.swing.JToolBar;
 import javax.swing.JButton;
 import org.ensembl.mart.explorer.*;
+import java.awt.Dimension;
 
 
 public class MartExplorerGUI extends JFrame {
+
+	private final static int WIDTH = 600;
+	private final static int HEIGHT = 800;
+
+
     /** Creates new form JFrame */
     public MartExplorerGUI() {
         initGUI();
-        pack();
+        setSize( new Dimension(WIDTH, HEIGHT) );
     }
 
-    public MartExplorerGUI(Engine engine, String host, String port, String user, String password) {
-        this();
-        logger.info("Constructor:");
-    }
 
     /** This method is called from within the constructor to initialize the form. */
     private void initGUI() {
@@ -65,6 +67,7 @@ public class MartExplorerGUI extends JFrame {
         fileMenu.setText("File");
         fileMenu.add(exitMenuItem);
         menuBar.add(fileMenu);
+        menuBar.add(queryMenu);
         menuBar.add(helpMenu);
         exitMenuItem.setText("jMenuItem1");
         exitMenuItem.setActionCommand("exitMenuItem");
@@ -82,11 +85,23 @@ public class MartExplorerGUI extends JFrame {
                 public void actionPerformed(ActionEvent e) { aboutActionPerformed(e); }
             });
         setJMenuBar(menuBar);
+        setSize(new java.awt.Dimension(500,402));
         logger.info("finished init");
         exportToolBarButton.addActionListener(
             new ActionListener() {
                 public void actionPerformed(ActionEvent e) { exportToolBarButtonActionPerformed(e); }
             });
+        queryMenu.setText("Query");
+        queryMenu.add(kakaMenuItem);
+        queryMenu.add(executeMenuItem);
+        queryMenu.add(newMenuItem);
+        kakaMenuItem.setText("Kaka partial query");
+        executeMenuItem.setText("Execute");
+        newMenuItem.setText("New");
+        newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newMenuItemActionPerformed(e);}});
+        executeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){executeMenuItemActionPerformed(e);}});
+        kakaMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){kakaMenuItemActionPerformed(e);}});
+        newToolBarButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newToolBarButtonActionPerformed(e);}});
     }
 
     /** Exit the Application */
@@ -96,8 +111,6 @@ public class MartExplorerGUI extends JFrame {
 
     public void run() {
         logger.info("Running");
-        pack();
-        logger.info("packed");
         setVisible(true);
         logger.info("visible");
     }
@@ -114,14 +127,43 @@ public class MartExplorerGUI extends JFrame {
         new AboutDialog().setVisible(true);
     }
 
-    private void export() {
-        // construct query from input pages
-        // execute query
-        // store results in output file
+    public void exportToolBarButtonActionPerformed(ActionEvent e) {
+        executeQuery();
     }
 
-    public void exportToolBarButtonActionPerformed(ActionEvent e) {
-        export();
+		private void newQuery() {
+			logger.warn("todo");
+    }
+
+		private void executeQuery() {
+			Query q = queryPanel.retrieveQuery();
+      logger.warn( "Executing query: " + q );
+			engine.execute( q );
+    }
+
+		private void kakaPartialQuery() {
+			Query q = new Query();
+      q.setHost( "kaka.sanger.ac.uk" );
+      q.setUser( "anonymous" );
+      logger.warn( "Initialising partial kaka query: " + q );
+			queryPanel.updatePage( q );
+    }
+
+    public void newMenuItemActionPerformed(ActionEvent e) {
+			newQuery();
+    }
+
+
+    public void executeMenuItemActionPerformed(ActionEvent e) {
+			executeQuery();
+    }
+
+    public void kakaMenuItemActionPerformed(ActionEvent e) {
+			kakaPartialQuery();
+    }
+
+    public void newToolBarButtonActionPerformed(ActionEvent e) {
+			newQuery();
     }
 
     private static final Logger logger = Logger.getLogger(MartExplorerGUI.class.getName());
@@ -136,4 +178,9 @@ public class MartExplorerGUI extends JFrame {
     private JButton newToolBarButton = new JButton();
     private JButton exportToolBarButton = new JButton();
     private SummaryPanel summaryPanel = new SummaryPanel();
+    private JMenu queryMenu = new JMenu();
+    private JMenuItem kakaMenuItem = new JMenuItem();
+    private JMenuItem executeMenuItem = new JMenuItem();
+    private JMenuItem newMenuItem = new JMenuItem();
+    private Engine engine = new Engine();
 }

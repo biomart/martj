@@ -65,11 +65,12 @@ public class Engine {
         return conn;
     }
 
-    public OutputStream execute(Query query) {
-        throw new RuntimeException();
+    public void execute(Query query) {
+      logger.warn( "Pretending to execute query : " + query );
+
     }
 
-    public OutputStream execute(Query query, Renderer renderer) {
+    public OutputStream execute(Query query, ResultRenderer renderer) {
         throw new RuntimeException();
     }
 
