@@ -108,12 +108,8 @@ public class AdaptorManager extends Box {
     combo.setEditable(false);
     //combo.setSelectedItem(none);
     initFileChoosers();
-    JButton addDB = new JButton("Add Database");
-    addDB.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doAddDatabase();
-      }
-    });
+    
+    
     JButton importRegistry = new JButton("Add Registry File");
     importRegistry.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -142,7 +138,7 @@ public class AdaptorManager extends Box {
     top.add(combo);
     Box bottom = Box.createHorizontalBox();
     bottom.add(Box.createHorizontalGlue());
-    bottom.add(addDB);
+    
     bottom.add(importRegistry);
     bottom.add(addFile);
     bottom.add(delete);
@@ -230,10 +226,10 @@ public class AdaptorManager extends Box {
   /**
    *  
    */
-  private void doAddDatabase() {
+  protected void doAddDatabase() {
     boolean valid = false;
     DetailedDataSource ds = null;
-
+    
     while (!valid) {
 
       if (!databaseDialog.showDialog(this))

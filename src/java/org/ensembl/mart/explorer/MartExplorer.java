@@ -425,16 +425,32 @@ public class MartExplorer
 
     JMenu settings = new JMenu("Settings");
 
+    
+    JMenuItem addDB = new JMenuItem("Add Mart");
+    settings.add(addDB).setAccelerator(
+    		KeyStroke.getKeyStroke(KeyEvent.VK_M, Event.CTRL_MASK));
+    //final JFrame parents = this;
+    addDB.addActionListener(new ActionListener() {
+    	public void actionPerformed(ActionEvent e) {
+    		adaptorManager.doAddDatabase();
+    		
+    	}
+    });
+    
+    settings.add(addDB);
+   
+    
     JMenuItem adaptors = new JMenuItem("Adaptors");
     settings.add(adaptors).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK));
+    		KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK));
     final JFrame parent = this;
     adaptors.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        adaptorManager.showDialog(parent);
-      }
+    	public void actionPerformed(ActionEvent e) {
+    		adaptorManager.showDialog(parent);
+    	}
     });
-
+    
+    
     JMenu advancedMenu = new JMenu("Advanced");
     settings.add(advancedMenu);
 
@@ -455,6 +471,14 @@ public class MartExplorer
     });
     advancedMenu.add(logging);
 
+    
+    
+    
+    
+    
+    
+    
+    
     settings.addSeparator();
 
     JMenuItem reset = new JMenuItem("Reset");
