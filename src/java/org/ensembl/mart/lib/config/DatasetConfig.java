@@ -1256,7 +1256,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
     int tmp = super.hashCode();
     
-    if (adaptor != null) {
+    //use the adaptor instead of the actual values, if it has a valid adaptor
+    if (adaptor != null && !(adaptor instanceof SimpleDSConfigAdaptor)) {
       tmp = (31 * tmp) + adaptor.hashCode();
     } else {
       for (int i = 0, n = starBases.size(); i < n; i++) {
