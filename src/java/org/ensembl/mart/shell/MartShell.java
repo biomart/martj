@@ -48,6 +48,18 @@ import org.ensembl.mart.lib.config.UIAttributeDescription;
 import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
+/**
+ * Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (referred to below as the Mart Query Language).
+ * The system can be used to run script files containing valid Mart Query Language commands, or individual queries from the commandline.
+ * It has an interactive shell as well.  The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
+ * to allow commandline editing, history, and tab completion for those users working on Linux/Unix operating systems.  Unfortunately, there is no way
+ * to provide this functionality in a portable way across OS platforms.  For windows users, there is a Getline c library which is provided with the Java Readline source.
+ * By following the instructions to build a windows version of this library, you can overwrite the libreadline-java.jar and libJavaGetline.so file in the 
+ * mart-explorer/lib directory with your own versions, and you will gain some (but not all) of this functionality.
+ * 
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ */
 public class MartShell {
 
 	// main variables
