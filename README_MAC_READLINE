@@ -1,34 +1,67 @@
 It is possible to get Readline working with MartShell on Mac OS X.
 First you have to get readline.  It may work out of the box once
-readline is installed (try using the DarwinPort method mentioned below).
-If not, download the latest version of JavaReadline from
+readline is installed using the DarwinPort method mentioned below.
+
+The following instructions were collated from these websites:
+
+http://telly.bravo5.org/blojsom/blog/?month=8&year=2004
+http://darwinports.opendarwin.org/docs/ch01s03.html
+
+A. Install DarwinPorts on your system. This requires admin rights, the
+presence of the Developer tools, which on OS X 10.3 is called Xcode tools
+(eg., gcc, autoconf, etc), and cvs.  If you already have this installed 
+(try running:
+ 
+shell>port
+     or
+shell>/opt/local/bin/port
+
+ ) 
+you can skip step A.
+
+shell>cd ~/
+shell>cvs -d :pserver:anonymous@anoncvs.opendarwin.org:/Volumes/src/cvs/od login
+(hit return for the password, it is blank)
+shell>cvs -d :pserver:anonymous@anoncvs.opendarwin.org:/Volumes/src/cvs/od co -P darwinports
+shell>cd ~/darwinports/base
+shell>./configure
+shell>make
+shell>sudo make install
+
+B. Install readline using DarwinPorts:
+
+shell>port install readline
+
+   or (if the ports binary directory isnt in your path)
+
+shell>/opt/local/bin/port install readline
+
+C. Try out MartShell.sh.  It comes with a precompiled
+version of JavaReadline which may work once readline is
+installed.  If not, go to section D.
+
+D. Install JavaReadline. 
+
+ 1. Download the latest version of libJavaReadline
+ from the website:
 
 http://java-readline.sourceforge.net/
 
-And follow the instructions below to compile libJavaReadline.so.
-Once you have done this, you can either follow the authors suggestion
-and:
+ 2. untar the downloaded file (if you are using a later
+ version than 0.8.0, your filename will reflect this):
 
-shell> cp libJavaReadline.so ~/Library/Java/extensions/libJavaReadline.jnilib
- 
-(you may have to create the Java/extensions subdirectory to ~/Library)
+shell>tar -zxvf libreadline-java-0.8.0-src.tar.gz
 
-Or, you can:
+ 3. Go into the resulting libreadline-java-X.X.X directory (change
+ X to fit the version you downloaded):
 
-shell> cp libJavaReadline.so $MARTJ_HOME/lib/macosx/libJavaReadline.jnilib
+shell>cd libreadline-java-0.8.0
 
-The following instructions were pulled from the this website
+ 4. Edit two MakeFile files (using vi, vim, pico, or emacs):
 
-http://telly.bravo5.org/blojsom/blog/?month=8&year=2004
+shell>emacs Makefile
 
-For starters, you'll need to get DarwinPorts up and running if you haven't already done so. Once that's done, just do a port install readline. You should know your DarwinPorts install root once you've installed it; in my case it's /opt/local.
-
-URL for DarwinPorts Installation Procedure:
-http://darwinports.opendarwin.org/docs/ch01s03.html
-
-Compilation of java-readline is pretty straightforward at this point, but you do need to patch both Makefiles in the source distribution to account for the non-Linux and non-Win32 options you'll need for the linker.
-
-These changes apply to java-readline version 0.8.0. In the source root, edit Makefile and make the following changes:
+ and make the following changes:
 
     * Add
       JAVA_HOME = /Library/Java/Home
@@ -37,7 +70,9 @@ These changes apply to java-readline version 0.8.0. In the source root, edit Mak
     * Make the JAVANATINC variable read $(JAVA_HOME)/include
     * Change LD_LIBRARY_PATH to be DYLD_LIBRARY_PATH
 
-Now, edit src/native/Makefile and change the following:
+shell>emacs src/native/Makefile 
+
+  and change the following:
 
     * Add -I/opt/local/include to the end of the INCLUDES variable.
     * Change the LIBPATH variable to be -L/usr/lib -L/opt/local/lib
@@ -47,4 +82,19 @@ Now, edit src/native/Makefile and change the following:
       to
       $(CC) -bundle -flat_namespace -undefined suppress $(OBJECTS) $(LIBPATH) $($(TG)_LIBS) -o $@
 
-You should now be able to run make and get libJavaReadline.so and libreadline-java.jar. You'll need to rename libJavaReadline.so to libJavaReadline.jnilib. I put both of these in ~/Library/Java/Extensions, which makes the library available to all Java processes that are started as you. Make sure everything works by running java test.ReadlineTest from the command line.
+  5. Make the required files:
+
+shell>make
+shell>ls -l
+
+  If you dont have the files libreadline-java.jar and libJavaReadline.so
+  after this has run, something went wrong.
+
+  6. Copy the resulting files to the MartJ lib directory
+  (assuming MartJ-0.2 is in your home directory, change to fit your situation):
+
+shell>cp libreadline.jar ~/martj-0.2/lib
+shell>cp libJavaReadline.so ~/martj-0.2/lib/macosx/libJavaReadline.jnilib
+(note, this involves a copy with a name change, which is important).
+
+You should now be able to run MartShell with readline support.
