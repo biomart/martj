@@ -991,10 +991,8 @@ public class MartShell {
 
 		if (userPrompt != null)
 			prompt = userPrompt;
-		else if (martUser != null && martDatabase != null)
-			prompt = martUser + "@" + martHost + " : " + martDatabase + "> ";
 		else
-			prompt = "> ";
+			prompt = DEFAULTPROMPT + "> ";
 
 		if (completionOn)
 			mcl.SetCommandMode();
@@ -3242,6 +3240,7 @@ public class MartShell {
 	private boolean readlineLoaded = false;
 	// true only if functional Readline library was loaded, false if PureJava
 	private String userPrompt = null;
+	private final String DEFAULTPROMPT = "MartShell";
 
 	private String altConfigurationFile = null;
 	private FileOutputStream sessionOutputFile = null;
