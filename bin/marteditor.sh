@@ -26,7 +26,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-echo "This is a DEMO of MartEditor (development version) " 
+echo "Starting MartEditor please wait .... " 
 
 java -ea -cp $TMP_CLASSPATH org.ensembl.mart.editor.MartEditor $@
 

@@ -41,4 +41,6 @@ case "$PLATFORM" in
   ;;
 esac
 
+echo "Starting MartExplorer please wait .... "
+
 $JAVA -Xmx128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@

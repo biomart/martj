@@ -40,5 +40,5 @@ case "$PLATFORM" in
   ;;
 esac
 
-echo "This is a DEMO of MartEditor (development version) "
+echo "Starting MartEditor please wait ... "
 $JAVA -ea -cp $TMP_CLASSPATH org.ensembl.mart.editor.MartEditor

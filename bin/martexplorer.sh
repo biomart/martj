@@ -27,6 +27,8 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
+echo "Starting MartExplorer please wait .... "
+
 java -Xmx128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
 
 
