@@ -40,14 +40,14 @@ public abstract class BaseConfigurationObject implements Comparable {
    * @param bo
    */
   public BaseConfigurationObject(BaseConfigurationObject bo) {
-    for (Iterator iter = xmlTitles.iterator(); iter.hasNext();) {
-      String key = (String) iter.next();
-      
-      if (bo.getAttribute(key) == null)
-        setAttribute(new String(key), null);
-      else
-        setAttribute(new String(key), new String(bo.getAttribute(key)));
-    }
+	String[] boXMLTitles = bo.getXmlAttributeTitles();
+	for (int i = 0; i < boXMLTitles.length; i++) {
+		String key = boXMLTitles[i];
+		if (bo.getAttribute(key) == null)
+		  setAttribute(new String(key), null);
+		else
+		  setAttribute(new String(key), new String(bo.getAttribute(key)));		
+	}
   }
 
   /**
