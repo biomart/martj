@@ -24,9 +24,12 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseLocation;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
+import org.ensembl.mart.lib.config.MartLocation;
+import org.ensembl.mart.lib.config.MartLocationBase;
 import org.ensembl.mart.lib.test.Base;
 
 /**
@@ -111,6 +114,20 @@ public class DatabaseDSViewAdaptorTest extends Base {
     
     byte[] newestDigest = newestDSV.getMessageDigest();
     assertTrue("DatasetView in DatabaseDatasetViewAdatpro after mod, store, and update should not equal Reference DatasetView based on message digest\n", !(MessageDigest.isEqual( refDigest, newestDigest )));
+    
+    
+    MartLocation[] martlocs = refdbdsva.getMartLocations();
+    assertTrue("getMartLocations didnt return anything\n", martlocs.length > 0);
+    
+    MartLocation thisLoc = martlocs[0];
+    assertEquals("MartLocation type should be " + MartLocationBase.DATABASE + "\n", MartLocationBase.DATABASE, thisLoc.getType());
+    assertTrue("MartLocation returned from getMartLocations should be a URLLocation\n", thisLoc instanceof DatabaseLocation);
+    assertNull("Password in resulting MartLocation should be null before setPassword is called\n", ( (DatabaseLocation) thisLoc).getPassword());
+    
+    String testPassword = "testpassword";
+    refdbdsva.setDatabasePassword(testPassword);
+    MartLocation newLoc = refdbdsva.getMartLocations()[0];
+    assertEquals("Password should match after setPassword call\n", testPassword, ( (DatabaseLocation) newLoc).getPassword());
     
     if (refdbdsva.getDatasetViews().length > 0) {
       DatasetView[] ds = refdbdsva.getDatasetViews();
