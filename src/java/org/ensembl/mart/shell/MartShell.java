@@ -132,7 +132,7 @@ public class MartShell {
 			+ "\n-D DATABASE                             - database name"
 			+ "\n-d DATASET                              - dataset name"
 			+ "\n-v                                      - verbose logging output"
-			+ "\n-l LOGGING_CONFIGURATION_URL                     - Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
+			+ "\n-l LOGGING_CONFIGURATION_URL    - Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
 			+ "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
 			+ "\n\nThe following are used in combination with the -e flag:"
 			+ "\n-O OUTPUT_FILE                          - output file, default is standard out"
@@ -162,35 +162,34 @@ public class MartShell {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			mainHost = p.getProperty("host");
-			if (mainHost != null && mainHost.length() > 1)
-				mainHost = mainHost.trim();
+			String tmp = p.getProperty("host");
+			if (tmp != null && tmp.length() > 1 && mainHost == null)
+				mainHost = tmp.trim();
 
-			mainPort = p.getProperty("port");
-			if (mainPort != null && mainPort.length() > 1)
-				mainPort = mainPort.trim();
+		 tmp = p.getProperty("port");
+			if (tmp != null && tmp.length() > 1  && mainPort == null)
+				mainPort = tmp.trim();
 
-			mainDatabase = p.getProperty("databaseName");
-			if (mainDatabase != null && mainDatabase.length() > 1)
-				mainDatabase = mainDatabase.trim();
+			tmp = p.getProperty("databaseName");
+			if (tmp != null && tmp.length() > 1 && mainDatabase == null)
+				mainDatabase = tmp.trim();
 
-			mainUser = p.getProperty("user");
-			if (mainUser != null && mainUser.length() > 1)
-				mainUser = mainUser.trim();
+			tmp = p.getProperty("user");
+			if (tmp != null && tmp.length() > 1 && mainUser == null)
+				mainUser = tmp.trim();
 
-			mainPassword = p.getProperty("password");
-			if (mainPassword != null && mainPassword.length() > 1)
-				mainPassword = mainPassword.trim();
+			tmp = p.getProperty("password");
+			if (tmp != null && tmp.length() > 1 && mainPassword == null)
+				mainPassword = tmp.trim();
 
-			mainDatabaseType = p.getProperty("databaseType");
-			if (mainDatabaseType != null && mainDatabaseType.length() > 1)
-				mainDatabaseType = mainDatabaseType.trim();
+			tmp = p.getProperty("databaseType");
+			if (tmp != null && tmp.length() > 1 && mainDatabaseType == null)
+				mainDatabaseType = tmp.trim();
 
-			mainConfiguration = p.getProperty("alternateConfigurationFile");
-			if (mainConfiguration != null && mainConfiguration.length() > 1) {
-				mainConfiguration = mainConfiguration.trim();
+			tmp = p.getProperty("alternateConfigurationFile");
+			if (tmp != null && tmp.length() > 1 && mainConfiguration == null) {
+				mainConfiguration = tmp.trim();
 			}
-
 		} catch (java.net.MalformedURLException e) {
 			mainLogger.warning("Could not load connection file " + connfile + " MalformedURLException: " + e);
 		} catch (java.io.IOException e) {
