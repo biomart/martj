@@ -2471,20 +2471,20 @@ public class DatabaseDatasetViewUtils {
 		  if (isMainTable(tableName)) {
 		  	tableName = "main";
 		  	allCols.add(cname);
-			fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName));
+			fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
 		  }
           if (!cname.endsWith("_bool"))
             ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize, joinKey));
           
         }
         else if (isLookupTable(tableName)){     	
-        	if (cname.startsWith("g_") || cname.startsWith("gs_")){
+        	if (cname.startsWith("glook_") || cname.startsWith("silent_")){
         		if (fc == null){
   				  fc = new FilterCollection();
 				  fc.setInternalName(content);
 				  fc.setDisplayName(content.replaceAll("_"," "));
         	    }
-        	   	fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName));
+        	   	fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
         		
         	}
         }
@@ -2542,20 +2542,31 @@ public class DatabaseDatasetViewUtils {
     return att;
   }
 
-  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType, String joinKey, DetailedDataSource dsource, String fullTableName)
+  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType, String joinKey, DetailedDataSource dsource, String fullTableName, DatasetView dsv)
     throws SQLException, ConfigurationException {
     FilterDescription filt = new FilterDescription();
 	filt.setField(columnName);
 	String descriptiveName = columnName;
-	System.out.println(columnName + "\n" + tableName + "\n" + fullTableName);
+	// lookup table fds
 	if (tableName.endsWith("look")){
-		
-		filt.setInternalName(columnName);
-		filt.setHandler("org.ensembl.mart.lib.GenericHandler");
+		descriptiveName = descriptiveName.replaceFirst("glook_", "");
+		descriptiveName = descriptiveName.replaceFirst("silent_", "");
+		filt.setInternalName(descriptiveName.toLowerCase());
+		filt.setDisplayName(descriptiveName.replaceAll("_"," "));
 		filt.setTableConstraint(tableName);
-		filt.setType("text");
-		
+		if (!columnName.startsWith("silent_")){
+		  filt.setHandler("org.ensembl.mart.lib.GenericHandler");
+		  filt.setType("text");
+		}
+		else{
+		  filt.setType("list");
+		  filt.setQualifier("=");
+		  filt.setLegalQualifiers("=");
+		  Option[] options = getOptions(columnName, tableName, null, dsource, dsv);		
+		  filt.addOptions(options);
+		}	
 	}
+	// main table fds
 	else{
 	  if (columnName.endsWith("_bool")){
 	    descriptiveName = columnName.replaceFirst("_bool", "");
@@ -2575,15 +2586,6 @@ public class DatabaseDatasetViewUtils {
       filt.setKey(joinKey); 
       
 	}
-    //	this is just to debug possibility of using java.sql.Types values to determine suitable filter types
-    if (logger.isLoggable(Level.INFO)) {
-      if (columnType == java.sql.Types.TINYINT) {
-        logger.info("Recieved TINYINT type, probably boolean or boolean_num\n");
-      } else {
-        logger.info("Recieved type " + columnType + " defaulting to list\n");
-      }
-    }
-
     return filt;
   }
   
@@ -2612,7 +2614,7 @@ public class DatabaseDatasetViewUtils {
 	    op = new Option();
 	    op.setDisplayName(value);
 		op.setInternalName(value);
-		if (!columnName.startsWith("gs_"))
+		if (!columnName.startsWith("silent_"))
 		  op.setValue(value);
 		op.setSelectable("true");
 		options.add(op);

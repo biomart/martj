@@ -90,20 +90,20 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				while (rset.next()) {
 				  if (rset.getString(3).toLowerCase().equals(lookUpTable.toLowerCase())) {
 					String cname = rset.getString(4);
-					if (cname.startsWith("f_")){
+					if (cname.startsWith("filt_")){
 					  if (start){
 					  	if (cname.endsWith("_start"))	
-					      filt_cols.add(cname.replaceFirst("f_",""));  	
+					      filt_cols.add(cname.replaceFirst("filt_",""));  	
 					  }
 					  else if (end){
 						if (cname.endsWith("_end"))	
-				          filt_cols.add(cname.replaceFirst("f_","")); 
+				          filt_cols.add(cname.replaceFirst("filt_","")); 
 					  }
 					  else
-					    filt_cols.add(cname.replaceFirst("f_","")); 
+					    filt_cols.add(cname.replaceFirst("filt_","")); 
 					}
-					else if (cname.startsWith("l_") && !(cname.equals(field)))
-					  look_cols.add(cname.replaceFirst("l_",""));  	
+					else if (cname.startsWith("olook_"))// && !(cname.equals(field)))
+					  look_cols.add(cname.replaceFirst("olook_",""));  	
 				  }
 				}
 				rset.close();
@@ -119,7 +119,7 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				for (int k = 0; k < newfilterCols.length; ++k) {
 				  if (k > 0)
 					buf.append(" , ");
-				  buf.append("f_" + newfilterCols[k]);
+				  buf.append("filt_" + newfilterCols[k]);
 				}			    
                 
                 buf.append(" FROM ");
@@ -135,7 +135,7 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				  if (filt == null)
 					throw new InvalidQueryException("Requires a particular Filter to have already been added to the Query." + lookCols[k]);
                   buf.append(" AND ");
-                  buf.append("l_" + lookCols[k] + "='" + filt.getValue() + "'");
+                  buf.append("olook_" + lookCols[k] + "='" + filt.getValue() + "'");
 				}			    
 			    
 				sql = buf.toString();
