@@ -181,6 +181,19 @@ public class PushAction extends BaseConfigurationObject {
   	  return null;
   }
   
+  /**
+   * Get the internalName for an Option within the PushAction which supports a given field and tableConstraint.
+   * @param field -- field of the requested Option
+   * @param tableConstraint -- tableConstraint of the requestedOption
+   * @return String internalName of the Option supporting the field and tableConstraint, or null if none found
+   */
+  public String geOptionInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+    if (supports(field, tableConstraint))
+      return lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
+    else
+      return null;
+  }
+  
   public String toString() {
     StringBuffer buf = new StringBuffer();
 
@@ -192,5 +205,4 @@ public class PushAction extends BaseConfigurationObject {
 
     return buf.toString();
   }
-
 }

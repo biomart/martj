@@ -436,6 +436,24 @@ public class Option extends QueryFilterSettings {
 			return null;
 	}
 
+  public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+    if      (this.field != null
+    && this.field.equals(field)
+    && this.tableConstraint != null
+    && this.tableConstraint.equals(tableConstraint))
+      return internalName;
+    else {
+      for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+        PushAction element = (PushAction) uiOptionPushes.get(i);
+        if (element.supports(field, tableConstraint)) {
+          return internalName + "." + element.geOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
+        }
+      }      
+    }
+    
+    return null;
+  }
+  
 	/**
 		* Debug output
 		*/

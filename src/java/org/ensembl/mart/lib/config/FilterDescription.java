@@ -384,7 +384,7 @@ public class FilterDescription extends QueryFilterSettings {
 				for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
 					Option element = (Option) iter.next();
 					if (element.supports(field, tableConstraint)) {
-						ret = element.getInternalName();
+						ret = element.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
 						break;
 					}
 				}
