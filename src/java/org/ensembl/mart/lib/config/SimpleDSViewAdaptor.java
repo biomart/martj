@@ -144,4 +144,14 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
 		// Doesnt do anything, should be fully instantiated
 	}
+
+  /**
+   * Throws a ConfigurationException, as this doesnt have a compatible MartLocation element.
+   * Client code should create one of the supported Adaptors from the DatasetView for this adaptor,
+   * and use that one to create the MartRegistry object instead.
+   */
+	public MartLocation[] getMartLocations() throws ConfigurationException {
+		  throw new ConfigurationException("Cannot create a MartLocation from a SimpleDatasetViewAdaptor\n");
+	}
+
 }
