@@ -18,94 +18,176 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.swing.Box;
+import javax.swing.JFrame;
+
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Widget showing available dataset views represented as a menu tree. The user can select one of
+ * these. 
+ * 
+ * <p>The first tier of the tree contains
+ * adaptors, the second the datasets, and the optional third tier the internalNames. 
+ * If adaptorManager.isOptionalDatasetViewsEnabled()==true then the optional 
+ * third tier is included. Otherwise only dataset views with internalName=="default"
+ * are displayed and they are shown as adaptor -> dataset. In this case the internalName
+ * is not shown.
+ * </p>
  */
 public class DatasetViewTree extends PopUpTreeCombo {
 
-	private AdaptorManager manager;
+  private final static Logger logger =
+    Logger.getLogger(DatasetViewTree.class.getName());
 
-	public DatasetViewTree(AdaptorManager manager) {
-		super("DatasetView");
+  private Feedback feedback = new Feedback(this);
+
+  private AdaptorManager manager;
+
+  public DatasetViewTree(AdaptorManager manager) {
+    super("DatasetView");
     this.manager = manager;
-	}
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.explorer.PopUpTreeCombo#update()
-	 */
-	public void update() {
-//		// TODO Auto-generated method stub
-//    DatasetView[] datasetViews = manager.getRootAdaptor().getDatasetViews();
-//    
-//    if (datasetViews == null || datasetViews.length == 0)
-//      return;
-//
-//    //  we need the dsvs sorted so we can construct the menu tree
-//    // by parsing the array once
-//    Arrays.sort(datasetViews, new Comparator() {
-//      public int compare(Object o1, Object o2) {
-//        DatasetView d1 = (DatasetView) o1;
-//        DatasetView d2 = (DatasetView) o2;
-//        return d1.getDisplayName().compareTo(d2.getDisplayName());
-//      }
-//    });
-//
-//    String[][] tree = new String[][] {
-//    };
-//    Map menus = new HashMap();
-//
-//    for (int i = 0; i < datasetViews.length; i++) {
-//      final DatasetView view = datasetViews[i];
-//
-//      final String datasetName = view.getDisplayName();
-//
-//      String[] elements = datasetName.split("__");
-//
-//      for (int j = 0; j < elements.length; j++) {
-//
-//        String substring = elements[j];
-//
-//        JMenu parent = treeTopMenu;
-//        if (j > 0)
-//          parent = (JMenu) menus.get(elements[j - 1]);
-//
-//        if (j + 1 == elements.length) {
-//
-//          // user selectable leaf node
-//          JMenuItem item = new JMenuItem(substring);
-//          item.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent event) {
-//              doSelect(view.getDisplayName());
-//            }
-//          });
-//          parent.add(item);
-//
-//        } else {
-//
-//          // intermediate menu node
-//          JMenu menu = (JMenu) menus.get(elements[j]);
-//          if (menu == null) {
-//            menu = new JMenu(substring);
-//            menus.put(substring, menu);
-//            parent.add(menu);
-//          }
-//
-//        }
-//
-//      }
-//    }
-	}
+  /**
+   * Update the tree's rootNode to reflect the currently available datasetViews.
+   * Structure: adaptor -> dataset [ -> internalName ]
+   * @see org.ensembl.mart.explorer.PopUpTreeCombo#update()
+   */
+  public void update() {
 
-	public static void main(String[] args) {
-	}
+    boolean optional = manager.isOptionalDatasetViewsEnabled();
+    rootNode.removeAllChildren();
+    logger.fine("optional="+optional);
+
+    try {
+      DSViewAdaptor[] adaptors = manager.getRootAdaptor().getAdaptors();
+      // TODO sort adaptors by name
+
+      for (int i = 0; i < adaptors.length; i++) {
+
+        DSViewAdaptor adaptor = adaptors[i];
+
+        // Skip composite adaptors
+        if (adaptor.getAdaptors().length > 0)
+          continue;
+
+        // skip adaptors which lack a "default" view
+        // if we are only showing default views.
+        if (!optional && !containsDefaultView(adaptor))
+          continue;
+
+        LabelledTreeNode adaptorNode =
+          new LabelledTreeNode(adaptor.getName(), null);
+
+        rootNode.add(adaptorNode);
+
+        try {
+
+          String[] datasetNames = adaptor.getDatasetNames();
+          Arrays.sort(datasetNames);
+
+          for (int j = 0; j < datasetNames.length; j++) {
+
+            String dataset = datasetNames[j];
+            DatasetView[] views = adaptor.getDatasetViewByDataset(dataset);
+
+            LabelledTreeNode datasetNode = null;
+
+            for (int k = 0; k < views.length; k++) {
+
+              DatasetView view = views[k];
+
+              if (optional) {
+
+                if (datasetNode == null) {
+                  datasetNode = new LabelledTreeNode(dataset, null);
+
+                  if (datasetNode != null)
+                    adaptorNode.add(datasetNode);
+                }
+
+                // adaptor -> dataset -> internalName
+                datasetNode.add(
+                  new LabelledTreeNode(view.getInternalName(), view));
+
+              } else {
+                // adaptor -> dataset (using default datasetview only)
+                if ( isDefault(view)) {
+                  adaptorNode.add(
+                    new LabelledTreeNode(view.getDataset(), view));
+                  break;
+                }
+              }
+            }
+          }
+        } catch (ConfigurationException e) {
+          // do this try ... catch so that a problem with one adaptor won't prevent dataset views from
+          // others being loaded 
+          feedback.warning(e);
+        }
+
+      }
+    } catch (ConfigurationException e) {
+
+      feedback.warning(e);
+    }
+  }
+
+  public boolean isDefault(DatasetView view) {
+    return "default".equals(view.getInternalName().toLowerCase());
+  }
+
+  /**
+   * @param adaptor
+   * @return
+   */
+  private boolean containsDefaultView(DSViewAdaptor adaptor) {
+    boolean r = false;
+    try {
+      DatasetView[] views = adaptor.getDatasetViews();
+      for (int i = 0; !r && i < views.length; i++)
+        if (isDefault(views[i]))
+          r = true;
+
+    } catch (ConfigurationException e) {
+      feedback.warning(e);
+    }
+    return r;
+  }
+
+  public static void main(String[] args) {
+
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    logger.setLevel(Level.FINE);
+
+    AdaptorManager am = QueryEditor.testDatasetViewSettings();
+    am.setOptionalDatasetViewsEnabled(false);
+
+    final DatasetViewTree pu = new DatasetViewTree(am);
+    // test the listener support
+    pu.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        System.out.println("Selection changed to : " + pu.getSelectedLabel());
+      }
+    });
+    Box p = Box.createVerticalBox();
+    p.add(pu);
+    JFrame f = new JFrame(DatasetViewTree.class.getName() + " (Test Frame)");
+    f.getContentPane().add(p);
+    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    //f.setSize(250, 100);
+    f.pack();
+    f.setVisible(true);
+  }
+
 }
