@@ -24,7 +24,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Exportable extends BaseConfigurationObject {
+public class Exportable extends BaseNamedConfigurationObject {
   private final String linkNameKey = "linkName";
   private final String nameKey = "name";
   private final String attributesKey = "attributes";
@@ -48,13 +48,17 @@ public class Exportable extends BaseConfigurationObject {
 	setAttribute(defaultKey, null);
   }
   
+  public Exportable(String linkName)  throws ConfigurationException {
+    this(linkName, null, null, linkName, null, null, null);
+  }
+  
   /**
    * Construct an Importable Object with a ref.
    * @param ref - String internalName of the FilterDescription to Importable.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String linkName) throws ConfigurationException {
-  	this(linkName, null, null, null);
+  public Exportable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
+  	this(internalName, displayName, description, linkName, null, null, null);
   }
   
   /**
@@ -63,8 +67,8 @@ public class Exportable extends BaseConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String linkName, String moduleName, String attributes, String d) throws ConfigurationException {
-  	super();
+  public Exportable(String internalName, String displayName, String description, String linkName, String moduleName, String attributes, String d) throws ConfigurationException {
+  	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
   	  throw new ConfigurationException("Importable objects must have a linkName.\n");

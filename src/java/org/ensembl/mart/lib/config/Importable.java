@@ -24,10 +24,11 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Importable extends BaseConfigurationObject {
+public class Importable extends BaseNamedConfigurationObject {
   private final String linkNameKey = "linkName";
   private final String nameKey = "name";
   private final String filtersKey = "filters";
+  
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
 	 * exact copy of an existing Importable.
@@ -44,14 +45,18 @@ public class Importable extends BaseConfigurationObject {
     setAttribute(nameKey, null);
 	setAttribute(filtersKey, null);
   }
+
+  public Importable(String linkName)  throws ConfigurationException {
+    this(linkName, null, null, linkName, null, null);
+  }
   
   /**
    * Construct an Importable Object with a ref.
    * @param ref - String internalName of the FilterDescription to Importable.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String linkName) throws ConfigurationException {
-  	this(linkName, null, null);
+  public Importable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
+  	this(internalName, displayName, description, linkName, null, null);
   }
   
   /**
@@ -60,8 +65,8 @@ public class Importable extends BaseConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String linkName, String moduleName, String filters) throws ConfigurationException {
-  	super();
+  public Importable(String internalName, String displayName, String description, String linkName, String moduleName, String filters) throws ConfigurationException {
+  	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
   	  throw new ConfigurationException("Importable objects must have a linkName.\n");
