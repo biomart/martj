@@ -39,6 +39,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 
   private final String fieldKey = "field";
   private final String tableConstraintKey = "tableConstraint";
+  private final String keyKey = "key";
   private final String sourceKey = "source";
   private final String homepageURLKey = "homepageURL";
   private final String linkoutURLKey = "linkoutURL";
@@ -66,6 +67,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(fieldKey, null);
     setAttribute(maxLengthKey, null);
     setAttribute(tableConstraintKey, null);
+	setAttribute(keyKey, null);
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
@@ -73,14 +75,14 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 
   /**
    * Constructs a AttributeDescription with just the internalName and field.
-   * 
+   * not used anywhere yet and should probably add tableConstraint and Key
    * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty
    * @param field String name of the field in the mart for this Attribute. Must not be null or empty.
    * @throws ConfigurationException when values are null or empty.
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -90,6 +92,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    * @param displayName String name of the AttributeDescription.
    * @param maxLength Int maximum possible length of the field in the mart.
    * @param tableConstraint String base name of a specific table containing this UIAttribute.
+   * @param key String name of the key to use with this attribute
    * @param description String description of this UIAttribute.
    * @param source String source for the data for this UIAttribute.
    * @param homePageURL String Web Homepage for the source.
@@ -102,6 +105,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String displayName,
     String maxLength,
     String tableConstraint,
+    String key,
     String description,
     String source,
     String homePageURL,
@@ -116,6 +120,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(fieldKey, field);
     setAttribute(maxLengthKey, maxLength);
     setAttribute(tableConstraintKey, tableConstraint);
+	setAttribute(keyKey, key);
     setAttribute(sourceKey, source);
     setAttribute(homepageURLKey, homePageURL);
     setAttribute(linkoutURLKey, linkoutURL);
@@ -150,6 +155,22 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   public String getTableConstraint() {
     return getAttribute(tableConstraintKey);
   }
+
+  /**
+   * @param key - join field key for the field
+   */
+	public void setKey(String key) {
+	  setAttribute(keyKey, key);
+	}
+
+	/**
+	 * Returns the join field key.
+	 * 
+	 * @return key.
+	 */
+	public String getKey() {
+	  return getAttribute(keyKey);
+	}
 
   /**
    * @param field - field in mart table
