@@ -458,11 +458,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 	protected class DatasetConfigTreeMouseListener implements MouseListener {
 		public void mousePressed(MouseEvent e) {
-			if (attrTable != null)
-				if (attrTable.getEditorComponent() != null) {
-					TableCellEditor attrTableEditor = attrTable.getCellEditor();
-					attrTableEditor.stopCellEditing();
-				}
+//			if (attrTable != null)
+//				if (attrTable.getEditorComponent() != null) {
+//					TableCellEditor attrTableEditor = attrTable.getCellEditor();
+//					attrTableEditor.stopCellEditing();
+//				}
 			//need to evaluate here as well as mouseReleased, for cross platform portability
 			if (e.isPopupTrigger()) {
 				//Create the popup menu.
@@ -471,11 +471,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		}
 
 		public void mouseReleased(MouseEvent e) {
-			if (attrTable != null)
-				if (attrTable.getEditorComponent() != null) {
-					TableCellEditor attrTableEditor = attrTable.getCellEditor();
-					attrTableEditor.stopCellEditing();
-				}
 			if (e.isPopupTrigger()) {
 				//Create the popup menu.
 				loungePopupMenu(e);
@@ -489,15 +484,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		}
 
 		public void mouseClicked(MouseEvent e) {
-			if (attrTable != null)
-				if (attrTable.getEditorComponent() != null) {
-					TableCellEditor attrTableEditor = attrTable.getCellEditor();
-					attrTableEditor.stopCellEditing();
-				}
-			if (e.isPopupTrigger()) {
-				//Create the popup menu.
-				loungePopupMenu(e);
-			}
+//			if (e.isPopupTrigger()) {
+//				//Create the popup menu.
+//				loungePopupMenu(e);
+//			}
 		}
 	}
 
@@ -505,6 +495,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		JPopupMenu popup = new JPopupMenu();
 		clickedPath = this.getClosestPathForLocation(e.getX(), e.getY());
 		editingNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+		setSelectionPath(clickedPath);
 		String[] menuItems = null;
 		String clickedNodeClass = editingNode.getUserObject().getClass().getName();
 		if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetConfig"))
