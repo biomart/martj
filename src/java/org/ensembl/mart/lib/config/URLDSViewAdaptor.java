@@ -135,14 +135,18 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
    * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
    */
   public boolean equals(Object o) {
-    return o instanceof SimpleDSViewAdaptor && hashCode() == o.hashCode();
+    return o instanceof URLDSViewAdaptor && hashCode() == o.hashCode();
   }
   
   /* (non-Javadoc)
    * @see java.lang.Object#hashCode()
    */
   public int hashCode() {
-    return dsv.hashCode();
+    int hshcode = 0;
+    if ( dsvurl!=null ) hshcode = ( 31 * hshcode ) + dsvurl.hashCode();
+    hshcode = ( 31 * hshcode ) + ( validate ? 1 : 2 );
+    if ( dsv!=null ) hshcode = ( 31 * hshcode ) + dsv.hashCode();
+    return hshcode;
   }
 
 }
