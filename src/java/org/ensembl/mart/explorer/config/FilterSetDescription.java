@@ -176,6 +176,6 @@ public class FilterSetDescription {
 	private int thisHashCode = 0;
 	
 	//static enums for UIFilterDescription FilterSetRequirements
-	public static final int MODFIELDNAME = 1;
-	public static final int MODTABLECONSTRAINT = 2;
+	public static final String MODFIELDNAME = "field";
+	public static final String MODTABLECONSTRAINT = "table";
 }

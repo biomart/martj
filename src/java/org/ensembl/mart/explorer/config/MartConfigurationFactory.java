@@ -301,9 +301,7 @@ public class MartConfigurationFactory {
 		String fieldnm = thisElement.getAttributeValue(fieldName, "");
 		String tableconst = thisElement.getAttributeValue(tableConstraint, "");
 		
-		int filterSetReq = 0;
-		if ( ! thisElement.getAttributeValue(filterSetReqA, "").equals("") )
-		  filterSetReq = Integer.parseInt( thisElement.getAttributeValue(filterSetReqA) );
+		String filterSetReq = thisElement.getAttributeValue(filterSetReqA, "");
 		
 		String qual = thisElement.getAttributeValue(qualifier, "");
 

@@ -66,6 +66,10 @@ public class FilterCollection {
 
 		this.internalName = internalName;
 		this.displayName = displayName;
+		
+		if ( ! ( filterSetName == null || filterSetName.equals("")  ) )
+		 inFilterSet = true;
+		 
 		this.filterSetName = filterSetName;
 		this.description = description;
 		this.type = type;
