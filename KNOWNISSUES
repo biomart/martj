@@ -1,28 +1,42 @@
-Known Issues
+Known Issues 00.2
 --------------------------------------------------------------------------
-- In some queries involving large amounts of data, such as large sequence requests
-or large data query chains, the mart user interface may not perform optimally. We
-are actively developing solutions to this issue. 
+The MartJ query interfaces are still incomplete and a number of filters and attributes may either not work (in
+particular in MartExplorer) or be missing. The interfaces can also produce redundant data under certain
+queries scenario in particular for marts where conformed dimension model is used (ensembl, MSD). 
 
-- This system has been developed and tested predominantly in Linux, tru64,
-  and Windows 2000 and XP.  
+NB. Please note that the web interface to the BioMart system - MartView is in a full production mode and guarantees correct
+    data. 
 
-- It does not have all of the mart datasets specified, but the ones that 
-are specified are relatively complete compared to the existing web MartView system 
-written in Perl.  
+                This system has been developed and tested predominantly in Linux, tru64, and Windows 2000.
 
-- The history/command completion system relies on JNI interaction with the GNU Readline
-(*NIX), or GetLine (Windows) c libraries.  For this reason, shared object files must
-be compiled for each platform that the system is to be run on, and placed in the
-LD_LIBRARY_PATH (or windows equivalent).  Without this, MartShell works fine, but
-without command completion or history (although Windows users with doskey will get crude 
-history functionality).  The list and describe commands can be used to replace
-the completion system.
-Currently, only linux and tru64 are supported in the distribution.  Users wishing to 
-make an immediate contribution to the project could obtain the Java-Readline source 
-from http://java-readline.sourceforge.net/ and follow the instructions
-to compile on their favorite unsupported platforms.  Once the 
-test works, the resulting .so file can be sent to us along with an
-example bin/martshell.sh or bin/martshell.bat file that makes
-MartShell completion and history work.
-Contributors would be duly cited in the README of future distributions.
+                The MartJ system is currently limited in the number of datasets that can be loaded at the same time in a
+                MartExplorer/MartShell session. Future releases will manage resources better to ensure that datasets are loaded and
+                managed efficiently. 
+
+                Currently, query chaining is limited in the number of ids that can be processed in a chain. The very large id chains
+                (300,000) are likely to cause out of memory errors. This will be addressed in future releases. 
+
+                The 'genomic sequence' retrieval from ensembl is rather inefficient. 
+
+                Running concurrent MartExplorer sessions is likely to result in the registry file lock. 
+
+                The history/command completion system relies on JNI interaction with the GNU Readline (*NIX), or GetLine
+                (Windows) c libraries. For this reason, shared object files must be compiled for each platform that the system is to
+                be run on, and placed in the LD_LIBRARY_PATH (or windows/apple equivalent). Without this, MartShell works fine,
+                but without command completion or history (although Windows users with doskey will get crude history
+                functionality). 
+
+                The list and describe commands can be used to replace the completion system. Currently, only linux and tru64 are
+                supported in the distribution. Users wishing to make an immediate contribution to the project could obtain the
+                Java-Readline source from sourceforge.net and follow the instructions to compile on their favorite unsupported
+                platforms. Once the test works, the resulting .so file can be sent to us along with an example bin/martshell.sh or
+                bin/martshell.bat file that makes MartShell completion and history work.
+
+                Contributors would be duly cited in the ACKNOWLEDGEMENTS of future distributions. Although pre-compiled
+                libraries for Apple OSX have been supplied, the user will need to ensure that GNU Readline is installed on their
+                system in the system-wide /sw directory (the contributing user had success using fink at fink.sourceforge.net to
+                install GNU Readline). 
+
+                MartEditor does not yet cover a full range of filter and attribute edition options and the important 'naive view'
+                functionality is completely missing from this release
+

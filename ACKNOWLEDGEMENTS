@@ -1,5 +1,16 @@
-The Mart Team would like to acknowledge the work of the following
+The BioMart Team would like to acknowledge the work of the following
 individuals for contributions to the success of the project:
+
+Katerina Tzouvara from EBI contributed MartEditor - a configuration tool 
+for XML configuration files
 
 Alan Powell from SANBI (alanp@sanbi.ac.za): contributed readline libraries
 for Apple Mac OS X.
+
+Ugis Sarkans and Sergio Contrino for help with building ArrayExpress mart
+Sameer Velankar and Antonio Suarez Uruena for help with building MSD mart
+Paul Kersey for help with building a Uniprot mart
+
+Ensembl Team for their continuous support
+EBI extrnal services and EBI systems group for their help in deploying the website
+
