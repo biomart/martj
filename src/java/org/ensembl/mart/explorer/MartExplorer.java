@@ -67,7 +67,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   // TODO support user renaming queries 
 
   // TODO clone query
-  // TODO load registry file
 
   // TODO Query | Rename
 
@@ -261,14 +260,11 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     file.addSeparator();
 
-    JMenuItem importRegistry = new JMenuItem("Import registry file");
-    importRegistry.setEnabled(false);
-    file.add(importRegistry);
-
     JMenuItem exportRegistry = new JMenuItem("Export registry file");
     exportRegistry.setEnabled(false);
     file.add(exportRegistry);
     file.addSeparator();
+
     JMenuItem exit = new JMenuItem("Exit");
     exit.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
