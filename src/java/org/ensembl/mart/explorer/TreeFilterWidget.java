@@ -44,6 +44,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.QueryFilterSettings;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -288,6 +289,8 @@ public class TreeFilterWidget extends FilterWidget {
    * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
    */
   protected void setFilter(Filter filter) {
+    
+    logger.info("");
     this.filter = filter;
 
     if (filter == null) {
@@ -329,7 +332,7 @@ public class TreeFilterWidget extends FilterWidget {
     if (filter != null)
       query.removeFilter(filter);
     filter = null;
-    
+
     if (option != nullOption) {
 
       assignPushOptions(option.getPushActions());
@@ -338,26 +341,31 @@ public class TreeFilterWidget extends FilterWidget {
       String value = (tmp != null && !"".equals(tmp)) ? tmp : null;
 
       if (value != null) {
-        
-        if (filterDescription.getField() == null) {
-          String s = 
-          "Can't add filter because of configuration problem in DatsetView." ;          String s2 = s + "filterDescription.field==null. "
-            + " filterDescription="+filterDescription + ", option.getValueFromContext()=" + value;
-          logger.warning( s2 );
-          feedback.warn( s );
-          
+
+        // need to reset FilterWidget.fieldName because it is used by 
+        // FilterWidget.equivalentFilter(...) during callbacks
+        fieldName = option.getFieldFromContext();
+        if ( fieldName == null) {
+          String s =
+            "Can't add filter because of configuration problem in DatsetView.";
+          String s2 =
+            s
+              + "option= " + option
+              + " filterDescription="
+              + filterDescription;
+
+          logger.warning(s2);
+          feedback.warn(s);
+
           // tidy up after disovering problem. Force the selected item
           // to be removed.
           lastSelectedOption = option;
-          setOption( nullOption );
-          
+          setOption(nullOption);
+
         } else {
+
           filter =
-            new BasicFilter(
-              filterDescription.getField(),
-              option.getTableConstraint(),
-              "=",
-              value);
+            new BasicFilter( fieldName, option.getTableConstraintFromContext(), "=", value);
           query.addFilter(filter);
         }
       }
@@ -366,4 +374,6 @@ public class TreeFilterWidget extends FilterWidget {
     lastSelectedOption = option;
 
   }
+
+
 }
