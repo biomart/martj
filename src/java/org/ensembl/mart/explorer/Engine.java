@@ -21,7 +21,6 @@ package org.ensembl.mart.explorer;
 import java.io.*;
 import java.sql.*;
 import org.apache.log4j.*;
-import org.ensembl.util.NotImplementedYetException;
 
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
@@ -120,9 +119,8 @@ public class Engine {
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
         throws FormatException, SequenceException, InvalidQueryException {
     
-          Connection conn = getDatabaseConnection();
-	        QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
-          qr.execute(0);
+          execute( query, formatspec, os, 0 );
+          
     }
     
 	/**
@@ -135,9 +133,7 @@ public class Engine {
 	 * @param formatspec A FormatSpec Object
 	 * @param os An OutputStream
 	 * @param limit limits the number of records returned by the query
-	 * @throws SQLException
 	 * @throws SequenceException
-	 * @throws IOException
 	 * @throws FormatException
 	 * @throws InvalidQueryException
 	 * @see Query
@@ -147,7 +143,7 @@ public class Engine {
 	 * @see TabulatedQueryRunner
 	 */
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
-		throws SQLException, SequenceException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
+		throws SequenceException, FormatException, InvalidQueryException {
     
 		  Connection conn = getDatabaseConnection();
 		  QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
