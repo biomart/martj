@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
-<MartRegistry>
-  <URLLocation url="file:data/XML/testDatasetViewRegFile.xml"/>
-  <DatabaseLocation databaseType="mysql" jdbcDriverClassName="com.mysql.jdbc.Driver" host="127.0.0.1" instanceName="ensembl_mart_19_3" user="ensro"/>
-  <RegistryLocation url="file:data/XML/testMartRegistryRegFile.xml"/>
-  <RegistryLocation url="file:data/XML/testMartRegistryFile.xml"/>  
-</MartRegistry>
