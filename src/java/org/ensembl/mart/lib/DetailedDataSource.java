@@ -438,6 +438,28 @@ public class DetailedDataSource implements DataSource {
 		return port;
 	}
 
+
+  /**
+   * @return
+   */
+  public String getConnectionString() {
+    return connectionString;
+  }
+
+  /**
+   * @return
+   */
+  public int getMaxPoolSize() {
+    return maxPoolSize;
+  }
+
+  /**
+   * @return
+   */
+  public String getPassword() {
+    return password;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
@@ -460,5 +482,6 @@ public class DetailedDataSource implements DataSource {
     
     return buf.toString();
   }
+
 
 }
