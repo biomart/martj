@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
 	private final String VALIDSQL =
-		"select count(*) from evoc_vocabulary_lookup where term = ?";
+		"select count(*) from global__evoc_vocabulary__look where term = ?";
 
 	private Logger logger =
 		Logger.getLogger(ExpressionFilterHandler.class.getName());
@@ -65,12 +65,14 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			//must get species and dataset, from the first starBase
 			String species = null;
 			String dataset = null;
+			String focus = null;
+			String dset = null;
 
 			//resolve dataset, species, and focus
 			String[] mainTables = newQuery.getStarBases();
 
 			for (int i = 0; i < mainTables.length; i++) {
-				if (mainTables[i].matches(".*gene"))
+				if (mainTables[i].matches(".*gene__main"))
 					dataset = mainTables[i];
 			}
 
@@ -84,6 +86,8 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
 			StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
 			species = tokens.nextToken();
+			focus = tokens.nextToken();
+			dset = species + "_" + focus;
 
 			String trans_lib_table = null;
 			StringBuffer idSQL = new StringBuffer();
@@ -136,11 +140,11 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 						"Term " + term + " does not exist in the Mart Database\n");
 
 				String table =
-					species + "_expression_" + edataset + "_" + term + "_support";
+					species + "__expression_" + edataset + "_" + term + "__supp";
 				if (terms < 1) {
 					firstTable = table;
 					selectBuf.append(firstTable + ".lib_id");
-					trans_lib_table = dataset + "_expression_" + edataset + "_map";
+					trans_lib_table = dset + "__expression_" + edataset + "__map";
 					idSQL.append("select transcript_stable_id from " + trans_lib_table);
 					// will only get the lib_id for the first term, but mapped across all support tables in the from and where clause
 				}
@@ -199,7 +203,7 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			String[] tids = new String[tranIds.size()];
 			tranIds.toArray(tids);
 
-			newQuery.addFilter(new IDListFilter("transcript_stable_id", tids));
+			newQuery.addFilter(new IDListFilter("transcript_stable_id", "main", "transcript_id_key", tids));
 			return newQuery;
 		} catch (SQLException e) {
 			throw new InvalidQueryException(

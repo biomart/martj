@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +45,7 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 	private Logger logger = Logger.getLogger(GOFilterHandler.class.getName());
 	private final String EVIDENCE = "evidence_code";
 	private final String GOSTART = "GO:";
-	private final String GOKEY = "transcript_id";
+	private final String GOKEY = "transcript_id_key";
 	private final String GOFILTERFIELD = "transcript_stable_id";
 	private final String EVIDENCECODEFIELD = "evidence_code";
 	private final String GODISPLAYIDFIELD = "display_id";
@@ -65,10 +66,12 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 
 			//must get dataset from the first starBase
 			String dataset = null;
+			String dset= null;
+			
 			String[] mainTables = newQuery.getStarBases();
 
 			for (int i = 0; i < mainTables.length; i++) {
-				if (mainTables[i].matches(".*gene"))
+				if (mainTables[i].matches(".*gene__main"))
 					dataset = mainTables[i];
 			}
 
@@ -79,7 +82,10 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 							+ newQuery);
 				throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
 			}
-
+            
+            StringTokenizer datasetTokens = new StringTokenizer(dataset,"__");
+            dset = datasetTokens.nextToken();
+                
 			List goTables = new ArrayList();
 			StringBuffer selectBuf = new StringBuffer("select ");
 			StringBuffer fromBuf = new StringBuffer(" from ");
@@ -115,7 +121,7 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 
 					evidence_code_value = field.split("\\:")[1];
 				} else {
-					String goTable = dataset + element.getTableConstraint();
+					String goTable = dset + "_" + element.getTableConstraint();
 					String value = element.getValue();
 
 					if (!goTables.contains(goTable)) {
@@ -232,7 +238,7 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 			String[] tids = new String[tranIds.size()];
 			tranIds.toArray(tids);
 
-			newQuery.addFilter(new IDListFilter("transcript_stable_id", tids));
+			newQuery.addFilter(new IDListFilter("transcript_stable_id", "main", "transcript_id_key", tids));
 
 			return newQuery;
 

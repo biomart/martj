@@ -53,24 +53,31 @@ public class EncodeQtlFilterHandler implements UnprocessedFilterHandler {
 		    
 			StringTokenizer paramTokens = new StringTokenizer(parameter, ":");
 			String chr = paramTokens.nextToken();
-			Filter chrFilter = new BasicFilter(chrname, "=", chr);
 
 			String bpstart = paramTokens.nextToken();
 			String bpend = paramTokens.nextToken();
 
-			newQuery.addFilter(chrFilter);
 
 			// must get focus for coordinate filter names
 			String focus = null;
+			String joinKey;
 			String starBase = newQuery.getStarBases()[0];
-			if (starBase.endsWith("snp"))
+			StringTokenizer starBaseTokens = new StringTokenizer(starBase, "__");
+			String dset = starBaseTokens.nextToken();
+			if (dset.endsWith("snp")){
 				focus = "snp";
-			else
+			    joinKey = "snp_id_key";	
+			}
+			else{
+				joinKey = "gene_id_key";
 				focus = "gene";
+			}
+			Filter startFilter = new BasicFilter(focus + chrcoord, "main", joinKey, ">=", bpstart);
+			Filter endFilter = new BasicFilter(focus + chrcoord, "main", joinKey, "<=", bpend);
 
-			Filter startFilter = new BasicFilter(focus + chrcoord, ">=", bpstart);
-			Filter endFilter = new BasicFilter(focus + chrcoord, "<=", bpend);
+			Filter chrFilter = new BasicFilter(chrname, "main", joinKey, "=", chr);
 
+			newQuery.addFilter(chrFilter);
 			newQuery.addFilter(startFilter);
 			newQuery.addFilter(endFilter);	
 		}

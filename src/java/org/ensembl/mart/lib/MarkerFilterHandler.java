@@ -57,24 +57,28 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 			PreparedStatement ps;
 			Filter chrFilter;
 			// must get species, focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
-			String species, focus, chrvalue, lookupTable;
+			String species, focus, chrvalue, lookupTable, joinKey;
 
 			// species can be parsed from the beginning of the first starBase
 			String starBase = newQuery.getStarBases()[0];
-			StringTokenizer sbtokens = new StringTokenizer(starBase, "_");
+			StringTokenizer sbtokens = new StringTokenizer(starBase, "__");
 			species = sbtokens.nextToken();
 			String tmp = sbtokens.nextToken();
 
 			//focus is snp if tmp ends with snp
-			if (tmp.endsWith("snp"))
+			if (tmp.endsWith("snp")){
 				focus = "snp";
-			else
+				joinKey = "snp_id_key";
+			}
+			else{
 				focus = "gene";
+			    joinKey = "gene_id_key";
+			}
 			filterName = focus + "_chrom_start";
 
 			if (species == null || species.equals(""))
 				throw new InvalidQueryException("Species is required for a Marker Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
-			lookupTable = species + "_marker_lookup";
+			lookupTable = species + "__marker__look";
 
 			chrFilter = newQuery.getFilterByName(CHRNAME);
 			if (chrFilter == null)
@@ -124,7 +128,7 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 
 				if (filterValue != null && filterValue.length() > 0) {
 					Filter posFilter =
-						new BasicFilter(filterName, filterCondition, filterValue);
+						new BasicFilter(filterName, "main", joinKey, filterCondition, filterValue);
 					newQuery.addFilter(posFilter);
 				} else
 					throw new InvalidQueryException(
