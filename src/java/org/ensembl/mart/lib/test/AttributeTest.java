@@ -28,8 +28,8 @@ public class AttributeTest extends Base {
 
 	public static Test suite() {
 		TestSuite suite = new TestSuite();
-		suite.addTest(new AttributeTest("testKakaQuery"));
-		//suite.addTestSuite( AttributeTest.class );
+		//suite.addTest(new AttributeTest("testKakaQuery"));
+		suite.addTestSuite( AttributeTest.class );
 		return suite;
 	}
 

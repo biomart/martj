@@ -67,6 +67,7 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -328,7 +329,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 	public static void main(String[] args) throws Exception {
 
 		// default adaptor for retrieving datasetconfigs
-		DSConfigAdaptor adaptor = QueryEditor.testDSConfigAdaptor();
+		DSConfigAdaptor adaptor = QueryEditor.testDSConfigAdaptor(new CompositeDSConfigAdaptor());
 
 		final Query query = new Query();
 		final QueryTreeView qtv = new QueryTreeView(query, adaptor);

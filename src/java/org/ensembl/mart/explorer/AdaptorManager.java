@@ -85,17 +85,22 @@ public class AdaptorManager extends Box {
 	 * perspective the widget is a Config and a Controller and the query is the
 	 * Model.
 	 * 
-	 * @param query
+	 * @param loadPreferences whether or not to load cached preferences
 	 *          underlying model for this widget.
 	 */
-	public AdaptorManager() {
+  public AdaptorManager(boolean loadPreferences) {
 		super(BoxLayout.Y_AXIS);
 		databaseDialog.addDatabaseType("mysql");
 		databaseDialog.addDriver("com.mysql.jdbc.Driver");
 		databaseDialog.setPrefs(Preferences.userNodeForPackage(this.getClass()));
-		loadPrefs();
+		if (loadPreferences) loadPrefs();
 		createUI();
 	}
+  
+  public AdaptorManager() {
+    this(true); 
+  }
+  
 	private void createUI() {
 		combo.setEditable(false);
 		//combo.setSelectedItem(none);

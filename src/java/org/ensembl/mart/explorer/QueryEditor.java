@@ -327,19 +327,18 @@ public class QueryEditor extends JPanel {
    * @return preloaded dataset configs
    * @throws ConfigurationException
    */
-  static DSConfigAdaptor testDSConfigAdaptor() throws ConfigurationException {
+  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
 
-    CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
+    //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
     String[] urls = new String[] { 
-      //,"data/XML/homo_sapiens__snps.xml"
-      "data/XML/homo_sapiens__vega_genes.xml" 
-      ,"data/XML/homo_sapiens__ensembl_genes.xml"
-      ,"data/XML/homo_sapiens__vega_genes_simple.xml" 
+      "data/XML/hsapiens_gene_ensembl.xml" 
+      ,"data/XML/hsapiens_gene_est.xml"
+      //,"data/XML/hsapiens_gene_vega.xml" 
     };
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
-      adaptor.add(new URLDSConfigAdaptor(dvURL, true));
+      ((CompositeDSConfigAdaptor)adaptor).add(new URLDSConfigAdaptor(dvURL, true));
     }
 
     return adaptor;
@@ -678,9 +677,10 @@ public class QueryEditor extends JPanel {
    * 
    */
   public static AdaptorManager testDatasetConfigSettings() {
-    AdaptorManager dvs = new AdaptorManager();
+    AdaptorManager dvs = new AdaptorManager(false);
+    dvs.setAdvancedOptionsEnabled(true);
     try {
-      dvs.add( testDSConfigAdaptor() );
+      testDSConfigAdaptor(dvs.getRootAdaptor()) ;
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
