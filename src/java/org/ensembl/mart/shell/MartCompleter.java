@@ -202,7 +202,7 @@ public class MartCompleter implements ReadlineCompleter {
 					else if (request.equalsIgnoreCase(ATTRIBUTE))
 						SetDescribeAttributeMode();
 					else
-						SetEmptyMode();
+						SetBaseDescribeMode();
 				}
 			} else if (currentCommand.startsWith(HELP))
 				SetHelpMode();
