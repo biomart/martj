@@ -1,5 +1,5 @@
 # add ensembldb as a Mart
-add Mart host = ensembldb.ensembl.org, user = anonymous, instanceName = ensembl_mart_17_1 as mainDataSource;
+add Mart host = ensembldb.ensembl.org, user = anonymous, instanceName = ensembl_mart_18_1 as mainDataSource;
 
 # set ensembldb as the sessionwide Mart, used in all subsequent queries
 set Mart mainDataSource;
