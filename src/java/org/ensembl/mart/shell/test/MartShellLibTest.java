@@ -18,15 +18,15 @@
  
 package org.ensembl.mart.shell.test;
 
-import org.ensembl.mart.lib.test.Base;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.ensembl.mart.lib.test.StatOutputStream;
+import org.ensembl.mart.lib.FormatSpec;
+import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.MartConfiguration;
-
+import org.ensembl.mart.lib.test.Base;
+import org.ensembl.mart.lib.test.StatOutputStream;
 import org.ensembl.mart.shell.MartShellLib;
 
 /**
@@ -56,21 +56,23 @@ public class MartShellLibTest extends Base {
 		super(name);
 	}
 
-  public void testMartShellLib() throws Exception {
+  public void testMQLtoQuery() throws Exception {
   	MartConfiguration martconf = engine.getMartConfiguration();
   	
-  	MartShellLib msl = new MartShellLib(engine, martconf);
+  	MartShellLib msl = new MartShellLib(martconf);
   	
   	String martSQL = "select ensembl_gene_id from homo_sapiens_ensembl_genes limit 100";
-  	
 		StatOutputStream stats = new StatOutputStream();
-
-    msl.setOutputStream(stats);
+    Query query = msl.MQLtoQuery(martSQL);
     
-    msl.parseQuery(martSQL);
+    engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, stats);
     
-		assertTrue("No text returned from query", stats.getCharCount() > 0);
-		assertTrue("No lines returned from query", stats.getLineCount() > 0);
+    int charCount = stats.getCharCount();
+    int lineCount = stats.getLineCount();
+		assertTrue("No text returned from query\n", charCount > 0);
+		assertTrue("No lines returned from query\n", lineCount > 0);
+		assertEquals("Wrong number of genes returned from Query\n", 100, lineCount);
+		
 		stats.close();		
   }  
 }
