@@ -216,6 +216,7 @@ public final class CdnaSeqQueryRunner extends BaseSeqQueryRunner {
 				tranatts.put(DESCRIPTION, seqd.getDescription());
 
 			totalRows++;
+      totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;

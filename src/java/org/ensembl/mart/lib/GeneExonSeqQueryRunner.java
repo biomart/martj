@@ -224,6 +224,7 @@ public final class GeneExonSeqQueryRunner extends BaseSeqQueryRunner {
       }
 
       totalRows++;
+      totalRowsThisExecute++;
       resultSetRowsProcessed++;
       lastID = keyID.intValue();
       lastIDRowsProcessed++;

@@ -225,6 +225,7 @@ public final class TranscriptEISeqQueryRunner extends BaseSeqQueryRunner {
         tranatts.put(DESCRIPTION, seqd.getDescription());
 
       totalRows++;
+      totalRowsThisExecute++;
       resultSetRowsProcessed++;
       lastID = keyID.intValue();
       lastIDRowsProcessed++;

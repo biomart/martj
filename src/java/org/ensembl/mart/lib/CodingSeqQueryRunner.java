@@ -217,6 +217,7 @@ public final class CodingSeqQueryRunner extends BaseSeqQueryRunner {
         tranatts.put(DESCRIPTION, seqd.getDescription());
 
       totalRows++;
+      totalRowsThisExecute++;
       resultSetRowsProcessed++;
       lastID = tranID.intValue();
       lastIDRowsProcessed++;

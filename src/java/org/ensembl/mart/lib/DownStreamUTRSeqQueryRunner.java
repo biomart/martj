@@ -234,6 +234,7 @@ public final class DownStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
 				atts.put(DESCRIPTION, seqd.getDescription());
 				
 			totalRows++;
+      totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;

@@ -236,6 +236,7 @@ public final class TranscriptExonSeqQueryRunner extends BaseSeqQueryRunner {
         exonatts.put(DESCRIPTION, seqd.getDescription());
 
       totalRows++;
+      totalRowsThisExecute++;
       resultSetRowsProcessed++;
       lastID = keyID.intValue();
       lastIDRowsProcessed++;

@@ -202,6 +202,7 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 				atts.put(DESCRIPTION, seqd.getDescription());
 								
 			totalRows++;
+      totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;	

@@ -71,6 +71,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected SeqWriter seqWriter;
 
   protected int totalRows = 0;
+  protected int totalRowsThisExecute = 0;
   protected int resultSetRowsProcessed = 0; // will count rows processed for a given ResultSet batch
   protected int lastID = -1;
   protected int lastIDRowsProcessed = 0;
@@ -289,6 +290,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected void executeQueryMysql(DetailedDataSource ds, Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
     boolean moreRows = true;
     boolean userLimit = false;
+    totalRowsThisExecute = 0;
 
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
@@ -305,19 +307,6 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
       while (moreRows) {
         sql = sqlbase;
 
-//      sql += " order by  "
-//        + structureTable
-//        + "."
-//        + GENEID
-//        + ", "
-//        + structureTable
-//        + "."
-//        + TRANID
-//        + ", "
-//        + structureTable
-//        + "."
-//        + RANK;
-
         sql += " order by "
             + structureTable
             + "."
@@ -331,7 +320,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
         } else
           maxRows = batchLength;
 
-        sql += " LIMIT " + totalRows + "," + maxRows; //;(maxRows - lastIDRowsProcessed);
+        sql += " LIMIT " + totalRowsThisExecute + "," + maxRows; //;(maxRows - lastIDRowsProcessed);
         
         if (logger.isLoggable(Level.INFO))
           logger.info("SQL : " + sql + "\n");

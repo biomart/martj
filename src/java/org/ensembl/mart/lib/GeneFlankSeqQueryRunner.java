@@ -212,6 +212,7 @@ public final class GeneFlankSeqQueryRunner extends BaseSeqQueryRunner {
         geneatts.put(DESCRIPTION, seqd.getDescription());
         
 			totalRows++;
+      totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;

@@ -238,6 +238,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
     boolean moreRows = true;
+    totalRowsThisExecute = 0;
 
     Connection conn = null;
     String sql = null;
@@ -256,7 +257,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         else
           maxRows = batchLimit;
 
-        sql += " LIMIT " + totalRows + "," + maxRows; //;(maxRows - lastIDRowsProcessed);    	
+        sql += " LIMIT " + totalRowsThisExecute + "," + maxRows; //;(maxRows - lastIDRowsProcessed);    	
 
         if (logger.isLoggable(Level.INFO))
           logger.info("SQL : " + sql);
@@ -337,6 +338,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         throw new IOException();
 
       totalRows++;
+      totalRowsThisExecute++;
       resultSetRowsProcessed++;
     }
   }
@@ -417,6 +419,8 @@ public final class AttributeQueryRunner implements QueryRunner {
   private String queryID = null;
   private int lastID = -1;
   private int totalRows = 0;
+  private int totalRowsThisExecute = 0;
+  
   private int resultSetRowsProcessed = 0; // will count rows processed for a given ResultSet batch
   private int lastIDRowsProcessed = 0;
   // will allow process to skip rows already processed in previous batch, for a given ID
