@@ -165,7 +165,6 @@ public class MartCompleter implements ReadlineCompleter {
 	public String completer(String text, int state) {
 		if (state == 0) {
 			// first call to completer(): initialize our choices-iterator
-			String currentCommand = Readline.getLineBuffer();
 			setModeForLine(Readline.getLineBuffer());
 			possibleValues = currentSet.tailSet(text).iterator();
 		}
@@ -445,14 +444,10 @@ public class MartCompleter implements ReadlineCompleter {
 	 * for the duration of the MartCompleter objects existence, and can only be over ridden
 	 * by a subsequent call to setEnvDataset, or a local dataset in the command
 	 * 
-	 * @param datasetName - String Name of the dataset
+	 * @param dataset - datasetview to set as environmental dataset
 	 */
-	public void setEnvDataset(String datasetIName) {
-		try {
-			envDataset = adaptorManager.getDatasetViewByInternalName(datasetIName);
-		} catch (ConfigurationException e) {
-			envDataset = null;
-		} // might return null, but that is ok
+	public void setEnvDataset(DatasetView dsv) {
+		envDataset = dsv;
 	}
 
 	/**
@@ -488,6 +483,7 @@ public class MartCompleter implements ReadlineCompleter {
 		currentSet.addAll(listSet);
 	}
 
+  //TODO: refactor MartCompleter not to complete mart names for add Datasets.
 	private void setAddMode(String token) {
 		String[] toks = token.split("\\s+");
 

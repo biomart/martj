@@ -18,15 +18,12 @@
  
 package org.ensembl.mart.shell.test;
 
-import java.net.URL;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
 import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.lib.test.StatOutputStream;
 import org.ensembl.mart.shell.MartShellLib;
@@ -39,7 +36,6 @@ public class MartShellLibTest extends Base {
 
   private final String MARTREG = "data/XML/exampleMartRegistryURL.xml";
   private MartShellLib msl;
-  private RegistryDSViewAdaptor adaptor;
   
 	public static void main(String[] args) {
 		if (args.length > 0)
@@ -66,7 +62,6 @@ public class MartShellLibTest extends Base {
   	String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
 		StatOutputStream stats = new StatOutputStream();
     
-    msl.setEnvMart(martJDataSource);
     Query query = msl.MQLtoQuery(martSQL);
     query.setDataSource(martJDataSource);
         
@@ -82,8 +77,7 @@ public class MartShellLibTest extends Base {
   }
   
   public void testQueryToMQL() throws Exception {
-    msl.setEnvMart(martJDataSource);
-    msl.setDataset("ensembl_genes_homo_sapiens");
+    msl.setEnvDataset("ensembl_genes_homo_sapiens");
     
     String test = "get ensembl_gene_id";
     Query testQuery = msl.MQLtoQuery(test);
@@ -223,12 +217,10 @@ public class MartShellLibTest extends Base {
 	 */
 	public void setUp() throws Exception {
 		super.setUp();
+
+    msl = new MartShellLib();
     
-    URL martRegURL = MartShellLibTest.class.getClassLoader().getResource(MARTREG);
-    assertNotNull("Missing dataset file: " + MARTREG + "\n", martRegURL);
-    
-    adaptor = new RegistryDSViewAdaptor(martRegURL);
-    
-    msl = new MartShellLib(adaptor);
+    msl.addMart(martJDataSource);
+    msl.addMartRegistry(MARTREG);
 	}
 }
