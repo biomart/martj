@@ -161,6 +161,20 @@ public class AttributeCollection extends BaseConfigurationObject {
   	return supports;
   }
   
+  /**
+   * Returns a List of possible internalNames to add to the MartCompleter command completion system.
+   * @return List of possible completions.
+   */
+  public List getCompleterNames() {
+  	List names = new ArrayList();
+  	
+  	for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+			AttributeDescription element = (AttributeDescription) iter.next();
+			names.add(element.getInternalName());
+		}
+  	return names;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 

@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -488,6 +489,121 @@ public class FilterDescription extends BaseConfigurationObject {
 		Disable[] ret = new Disable[Disables.size()];
 		Disables.toArray(ret);
 		return ret;
+	}
+
+	public List getCompleterNames() {
+		List names = new ArrayList();
+      
+		if (field != null && field.length() > 0 && type != null && type.length() > 0) {
+			//add internalName, and any PushOptions names that are found
+			if (!names.contains(internalName))
+				names.add(internalName);
+			
+			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+				Option element = (Option) iter.next();
+				names.addAll(element.getCompleterNames());
+			}	
+		} else {
+			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+				Option element = (Option) iter.next();
+				String opfield = element.getField();
+				String optype = element.getType();
+
+				if (opfield != null && opfield.length() > 0 && optype != null && optype.length() > 0) {
+					if (!names.contains(element.getInternalName()))
+						names.add(element.getInternalName());
+				} else {
+					//try pushOptions
+					names.addAll(element.getCompleterNames());
+				}
+			}
+		}
+		return names;
+	}
+
+	public List getCompleterQualifiers(String internalName) {
+		List quals = new ArrayList();
+		String pquals = getQualifiers(internalName);
+		if (pquals != null && pquals.length() > 0)
+			quals.addAll(Arrays.asList(pquals.split(",")));
+
+		return quals;
+	}
+
+	public List getCompleterValues(String internalName) {		
+		List vals = new ArrayList();
+    
+		if (this.internalName.equals(internalName)) {
+			Option[] myops = getOptions();
+
+			for (int i = 0, n = myops.length; i < n; i++) {
+				Option option = myops[i];
+				String opvalue = option.getValue();
+
+				if (opvalue != null && opvalue.length() > 0) {
+					if (!vals.contains(opvalue))
+						vals.add(opvalue);
+				}
+			}
+		} else if (internalName.indexOf(".") > 0) {
+			//PushOption Option either Filter Option with Value Options, or Value Options
+			String[] iname_info = internalName.split("\\.");
+			String supername = iname_info[0];
+			String refname = iname_info[1];
+      
+			Option superOption = getOptionByName(supername);			
+			PushOptions[] pos = superOption.getPushOptions();
+
+			for (int i = 0, n = pos.length; i < n; i++) {
+				PushOptions po = pos[i];
+				if (po.getRef().equals(refname)) {
+					//value options
+					Option[] suboptions = po.getOptions();
+					for (int j = 0, m = suboptions.length; j < m; j++) {
+						Option option = suboptions[j];
+						String opvalue = option.getValue();
+
+						if (opvalue != null && opvalue.length() > 0) {
+							if (!vals.contains(opvalue))
+								vals.add(opvalue);
+						}
+					}
+				} else {					
+					//Option Filter with Value Options
+					if (po.containsOption(refname)) {
+						Option[] os = po.getOptionByInternalName(refname).getOptions();
+
+						if (os.length > 0) {
+							for (int j = 0, l = os.length; j < l; j++) {
+								Option option = os[j];
+								String opvalue = option.getValue();
+
+								if (opvalue != null && opvalue.length() > 0) {
+									if (!vals.contains(opvalue))
+										vals.add(opvalue);
+								}
+							}
+						}
+					}
+				}
+			}
+		} else {
+			if (containsOption(internalName)) {
+				Option[] ops = getOptionByName(internalName).getOptions();
+
+				for (int i = 0, n = ops.length; i < n; i++) {
+					Option option = ops[i];
+					String opvalue = option.getValue();
+
+					if (opvalue != null && opvalue.length() > 0) {
+						if (!vals.contains(opvalue))
+							vals.add(opvalue);
+					}
+				}
+			}
+		}
+
+		return vals;
 	}
 
 	private Hashtable uiOptionNameMap = new Hashtable();

@@ -311,6 +311,21 @@ public class AttributePage extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Retruns a List of possible Completion names for filters to the MartCompleter command completion system.
+	 * @return List possible completions
+	 */
+	public List getCompleterNames() {
+		List names = new ArrayList();
+		
+		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+			Object group = iter.next();
+			if (group instanceof AttributeGroup)
+			  names.addAll( ( (AttributeGroup) group).getCompleterNames() );
+		}
+		return names;
+	}
+	
+	/**
 	 * debug output
 	 */
 	public String toString() {

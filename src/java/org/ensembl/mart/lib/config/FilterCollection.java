@@ -50,11 +50,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * @param description String description of the FilterCollection.
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
-	public FilterCollection(
-		String internalName,
-		String displayName,
-		String description)
-		throws ConfigurationException {
+	public FilterCollection(String internalName, String displayName, String description) throws ConfigurationException {
 
 		super(internalName, displayName, description);
 	}
@@ -106,9 +102,9 @@ public class FilterCollection extends BaseConfigurationObject {
 	 */
 	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
 		if (containsFilterDescription(internalName))
-		  return lastFilt;
+			return lastFilt;
 		else
-		  return null;
+			return null;
 	}
 
 	/**
@@ -124,30 +120,22 @@ public class FilterCollection extends BaseConfigurationObject {
 			contains = uiFilterNameMap.containsKey(internalName);
 
 			if (contains)
-			  lastFilt = (FilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(internalName) );
-			else if ( internalName.indexOf(".") > 0) {
+				lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(internalName));
+			else if (internalName.indexOf(".") > 0) {
 				String[] testNames = internalName.split("\\.");
 				String testRefName = testNames[0]; // x in x.y
 				String testIname = testNames[1]; // y in x.y
-				
-				if ( uiFilterNameMap.containsKey(testIname) ) {
-				  lastFilt =  (FilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(testIname) );
-				  contains = true;
+
+        if (testIname == null)
+          contains = false;
+				else if (uiFilterNameMap.containsKey(testIname)) {					
+					lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(testIname));
+					contains = true;
 				} else {
 					for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-				    FilterDescription element = (FilterDescription) iter.next();
-				    
-				    if (element.containsOption(testRefName)) {
-				    	lastFilt = element;
-				    	contains = true;
-				    	break;
-				    }
-					}
-				}
-		  } else {
-				for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-					FilterDescription element = (FilterDescription) iter.next();
-					if ( element.containsOption(internalName) ) {
+						FilterDescription element = (FilterDescription) iter.next();
+
+						if (element.containsOption(testRefName)) {
 							lastFilt = element;
 							contains = true;
 							break;
@@ -155,6 +143,16 @@ public class FilterCollection extends BaseConfigurationObject {
 					}
 				}
 			} else {
+				for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+					FilterDescription element = (FilterDescription) iter.next();
+					if (element.containsOption(internalName)) {
+						lastFilt = element;
+						contains = true;
+						break;
+					}
+				}
+			}
+		} else {
 			if (lastFilt.getInternalName().equals(internalName))
 				contains = true;
 			else {
@@ -179,36 +177,67 @@ public class FilterCollection extends BaseConfigurationObject {
 			return null;
 	}
 
-  /**
-   * Determine if this FilterCollection contains a FilterDescription supporting a given field and tableConstraint.
-   * @param field - String field of a mart database table
-   * @param TableConstraint -- String tableConstraint of a mart database table
-   * @return boolean, true if a FilterDescription contained within this collection supports the field and tableConstraint, false otherwise.
-   */
+	/**
+	 * Determine if this FilterCollection contains a FilterDescription supporting a given field and tableConstraint.
+	 * @param field - String field of a mart database table
+	 * @param TableConstraint -- String tableConstraint of a mart database table
+	 * @return boolean, true if a FilterDescription contained within this collection supports the field and tableConstraint, false otherwise.
+	 */
 	public boolean supports(String field, String TableConstraint) {
 		boolean supports = false;
 
-    if (lastSupportFilt == null) {
-    	for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+		if (lastSupportFilt == null) {
+			for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 				Object element = iter.next();
-				
+
 				if (element instanceof FilterDescription) {
-					if ( ( (FilterDescription) element ).supports(field, TableConstraint) ) {
+					if (((FilterDescription) element).supports(field, TableConstraint)) {
 						lastSupportFilt = (FilterDescription) element;
 						supports = true;
-						break; 
+						break;
 					}
 				}
 			}
-    } else {
-    	if (lastSupportFilt.supports(field, TableConstraint))
-    	  supports = true;
-    	else {
-    		lastSupportFilt = null;
-    		supports = supports(field, TableConstraint);
-    	}
-    }
+		} else {
+			if (lastSupportFilt.supports(field, TableConstraint))
+				supports = true;
+			else {
+				lastSupportFilt = null;
+				supports = supports(field, TableConstraint);
+			}
+		}
 		return supports;
+	}
+
+	/**
+	 * Returns a List of possible internalNames to add to the MartCompleter command completion system.
+	 * internalNames may be of the form x.y.  Also, internalNames that are not of the form x.y, but are found to be equal to y in
+	 * another internalName of form x.y will not be added as potential completers. 
+	 * @return List of potential completer names
+	 */
+	public List getCompleterNames() {
+		List names = new ArrayList();
+
+		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+			FilterDescription element = (FilterDescription) iter.next();
+			names.addAll(element.getCompleterNames());
+		}
+
+		return names;
+	}
+
+	/**
+	 * Allows MartShell to get all values associated with a given internalName (which may be of form x.y).
+	 * Behaves differently than getFilterDescriptionByInternalName when internalName is x.y and y is the name of
+	 * an actual filterDescription.
+	 * @param internalName
+	 * @return List of values to complete
+	 */
+	public List getCompleterValuesByInternalName(String internalName) {
+		if (internalName.indexOf(".") > 0)
+			return getFilterDescriptionByInternalName(internalName.split("\\.")[0]).getCompleterValues(internalName);
+		else
+			return getFilterDescriptionByInternalName(internalName).getCompleterValues(internalName);
 	}
 
 	public String toString() {

@@ -233,6 +233,37 @@ public class Option extends BaseConfigurationObject {
 		}
 	}
 
+  /**
+   * Searches each PushOptions for potential completer names.  If it contains Options acting as Filters 
+   * (eg, to be pushed to some other FilterDescription), adds 'internalName.option.getInternalName()' to the list of potential completer names.
+   * If it references another FilterDescription, and contains value Options, adds 'internalName.pushOptions.getRef()' to the list.
+   * @return List of potential completer names
+   */
+  public List getCompleterNames() {
+  	List names = new ArrayList();
+  	for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+			PushOptions element = (PushOptions) uiOptionPushes.get(i);
+			Option[] ops = element.getOptions();
+
+			for (int j = 0, o = ops.length; j < o; j++) {
+				Option option = ops[j];
+				String completer = null;
+				
+				if (option.getField() != null && option.getField().length() > 0 && option.getType() != null && option.getType().length() > 0) {
+					//push option filter, should get superoption.subotion as name
+					completer = internalName+"."+option.getInternalName();
+				} else if (option.getValue() != null && option.getValue().length() > 0 ) {
+					//push option value, should get superoption.pushoptionref as name
+					completer = internalName+"."+element.getRef();
+				} // else not needed
+				
+				if (! ( completer == null || names.contains(completer) ) )
+				  names.add(completer);
+			}
+		}
+		return names;
+  }
+  
 	/**
 	 * @return
 	 */

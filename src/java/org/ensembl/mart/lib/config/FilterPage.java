@@ -173,27 +173,39 @@ public class FilterPage extends BaseConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsFilterDescription(String internalName) {
-		boolean found = false;
+		boolean contains = false;
 
 		if (lastFilt == null) {
-			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-				Object group = filterGroups.get((Integer) iter.next());
+			if (internalName.indexOf(".") > 0) {
+				String[] refs = internalName.split("\\.");
+				if (refs.length > 1 && containsFilterDescription(refs[1]))
+					contains = true;
+			}
 
-				if (group instanceof FilterGroup && ((FilterGroup) group).containsFilterDescription(internalName)) {
-					lastFilt = ((FilterGroup) group).getFilterDescriptionByInternalName(internalName);
-					found = true;
-					break;
+			if (!contains) {
+				for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
+					Object group = filterGroups.get((Integer) iter.next());
+
+					if (group instanceof FilterGroup && ((FilterGroup) group).containsFilterDescription(internalName)) {
+						lastFilt = ((FilterGroup) group).getFilterDescriptionByInternalName(internalName);
+						contains = true;
+						break;
+					}
 				}
 			}
 		} else {
 			if (lastFilt.getInternalName().equals(internalName))
-				found = true;
+				contains = true;
+		  else if (lastFilt.containsOption(internalName))
+		    contains = true;
+		  else if ( ( internalName.indexOf(".") > 0 ) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
+		    contains = true;
 			else {
 				lastFilt = null;
-				found = containsFilterDescription(internalName);
+				contains = containsFilterDescription(internalName);
 			}
 		}
-		return found;
+		return contains;
 	}
 
 	/**
@@ -224,10 +236,10 @@ public class FilterPage extends BaseConfigurationObject {
 		if (lastSupportingFilter == null) {
 			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
 				Object element = iter.next();
-		
+
 				if (element instanceof FilterGroup) {
 					FilterGroup fgroup = (FilterGroup) element;
-		
+
 					if (fgroup.supports(field, tableConstraint)) {
 						lastSupportingFilter = fgroup.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
 						supports = true;
@@ -318,6 +330,56 @@ public class FilterPage extends BaseConfigurationObject {
 				return getCollectionForFilter(internalName);
 			}
 		}
+	}
+
+	/**
+	 * Retruns a List of possible Completion names for filters to the MartCompleter command completion system.
+	 * @return List possible completions
+	 */
+	public List getCompleterNames() {
+		List names = new ArrayList();
+
+		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+			Object group = iter.next();
+
+			if (group instanceof FilterGroup) {
+				List thisNames = ((FilterGroup) group).getCompleterNames();
+
+				for (int i = 0, n = thisNames.size(); i < n; i++) {
+					String completer = (String) thisNames.get(i);
+					
+					boolean addit = true;
+
+					//look for completer, or x.completer
+					for (int j = 0, m = names.size(); j < m; j++) {
+						String check = (String) names.get(j);
+
+						if (check.equals(completer) || (check.endsWith("." + completer))) {
+							addit = false;
+							break;
+						} else if (completer.endsWith("." + check))
+							names.remove(check);
+					}
+					if (addit)
+						names.add(completer);
+				}
+			}
+		}
+		return names;
+	}
+
+	/**
+	 * Allows MartShell to get all values associated with a given internalName (which may be of form x.y).
+	 * Behaves differently than getFilterDescriptionByInternalName when internalName is x.y and y is the name of
+	 * an actual filterDescription.
+	 * @param internalName
+	 * @return List of values to complete
+	 */
+	public List getCompleterValuesByInternalName(String internalName) {
+		if (internalName.indexOf(".") > 0)
+			return getFilterDescriptionByInternalName(internalName.split("\\.")[0]).getCompleterValues(internalName);
+		else
+			return getFilterDescriptionByInternalName(internalName).getCompleterValues(internalName);
 	}
 
 	/**

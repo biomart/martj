@@ -67,62 +67,62 @@ public class Dataset extends BaseConfigurationObject {
 		super(internalName, displayName, description);
 	}
 
-  /**
-   * add a Option object to this FilterCollection.  Options are stored in the order that they are added.
-   * @param o - an Option object
-   */
-  public void addOption(Option o) {
-    Integer oRankInt = new Integer(oRank);
-    uiOptions.put(oRankInt, o);
-    uiOptionNameMap.put(o.getInternalName(), oRankInt);
-    oRank++;
-    hasOptions = true;
-  }
-  
-  /**
-   * Set a group of Option objects in one call.  Subsequent calls to
-   * addOption or setOptions will add to what was added before, in the order that they are added.
-   * @param o - an array of Option objects
-   */
-  public void setOptions(Option[] o) {
-    for (int i = 0, n = o.length; i < n; i++) {
-      Integer oRankInt = new Integer(oRank);
-      uiOptions.put(oRankInt, o[i]);
-      uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
-      oRank++;      
-    }   
-    hasOptions = true;
-  }
-  
-  /**
-   * Add a DefaultFilter object to this Dataset.
-   * @param df - A DefaultFilter object
-   */
-  public void addDefaultFilter(DefaultFilter df) {
-    hasDefaultFilters = true;
-    if (!defaultFilters.contains(df))
-      defaultFilters.add(df);
-  }
-  
-  /**
-   * Add a set of DefaultFilter objects in one call.
-   * Note, subsequent calls to addDefaultFilter or setDefaultFilter
-   * will add to what was added before.
-   * @param df - An Array of DefaultFilter objects
-   */
-  public void setDefaultFilters(DefaultFilter[] df) {
-    for (int i = 0, n = df.length; i < n; i++) {
+	/**
+	 * add a Option object to this FilterCollection.  Options are stored in the order that they are added.
+	 * @param o - an Option object
+	 */
+	public void addOption(Option o) {
+		Integer oRankInt = new Integer(oRank);
+		uiOptions.put(oRankInt, o);
+		uiOptionNameMap.put(o.getInternalName(), oRankInt);
+		oRank++;
+		hasOptions = true;
+	}
+
+	/**
+	 * Set a group of Option objects in one call.  Subsequent calls to
+	 * addOption or setOptions will add to what was added before, in the order that they are added.
+	 * @param o - an array of Option objects
+	 */
+	public void setOptions(Option[] o) {
+		for (int i = 0, n = o.length; i < n; i++) {
+			Integer oRankInt = new Integer(oRank);
+			uiOptions.put(oRankInt, o[i]);
+			uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
+			oRank++;
+		}
+		hasOptions = true;
+	}
+
+	/**
+	 * Add a DefaultFilter object to this Dataset.
+	 * @param df - A DefaultFilter object
+	 */
+	public void addDefaultFilter(DefaultFilter df) {
+		hasDefaultFilters = true;
+		if (!defaultFilters.contains(df))
+			defaultFilters.add(df);
+	}
+
+	/**
+	 * Add a set of DefaultFilter objects in one call.
+	 * Note, subsequent calls to addDefaultFilter or setDefaultFilter
+	 * will add to what was added before.
+	 * @param df - An Array of DefaultFilter objects
+	 */
+	public void setDefaultFilters(DefaultFilter[] df) {
+		for (int i = 0, n = df.length; i < n; i++) {
 			addDefaultFilter(df[i]);
 		}
-  }
-  
- 	/**
-	 * Adds a star name to the list for this Dataset.  A star name is the
-	 * name of a central, or main, table to which all mart facts are tied.
-	 * Datasets can contain more than one star name.
-	 * 
-	 * @param starname  String name of a main table for a mart.
-	 */
+	}
+
+	/**
+	* Adds a star name to the list for this Dataset.  A star name is the
+	* name of a central, or main, table to which all mart facts are tied.
+	* Datasets can contain more than one star name.
+	* 
+	* @param starname  String name of a main table for a mart.
+	*/
 	public void addStarBase(String starname) {
 		starBases.add(starname);
 	}
@@ -215,43 +215,43 @@ public class Dataset extends BaseConfigurationObject {
 		}
 	}
 
-  /**
-   * Determine if this Dataset has Options Available.
-   * 
-   * @return boolean, true if Options are available, false if not.
-   */
-  public boolean hasOptions() {
-    return hasOptions;
-  }
-  
-  /**
-   * Get all Option objects available as an array.  Options are returned in the order they were added.
-   * @return Option[]
-   */
-  public Option[] getOptions() {
-    Option[] ret = new Option[uiOptions.size()];
-    uiOptions.values().toArray(ret);
-    return ret;    
-  }
-  
-  /**
-   * Determine if this Dataset has DefaultFilters available.
-   * @return boolean, true if DefaultFilter(s) are available, false if not
-   */
-  public boolean hasDefaultFilters() {
-    return hasDefaultFilters;
-  }
-  
-  /**
-   * Returns all DefaultFilter Objects added to the Dataset.
-   * @return DefaultFilter[] array of DefaultFilter objects.
-   */
-  public DefaultFilter[] getDefaultFilters() {
-    DefaultFilter[] ret = new DefaultFilter[defaultFilters.size()];
-    defaultFilters.toArray(ret);
-    return ret;
-  }
-  
+	/**
+	 * Determine if this Dataset has Options Available.
+	 * 
+	 * @return boolean, true if Options are available, false if not.
+	 */
+	public boolean hasOptions() {
+		return hasOptions;
+	}
+
+	/**
+	 * Get all Option objects available as an array.  Options are returned in the order they were added.
+	 * @return Option[]
+	 */
+	public Option[] getOptions() {
+		Option[] ret = new Option[uiOptions.size()];
+		uiOptions.values().toArray(ret);
+		return ret;
+	}
+
+	/**
+	 * Determine if this Dataset has DefaultFilters available.
+	 * @return boolean, true if DefaultFilter(s) are available, false if not
+	 */
+	public boolean hasDefaultFilters() {
+		return hasDefaultFilters;
+	}
+
+	/**
+	 * Returns all DefaultFilter Objects added to the Dataset.
+	 * @return DefaultFilter[] array of DefaultFilter objects.
+	 */
+	public DefaultFilter[] getDefaultFilters() {
+		DefaultFilter[] ret = new DefaultFilter[defaultFilters.size()];
+		defaultFilters.toArray(ret);
+		return ret;
+	}
+
 	/**
 	 * Returns the list of star names for this Dataset.
 	 * 
@@ -414,7 +414,7 @@ public class Dataset extends BaseConfigurationObject {
 		else
 			return null;
 	}
-  
+
 	/**
 	 * Determine if this Dataset supports a given field and tableConstraint for an Attribute.  
 	 * Caches the first supporting AttributeDescription that it finds, for subsequent call to 
@@ -425,10 +425,10 @@ public class Dataset extends BaseConfigurationObject {
 	 */
 	public boolean supportsAttributeDescription(String field, String tableConstraint) {
 		boolean supports = false;
-  	
+
 		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
 			AttributePage element = (AttributePage) iter.next();
-			
+
 			if (element.supports(field, tableConstraint)) {
 				lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
 				supports = true;
@@ -437,7 +437,7 @@ public class Dataset extends BaseConfigurationObject {
 		}
 		return supports;
 	}
-	
+
 	/**
 		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific FilterDescription/MapFilterDescription object.
 		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
@@ -447,26 +447,39 @@ public class Dataset extends BaseConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsFilterDescription(String internalName) {
-		boolean found = false;
+		boolean contains = false;
 
 		if (lastFilt == null) {
-			for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
-				FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
-				if (page.containsFilterDescription(internalName)) {
-					lastFilt = page.getFilterDescriptionByInternalName(internalName);
-					found = true;
-					break;
+			if (internalName.indexOf(".") > 0) {
+				String[] refs = internalName.split("\\.");
+				
+				if (refs.length > 1 && containsFilterDescription(refs[1]))
+					contains = true;
+			}
+
+			if (!contains) {
+				for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
+					FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
+					if (page.containsFilterDescription(internalName)) {
+						lastFilt = page.getFilterDescriptionByInternalName(internalName);
+						contains = true;
+						break;
+					}
 				}
 			}
 		} else {
 			if (lastFilt.getInternalName().equals(internalName))
-				found = true;
+				contains = true;
+			else if (lastFilt.containsOption(internalName))
+				contains = true;
+			else if ( ( internalName.indexOf(".") > 0 ) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
+				contains = true;
 			else {
 				lastFilt = null;
-				found = containsFilterDescription(internalName);
+				contains = containsFilterDescription(internalName);
 			}
 		}
-		return found;
+		return contains;
 	}
 
 	/**
@@ -475,14 +488,13 @@ public class Dataset extends BaseConfigurationObject {
 	 * @param field -- String field of a mart database table
 	 * @param tableConstraint -- String tableConstraint of a mart database
 	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
-	 */  
+	 */
 	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
 		if (supportsFilterDescription(field, tableConstraint))
 			return lastSupportingFilter;
 		else
 			return null;
-	}  
-
+	}
 
 	/**
 	 * Determine if this Dataset contains a FilterDescription that supports a given field and tableConstraint.
@@ -494,15 +506,15 @@ public class Dataset extends BaseConfigurationObject {
 	 */
 	public boolean supportsFilterDescription(String field, String tableConstraint) {
 		boolean supports = false;
-  	
+
 		if (lastSupportingFilter == null) {
 			for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
-				 FilterPage element = (FilterPage) iter.next();
-				 if (element.supports(field, tableConstraint)) {
+				FilterPage element = (FilterPage) iter.next();
+				if (element.supports(field, tableConstraint)) {
 					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
 					supports = true;
 					break;
-				 }
+				}
 			}
 		} else {
 			if (lastSupportingFilter.supports(field, tableConstraint))
@@ -514,7 +526,7 @@ public class Dataset extends BaseConfigurationObject {
 		}
 		return supports;
 	}
-  
+
 	/**
 	 * Convenience method for non graphical UIs.
 	 * Returns the FilterPage containing a specific FilterDescription, named by internalName
@@ -536,6 +548,24 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Returns all FilterPages that contain the FilterDescription mapped by the given internalName
+	 * @param internalName - internalName of a FilterDescription
+	 * @return List of FilterPages containing the FilterDescription named by internalName
+	 */
+	public List getPagesForFilter(String internalName) {
+		List pages = new ArrayList();
+
+		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
+			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
+
+			if (page.containsFilterDescription(internalName))
+				pages.add(page);
+		}
+
+		return pages;
+	}
+
+	/**
 	 * Returns the AttributePage containing a specific AttributeDescription named by internalName.
 	 * Note, if a AttributeDescription is contained in multiple AttributePages, this will
 	 * return the first AttributePage that contains the requested AttributeDescription.
@@ -554,6 +584,24 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Returns all AttributePages that contain the AttributeDescription mapped by the given internalName
+	 * @param internalName - internalName of a AttributeDescription
+	 * @return List of AttributePages containing the AttributeDescription named by internalName
+	 */
+	public List getPagesForAttribute(String internalName) {
+		List pages = new ArrayList();
+
+		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
+			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
+
+			if (page.containsAttributeDescription(internalName))
+				pages.add(page);
+		}
+
+		return pages;
+	}
+
+	/**
 	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a Dataset.
 	 * 
 	 * @return List of FilterDescription/MapFilterDescription objects
@@ -564,10 +612,10 @@ public class Dataset extends BaseConfigurationObject {
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
 			Object fpo = filterPages.get((Integer) iter.next());
 
-      if (fpo instanceof FilterPage) {
-        FilterPage fp = (FilterPage) fpo;
-			  filts.addAll(fp.getAllFilterDescriptions());
-      }
+			if (fpo instanceof FilterPage) {
+				FilterPage fp = (FilterPage) fpo;
+				filts.addAll(fp.getAllFilterDescriptions());
+			}
 		}
 
 		return filts;
@@ -582,12 +630,12 @@ public class Dataset extends BaseConfigurationObject {
 		List atts = new ArrayList();
 
 		for (Iterator iter = attributePages.keySet().iterator(); iter.hasNext();) {
-			  Object apo = attributePages.get((Integer) iter.next());
-        
-        if (apo instanceof AttributePage) {
-          AttributePage ap = (AttributePage) apo;
-			    atts.addAll(ap.getAllAttributeDescriptions());
-        }
+			Object apo = attributePages.get((Integer) iter.next());
+
+			if (apo instanceof AttributePage) {
+				AttributePage ap = (AttributePage) apo;
+				atts.addAll(ap.getAllAttributeDescriptions());
+			}
 		}
 
 		return atts;
@@ -612,13 +660,13 @@ public class Dataset extends BaseConfigurationObject {
 	public boolean containsPrimaryKey(String pkey) {
 		return primaryKeys.contains(pkey);
 	}
-  /**
-   * Returns a FilterGroup object for a specific Filter Description (FilterDescription, MapFilterDescription)
-   * based on its internalName.
-   * 
-   * @param internalName - String internalName of Filter Description for which a group is requested.
-   * @return FilterGroup for Attrribute Description provided, or null
-   */
+	/**
+	 * Returns a FilterGroup object for a specific Filter Description (FilterDescription, MapFilterDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalName of Filter Description for which a group is requested.
+	 * @return FilterGroup for Attrribute Description provided, or null
+	 */
 	public FilterGroup getGroupForFilter(String internalName) {
 		if (!containsFilterDescription(internalName))
 			return null;
@@ -635,73 +683,125 @@ public class Dataset extends BaseConfigurationObject {
 		}
 	}
 
-  /**
-   * Returns a FilterCollection object for a specific Filter Description (FilterDescription, MapFilterDescription)
-   * based on its internalName.
-   * 
-   * @param internalName - String internalName of Filter Description for which a collection is requested.
-   * @return FilterCollection for Attrribute Description provided, or null
-   */
+	/**
+	 * Returns a FilterCollection object for a specific Filter Description (FilterDescription, MapFilterDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalName of Filter Description for which a collection is requested.
+	 * @return FilterCollection for Attrribute Description provided, or null
+	 */
 	public FilterCollection getCollectionForFilter(String internalName) {
 		if (!containsFilterDescription(internalName)) {
 			return null;
 		} else if (lastFiltColl == null) {
-      lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
-      return lastFiltColl;
+			lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
+			return lastFiltColl;
 		} else {
-      if (lastFiltColl.getInternalName().equals(internalName))
-        return lastFiltColl;
-      else {
-        lastFiltColl = null;
-        return getCollectionForFilter(internalName);
-      }
+			if (lastFiltColl.getInternalName().equals(internalName))
+				return lastFiltColl;
+			else {
+				lastFiltColl = null;
+				return getCollectionForFilter(internalName);
+			}
 		}
 	}
 
-  /**
-   * Returns an AttributeGroup object for a specific AttributeDescription
-   * based on its internalName.
-   * 
-   * @param internalName - String internalName of Attribute Description for which a group is requested.
-   * @return FilterGroup for Attrribute Description provided, or null
-   */
+	/**
+	 * Returns an AttributeGroup object for a specific AttributeDescription
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalName of Attribute Description for which a group is requested.
+	 * @return FilterGroup for Attrribute Description provided, or null
+	 */
 	public AttributeGroup getGroupForAttribute(String internalName) {
-    if (!containsFilterDescription(internalName))
-      return null;
-    else if (lastAttGroup == null) {
-      lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
-      return lastAttGroup;
-    } else {
-      if (lastAttGroup.getInternalName().equals(internalName))
-        return lastAttGroup;
-      else {
-        lastAttGroup = null;
-        return getGroupForAttribute(internalName);
-      }
-    }    
+		if (!containsFilterDescription(internalName))
+			return null;
+		else if (lastAttGroup == null) {
+			lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
+			return lastAttGroup;
+		} else {
+			if (lastAttGroup.getInternalName().equals(internalName))
+				return lastAttGroup;
+			else {
+				lastAttGroup = null;
+				return getGroupForAttribute(internalName);
+			}
+		}
 	}
-  
-  /**
-   * Returns an AttributeCollection object for a specific AttributeDescription
-   * based on its internalName.
-   * 
-   * @param internalName - String internalName of Attribute Description for which a collection is requested.
-   * @return AttributeCollection for Attribute Description provided, or null
-   */
+
+	/**
+	 * Returns an AttributeCollection object for a specific AttributeDescription
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalName of Attribute Description for which a collection is requested.
+	 * @return AttributeCollection for Attribute Description provided, or null
+	 */
 	public AttributeCollection getCollectionForAttribute(String internalName) {
-    if (!containsAttributeDescription(internalName)) {
-      return null;
-    } else if (lastFiltColl == null) {
-      lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeDescription(internalName);
-      return lastAttColl;
-    } else {
-      if (lastFiltColl.getInternalName().equals(internalName))
-        return lastAttColl;
-      else {
-        lastFiltColl = null;
-        return getCollectionForAttribute(internalName);
-      }
-    }
+		if (!containsAttributeDescription(internalName)) {
+			return null;
+		} else if (lastFiltColl == null) {
+			lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeDescription(internalName);
+			return lastAttColl;
+		} else {
+			if (lastFiltColl.getInternalName().equals(internalName))
+				return lastAttColl;
+			else {
+				lastFiltColl = null;
+				return getCollectionForAttribute(internalName);
+			}
+		}
+	}
+
+	/**
+	 * Returns a List of potential AttributeDescription.internalName to the MartCompleter command completion system.
+	 * @returns List of internalNames
+	 */
+	public List getAttributeCompleterNames() {
+		List names = new ArrayList();
+
+		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+			AttributePage page = (AttributePage) iter.next();
+			List pagenames = page.getCompleterNames();
+			for (int i = 0, n = pagenames.size(); i < n; i++) {
+				String name = (String) pagenames.get(i);
+				if (!names.contains(name))
+					names.add(name);
+			}
+		}
+		return names;
+	}
+
+	/**
+	 * Returns a List of potential FilterDescription.internalName to the MartCompleter command completion system.
+	 * @returns List of internalNames
+	 */
+	public List getFilterCompleterNames() {
+		List names = new ArrayList();
+
+		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+			FilterPage page = (FilterPage) iter.next();
+			List pagenames = page.getCompleterNames();
+			for (int i = 0, n = pagenames.size(); i < n; i++) {
+				String name = (String) pagenames.get(i);
+				if (!names.contains(name))
+					names.add(name);
+			}
+		}
+		return names;
+	}
+
+	/**
+	 * Allows MartShell to get all values associated with a given internalName (which may be of form x.y).
+	 * Behaves differently than getFilterDescriptionByInternalName when internalName is x.y and y is the name of
+	 * an actual filterDescription.
+	 * @param internalName
+	 * @return List of values to complete
+	 */
+	public List getFilterCompleterValuesByInternalName(String internalName) {
+		if (internalName.indexOf(".") > 0)
+			return getFilterDescriptionByInternalName(internalName.split("\\.")[0]).getCompleterValues(internalName);
+		else
+			return getFilterDescriptionByInternalName(internalName).getCompleterValues(internalName);
 	}
 
 	/**
@@ -763,21 +863,21 @@ public class Dataset extends BaseConfigurationObject {
 	private Hashtable filterPageNameMap = new Hashtable();
 	private List starBases = new ArrayList();
 	private List primaryKeys = new ArrayList();
-  
-  private List defaultFilters = new ArrayList();
-  private boolean hasDefaultFilters = false;
-  
-  private int oRank = 0;
-  private TreeMap uiOptions = new TreeMap();
-  private Hashtable uiOptionNameMap = new Hashtable();
-  private boolean hasOptions = false;  
-	
+
+	private List defaultFilters = new ArrayList();
+	private boolean hasDefaultFilters = false;
+
+	private int oRank = 0;
+	private TreeMap uiOptions = new TreeMap();
+	private Hashtable uiOptionNameMap = new Hashtable();
+	private boolean hasOptions = false;
+
 	// cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
 	private AttributeDescription lastAtt = null;
-	
+
 	//cache one AttributeDescription for call to supportsAttributeDescription/getAttributeDescriptionByFieldNameTableConstraint
 	private AttributeDescription lastSupportingAttribute = null;
-	
+
 	//cache one FilterDescription Object for call to containsFilterDescription or getFiterDescriptionByInternalName
 	private FilterDescription lastFilt = null;
 
@@ -792,7 +892,7 @@ public class Dataset extends BaseConfigurationObject {
 
 	//cache one AttributeCollection for call to getCollectionForAttribute
 	private AttributeCollection lastAttColl = null;
-	
+
 	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
 	private FilterDescription lastSupportingFilter = null;
 }

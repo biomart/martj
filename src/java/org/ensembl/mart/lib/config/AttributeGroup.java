@@ -254,6 +254,20 @@ public final class AttributeGroup extends BaseConfigurationObject {
   }
   
   /**
+   * Returns a List of internalNames for the MartCompleter command completion system.
+   * @return List of internalNames
+   */
+  public List getCompleterNames() {
+  	List names = new ArrayList();
+  	
+  	for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+			AttributeCollection acol = (AttributeCollection) iter.next();
+			names.addAll(acol.getCompleterNames());
+		}
+  	
+  	return names;
+  }
+  /**
    * debug output
    */
 	public String toString() {

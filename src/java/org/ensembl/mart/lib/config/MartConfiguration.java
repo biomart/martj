@@ -18,8 +18,10 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -179,6 +181,21 @@ public class MartConfiguration extends BaseConfigurationObject {
 		layout = description;
 	}
 
+  /**
+   * Returns a List of potential dataset internalNames for the MartCompleter command
+   * completion system.
+   * @return List of internalNames
+   */
+  public List getCompleterNames() {
+  	List names = new ArrayList();
+  	
+  	for (Iterator iter = datasets.values().iterator(); iter.hasNext();) {
+			Dataset dset = (Dataset) iter.next();
+			names.add(dset.getInternalName());
+		}
+  	return names;
+  }
+  
 	/**
 	 * String representation of a MartConfiguration useful in debugging output.
 	 */
