@@ -72,8 +72,8 @@
       </FilterGroup>
       <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="EXpression: NOTE Expression datasets are currently being prototyped. The current datasets have sparse coverage of genes and tissues." internalName="expression">
         <FilterSet internalName="expression_type" type="radio">
-          <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="" internalName="EV_est" tableConstraintModifier="_expression_est_"/>
-          <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="" internalName="EV_gnf" tableConstraintModifier="_expression_gnf_"/>
+          <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="na" internalName="EV_est" tableConstraintModifier="_expression_est_"/>
+          <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="na" internalName="EV_gnf" tableConstraintModifier="_expression_gnf_"/>
         </FilterSet>
         <FilterCollection filterSetName="expression_type" internalName="ontology" type="text-entry">
           <UIDSFilterDescription description="Filter for Genes Expressed in Certain Anatomical Sites." displayName="Anatomical Site:" filterSetReq="table" internalName="anatomical_site_term" objectCode="Expression" type="text-entry"/>
