@@ -2746,22 +2746,26 @@ public class DatabaseDatasetConfigUtils {
             logger.fine("Skipping " + tableName + "\n");
         }
       }
-      if (ac != null)
+	  if (ac != null && ac.getAttributeDescriptions().size() > 0)
         ag.addAttributeCollection(ac);
 
-      if (fc != null)
+      if (fc != null && fc.getFilterDescriptions().size() > 0)
         fg.addFilterCollection(fc);
     }
-
-    fcList.addFilterDescription(fdBools);
-    fcList.addFilterDescription(fdLists);
-    fg.addFilterCollection(fcList);
-
-    ap.addAttributeGroup(ag);
-    fp.addFilterGroup(fg);
-
-    dsv.addAttributePage(ap);
-    dsv.addFilterPage(fp);
+    if (fdBools != null && fdBools.getOptions().length > 0)
+       fcList.addFilterDescription(fdBools);
+    if (fdLists != null && fdLists.getOptions().length > 0)
+        fcList.addFilterDescription(fdLists);
+    if (fcList != null && fcList.getFilterDescriptions().size() > 0)
+        fg.addFilterCollection(fcList);
+    if (ag != null && ag.getAttributeCollections().length > 0)
+      ap.addAttributeGroup(ag);
+    if (fg != null && fg.getFilterCollections().length > 0)
+      fp.addFilterGroup(fg);
+    if (ap != null && ap.getAttributeGroups().size() > 0)
+      dsv.addAttributePage(ap);
+    if (fp != null && fp.getFilterGroups().size() > 0)
+      dsv.addFilterPage(fp);
 
     return dsv;
   }
