@@ -35,6 +35,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -140,10 +143,7 @@ public class QueryEditor extends JPanel {
 			stale = true;
 		}
 
-		public void filterRemoved(
-			Query sourceQuery,
-			int index,
-			Filter filter) {
+		public void filterRemoved(Query sourceQuery, int index, Filter filter) {
 			stale = true;
 		}
 
@@ -187,13 +187,16 @@ public class QueryEditor extends JPanel {
 			return stale;
 		}
 
-    /* (non-Javadoc)
-     * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
-     */
-    public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
-      // TODO Auto-generated method stub
-      
-    }
+		/* (non-Javadoc)
+		 * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+		 */
+		public void datasetViewChanged(
+			Query query,
+			DatasetView oldDatasetView,
+			DatasetView newDatasetView) {
+			// TODO Auto-generated method stub
+
+		}
 	}
 
 	/** DatasetViewAdaptor defines the "query space" of available dataset views. */
@@ -249,7 +252,8 @@ public class QueryEditor extends JPanel {
 	 * 
 	 * @throws IOException if fails to create temporary results file.
 	 */
-	public QueryEditor(DSViewAdaptor datasetViewAdaptor) throws IOException {
+	public QueryEditor(DSViewAdaptor datasetViewAdaptor, List datasources)
+		throws IOException {
 
 		this.datasetViewAdaptor = datasetViewAdaptor;
 		this.query = new Query();
@@ -257,8 +261,9 @@ public class QueryEditor extends JPanel {
 
 		JComponent toolBar = createToolbar();
 		QueryTreeView treeView = new QueryTreeView(query, datasetViewAdaptor);
-    InputPageContainer inputPanelContainer = new InputPageContainer(query, datasetViewAdaptor, treeView);
-    
+		InputPageContainer inputPanelContainer =
+			new InputPageContainer(query, datasetViewAdaptor, treeView, datasources);
+
 		outputPanel = new JEditorPane();
 		outputPanel.setEditable(false);
 
@@ -396,7 +401,7 @@ public class QueryEditor extends JPanel {
 	 */
 	private void resizeSplits() {
 
-    // must set divider by explicit values rather than
+		// must set divider by explicit values rather than
 		// proportions because the proportion approach fails
 		// on winxp jre 1.4 when the component is FIRST added.
 		// (It does work when the component is resized).
@@ -406,13 +411,11 @@ public class QueryEditor extends JPanel {
 		leftAndRight.setDividerLocation(treeWidth);
 		middleAndBottom.setDividerLocation(treeHeight);
 
-    // need to do this so the component is redrawn on win xp jre 1.4
-    validate();
+		// need to do this so the component is redrawn on win xp jre 1.4
+		validate();
 
 	}
 
-
-  
 	/**
 	 * Sets the relative positions of the constituent components with splitters
 	 * where needed. Layout is:
@@ -501,6 +504,34 @@ public class QueryEditor extends JPanel {
 		return adaptor;
 	}
 
+	/**
+	 * @return list of datasources
+	 */
+	static List testDatasources() throws ConfigurationException {
+		Vector dss = new Vector();
+		dss.add(
+			DatabaseUtil.createDataSource(
+				"mysql",
+				"ensembldb.ensembl.org",
+				"3306",
+				"ensembl_mart_17_1",
+				"anonymous",
+				null,
+				10,
+				"com.mysql.jdbc.Driver"));
+    dss.add(
+      DatabaseUtil.createDataSource(
+        "mysql",
+        "ensembldb.ensembl.org",
+        "3306",
+        "ensembl_mart_18_1",
+        "anonymous",
+        null,
+        10,
+        "com.mysql.jdbc.Driver"));
+		return dss;
+	}
+
 	public static void main(String[] args) throws Exception {
 
 		// enable logging messages
@@ -509,8 +540,9 @@ public class QueryEditor extends JPanel {
 
 		DatasetView[] views = null;
 
-    DSViewAdaptor a = testDSViewAdaptor();
-		final QueryEditor editor = new QueryEditor(a);
+		DSViewAdaptor a = testDSViewAdaptor();
+		List dss = testDatasources();
+		final QueryEditor editor = new QueryEditor(a, dss);
 		editor.setName("test_query");
 
 		JFrame f = new JFrame("Query Editor (Test Frame)");
@@ -521,9 +553,8 @@ public class QueryEditor extends JPanel {
 		f.setSize(950, 750);
 		f.setVisible(true);
 
-    // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetView( a.getDatasetViews()[0]);
-
+		// set 1st dsv to save having to do it while testing.
+		editor.getQuery().setDatasetView(a.getDatasetViews()[0]);
 
 	}
 
@@ -623,7 +654,7 @@ public class QueryEditor extends JPanel {
 
 		} catch (FileNotFoundException e) {
 			feedback.warn(e);
-		} 
+		}
 
 	}
 

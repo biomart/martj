@@ -462,17 +462,21 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
 
 		String s = (newDataset != null) ? newDataset : "";
 		((TreeNodeData) datasetNode.getUserObject()).setRightText(s);
-		treeModel.reload();
+		treeModel.reload( datasetNode );
 	}
 
 	/**
-	 * TODO Set the Datasource node with the newDatasource.
-	 * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+	 * Set the Datasource node with the newDatasource.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
 	 */
 	public void datasourceChanged(
 		Query sourceQuery,
 		DataSource oldDatasource,
 		DataSource newDatasource) {
+
+      String s = (newDatasource != null) ? newDatasource.toString() : "";
+      ((TreeNodeData) dataSourceNode.getUserObject()).setRightText(s);
+      treeModel.reload( dataSourceNode );
 
 	}
 

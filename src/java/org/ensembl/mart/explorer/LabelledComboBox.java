@@ -21,11 +21,14 @@ package org.ensembl.mart.explorer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.prefs.Preferences;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
@@ -174,7 +177,14 @@ public class LabelledComboBox extends Box implements ActionListener {
 		combo.addItem(anObject);
 	}
 
-	
+  /**
+   * Adds all items to list.
+   * @param anObject object to be added to list.
+   */
+	public void addAll(Collection c) {
+    for (Iterator iter = c.iterator(); iter.hasNext();) 
+      combo.addItem( iter.next() );
+	}
 
 	/**
 	 * Removes all items from list.
@@ -285,6 +295,28 @@ public class LabelledComboBox extends Box implements ActionListener {
 	 */
 	public void setSelectedItem(Object anObject) {
 		combo.setSelectedItem(anObject);
+	}
+
+	/**
+	 * @param item
+	 * @return true if item in combo list, otherwise false
+	 */
+	public boolean hasItem(Object item) {
+    return indexOfItem(item)!=-1;
+
+	}
+
+	/**
+	 * @param item
+	 * @return index of item or -1 if not found
+	 */
+	private int indexOfItem(Object item) {
+    int index = -1;
+    ComboBoxModel model = combo.getModel();
+    for (int i = 0; index==-1 && i < model.getSize(); i++) {
+      if ( model.getElementAt(i)== item ) index = i;
+    }
+    return index;
 	}
 
 }

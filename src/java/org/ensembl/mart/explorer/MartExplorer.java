@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -88,6 +89,9 @@ public class MartExplorer extends JFrame {
 
 	// TODO clone query
 	// TODO load registry file
+
+  // use vector because thread safe
+	private List datasources = new Vector();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -410,7 +414,7 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(dsvAdaptor);
+			qe = new QueryEditor(dsvAdaptor, datasources);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -525,7 +529,7 @@ public class MartExplorer extends JFrame {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(dsvAdaptor);
+				qe = new QueryEditor(dsvAdaptor, datasources);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 
