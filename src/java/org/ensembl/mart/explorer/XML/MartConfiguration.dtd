@@ -3,6 +3,14 @@
                    displayName CDATA #IMPLIED    
                    description CDATA #IMPLIED"
 >
+
+<!-- Ensembl Source, Homepage, and LinkoutURL for AttributeDescriptions -->
+<!ENTITY ensembl_data
+                   "source=&quot;EnsEMBL&quot; 
+                    homepageURL=&quot;http://www.ensembl.org&quot;
+                    linkoutURL=&quot;http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&db=DBTYPE&quot;"
+>
+
                    
 <!-- Top-level Objects --> 
 <!ELEMENT MartConfiguration (Dataset+)>
@@ -34,7 +42,7 @@
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
                    %desc_data
-                    type   CDATA #REQUIRED>
+                   type CDATA #REQUIRED>
                     
 <!ELEMENT UIFilterDescription EMPTY>
 <!ATTLIST UIFilterDescription
@@ -57,8 +65,7 @@
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection
                   %desc_data
-                   type              CDATA #REQUIRED
-                   maxSelect    NMTOKEN #REQUIRED>
+                   maxSelect    CDATA #REQUIRED>
 
 <!ELEMENT UIAttributeDescription EMPTY>
 <!ATTLIST UIAttributeDescription

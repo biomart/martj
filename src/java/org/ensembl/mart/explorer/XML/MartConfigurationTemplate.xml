@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
 
 <MartConfiguration internalName="ensembl_mart_14_1"
@@ -6,8 +7,8 @@
                    description="">
 
   <Dataset  internalName="hsapiens_ensemblgene"
-  	               displayName="Homo sapiens Ensembl Genes"
-  	               description="">
+  	        displayName="Homo sapiens Ensembl Genes"
+            description="">
  
        <StarBase>hsapiens_ensemblgene</StarBase>
        <StarBase>hsapiens_ensembltranscript</StarBase>
@@ -16,58 +17,616 @@
        <PrimaryKey>transcript_id</PrimaryKey>
        
        <FilterPage internalName="DefaultPage"
-       	                   displayName="Filter"
-       	                   description="">
-       	                   
+       	           displayName="Filter"
+       	           description="">
+  
+	       <FilterGroup internalName="region" 
+                        displayName="Region:" 
+                        description="Filter for Genes in Specified Regions of the Golden Path">
+
+		     <FilterCollection internalName="chromosomeFilter" 
+                               type="select">
+
+		       <UIFilterDescription internalName="chr_name" 
+                                    displayName="Chromosome name" 
+                                    description="Filter for Genes on a specified Chromosome" 
+                                    type="list" 
+                                    fieldName="chr_name" 
+                                    qualifier="in" 
+                                    tableConstraint="gene_main"/>
+
+		     </FilterCollection>
+
+     		 <FilterCollection internalName="Start" 
+                               displayName="From" 
+                               type="select">
+
+		       <UIFilterDescription internalName="bp_start" 
+                                    displayName="Base Pair" 
+                                    description="Determine which base pair on the specified chromosome to begin range" 
+                                    type="range" 
+                                    fieldName="gene_chrom_start" 
+                                    qualifier=">=" 
+                                    tableConstraint="gene_main"/>
+
+		     </FilterCollection>
+
+     		 <FilterCollection internalName="End" displayName="To" type="select">
+
+		       <UIFilterDescription internalName="bp_end" 
+                                    displayName="Base Pair" 
+                                    description="Determine which base pair on the specified chromosome to end range" 
+                                    type="range" 
+                                    fieldName="gene_chrom_end" 
+                                    qualifier="<=" 
+                                    tableConstraint="gene_main"/>
+
+		     </FilterCollection>
+
+	       </FilterGroup>
+
+	       <FilterGroup internalName="gene">
+
+		     <FilterCollection internalName="idLimit" type="boolean">
+
+		       <UIFilterDescription internalName="knownGenes_B" 
+                                    displayName="Known Genes" 
+                                    description="Filter to include/exclude Known Genes" 
+                                    type="boolean" 
+                                    fieldName="known_gene" 
+                                    tableConstraint="gene_main"/>
+
+		       <UIFilterDescription internalName="affyMGU74id_B" 
+                                    displayName="with AFFY-MG-U74 ID(s)" 
+                                    description="filter to include/exclude AFFY-MG-U74 ID(s)" 
+                                    type="boolean" 
+                                    fieldName="AFFY_MG_U74" 
+                                    tableConstraint="gene_main"/>
+
+		       <UIFilterDescription internalName="swissprot_B" 
+                                    displayName="with SWISSPROT ID(s)" 
+                                    description="filter to include/exclude genes with SWISSPROT id(s)" 
+                                    type="boolean" 
+                                    fieldName="SWISSPROT" 
+                                    tableConstraint="gene_main"/>
+
+		     </FilterCollection>
+
+		     <FilterCollection internalName="idListLimit" 
+                               displayName="Limit to genes with these IDs" 
+                               description="Limit to genes with these IDs: (Paste ID list, or upload file)" 
+                               type="list">
+
+		       <UIFilterDescription internalName="ens_gene_ID_L" 
+                                    displayName="Ensembl gene ID(s)" 
+                                    description="filter to include genes with supplied list of Ensembl Gene IDs" 
+                                    type="list" 
+                                    fieldName="gene_stable_id" 
+                                    qualifier="in" 
+                                    tableConstraint="gene_main"/>
+
+		       <UIFilterDescription internalName="spTrEMBL_L" 
+                                    displayName="SPTrEMBL ID(s)" 
+                                    description="filter to include genes with supplied list of SPTrEMBL IDs" 
+                                    type="list" 
+                                    fieldName="display_id" 
+                                    qualifier="in" 
+                                    tableConstraint="_xref_SPTREMBL_dm"/>
+
+		       <UIFilterDescription internalName="ens_trans_ID_L" 
+                                    displayName="Ensembl transcript ID(s)" 
+                                    description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" 
+                                    type="list" 
+                                    fieldName="transcript_stable_id" 
+                                    qualifier="in" 
+                                    tableConstraint="transcript_main"/>
+
+		   </FilterCollection>
+
+	       </FilterGroup>
+
        	   <FilterGroup internalName="MultiSpecies"
-       	   	                     displayName="MULTI SPECIES COMPARISONS:"
-       	   	                      description="Filter on multi species comparison relationships">
+       	   	            displayName="MULTI SPECIES COMPARISONS:"
+       	   	            description="Filter on multi species comparison relationships">
        	    
        	       <FilterCollection internalName="Homologs"
-       	       	                           displayName="Homologous genes"
-       	       	                           type="checkbox"
-       	       	                           description="Filter on Homologous Gene Relationships">
+       	                         displayName="Homologous genes"
+       	                         description="Filter on Genes having homologous gene relationships with other species"
+                                 type="boolean">
        	       	
-       	       	    <UIFilterDescription internalName="mouseHomolog"
-       	       	    	                              fieldName=""
-       	       	    	                              qualifier=""
-       	       	    	                              type="only/excluded"
-       	       	    	                              tableConstraint="_homologs_mmusculus_dm"
-       	       	    	                              displayName="Entries associated with homologous mouse genes"
-       	       	    	                              description="Filter for Genes having mouse homologous Genes"
-       	       	    	                               />
+       	       	    <UIFilterDescription internalName="mouse_Homolog_B" 
+                                         displayName="Entries associated with homologous mouse genes" 
+                                         description="Filter for Genes having mouse homologous Genes" 
+                                         type="boolean" 
+                                         fieldName="mmusculus_homolog" 
+                                         qualifier="" 
+                                         tableConstraint="gene_main"/>
+
+       	       	    <UIFilterDescription internalName="rat_Homolog_B" 
+                                         displayName="Entries associated with homologous rat genes" 
+                                         description="Filter for Genes having rat homologous Genes" 
+                                         type="boolean" 
+                                         fieldName="rnorvegicus_homolog" 
+                                         qualifier="" 
+                                         tableConstraint="gene_main"/>
+
+       	       	    <UIFilterDescription internalName="fugu_Homolog_B" 
+                                         displayName="Entries associated with homologous fugu genes" 
+                                         description="Filter for Genes having fugu homologous Genes" 
+                                         type="boolean" 
+                                         fieldName="frubripes_homolog" 
+                                         qualifier="" 
+                                         tableConstraint="gene_main"/>
+
+       	       	    <UIFilterDescription internalName="zfish_Homolog_B" 
+                                         displayName="Entries associated with homologous zebrafish genes" 
+                                         description="Filter for Genes having zebrafish homologous Genes" 
+                                         type="boolean" 
+                                         fieldName="drerio_homolog" 
+                                         qualifier="" 
+                                         tableConstraint="gene_main"/>
+
        	       	</FilterCollection>
+
+  		        <FilterCollection internalName="upstreamCR" 
+                                  displayName="Upstream conserved regions" 
+                                  description="filter for genes having upstream conserved regions with other species" 
+                                  type="boolean">
+
+		          <UIFilterDescription internalName="mouse_UCR_B" 
+                                       displayName="Entries associated with upstream matches in mouse genome" 
+                                       description="filter for genes having upstream conserved regions mapped onto the mouse genome" 
+                                       type="boolean" 
+                                       fieldName="mmusculus_upstreamcr" 
+                                       tableConstraint="gene_main"/>
+
+		          <UIFilterDescription internalName="rat_UCR_B" 
+                                       displayName="Entries associated with upstream matches in rat genome" 
+                                       description="filter for genes having upstream conserved regions mapped onto the rat genome" 
+                                       type="boolean" 
+                                       fieldName="rnorvegicus_upstreamcr" 
+                                       tableConstraint="gene_main"/>
+
+		        </FilterCollection>
+
        	   </FilterGroup>
+
        </FilterPage>
        
        <AttributePage internalName="FeaturePage"
-       	                        displayName="Features"
-       	                        description="General Gene Features">
-       	
-       	    <AttributeGroup internalName="GENE"
-       	    	                       displayName="GENE:"
-       	    	                       description="Features of Genes">
+       	              displayName="Features"
+       	              description="General Gene Features">
+
+	        <AttributeGroup internalName="region" 
+                            displayName="Region:" 
+                            description="Attributes relating to the location of genes on the golden path.">
+
+		      <AttributeCollection internalName="chromsomeatts" 
+                                   displayName="Chromsome Attributes:" 
+                                   description="Attributes related to chromosomal positioning of genes." 
+                                   maxSelect="all">
+
+		         <UIAttributeDescription internalName="chromosome" 
+                                         displayName="Chromosome Name" description='"Chromsome Name"' 
+                                         fieldName="chr_name" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="12"/>
+
+		         <UIAttributeDescription internalName="chrom_start" 
+                                         displayName="Start Position (bp)" 
+                                         description="Start Coordinate of the gene in chromosomal coordinates." 
+                                         fieldName="gene_chrom_start" 
+                                         tableConstraint="gene_main" maxLength="9"/>
+
+		         <UIAttributeDescription internalName="chrom_end" 
+                                         displayName="End Position (bp)" 
+                                         description="End Coordinate of the gene in chromosomal coordinates." 
+                                         fieldName="gene_chrom_end" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="9"/>
+
+		         <UIAttributeDescription internalName="chrom_band" 
+                                         displayName="Band" 
+                                         description="Band of chromosome where genes occur." 
+                                         fieldName="band" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="7"/>
+
+		         <UIAttributeDescription internalName="chrom_strand" 
+                                         displayName="Strand" 
+                                         description="Strand (Orientation) of genes on chromosome."£
+                                         fieldName="chrom_strand" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="2"/>
+
+		      </AttributeCollection>
+
+            </AttributeGroup>
        	    
-       	        <AttributeCollection internalName="Xrefs"
-       	        	                             displayName="External Reference Attributes (max 3)"
-       	        	                             maxSelect="3"
-       	        	                             type="checkbox list">
-       	        
-       	            <UIAttributeDescription internalName="Swissprot"
-       	            	                                   displayName="SWISSPROT ID"
-       	            	                                   fieldName="display_id"
-       	            	                                   tableConstraint="_xref_SWISSPROT_dm"
-       	            	                                   maxLength=10
-       	            	                                   source="Swiss-Prot Group"
-       	            	                                   description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases"
-       	            	                                   homepageURL="http://us.expasy.org/sprot/"
-       	            	                                   linkoutURL=""/>	                             
-       	        
+       	    <AttributeGroup internalName="GENE"
+       	    	            displayName="GENE:"
+       	    	            description="Features of Genes">
+
+		      <AttributeCollection internalName="ensgeneid" 
+                                   displayName="Ensembl Gene ID" 
+                                   description="Ensembl Stable ID, with version, of the Gene" 
+                                   maxSelect="all">
+
+		        <UIAttributeDescription internalName="ensgeneid" 
+                                        displayName="Ensembl Gene ID" 
+                                        description="Ensembl Stable ID, with version, of the Gene" 
+                                        fieldName="gene_stable_id_v" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="enstranid" 
+                                        displayName="Ensembl Transcript ID" 
+                                        description="Ensembl Stable ID, with version, of the Transcript" 
+                                        fieldName="transcript_stable_id_v" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="external_id" 
+                                        displayName="External Gene ID" 
+                                        fieldName="display_id" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="10"
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="cds_length" 
+                                        displayName="Ensembl CDS Length" 
+                                        fieldName="cds_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="5"
+                                        &ensembl_data;/>
+
+   			    <UIAttributeDescription internalName="peptide_length" 
+                                        displayName="Ensembl Peptide Length" 
+                                        fieldName="peptide_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="5" 
+                                        &ensembl_data;/> 
+
+                <UIAttributeDescription internalName="gene_description" 
+                                        displayName="Description" 
+                                        fieldName="description" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="536" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="translation" 
+                                        displayName="Ensembl Peptide ID" 
+                                        fieldName="translation_stable_id_v" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="external_db" 
+                                        displayName="External Gene DB" 
+                                        fieldName="db_name" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="cdna_length" 
+                                        displayName="Ensembl cDNA Length" 
+                                        fieldName="cdna_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="6" 
+                                        &ensembl_data;/>
+
+		      </AttributeCollection>
+
+       	      <AttributeCollection internalName="Xrefs"
+       	       	                   displayName="External Reference Attributes (max 3)"
+                                   description="Information from external database sources."
+       	        	               maxSelect="3">
+        	        
+       	        <UIAttributeDescription internalName="xprotein_id_dis" 
+                                        displayName="Protien ID" 
+                                        fieldName="display_id" 
+                                        tableConstraint="gene_xref_protein_id_dm" 
+                                        maxLength="8"
+                                        source=""
+       	            	                description=""
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="x_go_dis"
+       	            	                displayName="GO ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_GO_dm"
+       	            	                maxLength=10
+       	            	                source=""
+       	            	                description="Gene Ontology accession"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xsptrembl_dis"
+       	            	                displayName="SPTrEMBL ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_SPTREMBL_dm"
+       	            	                maxLength=6
+       	            	                source=""
+       	            	                description="SPTrEMBL IDs"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="Swissprot"
+       	            	                displayName="SWISSPROT ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="_xref_SWISSPROT_dm"
+       	            	                maxLength=10
+       	            	                source="Swiss-Prot Group"
+       	            	                description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases"
+       	            	                homepageURL="http://us.expasy.org/sprot/"
+       	            	                linkoutURL=""/>
+
+       	        <UIAttributeDescription internalName="xmem_dis"
+       	            	                displayName="MIM ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_MIM_dm"
+       	            	                maxLength=6
+       	            	                source=""
+       	            	                description="MIM Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xlocuslink_dis"
+       	            	                displayName="LocusLink ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_LOCUSLINK_dm"
+       	            	                maxLength=6
+       	            	                source=""
+       	            	                description="Locus Link Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	                              
+       	     
+       	        <UIAttributeDescription internalName="xhugo_dis"
+       	            	                displayName="HUGO ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_HUGO_dm"
+       	            	                maxLength=9
+       	            	                source=""
+       	            	                description="HUGO Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xgo_dis_desc"
+       	            	                displayName="GO Description"
+       	            	                fieldName="description"
+      	            	                tableConstraint="gene_xref_GO_dm"
+       	            	                maxLength=184
+       	            	                source=""
+       	            	                description="GO Descriptions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xembl_dis"
+       	            	                displayName="EMBL ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_EMBL_dm"
+       	            	                maxLength=8
+       	            	                source=""
+       	            	                description="EMBL Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xpdb_dis"
+       	            	                displayName="PDB ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_PDB_dm"
+       	            	                maxLength=4
+       	            	                source=""
+       	            	                description="Protein Database Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xrefseq_dis"
+       	            	                displayName="RefSeq ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_REFSEQ_dm"
+       	            	                maxLength=9
+       	            	                source=""
+       	            	                description="RefSeq Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>	   
+
+       	        <UIAttributeDescription internalName="xgkb_dis"
+       	            	                displayName="GKB ID"
+       	            	                fieldName="display_id"
+      	            	                tableConstraint="gene_xref_GKB_dm"
+       	            	                maxLength=15
+       	            	                source=""
+       	            	                description="Genome Knowledge Base Accessions"
+       	            	                homepageURL=""
+       	            	                linkoutURL=""/>   
        	        </AttributeCollection>
        	        	                       
        	     </AttributeGroup>
        	
        	</AttributePage>
+
+	    <AttributePage internalName="structure" 
+                       displayName="Structures" 
+                       description="Details on Genomic Structures">
+
+	        <AttributeGroup internalName="region" 
+                            displayName="Region:" 
+                            description="Attributes relating to the location of genes on the golden path.">
+
+		      <AttributeCollection internalName="chromsomeatts" 
+                                   displayName="Chromsome Attributes:" 
+                                   description="Attributes related to chromosomal positioning of genes." 
+                                   maxSelect="all">
+
+		         <UIAttributeDescription internalName="chromosome" 
+                                         displayName="Chromosome Name" description='"Chromsome Name"' 
+                                         fieldName="chr_name" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="12"/>
+
+		         <UIAttributeDescription internalName="chrom_start" 
+                                         displayName="Start Position (bp)" 
+                                         description="Start Coordinate of the gene in chromosomal coordinates." 
+                                         fieldName="gene_chrom_start" 
+                                         tableConstraint="gene_main" maxLength="9"/>
+
+		         <UIAttributeDescription internalName="chrom_end" 
+                                         displayName="End Position (bp)" 
+                                         description="End Coordinate of the gene in chromosomal coordinates." 
+                                         fieldName="gene_chrom_end" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="9"/>
+
+		         <UIAttributeDescription internalName="chrom_band" 
+                                         displayName="Band" 
+                                         description="Band of chromosome where genes occur." 
+                                         fieldName="band" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="7"/>
+
+		         <UIAttributeDescription internalName="chrom_strand" 
+                                         displayName="Strand" 
+                                         description="Strand (Orientation) of genes on chromosome."£
+                                         fieldName="chrom_strand" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="2"/>
+
+		      </AttributeCollection>
+
+            </AttributeGroup>
+       	    
+       	    <AttributeGroup internalName="GENE"
+       	    	            displayName="GENE:"
+       	    	            description="Features of Genes">
+
+		      <AttributeCollection internalName="ensgeneid" 
+                                   displayName="Ensembl Gene ID" 
+                                   description="Ensembl Stable ID, with version, of the Gene" 
+                                   maxSelect="all">
+
+		        <UIAttributeDescription internalName="ensgeneid" 
+                                        displayName="Ensembl Gene ID" 
+                                        description="Ensembl Stable ID, with version, of the Gene" 
+                                        fieldName="gene_stable_id_v" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="enstranid" 
+                                        displayName="Ensembl Transcript ID" 
+                                        description="Ensembl Stable ID, with version, of the Transcript" 
+                                        fieldName="transcript_stable_id_v" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="external_id" 
+                                        displayName="External Gene ID" 
+                                        fieldName="display_id" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="10"
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="cds_length" 
+                                        displayName="Ensembl CDS Length" 
+                                        fieldName="cds_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="5"
+                                        &ensembl_data;/>
+
+   			    <UIAttributeDescription internalName="peptide_length" 
+                                        displayName="Ensembl Peptide Length" 
+                                        fieldName="peptide_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="5" 
+                                        &ensembl_data;/> 
+
+                <UIAttributeDescription internalName="gene_description" 
+                                        displayName="Description" 
+                                        fieldName="description" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="536" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="translation" 
+                                        displayName="Ensembl Peptide ID" 
+                                        fieldName="translation_stable_id_v" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="external_db" 
+                                        displayName="External Gene DB" 
+                                        fieldName="db_name" 
+                                        tableConstraint="gene_main" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+                <UIAttributeDescription internalName="cdna_length" 
+                                        displayName="Ensembl cDNA Length" 
+                                        fieldName="cdna_length" 
+                                        tableConstraint="transcript_main" 
+                                        maxLength="6" 
+                                        &ensembl_data;/>
+
+		      </AttributeCollection>
+
+            </AttributeGroup>
+
+	        <AttributeGroup internalName="exon" 
+                            displayName="EXON:" 
+                            description="Data on individual Exons of Genes">
+
+		      <AttributeCollection internalName="exonatts" displayName="Exon Attributes:" maxSelect="all">
+
+		        <UIAttributeDescription internalName="exon_name" 
+                                        displayName="Ensembl Exon ID" 
+                                        fieldName="exon_stable_id_v" 
+                                        tableConstraint="gene_structure_dm" 
+                                        maxLength="17" 
+                                        &ensembl_data;/>
+
+		        <UIAttributeDescription internalName="exon_chrom_start" 
+                                        displayName="Exon Start (Chr bp)" 
+                                        description="Chromosomal Coordinate of start of exon sequence." 
+                                        fieldName="exon_chrom_start" 
+                                        tableConstraint="gene_structure_dm" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+		        <UIAttributeDescription internalName="exon_chrom_end" 
+                                        displayName="Exon End (Chr bp)" 
+                                        description="Chromosomal Coordinate of the end of the Exon." 
+                                        fieldName="eon_chrom_end" 
+                                        tableConstraint="gene_structure_dm" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+		        <UIAttributeDescription internalName="exon_coding_chrom_start" 
+                                        displayName="Exon Coding Start (Chr bp)" 
+                                        description="Chromosomal Coordinate of the Beginning of the Coding Sequence of the Exon." 
+                                        fieldName="coding_start" 
+                                        tableConstraint="gene_structure_dm" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+		        <UIAttributeDescription internalName="exon_coding_chrom_end" 
+                                        displayName="Exon Coding End (Chr bp)" 
+                                        description="Chromosomal Coordinate of the End of the Coding Sequence of the Gene." 
+                                        fieldName="coding_end" 
+                                        tableConstraint="gene_structure_dm" 
+                                        maxLength="9" 
+                                        &ensembl_data;/>
+
+		      </AttributeCollection>
+
+	        </AttributeGroup>
+
+	    </AttributePage>
         	               
    </Dataset>
    
