@@ -26,12 +26,18 @@ import javax.swing.BoxLayout;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+
+import org.ensembl.mart.guiutils.QuickFrame;
 /**
  * Displays the MartExplorer help file
  * <code>file data/martexplorer_help.html</code>.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * 
+ * TODO support hyperlinks
+ * TODO wrap text.
  */
 public class Help extends Box {
 	private JEditorPane pane = new JEditorPane();
@@ -51,17 +57,23 @@ public class Help extends Box {
 		add(pane);
 		pane.setEditable(false);
 	}
-	public void showDialog(Frame parent) {
-		JDialog d = new JDialog(parent, "MartExplorer Documentation", false);
-		d.getContentPane().add(new JScrollPane(this));
-		d.setSize(400, 500);
-		d.setVisible(true);
-	}
-	public static void main(String[] args) {
-		JFrame f = new JFrame();
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setVisible(true);
-		f.setSize(200, 200);
-		new Help().showDialog(f);
+	  
+    
+  public void showDialog(Frame parent) {
+    showDialog(parent, JFrame.DISPOSE_ON_CLOSE);
+  }
+    
+  private void showDialog(Frame parent, int defaultCloseOperation) {
+  JDialog d = new JDialog(parent, "MartExplorer Documentation", false);
+  d.setDefaultCloseOperation(defaultCloseOperation);
+  //d.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+  d.getContentPane().add(new JScrollPane(this));
+  d.setSize(400, 500);
+  d.setVisible(true);
+  } 
+	
+  public static void main(String[] args) {
+    QuickFrame f = new QuickFrame("Help test",new JLabel("Nothing here, look at the dialog."));
+    new Help().showDialog(f);
 	}
 }
