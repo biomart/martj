@@ -1211,9 +1211,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
         if (logger.isLoggable(Level.INFO))
           logger.info("LAZYLOAD\n");
 
+        
         adaptor.lazyLoad(this);
+        
       } catch (ConfigurationException e) {
         throw new RuntimeException("Could not lazyload datasetconfig " + e.getMessage(), e);
+      } catch(OutOfMemoryError e) {
+        System.err.println("Problem on thread:" + Thread.currentThread());
+        new Exception("Ran out of memory. Could not lazyload datasetconfig. ", e).printStackTrace();
+        throw e;
       }
     }
   }
