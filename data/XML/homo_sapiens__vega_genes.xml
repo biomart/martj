@@ -1900,102 +1900,132 @@
       <FilterCollection displayName="Limit to Encode Region" internalName="encode">
         <FilterDescription internalName="encode_type" type="list">
           <Enable ref="encode_region"/>
-          <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
-            <PushAction internalName="push_to_encode_region" ref="encode_region">
-              <Option displayName="Chr11: 1707725-2313772bp" internalName="Chr11_1707725_2313772" isSelectable="true" value="11:1707725:2313772"/>
-              <Option displayName="Chr11: 4738729-5740320bp" internalName="Chr11_4738729_5740320" isSelectable="true" value="11:4738729:5740320"/>
-              <Option displayName="Chr11: 115994758-116494757bp" internalName="Chr11_115994758_116494757" isSelectable="true" value="11:115994758:116494757"/>
-              <Option displayName="Chr11: 130637240-131137239bp" internalName="Chr11_130637240_131137239" isSelectable="true" value="11:130637240:131137239"/>
-              <Option displayName="Chr16: 1-500000bp" internalName="Chr16_1_500000" isSelectable="true" value="16:1:500000"/>
-              <Option displayName="Chr19: 59023585-60024460bp" internalName="Chr19_59023585_60024460" isSelectable="true" value="19:59023585:60024460"/>
-              <Option displayName="Chr21: 32666763-34362747bp" internalName="Chr21_32666763_34362747" isSelectable="true" value="21:32666763:34362747"/>
-              <Option displayName="Chr22: 30128508-31828507bp" internalName="Chr22_30128508_31828507" isSelectable="true" value="22:30128508:31828507"/>
-              <Option displayName="Chr5: 131332631-132332630bp" internalName="Chr5_131332631_132332630" isSelectable="true" value="5:131332631:132332630"/>
-              <Option displayName="Chr7: 26699793-27199792bp" internalName="Chr7_26699793_27199792" isSelectable="true" value="7:26699793:27199792"/>
-              <Option displayName="Chr7: 113487636-114487635bp" internalName="Chr7_113487636_114487635" isSelectable="true" value="7:113487636:114487635"/>
-              <Option displayName="Chr7: 115365024-117242449bp" internalName="Chr7_115365024_117242449" isSelectable="true" value="7:115365024:117242449"/>
-              <Option displayName="ChrX: 151582202-152832201bp" internalName="ChrX_151582202_152832201" isSelectable="true" value="X:151582202:152832201"/>
-            </PushAction>
-          </Option>
-          <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
-            <PushAction internalName="push_to_encode_region" ref="encode_region">
-              <Option displayName="Chr1: 148374643-148874642bp" internalName="Chr1_148374643_148874642" isSelectable="true" value="1:148374643:148874642"/>
-              <Option displayName="Chr10: 54828416-55328415bp" internalName="Chr10_54828416_55328415" isSelectable="true" value="10:54828416:55328415"/>
-              <Option displayName="Chr11: 63959673-64459672bp" internalName="Chr11_63959673_64459672" isSelectable="true" value="11:63959673:64459672"/>
-              <Option displayName="Chr12: 38626477-39126476bp" internalName="Chr12_38626477_39126476" isSelectable="true" value="12:38626477:39126476"/>
-              <Option displayName="Chr13: 28318016-28818015bp" internalName="Chr13_28318016_28818015" isSelectable="true" value="13:28318016:28818015"/>
-              <Option displayName="Chr13: 111238065-111738064bp" internalName="Chr13_111238065_111738064" isSelectable="true" value="13:111238065:111738064"/>
-              <Option displayName="Chr14: 51867364-52367363bp" internalName="Chr14_51867364_52367363" isSelectable="true" value="14:51867364:52367363"/>
-              <Option displayName="Chr14: 97378512-97878511bp" internalName="Chr14_97378512_97878511" isSelectable="true" value="14:97378512:97878511"/>
-              <Option displayName="Chr15: 41448853-41947852bp" internalName="Chr15_41448853_41947852" isSelectable="true" value="15:41448853:41947852"/>
-              <Option displayName="Chr16: 25839478-26339477bp" internalName="Chr16_25839478_26339477" isSelectable="true" value="16:25839478:26339477"/>
-              <Option displayName="Chr16: 62051662-62551661bp" internalName="Chr16_62051662_62551661" isSelectable="true" value="16:62051662:62551661"/>
-              <Option displayName="Chr17: 33775531-34275530bp" internalName="Chr17_33775531_34275530" isSelectable="true" value="17:33775531:34275530"/>
-              <Option displayName="Chr18: 23717221-24217220bp" internalName="Chr18_23717221_24217220" isSelectable="true" value="18:23717221:24217220"/>
-              <Option displayName="Chr18: 59410290-59910289bp" internalName="Chr18_59410290_59910289" isSelectable="true" value="18:59410290:59910289"/>
-              <Option displayName="Chr2: 51633239-52133238bp" internalName="Chr2_51633239_52133238" isSelectable="true" value="2:51633239:52133238"/>
-              <Option displayName="Chr2: 118389719-118889718bp" internalName="Chr2_118389719_118889718" isSelectable="true" value="2:118389719:118889718"/>
-              <Option displayName="Chr2: 198703930-199203929bp" internalName="Chr2_198703930_199203929" isSelectable="true" value="2:198703930:199203929"/>
-              <Option displayName="Chr2: 220479885-220979884bp" internalName="Chr2_220479885_220979884" isSelectable="true" value="2:220479885:220979884"/>
-              <Option displayName="Chr2: 234778639-235278638bp" internalName="Chr2_234778639_235278638" isSelectable="true" value="2:234778639:235278638"/>
-              <Option displayName="Chr20: 34556944-35056943bp" internalName="Chr20_34556944_35056943" isSelectable="true" value="20:34556944:35056943"/>
-              <Option displayName="Chr21: 39242993-39742992bp" internalName="Chr21_39242993_39742992" isSelectable="true" value="21:39242993:39742992"/>
-              <Option displayName="Chr4: 47639061-48139060bp" internalName="Chr4_47639061_48139060" isSelectable="true" value="4:47639061:48139060"/>
-              <Option displayName="Chr4: 53794311-54294310bp" internalName="Chr4_53794311_54294310" isSelectable="true" value="4:53794311:54294310"/>
-              <Option displayName="Chr4: 118705475-119205474bp" internalName="Chr4_118705475_119205474" isSelectable="true" value="4:118705475:119205474"/>
-              <Option displayName="Chr4: 124345964-124845963bp" internalName="Chr4_124345964_124845963" isSelectable="true" value="4:124345964:124845963"/>
-              <Option displayName="Chr5: 15962554-16462553bp" internalName="Chr5_15962554_16462553" isSelectable="true" value="5:15962554:16462553"/>
-              <Option displayName="Chr5: 55851135-56351134bp" internalName="Chr5_55851135_56351134" isSelectable="true" value="5:55851135:56351134"/>
-              <Option displayName="Chr5: 141928468-142428467bp" internalName="Chr5_141928468_142428467" isSelectable="true" value="5:141928468:142428467"/>
-              <Option displayName="Chr6: 41344772-41844771bp" internalName="Chr6_41344772_41844771" isSelectable="true" value="6:41344772:41844771"/>
-              <Option displayName="Chr6: 73728830-74228829bp" internalName="Chr6_73728830_74228829" isSelectable="true" value="6:73728830:74228829"/>
-              <Option displayName="Chr6: 108310274-108810273bp" internalName="Chr6_108310274_108810273" isSelectable="true" value="6:108310274:108810273"/>
-              <Option displayName="Chr6: 132157417-132657416bp" internalName="Chr6_132157417_132657416" isSelectable="true" value="6:132157417:132657416"/>
-              <Option displayName="Chr8: 118769628-119269627bp" internalName="Chr8_118769628_119269627" isSelectable="true" value="8:118769628:119269627"/>
-              <Option displayName="Chr9: 127061347-127561346bp" internalName="Chr9_127061347_127561346" isSelectable="true" value="9:127061347:127561346"/>
-              <Option displayName="Chr9: 128561347-129061346bp" internalName="Chr9_128561347_129061346" isSelectable="true" value="9:128561347:129061346"/>
-              <Option displayName="ChrX: 42934523-43434522bp" internalName="ChrX_42934523_43434522" isSelectable="true" value="X:42934523:43434522"/>
-              <Option displayName="ChrX: 121480070-121980069bp" internalName="ChrX_121480070_121980069" isSelectable="true" value="X:121480070:121980069"/>
-            </PushAction>
-          </Option>
-          <Option displayName="Semi-Manual Picks" internalName="semi-manual_picks" isSelectable="true">
-            <PushAction internalName="push_to_encode_region" ref="encode_region">
-              <Option displayName="Chr7: 89395718-90510141bp" internalName="Chr7_89395718_90510141" isSelectable="true" value="7:89395718:90510141"/>
-              <Option displayName="Chr7: 92665828-93636236bp" internalName="Chr7_92665828_93636236" isSelectable="true" value="7:92665828:93636236"/>
-              <Option displayName="Chr7: 94727320-95945434bp" internalName="Chr7_94727320_95945434" isSelectable="true" value="7:94727320:95945434"/>
-              <Option displayName="Chr7: 125633145-126796333bp" internalName="Chr7_125633145_126796333" isSelectable="true" value="7:125633145:126796333"/>
-              <Option displayName="Chr7: 127504401-128407355bp" internalName="Chr7_127504401_128407355" isSelectable="true" value="7:127504401:128407355"/>
-            </PushAction>
-          </Option>
+<Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
+  <PushAction internalName="push_to_encode_region" ref="encode_region">
+    <Option displayName="Chr11: 1707725-2313772bp" internalName="Chr11_1707725_2313772" isSelectable="true" value="11:1707725:2313772"/>
+    <Option displayName="Chr11: 4738729-5740320bp" internalName="Chr11_4738729_5740320" isSelectable="true" value="11:4738729:5740320"/>
+    <Option displayName="Chr11: 115994758-116494757bp" internalName="Chr11_115994758_116494757" isSelectable="true" value="11:115994758:116494757"/>
+    <Option displayName="Chr11: 130637240-131137239bp" internalName="Chr11_130637240_131137239" isSelectable="true" value="11:130637240:131137239"/>
+    <Option displayName="Chr16: 1-500000bp" internalName="Chr16_1_500000" isSelectable="true" value="16:1:500000"/>
+    <Option displayName="Chr19: 59023585-60024460bp" internalName="Chr19_59023585_60024460" isSelectable="true" value="19:59023585:60024460"/>
+    <Option displayName="Chr21: 32666763-34362747bp" internalName="Chr21_32666763_34362747" isSelectable="true" value="21:32666763:34362747"/>
+    <Option displayName="Chr22: 30128508-31828507bp" internalName="Chr22_30128508_31828507" isSelectable="true" value="22:30128508:31828507"/>
+    <Option displayName="Chr5: 131332631-132332630bp" internalName="Chr5_131332631_132332630" isSelectable="true" value="5:131332631:132332630"/>
+    <Option displayName="Chr7: 26699793-27199792bp" internalName="Chr7_26699793_27199792" isSelectable="true" value="7:26699793:27199792"/>
+    <Option displayName="Chr7: 113487636-114487635bp" internalName="Chr7_113487636_114487635" isSelectable="true" value="7:113487636:114487635"/>
+    <Option displayName="Chr7: 115365024-117242449bp" internalName="Chr7_115365024_117242449" isSelectable="true" value="7:115365024:117242449"/>
+    <Option displayName="ChrX: 151582202-152832201bp" internalName="ChrX_151582202_152832201" isSelectable="true" value="X:151582202:152832201"/>
+  </PushAction>
+</Option>
+<Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
+  <PushAction internalName="push_to_encode_region" ref="encode_region">
+    <Option displayName="Chr1: 148374643-148874642bp" internalName="Chr1_148374643_148874642" isSelectable="true" value="1:148374643:148874642"/>
+    <Option displayName="Chr10: 54828416-55328415bp" internalName="Chr10_54828416_55328415" isSelectable="true" value="10:54828416:55328415"/>
+    <Option displayName="Chr11: 63959673-64459672bp" internalName="Chr11_63959673_64459672" isSelectable="true" value="11:63959673:64459672"/>
+    <Option displayName="Chr12: 38626477-39126476bp" internalName="Chr12_38626477_39126476" isSelectable="true" value="12:38626477:39126476"/>
+    <Option displayName="Chr13: 28318016-28818015bp" internalName="Chr13_28318016_28818015" isSelectable="true" value="13:28318016:28818015"/>
+    <Option displayName="Chr13: 111238065-111738064bp" internalName="Chr13_111238065_111738064" isSelectable="true" value="13:111238065:111738064"/>
+    <Option displayName="Chr14: 51867364-52367363bp" internalName="Chr14_51867364_52367363" isSelectable="true" value="14:51867364:52367363"/>
+    <Option displayName="Chr14: 97378512-97878511bp" internalName="Chr14_97378512_97878511" isSelectable="true" value="14:97378512:97878511"/>
+    <Option displayName="Chr15: 41448853-41947852bp" internalName="Chr15_41448853_41947852" isSelectable="true" value="15:41448853:41947852"/>
+    <Option displayName="Chr16: 25839478-26339477bp" internalName="Chr16_25839478_26339477" isSelectable="true" value="16:25839478:26339477"/>
+    <Option displayName="Chr16: 62051662-62551661bp" internalName="Chr16_62051662_62551661" isSelectable="true" value="16:62051662:62551661"/>
+    <Option displayName="Chr17: 33775531-34275530bp" internalName="Chr17_33775531_34275530" isSelectable="true" value="17:33775531:34275530"/>
+    <Option displayName="Chr18: 23717221-24217220bp" internalName="Chr18_23717221_24217220" isSelectable="true" value="18:23717221:24217220"/>
+    <Option displayName="Chr18: 59410290-59910289bp" internalName="Chr18_59410290_59910289" isSelectable="true" value="18:59410290:59910289"/>
+    <Option displayName="Chr2: 51633239-52133238bp" internalName="Chr2_51633239_52133238" isSelectable="true" value="2:51633239:52133238"/>
+    <Option displayName="Chr2: 118389719-118889718bp" internalName="Chr2_118389719_118889718" isSelectable="true" value="2:118389719:118889718"/>
+    <Option displayName="Chr2: 198703930-199203929bp" internalName="Chr2_198703930_199203929" isSelectable="true" value="2:198703930:199203929"/>
+    <Option displayName="Chr2: 220479885-220979884bp" internalName="Chr2_220479885_220979884" isSelectable="true" value="2:220479885:220979884"/>
+    <Option displayName="Chr2: 234778639-235278638bp" internalName="Chr2_234778639_235278638" isSelectable="true" value="2:234778639:235278638"/>
+    <Option displayName="Chr20: 34556944-35056943bp" internalName="Chr20_34556944_35056943" isSelectable="true" value="20:34556944:35056943"/>
+    <Option displayName="Chr21: 39242993-39742992bp" internalName="Chr21_39242993_39742992" isSelectable="true" value="21:39242993:39742992"/>
+    <Option displayName="Chr4: 47639061-48139060bp" internalName="Chr4_47639061_48139060" isSelectable="true" value="4:47639061:48139060"/>
+    <Option displayName="Chr4: 53794311-54294310bp" internalName="Chr4_53794311_54294310" isSelectable="true" value="4:53794311:54294310"/>
+    <Option displayName="Chr4: 118705475-119205474bp" internalName="Chr4_118705475_119205474" isSelectable="true" value="4:118705475:119205474"/>
+    <Option displayName="Chr4: 124345964-124845963bp" internalName="Chr4_124345964_124845963" isSelectable="true" value="4:124345964:124845963"/>
+    <Option displayName="Chr5: 15962554-16462553bp" internalName="Chr5_15962554_16462553" isSelectable="true" value="5:15962554:16462553"/>
+    <Option displayName="Chr5: 55851135-56351134bp" internalName="Chr5_55851135_56351134" isSelectable="true" value="5:55851135:56351134"/>
+    <Option displayName="Chr5: 141928468-142428467bp" internalName="Chr5_141928468_142428467" isSelectable="true" value="5:141928468:142428467"/>
+    <Option displayName="Chr6: 41344772-41844771bp" internalName="Chr6_41344772_41844771" isSelectable="true" value="6:41344772:41844771"/>
+    <Option displayName="Chr6: 73728830-74228829bp" internalName="Chr6_73728830_74228829" isSelectable="true" value="6:73728830:74228829"/>
+    <Option displayName="Chr6: 108310274-108810273bp" internalName="Chr6_108310274_108810273" isSelectable="true" value="6:108310274:108810273"/>
+    <Option displayName="Chr6: 132157417-132657416bp" internalName="Chr6_132157417_132657416" isSelectable="true" value="6:132157417:132657416"/>
+    <Option displayName="Chr8: 118769628-119269627bp" internalName="Chr8_118769628_119269627" isSelectable="true" value="8:118769628:119269627"/>
+    <Option displayName="Chr9: 127061347-127561346bp" internalName="Chr9_127061347_127561346" isSelectable="true" value="9:127061347:127561346"/>
+    <Option displayName="Chr9: 128561347-129061346bp" internalName="Chr9_128561347_129061346" isSelectable="true" value="9:128561347:129061346"/>
+    <Option displayName="ChrX: 42934523-43434522bp" internalName="ChrX_42934523_43434522" isSelectable="true" value="X:42934523:43434522"/>
+    <Option displayName="ChrX: 121480070-121980069bp" internalName="ChrX_121480070_121980069" isSelectable="true" value="X:121480070:121980069"/>
+  </PushAction>
+</Option>
+<Option displayName="Semi-Manual Picks" internalName="semi-manual_picks" isSelectable="true">
+  <PushAction internalName="push_to_encode_region" ref="encode_region">
+    <Option displayName="Chr7: 89395718-90510141bp" internalName="Chr7_89395718_90510141" isSelectable="true" value="7:89395718:90510141"/>
+    <Option displayName="Chr7: 92665828-93636236bp" internalName="Chr7_92665828_93636236" isSelectable="true" value="7:92665828:93636236"/>
+    <Option displayName="Chr7: 94727320-95945434bp" internalName="Chr7_94727320_95945434" isSelectable="true" value="7:94727320:95945434"/>
+    <Option displayName="Chr7: 125633145-126796333bp" internalName="Chr7_125633145_126796333" isSelectable="true" value="7:125633145:126796333"/>
+    <Option displayName="Chr7: 127504401-128407355bp" internalName="Chr7_127504401_128407355" isSelectable="true" value="7:127504401:128407355"/>
+  </PushAction>
+</Option>
         </FilterDescription>
         <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" legal_qualifiers="=" qualifier="=" type="text"/>
+      </FilterCollection>
+      <FilterCollection internalName="encode_boolean">
+        <FilterDescription description="Include/Exclude Entries in an Encode Region" displayName="Entries in an Encode Region" field="is_encode" internalName="entries_in_an_encode_region" legal_qualifiers="only,excluded" type="boolean"/>
       </FilterCollection>
     </FilterGroup>
     <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
       <FilterCollection internalName="id_limit">
-        <FilterDescription internalName="id_limit_filters" type="boolean">
-          <Option description="Filter to include/exclude Known Genes" displayName="Known Genes" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="Filter to include/exclude Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude HUGO ID(s)" displayName="with HUGO ID(s)" field="HUGO" internalName="hugo_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude InterPro ID(s)" displayName="with InterPro ID(s)" field="interpro" internalName="interpro_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" field="RefSeq" internalName="refseq_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
-          <Option description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" field="SWISSPROT" internalName="swissprot_id_xrefs" isSelectable="true" legal_qualifiers="excluded,only" tableConstraint="main" type="boolean"/>
+        <FilterDescription internalName="id_limit_filters" type="list">
+          <Option description="Filter to include/exclude Genes based on whether they do or don't have particualr names" displayName="Available Gene Names" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133-PLUS-2 ID(s) IDs" displayName="with AFFY-HG-U133-PLUS-2 ID(s)" field="AFFY_HG_U133_PLUS_2" internalName="affy_hg_u133_plus2_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133-all IDs" displayName="with AFFY-HG-U133-all ID(s)" field="AFFY_HG_U133_all" internalName="affy_hg_u133_all_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133A-2 IDs" displayName="with AFFY-HG-U133A-2 ID(s)" field="AFFY_HG_U133A_2" internalName="affy_hg_u133a2_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133A IDs" displayName="with AFFY-HG-U133A ID(s)" field="AFFY_HG_U133A" internalName="affy_hg_u133a_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133B IDs" displayName="with AFFY-HG-U133B ID(s)" field="AFFY_HG_U133B" internalName="affy_hg_u133b_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95-all IDs" displayName="with AFFY-HG-U95-all ID(s)" field="AFFY_HG_U95_all" internalName="affy_hg_u95_all_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95A IDs" displayName="with AFFY-HG-U95A ID(s)" field="AFFY_HG_U95A" internalName="affy_hg_u95a_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95Av2 IDs" displayName="with AFFY-HG-U95Av2 ID(s)" field="AFFY_HG_U95Av2" internalName="affy_hg_u95av2_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95B IDs" displayName="with AFFY-HG-U95B ID(s)" field="AFFY_HG_U95B" internalName="affy_hg_u95b_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95C IDs" displayName="with AFFY-HG-U95C ID(s)" field="AFFY_HG_U95C" internalName="affy_hg_u95c_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95D IDs" displayName="with AFFY-HG-U95D ID(s)" field="AFFY_HG_U95D" internalName="affy_hg_u95d_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95E IDs" displayName="with AFFY-HG-U95E ID(s)" field="AFFY_HG_U95E" internalName="affy_hg_u95e_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes associated with HUGO IDs" displayName="with HUGO ID(s)" field="HUGO" internalName="hugo_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes associated with InterPro IDs" displayName="with InterPro ID(s)" field="interpro" internalName="interpro_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes associated with LocusLink IDs" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes associated with MIM IDs" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes with RefSeq IDs" displayName="with RefSeq ID(s)" field="RefSeq" internalName="refseq_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+          <Option description="filter to include/exclude genes associated with SWISSPROT ids" displayName="with SWISSPROT ID(s)" field="SWISSPROT" internalName="swissprot_id_xrefs" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
         </FilterDescription>
       </FilterCollection>
       <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
-        <FilterDescription internalName="id_list_limit_filters" type="list">
+        <FilterDescription field="" internalName="id_list_limit_filters" type="list">
+          <Option description="filter to include genes with supplied list of AFFY-HG-U133-PLUS-2 ID(s)" displayName="AFFY-HG-U133-PLUS-2 ID(s):" field="display_id" internalName="affy_hg_u133_plus2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="xref_AFFY_HG_U133_PLUS_2_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_all_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U133A-2 ID(s)" displayName="AFFY-HG-U133A-2 ID(s):" field="display_id" internalName="affy_hg_u133a2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_2_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U133A ID(s)" displayName="AFFY-HG-U133A ID(s):" field="display_id" internalName="affy_hg_u133a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U133B ID(s)" displayName="AFFY-HG-U133B ID(s):" field="display_id" internalName="affy_hg_u133b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133B_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95-all ID(s)" displayName="AFFY-HG-U95-all ID(s):" field="display_id" internalName="affy_hg_u95_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95_all_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95A ID(s)" displayName="AFFY-HG-U95A ID(s):" field="display_id" internalName="affy_hg_u95a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95A_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95Av2 ID(s)" displayName="AFFY-HG-U95Av2 ID(s):" field="display_id" internalName="affy_hg_u95av2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95B ID(s)" displayName="AFFY-HG-U95B ID(s):" field="display_id" internalName="affy_hg_u95b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95B_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95C ID(s)" displayName="AFFY-HG-U95C ID(s):" field="display_id" internalName="affy_hg_u95c_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95C_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95D ID(s)" displayName="AFFY-HG-U95D ID(s):" field="display_id" internalName="affy_hg_u95d_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95D_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of AFFY-HG-U95E ID(s)" displayName="AFFY-HG-U95E ID(s):" field="display_id" internalName="affy_hg_u95e_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95E_dm" type="list"/>
           <Option description="filter to include genes with supplied list of HUGO ID(s)" displayName="HUGO ID(s):" field="display_id" internalName="hugo_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_HUGO_dm" type="list"/>
           <Option description="filter to include genes with supplied list of HUGO accession(s)" displayName="HUGO accession(s):" field="dbprimary_id" internalName="hugo_accession" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_HUGO_dm" type="list"/>
-          <Option description="filter to include genes with supplied list of LocusLink ID(s)" displayName="LocusLink ID(s):" field="display_id" internalName="locus_link" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_LocusLink_dm" type="list"/>
+          <Option description="filter to include genes with supplied list of LocusLink ID(s)" displayName="LocusLink ID(s):" field="display_id" internalName="locuslink_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_LocusLink_dm" type="list"/>
           <Option description="filter to include genes with supplied list of MIM ID(s)" displayName="MIM ID(s):" field="display_id" internalName="mim_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_MIM_dm" type="list"/>
           <Option description="filter to include genes with supplied list of RefSeq ID(s)" displayName="RefSeq ID(s):" field="display_id" internalName="refseq_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_RefSeq_dm" type="list"/>
           <Option description="filter to include genes with supplied list of SWISSPROT ID(s)" displayName="SWISSPROT ID(s):" field="display_id" internalName="swissprot_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_SWISSPROT_dm" type="list"/>
-          <Option description="filter to include genes with supplied list of Vega Gene IDs" displayName="Vega gene ID(s)" field="gene_stable_id" internalName="vega_gene_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" type="list"/>
-          <Option description="filter for genes with supplied list of Vega Transcript Stable ID(s)" displayName="Vega transcript ID(s)" field="transcript_stable_id" internalName="vega_transcript_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
-          <Option description="filter to include genes with supplied list of Vega translation ID(s)" displayName="Vega translation ID(s):" field="translation_stable_id" internalName="vega_translation_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
+          <Option description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" field="gene_stable_id" internalName="ensembl_gene_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" type="list"/>
+          <Option description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl peptide ID(s):" field="translation_stable_id" internalName="ensembl_peptide_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
+          <Option description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" displayName="Ensembl transcript ID(s)" field="transcript_stable_id" internalName="ensembl_transcript_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
         </FilterDescription>
+      </FilterCollection>
+      <FilterCollection internalName="transcript_count_filter">
+        <FilterDescription description="Limit to genes within given Transcript Count range" displayName="Transcripts per Gene" field="transcript_count" internalName="transcript_count" legal_qualifiers="=,&gt;,&gt;=,&lt;=,&lt;" tableConstraint="main" type="list"/>
       </FilterCollection>
       <FilterCollection internalName="5utr_collection">
         <FilterDescription description="Limit to entries with 5&amp;quot; UTR only, or excluded" displayName="Entries with a 5&amp;quot; UTR" field="5utr" internalName="entries_with_5_utr" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
@@ -2012,7 +2042,6 @@
           <Option description="Filter for Genes mapped to a list of PRINTS ID(s)" displayName="PRINTS ID(s):" field="prints" internalName="prints_ids" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_prot_prints_dm" type="list"/>
           <Option description="Filter for Genes mapped to a list of Profile ID(s)" displayName="Profile ID(s):" field="profile" internalName="profile_ids" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_prot_profile_dm" type="list"/>
           <Option description="Filter for Genes mapped to a list of Prosite ID(s)" displayName="Prosite ID(s):" field="prosite" internalName="prosite_ids" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_prot_prosite_dm" type="list"/>
-          <Option description="Filter for Genes having mapped to a list of Ensembl family ID(s)" displayName="Ensembl family ID(s):" field="family" internalName="ensembl_family_ids" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="main" type="list"/>
         </FilterDescription>
       </FilterCollection>
       <FilterCollection internalName="transmembrane">
@@ -2078,6 +2107,8 @@
         <AttributeDescription displayName="Vega CDS Length" field="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Transcript count" field="transcript_count" homepageURL="http://www.ensembl.org" internalName="transcript_count" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="3" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription description="Percentage GC content" displayName="%GC" field="perc_gc" homepageURL="http://www.ensembl.org" internalName="percent_gc_content" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="main"/>
       </AttributeCollection>
       <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
         <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xref_hugo_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
@@ -2085,6 +2116,22 @@
         <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
         <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_REFSEQ_dm"/>
         <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LOCUSLINK_dm"/>
+      </AttributeCollection>
+      <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
+        <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+        <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+        <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+        <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+        <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+        <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+        <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+        <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+        <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+        <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
+        <AttributeDescription displayName="Sanger HVER 1 3 1" field="display_id" internalName="sanger_hver1_3_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_3_1_dm"/>
+        <AttributeDescription displayName="UMCU 10Kv1" field="display_id" internalName="umcu_19Kv1_id" maxLength="10" tableConstraint="xref_UMCU_Hsapiens_19Kv1_dm"/>
+        <AttributeDescription displayName="AFFY HG U133-PLUS-2" field="display_id" internalName="affy_hg_u133_plus_2_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_PLUS_2_dm"/>
+        <AttributeDescription displayName="AFFY HG U133A-2" field="display_id" internalName="affy_hg_u133a2_id" maxLength="27" tableConstraint="gene_xref_AFFY_HG_U133A_2_dm"/>
       </AttributeCollection>
       <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
         <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
@@ -2125,6 +2172,8 @@
         <AttributeDescription displayName="Vega CDS Length" field="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Transcript count" field="transcript_count" homepageURL="http://www.ensembl.org" internalName="transcript_count" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="3" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription description="Percentage GC content" displayName="%GC" field="perc_gc" homepageURL="http://www.ensembl.org" internalName="percent_gc_content" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="main"/>
       </AttributeCollection>
       <AttributeCollection description="Descriptions of Gene SNP data" displayName="Gene SNP Attributes" internalName="genesnpatts">
         <AttributeDescription description="Count of the Synonymous snps on a gene" displayName="Synonymous SNP count" field="synsnpcount" internalName="synsnpcount" maxLength="2" tableConstraint="transcript_main"/>
@@ -2185,6 +2234,8 @@
         <AttributeDescription displayName="Vega CDS Length" field="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
         <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Transcript count" field="transcript_count" homepageURL="http://www.ensembl.org" internalName="transcript_count" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="3" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription description="Percentage GC content" displayName="%GC" field="perc_gc" homepageURL="http://www.ensembl.org" internalName="percent_gc_content" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="main"/>
       </AttributeCollection>
     </AttributeGroup>
     <AttributeGroup description="Data on individual Exons of Genes" displayName="EXON:" internalName="exon">
@@ -2194,11 +2245,54 @@
         <AttributeDescription description="Chromosomal Coordinate of the end of the Exon." displayName="Exon End (Chr bp)" field="exon_chrom_end" homepageURL="http://www.ensembl.org" internalName="exon_chromosome_end" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
         <AttributeDescription description="Chromosomal Coordinate of the Beginning of the Coding Sequence of the Exon." displayName="Exon Coding Start (Chr bp)" field="coding_start" homepageURL="http://www.ensembl.org" internalName="exon_coding_chromosome_start" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
         <AttributeDescription description="Chromosomal Coordinate of the End of the Coding Sequence of the Gene." displayName="Exon Coding End (Chr bp)" field="coding_end" homepageURL="http://www.ensembl.org" internalName="exon_coding_chromosome_end" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
+        <AttributeDescription description="" displayName="Constitutive Exon" field="" homepageURL="http://www.ensembl.org" internalName="constitutive_exon" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="structure_dm"/>
       </AttributeCollection>
     </AttributeGroup>
   </AttributePage>
   <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
     <DSAttributeGroup displayName="Type of Sequence to Export:" handler="sequence" internalName="sequences"/>
+    <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
+      <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
+        <AttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" field="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="vega_gene_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
+        <AttributeDescription displayName="Description" field="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription description="Vega Stable ID, with version, of the Transcript" displayName="Vega Transcript ID" field="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="vega_transcript_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Vega Peptide ID" field="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="vega_translation_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="External Gene ID" field="display_id" homepageURL="http://www.ensembl.org" internalName="external_gene_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription displayName="External Gene DB" field="db_name" homepageURL="http://www.ensembl.org" internalName="external_gene_db" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription displayName="Vega CDS Length" field="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
+        <AttributeDescription displayName="Transcript count" field="transcript_count" homepageURL="http://www.ensembl.org" internalName="transcript_count" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="3" source="EnsEMBL" tableConstraint="main"/>
+        <AttributeDescription description="Percentage GC content" displayName="%GC" field="perc_gc" homepageURL="http://www.ensembl.org" internalName="percent_gc_content" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="main"/>
+      </AttributeCollection>
+      <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
+        <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xref_hugo_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
+        <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
+        <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
+        <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_REFSEQ_dm"/>
+        <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LOCUSLINK_dm"/>
+      </AttributeCollection>
+      <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
+        <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+        <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+        <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+        <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+        <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+        <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+        <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+        <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+        <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+        <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
+        <AttributeDescription displayName="Sanger HVER 1 3 1" field="display_id" internalName="sanger_hver1_3_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_3_1_dm"/>
+        <AttributeDescription displayName="UMCU 10Kv1" field="display_id" internalName="umcu_19Kv1_id" maxLength="10" tableConstraint="xref_UMCU_Hsapiens_19Kv1_dm"/>
+        <AttributeDescription displayName="AFFY HG U133-PLUS-2" field="display_id" internalName="affy_hg_u133_plus_2_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_PLUS_2_dm"/>
+        <AttributeDescription displayName="AFFY HG U133A-2" field="display_id" internalName="affy_hg_u133a2_id" maxLength="27" tableConstraint="gene_xref_AFFY_HG_U133A_2_dm"/>
+      </AttributeCollection>
+      <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
+        <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
+        <AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="gene_disease_dm"/>
+      </AttributeCollection>
+    </AttributeGroup>
     <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
       <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
         <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" field="chr_name" internalName="chromosome_name" maxLength="12"/>
@@ -2206,27 +2300,6 @@
         <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" field="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
         <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" field="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
         <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" field="band" internalName="chromosome_band" maxLength="7"/>
-      </AttributeCollection>
-    </AttributeGroup>
-    <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
-      <AttributeCollection description="Vega Annotated Attributes and Features" displayName="Vega Attributes:" internalName="vega_attributes">
-        <AttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" field="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="vega_gene_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
-        <AttributeDescription description="Vega Stable ID, with version, of the Transcript" displayName="Vega Transcript ID" field="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="vega_transcript_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
-        <AttributeDescription displayName="External Gene ID" field="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
-        <AttributeDescription displayName="Vega CDS Length" field="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
-        <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
-        <AttributeDescription displayName="Description" field="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
-        <AttributeDescription displayName="Vega Peptide ID" field="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
-        <AttributeDescription displayName="External Gene DB" field="db_name" homepageURL="http://www.ensembl.org" internalName="external_db" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="main"/>
-        <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
-        <AttributeDescription displayName="Ensembl Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
-      </AttributeCollection>
-      <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
-        <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xhugo_dis" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
-        <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-        <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xmim_dis" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-        <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xrefseq_dis" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_REFSEQ_dm"/>
-        <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xlocuslink_dis" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LOCUSLINK_dm"/>
       </AttributeCollection>
     </AttributeGroup>
     <AttributeGroup description="Data for proteins associated with Genes." displayName="PROTEIN:" internalName="proteinatts">
