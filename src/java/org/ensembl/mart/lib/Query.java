@@ -589,11 +589,16 @@ public class Query {
    * Unsets all property values.
    */
   public void clear() {
+
+    setDataSource(null);
+    setDataset(null);
+    setDatasetView(null);
+    
     removeAllAttributes();
     removeAllFilters();
-    setDataset(null);
-    setDataSource(null);
+
     setLimit(0);
+
     setPrimaryKeys(null);
     setStarBases(null);
   }
