@@ -1,6 +1,7 @@
 package org.ensembl.mart.lib.test;
 
 import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,21 +26,22 @@ import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 
+//TODO: renamed so it does not run in unit tests. Needs to be refactored
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
  * 
  * @author craig
  *
  */
-public class SequenceTest extends Base {
+public class Sequencetst extends Base {
   
-  private Logger logger = Logger.getLogger(SequenceTest.class.getName());
+  private Logger logger = Logger.getLogger(Sequencetst.class.getName());
   
 	private Driver ensjDriver = null;
 	
   
   private final static String ENSJ_DB_CONFIG_URL =
-      "data/test_connection_ensj.properties";
+      Base.UNITTESTDIR + "/test_connection_ensj.properties";
 	
 	 public static void main(String[] args){
 		if (args.length > 0)
@@ -49,7 +51,7 @@ public class SequenceTest extends Base {
 	}
 
 	public static Test suite() {
-		return new TestSuite( SequenceTest.class );
+		return new TestSuite( Sequencetst.class );
 	}
 
 
@@ -57,11 +59,11 @@ public class SequenceTest extends Base {
 
     public static Test TestClass(String testclass) {
     	TestSuite suite = new TestSuite();
-		suite.addTest(new SequenceTest(testclass));
+		suite.addTest(new Sequencetst(testclass));
 		return suite;
     }
     
-	public SequenceTest(String name) {
+	public Sequencetst(String name) {
 		super(name);
 	}
 
@@ -385,9 +387,12 @@ public class SequenceTest extends Base {
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.test.Base#init()
 	 */
-	public void init() {
+	public void init() throws Exception{
 		
 		super.init();
+    URL connectionconf = ClassLoader.getSystemResource(ENSJ_DB_CONFIG_URL);
+    assertTrue("Failed to find connection configuration file: " + ENSJ_DB_CONFIG_URL + "\n", connectionconf != null);
+    
     try {
           ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
         } catch (ConfigurationException e) {

@@ -18,15 +18,7 @@
 
 package org.ensembl.mart.lib.test;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.sql.DataSource;
-
-import junit.framework.TestCase;
 
 import org.ensembl.mart.lib.DetailedDataSource;
 
@@ -36,9 +28,7 @@ import org.ensembl.mart.lib.DetailedDataSource;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class DetailedDataSourceTest extends TestCase {
-
-  private final static String DATABASE_NAME = "homo_sapiens_core_19_34b";
+public class DetailedDataSourceTest extends Base {
 
 	private Logger logger =
 		Logger.getLogger(DetailedDataSourceTest.class.getName());
@@ -51,66 +41,10 @@ public class DetailedDataSourceTest extends TestCase {
 		super(arg0);
 	}
 
-	public void testConnectionStringMethodod() throws Exception {
-		DataSource ds =
-			new DetailedDataSource(
-				"mysql",
-				"kaka.sanger.ac.uk",
-				null,
-				"",
-				"jdbc:mysql://kaka.sanger.ac.uk/",
-				"anonymous",
-				null,
-				10,
-				"com.mysql.jdbc.Driver");
+	public void testConnectionStringMethod() throws Exception {
+		DetailedDataSource ds =
+			new DetailedDataSource(databaseType, host, port, databaseName, user, password, 10, jdbcDriver);
 
-		Connection conn = ds.getConnection();
-		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet rs = meta.getTables("homo_sapiens_core_19_34b", null, null, null);
-		assertTrue("Failed to get any metadata from database", rs.next());
-
-		if (logger.isLoggable(Level.FINE))
-			print(rs);
-
-		conn.close();
+		assertTrue("Failed to get any metadata from database", super.connected(ds));
 	}
-
-	public void testConvenienceMethod() throws Exception {
-		DataSource ds =
-			new DetailedDataSource(
-				"mysql",
-				"kaka.sanger.ac.uk",
-				"3306",
-    "homo_sapiens_core_19_34b",
-				"anonymous",
-				null,
-				10,
-				"com.mysql.jdbc.Driver");
-
-		Connection conn = ds.getConnection();
-		DatabaseMetaData meta = conn.getMetaData();
-		ResultSet rs = meta.getTables("homo_sapiens_core_19_34b", null, null, null);
-		assertTrue("Failed to get any metadata from database", rs.next());
-
-		if (logger.isLoggable(Level.FINE))
-			print(rs);
-
-		conn.close();
-	}
-
-	/**
-	 * @param rs
-	 */
-	private void print(ResultSet rs) throws Exception {
-		do {
-			int n = rs.getMetaData().getColumnCount();
-			for (int i = 1; i <= n; i++) {
-				System.out.print(rs.getString(i));
-				System.out.print('\t');
-
-			}
-			System.out.println();
-		} while (rs.next());
-	}
-
 }

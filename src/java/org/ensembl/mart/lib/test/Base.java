@@ -2,11 +2,11 @@
 
 package org.ensembl.mart.lib.test;
 
-import java.io.IOException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import junit.framework.TestCase;
@@ -30,145 +30,112 @@ import org.ensembl.mart.lib.Query;
  */
 public abstract class Base extends TestCase {
 
-	private String jdbcDriver;
+  private Logger logger = Logger.getLogger(Base.class.getName());
 
-	private Logger logger = Logger.getLogger(Base.class.getName());
-
-	private final static String MARTJ_DB_CONFIG_URL =
-		"data/test_connection.properties";
-
-	
-
-	private final static String LOGGING_CONFIG_URL =
-		"data/test_logging.properties";
-
-	private final String DEFAULTDBTYPE = "mysql";
-	
-	private final String DEFAULTHOST = "ensembldb.ensembl.org";
-	private final String DEFAULTPORT = "3306";
-	private final String DEFAULTDATABASE = "ensembl_mart_19_2";
-	private final String DEFAULTUSER = "anonymous";
-	
-    
-    private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
-
-
-
-	private String databaseType;
-	// default, override in testconnection.conf
-	private String host;
-	private String port;
-	private String databaseName;
-  private String user;
-	private String password;
-	private Properties p = new Properties();
-	private URL connectionconf;
-
-	protected Engine engine;
-	protected Query genequery = new Query();
-	protected Query snpquery = new Query();
+  public final static String UNITTESTDIR = "data/unitTests";
+  protected final static String MARTJ_DB_CONFIG_URL = Base.UNITTESTDIR + "/connection.properties";
+  private URL connectionconf;
+  private Properties p = new Properties();
+  
+  protected String databaseType;
+  protected String jdbcDriver;
+  protected String host;
+  protected String port;
+  protected String databaseName;
+  protected String user;
+  protected String password;
+  protected String connectionName;
+  
+  
+  protected Engine engine;
+  protected Query genequery = new Query();
+  protected Query snpquery = new Query();
   protected DetailedDataSource martJDataSource;
 
+  public void init() throws Exception {
 
-	public void init() {
+    connectionconf = ClassLoader.getSystemResource(MARTJ_DB_CONFIG_URL);
 
-		connectionconf = ClassLoader.getSystemResource(MARTJ_DB_CONFIG_URL);
+    assertTrue("Failed to find connection configuration file: " + MARTJ_DB_CONFIG_URL.toString() + "\n", connectionconf != null);
 
-		if (connectionconf != null) {
-			try {
-				p.load(connectionconf.openStream());
+    p.load(connectionconf.openStream());
 
-				String tmp = p.getProperty("databaseType");
-				databaseType = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTDBTYPE;
+    databaseType = p.getProperty("databaseType");
+    if (databaseType == null) databaseType = DetailedDataSource.DEFAULTDATABASETYPE;
 
-				tmp = p.getProperty("host");
-				host = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTHOST;
+    host = p.getProperty("host");
 
-				tmp = p.getProperty("port");
-				port = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTPORT;
+    port = p.getProperty("port");
+    if (port == null) port = DetailedDataSource.DEFAULTPORT;
 
-				tmp = p.getProperty("databaseName");
-				databaseName =
-					(tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
+    databaseName = p.getProperty("databaseName");
 
-				tmp = p.getProperty("user");
-        user = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
+    user = p.getProperty("user");
 
-        tmp = p.getProperty("jdbc_driver");
-        jdbcDriver = (tmp != null && tmp.length() > 1) ? tmp : DEFAULT_JDBC_DRIVER;
-				password = p.getProperty("password");
-        
-			} catch (java.io.IOException e) {
-				System.out.println(
-					"Caught IOException when trying to open connection configuration file "
-						+ MARTJ_DB_CONFIG_URL
-						+ "\n"
-						+ e
-						+ "\n\nusing default connection parameters");
-			}
-		} else {
-			System.out.println(
-				"Failed to find connection configuration file "
-					+ MARTJ_DB_CONFIG_URL
-					+ " using default connection parameters");
+    jdbcDriver = p.getProperty("jdbc_driver");
+    if (jdbcDriver == null) jdbcDriver = DetailedDataSource.DEFAULTDRIVER;
 
-			databaseType = DEFAULTDBTYPE;
-			host = DEFAULTHOST;
-			databaseName = DEFAULTDATABASE;
-			user = DEFAULTUSER;
-      jdbcDriver = DEFAULT_JDBC_DRIVER;
-		}
+    password = p.getProperty("password");
 
-		
+    String tmp = p.getProperty("connection");
+    connectionName =
+      (tmp != null && tmp.length() > 1) ? tmp : DetailedDataSource.defaultName(host, port, databaseName, user);
+  }
 
-	}
+  public void setUp() throws Exception {
+    super.setUp();
+    
+    init();
 
-	public void setUp() throws Exception {
-		init();
-
-		martJDataSource = new DetailedDataSource(
-				databaseType,
-				host,
-				port,
+    martJDataSource =
+      new DetailedDataSource(
+        databaseType,
+        host,
+        port,
         databaseName,
-				user,
-				password,
-				DetailedDataSource.DEFAULTPOOLSIZE,
-				jdbcDriver);
-		engine = new Engine();
+        user,
+        password,
+        DetailedDataSource.DEFAULTPOOLSIZE,
+        jdbcDriver,
+        connectionName);
     
-		genequery.setStarBases(
-			new String[] { "hsapiens_ensemblgene__gene__main", "hsapiens_ensemblgene__transcript__main" });
-		genequery.setPrimaryKeys(new String[] { "gene_id_key", "transcript_id_key" });
-    genequery.setDataSource( martJDataSource );
-    genequery.setDataset( "hsapiens" );
-      
-		snpquery.setStarBases(new String[] { "hsapiens_snp__snp__main" });
-		snpquery.setPrimaryKeys(new String[] { "snp_id_key" });
-	}
+    assertTrue("Cannot connect to null DataSource\n", martJDataSource != null);
+    assertTrue("Could not connect to mart Database with " + MARTJ_DB_CONFIG_URL + "\n", connected(martJDataSource));
+    
+    engine = new Engine();
 
-	public Base(String name) {
-		super(name);
-    String envVar = System.getProperty("java.util.logging.config.file"); 
-    if ( envVar!=null ) {
-      return;
+    genequery.setStarBases(
+      new String[] { "hsapiens_gene_ensembl__gene__main", "hsapiens_gene_ensembl__transcript__main" });
+    genequery.setPrimaryKeys(new String[] { "gene_id_key", "transcript_id_key" });
+    genequery.setDataSource(martJDataSource);
+    genequery.setDataset("hsapiens_gene_ensembl");
+
+    snpquery.setStarBases(new String[] { "hsapiens_snp__snp__main" });
+    snpquery.setPrimaryKeys(new String[] { "snp_id_key" });
+    snpquery.setDataSource(martJDataSource);
+    snpquery.setDataset("hsapiens_snp");
+  }
+
+  public boolean connected(DetailedDataSource dsource) {
+    boolean connected = false;
+    Connection conf = null;
+    
+    try {
+      conf = dsource.getConnection();
+      connected = true;
+    } catch (SQLException e) {
+      connected = false;
+    } finally {
+      DetailedDataSource.close(conf);
     }
-    
-		URL loggingConfig =
-			Base.class.getClassLoader().getResource(LOGGING_CONFIG_URL);
-		if (loggingConfig != null) {
-			try {
-				LogManager.getLogManager().readConfiguration(
-					loggingConfig.openStream());
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else {
-			Logger.getLogger("").setLevel(Level.WARNING);
-		}
-	}
-
+    return connected;
+  }
+  
+  public Base(String name) {
+    super(name);
+    String envVar = System.getProperty("java.util.logging.config.file");
+    if (envVar == null)
+      Logger.getLogger("").setLevel(Level.WARNING);
+  }
 
 }
