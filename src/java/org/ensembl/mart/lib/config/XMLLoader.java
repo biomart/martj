@@ -45,6 +45,7 @@ public class XMLLoader {
 	private static String confinUse = null;
 	private static Connection conn = null;
 	private static String host = null;
+  private static String dbtype = null;
 	private static String port = null;
 	private static String database = null;
 	private static String user = null;
@@ -149,11 +150,12 @@ public class XMLLoader {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			host = p.getProperty("mysqlhost");
-			port = p.getProperty("mysqlport");
-			database = p.getProperty("mysqldbase");
-			user = p.getProperty("mysqluser");
-			password = p.getProperty("mysqlpass");
+			host = p.getProperty("host");
+			port = p.getProperty("port");
+			database = p.getProperty("databaseName");
+			user = p.getProperty("user");
+			password = p.getProperty("password");
+      dbtype = p.getProperty("databaseType");
 		} catch (java.net.MalformedURLException e) {
 			logger.warn(
 				"Could not load connection file "
