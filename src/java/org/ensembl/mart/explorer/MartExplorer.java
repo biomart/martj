@@ -114,6 +114,9 @@ public class MartExplorer extends JFrame {
 //				.setDatasetView(dsv);
 		}
 
+    if ( me.datasetViewSettings.getAdaptor().getDatasetViews().length>0 )
+      me.doNewQuery();
+
 	}
 
 	public MartExplorer() {

@@ -52,6 +52,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.DatabaseUtil;
@@ -192,7 +194,9 @@ public class QueryEditor extends JPanel {
     }
   }
 
-  /** DatasetViewAdaptor defines the "query space" of available dataset views. */
+  private LabelledComboBox datasetViewCombo;
+
+	/** DatasetViewAdaptor defines the "query space" of available dataset views. */
   private DSViewAdaptor datasetViewAdaptor;
 
   private static final Logger logger =
@@ -324,10 +328,30 @@ public class QueryEditor extends JPanel {
         doSaveResultsAs();
       }
     }, true));
+    
+    datasetViewCombo = new LabelledComboBox("DatasetView", new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+        doDatasetViewChanged();
+			}
+    });
+    datasetViewCombo.setEditable( false );
+    Dimension s = new Dimension(250, 40);
+    datasetViewCombo.setPreferredSize( s );
+    datasetViewCombo.setMaximumSize( s );
+    toolBar.add( datasetViewCombo );
+
     return toolBar;
   }
 
   /**
+	 * 
+	 */
+	private void doDatasetViewChanged() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
    * 
    */
   public void doLoadQuery() {

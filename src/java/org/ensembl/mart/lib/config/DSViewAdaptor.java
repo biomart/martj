@@ -133,4 +133,10 @@ public interface DSViewAdaptor {
    */
   public MartLocation[] getMartLocations() throws ConfigurationException;
 
+	/**
+   * All implementations should provide a display name.
+	 * @return display name for this adaptor.
+	 */
+	public String getDisplayName();
+
 }

@@ -1367,4 +1367,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
 			|| hasBrokenAttributePages
 			|| hasBrokenFilterPages;
 	}
+
+	/**
+	 * @return adaptor that created this instance, can be null.
+	 */
+	public DSViewAdaptor getAdaptor() {
+		return adaptor;
+		
+	}
 }

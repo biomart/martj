@@ -191,4 +191,12 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
       return new DatasetView[0];
   }
 
+	/**
+   * @return "Simple" 
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+	 */
+	public String getDisplayName() {
+		return "Simple";
+	}
+
 }

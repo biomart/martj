@@ -231,4 +231,12 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
     else
       return new DatasetView[0];
   }
+	/**
+   * @return "URL"
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+	 */
+	public String getDisplayName() {
+		return "URL";
+	}
+
 }

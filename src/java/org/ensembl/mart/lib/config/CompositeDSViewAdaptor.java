@@ -295,4 +295,12 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
   }
 
+	/**
+   * @return "Composite"
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+	 */
+	public String getDisplayName() {
+		return "Composite";
+	}
+
 }

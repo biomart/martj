@@ -300,4 +300,14 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
   }
 
+  /**
+   * @return datasource.toString() if datasource is not null, otherwise 
+   * "No Database".
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+   */
+  public String getDisplayName() {
+    
+    return (dsvsource==null) ? "No Database" : dsvsource.toString();
+  }
+
 }

@@ -21,6 +21,12 @@ package org.ensembl.mart.explorer;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.Box;
@@ -28,29 +34,43 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
+import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.apache.tools.ant.taskdefs.optional.sitraka.StringUtil;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * Widget representing the currently selected dataset view
- * and enabling the user to select another.
+ * Widget representing currently available datasource.dataset options.
+ * Once user selects a datasource.dataset the default datasource.dataset.datasetView
+ * is selected.
  */
 public class DatasetViewWidget
 	extends InputPage
-	implements QueryChangeListener {
+	implements QueryChangeListener, ChangeListener {
+
+	private Map optionToView = new HashMap();
 
 	private DatasetViewSettings datasetViewSettings;
 
-	private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
+	private static final Logger logger =
+		Logger.getLogger(DatasetViewWidget.class.getName());
 
 	private Feedback feedback = new Feedback(this);
 
-	private JTextField datasetViewName = new JTextField(30);
-	private JButton button = new JButton("change");
+	private LabelledComboBox chooser = new LabelledComboBox("Dataset");
+  
+  private String noneOption = "None";
+
+	//	private JTextField datasetViewName = new JTextField(30);
+	//	private JButton button = new JButton("change");
 
 	/**
 	 * @param query underlying model for this widget.
@@ -62,22 +82,65 @@ public class DatasetViewWidget
 		super(query, "Dataset View");
 
 		this.datasetViewSettings = datasetViewSettings;
-		datasetViewName.setEditable(false);
-		setDatasetView(null);
 
-		JButton cb = new JButton("Change");
-		cb.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doChange();
+		chooser.setEditable(false);
+		chooser.addChangeListener(this);
 
+		//
+
+		//		datasetViewName.setEditable(false);
+		//		setDatasetView(null);
+		//
+		//		JButton cb = new JButton("Change");
+		//		cb.addActionListener(new ActionListener() {
+		//			public void actionPerformed(ActionEvent e) {
+		//				doChange();
+		//
+		//			}
+		//		});
+		//
+		//		Box b = Box.createHorizontalBox();
+		//		b.add(new JLabel("Dataset "));
+		//		b.add(cb);
+		//		b.add(datasetViewName);
+		//	 add(b, BorderLayout.NORTH);
+
+		add(chooser, BorderLayout.NORTH);
+
+		initOptions();
+	}
+
+	/**
+	 * Construct list of options and add them to the chooser 
+	 */
+	private void initOptions() {
+
+		// Collect all dataset views and key by adaptor->dataset
+		optionToView.clear();
+		try {
+			DatasetView[] views = datasetViewSettings.getAdaptor().getDatasetViews();
+			for (int i = 0; i < views.length; i++) {
+				DatasetView view = views[i];
+				String option = toOption( view );
+				logger.fine( Integer.toString(i) + ": "+option + ", " + view.getDisplayName() );
+				optionToView.put(option, view);
 			}
-		});
+		} catch (ConfigurationException e) {
 
-		Box b = Box.createHorizontalBox();
-		b.add(new JLabel("DatasetView "));
-		b.add(cb);
-		b.add(datasetViewName);
-		add(b, BorderLayout.NORTH);
+			feedback.warning(e);
+		}
+
+		// Sort options before adding to chooser
+		List options = new ArrayList();
+    options.addAll(optionToView.keySet());
+    Collections.sort(options);
+
+    // Add the "none" option at the beginning.
+    optionToView.put( noneOption, null );
+    options.add(0, noneOption); 
+    
+    chooser.removeAllItems();
+		chooser.addAll(options);
 
 	}
 
@@ -113,7 +176,7 @@ public class DatasetViewWidget
 
 			query.clear();
 			query.setDatasetView(dsv);
-      
+
 			if (dsv != null) {
 
 				query.setPrimaryKeys(dsv.getPrimaryKeys());
@@ -128,6 +191,11 @@ public class DatasetViewWidget
 	 * Runs a test; an instance of this class is shown in a Frame.
 	 */
 	public static void main(String[] args) throws Exception {
+
+		LoggingUtil.setAllRootHandlerLevelsToFinest();
+		logger.setLevel(Level.FINE);
+    //Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
+
 		Query q = new Query();
 		DatasetViewWidget dvm =
 			new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
@@ -138,6 +206,7 @@ public class DatasetViewWidget
 		f.getContentPane().add(dvm);
 		f.pack();
 		f.setVisible(true);
+
 
 	}
 
@@ -157,25 +226,69 @@ public class DatasetViewWidget
 			} catch (ConfigurationException e) {
 				feedback.warning(e);
 			}
-		setDatasetView(newDatasetView);
-    
-    // set these to default values
-    if (newDatasetView != null) {
+
+		// add dsv to datasetViewSettings if not present
+		try {
+			if (newDatasetView!=null && !datasetViewSettings.contains(newDatasetView))
+				datasetViewSettings.add(newDatasetView);
+		} catch (ConfigurationException e1) {
+      feedback.warning(e1);
+		}
+
+    initOptions();
+
+
+		if (newDatasetView != null) {
+      chooser.setSelectedItem( toOption( newDatasetView ) );
+      // set these to default values
       query.setPrimaryKeys(newDatasetView.getPrimaryKeys());
-      query.setStarBases(newDatasetView.getStarBases());
+			query.setStarBases(newDatasetView.getStarBases());
+		} else {
+      chooser.setSelectedItem( noneOption );
 		}
 
 	}
 
 	/**
-	 * Update the label to show which dataset view is currently selected.
-	 * @param object
+	 * @param view DatasetView to convert to a string option name. 
+   * @return option name for the view
 	 */
-	private void setDatasetView(DatasetView datasetView) {
-		String s = "";
-		if (datasetView != null)
-			s = datasetView.getDisplayName();
-		datasetViewName.setText(s);
+	private String toOption(DatasetView view) {
+    
+    DSViewAdaptor a = view.getAdaptor();
+    String aName = ( a!=null ) ? a.getDisplayName() : "Unkown";
+    return aName + " -> " + view.getDataset();
 	}
+
+	/**
+	 * Update datasetview if user selects a new one.
+	 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+	 */
+	public void stateChanged(ChangeEvent e) {
+
+		DatasetView dsv = (DatasetView) optionToView.get(chooser.getSelectedItem());
+
+		query.clear();
+		query.setDatasetView(dsv);
+
+		if (dsv != null) {
+
+			query.setPrimaryKeys(dsv.getPrimaryKeys());
+			query.setStarBases(dsv.getStarBases());
+			query.setDataset(dsv.getDataset());
+		}
+
+	}
+
+	//	/**
+	//	 * Update the label to show which dataset view is currently selected.
+	//	 * @param object
+	//	 */
+	//	private void setDatasetView(DatasetView datasetView) {
+	//		String s = "";
+	//		if (datasetView != null)
+	//			s = datasetView.getDisplayName();
+	//		datasetViewName.setText(s);
+	//	}
 
 }
