@@ -2012,7 +2012,10 @@ public class DatabaseDatasetConfigUtils {
     //and force intermart consistency of capitalization for
     //those RDBMS which allow users freedom to capitalize as
     //they see fit. Currently does the latter.
+    
     String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+	//String tablePattern = (datasetName != null) ? datasetName + "__%": "%";
+    
     tablePattern += MAINTABLESUFFIX;
     String capTablePattern = tablePattern.toUpperCase();
 
@@ -2050,13 +2053,18 @@ public class DatabaseDatasetConfigUtils {
       rsSch.close();
     } else {
 
+
+	   
       //====
       //first search for tablePattern    
       ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
 
       while (rsTab.next()) {
         String tableName = rsTab.getString(3);
-        potentials.add(tableName);
+		String tableDataset = tableName.split("__")[0];
+		if (datasetName == null || tableDataset.equals(datasetName)){
+			potentials.add(tableName);
+		}
       }
       rsTab.close();
 
@@ -2065,8 +2073,12 @@ public class DatabaseDatasetConfigUtils {
       while (rsTab.next()) {
         String tableName = rsTab.getString(3);
 
-        if (!potentials.contains(tableName))
-          potentials.add(tableName);
+        if (!potentials.contains(tableName)){	
+			String tableDataset = tableName.split("__")[0];
+			if (datasetName == null || tableDataset.equals(datasetName)){
+				potentials.add(tableName);
+			}    	
+        }
       }
       rsTab.close();
 
@@ -2087,8 +2099,11 @@ public class DatabaseDatasetConfigUtils {
    * @throws SQLException
    */
   public String[] sortNaiveMainTables(String[] mainTables, String databaseName) throws SQLException {
+    
+    if (mainTables.length == 1){// no need to sort a single table
+    	return mainTables;
+    }
     List sortedMainTables = new ArrayList();
-
     int resolution = 1;
     int numberKeys;
     while (sortedMainTables.size() < mainTables.length) {
@@ -2142,7 +2157,10 @@ public class DatabaseDatasetConfigUtils {
     //and force intermart consistency of capitalization for
     //those RDBMS which allow users freedom to capitalize as
     //they see fit. Currently does the latter.
+    
     String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+	//String tablePattern = (datasetName != null) ? datasetName : "%";
+    
     tablePattern += DIMENSIONTABLESUFFIX;
     String capTablePattern = tablePattern.toUpperCase();
 
@@ -2325,7 +2343,6 @@ public class DatabaseDatasetConfigUtils {
     List finalStarbases = new ArrayList(); 
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
     List primaryKeys = new ArrayList();
-
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
       //System.out.println("getting table name "+tableName);
@@ -2348,9 +2365,11 @@ public class DatabaseDatasetConfigUtils {
     dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
-    primaryKeys.toArray(pkeys);
-    dsv.addPrimaryKeys(pkeys);
-
+    if (pkeys.length > 0){
+    	primaryKeys.toArray(pkeys);
+    	dsv.addPrimaryKeys(pkeys);
+    }
+    
     List allTables = new ArrayList();
     allTables.addAll(starbases);
     allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(databaseName, datasetName)));
