@@ -28,11 +28,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.ensembl.util.FormattedSequencePrintStream;
 import org.ensembl.util.SequenceUtil;
@@ -62,7 +60,7 @@ public final class GeneExonSeqQueryRunner extends BaseSeqQueryRunner {
    * @param os an OutputStream object
    */
   public GeneExonSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
-    this.query = query;
+    super(query);
     this.format = format;
     this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 
@@ -77,21 +75,6 @@ public final class GeneExonSeqQueryRunner extends BaseSeqQueryRunner {
         this.seqWriter = fastaWriter;
         break;
     }
-
-    //resolve dataset, species, and focus
-    String[] mainTables = query.getMainTables();
-
-    for (int i = 0; i < mainTables.length; i++) {
-      if (Pattern.matches(".*gene__main", mainTables[i]))
-        dataset = mainTables[i];
-    }
-
-    StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
-    species = tokens.nextToken();
-	//focus = tokens.nextToken();
-	//dset = species + "_" + focus;
-	dset = dataset.split("__")[0];
-	structureTable = dset + "__structure__dm";
   }
 
   protected void updateQuery() {

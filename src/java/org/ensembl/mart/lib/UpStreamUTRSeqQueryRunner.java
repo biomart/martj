@@ -28,11 +28,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.ensembl.util.FormattedSequencePrintStream;
 import org.ensembl.util.SequenceUtil;
@@ -63,7 +61,7 @@ public final class UpStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
    * @param os an OutputStream object
    */
   public UpStreamUTRSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
-    this.query = query;
+    super(query);
     this.format = format;
     this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); // autoflush true
 
@@ -78,17 +76,6 @@ public final class UpStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
         this.seqWriter = fastaWriter;
         break;
     }
-
-    //resolve dataset, species, and focus
-    String[] mainTables = query.getMainTables();
-
-    for (int i = 0; i < mainTables.length; i++) {
-      if (Pattern.matches(".*gene", mainTables[i]))
-        dataset = mainTables[i];
-    }
-
-    StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
-    species = tokens.nextToken();
   }
 
   protected void updateQuery() {
@@ -98,17 +85,17 @@ public final class UpStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
     displayIDs.add("transcript_stable_id_v");
     displayIDs.add("gene_stable_id_v");
 
-    query.addAttribute(new FieldAttribute(TRANID, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(queryID, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(RANK, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(coordStart, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(coordEnd, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(CHR, "_structure_dm","transcript_id_key"));
-    query.addAttribute(new FieldAttribute(STRANDCOLUMN, "_structure_dm","transcript_id_key"));
+    query.addAttribute(new FieldAttribute(TRANID, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(queryID, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(RANK, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(coordStart, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(coordEnd, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(CHR, structureTable,"transcript_id_key"));
+    query.addAttribute(new FieldAttribute(STRANDCOLUMN, structureTable,"transcript_id_key"));
 
     for (int i = 0; i < displayIDs.size(); i++) {
-      query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm","transcript_id_key"));
+      query.addAttribute(new FieldAttribute((String) displayIDs.get(i), structureTable,"transcript_id_key"));
     }
   }
 
@@ -337,20 +324,18 @@ public final class UpStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
             if (query.getSequenceDescription().getLeftFlank() > 0) {
               // extend flanking sequence
               SequenceLocation first_loc = (SequenceLocation) locations.get((Integer) locations.firstKey());
-              SequenceLocation last_loc = (SequenceLocation) locations.get((Integer) locations.lastKey());
 
-              SequenceLocation flank_loc;
+              //both use first location
+              SequenceLocation flank_loc = first_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
               byte[] theseBytes = null;
 
               if (first_loc.getStrand() < 0) {
-                flank_loc = last_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
 
-                // left flank of last location
+                // left flank of first location reverse complimented
                 theseBytes =
                   SequenceUtil.reverseComplement(
                     dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));
               } else {
-                flank_loc = first_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
 
                 // left flank of first location
                 theseBytes = dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd());
@@ -470,15 +455,14 @@ public final class UpStreamUTRSeqQueryRunner extends BaseSeqQueryRunner {
             if (query.getSequenceDescription().getLeftFlank() > 0) {
               // extend flanking sequence
               SequenceLocation first_loc = (SequenceLocation) locations.get((Integer) locations.firstKey());
-              SequenceLocation last_loc = (SequenceLocation) locations.get((Integer) locations.lastKey());
 
-              SequenceLocation flank_loc;
+              //both use first location
+              SequenceLocation flank_loc = first_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
+              
               byte[] theseBytes = null;
 
               if (first_loc.getStrand() < 0) {
-                flank_loc = last_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
-
-                // left flank of last location
+                // left flank of first location, reverse complimented
                 theseBytes =
                   SequenceUtil.reverseComplement(
                     dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));

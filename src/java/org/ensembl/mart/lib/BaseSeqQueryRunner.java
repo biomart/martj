@@ -25,9 +25,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.ensembl.util.FormattedSequencePrintStream;
 
@@ -43,8 +45,15 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected final int[] batchModifiers = { 5, 2 };
   protected int modIter = 0; //start at 0 
   protected int batchLength = 1000;
-  protected final int maxBatchLength = 50000;
+  private final int maxBatchLimit = 50000;
+  
+  // total number of rows execute will ever return
+//  private final int MAXTOTALROWS = 999999999;
 
+  //big list batching
+  private final int listSizeMax = 1000;
+  private final int maxBigListCount = 1;
+    
   protected String separator;
   private Logger logger = Logger.getLogger(BaseSeqQueryRunner.class.getName());
 
@@ -100,6 +109,25 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected List displayIDindices = new ArrayList();
   protected List otherIndices = new ArrayList();
 
+  public BaseSeqQueryRunner(Query query) {
+    this.query = new Query(query);
+    
+    //resolve dataset, species, and focus
+    String[] mainTables = query.getMainTables();
+
+    for (int i = 0; i < mainTables.length; i++) {
+      if (Pattern.matches(".*gene__main", mainTables[i]))
+        dataset = mainTables[i];
+    }
+
+    StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
+    species = tokens.nextToken();
+    //focus = tokens.nextToken();
+    //dset = species + "_" + focus;
+    dset = dataset.split("__")[0];
+    structureTable = dset + "__structure__dm";
+  }
+
   /**
    * This method should set the required variables queryID, coordStart, and coordEnd to
    * the values necessary for the type of sequence being processed, then 
@@ -154,64 +182,147 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected abstract class SeqWriter {
     abstract void writeSequences(Integer tranID, Connection conn) throws SequenceException;
   }
+  
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryRunner#execute(int, boolean)
    */
-  public void execute(int limit, boolean isSubQuery) throws SequenceException, InvalidQueryException {
-     if (isSubQuery)
-       throw new SequenceException("SubQuerys cannot return sequences\n");
-     
-    boolean moreRows = true;
-    boolean userLimit = false;
+  public void execute(int hardLimit, boolean isSubQuery) throws SequenceException, InvalidQueryException {
+    if (isSubQuery)
+      throw new SequenceException("SubQuerys cannot return sequences\n");
 
     updateQuery();
 
-    attributes = query.getAttributes();
-    filters = query.getFilters();
-    seqd = query.getSequenceDescription();
+//    if (hardLimit > 0)
+//      hardLimit = Math.min(hardLimit, MAXTOTALROWS);
+//    else
+//      hardLimit = MAXTOTALROWS;
+        
+    Filter[] filters = query.getFilters();
+
+    Filter bigListFilter = null;
+    String[] biglist = null;
+    int numBigLists = 0;
+    for (int i = 0, n = filters.length; i < n; i++) {
+      Filter filter = filters[i];
+      if (filter instanceof IDListFilter) {
+        if (((IDListFilter) filter).getIdentifiers().length > listSizeMax) {
+          if (numBigLists > maxBigListCount)
+            throw new InvalidQueryException("Too many in list filters attached, only one per query supported.\n");
+
+          bigListFilter = filter;
+          biglist = ((IDListFilter) filter).getIdentifiers();
+          numBigLists++;
+        }
+      }
+    }
+
+    if (numBigLists > 0) {      
+      boolean moreRows = true;
+      String[] idBatch = new String[listSizeMax];
+      int batchIter = 0;
+
+      for (int i = 0, n = biglist.length; moreRows && i < n; i++) {
+        String element = biglist[i];
+
+        if ((i > 0) && ((i % listSizeMax) == 0)) {
+          Query newQuery = new Query(query);
+          newQuery.removeFilter(bigListFilter);
+
+          IDListFilter newFilter =
+            new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), bigListFilter.getKey(), idBatch);
+          newQuery.addFilter(newFilter);
+
+          executeQuery(newQuery, hardLimit);
+
+          if (hardLimit > 0)
+            moreRows = totalRows < hardLimit;
+              
+          idBatch = new String[listSizeMax];
+          batchIter = 0;
+        }
+        idBatch[batchIter] = element;
+        batchIter++;
+      }
+
+      //last batch is either empty, or less than idBatch.length
+      if (moreRows && idBatch[0] != null) {
+        
+        List lastBatch = new ArrayList();
+        for (int i = 0, n = idBatch.length; i < n; i++) {
+          String element = idBatch[i];
+          if (element != null)
+            lastBatch.add(element);
+        }
+
+        String[] lbatch = new String[lastBatch.size()];
+        lastBatch.toArray(lbatch);
+                  
+        Query newQuery = new Query(query);
+        newQuery.removeFilter(bigListFilter);
+
+        IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), bigListFilter.getKey(),lbatch);
+        newQuery.addFilter(newFilter);
+
+        executeQuery(newQuery, hardLimit);
+      }
+    } else {
+      executeQuery(query, hardLimit);
+    }
+  }
+
+  protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    boolean moreRows = true;
+    boolean userLimit = false;
+
+    attributes = curQuery.getAttributes();
+    filters = curQuery.getFilters();
+    seqd = curQuery.getSequenceDescription();
 
     Connection conn = null;
     String sql = null;
     try {
-      conn = query.getDataSource().getConnection();
+      conn = curQuery.getDataSource().getConnection();
 
-      CompiledSQLQuery csql = new CompiledSQLQuery(query);
+      CompiledSQLQuery csql = new CompiledSQLQuery(curQuery);
       String sqlbase = csql.toSQL();
-
-      String structure_table = dset + "__structure__dm";
 
       while (moreRows) {
         sql = sqlbase;
 
         if (lastID > -1) {
           if (sqlbase.indexOf("WHERE") >= 0)
-            sql += " and " + structure_table + "." + queryID + " >= " + lastID;
+            sql += " and " + structureTable + "." + queryID + " >= " + lastID;
           else
-            sql += " WHERE " + structure_table + "." + queryID + " >= " + lastID;
+            sql += " WHERE " + structureTable + "." + queryID + " >= " + lastID;
         }
 
-        sql += " order by  "
-          + structure_table
-          + "."
-          + GENEID
-          + ", "
-          + structure_table
-          + "."
-          + TRANID
-          + ", "
-          + structure_table
-          + "."
-          + RANK;
+//        sql += " order by  "
+//          + structureTable
+//          + "."
+//          + GENEID
+//          + ", "
+//          + structureTable
+//          + "."
+//          + TRANID
+//          + ", "
+//          + structureTable
+//          + "."
+//          + RANK;
+
+        sql += " order by "
+            + structureTable
+            + "."
+            + queryID;
 
         if (logger.isLoggable(Level.INFO)) {
-          logger.info("QUERY : " + query);
-          logger.info("SQL : " + sql);
+          logger.info("SQL : " + sql + "\n");
+          logger.info("batchLength : " + batchLength + "\n");
         }
 
         PreparedStatement ps = conn.prepareStatement(sql);
-        if (limit > 0) {
+        if (hardLimit > 0) {
           userLimit = true;
-          ps.setMaxRows(limit);
+          ps.setMaxRows(hardLimit);
           moreRows = false;
         } else
           ps.setMaxRows(batchLength);
@@ -236,7 +347,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
         if ((!userLimit) && (resultSetRowsProcessed < batchLength))
           moreRows = false;
 
-        if (batchLength < maxBatchLength) {
+        if (batchLength < maxBatchLimit) {
           batchLength *= batchModifiers[modIter];
           modIter = (modIter == 0) ? 1 : 0;
         }
@@ -252,7 +363,6 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
       throw new InvalidQueryException(e + " :" + sql);
     } finally {
       DetailedDataSource.close(conn);
-    }  
+    }
   }
-
 }
