@@ -2,6 +2,9 @@ package org.ensembl.mart.lib.test;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
+import javax.sql.DataSource;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -10,72 +13,262 @@ import junit.textui.TestRunner;
 import org.ensembl.mart.lib.*;
 
 /**
- * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
+ * Tests Query's setters, getters and listener notification mechanisms.
  * 
  * @author craig
  *
  */
-public class QueryTest extends TestCase implements PropertyChangeListener{
+public class QueryTest extends TestCase implements QueryChangeListener {
 
-	public static void main(String[] args) {
-			TestRunner.run(suite());
-	}
+  private Query q = null;
+  private int numChanges = 0;
+  private int expectedNumChanges = 0;
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite();
-		//suite.addTest(new QueryTest("testKakaQuery"));
-		suite.addTestSuite( QueryTest.class );
-		return suite;
-	}
-
-	public QueryTest(String name) {
-		super(name);
-	}
-
-	public void testQuery()  throws Exception {
-		Query q = new Query();
-    q.addPropertyChangeListener( this );
-		
-    int expected = 0;
-    String[] pKeys = new String[] { "gene_id", "transcript_id" };
-		q.setPrimaryKeys( pKeys );
-    expected++;
-    assertEquals(expected, nChanges);
-    q.setPrimaryKeys( null );
-    expected++;
-    assertEquals(expected, nChanges);
-    
-    FieldAttribute fa = new FieldAttribute("chr_name"); 
-		q.addAttribute( fa );
-    expected++;
-    assertEquals(expected, nChanges);
-    q.removeAttribute( fa );
-    expected++;
-    assertEquals(expected, nChanges);
-    
-    Filter f = new BasicFilter("chr_name", "=", "22");    
-    q.addFilter( f );
-    expected++;
-    assertEquals(expected, nChanges);
-    q.removeFilter( f );
-    expected++;
-    assertEquals(expected, nChanges);
-    
-    
-    q.setLimit(100);
-		expected++;
-    assertEquals(expected, nChanges);
-    
-   }
-
-  /* Called when a bound attribute on query changes. It updates the number
-   * of events counted so far.
-   */
-  public void propertyChange(PropertyChangeEvent evt) {
-    // TODO Auto-generated method stub
-    System.out.println( evt.getPropertyName() + "\t"+ evt.getNewValue()  + "\t" + evt.getOldValue());
-    nChanges++;
+  public static void main(String[] args) {
+    TestRunner.run(suite());
   }
-  
-  private int nChanges = 0;
+
+  public static Test suite() {
+    TestSuite suite = new TestSuite();
+    //suite.addTest(new QueryTest("testKakaQuery"));
+    suite.addTestSuite(QueryTest.class);
+    return suite;
+  }
+
+  public QueryTest(String name) {
+    super(name);
+  }
+
+  public void setUp() {
+    q = new Query();
+    q.addQueryChangeListener(this);
+    numChanges = 0;
+    expectedNumChanges = 0;
+  }
+
+  public void testSettingPrimaryKeys() throws Exception {
+
+    String[] pKeys = new String[] { "gene_id", "transcript_id" };
+    q.setPrimaryKeys(pKeys);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(pKeys, q.getPrimaryKeys());
+    pKeys = null;
+    q.setPrimaryKeys(pKeys);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(pKeys, q.getPrimaryKeys());
+
+  }
+
+  public void testSettingAttributes() throws Exception {
+
+    Attribute a = new FieldAttribute("chr_name");
+    Attribute a2 = new FieldAttribute("geneName");
+    Attribute a3 = new FieldAttribute("geneLength");
+
+    q.addAttribute(a);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(a, q.getAttributes()[0]);
+
+    q.removeAttribute(a);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(0, q.getAttributes().length);
+
+    q.addAttribute(a);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    q.addAttribute(a);
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(
+      "Shouldn't add attribute if already included",
+      1,
+      q.getAttributes().length);
+
+    q.addAttribute(a2);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(a2, q.getAttributes()[1]);
+
+    q.addAttribute(1, a3);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+
+    assertEquals(3, q.getAttributes().length);
+    assertEquals(a, q.getAttributes()[0]);
+    assertEquals(a3, q.getAttributes()[1]);
+    assertEquals(a2, q.getAttributes()[2]);
+  }
+
+  public void testSettingFilters() throws Exception {
+
+    Filter f = new BasicFilter("chr_name", "=", "22");
+    Filter f2 = new BasicFilter("geneName", "=", "fred");
+    Filter f3 = new BasicFilter("numDiseases", ">", "3");
+
+    q.addFilter(f);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(f, q.getFilters()[0]);
+
+    q.addFilter(f2);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(f, q.getFilters()[0]);
+    assertEquals(f2, q.getFilters()[1]);
+
+    q.addFilter(1, f3);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(f, q.getFilters()[0]);
+    assertEquals(f3, q.getFilters()[1]);
+    assertEquals(f2, q.getFilters()[2]);
+
+    q.removeFilter(f);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(2, q.getFilters().length);
+    assertEquals(f3, q.getFilters()[0]);
+    assertEquals(f2, q.getFilters()[1]);
+
+    q.replaceFilter(f2, f);
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(2, q.getFilters().length);
+    assertEquals(f3, q.getFilters()[0]);
+    assertEquals(f, q.getFilters()[1]);
+
+  }
+
+  public void testSettingLimit() throws Exception {
+    int limit = 100;
+    q.setLimit(limit);
+    assertEquals(limit, q.getLimit());
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+
+  }
+
+
+  public void testSettingDatasetInternalName() throws Exception {
+    String datasetInternalName = "DS1";
+    q.setDatasetInternalName( datasetInternalName );
+    assertEquals(datasetInternalName, q.getDatasetInternalName());
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+   */
+  public void queryDatasetInternalNameChanged(
+    Query sourceQuery,
+    String oldDatasetInternalName,
+    String newDatasetInternalName) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+   */
+  public void queryStarBasesChanged(
+    Query sourceQuery,
+    String[] oldStarBases,
+    String[] newStarBases) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+   */
+  public void queryPrimaryKeysChanged(
+    Query sourceQuery,
+    String[] oldPrimaryKeys,
+    String[] newPrimaryKeys) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+   */
+  public void queryNameChanged(
+    Query sourceQuery,
+    String oldName,
+    String newName) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+   */
+  public void queryDatasourceChanged(
+    Query sourceQuery,
+    DataSource oldDatasource,
+    DataSource newDatasource) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Attribute)
+   */
+  public void queryAttributeAdded(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeRemoved(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Attribute)
+   */
+  public void queryAttributeRemoved(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter)
+   */
+  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter)
+   */
+  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
+   */
+  public void querySequenceDescriptionChanged(
+    Query sourceQuery,
+    SequenceDescription oldSequenceDescription,
+    SequenceDescription newSequenceDescription) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
+   */
+  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
+   */
+  public void queryFilterChanged(
+    Query sourceQuery,
+    Filter oldFilter,
+    Filter newFilter) {
+    numChanges++;
+  }
+
 }

@@ -18,502 +18,450 @@
 
 package org.ensembl.mart.lib;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
+
+import javax.sql.DataSource;
 
 import org.ensembl.util.StringUtil;
 
-import javax.sql.DataSource;
 /**
- * Object for storing the parameters to construct a query against a Mart
- * database.  Parameters consist of at least one Attribute (a requested field
- * from the database) implimenting object or a SequenceDescription object. 
- * Parameters can include Filter implimenting objects, or DSFilter objects
- * to restrict the Query on user supplied conditions.
+ * A mart query object. Instances of this class specify all of the parameters
+ * necessary for execution against a mart instance. Also any 
+ * QueryChangeListeners, added with <code>addQueryChangeListener(listener)</code>,
+ * are notified of changes in the query's state such as the addition of an attribute or remval of
+ * a filter.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @see Attribute
  * @see SequenceDescription 
  * @see Filter
- * @see DSFilter
+ * @see QueryChangeListener
  */
-// TODO fix set attributes/filters to use removeall + addXXX()
 
 public class Query {
-  
-	
+
+  private List listeners = new ArrayList();
+
   /**
-	 * enums over query types
-	 * clients can set type using the constant
-	 * and test / get results as well
-	 */
-	public final static int ATTRIBUTE = 1;
-	public final static int SEQUENCE = 2;
-  
+   * enums over query types
+   * clients can set type using the constant
+   * and test / get results as well
+   */
+  public final static int ATTRIBUTE = 1;
+  public final static int SEQUENCE = 2;
+
   public Query() {
   }
-  
+
   public Query(Query oq) {
-    
+
     initialise(oq);
   }
-
 
   /**
    * Inititise this query by removing all current properties
    * and copying all the properties from oq.
+   * 
    * @param oq
    */
   public void initialise(Query oq) {
-    
-		setDatasetInternalName( oq.getDatasetInternalName() );
-		setDataSource( oq.getDataSource() );
+
+    setDatasetInternalName(oq.getDatasetInternalName());
+    setDataSource(oq.getDataSource());
 
     removeAllAttributes();
     if (oq.getAttributes().length > 0) {
       Attribute[] oatts = oq.getAttributes();
-      Attribute[] natts = new Attribute[oatts.length];
-      System.arraycopy(oatts, 0, natts, 0, oatts.length);
-      setAttributes(natts);
+      //    TODO copy attribute and filter by value rather than reference
+      for (int i = 0; i < oatts.length; ++i)
+        addAttribute(oatts[i]);
     }
-    
+
     removeAllFilters();
     if (oq.getFilters().length > 0) {
       Filter[] ofilts = oq.getFilters();
-      Filter[] nfilts = new Filter[ofilts.length];
-      System.arraycopy(ofilts,0,nfilts,0,ofilts.length);
-      setFilters(nfilts);
+      //    TODO copy attribute and filter by value rather than reference
+      for (int i = 0; i < ofilts.length; ++i)
+        addFilter(ofilts[i]);
     }
-    
+
     // TODO copy other querytypes?
     if (oq.querytype == Query.SEQUENCE)
-      setSequenceDescription(new SequenceDescription(oq.getSequenceDescription()));
-      
+      setSequenceDescription(
+        new SequenceDescription(oq.getSequenceDescription()));
+
     if (oq.getStarBases().length > 0) {
       String[] oStars = oq.getStarBases();
       String[] nStars = new String[oStars.length];
       System.arraycopy(oStars, 0, nStars, 0, oStars.length);
-      
+
       setStarBases(nStars);
     } else {
       setStarBases(null);
     }
-    
-    
+
     if (oq.getPrimaryKeys().length > 0) {
       String[] oPkeys = oq.getPrimaryKeys();
       String[] nPkeys = new String[oPkeys.length];
       System.arraycopy(oPkeys, 0, nPkeys, 0, oPkeys.length);
-      
+
       setPrimaryKeys(nPkeys);
     } else {
       setPrimaryKeys(null);
     }
-    
+
     limit = oq.getLimit();
 
   }
-  
-	/**
-	 * returns the query type (one of ATTRIBUTE or SEQUENCE)
-	 * @return int querytype
-	 */
-	public int getType() {
-		return querytype;
-	}
-
-	/**
-	 * test to determine if a specified attribute object is 
-	 * contained within the attribute list of the Query.
-	 * 
-	 * @param attribute
-	 * @return boolean
-	 */
-	public boolean hasAttribute(Attribute attribute) {
-		return attributes.contains(attribute);
-	}
-
-	/**
-	 * add an Attribute object to the list of Attributes
-	 * for the Query.
-	 * 
-	 * @param Attribute attribute
-	 */
-	public void addAttribute(Attribute attribute) {
-		if (!attributes.contains(attribute)) {
-			attributes.add(attribute);
-      changeSupport.firePropertyChange("attribute", null, attribute);
-    }
-	}
-
-	/**
-	 * remove a Filter object from the list of Attributes
-	 * 
-	 * @param Filter filter
-	 */
-	public void removeFilter(Filter filter) {
-		if (filters.contains(filter)) {
-		
-			filters.remove(filter);
-      changeSupport.firePropertyChange("filter", filter, null);
-    }
-	}
-
-	/**
-	 * get all Attributes as an Attribute :ist
-	 * 
-	 * @return Attribute[] attributes
-	 */
-	public Attribute[] getAttributes() {
-		Attribute[] a = new Attribute[attributes.size()];
-		attributes.toArray(a);
-		return a;
-	}
-
-	/**
-	 * set an entire list of Attribute objects
-	 * @param List attributes
-	 */
-	public void setAttributes(Attribute[] attributes) {
-    Object old = this.attributes;
-		this.attributes = new ArrayList(Arrays.asList(attributes));
-    changeSupport.firePropertyChange("attributes", old, this.attributes);
-	}
-
-	/**
-	 * get all Filter objects as a Filter[] Array
-	 * 
-	 * @return Filters[] filters
-	 */
-	public Filter[] getFilters() {
-		Filter[] f = new Filter[filters.size()];
-		filters.toArray(f);
-		return f;
-	}
-
- /**
-  * Allows the retrieval of a specific Filter object with a specified field name.
-  * 
-  * @param name - name of the fieldname for this Filter.
-  * @return Filter object named by given field name.
-  */
-  public Filter getFilterByName(String name) {
-  	for (int i = 0, n = filters.size(); i < n; i++) {
-			Filter element = (Filter) filters.get(i);
-			if (element.getField().equals(name))
-			  return element;
-		}
-		return null;
-  }
-  
-	/**
-	 * set an entire list of Filter objects.  Subsequent calls to setFilters will add to 
-	 * what was added with previous addFilter/setFilters calls.  This method handles the 
-	 * logic for collecting any non STRING type IDListFilter objects for later processing 
-	 * by UnprocessedFilterHandler objects, and sets the hasUnprocessedListFilters flag to true 
-	 * when they are encountered
-	 * 
-	 * @param Filter[] filters
-	 */
-	public void setFilters(Filter[] filters) {
-    Object old = getFilters();
-		for (int i = 0, n = filters.length; i < n; i++)
-      addFilter(filters[i]);
-    changeSupport.firePropertyChange("filters", old, getFilters() );
-	}
-
-	/**
-	 * add a single Filter object.
-	 * 
-	 * @param Filter filter
-	 */
-	public void addFilter(Filter filter) {
-		 filters.add(filter);    
-
-    changeSupport.firePropertyChange("filter", null, filter );
-	}
 
   /**
-   * remove an Attribute object from the list of Attributes
+   * returns the query type (one of ATTRIBUTE or SEQUENCE)
+   * @return int querytype
+   */
+  public int getType() {
+    return querytype;
+  }
+
+  /**
+   * test to determine if a specified attribute object is 
+   * contained within the attribute list of the Query.
+   * 
+   * @param attribute
+   * @return boolean
+   */
+  public boolean hasAttribute(Attribute attribute) {
+    return attributes.contains(attribute);
+  }
+
+  /**
+   * add an Attribute object to the list of Attributes
+   * for the Query.
    * 
    * @param Attribute attribute
    */
-  public void removeAttribute(Attribute attribute) {
-    if (attributes.contains(attribute)) {
-    
-      attributes.remove(attribute);
-      changeSupport.firePropertyChange("attribute", attribute, null);
+  public void addAttribute(Attribute attribute) {
+    addAttribute(attributes.size(), attribute);
+  }
+
+  /**
+   * remove a Filter object from the list of Attributes
+   * 
+   * @param Filter filter
+   */
+  public void removeFilter(Filter filter) {
+    if (filters.contains(filter)) {
+
+      filters.remove(filter);
+      for (int i = 0; i < listeners.size(); ++i)
+        ((QueryChangeListener) listeners.get(i)).queryFilterRemoved(
+          this,
+          0, filter);
     }
   }
-    
-	/**
-	 * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
-	* @param s A SequenceDescription object.
-	*/
-	public void setSequenceDescription(SequenceDescription s) {
-    Object old = getSequenceDescription();
-		this.seqd = s;
-		this.querytype = Query.SEQUENCE;
-    changeSupport.firePropertyChange("sequence_description", old, getSequenceDescription() );
-	}
 
-	/**
-	 * returns the SequenceDescription for this Query.
-	* @return SequenceDescription
-	*/
-	public SequenceDescription getSequenceDescription() {
-		return seqd;
-	}
+  /**
+   * get all Attributes as an Attribute :ist
+   * 
+   * @return Attribute[] attributes
+   */
+  public Attribute[] getAttributes() {
+    Attribute[] a = new Attribute[attributes.size()];
+    attributes.toArray(a);
+    return a;
+  }
 
-	/**
-	 * get the primaryKeys of the Query
-	 * @return String primaryKeys
-	 */
-	public String[] getPrimaryKeys() {
-		return primaryKeys;
-	}
+  /**
+   * get all Filter objects as a Filter[] Array
+   * 
+   * @return Filters[] filters
+   */
+  public Filter[] getFilters() {
+    Filter[] f = new Filter[filters.size()];
+    filters.toArray(f);
+    return f;
+  }
 
-	/**
-	 * set the primaryKeys for the Query
-	 * @param String primaryKeys
-	 */
-	public void setPrimaryKeys(String[] primaryKeys) {
-    Object old = getPrimaryKeys();
-		this.primaryKeys = primaryKeys;
-    changeSupport.firePropertyChange("primary_keys", old, getPrimaryKeys() );
-	}
+  /**
+   * Allows the retrieval of a specific Filter object with a specified field name.
+   * 
+   * @param name - name of the fieldname for this Filter.
+   * @return Filter object named by given field name.
+   */
+  public Filter getFilterByName(String name) {
+    for (int i = 0, n = filters.size(); i < n; i++) {
+      Filter element = (Filter) filters.get(i);
+      if (element.getField().equals(name))
+        return element;
+    }
+    return null;
+  }
 
-	/**
-	 * get the starBases for the Query
-	 * @return String starBases
-	 */
-	public String[] getStarBases() {
-		return starBases;
-	}
+  /**
+   * Add filter to end of filter list.
+   * 
+   * @param Filter filter to be added.
+   */
+  public void addFilter(Filter filter) {
+    addFilter(filters.size(), filter);
+  }
 
-	/**
-	 * set the starBases for the Query
-	 * @param String starBases
-	 */
-	public void setStarBases(String[] starBases) {
-    Object old = getStarBases();
-		this.starBases = starBases;
-    changeSupport.firePropertyChange("star_bases", old, getStarBases() );
-	}
+  /**
+   * Add filter to end of filter list.
+   * 
+   * @param index index at which the specified element is to be inserted.
+   * @param Filter filter to be added.
+   */
+  public void addFilter(int index, Filter filter) {
+    filters.add(index, filter);
+    for (int i = 0; i < listeners.size(); ++i)
+       ((QueryChangeListener) listeners.get(i)).queryFilterAdded(this, index, filter);
+  }
+
+  /**
+   * Remove Attribute if present, otherwise do nothing.
+   * 
+   * @param Attribute attribute to be removed.
+   */
+  public void removeAttribute(Attribute attribute) {
+    if (attributes.contains(attribute)) {
+      attributes.remove(attribute);
+      for (int i = 0; i < listeners.size(); ++i)
+        ((QueryChangeListener) listeners.get(i)).queryAttributeRemoved(
+          this,
+          0, attribute);
+    }
+  }
+
+  /**
+   * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
+  * @param s A SequenceDescription object.
+  */
+  public void setSequenceDescription(SequenceDescription s) {
+    SequenceDescription oldSequenceDescription = this.sequenceDescription;
+    this.sequenceDescription = s;
+    this.querytype = Query.SEQUENCE;
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).querySequenceDescriptionChanged(
+        this,
+        oldSequenceDescription,
+        this.sequenceDescription);
+
+  }
+
+  /**
+   * returns the SequenceDescription for this Query.
+  * @return SequenceDescription
+  */
+  public SequenceDescription getSequenceDescription() {
+    return sequenceDescription;
+  }
+
+  /**
+   * get the primaryKeys of the Query
+   * @return String primaryKeys
+   */
+  public String[] getPrimaryKeys() {
+    return primaryKeys;
+  }
+
+  /**
+   * set the primaryKeys for the Query
+   * @param String primaryKeys
+   */
+  public void setPrimaryKeys(String[] primaryKeys) {
+    String[] old = this.primaryKeys;
+    this.primaryKeys = primaryKeys;
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryPrimaryKeysChanged(
+        this,
+        old,
+        this.primaryKeys);
+  }
+
+  /**
+   * get the starBases for the Query
+   * @return String starBases
+   */
+  public String[] getStarBases() {
+    return starBases;
+  }
+
+  /**
+   * set the starBases for the Query
+   * @param String starBases
+   */
+  public void setStarBases(String[] starBases) {
+    String[] old = this.starBases;
+    this.starBases = starBases;
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryStarBasesChanged(
+        this,
+        old,
+        this.starBases);
+  }
 
   /**
    * Set a limit for the Query.
    * @param inlimit - int limit to add to the Query
    */
   public void setLimit(int inlimit) {
-  	if (inlimit > 0) {
+    if (inlimit > 0) {
       int old = this.limit;
-  	  this.limit = inlimit;
-      changeSupport.firePropertyChange("limit", old, this.limit );
+      this.limit = inlimit;
+      for (int i = 0; i < listeners.size(); ++i)
+        ((QueryChangeListener) listeners.get(i)).queryLimitChanged(
+          this,
+          old,
+          this.limit);
     }
   }
-	/**
-	 * Determine if the Query has a limit > 0.
-	 * @return true if limit > 0, false if not
-	 */
-	public boolean hasLimit() {
-		return (limit > 0);
-	}
-	/**
-	 * Returns the limit for the Query. limit == 0 means no limit
-	 * @return limit
-	 */
-	public int getLimit() {
-		return limit;
-	}
+  /**
+   * Determine if the Query has a limit > 0.
+   * @return true if limit > 0, false if not
+   */
+  public boolean hasLimit() {
+    return (limit > 0);
+  }
+  /**
+   * Returns the limit for the Query. limit == 0 means no limit
+   * @return limit
+   */
+  public int getLimit() {
+    return limit;
+  }
 
   /**
    * Returns the total number of filters of all types added to the Query
    * @return int count of all filters added
    */
   public int getTotalFilterCount() {
-  	return filters.size();	
+    return filters.size();
   }
-  
-	/**
-	 * returns a description of the Query for logging purposes
-	 * 
-	 * @return String description (primaryKeys=primaryKeys\nstarBases=starBases\nattributes=attributes\nfilters=filters)
-	 */
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
-    buf.append( " datasetInternalName=").append(datasetInternalName);
-    buf.append(", dataSource=").append( dataSource );
-		buf.append(", starBases=[").append(StringUtil.toString(starBases));
-		buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));
-		buf.append("], querytype=").append(querytype);
-		buf.append(", attributes=").append(attributes);
-		buf.append(", filters=").append(filters);
-		
-		if (seqd != null)
-			buf.append(", sequencedescription=").append(seqd);
+  /**
+   * returns a description of the Query for logging purposes
+   * 
+   * @return String description (primaryKeys=primaryKeys\nstarBases=starBases\nattributes=attributes\nfilters=filters)
+   */
+  public String toString() {
+    StringBuffer buf = new StringBuffer();
+
+    buf.append("[");
+    buf.append(" datasetInternalName=").append(datasetInternalName);
+    buf.append(", dataSource=").append(dataSource);
+    buf.append(", starBases=[").append(StringUtil.toString(starBases));
+    buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));
+    buf.append("], querytype=").append(querytype);
+    buf.append(", attributes=").append(attributes);
+    buf.append(", filters=").append(filters);
+
+    if (sequenceDescription != null)
+      buf.append(", sequencedescription=").append(sequenceDescription);
 
     buf.append(", limit=").append(limit);
-		buf.append("]");
+    buf.append("]");
 
-		return buf.toString();
-	}
+    return buf.toString();
+  }
 
   /**
-	 * Allows Equality Comparisons manipulation of Query objects
-	 * Mainly for testing of copy constructor
-	 */
-	public boolean equals(Object o) {
-		return o instanceof Query && hashCode() == ((Query) o).hashCode();
-	}
-	
-	public int hashCode() {
-		int tmp = 0;
-		if (querytype == Query.SEQUENCE) {
-		  tmp = (31 * tmp) + seqd.hashCode();
-			tmp = (31 * tmp) + querytype; 
-		}
-		  
-		for (int i = 0, n = starBases.length; i < n; i++)
-			tmp = (31 * tmp) + starBases[i].hashCode();
-		
-		for (int i = 0, n = primaryKeys.length; i < n; i++)
-		  tmp = (31 * tmp) + primaryKeys[i].hashCode();
-		  
-		for (int i = 0, n = attributes.size(); i < n; i++) {
-			FieldAttribute element = (FieldAttribute) attributes.get(i);
-			tmp = (31 * tmp) + element.hashCode();
-		}
-		
-		for (int i = 0, n = filters.size(); i < n; i++)
-		  tmp = (31 * tmp) + filters.get(i).hashCode();
-		
-		return tmp;
-	}
-	
-	private List attributes = new Vector();
-	private List filters = new Vector();
+   * Allows Equality Comparisons manipulation of Query objects
+   * Mainly for testing of copy constructor
+   */
+  public boolean equals(Object o) {
+    return o instanceof Query && hashCode() == ((Query) o).hashCode();
+  }
+
+  public int hashCode() {
+    int tmp = 0;
+    if (querytype == Query.SEQUENCE) {
+      tmp = (31 * tmp) + sequenceDescription.hashCode();
+      tmp = (31 * tmp) + querytype;
+    }
+
+    for (int i = 0, n = starBases.length; i < n; i++)
+      tmp = (31 * tmp) + starBases[i].hashCode();
+
+    for (int i = 0, n = primaryKeys.length; i < n; i++)
+      tmp = (31 * tmp) + primaryKeys[i].hashCode();
+
+    for (int i = 0, n = attributes.size(); i < n; i++) {
+      FieldAttribute element = (FieldAttribute) attributes.get(i);
+      tmp = (31 * tmp) + element.hashCode();
+    }
+
+    for (int i = 0, n = filters.size(); i < n; i++)
+      tmp = (31 * tmp) + filters.get(i).hashCode();
+
+    return tmp;
+  }
+
+  private List attributes = new Vector();
+  private List filters = new Vector();
 
   private String queryName;
-	private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
-	private SequenceDescription seqd;
-	private String[] primaryKeys;
-	private String[] starBases;
-	private int limit = 0; // add a limit clause to the SQL with an int > 0
-  private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
-	/**
-	 * Datasource this query applies to.
-	 */
-	private DataSource dataSource;
-
-	/**
-	 * Name of dataset this query applies to.
-	 */
-	private String datasetInternalName;
+  private int querytype = Query.ATTRIBUTE;
+  // default to ATTRIBUTE, over ride for SEQUENCE
+  private SequenceDescription sequenceDescription;
+  private String[] primaryKeys;
+  private String[] starBases;
+  private int limit = 0; // add a limit clause to the SQL with an int > 0
 
   /**
-   * @param listener
+   * Datasource this query applies to.
    */
-  public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
-    changeSupport.addPropertyChangeListener(listener);
+  private DataSource dataSource;
+
+  /**
+   * Name of dataset this query applies to.
+   */
+  private String datasetInternalName;
+
+  public synchronized QueryChangeListener[] getQueryChangeListeners() {
+    return (QueryChangeListener[]) listeners.toArray(
+      new QueryChangeListener[listeners.size()]);
+  }
+
+  public synchronized void removeQueryChangeListener(QueryChangeListener listener) {
+    listeners.remove(listener);
   }
 
   /**
-   * @param propertyName
-   * @param listener
+   * Convenience method that removes all attributes from the query. Notifies listeners.
    */
-  public synchronized void addPropertyChangeListener(
-    String propertyName,
-    PropertyChangeListener listener) {
-    changeSupport.addPropertyChangeListener(propertyName, listener);
-  }
+  public void removeAllAttributes() {
 
-  /**
-   * @return
-   */
-  public synchronized PropertyChangeListener[] getPropertyChangeListeners() {
-    return changeSupport.getPropertyChangeListeners();
-  }
+    Attribute[] attributes = getAttributes();
 
-  /**
-   * @param propertyName
-   * @return
-   */
-  public synchronized PropertyChangeListener[] getPropertyChangeListeners(String propertyName) {
-    return changeSupport.getPropertyChangeListeners(propertyName);
-  }
-
-  /**
-   * @param propertyName
-   * @return
-   */
-  public synchronized boolean hasListeners(String propertyName) {
-    return changeSupport.hasListeners(propertyName);
-  }
-
-  /**
-   * @param listener
-   */
-  public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
-    changeSupport.removePropertyChangeListener(listener);
-  }
-
-  /**
-   * @param propertyName
-   * @param listener
-   */
-  public synchronized void removePropertyChangeListener(
-    String propertyName,
-    PropertyChangeListener listener) {
-    changeSupport.removePropertyChangeListener(propertyName, listener);
-  }
-
-	/**
-	 * Removes all attributes from the query. Each removed attribute will
-   * generate a separate property change event.
-	 */
-	public void removeAllAttributes() {
-    
-		Attribute[] attributes = getAttributes();
-    
     for (int i = 0, n = attributes.length; i < n; i++) {
-			removeAttribute( attributes[i] );
-		}
-		
-	}
+      removeAttribute(attributes[i]);
+    }
 
+  }
 
   /**
    * Removes all Filters from the query. Each removed Filter will
    * generate a separate property change event.
    */
   public void removeAllFilters() {
-    
+
     Filter[] filters = getFilters();
-    
+
     for (int i = 0, n = filters.length; i < n; i++) {
-      removeFilter( filters[i] );
+      removeFilter(filters[i]);
     }
-    
+
   }
 
-
   /**
-   * Removes all PropertyChangeListeners from the query. Each removed PropertyChangeListener will
-   * generate a separate property change event.
+   * Removes all QueryChangeListeners. Note: does not notify
+   * listeners that they have been removed.
    */
-  public void removeAllPropertyChangeListeners() {
-    
-    PropertyChangeListener[] propertyChangeListeners = getPropertyChangeListeners();
-    
-    for (int i = 0, n = propertyChangeListeners.length; i < n; i++) {
-      removePropertyChangeListener( propertyChangeListeners[i] );
-    }
-    
+  public void removeAllQueryChangeListeners() {
+    listeners.clear();
   }
 
   /**
@@ -526,34 +474,43 @@ public class Query {
    */
   public void replaceFilter(Filter oldFilter, Filter newFilter) {
 
-    int index = filters.indexOf( oldFilter );
-    if ( index==-1 ) 
-      throw new RuntimeException("Old filter not in query: " + oldFilter);
+    int index = filters.indexOf(oldFilter);
+    if (index == -1)
+      throw new IllegalArgumentException(
+        "Old filter can not be removed because not in query: " + oldFilter);
 
-    filters.remove( index );
-    filters.add(index, newFilter );
-    
-    changeSupport.firePropertyChange("filter", oldFilter, newFilter );
+    filters.remove(index);
+    filters.add(index, newFilter);
+
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryFilterChanged(
+        this,
+        oldFilter,
+        newFilter);
+
   }
 
-	public DataSource getDataSource() {
-		return dataSource;
-	}
+  public DataSource getDataSource() {
+    return dataSource;
+  }
 
   /**
-   * Sets the value and propagates a PropertyChange event to listeners. The 
-   * property name is in the event is "dataSource".
+   * Sets the value and notifies listeners.
    * @param dataSource new dataSource.
    */
-	public void setDataSource(DataSource dataSource) {
+  public void setDataSource(DataSource dataSource) {
     DataSource oldDatasource = this.dataSource;
-		this.dataSource = dataSource;
-    changeSupport.firePropertyChange("dataSource", oldDatasource, dataSource );
-	}
+    this.dataSource = dataSource;
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryDatasourceChanged(
+        this,
+        oldDatasource,
+        this.dataSource);
+  }
 
-	public String getDatasetInternalName() {
-		return datasetInternalName;
-	}
+  public String getDatasetInternalName() {
+    return datasetInternalName;
+  }
 
   /**
    * Sets the value and propagates a PropertyChange event to listeners. The 
@@ -561,30 +518,55 @@ public class Query {
    * if the parameter is equal to the current datasetInternalName.
    * @param datasetInternalName new datasetInternalName.
    */
-	public void setDatasetInternalName(String datasetName) {
-    
-    if ( this.datasetInternalName==datasetName 
-        || datasetName!=null && datasetName.equals(this.datasetInternalName) )
-        return;
-         
+  public void setDatasetInternalName(String datasetName) {
+
+    if (this.datasetInternalName == datasetName
+      || datasetName != null
+      && datasetName.equals(this.datasetInternalName))
+      return;
+
     String oldDatasetName = this.datasetInternalName;
-		this.datasetInternalName = datasetName;
-    changeSupport.firePropertyChange("datasetInternalName", oldDatasetName, datasetName );
-	}
+    this.datasetInternalName = datasetName;
 
-	/**
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryDatasetInternalNameChanged(
+        this,
+        oldDatasetName,
+        this.datasetInternalName);
+  }
+
+  /**
    * Returns the name that has been set for this Query, null if not set
-	 * @return String Query name
-	 */
-	public String getQueryName() {
-		return queryName;
-	}
+   * @return String Query name
+   */
+  public String getQueryName() {
+    return queryName;
+  }
 
-	/**
-	 * @param string -- String name to apply to this Query.
-	 */
-	public void setQueryName(String string) {
-		queryName = string;
-	}
+  /**
+   * @param string -- String name to apply to this Query.
+   */
+  public void setQueryName(String string) {
+    queryName = string;
+  }
+
+  /**
+   * @param listener
+   */
+  public void addQueryChangeListener(QueryChangeListener listener) {
+    listeners.add(listener);
+  }
+
+  public void addAttribute(int index, Attribute attribute) {
+
+    if (!attributes.contains(attribute)) {
+      attributes.add(index, attribute);
+      for (int i = 0; i < listeners.size(); ++i)
+        ((QueryChangeListener) listeners.get(i)).queryAttributeAdded(
+          this,
+          index, attribute);
+    }
+
+  }
 
 }

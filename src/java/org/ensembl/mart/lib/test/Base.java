@@ -47,9 +47,9 @@ public abstract class Base extends TestCase {
 		"data/test_logging.properties";
 
 	private final String DEFAULTDBTYPE = "mysql";
-	private final String DEFAULTHOST = "kaka.sanger.ac.uk";
+	private final String DEFAULTHOST = "ensembldb.ensembl.org";
 	private final String DEFAULTPORT = "3306";
-	private final String DEFAULTDATABASE = "ensembl_mart_16_1";
+	private final String DEFAULTDATABASE = "ensembl_mart_17_1";
 	private final String DEFAULTUSER = "anonymous";
   private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
@@ -97,7 +97,6 @@ public abstract class Base extends TestCase {
 
         tmp = p.getProperty("jdbc_driver");
         jdbcDriver = (tmp != null && tmp.length() > 1) ? tmp : DEFAULT_JDBC_DRIVER;
-
 				password = p.getProperty("password");
         
 			} catch (java.io.IOException e) {
@@ -118,6 +117,7 @@ public abstract class Base extends TestCase {
 			host = DEFAULTHOST;
 			databaseName = DEFAULTDATABASE;
 			user = DEFAULTUSER;
+      jdbcDriver = DEFAULT_JDBC_DRIVER;
 		}
 
 		

@@ -59,7 +59,7 @@ public class CompiledSQLQueryTest extends Base {
 
 	public void testQueryCopy() throws Exception {
 		Query q = new Query(genequery);
-		assertTrue("Query Copy Constructor not creating a equal copy\n", genequery.equals(q));
+		assertTrue("Query Copy Constructor creating a equal copy\n", genequery.equals(q));
 	}
 
 	public void testChrQuery() throws Exception {
