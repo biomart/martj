@@ -45,6 +45,7 @@
   <property name="license" value="LICENSE" />
   <property name="install" value="INSTALL" />
   <property name="buildfile" value="build.xml" />
+  <property name="spy.properties" value="spy.properties" />
   <property name="jre.dir" value="./jre" />
   <property name="src.dir" value="./src/java" />
   <property name="data.dir" value="./data" />
@@ -90,6 +91,7 @@
       <include name="${license}" />
       <include name="${install}" />
       <include name="${buildfile}" />
+      <include name="${spy.properties}" />
   </patternset>
 
   <!-- binary distribution jars -->
