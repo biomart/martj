@@ -629,8 +629,86 @@
 
 	 </AttributeGroup>
 
-	 </AttributePage>
+    </AttributePage>
+
+	<AttributePage internalName="sequences" displayName="Sequences" description="Gene Sequences">
+
+	  <AttributeGroup internalName="region" displayName="Region:" description="Attributes relating to the location of genes on the golden path.">
+
+		<AttributeCollection internalName="chromsomeatts" displayName="Chromsome Attributes:" description="Attributes related to chromosomal positioning of genes.">
+
+		  <UIAttributeDescription internalName="chromosome" displayName="Chromosome Name" description="&quot;Chromsome Name&quot;" fieldName="chr_name" tableConstraint="gene_main" maxLength="12"/>
+
+		  <UIAttributeDescription internalName="chrom_start" displayName="Start Position (bp)" description="Start Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_start" tableConstraint="gene_main" maxLength="9"/>
+
+		  <UIAttributeDescription internalName="chrom_end" displayName="End Position (bp)" description="End Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_end" tableConstraint="gene_main" maxLength="9"/>
+
+		  <UIAttributeDescription internalName="chrom_strand" displayName="Strand" description="Orientation of genes on chromosome." fieldName="chrom_strand" tableConstraint="gene_main" maxLength="2"/>
+
+		  <UIAttributeDescription internalName="chrom_band" displayName="Band" description="Band of chromosome where genes occur." fieldName="band" tableConstraint="gene_main" maxLength="7"/>
+
+       </AttributeCollection>
+
+     </AttributeGroup>
 	 
+	 <AttributeGroup internalName="GENE" displayName="GENE:" description="Features of Genes">
+
+	   <AttributeCollection internalName="ensgeneid" displayName="Ensembl Gene ID" description="Ensembl Stable ID, with version, of the Gene">
+
+		 <UIAttributeDescription internalName="ensgeneid" displayName="Ensembl Gene ID" description="Ensembl Stable ID, with version, of the Gene" fieldName="gene_stable_id_v" tableConstraint="gene_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+         <UIAttributeDescription internalName="enstranid" displayName="Ensembl Transcript ID" description="Ensembl Stable ID, with version, of the Transcript" fieldName="transcript_stable_id_v" tableConstraint="transcript_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+         <UIAttributeDescription internalName="external_id" displayName="External Gene ID" fieldName="display_id" tableConstraint="gene_main" maxLength="10" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+         <UIAttributeDescription internalName="cds_length" displayName="Ensembl CDS Length" fieldName="cds_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+		<UIAttributeDescription internalName="peptide_length" displayName="Ensembl Peptide Length" fieldName="peptide_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/> 
+
+        <UIAttributeDescription internalName="gene_description" displayName="Description" fieldName="description" tableConstraint="gene_main" maxLength="536" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+        <UIAttributeDescription internalName="translation" displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" tableConstraint="transcript_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+        <UIAttributeDescription internalName="external_db" displayName="External Gene DB" fieldName="db_name" tableConstraint="gene_main" maxLength="9" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+        <UIAttributeDescription internalName="cdna_length" displayName="Ensembl cDNA Length" fieldName="cdna_length" tableConstraint="transcript_main" maxLength="6" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+        <UIAttributeDescription internalName="peptide_length" displayName="Ensembl Peptide Length" fieldName="peptide_length" tableConstraint="transcript_main" maxLength="6" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+      </AttributeCollection>
+
+	 <AttributeCollection internalName="Xrefs" displayName="External Reference Attributes (max 3)" description="Information from external database sources." maxSelect="3">
+
+	  <UIAttributeDescription internalName="xprotein_id_dis" displayName="Protien ID" description="" fieldName="display_id" tableConstraint="gene_xref_protein_id_dm" maxLength="8" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xhugo_dis" displayName="HUGO ID" description="HUGO Accessions" fieldName="display_id" tableConstraint="gene_xref_HUGO_dm" maxLength="9" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="x_go_dis" displayName="GO ID" description="Gene Ontology accession" fieldName="display_id" tableConstraint="gene_xref_GO_dm" maxLength="10" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xgo_dis_desc" displayName="GO Description" description="GO Descriptions" fieldName="description" tableConstraint="gene_xref_GO_dm" maxLength="184" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xsptrembl_dis" displayName="SPTrEMBL ID" description="SPTrEMBL IDs" fieldName="display_id" tableConstraint="gene_xref_SPTREMBL_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xembl_dis" displayName="EMBL ID" description="EMBL Accessions" fieldName="display_id" tableConstraint="gene_xref_EMBL_dm" maxLength="8" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="Swissprot" displayName="SWISSPROT ID" description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" fieldName="display_id" tableConstraint="_xref_SWISSPROT_dm" maxLength="10" source="Swiss-Prot Group" homepageURL="http://us.expasy.org/sprot/" linkoutURL=""/>
+
+	  <UIAttributeDescription internalName="xpdb_dis" displayName="PDB ID" description="Protein Database Accessions" fieldName="display_id" tableConstraint="gene_xref_PDB_dm" maxLength="4" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xmim_dis" displayName="MIM ID" description="MIM Accessions" fieldName="display_id" tableConstraint="gene_xref_MIM_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xrefseq_dis" displayName="RefSeq ID" description="RefSeq Accessions" fieldName="display_id" tableConstraint="gene_xref_REFSEQ_dm" maxLength="9" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xlocuslink_dis" displayName="LocusLink ID" description="Locus Link Accessions" fieldName="display_id" tableConstraint="gene_xref_LOCUSLINK_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	  <UIAttributeDescription internalName="xgkb_dis" displayName="GKB ID" description="Genome Knowledge Base Accessions" fieldName="display_id" tableConstraint="gene_xref_GKB_dm" maxLength="15" source="" homepageURL="" linkoutURL=""/> 
+
+	 </AttributeCollection>
+
+    </AttributeGroup>
+
+  </AttributePage>
+
 </Dataset>
 
 <Dataset internalName="hsapiens_estgene" displayName="Homo sapiens (NCBI 31) -- EST Genes">
@@ -673,8 +751,8 @@
 
 <Dataset internalName="hsapiens_vegagene" displayName="Homo sapiens (NCBI 31) -- Vega Genes" description="Mart created from the Vega Manually curated Gene Dataset">
 
-<StarBase>hsapiens_ensemblgene</StarBase>
-<StarBase>hsapiens_ensembltranscript</StarBase>
+<StarBase>hsapiens_vegagene</StarBase>
+<StarBase>hsapiens_vegatranscript</StarBase>
 
 <PrimaryKey>gene_id</PrimaryKey>
 <PrimaryKey>transcript_id</PrimaryKey>
@@ -867,7 +945,7 @@
 
 	 </AttributeCollection>
 
-		 <AttributeCollection internalName="microarray" displayName="Microarray Attributes" description="Microarray Attributes" maxSelect="1">
+	 <AttributeCollection internalName="microarray" displayName="Microarray Attributes" description="Microarray Attributes" maxSelect="1">
 
 		 <UIAttributeDescription internalName="xaffy_hg_u95_dis" displayName="AFFY HG U95" fieldName="display_id" tableConstraint="gene_xref_AFFY_HG_U95_dm" maxLength="37"/>
 
@@ -1065,6 +1143,70 @@
 		 </AttributeCollection>
 
 	 </AttributeGroup>
+
+	 </AttributePage>
+
+	 <AttributePage internalName="sequences" displayName="Sequences" description="Gene Sequences">
+
+	 <AttributeGroup internalName="region" displayName="Region:" description="Attributes relating to the location of genes on the golden path.">
+
+		 <AttributeCollection internalName="chromsomeatts" displayName="Chromsome Attributes:" description="Attributes related to chromosomal positioning of genes.">
+
+		 <UIAttributeDescription internalName="chromosome" displayName="Chromosome Name" description="&quot;Chromsome Name&quot;" fieldName="chr_name" tableConstraint="gene_main" maxLength="12"/>
+
+		 <UIAttributeDescription internalName="chrom_start" displayName="Start Position (bp)" description="Start Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_start" tableConstraint="gene_main" maxLength="9"/>
+
+		 <UIAttributeDescription internalName="chrom_end" displayName="End Position (bp)" description="End Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_end" tableConstraint="gene_main" maxLength="9"/>
+
+		 <UIAttributeDescription internalName="chrom_strand" displayName="Strand" description="Orientation of genes on chromosome." fieldName="chrom_strand" tableConstraint="gene_main" maxLength="2"/>
+
+		 <UIAttributeDescription internalName="chrom_band" displayName="Band" description="Band of chromosome where genes occur." fieldName="band" tableConstraint="gene_main" maxLength="7"/>
+
+	   </AttributeCollection>
+
+     </AttributeGroup>
+	 
+	 <AttributeGroup internalName="GENE" displayName="GENE:" description="Features of Genes">
+
+		 <AttributeCollection internalName="ensgeneid" displayName="Vega Gene ID" description="Vega Stable ID, with version, of the Gene">
+
+		   <UIAttributeDescription internalName="ensgeneid" displayName="Vega Gene ID" description="Vega Stable ID, with version, of the Gene" fieldName="gene_stable_id_v" tableConstraint="gene_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="enstranid" displayName="Vega Transcript ID" description="Vega Stable ID, with version, of the Transcript" fieldName="transcript_stable_id_v" tableConstraint="transcript_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="external_id" displayName="External Gene ID" fieldName="display_id" tableConstraint="gene_main" maxLength="10" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="cds_length" displayName="Vega CDS Length" fieldName="cds_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+			<UIAttributeDescription internalName="peptide_length" displayName="Vega Peptide Length" fieldName="peptide_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/> 
+
+           <UIAttributeDescription internalName="gene_description" displayName="Description" fieldName="description" tableConstraint="gene_main" maxLength="536" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="translation" displayName="Vega Peptide ID" fieldName="translation_stable_id_v" tableConstraint="transcript_main" maxLength="17" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="external_db" displayName="External Gene DB" fieldName="db_name" tableConstraint="gene_main" maxLength="9" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="cdna_length" displayName="Vega cDNA Length" fieldName="cdna_length" tableConstraint="transcript_main" maxLength="6" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="peptide_length" displayName="Ensembl Peptide Length" fieldName="peptide_length" tableConstraint="transcript_main" maxLength="6" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+		 </AttributeCollection>
+
+	     <AttributeCollection internalName="Xrefs" displayName="External Reference Attributes (max 3)" description="Information from external database sources." maxSelect="3">
+	 
+	       <UIAttributeDescription internalName="xhugo_dis" displayName="HUGO ID" description="HUGO Accessions" fieldName="display_id" tableConstraint="gene_xref_HUGO_dm" maxLength="9" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="Swissprot" displayName="SWISSPROT ID" description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" fieldName="display_id" tableConstraint="_xref_SWISSPROT_dm" maxLength="10" source="Swiss-Prot Group" homepageURL="http://us.expasy.org/sprot/" linkoutURL=""/>
+
+	       <UIAttributeDescription internalName="xmim_dis" displayName="MIM ID" description="MIM Accessions" fieldName="display_id" tableConstraint="gene_xref_MIM_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="xrefseq_dis" displayName="RefSeq ID" description="RefSeq Accessions" fieldName="display_id" tableConstraint="gene_xref_REFSEQ_dm" maxLength="9" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="xlocuslink_dis" displayName="LocusLink ID" description="Locus Link Accessions" fieldName="display_id" tableConstraint="gene_xref_LOCUSLINK_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	     </AttributeCollection>
+
+       </AttributeGroup>
 
 	 </AttributePage>
 
@@ -1271,6 +1413,116 @@
 </AttributeCollection>
 
 </AttributeGroup>
+
+	 </AttributePage>
+
+	 <AttributePage internalName="sequences" displayName="Sequences" description="Snp Sequences">
+
+	   <AttributeGroup internalName="region" displayName="Region:" description="SNP Location Attributes">
+
+		 <AttributeCollection internalName="chromosomeatts" displayName="Chromosome Attributes:" description="Chromosomal Location of SNPs">
+
+		   <UIAttributeDescription internalName="chromosome" displayName="Chromosome Name" description="Chromosome Name" fieldName="chr_name" tableConstraint="snp_main" maxLength="6"/>
+
+		   <UIAttributeDescription internalName="chrom_start" displayName="Start Position (bp)" description="Chromosomal Start Coordinate" fieldName="snp_chrom_start" tableConstraint="snp_main" maxLength="9"/>
+
+		   <UIAttributeDescription internalName="chrom_strand" displayName="Strand" description="Orientation of SNP on the Chromosome" fieldName="chrom_strand" tableConstraint="snp_main" maxLength="2"/>
+
+		 </AttributeCollection>
+
+	 </AttributeGroup>
+
+	 <AttributeGroup internalName="snp" displayName="SNP:" description="SNP IDs and Features">
+
+	   <AttributeCollection internalName="snpatts" displayName="SNP Attributes" description="SNP Attributes">
+
+		 <UIAttributeDescription internalName="refsnpid" displayName="Reference ID" description="RefSNP ID" fieldName="external_id" tableConstraint="snp_main" maxLength="7"/>
+
+		 <UIAttributeDescription internalName="tscid" displayName="TSC ID" description="The SNP Consortium ID" fieldName="tscid" tableConstraint="snp_main" maxLength="98"/>
+
+		 <UIAttributeDescription internalName="hgbaseid" displayName="HGBASE ID" description="HGBASE ID" fieldName="hgbaseid" tableConstraint="snp_main" maxLength="25"/>
+
+		 <UIAttributeDescription internalName="snpclass" displayName="SNP Class" description="SNP Class" fieldName="snpclass" tableConstraint="snp_main" maxLength="8"/>
+
+		 <UIAttributeDescription internalName="allele" displayName="Allele" description="Allele Change recorded for this SNP" fieldName="alleles" tableConstraint="snp_main" maxLength="67"/>
+
+		 <UIAttributeDescription internalName="validated" displayName="Validated" description="Validated Status of SNP" fieldName="validated" tableConstraint="snp_main" maxLength="12"/>
+
+		 <UIAttributeDescription internalName="mapweight" displayName="Mapweight" description="Map Weight Recorded for the SNP" fieldName="mapweight" tableConstraint="snp_main" maxLength="2"/>
+
+		 <UIAttributeDescription internalName="subsnpcount" displayName="Sub SNP Count" description="Count of SNPs contained withing this SNP" fieldName="subsnpcount" tableConstraint="snp_main" maxLength="2"/>
+
+		</AttributeCollection>
+
+		<AttributeCollection internalName="snplocatts" displayName="SNP Location Attributes" description="SNP Location Attributes">
+
+		 <UIAttributeDescription internalName="snp_contig" displayName="Contig" description="Contig containing the SNP" fieldName="contig" tableConstraint="snp_main" maxLength="9"/>
+
+		 <UIAttributeDescription internalName="snp_start_contig" displayName="Contig Location (bp)" description="Contig Start Coordinate of SNP" fieldName="snp_contig_start" tableConstraint="snp_main" maxLength="8"/>
+
+		</AttributeCollection>
+
+	 </AttributeGroup>
+
+	 <AttributeGroup internalName="genesnpatts" displayName="GENE RELATED SNP ATTRIBUTES:" description="Gene Snp Relationships">
+
+		<AttributeCollection internalName="ensemblatts" displayName="For Ensembl Genes" description="Ensembl Gene SNP Relationships">
+
+		 <UIAttributeDescription internalName="ensembl_snp_gene_name" displayName="Ensembl gene name" description="Ensembl Gene Stable ID" fieldName="gene_stable_id_v" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_transcript_name" displayName="Ensembl transcript name" description="Ensembl Transcript Stable ID" fieldName="transcript_stable_id_v" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_gene_description" displayName="Description" description="Description of the Gene" fieldName="description" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_gene_display_id" displayName="External Name" description="External Name" fieldName="display_id" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_gene_db_name" displayName="External db" description="External db" fieldName="db_name" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_family_id" displayName="Family Name" description="Stable ID for Gene Family" fieldName="family" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_family_description" displayName="Family Description" description="Gene Family Description" fieldName="family_description" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snptype" displayName="Location in Ensembl Gene (Coding, etc.)" description="Which location within the Gene the SNP resides" fieldName="type" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_pepshift" displayName="Peptide Shift in Ensembl Gene" description="The Change in the Amino Acid caused by the SNP in the Gene" fieldName="peptide_shift" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_synonymous" displayName="Is synonymous in Ensembl Gene" description="Whether the snp is synonymous in the Ensembl Gene" fieldName="synonymous" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_nonsynonymous" displayName="Is non-synonymous in Ensembl Gene" description="Whether the snp is non-synonymous in the Ensembl Gene" fieldName="nonsynonymous" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="ensembl_snp_stop" displayName="Is stop snp in Ensembl Gene" description="Whether the snp is a stop snp in the Ensembl Gene." fieldName="stop" tableConstraint="snp_ensemblgene_dm" maxLength=""/>
+
+</AttributeCollection>
+
+		<AttributeCollection internalName="vegaatts" displayName="For Vega Genes" description="Vega Gene Snp Relationships">
+
+		 <UIAttributeDescription internalName="vega_snp_gene_name" displayName="Vega gene name" description="Vega Gene Stable ID" fieldName="gene_stable_id_v" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_transcript_name" displayName="Vega transcript name" description="Vega Transcript Stable ID" fieldName="transcript_stable_id_v" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_gene_description" displayName="Description" description="Description of the Gene" fieldName="description" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_gene_display_id" displayName="External Name" description="External Name" fieldName="display_id" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_gene_db_name" displayName="External db" description="External db" fieldName="db_name" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_family_id" displayName="Family Name" description="Stable ID for Gene Family" fieldName="family" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_family_description" displayName="Family Description" description="Gene Family Description" fieldName="family_description" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snptype" displayName="Location in Vega Gene (Coding, etc.)" description="Which location within the Gene the SNP resides" fieldName="type" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_pepshift" displayName="Peptide Shift in Vega Gene" description="The Change in the Amino Acid caused by the SNP in the Gene" fieldName="peptide_shift" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_synonymous" displayName="Is synonymous in Vega Gene" description="Whether the snp is synonymous in the Vega Gene" fieldName="synonymous" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_nonsynonymous" displayName="Is non-synonymous in Vega Gene" description="Whether the snp is non-synonymous in the Vega Gene" fieldName="nonsynonymous" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+		 <UIAttributeDescription internalName="vega_snp_stop" displayName="Is stop snp in Vega Gene" description="Whether the snp is a stop snp in the Vega Gene." fieldName="stop" tableConstraint="snp_vegagene_dm" maxLength=""/>
+
+         </AttributeCollection>
+
+       </AttributeGroup>
 
 	 </AttributePage>
 
@@ -1852,9 +2104,79 @@
 
 		 </AttributeCollection>
 
-	 </AttributeGroup>
+	   </AttributeGroup>
 
 	 </AttributePage>
+
+     <AttributePage internalName="sequences" displayName="Sequences" description="Gene Sequences">
+
+	   <AttributeGroup internalName="region" displayName="Region:" description="Attributes relating to the location of genes on the golden path.">
+
+		 <AttributeCollection internalName="chromsomeatts" displayName="Chromsome Attributes:" description="Attributes related to chromosomal positioning of genes.">
+
+		 <UIAttributeDescription internalName="chromosome" displayName="Chromosome Name" description="&quot;Chromsome Name&quot;" fieldName="chr_name" tableConstraint="gene_main" maxLength="12"/>
+
+		 <UIAttributeDescription internalName="chrom_start" displayName="Start Position (bp)" description="Start Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_start" tableConstraint="gene_main" maxLength="9"/>
+
+		 <UIAttributeDescription internalName="chrom_end" displayName="End Position (bp)" description="End Coordinate of the gene in chromosomal coordinates." fieldName="gene_chrom_end" tableConstraint="gene_main" maxLength="9"/>
+
+		 <UIAttributeDescription internalName="chrom_strand" displayName="Strand" description="Orientation of genes on chromosome." fieldName="chrom_strand" tableConstraint="gene_main" maxLength="2"/>
+
+		 <UIAttributeDescription internalName="chrom_band" displayName="Band" description="Band of chromosome where genes occur." fieldName="band" tableConstraint="gene_main" maxLength="7"/>
+
+	   </AttributeCollection>
+
+     </AttributeGroup>
+	 
+	 <AttributeGroup internalName="GENE" displayName="GENE:" description="Features of Genes">
+
+		 <AttributeCollection internalName="ensAtts" displayName="Ensembl Attributes:" description="Ensembl Annotated Attributes and Features">
+
+		   <UIAttributeDescription internalName="ensgeneid" displayName="Ensembl Gene ID" description="Ensembl Stable ID, with version, of the Gene" fieldName="gene_stable_id_v" tableConstraint="gene_main" maxLength="20" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="gene_description" displayName="Description" fieldName="description" tableConstraint="gene_main" maxLength="536" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+           <UIAttributeDescription internalName="enstranid" displayName="Ensembl Transcript ID" description="Ensembl Stable ID, with version, of the Transcript" fieldName="transcript_stable_id_v" tableConstraint="transcript_main" maxLength="20" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="translation" displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" tableConstraint="transcript_main" maxLength="20" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="external_id" displayName="External Gene ID" fieldName="display_id" tableConstraint="gene_main" maxLength="18" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="external_db" displayName="External Gene DB" fieldName="db_name" tableConstraint="gene_main" maxLength="12" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="cds_length" displayName="Ensembl CDS Length" fieldName="cds_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+            <UIAttributeDescription internalName="cdna_length" displayName="Ensembl cDNA Length" fieldName="cdna_length" tableConstraint="transcript_main" maxLength="5" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
+
+			 <UIAttributeDescription internalName="peptide_length" displayName="Ensembl Peptide Length" fieldName="peptide_length" tableConstraint="transcript_main" maxLength="4" source="EnsEMBL" homepageURL="http://www.ensembl.org" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/> 
+
+		 </AttributeCollection>
+
+	     <AttributeCollection internalName="Xrefs" displayName="External Reference Attributes (max 3)" description="Information from external database sources." maxSelect="3">
+
+	      <UIAttributeDescription internalName="xprotein_id_dis" displayName="Protien ID" description="" fieldName="display_id" tableConstraint="gene_xref_protein_id_dm" maxLength="10" source="" homepageURL="" linkoutURL=""/>	 
+
+	      <UIAttributeDescription internalName="xsptrembl_dis" displayName="SPTrEMBL ID" description="SPTrEMBL IDs" fieldName="display_id" tableConstraint="gene_xref_SPTREMBL_dm" maxLength="8" source="" homepageURL="" linkoutURL=""/>	 
+
+ 	      <UIAttributeDescription internalName="xembl_dis" displayName="EMBL ID" description="EMBL Accessions" fieldName="display_id" tableConstraint="gene_xref_EMBL_dm" maxLength="8" source="" homepageURL="" linkoutURL=""/>	 
+
+	      <UIAttributeDescription internalName="xmarkersymbol_dis" displayName="MarkerSymbol" description="MarkerSymbols" fieldName="display_id" tableConstraint="gene_xref_MarkerSymbol_dm" maxLength="18" source="" homepageURL="" linkoutURL=""/>	 
+
+	      <UIAttributeDescription internalName="Swissprot" displayName="SWISSPROT ID" description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" fieldName="display_id" tableConstraint="_xref_SWISSPROT_dm" maxLength="10" source="Swiss-Prot Group" homepageURL="http://us.expasy.org/sprot/" linkoutURL=""/>
+
+	       <UIAttributeDescription internalName="xpdb_dis" displayName="PDB ID" description="Protein Database Accessions" fieldName="display_id" tableConstraint="gene_xref_PDB_dm" maxLength="4" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="xmim_dis" displayName="MIM ID" description="MIM Accessions" fieldName="display_id" tableConstraint="gene_xref_MIM_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="xrefseq_dis" displayName="RefSeq ID" description="RefSeq Accessions" fieldName="display_id" tableConstraint="gene_xref_REFSEQ_dm" maxLength="9" source="" homepageURL="" linkoutURL=""/>	 
+
+	       <UIAttributeDescription internalName="xlocuslink_dis" displayName="LocusLink ID" description="Locus Link Accessions" fieldName="display_id" tableConstraint="gene_xref_LOCUSLINK_dm" maxLength="6" source="" homepageURL="" linkoutURL=""/>	 
+
+	     </AttributeCollection>
+
+       </AttributeGroup>
+
+     </AttributePage>
 
 </Dataset>
 
