@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.BasicFilter;
@@ -36,7 +35,6 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.mart.util.StringUtil;
 
 /**
  * Widget with a label and text entry area which adds/removes

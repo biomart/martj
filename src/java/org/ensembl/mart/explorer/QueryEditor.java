@@ -53,7 +53,6 @@ import javax.swing.JSplitPane;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
-import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceException;

@@ -71,8 +71,6 @@ import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.QueryFilterSettings;
 
 /**
  * Tree config showing the current state of the query. Allows the user

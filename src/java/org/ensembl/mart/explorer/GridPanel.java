@@ -18,7 +18,6 @@
 
 package org.ensembl.mart.explorer;
 
-import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.swing.Box;
