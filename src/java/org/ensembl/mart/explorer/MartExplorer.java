@@ -22,11 +22,15 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -49,6 +53,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -91,19 +96,18 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    * instead. 
    */
   public final static String REGISTRY_FILE_NAME = ".martj_adaptors.xml";
-    
+
   /**
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
-   */  
+   */
   private final static String DEFAULT_REGISTRY_URL = "data/defaultRegistry.xml";
-  
+
   private static final String IMAGE_DIR = "data/image";
 
   private AdaptorManager adaptorManager = new AdaptorManager();
 
-  private final static String TITLE =
-    " Mart Explorer (Development version)";
+  private final static String TITLE = " Mart Explorer (Development version)";
 
   private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
@@ -116,10 +120,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private JTabbedPane tabs = new JTabbedPane();
 
   /** Persistent preferences object used to hold user history. */
-  private Preferences prefs  = Preferences.userNodeForPackage(this.getClass());
+  private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 
   private Feedback feedback = new Feedback(this);
-  
+
   private Help help = new Help();
 
   public static void main(String[] args) throws ConfigurationException {
@@ -135,7 +139,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     me.setVisible(true);
 
     me.loadDefaultAdaptors();
-    
+
     if (me.adaptorManager.getRootAdaptor().getNumDatasetConfigs() > 0)
       me.doNewQuery();
 
@@ -154,18 +158,19 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    */
   private void loadDefaultAdaptors() {
     URL url = getClass().getClassLoader().getResource(DEFAULT_REGISTRY_URL);
-    
-    String path = System.getProperty("user.home") + File.separator + REGISTRY_FILE_NAME;
+
+    String path =
+      System.getProperty("user.home") + File.separator + REGISTRY_FILE_NAME;
     File file = new File(path);
-    if ( file.exists() )
-			try {
-				url = file.toURL();
-			} catch (MalformedURLException e) {
-				feedback.warning(e);
-			} 
+    if (file.exists())
+      try {
+        url = file.toURL();
+      } catch (MalformedURLException e) {
+        feedback.warning(e);
+      }
     logger.fine("Loading default registry file: " + url);
     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    adaptorManager.importRegistry( url );
+    adaptorManager.importRegistry(url);
     setCursor(Cursor.getDefaultCursor());
   }
 
@@ -177,6 +182,16 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     getContentPane().add(createToolBar(), BorderLayout.NORTH);
     getContentPane().add(tabs, BorderLayout.CENTER);
     setSize(PREFERRED_SIZE);
+
+    // add glass pane so we can "disable" cursor
+    JPanel p = new JPanel();
+    p.setOpaque(false);
+    p.addMouseListener(new MouseAdapter() {
+      public void mousePressed(MouseEvent e) {
+        Toolkit.getDefaultToolkit().beep();
+      }
+    });
+    setGlassPane(p);
 
   }
 
@@ -267,7 +282,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     query.add(newQuery).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK));
 
-
     JMenuItem open = new JMenuItem("Open Query");
     open.setEnabled(false);
     open.addActionListener(new ActionListener() {
@@ -278,16 +292,14 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     });
     query.add(open).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_O, Event.CTRL_MASK));
- 
 
-  
     JMenuItem saveQueryAsMQL = new JMenuItem("Save Query as MQL");
     saveQueryAsMQL.setEnabled(false);
-    query.add( saveQueryAsMQL );
+    query.add(saveQueryAsMQL);
 
     JMenuItem saveQueryAsSQL = new JMenuItem("Save Query as SQL");
     saveQueryAsSQL.setEnabled(false);
-    query.add( saveQueryAsSQL );
+    query.add(saveQueryAsSQL);
 
     JMenuItem close = new JMenuItem("Close Query");
     close.addActionListener(new ActionListener() {
@@ -308,41 +320,39 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     query.add(closeAll);
 
-JMenuItem execute = new JMenuItem(executeAction);
+    JMenuItem execute = new JMenuItem(executeAction);
     query.add(execute).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
 
     query.addSeparator();
 
- JMenuItem saveResults = new JMenuItem(saveResultsAction);
+    JMenuItem saveResults = new JMenuItem(saveResultsAction);
     query.add(saveResults).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK));
- 
+
     JMenuItem saveResultsAs = new JMenuItem("Save Results As");
     saveResultsAs.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         if (isQueryEditorSelected())
           getSelectedQueryEditor().doSaveResultsAs();
       }
- 
+
     });
 
     query.add(saveResultsAs);
 
     query.addSeparator();
 
-
     JMenuItem exit_explorer = new JMenuItem("Quit");
     exit_explorer.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doExit();
       }
- 
+
     });
 
-      query.add(exit_explorer).setAccelerator(
+    query.add(exit_explorer).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
-
 
     JMenu settings = new JMenu("Settings");
 
@@ -355,49 +365,41 @@ JMenuItem execute = new JMenuItem(executeAction);
       }
     });
 
-    final JCheckBox advanced = new JCheckBox("Enable Advanced Options");    
-    advanced.setToolTipText("Enables optional DatasetConfigs, ability to change dataset name and datasource.");
-    advanced.setSelected( adaptorManager.isAdvancedOptionsEnabled() );
-    settings.add( advanced );
+    final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
+    advanced.setToolTipText(
+      "Enables optional DatasetConfigs, ability to change dataset name and datasource.");
+    advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
+    settings.add(advanced);
     advanced.addItemListener(new ItemListener() {
       public void itemStateChanged(ItemEvent e) {
-        adaptorManager.setAdvancedOptionsEnabled( advanced.isSelected() );       
+        adaptorManager.setAdvancedOptionsEnabled(advanced.isSelected());
       }
     });
-    
+
     JMenuItem reset = new JMenuItem("Reset");
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         try {
-          adaptorManager.reset();          
-					prefs.clear();
+          adaptorManager.reset();
+          prefs.clear();
           loadDefaultAdaptors();
-          advanced.setSelected( adaptorManager.isAdvancedOptionsEnabled() );
-				} catch (BackingStoreException e1) {
-					feedback.warning(e1);
-				}
+          advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
+        } catch (BackingStoreException e1) {
+          feedback.warning(e1);
+        }
       }
     });
-    settings.add( reset );
-  
+    settings.add(reset);
 
-
-
-
-
-
- JMenuItem clear = new JMenuItem("Clear cache");
+    JMenuItem clear = new JMenuItem("Clear cache");
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 
-          //DarinFavouriteClass.clear
-
+        //DarinFavouriteClass.clear
 
       }
     });
-    settings.add( clear );
-  
- 
+    settings.add(clear);
 
     JMenu help = new JMenu("Help");
     JMenuItem about = new JMenuItem("About");
@@ -409,8 +411,7 @@ JMenuItem execute = new JMenuItem(executeAction);
 
     });
     help.add(about);
-    
-    
+
     JMenuItem docs = new JMenuItem("Documentation");
     docs.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
@@ -419,22 +420,21 @@ JMenuItem execute = new JMenuItem(executeAction);
 
     });
     help.add(docs);
-   
-    /**
 
-   JMenu exit = new JMenu("Exit");
-   JMenuItem exit_explorer = new JMenuItem("Exit Mart Explorer");
+    /**
+    
+    JMenu exit = new JMenu("Exit");
+    JMenuItem exit_explorer = new JMenuItem("Exit Mart Explorer");
     exit_explorer.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doExit();
       }
- 
+    
     });
-
+    
       exit.add(exit_explorer).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
-    **/ 
-
+    **/
 
     JMenuBar all = new JMenuBar();
     all.add(query);
@@ -443,12 +443,11 @@ JMenuItem execute = new JMenuItem(executeAction);
     return all;
   }
 
- 
-protected void doDocumentation() {
-	help.showDialog(this);
-}
+  protected void doDocumentation() {
+    help.showDialog(this);
+  }
 
-protected void doSave() {
+  protected void doSave() {
     if (isQueryEditorSelected())
       getSelectedQueryEditor().doSaveQuery();
 
@@ -515,17 +514,32 @@ protected void doSave() {
 
       } else {
 
+        disableCursor();
+
         final QueryEditor qe = new QueryEditor(this, adaptorManager);
         qe.setName(nextQueryBuilderTabLabel());
         addQueryEditor(qe);
         tabs.setSelectedComponent(qe);
-        qe.openDatasetConfigMenu();  
-        
+        qe.openDatasetConfigMenu();
+
+        enableCursor();
+        //getGlassPane().removeMouseListener(ml);
+
       }
     } catch (IOException e) {
       feedback.warning(e);
     }
 
+  }
+
+  private void enableCursor() {
+    setCursor(Cursor.getDefaultCursor());
+    getGlassPane().setVisible(false);
+  }
+
+  private void disableCursor() {
+    getGlassPane().setVisible(true);
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
   }
 
   /**
@@ -563,6 +577,5 @@ protected void doSave() {
       return null;
     }
   }
-
 
 }
