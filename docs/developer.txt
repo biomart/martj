@@ -22,3 +22,21 @@ your JVMs /ext directory. The extra jars are included in ./lib:
   - junit.jar
   - xalan.jar
 
+
+
+SQL Logging
+-----------
+
+SQL logging works by wrapping a "logger" around the real jdbc driver.
+By default the results are sent to "../spy.log". 
+
+In order to use it you must tell the applications to use the 
+com.p6spy.engine.spy.P6SpyDriver driver rather than the "real" one. 
+In MartExplorer this is the "Database Driver" 
+parameter in the "Add Database" dialog. In MartShell this is the "jdbc driver"
+setting while adding a mart. 
+
+The file "../spy.properties" contains the real driver name. If you 
+are not using mysql then you should edit this file (it contains 
+documentation). You can also redirect the output to a file other than 
+"../spy.log" and what is logged.
