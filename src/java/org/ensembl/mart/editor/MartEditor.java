@@ -96,7 +96,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   protected Clipboard clipboardEditor;
 
   public MartEditor() {
-    super("Mart Editor (Development version)");
+    super("MartEditor");
     JFrame.setDefaultLookAndFeelDecorated(true);
     fc = new JFileChooser();
 
@@ -214,6 +214,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
+	menuItem = new JMenuItem("Delete ");
+	menuItem.addActionListener(menuActionListener);
+	menuItem.setMnemonic(KeyEvent.VK_I);
+	menu.add(menuItem);
+
     menuItem = new JMenuItem("Naive ");
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_M);
@@ -224,10 +229,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
-    menuItem = new JMenuItem("Delete ");
-    menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_I);
-    menu.add(menuItem);
+
 
     menu.addSeparator();
     menuItem = new JMenuItem("New", icon);
@@ -314,12 +316,13 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("deletes");
     menu.add(menuItem);
-    icon = createImageIcon(IMAGE_DIR + "add.gif");
-    menuItem = new JMenuItem("Insert", icon);
-    menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
-    menuItem.getAccessibleContext().setAccessibleDescription("inserts");
-    menu.add(menuItem);
+    // insert does nothing at moment
+    //icon = createImageIcon(IMAGE_DIR + "add.gif");
+    //menuItem = new JMenuItem("Insert", icon);
+    //menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    //menuItem.getAccessibleContext().setAccessibleDescription("inserts");
+    //menu.add(menuItem);
 
     menu = new JMenu("Settings");
     JMenuItem clear = new JMenuItem("Clear Cache");
@@ -339,7 +342,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menu.setMnemonic(KeyEvent.VK_H);
     menu.getAccessibleContext().setAccessibleDescription("this is the help menu");
     menuBar.add(menu);
-    menuItem = new JMenuItem("Docomentation", icon);
+    menuItem = new JMenuItem("Documentation", icon);
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_M); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("documentation");
@@ -453,7 +456,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         updateDatasetConfig();
       else if (e.getActionCommand().startsWith("Delete"))
         deleteDatasetConfig();
-      else if (e.getActionCommand().startsWith("Hidden"))
+      else if (e.getActionCommand().startsWith("hide"))
         makeHidden();
 
     }
