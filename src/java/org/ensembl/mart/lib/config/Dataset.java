@@ -489,9 +489,12 @@ public class Dataset extends BaseConfigurationObject {
 		List filts = new ArrayList();
 
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
-			FilterPage fp = (FilterPage) filterPages.get((Integer) iter.next());
+			Object fpo = filterPages.get((Integer) iter.next());
 
-			filts.addAll(fp.getAllUIFilterDescriptions());
+      if (fpo instanceof FilterPage) {
+        FilterPage fp = (FilterPage) fpo;
+			  filts.addAll(fp.getAllUIFilterDescriptions());
+      }
 		}
 
 		return filts;
@@ -505,10 +508,13 @@ public class Dataset extends BaseConfigurationObject {
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
 
-		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
-			AttributePage ap = (AttributePage) filterPages.get((Integer) iter.next());
-
-			atts.addAll(ap.getAllUIAttributeDescriptions());
+		for (Iterator iter = attributePages.keySet().iterator(); iter.hasNext();) {
+			  Object apo = attributePages.get((Integer) iter.next());
+        
+        if (apo instanceof AttributePage) {
+          AttributePage ap = (AttributePage) apo;
+			    atts.addAll(ap.getAllUIAttributeDescriptions());
+        }
 		}
 
 		return atts;
