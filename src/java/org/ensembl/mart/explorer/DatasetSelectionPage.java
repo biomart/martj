@@ -21,17 +21,34 @@ import org.ensembl.mart.lib.config.MartConfiguration;
  */
 public class DatasetSelectionPage extends InputPage implements ChangeListener{
 
+
+  /**
+   * Proxy for a Dataset where toString() returns dataset.displayName(). Used for printing in ComboName.
+   */
+  private class DatasetWrapper{
+    private final Dataset dataset;
+    
+    private DatasetWrapper( Dataset dataset ) {
+      this.dataset = dataset;
+    }
+    
+    public String toString() {
+      return dataset.getDisplayName();
+    }
+  }
+
+
+
   /**
    * @param query
    * @param config
    */
-  public DatasetSelectionPage(Query query, QueryEditor editor ) {
+  public DatasetSelectionPage(Query query, MartConfiguration config) {
     
     super("Dataset", query);
     
-    this.editor = editor;
     
-    initPage( editor.getMartConfiguration() );
+    initPage( config );
   } 
 
   /**
@@ -48,7 +65,7 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
     combo.setEditable( false );
     combo.addItem( "" );
     for (int i = 0, n = datasets.length; i < n; i++) {
-      combo.addItem( datasets[i].getDisplayName() );
+      combo.addItem( new DatasetWrapper( datasets[i])  );
 		}
     
     // Add Box to page
@@ -69,26 +86,25 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
 
       // update the nodes label      
       setNodeLabel( getName(), selection );
-      // tell the tree to redraw the node with it's new label
-      editor.nodeChanged( getNode() );
     
       // set new value on query
-      query.setStarBases( new String[] {selection});
+      Dataset dataset = getSelectedDataset();
+      query.setStarBases( dataset.getStarBases() );
+      query.setPrimaryKeys( dataset.getPrimaryKeys() );
       
     }
   }
 
+  
+  public Dataset getSelectedDataset() {
+    Dataset selected = null;
+    String selection = combo.getText();
+    if ( selection!="" )  
+      selected  = ((DatasetWrapper) combo.getSelectedItem()).dataset;
+    return selected;
+  }
    
-  private QueryEditor editor;
   private LabelledComboBox combo;
-  private String nodeLabel;
 
-
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.explorer.InputPage#getNodeLabel()
-	 */
-	public String getNodeLabel() {
-		return nodeLabel;
-	}
 
 }

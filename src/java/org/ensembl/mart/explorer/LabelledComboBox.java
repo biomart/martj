@@ -270,4 +270,11 @@ public class LabelledComboBox extends Box implements ActionListener {
 		combo.setEditable( editable );
 	}
 
+	/**
+	 * @return selected item.
+	 */
+	public Object getSelectedItem() {
+		return combo.getSelectedItem();
+	}
+
 }

@@ -23,6 +23,7 @@ import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
@@ -33,12 +34,12 @@ import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 
@@ -74,12 +75,16 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
   private Query query;
 
   private DefaultTreeModel treeModel;
-  private MutableTreeNode rootNode;
+  private DefaultMutableTreeNode rootNode;
   
   private JTree treeView;
   private JPanel inputPanel;
   private JPanel outputPanel;
-
+  
+  
+  private DatasetSelectionPage datasetSelectionPage;
+  private Dataset currentDataset;
+  private OutputSettingsPage outputSettingsPage;
 
   public QueryEditor(MartConfiguration config) {
     this.martConfiguration = config;
@@ -96,24 +101,58 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
     addDatasetSelectionPage();
   }
 
+
   /**
-   * 
+   * Adds page to input panel and tree view.
+   * @param page page to be added
+   * @param treeIndex index of node from root node.
+   */
+  private void addPage(InputPage page, int treeIndex ) {
+      
+     //  Add page to input panel.
+     inputPanel.add( page.getName(), page );
+     ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
+    
+     // Add page's node and show it
+     treeModel.insertNodeInto( page.getNode(), rootNode, treeIndex );
+     TreePath path = new TreePath( rootNode ).pathByAddingChild( page.getNode() );
+     treeView.makeVisible(  path ); 
+    
+     treeView.setRootVisible( false );
+  }
+
+  /**
+   * Adds the Dataset selection page to the panel.
    */
   private void addDatasetSelectionPage() {
     
-    DatasetSelectionPage page = new DatasetSelectionPage(query, this );
-    
-    // Add dataset selection page to input panel.
-    inputPanel.add( page.getName(), page );
-    ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
-    
-    // Add datasetSelectionPage node and show it
-    treeModel.insertNodeInto( page.getNode(), rootNode, 0 );
-    TreePath path = new TreePath( rootNode ).pathByAddingChild( page.getNode() );
-    treeView.makeVisible(  path );	
-    
-    treeView.setRootVisible( false );
+    datasetSelectionPage = new DatasetSelectionPage(query, martConfiguration );
+    currentDataset = null;
+    addPage( datasetSelectionPage, 0);
   }
+
+
+  /**
+   * Adds attribute, filter and output settings pages to panel. 
+   */
+  private void addAttributePages() {
+    // TODO Auto-generated method stub
+    //martConfiguration.
+  }
+  
+  
+  private void addFilterPages() {
+    
+  }
+  
+  private void addOutputSettingsPage(){
+    outputSettingsPage = new OutputSettingsPage();
+    outputSettingsPage.addPropertyChangeListener( this );
+    
+    addPage( outputSettingsPage, 1 );
+  }
+
+
 
   /**
    * Sets the prefered sizes for constituent components and adds them
@@ -173,7 +212,7 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
   }
 
   public static void main(String[] args) throws ConfigurationException {
-    String confFile = "data/XML/MartConfiguration.xml";
+    String confFile = "data/XML/MartConfigurationTemplate.xml";
     URL confURL = ClassLoader.getSystemResource(confFile);
     MartConfiguration config =
       new MartConfigurationFactory().getInstance(confURL);
@@ -193,16 +232,39 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent evt) {
 		
     if ( evt.getSource()==query ) {
-      logger.info("Redraw");
-		}
+      
+      String propertyName = evt.getPropertyName();
+      
+      // update pages if dataset changed.
+      if ( currentDataset!=datasetSelectionPage.getSelectedDataset() ) {
+              
+        if ( query.getStarBases()!=null && query.getPrimaryKeys()!=null ) {
+        
+          addAttributePages();   
+          addFilterPages();
+          addOutputSettingsPage();
+        
+          currentDataset =  datasetSelectionPage.getSelectedDataset(); 
+        }     
+      }
+      
+      Enumeration enum = rootNode.breadthFirstEnumeration();
+      while ( enum.hasMoreElements() ) 
+        treeModel.nodeChanged( (TreeNode)enum.nextElement() );
+    
+      System.out.println( "Query Changed: " + query );    
+    }
+    
+    if ( evt.getSource()==outputSettingsPage ) {
+      System.out.println( "Output changed: " );
+      treeModel.nodeChanged( outputSettingsPage.getNode() );
+    }
     
 	}
-	/**
-	 * @param node
-	 */
-	public void nodeChanged(TreeNode node) {
-		treeModel.nodeChanged(node);
-	}
+  
+  
+
+	
 
 	/**
 	 * @return
