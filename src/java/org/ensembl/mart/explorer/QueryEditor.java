@@ -329,9 +329,11 @@ public class QueryEditor extends JPanel {
 
     CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
 
-    String[] urls = new String[] { "data/XML/homo_sapiens__ensembl_genes.xml"
+    String[] urls = new String[] { 
       //,"data/XML/homo_sapiens__snps.xml"
-      //,"data/XML/homo_sapiens__vega_genes.xml" 
+      "data/XML/homo_sapiens__vega_genes.xml" 
+      ,"data/XML/homo_sapiens__ensembl_genes.xml"
+      ,"data/XML/homo_sapiens__vega_genes_simple.xml" 
     };
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
