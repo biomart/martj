@@ -141,9 +141,10 @@ public class CompiledSQLQuery {
         // but leave incase this method is ever called without calling that
         // method previously.
         if ( !mapper.canMap( colName ) ) return false; 
+
+        if ( and ) buf.append( " AND " );
         colName = mapper.qualifiedName( colName );
         buf.append( colName ).append( f.getRightHandClause() ).append( " " );
-        if ( and ) buf.append( " AND " );
         and = true;
       }
 
