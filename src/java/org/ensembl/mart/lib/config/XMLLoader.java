@@ -53,6 +53,7 @@ public class XMLLoader {
 	private static String martdb = null;
 	private static String system_id = null;
 	private static URL sourceURL = null;
+	private static boolean compress = false; 
 	private static Logger logger = Logger.getLogger(XMLLoader.class.getName());
 			
 	public static void main(String[] args) {
@@ -70,6 +71,11 @@ public class XMLLoader {
 				database = args[0];
 				system_id = args[1];
 				sourceURL = new URL(args[2]);
+			} else if (args.length == 4) {
+				database = args[0];
+				system_id = args[1];
+				sourceURL = new URL(args[2]);
+				compress = true;
 			}
 			else {
 				System.err.println(usage());
@@ -85,11 +91,11 @@ public class XMLLoader {
 			
 			  Document doc = builder.build(sourceURL);
 			
-			  MartXMLutils.storeConfiguration(conn, system_id, doc);
+			  MartXMLutils.storeConfiguration(conn, system_id, doc, compress);
 			}
 			else {
 				// dtd
-				MartXMLutils.storeDTD(conn, system_id, sourceURL);
+				MartXMLutils.storeDTD(conn, system_id, sourceURL, compress);
 			}
 			
 			conn.close();
@@ -117,7 +123,7 @@ public class XMLLoader {
 	}
 	
 	public static String usage() {
-		String out = "Usage: XMLLoader <martdb> <system_id> <URL for xml file location>";
+		String out = "Usage: XMLLoader <martdb> <system_id> <URL for xml file location> <[compress] (if left off, the file is not compressed)>";
 		return out;
 	}
 	

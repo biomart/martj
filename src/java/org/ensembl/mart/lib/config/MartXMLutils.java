@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
@@ -41,11 +44,15 @@ import org.xml.sax.InputSource;
  */
 public class MartXMLutils {
 
-	private static final String GETSQL = "select stream from _meta_martConfiguration_XML where system_id = ?";
+	private static final String GETSQL = "select stream, compressed_stream from _meta_martConfiguration_XML where system_id = ?";
 	private static final String EXISTSQL = "select count(system_id) from _meta_martConfiguration_XML where system_id = ?";
-	private static final String UPDATEXMLSQL = "update _meta_martConfiguration_XML set stream = ? where system_id = ?";
-	// if EXISTSQL returns 1
+
+	//if EXISTSQL returns 1
+	private static final String DELETEOLDXML = "delete from _meta_martConfiguration_XML where system_id = ?";
 	private static final String INSERTXMLSQL = "insert into _meta_martConfiguration_XML (system_id, stream) values (?,?)";
+	private static final String INSERTCOMPRESSEDXMLSQL =
+		"insert into _meta_martConfiguration_XML (system_id, compressed_stream) values (?,?)";
+	private static Logger logger = Logger.getLogger(MartXMLutils.class.getName());
 
 	public static InputSource getInputSourceFor(Connection conn, String systemID) throws ConfigurationException {
 		try {
@@ -55,14 +62,23 @@ public class MartXMLutils {
 			ResultSet rs = ps.executeQuery();
 			rs.next(); // will only get one result
 
-			InputStream stream = rs.getBinaryStream(1); // will only get one row
+			byte[] stream = rs.getBytes(1);
+			byte[] cstream = rs.getBytes(2);
 			rs.close();
 
+      InputStream rstream = null;
+      if (cstream != null)
+				rstream = new GZIPInputStream( new ByteArrayInputStream(cstream) );
+      else
+        rstream = new ByteArrayInputStream(stream);
+
 			InputSource is = new InputSource(systemID); // allow the InputSource to carry the systemID with it
-			is.setByteStream(stream);
+			is.setByteStream(rstream);
 			return is;
 		} catch (SQLException e) {
 			throw new ConfigurationException("Caught SQL Exception during fetch of requested InputSource: " + e.getMessage());
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException during fetch of requested inputSource: " + e.getMessage());
 		}
 	}
 
@@ -76,18 +92,30 @@ public class MartXMLutils {
 		}
 	}
 
-	public static void storeConfiguration(Connection conn, String systemID, Document doc) throws ConfigurationException {
-		Logger logger = Logger.getLogger(MartXMLutils.class.getName()); // may need to log some warnings
+	public static void storeConfiguration(Connection conn, String systemID, Document doc, boolean compress)
+		throws ConfigurationException {
 		int rowsupdated = 0;
 
+		if (compress)
+			rowsupdated = storeCompressedXML(conn, systemID, doc);
+		else
+			rowsupdated = storeUncompressedXML(conn, systemID, doc);
+
+		if (rowsupdated < 1)
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?	
+	}
+
+	private static int storeUncompressedXML(Connection conn, String systemID, Document doc)
+		throws ConfigurationException {
 		try {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
 
-			xout.output(doc, out);
+			xout.output(doc, bout);
 
-			byte[] xml = out.toByteArray();
-			out.close();
+			byte[] xml = bout.toByteArray();
+			bout.close();
 
 			// check for existence
 			boolean exists = false;
@@ -97,38 +125,90 @@ public class MartXMLutils {
 
 			ResultSet er = es.executeQuery();
 			er.next(); // only one result
-			if (er.getInt(1) > 0)
-				exists = true;
-			er.close();
+			int rowstodelete = er.getInt(1);
 
-			if (exists) {
-				PreparedStatement ps = conn.prepareStatement(UPDATEXMLSQL);
-				ps.setBytes(1, xml);
-				ps.setString(2, systemID);
+			if (rowstodelete > 0) {
+				PreparedStatement ds = conn.prepareStatement(DELETEOLDXML);
+				ds.setString(1, systemID);
+				int rowsdeleted = ds.executeUpdate();
 
-				rowsupdated = ps.executeUpdate();
-			} else {
-				PreparedStatement ps = conn.prepareStatement(INSERTXMLSQL);
-				ps.setString(1, systemID);
-				ps.setBytes(2, xml);
-
-				rowsupdated = ps.executeUpdate();
+				if (!(rowsdeleted == rowstodelete))
+					throw new ConfigurationException("Did not delete old XML data rows for " + systemID + "\n");
 			}
+
+			PreparedStatement ps = conn.prepareStatement(INSERTXMLSQL);
+			ps.setString(1, systemID);
+			ps.setBytes(2, xml);
+
+			return ps.executeUpdate();
 		} catch (IOException e) {
 			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
 		} catch (SQLException e) {
 			throw new ConfigurationException("Caught SQLException updating xml for " + systemID + ": " + e.getMessage());
 		}
-
-		if (rowsupdated < 1)
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?	
 	}
 
-	public static void storeDTD(Connection conn, String systemID, URL dtdurl) throws ConfigurationException {
-		Logger logger = Logger.getLogger(MartXMLutils.class.getName()); // may need to log some warnings
+	private static int storeCompressedXML(Connection conn, String systemID, Document doc) throws ConfigurationException {
+		try {
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			GZIPOutputStream out = new GZIPOutputStream(bout);
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+			xout.output(doc, out);
+			out.finish();
+
+			byte[] xml = bout.toByteArray();
+
+			bout.close();
+			out.close();
+
+			// check for existence
+			boolean exists = false;
+
+			PreparedStatement es = conn.prepareStatement(EXISTSQL);
+			es.setString(1, systemID);
+
+			ResultSet er = es.executeQuery();
+			er.next();
+			int rowstodelete = er.getInt(1);
+
+			if (rowstodelete > 0) {
+				PreparedStatement ds = conn.prepareStatement(DELETEOLDXML);
+				ds.setString(1, systemID);
+				int rowsdeleted = ds.executeUpdate();
+
+				if (!(rowsdeleted == rowstodelete))
+					throw new ConfigurationException("Did not delete old XML data rows for " + systemID + "\n");
+			}
+
+			PreparedStatement ps = conn.prepareStatement(INSERTCOMPRESSEDXMLSQL);
+			ps.setString(1, systemID);
+			ps.setBytes(2, xml);
+
+			return ps.executeUpdate();
+
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating xml for " + systemID + ": " + e.getMessage());
+		}
+	}
+
+	public static void storeDTD(Connection conn, String systemID, URL dtdurl, boolean compress)
+		throws ConfigurationException {
 		int rowsupdated = 0;
 
+    if (compress)
+      rowsupdated = storeCompressedDTD(conn, systemID, dtdurl);
+    else
+      rowsupdated = storeUncompressedDTD(conn, systemID, dtdurl);
+      
+		if (rowsupdated < 1)
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?						
+	}
+
+	private static int storeUncompressedDTD(Connection conn, String systemID, URL dtdurl) throws ConfigurationException {
 		try {
 			BufferedReader in = new BufferedReader(new InputStreamReader(dtdurl.openStream()));
 			StringBuffer buf = new StringBuffer();
@@ -148,31 +228,76 @@ public class MartXMLutils {
 
 			ResultSet er = es.executeQuery();
 			er.next(); // only one result
-			if (er.getInt(1) > 0)
-				exists = true;
-			er.close();
+			int rowstodelete = er.getInt(1);
 
-			if (exists) {
-				PreparedStatement ps = conn.prepareStatement(UPDATEXMLSQL);
-				ps.setString(1, dtd);
-				ps.setString(2, systemID);
+			if (rowstodelete > 0) {
+				PreparedStatement ds = conn.prepareStatement(DELETEOLDXML);
+				ds.setString(1, systemID);
+				int rowsdeleted = ds.executeUpdate();
 
-				rowsupdated = ps.executeUpdate();
-			} else {
-				PreparedStatement ps = conn.prepareStatement(INSERTXMLSQL);
-				ps.setString(1, systemID);
-				ps.setString(2, dtd);
-
-				rowsupdated = ps.executeUpdate();
+				if (!(rowsdeleted == rowstodelete))
+					throw new ConfigurationException("Did not delete old XML data rows for " + systemID + "\n");
 			}
+
+			PreparedStatement ps = conn.prepareStatement(INSERTXMLSQL);
+			ps.setString(1, systemID);
+			ps.setString(2, dtd);
+
+			return ps.executeUpdate();
 		} catch (IOException e) {
 			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
 		} catch (SQLException e) {
 			throw new ConfigurationException("Caught SQLException updating xml for " + systemID + ": " + e.getMessage());
 		}
+	}
 
-		if (rowsupdated < 1)
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?						
+	private static int storeCompressedDTD(Connection conn, String systemID, URL dtdurl) throws ConfigurationException {
+		try {
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			GZIPOutputStream zout = new GZIPOutputStream(bout);
+
+			InputStream in = dtdurl.openStream();
+
+			int b;
+			while ((b = in.read()) != -1)
+				zout.write(b);
+
+			zout.finish();
+			zout.close();
+
+			in.close();
+
+			byte[] dtd = bout.toByteArray();
+			bout.close();
+
+			// check for existence
+			boolean exists = false;
+
+			PreparedStatement es = conn.prepareStatement(EXISTSQL);
+			es.setString(1, systemID);
+
+			ResultSet er = es.executeQuery();
+			er.next(); // only one result
+			int rowstodelete = er.getInt(1);
+
+			if (rowstodelete > 0) {
+				PreparedStatement ds = conn.prepareStatement(DELETEOLDXML);
+				ds.setString(1, systemID);
+				int rowsdeleted = ds.executeUpdate();
+
+				if (!(rowsdeleted == rowstodelete))
+					throw new ConfigurationException("Did not delete old XML data rows for " + systemID + "\n");
+			}
+
+			PreparedStatement ps = conn.prepareStatement(INSERTCOMPRESSEDXMLSQL);
+			ps.setString(1, systemID);
+			ps.setBytes(2, dtd);
+
+			return ps.executeUpdate();
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating xml for " + systemID + ": " + e.getMessage());
+		}
 	}
 }
