@@ -512,16 +512,30 @@ public class Query {
 		return dataSource;
 	}
 
+  /**
+   * Sets the value and propagates a PropertyChange event to listeners. The 
+   * property name is in the event is "dataSource".
+   * @param dataSource new dataSource.
+   */
 	public void setDataSource(DataSource dataSource) {
+    DataSource oldDatasource = this.dataSource;
 		this.dataSource = dataSource;
+    changeSupport.firePropertyChange("dataSource", oldDatasource, dataSource );
 	}
 
 	public String getDatasetName() {
 		return datasetName;
 	}
 
+  /**
+   * Sets the value and propagates a PropertyChange event to listeners. The 
+   * property name is in the event is "datasetName".
+   * @param datasetName new datasetName.
+   */
 	public void setDatasetName(String datasetName) {
+    String oldDatasetName = this.datasetName;
 		this.datasetName = datasetName;
+    changeSupport.firePropertyChange("datasetName", oldDatasetName, datasetName );
 	}
 
 }
