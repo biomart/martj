@@ -122,43 +122,43 @@ public class TreeNodeData {
           .getFilterDescriptionByFieldNameTableConstraint(
           filter.getField(),
           filter.getTableConstraint(),
-          filter.getCondition());
+          filter.getQualifier());
 
       if (fd != null)
         fieldName =
           fd.getDisplayNameByFieldNameTableConstraint(
             filter.getField(),
             filter.getTableConstraint(),
-            filter.getCondition());
+            filter.getQualifier());
 
     }
 
-    // Try to make the condition prettier
-    String condition = filter.getCondition();
-    if (filter instanceof BooleanFilter && condition != null) {
-      condition = condition.toLowerCase();
+    // Try to make the qualifier prettier
+    String qualifier = filter.getQualifier();
+    if (filter instanceof BooleanFilter && qualifier != null) {
+      qualifier = qualifier.toLowerCase();
 
-      if (condition.matches("\\s*is\\s+null\\s*"))
-        condition = "excluded";
-      else if (condition.matches("\\s*is\\s+not\\s+null\\s*"))
-        condition = "required";
+      if (qualifier.matches("\\s*is\\s+null\\s*"))
+        qualifier = "excluded";
+      else if (qualifier.matches("\\s*is\\s+not\\s+null\\s*"))
+        qualifier = "required";
     }
     
     if (filter instanceof IDListFilter) {
       IDListFilter f = (IDListFilter) filter;
-      if ( f.getFile()!=null ) condition = "in " + f.getFile();
-      else if (f.getUrl()!=null) condition = "in " + f.getUrl();
-      else if (f.getIdentifiers()!=null && f.getIdentifiers().length!=0 )condition = "in list";
+      if ( f.getFile()!=null ) qualifier = "in " + f.getFile();
+      else if (f.getUrl()!=null) qualifier = "in " + f.getUrl();
+      else if (f.getIdentifiers()!=null && f.getIdentifiers().length!=0 )qualifier = "in list";
     }
     
-    if (condition == null)
-      condition = "";
+    if (qualifier == null)
+      qualifier = "";
 
     String value = filter.getValue();
     if (value == null)
       value = "";
 
-    String tmp = fieldName + " " + condition + " " + value;
+    String tmp = fieldName + " " + qualifier + " " + value;
     // we need to make the special characters < and > safe for display in html
     this.rightText = tmp.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 

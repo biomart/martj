@@ -29,9 +29,9 @@ public interface Filter extends Field {
 
 
     /**
-     * Condition, null if not needed.  This is used by the UnprcessedFilterHandler implimenting classes
+     * Qualifier, null if not needed.  This is used by the UnprcessedFilterHandler implimenting classes
      */
-    String getCondition();
+    String getQualifier();
     
     /**
      * Value, null if not needed. This can be added to the prepared statment.

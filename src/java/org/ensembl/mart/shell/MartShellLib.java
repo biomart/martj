@@ -309,7 +309,7 @@ public class MartShellLib {
   private boolean mapBooleanFilter(BooleanFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    String filterCondition = filter.getCondition();
+    String filterCondition = filter.getQualifier();
     
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
@@ -331,7 +331,7 @@ public class MartShellLib {
   private boolean mapIDListFilter(IDListFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    String filterCondition = filter.getCondition();
+    String filterCondition = filter.getQualifier();
     
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
@@ -377,7 +377,7 @@ public class MartShellLib {
   private boolean mapBasicFilter(BasicFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    String filterCondition = filter.getCondition();
+    String filterCondition = filter.getQualifier();
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
@@ -385,7 +385,7 @@ public class MartShellLib {
     mqlbuf
       .append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition))
       .append(" ")
-      .append(filter.getCondition())
+      .append(filter.getQualifier())
       .append(" ")
       .append(filter.getValue());
 

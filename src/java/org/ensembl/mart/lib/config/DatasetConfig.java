@@ -816,12 +816,12 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * added to a Query back to its FilterDescription.
    * @param field -- String field of a mart database table
    * @param tableConstraint -- String tableConstraint of a mart database
-   * @param condition -- Filter condition
+   * @param qualifier -- Filter qualifier
    * @return FilterDescription object supporting the given field and tableConstraint, or null.
    */
-  public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
+  public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint, String qualifier) {
     lazyLoad();
-    if (supportsFilterDescription(field, tableConstraint, condition))
+    if (supportsFilterDescription(field, tableConstraint, qualifier))
       return lastSupportingFilter;
     else
       return null;
@@ -833,28 +833,28 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
    * @param field -- String field of a mart database table
    * @param tableConstraint -- String tableConstraint of a mart database
-   * @param condition -- Filter condition
+   * @param qualifier -- Filter qualifier
    * @return boolean, true if the DatasetConfig contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
    */
-  public boolean supportsFilterDescription(String field, String tableConstraint, String condition) {
+  public boolean supportsFilterDescription(String field, String tableConstraint, String qualifier) {
     lazyLoad();
     boolean supports = false;
 
     if (lastSupportingFilter == null) {
       for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
         FilterPage element = (FilterPage) iter.next();
-        if (element.supports(field, tableConstraint, condition)) {
-          lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint,condition);
+        if (element.supports(field, tableConstraint, qualifier)) {
+          lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint,qualifier);
           supports = true;
           break;
         }
       }
     } else {
-      if (lastSupportingFilter.supports(field, tableConstraint, condition))
+      if (lastSupportingFilter.supports(field, tableConstraint, qualifier))
         supports = true;
       else {
         lastSupportingFilter = null;
-        supports = supportsFilterDescription(field, tableConstraint, condition);
+        supports = supportsFilterDescription(field, tableConstraint, qualifier);
       }
     }
     return supports;

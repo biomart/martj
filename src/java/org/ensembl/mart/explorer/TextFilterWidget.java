@@ -95,11 +95,11 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
 
     public InputPageAwareBasicFilter(
       String field,
-      String condition,
+      String qualifier,
       String value,
       InputPage inputPage) {
 
-      super(field, condition, value);
+      super(field, qualifier, value);
       this.inputPage = inputPage;
 
     }
@@ -108,11 +108,11 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
       String field,
       String tableConstraint,
       String key,
-      String condition,
+      String qualifier,
       String value,
       InputPage inputPage) {
 
-      super(field, tableConstraint, key, condition, value);
+      super(field, tableConstraint, key, qualifier, value);
       this.inputPage = inputPage;
 
     }

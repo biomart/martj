@@ -180,7 +180,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
   public abstract String getValueFromContext();
   
-	public boolean supports(String field, String tableConstraint, String condition) {
+	public boolean supports(String field, String tableConstraint, String qualifier) {
 		boolean supports = false;
 		
 		//if field is null, this Object cannot support any field x tableConstraint combination 
@@ -194,9 +194,9 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 					if (tableConstraint != null || tableConstraintK != null) {
 						supports = tableConstraintK != null && tableConstraint != null && tableConstraintK.equals(tableConstraint);
             
-            if (condition!=null && supports) {
-              String conditionK = getAttribute(qualifierKey); 
-              supports = conditionK!=null && conditionK.equals(condition);
+            if (qualifier!=null && supports) {
+              String qualifierK = getAttribute(qualifierKey); 
+              supports = qualifierK!=null && qualifierK.equals(qualifier);
             }
 					}
 				}

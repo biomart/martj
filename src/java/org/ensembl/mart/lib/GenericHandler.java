@@ -54,7 +54,7 @@ public class GenericHandler implements UnprocessedFilterHandler {
 
 			Query newQuery = new Query(query);
 
-			String sql, lookUpTable, filterName, filterCondition, filterValue;
+			String sql, lookUpTable, filterName, filterQualifier, filterValue;
 			PreparedStatement ps;
 			Filter chrFilter;
 

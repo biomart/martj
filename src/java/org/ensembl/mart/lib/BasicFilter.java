@@ -31,11 +31,11 @@ public class BasicFilter implements Filter {
 	 * constructs a BasicFilter object, which can be added to a Query
 	 * 
 	 * @param field -- String type.  The type of filter being applied
-	 * @param condition -- String condition of the clause, eg. =<>
-	 * @param value -- parameter of the condition, applicable to the type.
+	 * @param qualifier -- String qualifier of the clause, eg. =<>
+	 * @param value -- parameter of the qualifier, applicable to the type.
 	 */
-	public BasicFilter(String field, String condition, String value) {
-		this(field, null, null, condition, value);
+	public BasicFilter(String field, String qualifier, String value) {
+		this(field, null, null, qualifier, value);
 	}
 
 	/**
@@ -43,11 +43,11 @@ public class BasicFilter implements Filter {
 	 * 
 	 * @param field -- String type.  The type of filter being applied
 	 * @param tableConstraint -- String table where field is found
-	 * @param condition -- String condition of the clause, eg. =<>
-	 * @param value -- parameter of the condition, applicable to the type.
+	 * @param qualifier -- String qualifier of the clause, eg. =<>
+	 * @param value -- parameter of the qualifier, applicable to the type.
 	 */
-	public BasicFilter(String field, String tableConstraint, String key, String condition, String value) {
-		this(field, tableConstraint, key, condition, value, null);
+	public BasicFilter(String field, String tableConstraint, String key, String qualifier, String value) {
+		this(field, tableConstraint, key, qualifier, value, null);
 	}
 
 	/**
@@ -56,21 +56,21 @@ public class BasicFilter implements Filter {
 	 * 
 	 * @param field -- String type.  The type of filter being applied
 	 * @param tableConstraint -- String hint for table or tables where field is found
-	 * @param condition -- String condition of the clause, eg. =<>
-	 * @param value -- parameter of the condition, applicable to the type.
+	 * @param qualifier -- String qualifier of the clause, eg. =<>
+	 * @param value -- parameter of the qualifier, applicable to the type.
 	 * @param handler -- name of UnprocessedFilterHandler implimenting class to load to handle this Filter, or null if
 	 *                                  no processing is required.
 	 */
-	public BasicFilter(String field, String tableConstraint, String key, String condition, String value, String handler) {
+	public BasicFilter(String field, String tableConstraint, String key, String qualifier, String value, String handler) {
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.key = key;
-		this.condition = condition;
+		this.qualifier = qualifier;
 		this.value = value;
 		this.handler = handler;
 
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
-		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
+		hashcode = (this.qualifier != null) ? (31 * hashcode) + this.qualifier.hashCode() : hashcode;
 		hashcode = (this.value != null) ? (31 * hashcode) + ((this.value == null) ? 0 : this.value.hashCode()) : hashcode;
 		hashcode = (this.tableConstraint != null) ? (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
 		hashcode = (this.key != null) ? (31 * hashcode) + this.key.hashCode() : hashcode;
@@ -78,11 +78,11 @@ public class BasicFilter implements Filter {
 	}
 
 	/**
-	 * returns the condition for the filter
-	 * @return String condition =<>
+	 * returns the qualifier for the filter
+	 * @return String qualifier =<>
 	 */
-	public String getCondition() {
-		return condition;
+	public String getQualifier() {
+		return qualifier;
 	}
 
 	/**
@@ -121,7 +121,7 @@ public class BasicFilter implements Filter {
 	/**
 	 * prints information about the filter, for logging purposes
 	 *
-	 * @return String filter information (field=type\ncondition=condition\nvalue=value)
+	 * @return String filter information (field=type\nqualifier=qualifier\nvalue=value)
 	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
@@ -130,7 +130,7 @@ public class BasicFilter implements Filter {
 		buf.append(" field=").append(field);
     buf.append(", tableConstraint=").append(tableConstraint);
     buf.append(", key=").append(key);
-		buf.append(" ,condition=").append(condition);
+		buf.append(" ,qualifier=").append(qualifier);
 		buf.append(" ,value=").append(value);
 		buf.append(", handler=").append(handler);
 		buf.append("]");
@@ -139,21 +139,21 @@ public class BasicFilter implements Filter {
 	}
 
 	/**
-	 * returns a where clause with the type, condition, and a bind parameter 
+	 * returns a where clause with the type, qualifier, and a bind parameter 
 	 * for the value, suitable for inclusion in a SQL PreparedStatement
 	 * 
 	 * @return String where clause
 	 */
 	public String getWhereClause() {
-		return field + condition + "?";
+		return field + qualifier + "?";
 	}
 
 	/**
-	 * returns the right hand of the where clause, with the condition, and
+	 * returns the right hand of the where clause, with the qualifier, and
 	 * a bind value suitable for inclusion into a SQL PreparedStatement.
 	 */
 	public String getRightHandClause() {
-		return condition + "?";
+		return qualifier + "?";
 	}
 
 	/**
@@ -177,7 +177,7 @@ public class BasicFilter implements Filter {
 	}
 
 	private final String field;
-	private final String condition;
+	private final String qualifier;
 	private final String value;
 	private final String tableConstraint;
 	private final String key;

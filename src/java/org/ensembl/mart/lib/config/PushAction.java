@@ -199,14 +199,14 @@ public class PushAction extends BaseNamedConfigurationObject {
 	 * Also caches the first supporting Option it finds, for subsequent call to getOptionByFieldNameTableConstraint.
 	 * @param field - String field name in a mart database table
 	 * @param tableConstraint - String tableConstraint mapping to a mart database
-   * @param condition - filter condition
+   * @param qualifier - filter qualifier
 	 * @return true if supporting Option found, false if not
 	 */
-	public boolean supports(String field, String tableConstraint, String condition) {
+	public boolean supports(String field, String tableConstraint, String qualifier) {
 		boolean supports = false;
 		for (int i = 0, n = options.size(); i < n; i++) {
 			Option element = (Option) options.get(i);
-			if (element.supports(field, tableConstraint, condition)) {
+			if (element.supports(field, tableConstraint, qualifier)) {
 				lastSupportingOption = element;
 				supports = true;
 				break;
@@ -221,11 +221,11 @@ public class PushAction extends BaseNamedConfigurationObject {
 	 * getOptionByFieldNameTableConstraint faster.
 	 * @param field - String field name in a mart database table
 	 * @param tableConstraint - String tableConstraint mapping to a mart database
-   * @param condition - filter condition
+   * @param qualifier - filter qualifier
 	 * @return Option supporting this field, tableConstraint combination, or null.
 	 */
-	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
-		if (supports(field, tableConstraint, condition))
+	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint, String qualifier) {
+		if (supports(field, tableConstraint, qualifier))
 			return lastSupportingOption;
 		else
 			return null;
@@ -235,12 +235,12 @@ public class PushAction extends BaseNamedConfigurationObject {
 	 * Get the internalName for an Option within the PushAction which supports a given field and tableConstraint.
 	 * @param field -- field of the requested Option
 	 * @param tableConstraint -- tableConstraint of the requestedOption
-   * @param condition -- filter condition
+   * @param qualifier -- filter qualifier
 	 * @return String internalName of the Option supporting the field and tableConstraint, or null if none found
 	 */
-	public String getOptionInternalNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
-		if (supports(field, tableConstraint, condition))
-			return lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint, condition);
+	public String getOptionInternalNameByFieldNameTableConstraint(String field, String tableConstraint, String qualifier) {
+		if (supports(field, tableConstraint, qualifier))
+			return lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint, qualifier);
 		else
 			return null;
 	}
@@ -249,12 +249,12 @@ public class PushAction extends BaseNamedConfigurationObject {
    * Get the displayName for an Option within the PushAction which supports a given field and tableConstraint.
    * @param field -- field of the requested Option
    * @param tableConstraint -- tableConstraint of the requestedOption
-   * @param condition - filter condition
+   * @param qualifier - filter qualifier
    * @return String displayName of the Option supporting the field and tableConstraint, or null if none found
    */
-  public String getOptionDisplayNameByFieldNameTableConstraint(String field, String tableConstraint, String condition) {
-    if (supports(field, tableConstraint, condition))
-      return lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint, condition);
+  public String getOptionDisplayNameByFieldNameTableConstraint(String field, String tableConstraint, String qualifier) {
+    if (supports(field, tableConstraint, qualifier))
+      return lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint, qualifier);
     else
       return null;
   }

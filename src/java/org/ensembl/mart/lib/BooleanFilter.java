@@ -35,39 +35,39 @@ public class BooleanFilter implements Filter {
 	public static final String isNotNULL_NUM = " = 1";
 
 /**
- * Constructor for a basic BooleanFilter, with field and condition set.
+ * Constructor for a basic BooleanFilter, with field and qualifier set.
  * 
 	 * @param field - String, field of filter
-	 * @param condition - String, one of isNULL or isNotNull
+	 * @param qualifier - String, one of isNULL or isNotNull
  */
-	public BooleanFilter(String field, String condition) {
-    this(field, null, null,condition);
+	public BooleanFilter(String field, String qualifier) {
+    this(field, null, null,qualifier);
 	}
 
 	/**
 	 * constructor for a fully defined BooleanFilter.
 	 * static isNULL and isNotNull variables can be used
-	 * to set the condition
+	 * to set the qualifier
 	 * 
 	 * @param field - String, field of filter
 	 * @param tableConstraint - String, tableConstraint for the Filter
-	 * @param condition - String, one of isNULL or isNotNull
+	 * @param qualifier - String, one of isNULL or isNotNull
 	 */	
-	public BooleanFilter(String field, String tableConstraint, String key,String condition) {
-		this(field, tableConstraint, key, condition, null);
+	public BooleanFilter(String field, String tableConstraint, String key,String qualifier) {
+		this(field, tableConstraint, key, qualifier, null);
 	}
 
-  public BooleanFilter(String field, String tableConstraint, String key, String condition, String handler) {	
+  public BooleanFilter(String field, String tableConstraint, String key, String qualifier, String handler) {	
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 	    this.key = key;
-		this.condition = condition;
+		this.qualifier = qualifier;
 		this.handler = handler;
     
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
 		hashcode = (this.tableConstraint != null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
 	    hashcode = (this.key != null) ?  (31 * hashcode) + this.key.hashCode() : hashcode;
-		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
+		hashcode = (this.qualifier != null) ? (31 * hashcode) + this.qualifier.hashCode() : hashcode;
 		hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
   }
   
@@ -84,14 +84,14 @@ public class BooleanFilter implements Filter {
 	 * returns the where clause for the SQL as field is null
 	 */
 	public String getWhereClause() {
-		return field + condition;
+		return field + qualifier;
 	}
 
 	/**
 	 * returns the right side of an SQL where clause
 	 */
 	public String getRightHandClause() {
-		return condition;
+		return qualifier;
 	}
 
 	/*
@@ -108,10 +108,10 @@ public class BooleanFilter implements Filter {
 		return key;
 	}
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.Filter#getCondition()
+	 * @see org.ensembl.mart.lib.Filter#getQualifier()
 	 */
-	public String getCondition() {
-		 return condition;
+	public String getQualifier() {
+		 return qualifier;
 	}
 
 	/* (non-Javadoc)
@@ -128,7 +128,7 @@ public class BooleanFilter implements Filter {
 		buf.append("field=").append(field);
 		buf.append(", tableConstraint=").append(tableConstraint);
     buf.append(", key=").append(key);
-		buf.append(", condition=").append(condition);
+		buf.append(", qualifier=").append(qualifier);
     buf.append(" ,value=").append(getValue());
 		buf.append(", handler=").append(handler);
 		buf.append("]");
@@ -153,7 +153,7 @@ public class BooleanFilter implements Filter {
 	private final String field;
 	private final String tableConstraint; 
 	private final String key; 
-	private final String condition;
+	private final String qualifier;
 	private final String handler;
   private int hashcode = 0; //hashcode for immutable object
 }

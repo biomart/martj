@@ -376,7 +376,7 @@ public class IDListFilter implements Filter {
   /**
    * Not applicable to this type of Filter. Returns null
    */
-  public String getCondition() {
+  public String getQualifier() {
     return null;
   }
 

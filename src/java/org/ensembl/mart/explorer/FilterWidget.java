@@ -165,8 +165,8 @@ public abstract class FilterWidget
     //
     && qualifier != null
     && !"".equals(qualifier)
-    && of.getCondition() != null
-    && of.getCondition().equals(qualifier);
+    && of.getQualifier() != null
+    && of.getQualifier().equals(qualifier);
   }
 
   protected abstract void setFilter(Filter filter);
@@ -182,20 +182,20 @@ public abstract class FilterWidget
     private InputPage inputPage;
     public InputPageAwareBasicFilter(
       String field,
-      String condition,
+      String qualifier,
       String value,
       InputPage inputPage) {
-      this(field, null, null, condition, value, inputPage);
+      this(field, null, null, qualifier, value, inputPage);
     }
 
     public InputPageAwareBasicFilter(
       String field,
       String tableConstraint,
       String key,
-      String condition,
+      String qualifier,
       String value,
       InputPage inputPage) {
-      super(field, tableConstraint, key, condition, value);
+      super(field, tableConstraint, key, qualifier, value);
       this.inputPage = inputPage;
     }
 

@@ -258,10 +258,10 @@ public class BooleanFilterWidget
         }
       }
 
-      if (filter.getCondition().equals(requireFilterType))
+      if (filter.getQualifier().equals(requireFilterType))
         require.setSelected(true);
 
-      else if (filter.getCondition().equals(excludeFilterType))
+      else if (filter.getQualifier().equals(excludeFilterType))
         exclude.setSelected(true);
     }
   }
