@@ -298,7 +298,7 @@
       doctitle="MartExplorer API" >
 
       <fileset dir="${src.dir}" defaultexcludes="yes">
-        <include name="org/ensembl/mart/**" />
+        <include name="org/ensembl/mart/**/*.java" />
         <exclude name="**/*Test*" />
       </fileset>
 

@@ -3,34 +3,34 @@
 package org.ensembl.mart.explorer;
 
 public class BasicFilter implements Filter {
-  public String getField(){
-    // Write your code here
-    return null;
-  }
-
-  public String getCondition(){
-    // Write your code here
-    return null;
-  }
-
-  public String getValue(){
-    // Write your code here
-    return null;
-  }
-
-  public void setField(String field){
-      this.field = field;
+    public String getField() {
+        // Write your code here
+        return null;
     }
 
-  public void setCondition(String condition){
-      this.condition = condition;
+    public String getCondition() {
+        // Write your code here
+        return null;
     }
 
-  public void setValue(String value){
-      this.value = value;
+    public String getValue() {
+        // Write your code here
+        return null;
     }
 
-  private String field;
-  private String condition;
-  private String value;
+    public void setField(String field) {
+        this.field = field;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    private String field;
+    private String condition;
+    private String value;
 }

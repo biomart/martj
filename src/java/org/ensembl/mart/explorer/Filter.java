@@ -3,9 +3,9 @@
 package org.ensembl.mart.explorer;
 
 public interface Filter {
-  String getField();
+    String getField();
 
-  String getCondition();
+    String getCondition();
 
-  String getValue();
+    String getValue();
 }
