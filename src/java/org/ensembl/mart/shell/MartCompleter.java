@@ -816,7 +816,10 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     currentSet.add("all");
     try {
-      currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorNames()));
+      String[] names =  msl.adaptorManager.getAdaptorNames();
+      for (int i = 0, n = names.length; i < n; i++) {
+	    currentSet.add( msl.canonicalizeMartName( names[i] ) );			
+	  }
     } catch (ConfigurationException e) {
       if (logger.isLoggable(Level.INFO))
         logger.info("Caught ConfigurationException getting adaptor names: " + e.getMessage() + "\n");
