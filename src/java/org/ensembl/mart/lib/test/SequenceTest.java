@@ -287,7 +287,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000111960", "ENSG00000161929"}) );
 		int leftflank = 1000;
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEFLANKS, leftflank, 0));
 		
@@ -310,17 +310,18 @@ public class SequenceTest extends Base {
 			Gene gene = ga.fetch(gene_stable_id);
 			
 			AssemblyLocation first_exon_loc = (AssemblyLocation) ((Exon) gene.getExons().get(0)).getLocation();
+      AssemblyLocation last_exon_loc = (AssemblyLocation) ((Exon) gene.getExons().get(gene.getExons().size() - 1)).getLocation();
 			
 			AssemblyLocation newloc;
 			
-			if (first_exon_loc.getStrand() < 0)
-			  newloc = new AssemblyLocation(first_exon_loc.getChromosome(), first_exon_loc.getEnd() + 1, first_exon_loc.getEnd() + leftflank, first_exon_loc.getStrand() );
+			if (last_exon_loc.getStrand() < 0)
+			  newloc = new AssemblyLocation(last_exon_loc.getChromosome(), last_exon_loc.getEnd() + 1, last_exon_loc.getEnd() + leftflank, last_exon_loc.getStrand() );
 			else
 			  newloc = new AssemblyLocation(first_exon_loc.getChromosome(), first_exon_loc.getStart() - leftflank, first_exon_loc.getStart() - 1, first_exon_loc.getStrand() );
 			
 			String ensjseq = sa.fetch(newloc).getString();
-			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			    
+			assertEquals("WARNING: Mart Sequence for Gene " + gene_stable_id + " Doesnt match ENSJ Sequence\n", ensjseq, martseq);
 		}				
 	}
 	
