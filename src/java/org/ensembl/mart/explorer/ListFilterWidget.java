@@ -31,6 +31,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
@@ -166,12 +167,11 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         if (value != null) {
 
           Filter f =
-            new InputPageAwareBasicFilter(
+            new BasicFilter(
               filterDescription.getField(),
               option.getTableConstraint(),
               "=",
-              value,
-              this);
+              value);
               
           setFilter( f );
         }
