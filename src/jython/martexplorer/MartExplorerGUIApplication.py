@@ -20,13 +20,18 @@
 # TODO support removing filter and attribute items from
 # quesry. "Delete" and or right click/delete.
 
+from jarray import array
+from java.lang import System, String
+from java.io import File
+from java.net import URL
 from java.awt import CardLayout, Dimension, BorderLayout
 from java.awt.event import ActionListener
-from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
+from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout, ButtonGroup, JRadioButton
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
+from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute
 
 GAP = 5
 
@@ -40,6 +45,23 @@ class QueryInputPage:
     def clear(self):
         pass
 
+class BaseInputPage(QueryInputPage, Box, ChangeListener):
+
+    """ Implements a Box container that can listen for change events
+    and rebroadcast to attached listeners."""
+
+    def __init__(self):
+        Box.__init__(self, BoxLayout.Y_AXIS)
+        self.changeEvent = ChangeEvent( self )
+        self.changeListeners = []
+
+    def stateChanged(self, event=None):
+        for l in self.changeListeners:
+            l.stateChanged( self.changeEvent )
+
+    def addChangeListener(self, listener):
+        self.changeListeners.append( listener )
+
 
 class DummyInputPage(QueryInputPage, JPanel):
     def __init__(self, message):
@@ -48,18 +70,32 @@ class DummyInputPage(QueryInputPage, JPanel):
     def addChangeListener( self, listener ):
         pass
 
+    def toString(self):
+        return ""
+
 
 class LabelledComboBox(QueryInputPage, Box, ActionListener):
 
-    """ Abstract "label + combo box" component. Issues ChangeEvents to
-    ChangeListeners if contents of combobox changes. Loads value from
-    and into query through methods implemented in derived classes. """
+    """ Abstract "label + combo box" component with optional radio
+    button. Issues ChangeEvents to ChangeListeners if contents of
+    combobox changes. Loads value from and into query through methods
+    implemented in derived classes. """
 
-    def __init__(self, label, changeListener=None):
+    # TODO next: writing in text box should auto select radiobutton if
+    # available
+
+    def __init__(self, label, changeListener=None, radioButtonGroup=None):
 
         Box.__init__(self, BoxLayout.X_AXIS)
 
-        self.add( JLabel( label ) ) 
+        if radioButtonGroup:
+            self.radioButton = JRadioButton( label, 0 )
+            radioButtonGroup.add( self.radioButton )
+            self.add( self.radioButton )
+        else:
+            self.radioButton = None
+            self.add( JLabel( label ) ) 
+
         self.add( Box.createHorizontalStrut( GAP*2 ))
         self.box = JComboBox()
         self.box.editable = 1
@@ -93,15 +129,29 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
     def addChangeListener( self, listener ):
         self.changeListeners.append( listener )
         
-    # todo add set options methods
+    def setText(self, text):
+        self.box.setSelectedItem( text )
+
+    def getText(self):
+        return self.box.selectedItem
+
+
+    def isSelected(self):
+        if self.radioButton: return self.radioButton.selected
+        else: 0
 
 
 
 
-class SpeciesInputPage(LabelledComboBox):
+class SpeciesInputPage(BaseInputPage):
+
+    """ Input component manages display and communication between
+    "species" drop down list <-> query.species."""
 
     def __init__(self):
-        LabelledComboBox.__init__(self, "Species")
+        BaseInputPage.__init__(self)
+        self.box = LabelledComboBox("Species", self)
+        self.add( self.box )
 
     def updateQuery(self, query):
         item = self.box.selectedItem
@@ -109,8 +159,37 @@ class SpeciesInputPage(LabelledComboBox):
         else: raise InvalidQueryException("Species must be set")
 
     def updatePage(self, query):
-        Tool.prepend( query.species, self.box )
+        self.box.setText( query.species )
         
+    def toString(self):
+        tmp = self.box.getText()
+        if tmp: return tmp
+        else: return "UNSET"
+
+
+class FocusInputPage(BaseInputPage):
+
+    """ Input component manages display and communication between
+    "focus" drop down list <-> query.focus."""
+
+    def __init__(self):
+        BaseInputPage.__init__(self)
+        self.box = LabelledComboBox("Focus", self)
+        self.add( self.box )
+
+    def updateQuery(self, query):
+        item = self.box.selectedItem
+        if item: query.focus = item
+        else: raise InvalidQueryException("Focus must be set")
+
+    def updatePage(self, query):
+        self.box.setText( query.focus )
+        
+    def toString(self):
+        tmp = self.box.getText()
+        if tmp: return tmp
+        else: return "UNSET"
+
 
 
 class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
@@ -118,7 +197,7 @@ class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
     def __init__(self):
         Box.__init__(self, BoxLayout.Y_AXIS)
 
-        self.host = LabelledComboBox("Database", self)
+        self.host = LabelledComboBox("Host", self)
         self.port = LabelledComboBox("Port", self)
         self.database = LabelledComboBox("Database", self)
         self.user = LabelledComboBox("User", self)
@@ -130,8 +209,10 @@ class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
         self.add( self.user )
         self.add( self.password )
         self.add( Box.createVerticalGlue() )
-
         
+        self.changeEvent = ChangeEvent( self )
+        self.changeListeners = []
+
 
     def updateQuery(self, query):
         # todo
@@ -146,13 +227,51 @@ class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
         pass
 
     def stateChanged(self, event=None):
-        # todo
-        print "db page changed"
+        for l in self.changeListeners:
+            l.stateChanged( self.changeEvent )
 
     def addChangeListener(self, listener):
-        # todo
-        pass
-    
+        self.changeListeners.append( listener )
+
+    def toString(self):
+        desc = "UNSET22"
+        tmp = self.host.getText()
+        if tmp:
+            desc = tmp
+            tmp = self.port.getText()
+            if tmp:
+                desc = desc + ":" + tmp
+            tmp = self.database.getText()
+            if tmp:
+                desc = desc + "/" + tmp
+        return desc
+        
+
+class DestinationInputPage(BaseInputPage):
+
+    def __init__(self):
+        BaseInputPage.__init__(self)
+        group = ButtonGroup()
+        
+        self.file = LabelledComboBox("File", self, group)
+        self.window = LabelledComboBox("Window", self, group)
+        
+        self.add( self.file )
+        self.add( self.window )
+
+    def toString(self):
+        # TODO next: display label properlyin tree node
+        if self.file.isSelected():
+            label =  "FILE: "+self.file.getText()
+        elif self.window.isSelected():
+            label = "WINDOW: " + self.window.getText()
+        else:
+            label = "UNSET"
+
+        print label
+        return label
+
+
 
 class CardContainer(JPanel):
     """A JPanel with a CardLayout plus show() method for showing a particular card."""
@@ -228,16 +347,18 @@ class TreeNavigationPanel(JPanel, QueryInputPage):
         treeModel = DefaultTreeModel( self.rootNode )
         tree = JTree( treeModel )
         configPanel = CardContainer()
-        
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, DatabaseInputPage(), "DATABASE" )
+
+        self.databasePage = DatabaseInputPage()
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, self.databasePage, "DATABASE" )
         speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
-        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel, None,"focus" )
+        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel, FocusInputPage(),"focus" )
         filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel, None,"filter" )
         regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel, None,"region" )
         outputNode = QueryTreeNode( tree, self.rootNode, 4, configPanel, None,"output" )
         attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel, None,"attribute" )
         formatNode = QueryTreeNode( tree, outputNode, 1, configPanel, None,"format" )
-        destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel, None,"destination" )
+        destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel,
+                                         DestinationInputPage(),"destination" )
         
         # expand branches in tree
 	path = TreePath(self.rootNode).pathByAddingChild( filtersNode )
@@ -249,9 +370,9 @@ class TreeNavigationPanel(JPanel, QueryInputPage):
 
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
-	scrollPane.setPreferredSize( Dimension(250,300) )
+	scrollPane.setPreferredSize( Dimension(350,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( JScrollPane( configPanel ) )
+	self.add( JScrollPane( configPanel ), BorderLayout.CENTER )
 
 
     def updateQuery(self, query):
@@ -275,7 +396,7 @@ class TreeNavigationPanel(JPanel, QueryInputPage):
 class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
-        JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(800,500))
+        JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
         self.queryPages = TreeNavigationPanel()
         self.buildGUI()
         self.visible=1
@@ -334,12 +455,12 @@ class MartGUIApplication(JFrame):
 
 
     def doInsertKakaQuery(self, event=None):
-        q = Query(
-            host = "kaka.sanger.ac.uk" 
-            ,user =  "anonymous" 
-            ,database = "ensembl_mart_11_1" 
-            ,species = "homo_sapiens" 
-            ,focus = "gene" )
+        self.queryPages.databasePage.host.setText( "kaka.sanger.ac.uk" )
+        self.queryPages.databasePage.user.setText( "anonymous" )
+        self.queryPages.databasePage.database.setText( "ensembl_mart_11_1" )
+
+        q = Query(species = "homo_sapiens"
+                  ,focus = "gene" )
         q.addFilter( IDListFilter("gene_stable_id",
                                   File( System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
         
@@ -349,8 +470,9 @@ class MartGUIApplication(JFrame):
                                   array( ("ENSG00000177741"), String) ) )
         q.addAttribute( FieldAttribute("gene_stable_id") )
         #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
-        #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") ) 
-        q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
+        #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") )
+        # TODO need a result window
+        #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
         self.queryPages.updatePage( q )
 
 
