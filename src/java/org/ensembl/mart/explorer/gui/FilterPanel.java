@@ -35,6 +35,10 @@ public class FilterPanel extends JPanel
     entireGenomeButton.setSelected(true);
     entireGenomePanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
     entireGenomePanel.add(entireGenomeButton);
+
+    regionGroup.add( chromosomeButton );
+    regionGroup.add( entireGenomeButton );
+
     jLabel3.setText("Focus");
     jPanel7.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
     jPanel7.add(jLabel3);
