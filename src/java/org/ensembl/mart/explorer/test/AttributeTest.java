@@ -1,5 +1,7 @@
 package org.ensembl.mart.explorer.test;
 
+import java.io.ByteArrayOutputStream;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
@@ -22,7 +24,10 @@ public class AttributeTest extends Base {
 	}
 
 	public static Test suite() {
-		return new TestSuite( AttributeTest.class );
+		TestSuite suite = new TestSuite();
+		//ite.addTest( new AttributeTest("testDisambiguationQueries") );
+		suite.addTestSuite( AttributeTest.class );
+		return suite;		
 	}
 
     public static Test TestClass(String testclass) {
@@ -42,7 +47,12 @@ public class AttributeTest extends Base {
 		q.setPrimaryKeys( new String[] {"gene_id", "transcript_id"});
 		q.addAttribute( new FieldAttribute("gene_stable_id"));
 		q.addFilter( new BasicFilter("chr_name", "=", "22") );
-		engine.execute( q, new FormatSpec( FormatSpec.TABULATED ), System.out);	
+		StatOutputStream stats = new StatOutputStream();
+		engine.execute( q, new FormatSpec( FormatSpec.TABULATED ), stats );
+
+		assertTrue( "No text returned from query", stats.getCharCount()>0 );
+		assertTrue( "No lines returned from query", stats.getLineCount()>0 );		
+		stats.close();
 	}
 	
 	
@@ -53,6 +63,25 @@ public class AttributeTest extends Base {
 			q.addAttribute( new FieldAttribute("external_id"));
 			q.addAttribute( new FieldAttribute("allele"));
 			q.addFilter( new BasicFilter("chr_name", "=", "21") );
-			engine.execute( q, new FormatSpec( FormatSpec.TABULATED ), System.out);	
+			StatOutputStream stats = new StatOutputStream();
+			engine.execute( q, new FormatSpec( FormatSpec.TABULATED ), stats);
+			assertTrue( "No text returned from query", stats.getCharCount()>0 );
+			assertTrue( "No lines returned from query", stats.getLineCount()>0 );	
+			stats.close();
 		}
+		
+	public void testDisambiguationQueries() throws Exception {
+		String geneID = "ENSG00000079974";
+		String expectedDiseaseID = "RB2B_HUMAN";
+		Query q = new Query();
+		q.setStarBases( new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript"} );
+		q.setPrimaryKeys( new String[] {"gene_id", "transcript_id"});
+		q.addAttribute( new FieldAttribute("display_id", "xref_SWISSPROT"));
+		q.addFilter( new BasicFilter("gene_stable_id", "=", geneID) );
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		engine.execute( q, new FormatSpec( FormatSpec.TABULATED ), out);
+		out.close();
+		String actualDiseaseID = out.toString().trim();
+		assertEquals( "Got wrong disease ID for gene " + geneID, expectedDiseaseID, actualDiseaseID );	
+	}
 }
