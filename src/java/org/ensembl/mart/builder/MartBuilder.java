@@ -30,25 +30,46 @@ public class MartBuilder {
 		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
 		String output;
 		
+		
+		// Get source schema info
 		do
 				output=getUserInput(prompt);
 		while (!(output.equals("M") || output.equals("D") || output.equals("E")));
 	
 			while (output.equals("M") || output.equals("D")){
-				LinkedTables linked_tables=setCardinality(getUserInput("TABLE NAME: "));
+				String table_name = getUserInput("TABLE NAME: ");
+				LinkedTables linked_tables=getLinked(table_name);
+                StringBuffer final_table = new StringBuffer(dataset + "__"+table_name+"__");
 				if (output.equals("M")){
-					linked_tables.type = "MAIN";
-				} else { linked_tables.type = "DM";}
+					linked_tables.type ="MAIN";
+					linked_tables.final_table_name= final_table.append("MAIN").toString();
+				} else { 
+					linked_tables.type = "DM";
+					linked_tables.final_table_name= final_table.append("DM").toString();
+				}
 				linked_tables.dataset=dataset;
+			
+				linked_tables=setColumnsToFinal(linked_tables);
+				
 				source_schema.addLinkedTables(linked_tables);
 				output=getUserInput(prompt);
 			}
 		
 		
-		TargetSchema target_schema = new TargetSchema(source_schema);
+	    // Reset final table names if you want to
+	    LinkedTables [] newlinked = source_schema.getLinkedTables();
+	    
+	    for (int i=0;i<newlinked.length;i++){
+		String newname = getUserInput("CHANGE FINAL TABLE NAME: "+newlinked[i].final_table_name+" TO: " );
+	    if (newname != null && ! newname.equals("\n") && !newname.equals(""))
+		newlinked[i].final_table_name=newname;
+	    }
 		
+		// Transform	
+		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
 		
+		// Dump to SQL
 		for (int i=0;i<transformations.length;i++){
 			TransformationUnit [] units = transformations[i].getUnits();
 			
@@ -64,28 +85,28 @@ public class MartBuilder {
 	
 	
 	
-	private static  LinkedTables setCardinality(String table_name){
+	private static  LinkedTables getLinked(String table_name){
 		
-		Table [] key_tables; 
+		Table [] referenced_tables; 
 		
-		key_tables = source_schema.getKeyTables(table_name);
+		referenced_tables = source_schema.getReferencedTables(table_name);
 		
 		ArrayList list = new ArrayList();
 		
 		String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
-		for (int i=0;i<key_tables.length; i++){
+		for (int i=0;i<referenced_tables.length; i++){
 			String cardinality = "";
-			Table key_tab=key_tables[i];
+			Table ref_tab=referenced_tables[i];
 			
 			while (!(cardinality.equals("11") || cardinality.equals("n1")
 					|| cardinality.equals("0n") || cardinality.equals("1n")
 					|| cardinality.equals("S")))
 				
-			{cardinality = getUserInput(table_name+": "+key_tab.getName() + card_string);}
+			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
 			if (!cardinality.equals("S")){
-				key_tab.setCardinality(cardinality);
-				list.add(key_tab);
+				ref_tab.setCardinality(cardinality);
+				list.add(ref_tab);
 			}
 		}
 		 
@@ -110,7 +131,18 @@ public class MartBuilder {
 		
 	}
 	
-	
+
+	private static LinkedTables setColumnsToFinal (LinkedTables linked){
+		
+		Table [] reftables = linked.getReferencedTables();
+		for (int i=0;i<reftables.length;i++){
+			Column [] columns = reftables[i].getColumns();
+			for (int j=0;j<columns.length;j++){
+				columns[i].final_table_name=linked.final_table_name;
+			}
+		}
+		return linked;
+	}
 }
 
 

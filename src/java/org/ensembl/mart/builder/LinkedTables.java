@@ -22,6 +22,7 @@ public class LinkedTables {
 	String next_main;
 	String type;
 	String dataset;
+	String final_table_name;
 	
 	
 	public void addTable (Table table){	

@@ -19,6 +19,7 @@ public class Column implements Cloneable {
 	String alias;
 	String original_table;
 	String original_name;
+	String final_table_name;
 	boolean deleted;
 	
 	public Object clone  ()

@@ -112,6 +112,7 @@ public class MetaDataResolverOracle {
 				
 				Column column = new Column();
 				column.setName(columns.getString(4));
+				column.original_name=columns.getString(4);
 				column.original_table=table.getName();
 				cols.add(column);
 				z++;
