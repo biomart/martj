@@ -1543,7 +1543,7 @@ public class DatabaseDatasetViewUtils {
 
           if (brokenGroup instanceof FilterGroup) {
             validatedPage.removeFilterGroup((FilterGroup) allGroups.get(position.intValue()));
-            System.out.println("!!!!!!!!FP\t" + brokenGroup + "\n\n\n");
+            
             validatedPage.insertFilterGroup(position.intValue(), (FilterGroup) brokenGroup);
           } //else not needed yet
         }
@@ -1578,7 +1578,7 @@ public class DatabaseDatasetViewUtils {
         FilterCollection brokenCollection = (FilterCollection) brokenCollections.get(position);
 
         validatedGroup.removeFilterCollection(collections[position.intValue()]);
-		System.out.println("!!!!!!!!FP\t" + brokenCollection + "\n\n\n");
+		
         validatedGroup.insertFilterCollection(position.intValue(), brokenCollection);
       }
     }
@@ -1622,7 +1622,7 @@ public class DatabaseDatasetViewUtils {
         FilterDescription validatedFilter =
           getValidatedFilterDescription(dsource, schema, catalog, (FilterDescription) element, dset);
         if (validatedFilter.isBroken()){
-          System.out.println("FILTER IS BROKEN");
+          
           filtersValid = false;
           brokenFilts.put(new Integer(i), validatedFilter);
         }
@@ -1638,7 +1638,7 @@ public class DatabaseDatasetViewUtils {
 
         if (brokenFilter instanceof FilterDescription) {
           validatedFilterCollection.removeFilterDescription((FilterDescription) allFilts.get(position.intValue()));
-		  System.out.println("!!!!!!!!FP\t" + brokenFilter + "\n\n\n");
+		  
           validatedFilterCollection.insertFilterDescription(position.intValue(), (FilterDescription) brokenFilter);
         } //else not needed yet
       }
@@ -1679,15 +1679,21 @@ public class DatabaseDatasetViewUtils {
 		
 		
 
-        if (valid[0] && valid[1])
+        if (valid[0] && valid[1]){
+			//System.out.println(columnName + "\t" + tableName + "\t" + field);
           break;
+        }
       }
       conn.close();
-      
 	  if (!(fieldValid) || !(tableValid)){
 		validatedFilter.setHidden("true");
 		
-		System.out.println("CHNAGING FILTER\t" + validatedFilter);
+	  }
+	  
+	  else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")){	
+	    
+	    validatedFilter.setHidden("false");
+	    validatedFilter.setFieldBroken();//so gets changed in the update
 	  }
        
       if (!(fieldValid && tableValid)) {
@@ -1760,8 +1766,12 @@ public class DatabaseDatasetViewUtils {
 		  System.out.println("CHNAGING OPTION\t" + validatedOption);
 		  validatedOption.setHidden("true");
 		
-	  }               
-      
+	  }
+	  else if (validatedOption.getHidden() != null && validatedOption.getHidden().equals("true")){
+		validatedOption.setHidden("false");
+		validatedOption.setFieldBroken();//so gets changed in the update
+	  }	                 
+	  
       if (!(fieldValid && tableValid)) {
         validatedOption.setFieldBroken(); //eg. if field is valid, Option.hasBrokenField will return false
         validatedOption.setTableConstraintBroken();
@@ -2014,7 +2024,7 @@ public class DatabaseDatasetViewUtils {
     while (rs.next()) {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
-
+      
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
@@ -2031,7 +2041,11 @@ public class DatabaseDatasetViewUtils {
 		validatedAttribute.setHidden("true");
 		
 	}
-	  
+	else if (validatedAttribute.getHidden() != null && validatedAttribute.getHidden().equals("true")){
+	  validatedAttribute.setHidden("false");
+	  validatedAttribute.setFieldBroken();//so gets changed in the update
+	}	
+	
 	
     if (!(fieldValid && tableValid)) {
       
@@ -2596,6 +2610,215 @@ public class DatabaseDatasetViewUtils {
 
     return dsv;
   }
+
+
+  public static DatasetView getNewFiltsAtts(DetailedDataSource dsource, String databaseName, DatasetView dsv)
+	throws ConfigurationException, SQLException {
+		
+		String datasetName = dsv.getDataset();
+		
+		AttributePage ap = new AttributePage();
+		ap.setInternalName("new_attributes");
+		ap.setDisplayName("NEW_ATTRIBUTES");
+
+		FilterPage fp = new FilterPage();
+		fp.setInternalName("new_filters");
+		fp.setDisplayName("NEW_FILTERS");
+
+		AttributeGroup ag = new AttributeGroup();
+		ag.setInternalName("new_attributes");
+		ag.setDisplayName("NEW_ATTRIBUTES");
+
+		FilterGroup fg = new FilterGroup();
+		fg.setInternalName("new_filters");
+		fg.setDisplayName("NEW_FILTERS");		
+		
+
+
+
+		//need to sort starbases in order of the number of keys they contain
+		//primaryKeys should be in this same order
+    
+		List starbases = new ArrayList();
+    
+		starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(dsource, databaseName, datasetName), dsource, databaseName)));
+    
+		List primaryKeys = new ArrayList();
+	
+		for (int i = 0, n = starbases.size(); i < n; i++) {
+		  String tableName = (String) starbases.get(i);
+		  TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
+      
+		  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+			ColumnDescription column = table.columnDescriptions[j];
+			String cname = column.name;
+			if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+			  primaryKeys.add(cname);
+		  }	
+		}
+	
+		String[] sbases = new String[starbases.size()];
+		starbases.toArray(sbases);    
+		dsv.addStarBases(sbases);
+	
+		String[] pkeys = new String[primaryKeys.size()];
+		primaryKeys.toArray(pkeys);  
+		dsv.addPrimaryKeys(pkeys);
+
+		List allTables = new ArrayList();
+		allTables.addAll(starbases);
+		allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(dsource, databaseName, datasetName)));
+		allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(dsource, databaseName, datasetName)));
+		List allCols = new ArrayList();
+
+		// ID LIST FC and FDs
+		FilterCollection fcList = new FilterCollection();
+		fcList.setInternalName("id_list");
+		fcList.setDisplayName("ID LIST");
+    
+		FilterDescription fdBools= new FilterDescription();
+		fdBools.setInternalName("id_list_filters");
+		fdBools.setType("list");
+		FilterDescription fdLists= new FilterDescription();
+		fdLists.setInternalName("id_list_limit_filters");
+		fdLists.setType("list");
+		
+		for (int i = 0, n = allTables.size(); i < n; i++) {
+		  String tableName = (String) allTables.get(i);
+		  String content = null;
+		  String fullTableName = tableName;
+	  
+		  String[] tableTokenizer = tableName.split("__");
+		  content = tableTokenizer[1];
+	  
+		  AttributeCollection ac = null;
+		  if (!isLookupTable(tableName)){
+			ac = new AttributeCollection();
+			ac.setInternalName(content);
+			ac.setDisplayName(content.replaceAll("_"," "));
+		  }
+      
+      
+
+		  FilterCollection fc = null;
+		  if (isMainTable(tableName)) {
+        
+			fc = new FilterCollection();
+			fc.setInternalName(content);
+			fc.setDisplayName(content.replaceAll("_"," "));
+		  }
+
+		  TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
+      
+		  // need to find the lowest joinKey for table first;
+		  String joinKey = null;
+		  outer:for (int k = pkeys.length - 1; k > -1; k--){
+			for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+			  ColumnDescription column = table.columnDescriptions[j];
+			  String cname = column.name;
+			  if (cname.equals(pkeys[k])){
+				joinKey = cname;
+				break outer;		
+			  }
+			}
+		  }
+      
+		  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+			ColumnDescription column = table.columnDescriptions[j];
+        
+			String cname = column.name;
+        
+			// ignore the key columns as atts and filters
+			if (cname.endsWith("_key"))
+			  continue;
+        
+			// if the column already seen in a higher resolution
+			// main table ignore
+        
+			if (isMainTable(tableName) && allCols.contains(cname))
+			  continue;
+        
+			int ctype = column.javaType; // java generalized type across all JDBC instances
+			//String ctype = column.dbType; //as in RDBMS table definition
+			int csize = column.maxLength;
+
+			if (logger.isLoggable(Level.INFO))
+			  logger.info(tableName + ": " + cname + "-- type : " + ctype + "\n");
+
+			if (isMainTable(tableName) || isDimensionTable(tableName)) {
+          
+			  if (isMainTable(tableName)) {
+				tableName = "main";
+				allCols.add(cname);
+				if (!cname.endsWith("_bool")){
+				  if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName) == null)	
+				    fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
+				} else{
+				  FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
+		      
+				  Option opBool = new Option(fdBool);
+				  //if (dsv.getOptionByFieldNameTableConstraint(cname,tableName) == null)	
+				    fdBools.addOption(opBool);
+		      
+				}
+			  }
+			  if (!cname.endsWith("_bool")){
+				AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey);
+				//ad.setHidden("false");
+				if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname,tableName) == null)	
+				  ac.addAttributeDescription(ad);
+				if (cname.endsWith("_list")){
+            	
+					FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
+					Option op = new Option(fdList);
+					fdLists.addOption(op);
+            	
+				}
+			  }
+          
+			}
+			else if (isLookupTable(tableName)){     	
+				if (cname.startsWith("glook_") || cname.startsWith("silent_")){
+					if (fc == null){
+					  fc = new FilterCollection();
+					  fc.setInternalName(content);
+					  fc.setDisplayName(content.replaceAll("_"," "));
+					}
+					if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName) == null)	
+					  fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
+        		
+				}
+			}
+        
+			else {
+			  if (logger.isLoggable(Level.INFO))
+				logger.info("Skipping " + tableName + "\n");
+			}
+		  }
+		  if (ac != null && ac.getAttributeDescriptions().size() > 0)
+			ag.addAttributeCollection(ac);
+
+		  if (fc != null && fc.getFilterDescriptions().size() > 0)
+			fg.addFilterCollection(fc);
+		}
+    
+		fcList.addFilterDescription(fdBools);
+		fcList.addFilterDescription(fdLists);
+		fg.addFilterCollection(fcList);	
+        if (ag != null && ag.getAttributeCollections().length > 0)    
+		  ap.addAttributeGroup(ag);
+		if (fg != null && fg.getFilterCollections().length > 0)  
+		  fp.addFilterGroup(fg);
+        
+        if (ap != null && ap.getAttributeGroups().size() > 0)
+		  dsv.addAttributePage(ap);
+		if (fp != null && fp.getFilterGroups().size() > 0)
+		  dsv.addFilterPage(fp);	
+			
+		return dsv;
+  }
+
+
 
   private static boolean isDimensionTable(String tableName) {
     if (tableName.toLowerCase().endsWith(DIMENSIONTABLESUFFIX))
