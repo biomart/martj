@@ -391,7 +391,7 @@ public class QueryEditor extends JPanel {
 	 */
 	private void resizeSplits() {
 
-		// must set divider by explicit values rather than
+    // must set divider by explicit values rather than
 		// proportions because the proportion approach fails
 		// on winxp jre 1.4 when the component is FIRST added.
 		// (It does work when the component is resized).
@@ -401,8 +401,13 @@ public class QueryEditor extends JPanel {
 		leftAndRight.setDividerLocation(treeWidth);
 		middleAndBottom.setDividerLocation(treeHeight);
 
+    // need to do this so the component is redrawn on win xp jre 1.4
+    validate();
+
 	}
 
+
+  
 	/**
 	 * Sets the relative positions of the constituent components with splitters
 	 * where needed. Layout is:
