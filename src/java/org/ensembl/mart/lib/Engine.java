@@ -39,215 +39,210 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
 //TODO: implement broad(transcript based) versus narrow(gene based) filtering of resultsets
 
 public class Engine {
-  private String database;
-  private Connection databaseConnection = null;
-  //private Connection serverConnection = null;
-  //private Engine engine;
-  private String host;
-  private Logger logger = Logger.getLogger(Engine.class.getName());
-  private String password;
-  private String port;
-  private String user;
+	private String database;
+	private Connection databaseConnection = null;
+	//private Connection serverConnection = null;
+	//private Engine engine;
+	private String host;
+	private Logger logger = Logger.getLogger(Engine.class.getName());
+	private String password;
+	private String port;
+	private String user;
 
-  /**
-   * Creates an Engine object for a connection to a specific mart
-   * database running on a specific mySQL database instance.
-   * 
-   * @param host - the mySQL host
-   * @param port - the mySQL port
-   * @param user - the mySQL user
-   * @param password - the mySQL password (can be null)
-   * @param database - the name of the mart database
-   */
-  public Engine(
-    String host,
-    String port,
-    String user,
-    String password,
-    String database) {
-    this.host = host;
-    this.port = port;
-    this.user = user;
-    this.password = password;
-    this.database = database;
-  }
+	/**
+	 * Creates an Engine object for a connection to a specific mart
+	 * database running on a specific mySQL database instance.
+	 * 
+	 * @param host - the mySQL host
+	 * @param port - the mySQL port
+	 * @param user - the mySQL user
+	 * @param password - the mySQL password (can be null)
+	 * @param database - the name of the mart database
+	 */
+	public Engine(String host, String port, String user, String password, String database) {
+		this.host = host;
+		this.port = port;
+		this.user = user;
+		this.password = password;
+		this.database = database;
+	}
 
-  public int countFocus(Query query) {
-    throw new RuntimeException();
-  }
+	public int countFocus(Query query) {
+		throw new RuntimeException();
+	}
 
-  public int countRows(Query query) {
-    throw new RuntimeException();
-  }
+	public int countRows(Query query) {
+		throw new RuntimeException();
+	}
 
-  /**
-   * Creates connection to database server. If getdb is true, resulting connection
-   * is to the specific database on the server, otherwise it is to the server itself.
-   */
-  private Connection createConnection(boolean getdb) {
-    StringBuffer connStr = new StringBuffer();
-    connStr.append("jdbc:mysql://");
-    connStr.append(host);
+	/**
+	 * Creates connection to database server. If getdb is true, resulting connection
+	 * is to the specific database on the server, otherwise it is to the server itself.
+	 */
+	private Connection createConnection(boolean getdb) {
+		StringBuffer connStr = new StringBuffer();
+		connStr.append("jdbc:mysql://");
+		connStr.append(host);
 
-    if (port != null && !"".equals(port))
-      connStr.append(":").append(port);
-    connStr.append("/");
+		if (port != null && !"".equals(port))
+			connStr.append(":").append(port);
+		connStr.append("/");
 
-    if (getdb && database != null && !database.equals(""))
-      connStr.append(database);
-    else
-      connStr.append("mysql");
-    // default table - we have to connect to one table
-    connStr.append("?autoReconnect=true");
-    Connection conn = null;
-    try {
-      Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-      logger.info(connStr.toString());
-      conn = DriverManager.getConnection(connStr.toString(), user, password);
-    } catch (Exception e) {
-      logger.error("failed to connect to " + connStr.toString(), e);
-      throw new RuntimeException(e.getMessage());
-    }
-    return conn;
-  }
+		if (getdb && database != null && !database.equals(""))
+			connStr.append(database);
+		else
+			connStr.append("mysql"); // default table - we have to connect to one table
+		connStr.append("?autoReconnect=true");
+		Connection conn = null;
+		try {
+			Class.forName("org.gjt.mm.mysql.Driver").newInstance();
+			logger.info(connStr.toString());
+			conn = DriverManager.getConnection(connStr.toString(), user, password);
+		} catch (Exception e) {
+			logger.error("failed to connect to " + connStr.toString(), e);
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		return conn;
+	}
 
-  /**
-   * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
-   * system to modify the Query accordingly, if present.
-   * Constructs a QueryRunner object for the given Query, and format using 
-   * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
-   * with the mySQL connection of this Engine, and write the results to 
-   * a specified OutputStream.
-   * 
-   * @param query - A Query Object
-   * @param formatspec - A FormatSpec Object
-   * @param os - An OutputStream
-   * @throws FormatException - unsupported Format supplied to the QueryRunnerFactory
-   * @throws SequenceException - general Exception thrown for a variety of reasons that the SeqQueryRunners cannot write out sequence data
-   * @throws InvalidQueryException - general Exception thrown when invalid query parameters have been presented, and the resulting SQL will not work.
-   * @see Query
-   * @see FormatSpec
-   * @see QueryRunnerFactory
-   * @see QueryRunner
-   * @see DSFilterHandler
-   * @see DSFilterHandlerFactory
-   */
-  public void execute(Query query, FormatSpec formatspec, OutputStream os)
-    throws FormatException, SequenceException, InvalidQueryException {
+	/**
+	 * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+	 * system to modify the Query accordingly, if present.
+	 * Constructs a QueryRunner object for the given Query, and format using 
+	 * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
+	 * with the mySQL connection of this Engine, and write the results to 
+	 * a specified OutputStream.  Polls Query for a limit, if present, applies it to the execute method.
+	 * 
+	 * @param query - A Query Object
+	 * @param formatspec - A FormatSpec Object
+	 * @param os - An OutputStream
+	 * @throws FormatException - unsupported Format supplied to the QueryRunnerFactory
+	 * @throws SequenceException - general Exception thrown for a variety of reasons that the SeqQueryRunners cannot write out sequence data
+	 * @throws InvalidQueryException - general Exception thrown when invalid query parameters have been presented, and the resulting SQL will not work.
+	 * @see Query
+	 * @see FormatSpec
+	 * @see QueryRunnerFactory
+	 * @see QueryRunner
+	 * @see DSFilterHandler
+	 * @see DSFilterHandlerFactory
+	 */
+	public void execute(Query query, FormatSpec formatspec, OutputStream os) throws FormatException, SequenceException, InvalidQueryException {
 
-    execute(query, formatspec, os, 0);
+		if (query.hasLimit())
+			execute(query, formatspec, os, query.getLimit());
+		else
+			execute(query, formatspec, os, 0);
+	}
 
-  }
+	/**
+	 * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+	 * system to modify the Query accordingly, if present.
+	 * Constructs a QueryRunner object for the given Query, and format using 
+	 * a QueryRunnerFactory.  Applies a limit clause to the SQL.
+	 * Uses the QueryRunner to execute the Query with the mySQL connection of 
+	 * this Engine, and write the results to a specified OutputStream.
+	 * 
+	 * @param query A Query Object
+	 * @param formatspec A FormatSpec Object
+	 * @param os An OutputStream
+	 * @param limit limits the number of records returned by the query
+	 * @throws SequenceException
+	 * @throws FormatException
+	 * @throws InvalidQueryException
+	 * @see Query
+	 * @see FormatSpec
+	 * @see QueryRunnerFactory
+	 * @see QueryRunner
+	 * @see DSFilterHandler
+	 * @see DSFilterHandlerFactory
+	 */
+	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) throws SequenceException, FormatException, InvalidQueryException {
 
-  /**
-   * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
-   * system to modify the Query accordingly, if present.
-   * Constructs a QueryRunner object for the given Query, and format using 
-   * a QueryRunnerFactory.  Applies a limit clause to the SQL.
-   * Uses the QueryRunner to execute the Query with the mySQL connection of 
-   * this Engine, and write the results to a specified OutputStream.
-   * 
-   * @param query A Query Object
-   * @param formatspec A FormatSpec Object
-   * @param os An OutputStream
-   * @param limit limits the number of records returned by the query
-   * @throws SequenceException
-   * @throws FormatException
-   * @throws InvalidQueryException
-   * @see Query
-   * @see FormatSpec
-   * @see QueryRunnerFactory
-   * @see QueryRunner
-   * @see DSFilterHandler
-   * @see DSFilterHandlerFactory
-   */
-  public void execute(
-    Query query,
-    FormatSpec formatspec,
-    OutputStream os,
-    int limit)
-    throws SequenceException, FormatException, InvalidQueryException {
+		Connection conn = getDatabaseConnection();
+		if (query.hasDomainSpecificFilters()) {
+			DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
+			for (int i = 0, n = dsfilters.length; i < n; i++) {
+				DomainSpecificFilter dsf = dsfilters[i];
+				DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getObjectCode());
+				query = dsfh.ModifyQuery(conn, dsf.getHandlerParameter(), query);
+			}
+		}
 
-    Connection conn = getDatabaseConnection();
-    if (query.hasDomainSpecificFilters()) {
-      DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
-      for (int i = 0, n = dsfilters.length; i < n; i++) {
-        DomainSpecificFilter dsf = dsfilters[i];
-        DSFilterHandler dsfh =
-          DSFilterHandlerFactory.getInstance(dsf.getObjectCode());
-        query = dsfh.ModifyQuery(conn, dsf.getHandlerParameter(), query);
-      }
-    }
+		if (query.hasUnprocessedListFilters()) {
+			IDListFilter[] unprocessedFilters = query.getUnprocessedListFilters();
+			for (int i = 0, n = unprocessedFilters.length; i < n; i++) {
+				IDListFilter filter = unprocessedFilters[i];
+				IDListFilterHandler idhandler = IDListFilterHandlerFactory.getInstance(filter.getType());
+				query = idhandler.ModifyQuery(this, filter, query);
+			}
+		}
 
-    logger.info(query);
-    QueryRunner qr =
-      QueryRunnerFactory.getInstance(query, formatspec, conn, os);
-    qr.execute(limit);
-  }
+		logger.info(query);
+		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
+		qr.execute(limit);
+	}
 
-  public String getDatabase() {
-    return database;
-  }
+	public String getDatabase() {
+		return database;
+	}
 
-  private Connection getDatabaseConnection() {
-    if (databaseConnection == null) {
-      if (database == null)
-        throw new IllegalStateException("database not set.");
+	/**
+	 * Returns the java.sql.Connection object for the database to which the engine is currently connected. 
+	 * @return java.sql.Connection object
+	 */
+	public Connection getDatabaseConnection() {
+		if (databaseConnection == null) {
+			if (database == null)
+				throw new IllegalStateException("database not set.");
 
-      databaseConnection = createConnection(true);
-    }
-    return databaseConnection;
-  }
+			databaseConnection = createConnection(true);
+		}
+		return databaseConnection;
+	}
 
-  /**
-   * Returns a MartConfiguration object with all of the information needed to interact with
-   * the mart defined by the connection parameters provided to this Engine.
-   * 
-   * @return MartConfiguration object
-   */
-  public MartConfiguration getMartConfiguration()
-    throws ConfigurationException {
-    Connection conn = getDatabaseConnection();
-    return new MartConfigurationFactory().getInstance(conn, database);
-  }
+	/**
+	 * Overloaded method allowing user to supply an alternate xml configuration to use.  This configuration
+	 * must exist in the database, and must conform to the MartConfiguration.dtd.  Intended mostly for use by the Unit Test
+	 * ConfigurationTest.testMartConfiguration
+	 * 
+	 * @param system_id -- system_id of the alternate Configuration document
+	 * @return MartConfiguration object
+	 * @throws ConfigurationException
+	 */
+	public MartConfiguration getMartConfiguration(String system_id) throws ConfigurationException {
+		Connection conn = getDatabaseConnection();
+		return new MartConfigurationFactory().getInstance(conn, database, system_id);
+	}
 
-  /**
-   * Overloaded method allowing user to supply an alternate xml configuration to use.  This configuration
-   * must exist in the database, and must conform to the MartConfiguration.dtd.  Intended mostly for use by the Unit Test
-   * ConfigurationTest.testMartConfiguration
-   * 
-   * @param system_id -- system_id of the alternate Configuration document
-   * @return MartConfiguration object
-   * @throws ConfigurationException
-   */
-  public MartConfiguration getMartConfiguration(String system_id)
-    throws ConfigurationException {
-    Connection conn = getDatabaseConnection();
-    return new MartConfigurationFactory().getInstance(
-      conn,
-      database,
-      system_id);
-  }
+	/**
+	 * Overloaded method allowing user to supply an alternate xml configuration stored on the file system, as a URL.
+	 * This requires that the DTD for the document is also available from the file system.  Users should make sure that
+	 * the DOCTYPE declaration correctly locates the DTD for the document supplied.
+	 * 
+	 * @param martConfURL - URL for the supplied MartConfiguration xml document
+	 * @return MartConfiguration object for the mart defined by this document.
+	 * @throws ConfigurationException for all underlying Exceptions encountered during the attempt to process the request.
+	 */
+	public MartConfiguration getMartConfiguration(URL martConfURL) throws ConfigurationException {
+		return new MartConfigurationFactory().getInstance(martConfURL);
+	}
 
-  /**
-   * Overloaded method allowing user to supply an alternate xml configuration stored on the file system, as a URL.
-   * This requires that the DTD for the document is also available from the file system.  Users should make sure that
-   * the DOCTYPE declaration correctly locates the DTD for the document supplied.
-   * 
-   * @param martConfURL - URL for the supplied MartConfiguration xml document
-   * @return MartConfiguration object for the mart defined by this document.
-   * @throws ConfigurationException for all underlying Exceptions encountered during the attempt to process the request.
-   */
-  public MartConfiguration getMartConfiguration(URL martConfURL)
-    throws ConfigurationException {
-    return new MartConfigurationFactory().getInstance(martConfURL);
-  }
+	/**
+	 * Returns a MartConfiguration object with all of the information needed to interact with
+	 * the mart defined by the connection parameters provided to this Engine.
+	 * 
+	 * @return MartConfiguration object
+	 */
+	public MartConfiguration getMartConfiguration() throws ConfigurationException {
+		Connection conn = getDatabaseConnection();
+		return new MartConfigurationFactory().getInstance(conn, database);
+	}
 
-  public void setDatabase(String database) {
-    this.database = database;
-  }
+	public void setDatabase(String database) {
+		this.database = database;
+	}
 
-  public String sql(Query query) {
-    throw new RuntimeException();
-  }
+	public String sql(Query query) {
+		throw new RuntimeException();
+	}
 }
