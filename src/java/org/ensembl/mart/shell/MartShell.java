@@ -179,13 +179,33 @@ public class MartShell {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			mainHost = p.getProperty("host").trim();
-			mainPort = p.getProperty("port").trim();
-			mainDatabase = p.getProperty("databaseName").trim();
-			mainUser = p.getProperty("user").trim();
-			mainPassword = p.getProperty("password").trim();
-			mainDatabaseType = p.getProperty("databaseType").trim();
-			mainConfiguration = p.getProperty("alternateConfigurationFile").trim();
+			mainHost = p.getProperty("host");
+			if (mainHost != null && mainHost.length() > 1)
+			  mainHost = mainHost.trim();
+			  
+			mainPort = p.getProperty("port");
+			if (mainPort != null && mainPort.length() > 1)
+			  mainPort = mainPort.trim();
+			  
+			mainDatabase = p.getProperty("databaseName");
+			if (mainDatabase != null && mainDatabase.length() > 1)
+			  mainDatabase = mainDatabase.trim();
+			  
+			mainUser = p.getProperty("user");
+			if (mainUser != null && mainUser.length() > 1)
+			  mainUser = mainUser.trim();
+			  
+			mainPassword = p.getProperty("password");
+			if (mainPassword != null && mainPassword.length() > 1)
+			  mainPassword = mainPassword.trim();
+			  
+			mainDatabaseType = p.getProperty("databaseType");
+			if (mainDatabaseType != null && mainDatabaseType.length() > 1)
+			  mainDatabaseType = mainDatabaseType.trim();
+			  
+			mainConfiguration = p.getProperty("alternateConfigurationFile");
+			if (mainConfiguration != null && mainConfiguration.length() > 1)
+			  mainConfiguration = mainConfiguration.trim();
 
 		} catch (java.net.MalformedURLException e) {
 			mainLogger.warn("Could not load connection file " + connfile + " MalformedURLException: " + e);
@@ -725,9 +745,6 @@ public class MartShell {
 		} else if (martUser == null || martUser.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a User");
-		} else if (martPass == null || martPass.length() < 1) {
-			validQuery = false;
-			setBatchError("Must set a Password");
 		} else if (martDatabase == null || martDatabase.length() < 5) {
 			validQuery = false;
 			setBatchError("Must set a Mart Database");
