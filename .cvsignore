@@ -1,3 +1,4 @@
+.cvsignore
 build
 dist
 reports
@@ -9,3 +10,4 @@ testing.jpage
 oraclemart.sqls
 jre
 spy.log
+oracle.sql
