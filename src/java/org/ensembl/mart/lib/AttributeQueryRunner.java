@@ -1,3 +1,4 @@
+//TODO: test, and if necessary, revert to cvs version 1.7
 package org.ensembl.mart.lib;
 
 import java.io.IOException;
@@ -8,6 +9,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +40,216 @@ public final class AttributeQueryRunner implements QueryRunner {
     this.query = query;
     this.format = format;
     this.osr = new PrintStream(os, true); // autoflush true
+  }
+
+  public void executeNEW(int limit) throws SequenceException, InvalidQueryException {
+    //TODO: this should be moved into the Query object, so you can just do if (query.hasBigList())
+    Filter[] filters = query.getFilters();
+
+    Filter bigListFilter = null;
+    String[] biglist = null;
+    int numBigLists = 0;
+    for (int i = 0, n = filters.length; i < n; i++) {
+      Filter filter = filters[i];
+      if (filter instanceof IDListFilter) {
+        if (((IDListFilter) filter).getIdentifiers().length > listSizeMax) {
+          if (numBigLists > maxBigListCount)
+            throw new InvalidQueryException("Too many in list filters attached, only one per query supported.\n");
+
+          bigListFilter = filter;
+          biglist = ((IDListFilter) filter).getIdentifiers();
+          numBigLists++;
+        }
+      }
+    }
+
+    if (limit < 1 && numBigLists > 0) {
+      String[] idBatch = new String[listSizeMax];
+      int batchIter = 0;
+
+      for (int i = 0, n = biglist.length; i < n; i++) {
+        String element = biglist[i];
+
+        if ((i > 0) && ((i % listSizeMax) == 0)) {
+          Query newQuery = new Query(query);
+          newQuery.removeFilter(bigListFilter);
+
+          IDListFilter newFilter =
+            new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), idBatch);
+          newQuery.addFilter(newFilter);
+
+          executeQueryBatch(newQuery);
+
+          idBatch = new String[listSizeMax];
+          batchIter = 0;
+        }
+        idBatch[batchIter] = element;
+        batchIter++;
+      }
+
+      //last batch is either empty, or less than idBatch.length
+      if (idBatch[0] != null) {
+        
+        List lastBatch = new ArrayList();
+        for (int i = 0, n = idBatch.length; i < n; i++) {
+          String element = idBatch[i];
+          if (element != null)
+            lastBatch.add(element);
+        }
+
+        String[] lbatch = new String[lastBatch.size()];
+        lastBatch.toArray(lbatch);
+                  
+        Query newQuery = new Query(query);
+        newQuery.removeFilter(bigListFilter);
+
+        IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), lbatch);
+        newQuery.addFilter(newFilter);
+
+        executeQueryBatch(newQuery);
+      }
+    } else {
+      executeSQLLimit(limit);
+    }
+  }
+
+  protected void executeQueryBatch(Query newQuery) throws SequenceException, InvalidQueryException {
+    attributes = newQuery.getAttributes();
+    filters = newQuery.getFilters();
+
+    Connection conn = null;
+    String sql = null;
+    try {
+      csql = new CompiledSQLQuery(newQuery);
+      sql = csql.toSQLWithKey();
+
+      queryID = csql.getPrimaryKey();
+
+      DataSource ds = newQuery.getDataSource();
+      if (ds == null)
+        throw new RuntimeException("newQuery.DataSource is null");
+      conn = ds.getConnection();
+
+      if (logger.isLoggable(Level.INFO)) {
+        logger.info("QUERY : " + newQuery);
+        logger.info("SQL : " + sql);
+      }
+
+      PreparedStatement ps = conn.prepareStatement(sql);
+
+      int p = 1;
+      for (int i = 0, n = filters.length; i < n; ++i) {
+        Filter f = filters[i];
+        String value = f.getValue();
+        if (value != null) {
+          logger.info("SQL (prepared statement value) : " + p + " = " + value);
+          ps.setString(p++, value);
+        }
+      }
+
+      ResultSet rs = ps.executeQuery();
+      resultSetRowsProcessed = 0;
+
+      processResultSet(conn, rs);
+
+      rs.close();
+    } catch (IOException e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+      throw new InvalidQueryException(e);
+    } catch (SQLException e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning(e.getMessage());
+      throw new InvalidQueryException(e);
+    } finally {
+      DatabaseUtil.close(conn);
+    }
+  }
+
+  protected void executeSQLLimit(int limit) throws SequenceException, InvalidQueryException {
+    boolean moreRows = true;
+    boolean userLimit = false;
+
+    attributes = query.getAttributes();
+    filters = query.getFilters();
+
+    Connection conn = null;
+    String sql = null;
+    try {
+      csql = new CompiledSQLQuery(query);
+      String sqlbase = csql.toSQLWithKey();
+      String primaryKey = csql.getQualifiedPrimaryKey();
+      queryID = csql.getPrimaryKey();
+
+      DataSource ds = query.getDataSource();
+      if (ds == null)
+        throw new RuntimeException("query.DataSource is null");
+      conn = ds.getConnection();
+
+      while (moreRows) {
+        sql = sqlbase;
+
+        if (sqlbase.indexOf("WHERE") >= 0)
+          sql += " AND " + primaryKey + " >= " + lastID;
+        else
+          sql += " WHERE " + primaryKey + " >= " + lastID;
+
+        sql += " ORDER BY " + primaryKey;
+
+        if (logger.isLoggable(Level.INFO)) {
+          logger.info("QUERY : " + query);
+          logger.info("SQL : " + sql);
+        }
+
+        PreparedStatement ps = conn.prepareStatement(sql);
+
+        if (limit > 0) {
+          userLimit = true;
+          ps.setMaxRows(limit);
+          moreRows = false;
+        } else
+          ps.setMaxRows(batchLength);
+
+        int p = 1;
+        for (int i = 0, n = filters.length; i < n; ++i) {
+          Filter f = query.getFilters()[i];
+          String value = f.getValue();
+          if (value != null) {
+            logger.info("SQL (prepared statement value) : " + p + " = " + value);
+            ps.setString(p++, value);
+          }
+        }
+
+        ResultSet rs = ps.executeQuery();
+        resultSetRowsProcessed = 0;
+
+        processResultSet(conn, skipNewBatchRedundantRecords(rs));
+
+        // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
+        if ((!userLimit) && (resultSetRowsProcessed < batchLength))
+          moreRows = false;
+
+        if (batchLength < maxBatchLength) {
+          batchLength =
+            (batchLength * batchModifiers[modIter] < maxBatchLength)
+              ? batchLength * batchModifiers[modIter]
+              : maxBatchLength;
+          modIter = (modIter == 0) ? 1 : 0;
+        }
+
+        rs.close();
+      }
+    } catch (IOException e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+      throw new InvalidQueryException(e);
+    } catch (SQLException e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning(e.getMessage());
+      throw new InvalidQueryException(e);
+    } finally {
+      DatabaseUtil.close(conn);
+    }
   }
 
   public void execute(int limit) throws SequenceException, InvalidQueryException {
@@ -113,11 +326,11 @@ public final class AttributeQueryRunner implements QueryRunner {
         rs.close();
       }
     } catch (IOException e) {
-    	if (logger.isLoggable(Level.WARNING))
+      if (logger.isLoggable(Level.WARNING))
         logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
       throw new InvalidQueryException(e);
     } catch (SQLException e) {
-			if (logger.isLoggable(Level.WARNING))
+      if (logger.isLoggable(Level.WARNING))
         logger.warning(e.getMessage());
       throw new InvalidQueryException(e);
     } finally {
@@ -189,6 +402,10 @@ public final class AttributeQueryRunner implements QueryRunner {
   private int batchLength = 50000;
   private final int maxBatchLength = 200000;
   //private int batchLength = 200000;
+
+  //big list batching
+  private final int listSizeMax = 1000;
+  private final int maxBigListCount = 1;
 
   private String queryID = null;
   private int lastID = -1;
