@@ -260,7 +260,7 @@ public class AdaptorManager extends Box {
 				for (int i = 0; i < adaptors.length; i++) {
 					add(adaptors[i]);
 					logger.fine("Loaded Adaptor:" + adaptors[i].getName()
-							+ ", num datasetConfigs=" + adaptors[i].getDatasetConfigs().length);
+							+ ", num datasetConfigs=" + adaptors[i].getNumDatasetConfigs());
 				}
 			}
 		} catch (ConfigurationException e1) {
@@ -364,7 +364,7 @@ public class AdaptorManager extends Box {
 	public boolean contains(DatasetConfig dsv) {
 		try {
 			return dsv != null
-					&& rootAdaptor.supportsInternalName(dsv.getInternalName());
+					&& rootAdaptor.containsDatasetConfig(dsv);
 		} catch (ConfigurationException e) {
 			// Shouldn't happen
 			feedback.warning(e);

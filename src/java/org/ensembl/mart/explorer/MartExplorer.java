@@ -143,21 +143,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);
 
-    // test mode preloads datasets and sets up a query ready to use.
-    if (true) {
-      DSConfigAdaptor a = QueryEditor.testDSConfigAdaptor();
-      DatasetConfig dsv = a.getDatasetConfigs()[0];
-
-      //me.datasetConfigSettings.add(a);
-      //me.doNewQuery();
-      //      ((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
-      //        .getQuery()
-      //        .setDatasetConfig(dsv);
-    }
-
     me.loadDefaultAdaptors();
     
-    if (me.adaptorManager.getRootAdaptor().getDatasetConfigs().length > 0)
+    if (me.adaptorManager.getRootAdaptor().getNumDatasetConfigs() > 0)
       me.doNewQuery();
 
   }
@@ -529,7 +517,7 @@ protected void doSave() {
 
     try {
 
-      if (adaptorManager.getRootAdaptor().getDatasetConfigs().length == 0) {
+      if (adaptorManager.getRootAdaptor().getNumDatasetConfigs() == 0) {
         feedback.warning(
           "You need to add an "
             + "adaptor containing dataset configs before you can create a query.");
@@ -543,8 +531,6 @@ protected void doSave() {
         qe.openDatasetConfigMenu();  
         
       }
-    } catch (ConfigurationException e) {
-      feedback.warning(e);
     } catch (IOException e) {
       feedback.warning(e);
     }

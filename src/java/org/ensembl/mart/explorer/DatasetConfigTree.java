@@ -22,7 +22,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,6 +31,7 @@ import javax.swing.JFrame;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -88,7 +88,7 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 				if (!optional && !containsDefaultConfig(adaptor))
 					continue;
         
-        if (adaptor.getDatasetConfigs().length==0 )
+        if (adaptor.getNumDatasetConfigs()==0 )
           continue;
 
 				LabelledTreeNode adaptorNode =
@@ -104,13 +104,13 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 					for (int j = 0; j < datasetNames.length; j++) {
 
 						String dataset = datasetNames[j];
-						DatasetConfig[] configs = adaptor.getDatasetConfigsByDataset(dataset);
+						DatasetConfigIterator configs = adaptor.getDatasetConfigsByDataset(dataset);
 
 						LabelledTreeNode datasetNode = null;
 
-						for (int k = 0; k < configs.length; k++) {
+						while (configs.hasNext()) {
 
-							DatasetConfig config = configs[k];
+							DatasetConfig config = (DatasetConfig) configs.next();
 
 							if (optional) {
 
@@ -159,9 +159,9 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 	private boolean containsDefaultConfig(DSConfigAdaptor adaptor) {
 		boolean r = false;
 		try {
-			DatasetConfig[] configs = adaptor.getDatasetConfigs();
-			for (int i = 0; !r && i < configs.length; i++)
-				if (isDefault(configs[i]))
+			DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+			while (!r && configs.hasNext())
+				if (isDefault((DatasetConfig) configs.next()))
 					r = true;
 
 		} catch (ConfigurationException e) {

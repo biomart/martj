@@ -342,15 +342,6 @@ public class QueryEditor extends JPanel {
       adaptor.add(new URLDSConfigAdaptor(dvURL, true));
     }
 
-    DatasetConfig[] configs = adaptor.getDatasetConfigs();
-
-    DetailedDataSource ds = new DetailedDataSource("mysql",
-      //"127.0.0.1",
-    //"3313",
-  "ensembldb.ensembl.org", "3306", "ensembl_mart_17_1",
-      //"ensro",
-  "anonymous", null, 10, "com.mysql.jdbc.Driver");
-
     return adaptor;
   }
 
@@ -388,8 +379,6 @@ public class QueryEditor extends JPanel {
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     logger.setLevel(Level.FINEST);
 
-    DatasetConfig[] configs = null;
-
     AdaptorManager dvs = testDatasetConfigSettings();
     final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
@@ -403,8 +392,7 @@ public class QueryEditor extends JPanel {
     f.setVisible(true);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetConfig(dvs.getRootAdaptor().getDatasetConfigs()[0]);
-
+    editor.getQuery().setDatasetConfig((DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
   }
 
   /**
