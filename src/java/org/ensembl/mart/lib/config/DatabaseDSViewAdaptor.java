@@ -92,12 +92,9 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 	 * not do anything to encrypt the password provided.  It is really a convenience method for users wishing to
 	 * create MartRegistry files with their database password attribute filled in.
 	 * @param password -- String password for underlying DataSource
-	 * @throws ConfigurationException if setDatabasePassword has already been called.
 	 * @see org.ensembl.mart.lib.config.DatabaseDSViewAdaptor#getMartLocations
 	 */
-	public void setDatabasePassword(String password) throws ConfigurationException {
-		if (dbpassword != null)
-			throw new ConfigurationException("DatabasePassword already set\n");
+	public void setDatabasePassword(String password) {
 		dbpassword = password;
 	}
 
