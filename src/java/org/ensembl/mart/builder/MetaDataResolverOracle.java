@@ -102,6 +102,27 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 	return array_exp;
 	}
 	
+
+ protected String getPrimaryKeys ( String table){
+ 	
+ 	String pk = null;
+ 	
+ 	try {
+ 		DatabaseMetaData dmd = getConnection().getMetaData();
+ 		ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.username,table);
+ 		while (keys.next()){
+ 	    // This needs to be user specifed as it is not going to work properly with composite keys
+ 		pk=keys.getString(4);
+ 		}
+ 	} catch (SQLException e) {
+ 		e.printStackTrace();
+ 	}
+ 	
+ 	return pk;
+ }
+
+
+
 }
 
 

@@ -23,18 +23,16 @@ public class Transformation {
 	String final_table_type;
 	String type;
 	private LinkedTables linked;
-	Table main_table;
+	Table start_table;
 	
 	
 	public void create (Table [] referenced_tables){
 		
 		if(type.equals("linked")){
-		createPrimaryTransUnits(referenced_tables);
-		} else { 
+			createPrimaryTransUnits(referenced_tables);
+		} else if(type.equals("main")){ 
 			createSecondaryTransUnits(referenced_tables);
-		}
-		
-		
+		}	
 	}
 	
 	
@@ -122,7 +120,7 @@ public class Transformation {
 			Table temp_start = new Table();
 			
 			if (i == 0){
-				temp_start = main_table;	
+				temp_start = start_table;	
 			} else  {temp_start=temp_end;}
 			
 			

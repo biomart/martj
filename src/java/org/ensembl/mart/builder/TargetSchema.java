@@ -42,7 +42,7 @@ public class TargetSchema {
 		    Transformation transformation = new Transformation();
 			transformation.final_table_type=linked.final_table_type;
 			transformation.final_table_name=linked.final_table_name;
-			transformation.main_table=linked.getMainTable();
+			transformation.start_table=linked.getMainTable();
 			transformation.type="linked";
 			transformation.create(referenced_tables);
 			
@@ -73,11 +73,13 @@ public class TargetSchema {
             ref_tables.add(ref);
             Table [] b = new Table [ref_tables.size()];
             Table [] tables = (Table []) ref_tables.toArray(b);
+            
+            
             Transformation transformation = new Transformation();
             transformation.final_table_name =ref.getName();
             
             ref.setName(ref.temp_name);
-            transformation.main_table=main;
+            transformation.start_table=main;
 		    transformation.type="main";
             transformation.create(tables);
 		    

@@ -58,7 +58,7 @@ public abstract class MetaDataResolver {
 	
 	protected abstract Table [] getExportedKeyTables (String table_name);
 	protected abstract Table [] getImportedKeyTables (String table_name);
-	
+	protected abstract String getPrimaryKeys(String table_name);
 	
 	
 	public Column [] getReferencedColumns (String name){
@@ -107,12 +107,18 @@ public abstract class MetaDataResolver {
 	
 	
 	
+	
+	
+	
 	public Table getMainTable (String main_name){
 		
 		Table table = new Table();
 		table.setName(main_name);
 		table.setColumns(getReferencedColumns(table.getName()));
 		
+		table.setKey(getPrimaryKeys(main_name));
+	
+	/**	
 		try {
 			DatabaseMetaData dmd = getConnection().getMetaData();
 			ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.username,main_name);
@@ -121,7 +127,10 @@ public abstract class MetaDataResolver {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}	
+		}
+		
+		*/
+		
 		return table;
 	}
 	

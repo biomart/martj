@@ -33,7 +33,7 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 		
 		ArrayList exported_tabs= new ArrayList();
 		
-		String [] pkeys = getPrimaryKeys(maintable);
+		String pkey = getPrimaryKeys(maintable);
 		String [] tables = getAllTables();
 		
 		for (int i =0; i<tables.length;i++){
@@ -42,12 +42,12 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 			
 			for (int j=0;j<columns.length;j++)
 			{
-				if (columns[j].equals(pkeys[0])){
+				if (columns[j].equals(pkey)){
 					
 					Table table = new Table();
 					exported_tabs.add(table);
 					table.setName(tables[i]);
-					table.setKey(pkeys[0]);
+					table.setKey(pkey);
 					table.status="exported";
 					table.setColumns(getReferencedColumns(tables[i]));
 					break;
@@ -76,9 +76,9 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 		for (int k=0;k<fkeys.length;k++){
 			for (int i =0; i<tables.length;i++){
 				
-				if (getPrimaryKeys(tables[i]).length == 0){ continue;}
+				if (getPrimaryKeys(tables[i]) == null){ continue;}
 				
-				String pk= getPrimaryKeys(tables[i])[0];
+				String pk = getPrimaryKeys(tables[i]);
 				String [] columns = getColumnNames(tables[i]);
 				
 				for (int j=0;j<columns.length;j++)
@@ -109,25 +109,29 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 	
 	
 	
-	private String [] getPrimaryKeys (String maintable){
+	protected String getPrimaryKeys (String maintable){
 		
-		ArrayList pkeys= new ArrayList();
+		String pk = null;
 		
 		try {
-			int i = 0;
-			ResultSet keys = dmd.getPrimaryKeys(getAdaptor().catalog,getAdaptor().username,maintable);
-			while (keys.next()){
-				pkeys.add(keys.getString(4));
-				i++;
+			
+			// DMD does not understand mysql composite key, need to get them 'hard way'.
+			//ResultSet keys = dmd.getPrimaryKeys(getAdaptor().catalog,getAdaptor().username,maintable);
+
+			String sql = "describe " + maintable;
+			PreparedStatement ds = connection.prepareStatement(sql);
+            ResultSet rs= ds.executeQuery();
+			
+            // this is not going to work properly with composite keys, needs user input
+			while (rs.next()){
+				if (rs.getString(4).equals("PRI"))
+					pk = rs.getString(1);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} 
 		
-		String [] b = new String[pkeys.size()];
-		String [] array_keys = (String []) pkeys.toArray(b);
-		
-		return array_keys;
+		return pk;
 	}
 	
 	
@@ -137,11 +141,11 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 		ArrayList fkeys= new ArrayList();
 		
 		String [] columns = getColumnNames(maintable);
-		String [] pk = getPrimaryKeys(maintable);
+		String pk = getPrimaryKeys(maintable);
 		
 		for (int i=0;i<columns.length;i++){
 			
-			if (columns[i].equals(pk[0])) continue;
+			if (columns[i].equals(pk)) continue;
 			else { 
 				fkeys.add(columns[i]);
 			}
