@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,6 +31,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -37,6 +39,8 @@ import javax.swing.JTextField;
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
+
+import sun.awt.HorizBagLayout;
 
 /**
  * Widget for selecting sequence attributes.
@@ -60,7 +64,7 @@ public class SequenceGroupWidget
   private JTextField flank5 = new JTextField("1000");
   private JTextField flank3 = new JTextField("1000");
 
-  private JRadioButton clearButton = new JRadioButton("Clear");
+  private JRadioButton clearButton = new JRadioButton("None");
 
   private JRadioButton transcript = new JRadioButton("Transcripts/proteins");
 
@@ -116,11 +120,10 @@ public class SequenceGroupWidget
 
   private JRadioButton includeNone = new JRadioButton();
 
-  private JRadioButton[] typeButtons =
-    new JRadioButton[] { clearButton, transcript, gene };
+  private JRadioButton[] typeButtons = { transcript, gene, clearButton };
 
   private JRadioButton[] includeButtons =
-    new JRadioButton[] {
+    {
       includeGeneSequence,
       includeGeneSequence_5_3,
       includeGeneSequence_5,
@@ -139,8 +142,31 @@ public class SequenceGroupWidget
       includeExonsPlus3Flanks,
       includeExonsPlus5Flanks };
 
+  private JComponent[] leftColumn =
+    {
+      includeGeneSequence,
+      includeGeneSequence_5_3,
+      includeGeneSequence_5,
+      includeUpstream,
+      includeGeneSequence_3,
+      includeDownStream,
+      includeExonSequence,
+      includeExonsPlus5And3Flanks,
+      includeExonsPlus3Flanks,
+      includeExonsPlus5Flanks };
+
+  private JComponent[] rightColumn =
+    {
+      includeUpStreamUTROnly,
+      includeUpStreamAndUTR,
+      includeDownStreamUTROnly,
+      includeDownStreamAndUTR,
+      includecDNASequence,
+      includeCodingSequence,
+      includePeptide };
+
   private JRadioButton[] geneButtons =
-    new JRadioButton[] {
+    {
       includeGeneSequence,
       includeGeneSequence_5_3,
       includeGeneSequence_5,
@@ -175,42 +201,69 @@ public class SequenceGroupWidget
 
     Box b = Box.createVerticalBox();
 
-    b.add(schematicSequenceImageHolder);
-
+    Box types = Box.createHorizontalBox();
     ButtonGroup bg = new ButtonGroup();
     for (int i = 0; i < typeButtons.length; i++) {
 
       bg.add(typeButtons[i]);
-      b.add(typeButtons[i]);
+      types.add(typeButtons[i]);
       typeButtons[i].addActionListener(this);
 
     }
+    b.add(types);
+    
+    Box schemaBox = Box.createHorizontalBox();
+    schemaBox.add(schematicSequenceImageHolder);
+    schemaBox.add(Box.createHorizontalGlue());
+    b.add(schemaBox);
 
     bg = new ButtonGroup();
     for (int i = 0; i < includeButtons.length; i++) {
 
       bg.add(includeButtons[i]);
-      b.add(includeButtons[i]);
       includeButtons[i].addActionListener(this);
 
     }
     bg.add(includeNone);
 
-    Box f5 = Box.createHorizontalBox();
-    f5.add(new JLabel("5' Flank (bp)"));
-    f5.add(flank5);
-    b.add(f5);
+    Box columns = Box.createHorizontalBox();
+    Box left = Box.createVerticalBox();
+    for (int i = 0; i < leftColumn.length; i++) {
+      left.add(leftColumn[i]);
+    }
+    columns.add(left);
 
-    Box f3 = Box.createHorizontalBox();
-    f3.add(new JLabel("3' Flank (bp)"));
-    f3.add(flank3);
-    b.add(f3);
+    Box right = Box.createVerticalBox();
+    for (int i = 0; i < rightColumn.length; i++) {
+      right.add(rightColumn[i]);
+    }
+    right.add(Box.createVerticalGlue());
+    columns.add(right);
+    columns.add(Box.createHorizontalGlue());
+
+    b.add(columns);
+
+    Box flanks = Box.createHorizontalBox();
+    Dimension d = new Dimension(100, 24);
+    flank5.setPreferredSize(d);
+    flank5.setMaximumSize(d);
+    flanks.add(new JLabel("5' Flank (bp)"));
+    flanks.add(flank5);
+
+    flanks.add(Box.createHorizontalStrut(50));
+
+    flank3.setPreferredSize(d);
+    flank3.setMaximumSize(d);
+    flanks.add(new JLabel("3' Flank (bp)"));
+    flanks.add(flank3);
+
+    b.add(flanks);
 
     // TODO listen to changes in the flank text fields
 
     add(b);
 
-    disableButtons();
+    reset();
   }
 
   private void loadSchematicSequenceImages() {
@@ -265,6 +318,8 @@ public class SequenceGroupWidget
 
     Object src = e.getSource();
 
+    disableFlanks();
+
     if (src == clearButton) {
 
       reset();
@@ -283,14 +338,18 @@ public class SequenceGroupWidget
       } else if (includeGeneSequence_5_3.isSelected()) {
 
         updateState("data/image/gene_schematic_gene_5_3.gif");
+        flank5.setEnabled(true);
+        flank3.setEnabled(true);
 
       } else if (includeGeneSequence_5.isSelected()) {
 
         updateState("data/image/gene_schematic_gene_5.gif");
+        flank5.setEnabled(true);
 
       } else if (includeUpstream.isSelected()) {
 
         updateState("data/image/gene_schematic_5_only.gif");
+        flank5.setEnabled(true);
 
       } else if (includeUpStreamUTROnly.isSelected()) {
 
@@ -299,14 +358,17 @@ public class SequenceGroupWidget
       } else if (includeUpStreamAndUTR.isSelected()) {
 
         updateState("data/image/gene_schematic_upstream_utr_5.gif");
+        flank5.setEnabled(true);
 
       } else if (includeGeneSequence_3.isSelected()) {
 
         updateState("data/image/gene_schematic_gene_3.gif");
+        flank3.setEnabled(true);
 
       } else if (includeDownStream.isSelected()) {
 
         updateState("data/image/gene_schematic_3_only.gif");
+        flank3.setEnabled(true);
 
       } else if (includeDownStreamUTROnly.isSelected()) {
 
@@ -315,6 +377,7 @@ public class SequenceGroupWidget
       } else if (includeDownStreamAndUTR.isSelected()) {
 
         updateState("data/image/gene_schematic_downstream_utr_3.gif");
+        flank3.setEnabled(true);
 
       } else if (includeExonSequence.isSelected()) {
 
@@ -335,15 +398,19 @@ public class SequenceGroupWidget
       } else if (includeExonsPlus5And3Flanks.isSelected()) {
 
         updateState("data/image/gene_schematic_exons_5_3.gif");
+        flank5.setEnabled(true);
+        flank3.setEnabled(true);
 
       } else if (includeExonsPlus3Flanks.isSelected()) {
 
         updateState("data/image/gene_schematic_exons_3.gif");
-
+        flank3.setEnabled(true);
+        
       } else if (includeExonsPlus5Flanks.isSelected()) {
 
         updateState("data/image/gene_schematic_exons_5.gif");
-
+        flank5.setEnabled(true);
+        
       }
 
     } else if (gene.isSelected()) {
@@ -352,47 +419,57 @@ public class SequenceGroupWidget
 
         reset();
         enableGeneButtons();
- 
+
       } else if (includeGeneSequence.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_gene_only.gif");
- 
+
       } else if (includeGeneSequence_5_3.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_gene_5_3.gif");
- 
+        flank5.setEnabled(true);
+        flank3.setEnabled(true);
+      
       } else if (includeGeneSequence_5.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_gene_5.gif");
- 
+        flank5.setEnabled(true);
+        
       } else if (includeGeneSequence_3.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_gene_3.gif");
- 
+        flank3.setEnabled(true);
+        
       } else if (includeUpstream.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_5_only.gif");
- 
+        flank5.setEnabled(true);
+
       } else if (includeDownStream.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_3_only.gif");
- 
+        flank3.setEnabled(true);
+
       } else if (includeExonSequence.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_exons.gif");
- 
+
       } else if (includeExonsPlus5And3Flanks.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_exons_5_3.gif");
- 
+        flank5.setEnabled(true);
+        flank3.setEnabled(true);
+
       } else if (includeExonsPlus3Flanks.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_exons_3.gif");
- 
+        flank3.setEnabled(true);
+
       } else if (includeExonsPlus5Flanks.isSelected()) {
- 
+
         updateState("data/image/gene_schematic_extent_exons_5.gif");
- 
+        flank5.setEnabled(true);
+
       }
 
       //  TODO enable gene only options if src==gene
@@ -403,6 +480,13 @@ public class SequenceGroupWidget
 
   }
 
+
+
+  private void disableFlanks() {
+    flank5.setEnabled(false);
+    flank3.setEnabled(false);
+  }
+
   /**
    * Removes filter if set and disables buttons.
    *
@@ -411,6 +495,7 @@ public class SequenceGroupWidget
     includeNone.setSelected(true);
     disableButtons();
     schematicSequenceImageHolder.setIcon(blankIcon);
+    disableFlanks();
     // TODO remove filter if necessary
   }
 
