@@ -212,6 +212,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     private void doOnSelection() {
+        if(attrTable != null)
+                if (attrTable.getEditorComponent() != null) {
+                TableCellEditor attrTableEditor = attrTable.getCellEditor();
+                attrTableEditor.stopCellEditing();
+            }
         lastSelectedNode = (DatasetViewTreeNode) this.getLastSelectedPathComponent();
         if (lastSelectedNode == null) return;
         BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
