@@ -23,7 +23,17 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.ensembl.mart.lib.config.*;
+import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.FilterSetDescription;
+import org.ensembl.mart.lib.config.MartConfiguration;
+import org.ensembl.mart.lib.config.UIAttributeDescription;
+import org.ensembl.mart.lib.config.UIDSFilterDescription;
+import org.ensembl.mart.lib.config.UIFilterDescription;
+
+import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
 
 /**
@@ -37,14 +47,20 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	private Iterator possibleValues;  // iterator for subsequent calls.
 	private SortedSet commandSet = new TreeSet();
+	private SortedSet backupSet = new TreeSet();
+	
+	//sequence possibilities
+	private final String SEQUENCE = "sequence ";
+	private final String FROM = "from";
+	
+	private boolean seqsLoaded = false;
   
   public MartCompleter(MartConfiguration martconf) {
-  	commandSet.add("select");
-  	commandSet.add("with");
-  	commandSet.add("from");
-  	commandSet.add("where");
-  	commandSet.add("into");
-  	commandSet.add("limit");
+    // add commands
+    commandSet.addAll(new MartShell().availableCommands);
+  	
+  	// add sequences
+  	commandSet.addAll(SequenceDescription.SEQS);
   	
   	Dataset[] dsets = martconf.getDatasets();
   	for (int i = 0, n = dsets.length; i < n; i++) {
@@ -60,11 +76,40 @@ public class MartCompleter implements ReadlineCompleter {
 					 // first call to completer(): initialize our choices-iterator
 					 possibleValues = commandSet.tailSet(text).iterator();
 			}
-			if (possibleValues.hasNext()) {
-					 String nextKey = (String) possibleValues.next();
-					 if (nextKey.startsWith(text))
-							 return nextKey;
+			
+			if (Readline.getLineBuffer().endsWith(SEQUENCE)) {
+					if (! seqsLoaded) {
+						Iterator tmp = SequenceDescription.SEQS.iterator();
+						
+						for (Iterator iter = commandSet.iterator(); iter.hasNext();)
+							backupSet.add(iter.next());
+						
+						commandSet = new TreeSet();
+							
+						while (tmp.hasNext())
+							commandSet.add(tmp.next());
+						  
+						possibleValues = commandSet.tailSet(text).iterator();
+						seqsLoaded = true;
+					}
 			}
+			
+			if (seqsLoaded && Readline.getLineBuffer().endsWith(FROM)) {
+				commandSet = new TreeSet();
+				for (Iterator iter = backupSet.iterator(); iter.hasNext();)
+          commandSet.add(iter.next());
+				
+				backupSet = new TreeSet();
+				possibleValues = commandSet.tailSet(text).iterator();
+				seqsLoaded = false;					
+			}
+			
+			if (possibleValues.hasNext()) {
+				 String nextKey = (String) possibleValues.next();
+				if (nextKey.startsWith(text))
+				 	 return nextKey;
+			}
+			  
 			return null; // we reached the last choice.
 	}
  
