@@ -524,7 +524,7 @@ public class QueryEditor extends JPanel {
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
       return;
-    } else if (query.getAttributes().length == 0) {
+    } else if (query.getAttributes().length == 0 && query.getSequenceDescription()==null) {
       feedback.warning("Attributes must be set before executing query.");
       return;
     }
