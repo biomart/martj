@@ -591,7 +591,7 @@ public class Query {
    */
   public void setQueryName(String queryName) {
 
-    if (this.queryName.equals(queryName))
+    if (this.queryName!=null && this.queryName.equals(queryName))
       return;
 
     String old = this.queryName;
