@@ -939,9 +939,9 @@ public class MartShellLib {
 
 		//validate, then call parseQuery on the subcommand
 		String[] tokens = nestedQuery.split("\\s");
-		if (!tokens[0].trim().equals(USINGQSTART))
-			throw new InvalidQueryException(
-				"Invalid Nested Query Recieved: no using statement recieved " + tokens[0].trim() + " in " + nestedQuery + "\n");
+//		if (!tokens[0].trim().equals(USINGQSTART))
+//			throw new InvalidQueryException(
+//				"Invalid Nested Query Recieved: no using statement recieved " + tokens[0].trim() + " in " + nestedQuery + "\n");
 
 		for (int i = 1, n = tokens.length; i < n; i++) {
 			String tok = tokens[i];
