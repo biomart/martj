@@ -64,7 +64,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /**
    * Constructor for a DatabaseDSViewAdaptor
    * @param ds -- DataSource for Mart RDBMS
-   * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
+   * @param user -- user for RDBMS connection, AND meta_DatasetView_user table
    * @throws ConfigurationException if DataSource or user is null
    */
   public DatabaseDSViewAdaptor(DetailedDataSource ds, String user) throws ConfigurationException {
@@ -484,7 +484,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * Allows client to store a single DatasetView object as a DatasetView.dtd compliant XML document into a Mart Database.
    * Client can choose whether to compress (GZIP) the resulting XML before it is stored in the Database.
    * @param ds -- DataSource of the Mart Database where the DatasetView.dtd compliant XML is to be stored.
-   * @param user -- RDBMS user for _meta_DatasetView_[user] table to store the document.  If null, or if _meta_DatasetView_[user] does not exist, _meta_DatasetView will be the target of the document.
+   * @param user -- RDBMS user for meta_DatasetView_[user] table to store the document.  If null, or if meta_DatasetView_[user] does not exist, meta_DatasetView will be the target of the document.
    * @param dsv -- DatasetView object to store
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
    * @throws ConfigurationException for all underlying Exceptions
