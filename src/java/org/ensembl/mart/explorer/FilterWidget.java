@@ -120,6 +120,7 @@ public abstract class FilterWidget extends InputPage {
       && !"".equals(fieldName)
       && possibleFilter != null
       && possibleFilter instanceof Filter
+      && ((Filter) possibleFilter).getField()!=null
       && ((Filter) possibleFilter).getField().equals(fieldName);
   }
 
