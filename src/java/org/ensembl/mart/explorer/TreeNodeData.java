@@ -45,7 +45,7 @@ public class TreeNodeData {
 	public static final Type ATTRIBUTES = new Type("Attributes");
 	public static final Type FILTERS = new Type("Filters");
 	public static final Type FORMAT = new Type("Format");
-  
+    
 	public static final TreeNodeData createDataSourceNode() {
 		return new TreeNodeData(DATASOURCE, ":", null);
 	};
@@ -66,6 +66,7 @@ public class TreeNodeData {
 	private String rightText;
 	private Attribute attribute;
 	private Filter filter;
+	
 	private TreeNodeData(Type type, String separator,
 			String rightText, Attribute attribute, Filter filter) {
 		this.type = type;

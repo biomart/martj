@@ -509,7 +509,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 		String nodeLabel =
 			(ad != null) ? ad.getDisplayName() : attribute.getField();
 		TreeNodeData userObject =
-			new TreeNodeData(new TreeNodeData.Type(nodeLabel), null, null, attribute);
+			new TreeNodeData(null, null, nodeLabel, attribute);
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		attributesNode.insert(treeNode, index);
 		treeModel.reload(attributesNode);
