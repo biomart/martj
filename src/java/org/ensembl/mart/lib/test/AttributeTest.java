@@ -46,7 +46,6 @@ public class AttributeTest extends Base {
 	public void testKakaQuery()  throws Exception {
 		Query q = new Query(genequery);
 		
-		q.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		q.addAttribute(new FieldAttribute("chr_name"));
 		q.addAttribute(new FieldAttribute("gene_chrom_start"));
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
