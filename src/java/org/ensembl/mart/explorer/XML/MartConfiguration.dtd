@@ -17,11 +17,15 @@
 
 <!ELEMENT PrimaryKey (#PCDATA)>
 
-<!ELEMENT FilterPage (FilterGroup+)>
+<!ELEMENT FilterPage (FilterGroup|DSFilterGroup|DSFilterGroup|FilterGroup)+>
 <!ATTLIST FilterPage %desc_data;>
 
 <!ELEMENT FilterGroup (FilterSet*, FilterCollection+)>
 <!ATTLIST FilterGroup %desc_data;>
+
+<!ELEMENT DSFilterGroup EMPTY>
+<!ATTLIST DSFilterGroup %desc_data;
+                        objectCode  CDATA #IMPLIED>
 
 <!ELEMENT FilterSet (FilterSetDescription+)>
 <!ATTLIST FilterSet 
@@ -55,11 +59,15 @@
                    filterSetReq       CDATA #IMPLIED
                    objectCode         CDATA #REQUIRED>
                    
-<!ELEMENT AttributePage (AttributeGroup+)>
+<!ELEMENT AttributePage (AttributeGroup|DSAttributeGroup|DSAttributeGroup|AttributeGroup)+>
 <!ATTLIST AttributePage %desc_data;>
 
 <!ELEMENT AttributeGroup (AttributeCollection+)>
 <!ATTLIST AttributeGroup %desc_data;>
+
+<!ELEMENT DSAttributeGroup EMPTY>
+<!ATTLIST DSAttributeGroup %desc_data;
+                           objectCode CDATA #IMPLIED>
 
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection

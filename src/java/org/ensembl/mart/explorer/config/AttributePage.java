@@ -95,7 +95,7 @@ public class AttributePage {
 	}
 
 	/**
-	 * Add a single attributeGroup to the AttributePage.
+	 * Add a single AttributeGroup to the AttributePage.
 	 * 
 	 * @param a An AttributeGroup object
 	 */
@@ -122,25 +122,50 @@ public class AttributePage {
 	}
 
 	/**
-	 * Returns a list of AttributeGroups contained in the AttributePage, in the order they were added.
+	 * Add a single DSAttributeGroup to the AttributePage.
 	 * 
-	 * @return An array of AttributeGroup objects
+	 * @param a A DSAttributeGroup object
 	 */
-	public AttributeGroup[] getAttributeGroups() {
-		AttributeGroup[] a = new AttributeGroup[attributeGroups.size()];
-		attributeGroups.values().toArray(a);
-		return a;
+	public void addDSAttributeGroup(DSAttributeGroup a) {
+		Integer rankInt = new Integer(agroupRank);
+		attributeGroups.put(rankInt, a);
+		attGroupNameMap.put(a.getInternalName(), rankInt);
+		agroupRank++;
+	}
+
+	/**
+	 * Add a group of DSAttributeGroup objects at once.  Note, subsequent calls
+	 * to addAttributeGroup/addDSAttributeGroup or setAttributeGroup/setDSAttributeGroup will add to what has already been added.
+	 * 
+	 * @param a an array of DSAttributeGroup objects
+	 */
+	public void setDSAttributeGroups(DSAttributeGroup[] a) {
+		for (int i = 0, n = a.length; i < n; i++) {
+			Integer rankInt = new Integer(agroupRank);
+			attributeGroups.put(rankInt, a[i]);
+			attGroupNameMap.put(a[i].getInternalName(), rankInt);
+			agroupRank++;
+		}
+	}
+	
+	/**
+	 * Returns a List of AttributeGroup/DSAttributeGroup objects contained in the AttributePage, in the order they were added.
+	 * 
+	 * @return A List of AttributeGroup/DSAttributeGroup objects
+	 */
+	public List getAttributeGroups() {
+		return new ArrayList(attributeGroups.values());
 	}
 
 	/**
 	 * Returns a specific AttributeGroup named by internalName.
 	 * 
 	 * @param internalName String name of the requested AttributeGroup
-	 * @return an AttributeGroup object
+	 * @return an Object (either AttributeGroup or DSAttributeGroup), or null
 	 */
-	public AttributeGroup getAttributeGroupByName(String internalName) {
+	public Object getAttributeGroupByName(String internalName) {
 		if (attGroupNameMap.containsKey(internalName))
-			return (AttributeGroup) attributeGroups.get((Integer) attGroupNameMap.get(internalName));
+			return attributeGroups.get((Integer) attGroupNameMap.get(internalName));
 		else
 			return null;
 	}
@@ -183,9 +208,9 @@ public class AttributePage {
 
 		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
-				AttributeGroup group = (AttributeGroup) attributeGroups.get((Integer) iter.next());
-				if (group.containsUIAttributeDescription(internalName)) {
-					lastAtt = group.getUIAttributeDescriptionByName(internalName);
+				Object group = attributeGroups.get((Integer) iter.next());
+				if (group instanceof AttributeGroup && ( (AttributeGroup) group).containsUIAttributeDescription(internalName)) {
+					lastAtt = ( (AttributeGroup) group).getUIAttributeDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -245,8 +270,11 @@ public class AttributePage {
 		tmp = (31 * tmp) + description.hashCode();
 		
 		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
-			AttributeGroup element = (AttributeGroup) iter.next();
-			tmp = (31 * tmp) + element.hashCode();
+			Object element = (AttributeGroup) iter.next();
+			if (element instanceof AttributeGroup)
+			  tmp = (31 * tmp) + ( (AttributeGroup) element ).hashCode();
+			else
+			  tmp = (31 * tmp) + ( (DSAttributeGroup) element ).hashCode();
 		}
 		
   	return tmp;

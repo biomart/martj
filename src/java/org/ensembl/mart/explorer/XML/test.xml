@@ -5,6 +5,7 @@
     <StarBase>test_starbase</StarBase>
     <PrimaryKey>test_primaryKey</PrimaryKey>
     <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
+      <DSFilterGroup description="For Testing Purposes Only" displayName="Test A DSFilterGroup:" internalName="testDSFilterGroup" objectCode="testObjectCode"/>
       <FilterGroup description="For Testing Purposes Only" displayName="Test A FilterGroup:" internalName="testFilterGroup">
         <FilterSet description="For Testing Purposes Only" displayName="Test of a Filter Set" internalName="testFilterSet" type="radio">
           <FilterSetDescription description="For Testing Purposes Only" displayName="Test of a FilterSetDescription" fieldNameModifier="ensembl" internalName="testFilterSetDescription" tableConstraintModifier="ensemblgene"/>
@@ -21,6 +22,7 @@
       </FilterGroup>
     </FilterPage>
     <AttributePage description="For Testing Purposes Only" displayName="Test of an Attribute Page" internalName="testAttributePage">
+      <DSAttributeGroup description="For Testing Purposes Only" displayName="test of an DSAttribute Group:" internalName="testDSAttributeGroup" objectCode="testObjectCode"/>
       <AttributeGroup description="For Testing Purposes Only" displayName="test of an Attribute Group:" internalName="testAttributeGroup">
         <AttributeCollection description="For Testing Purposes Only" displayName="Test of an AttributeCollection:" internalName="testAttributeCollection" maxSelect="1">
           <UIAttributeDescription description="For Testing Purposes Only" displayName="Test of a UIAttributeDescription" fieldName="test_id" homepageURL="http://test.org" internalName="testUIAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>

@@ -121,25 +121,51 @@ public class FilterPage {
 	}
 
 	/**
-	 * Returns an Array of FilterGroup objects, in the order they were added.
+	 * Adds a DSFilterGroup to the FilterPage.
 	 * 
-	 * @return Array of FilterGroup objects.
+	 * @param fg a DSFilterGroup object.
 	 */
-	public FilterGroup[] getFilterGroups() {
-		FilterGroup[] fg = new FilterGroup[filterGroups.size()];
-		filterGroups.values().toArray(fg);
-		return fg;
+	public void addDSFilterGroup(DSFilterGroup fg) {
+		Integer fgRankInt = new Integer(fcRank);
+		filterGroups.put(fgRankInt, fg);
+		filterGroupNameMap.put(fg.getInternalName(), fgRankInt);
+		fcRank++;
+	}
+
+	/**
+	 * Sets a group of DSFilterGroup objects in one call.
+	 * Note, subsequent calls to addFilterGroup/addDSFilterGroup and setFilterGroups/setDSFilterGroups will add to what
+	 * has already been aded.
+	 * 
+	 * @param fg An Array of DSFilterGroup objects.
+	 */
+	public void setDSFilterGroups(DSFilterGroup[] fg) {
+		for (int i = 0, n = fg.length; i < n; i++) {
+			Integer fgRankInt = new Integer(fcRank);
+			filterGroups.put(fgRankInt, fg[i]);
+			filterGroupNameMap.put(fg[i].getInternalName(), fgRankInt);
+			fcRank++;
+		}
+	}
+	
+	/**
+	 * Returns a List of FilterGroup/DSFilterGroup objects, in the order they were added.
+	 * 
+	 * @return List of FilterGroup/DSFilterGroup objects.
+	 */
+	public List getFilterGroups() {
+		return new ArrayList(filterGroups.values());
 	}
 
 	/**
 	 * Returns a particular FilterGroup object, named by the given internalName.
 	 * 
 	 * @param internalName String name of the FilterGroup
-	 * @return FilterGroup object, or null.
+	 * @return Object (either FilterGroup or DSFilterGroup), or null.
 	 */
-	public FilterGroup getFilterGroupByName(String internalName) {
+	public Object getFilterGroupByName(String internalName) {
 		if (filterGroupNameMap.containsKey(internalName))
-			return (FilterGroup) filterGroups.get((Integer) filterGroupNameMap.get(internalName));
+			return filterGroups.get((Integer) filterGroupNameMap.get(internalName));
 		else
 			return null;
 	}
@@ -182,9 +208,10 @@ public class FilterPage {
 
 		if (lastFilt == null){
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-				FilterGroup group = (FilterGroup) filterGroups.get((Integer) iter.next());
-				if (group.containsUIFilterDescription(internalName)) {
-					lastFilt = group.getUIFilterDescriptionByName(internalName);
+				Object group = filterGroups.get((Integer) iter.next());
+				
+				if (group instanceof FilterGroup && ( (FilterGroup) group).containsUIFilterDescription(internalName)) {
+					lastFilt = ( (FilterGroup) group).getUIFilterDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -296,8 +323,11 @@ public class FilterPage {
 		tmp = (31 * tmp) + description.hashCode();
 		
 		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
-			FilterPage element = (FilterPage) iter.next();
-			tmp = (31 * tmp) + element.hashCode();
+			Object element = iter.next();
+			if (element instanceof FilterGroup)
+			  tmp = (31 * tmp) + ( (FilterGroup) element ).hashCode();
+			else
+			  tmp = (31 * tmp) + ( (DSFilterGroup) element ).hashCode();
 		}
 
 	  return tmp;

@@ -45,40 +45,41 @@ public class MartConfigurationFactory {
 	private String martConfSystemID = "MartConfiguration.xml"; // default, but can be over-ridden
 
 	// element names
-	private final String dataset = "Dataset";
-	private final String starbase = "StarBase";
-	private final String primarykey = "PrimaryKey";
-	private final String filterset = "FilterSet";
-	private final String filterSetDescription = "FilterSetDescription";
-	private final String filterpage = "FilterPage";
-	private final String filtergroup = "FilterGroup";
-	private final String filtercollection = "FilterCollection";
-	private final String filterdescription = "UIFilterDescription";
-	private final String dsfilterdescription = "UIDSFilterDescription";
-	private final String attributepage = "AttributePage";
-	private final String attributegroup = "AttributeGroup";
-	private final String attributecollection = "AttributeCollection";
-	private final String attributedescription = "UIAttributeDescription";
-	private final String dsattributedescription = "UIDSAttributeDescription";
+	private final String DATASET = "Dataset";
+	private final String STARBASE = "StarBase";
+	private final String PRIMARYKEY = "PrimaryKey";
+	private final String FILTERSET = "FilterSet";
+	private final String FILTERSETDESCRIPTION = "FilterSetDescription";
+	private final String FILTERPAGE = "FilterPage";
+	private final String FILTERGROUP = "FilterGroup";
+	private final String DSFILTERGROUP = "DSFilterGroup";
+	private final String FILTERCOLLECTION = "FilterCollection";
+	private final String FILTERDESCRIPTION = "UIFilterDescription";
+	private final String DSFILTERDESCRIPTION = "UIDSFilterDescription";
+	private final String ATTRIBUTEPAGE = "AttributePage";
+	private final String ATTRIBUTEGROUP = "AttributeGroup";
+	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
+	private final String ATTRIBUTEDESCRIPTION = "UIAttributeDescription";
+	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 
 	// attribute names
-	private final String internalName = "internalName";
-	private final String displayName = "displayName";
-	private final String description = "description";
-	private final String type = "type";
-	private final String fieldName = "fieldName";
-	private final String qualifier = "qualifier";
-	private final String tableConstraint = "tableConstraint";
-	private final String maxSelect = "maxSelect";
-	private final String maxLength = "maxLength";
-	private final String source = "source";
-	private final String homepageURL = "homepageURL";
-	private final String linkoutURL = "linkoutURL";
-	private final String tableConstraintModifierA = "tableConstraintModifier";
-	private final String fieldNameModifierA = "fieldNameModifier";
-	private final String filterSetNameA = "filterSetName";
-	private final String filterSetReqA = "filterSetReq";
-	private final String objectCode = "objectCode";
+	private final String INTERNALNAME = "internalName";
+	private final String DISPLAYNAME = "displayName";
+	private final String DESCRIPTION = "description";
+	private final String TYPE = "type";
+	private final String FIELDNAME = "fieldName";
+	private final String QUALIFIER = "qualifier";
+	private final String TABLECONSTRAINT = "tableConstraint";
+	private final String MAXSELECT = "maxSelect";
+	private final String MAXLENGTH = "maxLength";
+	private final String SOURCE = "source";
+	private final String HOMEPAGEURL = "homepageURL";
+	private final String LINKOUTURL = "linkoutURL";
+	private final String TABLECONSTRAINTMODIFIER = "tableConstraintModifier";
+	private final String FIELDNAMEMODIFIER = "fieldNameModifier";
+	private final String FILTERSETNAME = "filterSetName";
+	private final String FILTERSETREQ = "filterSetReq";
+	private final String OBJECTCODE = "objectCode";
 
 	private MartConfiguration martconf = null;
 
@@ -117,16 +118,16 @@ public class MartConfigurationFactory {
 			Document doc = builder.build(MartXMLutils.getInputSourceFor(conn, martConfSystemID));
 
 			Element martconfElement = doc.getRootElement();
-			String mname = martconfElement.getAttributeValue(internalName, "");
+			String mname = martconfElement.getAttributeValue(INTERNALNAME, "");
 			if (!mname.equals(martName))
 				logger.warn("Warning, xml from " + martName + " contains different internalName " + mname + " may need to load a different xml into the mart database");
 
-			String dispname = martconfElement.getAttributeValue(displayName, "");
-			String desc = martconfElement.getAttributeValue(description, "");
+			String dispname = martconfElement.getAttributeValue(DISPLAYNAME, "");
+			String desc = martconfElement.getAttributeValue(DESCRIPTION, "");
 
 			martconf = new MartConfiguration(mname, dispname, desc);
 
-			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(dataset)); iter.hasNext();) {
+			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(DATASET)); iter.hasNext();) {
 				Element datasetElement = (Element) iter.next();
 				martconf.addDataset(getDataset(datasetElement));
 			}
@@ -156,14 +157,14 @@ public class MartConfigurationFactory {
 			Document doc = builder.build(MartXMLutils.getInputSourceFor(martConfFile));
 
 			Element martconfElement = doc.getRootElement();
-			String martName = martconfElement.getAttributeValue(internalName, "");
+			String martName = martconfElement.getAttributeValue(INTERNALNAME, "");
 
-			String dispname = martconfElement.getAttributeValue(displayName, "");
-			String desc = martconfElement.getAttributeValue(description, "");
+			String dispname = martconfElement.getAttributeValue(DISPLAYNAME, "");
+			String desc = martconfElement.getAttributeValue(DESCRIPTION, "");
 
 			martconf = new MartConfiguration(martName, dispname, desc);
 
-			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(dataset)); iter.hasNext();) {
+			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(DATASET)); iter.hasNext();) {
 				Element datasetElement = (Element) iter.next();
 				martconf.addDataset(getDataset(datasetElement));
 			}
@@ -175,28 +176,28 @@ public class MartConfigurationFactory {
 	}
 
 	private Dataset getDataset(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		Dataset d = new Dataset(intName, dispname, desc);
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(starbase)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(STARBASE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			d.addStarBase(element.getTextNormalize());
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(primarykey)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(PRIMARYKEY)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			d.addPrimaryKey(element.getTextNormalize());
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterpage)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERPAGE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			d.addFilterPage(getFilterPage(element));
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributepage)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEPAGE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			d.addAttributePage(getAttributePage(element));
 		}
@@ -204,32 +205,35 @@ public class MartConfigurationFactory {
 	}
 
 	private FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		FilterPage fp = new FilterPage(intName, dispname, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filtergroup)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartFilterGroupFilter()); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			fp.addFilterGroup(getFilterGroup(element));
+			if (element.getName().equals(FILTERGROUP))
+			  fp.addFilterGroup(getFilterGroup(element));
+			else
+			  fp.addDSFilterGroup(getDSFilterGroup(element));
 		}
 
 		return fp;
 	}
-
+	
 	private FilterGroup getFilterGroup(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		FilterGroup fg = new FilterGroup(intName, dispname, desc);
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterset)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERSET)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			fg.addFilterSet(getFilterSet(element));
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filtercollection)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERCOLLECTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			fg.addFilterCollection(getFilterCollection(element));
 		}
@@ -237,14 +241,25 @@ public class MartConfigurationFactory {
 		return fg;
 	}
 
+  private DSFilterGroup getDSFilterGroup(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		
+		DSFilterGroup fg = new DSFilterGroup(intName, dispname, desc, objCode);
+
+    return fg;  	
+  }
+  
 	private FilterSet getFilterSet(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String typeval = thisElement.getAttributeValue(type, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String typeval = thisElement.getAttributeValue(TYPE, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		FilterSet fs = new FilterSet(intName, typeval, dispname, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterSetDescription)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERSETDESCRIPTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			fs.addFilterSetDescription(getFilterSetDescription(element));
 		}
@@ -252,12 +267,12 @@ public class MartConfigurationFactory {
 	}
 
 	private FilterSetDescription getFilterSetDescription(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String typeval = thisElement.getAttributeValue(type, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
-		String tableConstraintModifier = thisElement.getAttributeValue(tableConstraintModifierA, "");
-		String fieldNameModifier = thisElement.getAttributeValue(fieldNameModifierA, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String typeval = thisElement.getAttributeValue(TYPE, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String tableConstraintModifier = thisElement.getAttributeValue(TABLECONSTRAINTMODIFIER, "");
+		String fieldNameModifier = thisElement.getAttributeValue(FIELDNAMEMODIFIER, "");
 
 		FilterSetDescription fsd = new FilterSetDescription(intName, tableConstraintModifier, fieldNameModifier, dispname, desc);
 
@@ -265,18 +280,18 @@ public class MartConfigurationFactory {
 	}
 
 	private FilterCollection getFilterCollection(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String filterSetName = thisElement.getAttributeValue(filterSetNameA, "");
-		String desc = thisElement.getAttributeValue(description, "");
-		String typeval = thisElement.getAttributeValue(type, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String filterSetName = thisElement.getAttributeValue(FILTERSETNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String typeval = thisElement.getAttributeValue(TYPE, "");
 
 		FilterCollection fc = new FilterCollection(intName, typeval, dispname, filterSetName, desc);
 		for (Iterator iter = thisElement.getDescendants(new MartFilterDescriptionFilter()); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			if (element.getName().equals(filterdescription))
+			if (element.getName().equals(FILTERDESCRIPTION))
 				fc.addUIFilter(getUIFilterDescription(element));
-			else if (element.getName().equals(dsfilterdescription))
+			else if (element.getName().equals(DSFILTERDESCRIPTION))
 				fc.addUIDSFilterDescription(getUIDSFilterDescription(element));
 		}
 
@@ -284,12 +299,12 @@ public class MartConfigurationFactory {
 	}
 
 	private UIDSFilterDescription getUIDSFilterDescription(Element element) throws ConfigurationException {
-		String intName = element.getAttributeValue(internalName, "");
-		String dispname = element.getAttributeValue(displayName, "");
-		String desc = element.getAttributeValue(description, "");
-		String typeval = element.getAttributeValue(type, "");
-		String objCode = element.getAttributeValue(objectCode, "");
-		String filterSetReq = element.getAttributeValue(filterSetReqA, "");
+		String intName = element.getAttributeValue(INTERNALNAME, "");
+		String dispname = element.getAttributeValue(DISPLAYNAME, "");
+		String desc = element.getAttributeValue(DESCRIPTION, "");
+		String typeval = element.getAttributeValue(TYPE, "");
+		String objCode = element.getAttributeValue(OBJECTCODE, "");
+		String filterSetReq = element.getAttributeValue(FILTERSETREQ, "");
 
 		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc);
 
@@ -297,16 +312,16 @@ public class MartConfigurationFactory {
 	}
 
 	private UIFilterDescription getUIFilterDescription(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
-		String typeval = thisElement.getAttributeValue(type, "");
-		String fieldnm = thisElement.getAttributeValue(fieldName, "");
-		String tableconst = thisElement.getAttributeValue(tableConstraint, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String typeval = thisElement.getAttributeValue(TYPE, "");
+		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
+		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
 
-		String filterSetReq = thisElement.getAttributeValue(filterSetReqA, "");
+		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 
-		String qual = thisElement.getAttributeValue(qualifier, "");
+		String qual = thisElement.getAttributeValue(QUALIFIER, "");
 
 		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, filterSetReq, desc);
 
@@ -314,27 +329,30 @@ public class MartConfigurationFactory {
 	}
 
 	private AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		AttributePage ap = new AttributePage(intName, dispname, desc);
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributegroup)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartAttributeGroupFilter()); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			ap.addAttributeGroup(getAttributeGroup(element));
+			if (element.getName().equals(ATTRIBUTEGROUP))
+			  ap.addAttributeGroup(getAttributeGroup(element));
+			else
+			  ap.addDSAttributeGroup(getDSAttributeGroup(element));
 		}
 
 		return ap;
 	}
 
 	private AttributeGroup getAttributeGroup(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
 		AttributeGroup ag = new AttributeGroup(intName, dispname, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributecollection)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTECOLLECTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			ag.addAttributeCollection(getAttributeCollection(element));
 		}
@@ -342,16 +360,27 @@ public class MartConfigurationFactory {
 		return ag;
 	}
 
+	private DSAttributeGroup getDSAttributeGroup(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		
+		DSAttributeGroup ag = new DSAttributeGroup(intName, dispname, desc, objCode);
+
+		return ag;  	
+	}
+	
 	private AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		int maxs = 0;
-		if (!thisElement.getAttributeValue(maxSelect, "").equals(""))
-			maxs = Integer.parseInt(thisElement.getAttributeValue(maxSelect));
+		if (!thisElement.getAttributeValue(MAXSELECT, "").equals(""))
+			maxs = Integer.parseInt(thisElement.getAttributeValue(MAXSELECT));
 
 		AttributeCollection ac = new AttributeCollection(intName, maxs, dispname, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributedescription)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEDESCRIPTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 		  ac.addUIAttribute(getUIAttributeDescription(element));
 		}
@@ -360,18 +389,18 @@ public class MartConfigurationFactory {
 	}
 
 	private UIAttributeDescription getUIAttributeDescription(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		int maxl = 0;
-		if (!thisElement.getAttributeValue(maxLength, "").equals(""))
-			maxl = Integer.parseInt(thisElement.getAttributeValue(maxLength));
+		if (!thisElement.getAttributeValue(MAXLENGTH, "").equals(""))
+			maxl = Integer.parseInt(thisElement.getAttributeValue(MAXLENGTH));
 
-		String fieldnm = thisElement.getAttributeValue(fieldName, "");
-		String tableconst = thisElement.getAttributeValue(tableConstraint, "");
-		String src = thisElement.getAttributeValue(source, "");
-		String hpage = thisElement.getAttributeValue(homepageURL, "");
-		String link = thisElement.getAttributeValue(linkoutURL, "");
+		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
+		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
+		String src = thisElement.getAttributeValue(SOURCE, "");
+		String hpage = thisElement.getAttributeValue(HOMEPAGEURL, "");
+		String link = thisElement.getAttributeValue(LINKOUTURL, "");
 
 		UIAttributeDescription a = new UIAttributeDescription(intName, fieldnm, dispname, maxl, tableconst, desc, src, hpage, link);
 		return a;

@@ -22,14 +22,10 @@ import org.jdom.filter.Filter;
 import org.jdom.Element;
 
 /**
- * JDOM Filter specific to UIFilterDescription/UIDSFilterDescription objects in a Mart FilterCollection.
- * Allows MartConfigurationFactory to harvest all FilterDescription objects of both types, in the order
- * they occur in the xml configuration document.
- * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartFilterDescriptionFilter implements Filter {
+public class MartAttributeGroupFilter implements Filter {
 
 	/* (non-Javadoc)
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
@@ -38,12 +34,12 @@ public class MartFilterDescriptionFilter implements Filter {
 		if (obj instanceof Element) {
 			Element e = (Element) obj;
 			
-			if (e.getName().equals(UIFILTER) || e.getName().equals(UIDSFILTER))
+			if (e.getName().equals(ATTRIBUTEGROUP) || e.getName().equals(DSATTRIBUTEGROUP))
 				return true;
 		}
 		return false;
 	}
 
-  private final String UIFILTER = "UIFilterDescription";
-  private final String UIDSFILTER = "UIDSFilterDescription";
+  private final String ATTRIBUTEGROUP = "AttributeGroup";
+  private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 }
