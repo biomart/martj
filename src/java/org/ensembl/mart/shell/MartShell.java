@@ -181,31 +181,32 @@ public class MartShell {
 
 			mainHost = p.getProperty("host");
 			if (mainHost != null && mainHost.length() > 1)
-			  mainHost = mainHost.trim();
-			  
+				mainHost = mainHost.trim();
+
 			mainPort = p.getProperty("port");
 			if (mainPort != null && mainPort.length() > 1)
-			  mainPort = mainPort.trim();
-			  
+				mainPort = mainPort.trim();
+
 			mainDatabase = p.getProperty("databaseName");
 			if (mainDatabase != null && mainDatabase.length() > 1)
-			  mainDatabase = mainDatabase.trim();
-			  
+				mainDatabase = mainDatabase.trim();
+
 			mainUser = p.getProperty("user");
 			if (mainUser != null && mainUser.length() > 1)
-			  mainUser = mainUser.trim();
-			  
+				mainUser = mainUser.trim();
+
 			mainPassword = p.getProperty("password");
 			if (mainPassword != null && mainPassword.length() > 1)
-			  mainPassword = mainPassword.trim();
-			  
+				mainPassword = mainPassword.trim();
+
 			mainDatabaseType = p.getProperty("databaseType");
 			if (mainDatabaseType != null && mainDatabaseType.length() > 1)
-			  mainDatabaseType = mainDatabaseType.trim();
-			  
+				mainDatabaseType = mainDatabaseType.trim();
+
 			mainConfiguration = p.getProperty("alternateConfigurationFile");
-			if (mainConfiguration != null && mainConfiguration.length() > 1)
-			  mainConfiguration = mainConfiguration.trim();
+			if (mainConfiguration != null && mainConfiguration.length() > 1) {
+				mainConfiguration = mainConfiguration.trim();
+			}
 
 		} catch (java.net.MalformedURLException e) {
 			mainLogger.warn("Could not load connection file " + connfile + " MalformedURLException: " + e);
@@ -223,10 +224,24 @@ public class MartShell {
 			String arg = oargs[i];
 
 			if (arg.startsWith("-")) {
-				key = arg;
+				String thisArg = arg;
+				key = null;
+				String value = null;
 
-				if (!argtable.containsKey(key))
-					argtable.put(key, new StringBuffer());
+				if (thisArg.length() > 2) {
+					key = thisArg.substring(0, 2);
+					value = thisArg.substring(2);
+				} else
+					key = thisArg;
+
+				if (!argtable.containsKey(key)) {
+					StringBuffer buf = new StringBuffer();
+
+					if (value != null)
+						buf.append(value);
+
+					argtable.put(key, buf);
+				}
 			} else {
 				if (key == null)
 					throw new Exception("Invalid Arguments Passed to MartShell\n");
@@ -266,6 +281,10 @@ public class MartShell {
 		boolean verbose = false;
 		boolean commandComp = true;
 
+		// check for the defaultConf file, and use it, if present.  Some values may be overridden with a user specified file with -g
+		if (new File(defaultConf).exists())
+			getConnProperties(defaultConf);
+
 		String[] args = null;
 		if (oargs.length > 0) {
 			try {
@@ -290,6 +309,7 @@ public class MartShell {
 
 					case 'C' :
 						mainConfiguration = g.getOptarg();
+						System.out.println("mainConfiguration = " + mainConfiguration + "\n");
 						break;
 
 					case 'A' :
@@ -364,10 +384,6 @@ public class MartShell {
 			args = new String[0];
 		}
 
-		// check for the defaultConf file, and use it, if present.  Some values may be overridden with a user specified file with -g
-		if (new File(defaultConf).exists())
-			getConnProperties(defaultConf);
-
 		// Initialise logging system
 		if (loggingURL != null) {
 			PropertyConfigurator.configure(loggingURL);
@@ -399,20 +415,28 @@ public class MartShell {
 		}
 
 		MartShell ms = new MartShell();
+
 		if (mainHost != null)
 			ms.setDBHost(mainHost);
+
 		if (mainDatabaseType != null)
 			ms.setDBType(mainDatabaseType);
+
 		if (mainPort != null)
 			ms.setDBPort(mainPort);
+
 		if (mainUser != null)
 			ms.setDBUser(mainUser);
+
 		if (mainPassword != null)
 			ms.setDBPass(mainPassword);
+
 		if (mainDatabase != null)
 			ms.setDBDatabase(mainDatabase);
+
 		if (mainConfiguration != null)
 			ms.setAlternateMartConfiguration(mainConfiguration);
+
 		if (mainDataset != null)
 			ms.setDatasetName(mainDataset);
 
@@ -983,7 +1007,7 @@ public class MartShell {
 
 			for (Iterator iter = commandHelp.keySet().iterator(); iter.hasNext();) {
 				String element = (String) iter.next();
-        //mainLogger.info("ELEMENT IS <" + element + ">\nVALUE IS " + commandHelp.getProperty(element) + "\n" );
+				//mainLogger.info("ELEMENT IS <" + element + ">\nVALUE IS " + commandHelp.getProperty(element) + "\n" );
 				buf.append("\t\t" + element).append("\n");
 			}
 			return buf.toString();
@@ -1024,11 +1048,11 @@ public class MartShell {
 				m.appendTail(buf);
 			} else
 				buf.append("Sorry, no information available for item: ").append(command).append("\n");
-				
+
 			return buf.toString();
 		}
 	}
-  
+
 	private void LoadHelpFiles() throws InvalidQueryException {
 		URL help = ClassLoader.getSystemResource(HELPFILE);
 		URL dshelp = ClassLoader.getSystemResource(DSHELPFILE);
@@ -1038,9 +1062,9 @@ public class MartShell {
 			commandHelp.load(help.openStream());
 			commandHelp.load(dshelp.openStream());
 
-      supportHelp.load(helpsupport.openStream());
-      supportHelp.load(dshelpsupport.openStream());
-      
+			supportHelp.load(helpsupport.openStream());
+			supportHelp.load(dshelpsupport.openStream());
+
 			if (!historyOn) {
 				commandHelp.remove(HISTORYQ);
 				commandHelp.remove(EXECC);
@@ -1094,47 +1118,47 @@ public class MartShell {
 
 	private void DescribeRequest(String command) throws InvalidQueryException {
 		System.out.println("Sorry, describe not supported yet");
-//		StringTokenizer toks = new StringTokenizer(command, " ");
-//		int tokCount = toks.countTokens();
-//		toks.nextToken(); // skip describe
-//
-//		System.out.println();
-//
-//		if (tokCount == 1) {
-//			String output = "This mart contains the following datasets:\n";
-//			Dataset[] dsets = martconf.getDatasets();
-//			for (int i = 0, n = dsets.length; i < n; i++) {
-//				Dataset dset = dsets[i];
-//				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
-//			}
-//			System.out.println(output);
-//		} else if (tokCount == 2) {
-//			String dsetName = toks.nextToken();
-//
-//			if (!martconf.containsDataset(dsetName))
-//				throw new InvalidQueryException(
-//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-//
-//			DescribeDataset(martconf.getDatasetByName(dsetName));
-//		} else if (tokCount > 2) {
-//
-//			int mod = tokCount % 2; // must be even number of elements
-//			if (mod > 0)
-//				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
-//
-//			List args = new ArrayList();
-//
-//			String dsetName = toks.nextToken();
-//			if (!martconf.containsDataset(dsetName))
-//				throw new InvalidQueryException(
-//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-//
-//			while (toks.hasMoreTokens()) {
-//				args.add(new String[] { toks.nextToken(), toks.nextToken()});
-//			}
-//
-//			DescribeDataset(martconf.getDatasetByName(dsetName), args);
-//		}
+		//		StringTokenizer toks = new StringTokenizer(command, " ");
+		//		int tokCount = toks.countTokens();
+		//		toks.nextToken(); // skip describe
+		//
+		//		System.out.println();
+		//
+		//		if (tokCount == 1) {
+		//			String output = "This mart contains the following datasets:\n";
+		//			Dataset[] dsets = martconf.getDatasets();
+		//			for (int i = 0, n = dsets.length; i < n; i++) {
+		//				Dataset dset = dsets[i];
+		//				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
+		//			}
+		//			System.out.println(output);
+		//		} else if (tokCount == 2) {
+		//			String dsetName = toks.nextToken();
+		//
+		//			if (!martconf.containsDataset(dsetName))
+		//				throw new InvalidQueryException(
+		//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+		//
+		//			DescribeDataset(martconf.getDatasetByName(dsetName));
+		//		} else if (tokCount > 2) {
+		//
+		//			int mod = tokCount % 2; // must be even number of elements
+		//			if (mod > 0)
+		//				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
+		//
+		//			List args = new ArrayList();
+		//
+		//			String dsetName = toks.nextToken();
+		//			if (!martconf.containsDataset(dsetName))
+		//				throw new InvalidQueryException(
+		//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+		//
+		//			while (toks.hasMoreTokens()) {
+		//				args.add(new String[] { toks.nextToken(), toks.nextToken()});
+		//			}
+		//
+		//			DescribeDataset(martconf.getDatasetByName(dsetName), args);
+		//		}
 	}
 
 	private void DescribeDataset(Dataset dset) throws InvalidQueryException {
@@ -2495,12 +2519,12 @@ public class MartShell {
 				// will throw an exception if GetHistoryLines requirements are not satisfied
 				for (int i = 0, n = lines.length; i < n; i++) {
 					String thisline = lines[i];
-					
+
 					if (historyOn)
 						Readline.addToHistory(thisline);
-				
+
 					while (thisline != null)
-					  thisline = parseForCommands(thisline);
+						thisline = parseForCommands(thisline);
 				}
 			}
 		} catch (Exception e) {
@@ -2785,14 +2809,14 @@ public class MartShell {
 	private String batchErrorMessage = null;
 	private Properties commandHelp = new Properties();
 	private Properties supportHelp = new Properties();
-	
+
 	private final String HELPFILE = "data/help.properties";
 	//contains help general to the shell
 	private final String DSHELPFILE = "data/dshelp.properties";
 	// contains help for domain specific aspects
-  private final String HELPSUPPORT = "data/helpSupport.properties";
-  private final String DSHELPSUPPORT = "data/dshelpSupport.properties";
-  
+	private final String HELPSUPPORT = "data/helpSupport.properties";
+	private final String DSHELPSUPPORT = "data/dshelpSupport.properties";
+
 	private final Pattern DOMAINSPP = Pattern.compile("DOMAINSPECIFIC:(\\w+)", Pattern.DOTALL);
 	private Pattern INSERTP = Pattern.compile("INSERT:(\\w+)", Pattern.DOTALL);
 
