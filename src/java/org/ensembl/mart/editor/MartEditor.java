@@ -825,7 +825,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	  if (duplicationString != ""){
 		JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
 							+ duplicationString, "ERROR", 0);
-	  	//return;//leave as a warning for now otherwise naive doesn't work
+	  	return;//no export performed
 	  }
 
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();

@@ -34,6 +34,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -2397,6 +2398,9 @@ public class DatabaseDatasetConfigUtils {
     //need to sort starbases in order of the number of keys they contain
     //primaryKeys should be in this same order
 
+	Hashtable attMap = new Hashtable();
+	Hashtable filtMap = new Hashtable();
+	int duplicated = 0;
        
     List starbases = new ArrayList();
     List finalStarbases = new ArrayList(); 
@@ -2493,7 +2497,7 @@ public class DatabaseDatasetConfigUtils {
 
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
-
+	    duplicated = 0;
         //NN 
         String cname = column.name.toLowerCase();
         //String cname = column.name;
@@ -2525,25 +2529,43 @@ public class DatabaseDatasetConfigUtils {
              //System.out.println("Resetting table name to: "+ tableName);
 
             allCols.add(cname);
-            if (!cname.endsWith("_bool"))
-              fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
-            else {
-              FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv);
+            if (!cname.endsWith("_bool")){
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+			  	filtMap.put(cname,"1");
+              	fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+            } else {
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+				filtMap.put(cname,"1");	
+              	FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
 
-              Option opBool = new Option(fdBool);
-              fdBools.addOption(opBool);
-
+              	Option opBool = new Option(fdBool);
+              	fdBools.addOption(opBool);
             }
           }
           if (!cname.endsWith("_bool")) {
-            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey);
+			if (attMap.containsKey(cname)){
+				duplicated = 1;		
+			}
+			attMap.put(cname,"1");
+            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey, duplicated);
             //ad.setHidden("false");
             ac.addAttributeDescription(ad);
             if (cname.endsWith("_list")) {
-
-              FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv);
-              Option op = new Option(fdList);
-              fdLists.addOption(op);
+            	duplicated = 0;
+				if (!cname.equals("display_id_list")){
+			  		if (filtMap.containsKey(cname)){
+			  	    	//System.out.println(cname + " is duplicated");
+						duplicated = 1;		
+			  		}
+			  		filtMap.put(cname,"1");
+				}
+                FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
+                Option op = new Option(fdList);
+                fdLists.addOption(op);
 
             }
           }
@@ -2555,7 +2577,11 @@ public class DatabaseDatasetConfigUtils {
               fc.setInternalName(content);
               fc.setDisplayName(content.replaceAll("_", " "));
             }
-            fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
+			if (filtMap.containsKey(cname)){
+				duplicated = 1;		
+			}
+			filtMap.put(cname,"1");
+            fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
 
           }
         } else {
@@ -2612,6 +2638,10 @@ public class DatabaseDatasetConfigUtils {
     FilterGroup fg = new FilterGroup();
     fg.setInternalName("new_filters");
     fg.setDisplayName("NEW_FILTERS");
+
+	Hashtable attMap = new Hashtable();
+	Hashtable filtMap = new Hashtable();
+	int duplicated = 0;
 
     //need to sort starbases in order of the number of keys they contain
     //primaryKeys should be in this same order
@@ -2733,7 +2763,11 @@ public class DatabaseDatasetConfigUtils {
               	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
 
               if (currFilt == null) {
-                fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+				filtMap.put(cname,"1");	
+                fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
 //System.out.println("Going to null ");
               }
               else { // update options if has any
@@ -2743,7 +2777,11 @@ public class DatabaseDatasetConfigUtils {
               }
 
             } else { // is a main table bool filter
-              FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv);
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+				filtMap.put(cname,"1");	            	
+              FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
 
               Option opBool = new Option(fdBool);
               boolean newOption = true;
@@ -2779,14 +2817,21 @@ public class DatabaseDatasetConfigUtils {
             }
           }
           if (!cname.endsWith("_bool")) {
-            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey);
+			if (attMap.containsKey(cname)){
+				duplicated = 1;		
+			}
+			attMap.put(cname,"1");	          	
+            AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey, duplicated);
 
             if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname, tableName) == null) {
               ac.addAttributeDescription(ad);
             }
             if (cname.endsWith("_list")) {
-
-              FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv);
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+				filtMap.put(cname,"1");	
+              FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated);
               Option op = new Option(fdList);
 
               boolean newOption = true;
@@ -2831,9 +2876,13 @@ public class DatabaseDatasetConfigUtils {
             }
 
             FilterDescription currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
-            if (currFilt == null)
-              fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
-
+            if (currFilt == null){
+				if (filtMap.containsKey(cname)){
+					duplicated = 1;		
+				}
+				filtMap.put(cname,"1");	
+              fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
+            }
             else { // update options if has any
               if (currFilt.hasOptions())
                 updateDropDown(dsv, currFilt);
@@ -3016,11 +3065,17 @@ public class DatabaseDatasetConfigUtils {
     return false;
   }
 
-  private AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize, String joinKey)
+  private AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize, String joinKey, int duplicated)
     throws ConfigurationException {
     AttributeDescription att = new AttributeDescription();
     att.setField(columnName);
-    att.setInternalName(columnName.toLowerCase());
+	if (duplicated == 1){
+		att.setInternalName(tableName + "_" + columnName.toLowerCase());
+	}
+	else{
+		att.setInternalName(columnName.toLowerCase());	
+	}
+    
     att.setDisplayName(columnName.replaceAll("_", " "));
     att.setKey(joinKey);
     att.setTableConstraint(tableName);
@@ -3039,7 +3094,8 @@ public class DatabaseDatasetConfigUtils {
     String tableName,
     int columnType,
     String joinKey,
-    DatasetConfig dsv)
+    DatasetConfig dsv,
+    int duplicated)
     throws SQLException, ConfigurationException {
     FilterDescription filt = new FilterDescription();
     filt.setField(columnName);
@@ -3065,7 +3121,12 @@ public class DatabaseDatasetConfigUtils {
     // main table fds
     else {
       if (columnName.endsWith("_bool")) {
-		filt.setInternalName(descriptiveName.toLowerCase());
+      	if (duplicated == 1){
+			filt.setInternalName(tableName + "_" + columnName.toLowerCase());
+      	}
+      	else{
+			filt.setInternalName(columnName.toLowerCase());	
+      	}
         descriptiveName = columnName.replaceFirst("_bool", "");
         filt.setType("boolean");
         filt.setQualifier("only");
@@ -3079,9 +3140,21 @@ public class DatabaseDatasetConfigUtils {
         if (descriptiveName.equals("display_id")) {
           descriptiveName = tableName.split("__")[1].replaceFirst("xref_", "");
         }
-		filt.setInternalName(descriptiveName.toLowerCase());
+        
+		if (duplicated == 1){
+			filt.setInternalName(tableName + "_" + descriptiveName.toLowerCase());
+		}
+		else{
+			filt.setInternalName(descriptiveName.toLowerCase());
+		}
+		
       } else {
-		filt.setInternalName(descriptiveName.toLowerCase());
+		if (duplicated == 1){
+			filt.setInternalName(tableName + "_" + columnName.toLowerCase());	
+		}
+		else{
+			filt.setInternalName(columnName.toLowerCase());
+		}		
         filt.setType(DEFAULTTYPE);
         filt.setQualifier(DEFAULTQUALIFIER);
         filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
