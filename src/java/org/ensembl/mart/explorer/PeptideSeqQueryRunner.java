@@ -125,6 +125,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				
 		Attribute[] attributes = query.getAttributes();
 
+		String sql = null;
     try {
 		  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 		  String sqlbase = csql.toSQL();
@@ -133,7 +134,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		  sqlbase += " order by  "+structure_table+".transcript_id, "+structure_table+".rank";
 
 		while (moreRows) {
-			  String sql = sqlbase;
+			  sql = sqlbase;
 			  		
 		    if (limit > 0) {
 			    sql += " limit "+limit;
@@ -280,11 +281,9 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	        moreRows = false; // on the odd chance that the last resultset has equal rowcount with batchLength, an extra attempt will be made
 		  }
 		} catch (IOException e) {
-			logger.warn(e.getMessage());
 			throw new InvalidQueryException(e);
     } catch (SQLException e) {
-			logger.warn(e.getMessage());
-			throw new SequenceException(e);
+			throw new SequenceException(e + ":"+sql);
 		}
 	}
 
