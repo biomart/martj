@@ -17,8 +17,6 @@
  */
 package org.ensembl.mart.lib.config;
 
-import java.util.ArrayList;
-import java.util.List;
 
  /** 
   * Allows a FilterDescription Object to code whether to disable another FilterDescription Object
@@ -26,10 +24,9 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Disable {
-	private String ref;
-	private String valueCondition;
-	private List xmlAttributeTitles = new ArrayList();
+public class Disable extends BaseConfigurationObject {
+	private final String refKey = "ref";
+	private final String valueConditionKey = "valueCondition";
 	
 	/**
 	 * Copy Constructor. Constructs a new Disable that is a
@@ -37,14 +34,14 @@ public class Disable {
 	 * @param d Disable Object to copy.
 	 */
 	public Disable(Disable d) {
-		ref = d.getRef(); 
-		valueCondition = d.getValueCondition(); 
+    super(d); 
 	}
 	
   /**
    * Empty Constructor should only be used by DatasetViewEditor
    */
   public Disable() {
+  	super();
   }
   
 	/**
@@ -63,19 +60,21 @@ public class Disable {
 	 * @throws ConfigurationException when ref is null or empty.
 	 */
 	public Disable(String ref, String valueCondition) throws ConfigurationException {
+		super();
+		
 		if (ref == null || "".equals(ref))
-			throw new ConfigurationException("Enable objects must have a ref.\n");
+			throw new ConfigurationException("Disable objects must have a ref.\n");
   	  
-		this.ref = ref;
-		this.valueCondition = valueCondition;
+		setAttribute(refKey, ref);
+		setAttribute(valueConditionKey, valueCondition);
 	}
 
 	/**
-	 * Get the Reference for this Enable.  Refers to the internalName of a FilterDescription to Enable.
+	 * Get the Reference for this Disable.  Refers to the internalName of a FilterDescription to Disable.
 	 * @return String internalName of the referring FilterDescription.
 	 */
 	public String getRef() {
-		return ref;
+		return getAttribute(refKey);
 	}
 
 	/**
@@ -83,72 +82,46 @@ public class Disable {
 	 * @return String valueCondition
 	 */
 	public String getValueCondition() {
-		return valueCondition;
-	}
-
-  /**
-   * Set the Reference for this Disable.  This should refer to the internalName of another FilterDescription
-   * @param string internalName of a Filter to Disable
-   */
-  public void setRef(String string) {
-    ref = string;
-  }
-
-  /**
-   * Set the value at which the filter referred to by ref should be disabled
-   * @param string -- value at which another Filter should be disabled
-   */
-  public void setValueCondition(String string) {
-    valueCondition = string;
-  }
-
-	/**
-	 * Get the XML Attribute Titles for this object. This is meant for use
-	 * by DatasetViewEditor.
-	 * @return String[] List of XMLAttribute Titles.
-	 */
-	public String[] getXmlAttributeTitles() {
-		String[] titles = new String[xmlAttributeTitles.size()];
-		xmlAttributeTitles.toArray(titles);
-		return titles;
+		return getAttribute(valueConditionKey);
 	}
 
 	/**
-	 * Sets the XML Attribute Titles for this object.  This should equal
-	 * the titles of all XML Attributes for the element. This is meant for use
-	 * by DatasetViewEditor.
-	 * @param list
+	 * Set the internalName of the Filter to Disable when this Filter is used
+	 * @param ref -- internalName of the filter to enable
 	 */
-	public void setXmlAttributeTitles(String[] list) {
-		for (int i = 0, n = list.length; i < n; i++) {
-			xmlAttributeTitles.add(list[i]);
-		}
+	public void setRef(String ref) {
+		setAttribute(refKey, ref);
 	}
-	  
+
+	/**
+	 * Set a value at which the referenced Filter should be enabled.
+	 * @param valueCondition -- value at which the referenced Filter should be enabled.
+	 */
+	public void setValueCondition(String valueCondition) {
+		setAttribute(valueConditionKey, valueCondition);
+	}
+		  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("ref=").append(ref);
-		buf.append(", valueCondition=").append(valueCondition);
+		buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
 	}
 	
 	/**
-	 * Allows Equality Comparisons manipulation of Enable objects
+	 * Allows Equality Comparisons manipulation of Disable objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof Enable && hashCode() == o.hashCode();
+		return o instanceof Disable && hashCode() == o.hashCode();
 	}
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * always false
 	 */
-	public int hashCode() {
-    int hshcode = ref.hashCode();
-    hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
-		return hshcode;
+	public boolean isBroken() {
+		return false;
 	}
 }

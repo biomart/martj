@@ -18,9 +18,6 @@
  
 package org.ensembl.mart.lib.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Default Filter for a DatasetView.  Holds a FilterDescription, and
  * the value to apply for that filter.  This allows the DatasetView to
@@ -29,17 +26,17 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DefaultFilter {
-  private String value;
+public class DefaultFilter extends BaseConfigurationObject {
+  private boolean hasBrokenFilter;
+  private final String valueKey = "value";
   private FilterDescription fdesc;
-	private List xmlAttributeTitles = new ArrayList();
   
   /**
    * Copy constructor. Creates an exact copy of an existing DefaultFilter.
    * @param df DefaultFilter to copy.
    */
   public DefaultFilter(DefaultFilter df) {
-  	value = df.getValue();
+  	super(df);
   	
   	setFilterDescription(new FilterDescription( df.getFilterDescription() ) );
   }
@@ -47,7 +44,8 @@ public class DefaultFilter {
    /**
     * Empty Constructor.  Should really only be used by the DatasetViewEditor
     */
-   public DefaultFilter() {  
+   public DefaultFilter() {
+   	super();  
    }
    
    /**
@@ -59,12 +57,14 @@ public class DefaultFilter {
     * @throws ConfigurationException when value is null or empty, or FilterDescription is null
     */
    public DefaultFilter(FilterDescription fdesc, String value) throws ConfigurationException {
+   	super();
+   	
      if (value == null || value.equals("")
          || fdesc == null)
        throw new ConfigurationException("DefaultFilter Objects must be instantiated with a FilterDescription and a value for that filter\n");
      
      this.fdesc = fdesc;
-     this.value = value;
+     setAttribute(valueKey, value);
    }
 
   /**
@@ -79,8 +79,8 @@ public class DefaultFilter {
    * Sets the value for this DefaultFilter
    * @param string
    */
-  public void setValue(String string) {
-    value = string;
+  public void setValue(String value) {
+    setAttribute(valueKey, value);
   }
   
   /**
@@ -90,44 +90,21 @@ public class DefaultFilter {
   public FilterDescription getFilterDescription() {
     return fdesc;
   }
-
-	/**
-	 * Get the XML Attribute Titles for this object. This is meant for use
-	 * by DatasetViewEditor.
-	 * @return String[] List of XMLAttribute Titles.
-	 */
-	public String[] getXmlAttributeTitles() {
-		String[] titles = new String[xmlAttributeTitles.size()];
-		xmlAttributeTitles.toArray(titles);
-		return titles;
-	}
-
-	/**
-	 * Sets the XML Attribute Titles for this object.  This should equal
-	 * the titles of all XML Attributes for the element. This is meant for use
-	 * by DatasetViewEditor.
-	 * @param list
-	 */
-	public void setXmlAttributeTitles(String[] list) {
-		for (int i = 0, n = list.length; i < n; i++) {
-			xmlAttributeTitles.add(list[i]);
-		}
-	}
 	
   /**
    * Returns the value for the filter
    * @return String value
    */
   public String getValue() {
-    return value;
+    return getAttribute(valueKey);
   }
    
    public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
+		super.toString();
 		buf.append(" FilterDescription=").append(fdesc);
-    buf.append(", value=").append(value);
 		buf.append("]");
 
 		return buf.toString();
@@ -144,9 +121,32 @@ public class DefaultFilter {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-    int tmp = fdesc.hashCode();
-    tmp = (31 * tmp) + value.hashCode();
+		int tmp = super.hashCode();
+    tmp = (fdesc != null) ? (31 * tmp) + fdesc.hashCode() : tmp;
      
     return tmp;
 	}
-}
+
+	/**
+	 * Set the hasBrokenFilter flag to true, meaning its FilterDescription is broken.
+	 */
+	public void setFilterBroken() {
+    hasBrokenFilter = true;
+	}
+	
+	/**
+	 * Determine if this DefaultFilter 's FilterDescription Object is broken.
+	 * @return boolean
+	 */
+	public boolean hasBrokenFilter() {
+		return hasBrokenFilter;
+	}
+	
+	/**
+	 * True if hasBrokenFilter is true
+	 * @return boolean
+	 */
+	public boolean isBroken() {
+		return hasBrokenFilter;
+	}
+ }

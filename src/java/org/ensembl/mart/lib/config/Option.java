@@ -30,23 +30,20 @@ import java.util.List;
  */
 public class Option extends QueryFilterSettings {
 
-  private String qualifier;
 	private QueryFilterSettings parent;
-	private String field;
-	private String tableConstraint;
-	private String value;
-	private String ref;
-	private String legalQualifiers;
-	private String type;
-	private String handler;
 
-	private boolean isSelectable;
+	private final String refKey = "ref";
+	private final String isSelectableKey = "isSelectable"; 
+
 	private boolean hasOptions = false;
 
+	private boolean hasBrokenOptions = false;
+	private boolean hasBrokenPushActions = false;
+	
 	//options can contain options
 	private List uiOptions = new ArrayList();
 	private Hashtable uiOptionNameMap = new Hashtable();
-	private List uiOptionPushes = new ArrayList();
+	private List pushActions = new ArrayList();
 
 	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
 	private Option lastSupportingOption = null;
@@ -57,16 +54,6 @@ public class Option extends QueryFilterSettings {
    */
   public Option(Option o) {
     super(o);
-    
-  	isSelectable = o.isSelectable();
-  	field = o.getField();
-  	tableConstraint = o.getTableConstraint();
-  	value = o.getValue();
-  	ref = o.getRef();
-  	type = o.getType();
-  	qualifier = o.getQualifier();
-  	legalQualifiers = o.getLegalQualifiers();
-  	handler = o.getHandler();
   	
   	Option[] os = o.getOptions();
   	for (int i = 0, n = os.length; i < n; i++) {
@@ -92,21 +79,12 @@ public class Option extends QueryFilterSettings {
    */
   public Option(FilterDescription fd) {
   	super(fd);
-  	
-		isSelectable = true;
-		field = fd.getField();
-		tableConstraint = fd.getTableConstraint();
-		value = fd.getValue();
-		type = fd.getType();
-		qualifier = fd.getQualifier();
-		legalQualifiers = fd.getLegalQualifiers();
-		handler = fd.getHandler();
-  	
+
+    setSelectable("true");
 		Option[] os = fd.getOptions();
 		for (int i = 0, n = os.length; i < n; i++) {
 			addOption( new Option( os[i] ) );
-		}
-  	  
+		}  	  
   }
   
 	/**
@@ -117,13 +95,13 @@ public class Option extends QueryFilterSettings {
 		super();
 	}
 
-	public Option(String internalName, boolean isSelectable) throws ConfigurationException {
+	public Option(String internalName, String isSelectable) throws ConfigurationException {
 		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", null);
 	}
 
 	public Option(
 		String internalName,
-		boolean isSelectable,
+		String isSelectable,
 		String displayName,
 		String description,
 		String field,
@@ -136,18 +114,10 @@ public class Option extends QueryFilterSettings {
 		String handler)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description);
+		super(internalName, displayName, description, field, value, tableConstraint, handler, type, qualifier, legalQualifiers);
 
-		this.isSelectable = isSelectable;
-		this.field = field;
-		this.tableConstraint = tableConstraint;
-		this.qualifier = qualifier;
-		this.legalQualifiers = legalQualifiers;
-		this.type = type;
-
-		this.value = value;
-		this.ref = ref;
-		this.handler = handler;
+    setAttribute(isSelectableKey, isSelectable );
+		setAttribute(refKey, ref);
 	}
 
 	/**
@@ -255,13 +225,14 @@ public class Option extends QueryFilterSettings {
 		else
 			return null;
 	}
-
+  
   /**
-   * Set the selectability of this Option (true or false)
-   * @param isSelectable -- boolean, true if this Option is selectable, false otherwise
+   * Sets the isSelectable attribute to the string value
+   * of this flag.  The value of his should be a one of "true" or "false".
+   * @param isSelectable - String isSelectable value
    */
-  public void setSelectable(boolean isSelectable) {
-    this.isSelectable = isSelectable;
+  public void setSelectable(String isSelectable) {
+  	setAttribute(isSelectableKey, isSelectable);
   }
   
 	/**
@@ -269,7 +240,7 @@ public class Option extends QueryFilterSettings {
 	 * @return boolean, true if selectable, false otherwise
 	 */
 	public boolean isSelectable() {
-		return isSelectable;
+		return Boolean.valueOf( getAttribute( isSelectableKey) ).booleanValue();
 	}
 
 	/**
@@ -282,13 +253,13 @@ public class Option extends QueryFilterSettings {
 
 	public String getDisplayName(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getDisplayName(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getDisplayName(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getDisplayName();
 				}
@@ -299,35 +270,19 @@ public class Option extends QueryFilterSettings {
 
 	public String getDescription(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getDescription(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getDescription(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getDescription();
 				}
 				return null; // nothing found
 			}
 		}
-	}
-
-  /**
-   * Set the field for this Option
-   * @param field -- String field of the Option.
-   */
-  public void setField(String field) {
-    this.field = field;
-  }
-  
-	/**
-	 * Returns the field for this Option
-	 * @return String field
-	 */
-	public String getField() {
-		return field;
 	}
 
 	/**
@@ -338,35 +293,19 @@ public class Option extends QueryFilterSettings {
 	 */
 	public String getField(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getField(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getField(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getField();
 				}
 				return null; // nothing found
 			}
 		}
-	}
-
-	/**
-	 * Set the tableConstraint.
-	 * @param tableConstraint -- String table name pattern.
-	 */
-	public void setTableConstraint(String tableConstraint) {
-		this.tableConstraint = tableConstraint;
-	}
-
-	/**
-	 * Returns the tableConstraint for this Option
-	 * @return String tableConstraint
-	 */
-	public String getTableConstraint() {
-		return tableConstraint;
 	}
 
 	/**
@@ -377,35 +316,19 @@ public class Option extends QueryFilterSettings {
 	 */
 	public String getTableConstraint(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getTableConstraint(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getTableConstraint(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getTableConstraint();
 				}
 				return null; // nothing found
 			}
 		}
-	}
-
-	/**
-	 * Set the handler
-	 * @param handler -- String handler.  Should be a Java package name, that can be fed to the ClassLoader.
-	 */
-	public void setHandler(String handler) {
-		this.handler = handler;
-	}
-
-	/**
-	 * Returns the handler for this Option
-	 * @return String handler
-	 */
-	public String getHandler() {
-		return handler;
 	}
 
 	/**
@@ -416,13 +339,13 @@ public class Option extends QueryFilterSettings {
 	 */
 	public String getHandler(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getHandler(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getHandler(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getHandler();
 				}
@@ -439,8 +362,8 @@ public class Option extends QueryFilterSettings {
 	 */
 	public List getCompleterNames() {
 		List names = new ArrayList();
-		for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-			PushAction element = (PushAction) uiOptionPushes.get(i);
+		for (int i = 0, n = pushActions.size(); i < n; i++) {
+			PushAction element = (PushAction) pushActions.get(i);
 			Option[] ops = element.getOptions();
 
 			for (int j = 0, o = ops.length; j < o; j++) {
@@ -449,10 +372,10 @@ public class Option extends QueryFilterSettings {
 
 				if (option.getField() != null && option.getField().length() > 0 && option.getType() != null && option.getType().length() > 0) {
 					//push option filter, should get superoption.subotion as name
-					completer = internalName + "." + option.getInternalName();
+					completer =  attributes.getProperty(internalNameKey)  + "." + option.getInternalName();
 				} else if (option.getValue() != null && option.getValue().length() > 0) {
 					//push option value, should get superoption.pushoptionref as name
-					completer = internalName + "." + element.getRef();
+					completer =  attributes.getProperty(internalNameKey)  + "." + element.getRef();
 				} // else not needed
 
 				if (!(completer == null || names.contains(completer)))
@@ -467,7 +390,7 @@ public class Option extends QueryFilterSettings {
 	 * @param ref -- String ref, which refers to another FilterDescription or Option internalName.
 	 */
 	public void setRef(String ref) {
-		this.ref = ref;
+		setAttribute(refKey, ref);
 	}
 
 	/**
@@ -475,23 +398,7 @@ public class Option extends QueryFilterSettings {
 	 * @return String ref.
 	 */
 	public String getRef() {
-		return ref;
-	}
-
-	/**
-	 * Set the value for this Option.
-	 * @param value -- Value for the Option.
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	/**
-	 * Returns the Value for this Option
-	 * @return String value for the Option
-	 */
-	public String getValue() {
-		return value;
+		return getAttribute(refKey);
 	}
 
 	/**
@@ -499,7 +406,7 @@ public class Option extends QueryFilterSettings {
 	 * @return PushOption[]
 	 */
 	public PushAction[] getPushActions() {
-		return (PushAction[]) uiOptionPushes.toArray(new PushAction[uiOptionPushes.size()]);
+		return (PushAction[]) pushActions.toArray(new PushAction[pushActions.size()]);
 	}
 
 	/**
@@ -507,7 +414,7 @@ public class Option extends QueryFilterSettings {
 	 * @param PushAction object to be added.
 	 */
 	public void addPushAction(PushAction optionPush) {
-		uiOptionPushes.add(optionPush);
+		pushActions.add(optionPush);
 	}
 
   /**
@@ -515,7 +422,7 @@ public class Option extends QueryFilterSettings {
    * @param pushactions  Array of PushActions
    */
   public void addPushActions(PushAction[] pushactions) {
-    uiOptionPushes.addAll(Arrays.asList(pushactions));
+    pushActions.addAll(Arrays.asList(pushactions));
   }
   
 	/**
@@ -523,23 +430,7 @@ public class Option extends QueryFilterSettings {
 	 * @param pa -- PushAction to be removed.
 	 */
 	public void removePushAction(PushAction pa) {
-		uiOptionPushes.remove(pa);
-	}
-
-	/**
-	 * Set the legalQualifiers for this Option.
-	 * @param legalQualifiers -- String comma separated list of legal Qualifiers for this Option.
-	 */
-	public void setLegalQualifiers(String legalQualifiers) {
-		this.legalQualifiers = legalQualifiers;
-	}
-
-	/**
-	 * Get the legal Qualifiers for this Option.
-	 * @return String legalQualifiers
-	 */
-	public String getLegalQualifiers() {
-		return legalQualifiers;
+		pushActions.remove(pa);
 	}
 
 	/**
@@ -549,35 +440,19 @@ public class Option extends QueryFilterSettings {
 	 */
 	public String getLegalQualifiers(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getLegalQualifiers(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getLegalQualifiers(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getLegalQualifiers();
 				}
 				return null; // nothing found
 			}
 		}
-	}
-
-	/**
-	 * Set the type for this Option.
-	 * @param type -- String type of Option.
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	/**
-	 * Get the type of this Option
-	 * @return String type.
-	 */
-	public String getType() {
-		return type;
 	}
 
 	/**
@@ -588,13 +463,13 @@ public class Option extends QueryFilterSettings {
 	 */
 	public String getType(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get(internalName)).getType(refIname);
+			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getType(refIname);
 		else {
-			if (uiOptionPushes.size() < 1)
+			if (pushActions.size() < 1)
 				return null;
 			else {
-				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushAction element = (PushAction) uiOptionPushes.get(i);
+				for (int i = 0, n = pushActions.size(); i < n; i++) {
+					PushAction element = (PushAction) pushActions.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getType();
 				}
@@ -611,7 +486,7 @@ public class Option extends QueryFilterSettings {
 	 * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
 	 */
 	public boolean supports(String field, String tableConstraint) {
-		boolean supports = (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint));
+		boolean supports = super.supports(field, tableConstraint);
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
@@ -625,8 +500,8 @@ public class Option extends QueryFilterSettings {
 				}
 
 				if (!supports) {
-					for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-						PushAction element = (PushAction) uiOptionPushes.get(i);
+					for (int i = 0, n = pushActions.size(); i < n; i++) {
+						PushAction element = (PushAction) pushActions.get(i);
 						if (element.supports(field, tableConstraint)) {
 							lastSupportingOption = element.getOptionByFieldNameTableConstraint(field, tableConstraint);
 							supports = true;
@@ -666,13 +541,13 @@ public class Option extends QueryFilterSettings {
 	 * @return String internalName
 	 */
 	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
-		if (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint))
-			return internalName;
+		if (getAttribute(fieldKey) != null && getAttribute(fieldKey).equals(field) && getAttribute(tableConstraintKey) != null && getAttribute(tableConstraintKey).equals(tableConstraint))
+			return  attributes.getProperty(internalNameKey) ;
 		else {
-			for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-				PushAction element = (PushAction) uiOptionPushes.get(i);
+			for (int i = 0, n = pushActions.size(); i < n; i++) {
+				PushAction element = (PushAction) pushActions.get(i);
 				if (element.supports(field, tableConstraint)) {
-					return internalName + "." + element.geOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
+					return  attributes.getProperty(internalNameKey)  + "." + element.getOptionInternalNameByFieldNameTableConstraint(field, tableConstraint);
 				}
 			}
 		}
@@ -688,22 +563,8 @@ public class Option extends QueryFilterSettings {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", isSelectable=").append(isSelectable);
-		buf.append(", field=").append(field);
-		buf.append(", tableConstraint=").append(tableConstraint);
-		buf.append(", value=").append(value);
-		buf.append(", ref=").append(ref);
-		buf.append(", qualifier=").append(qualifier);
-		buf.append(", legalQualifiers=").append(legalQualifiers);
-		buf.append(", type=").append(type);
-		buf.append(", handler=");
-		if (handler != null)
-			buf.append(handler);
-		else
-			buf.append("null");
-
-		if (hasOptions)
-			buf.append(", options=").append(uiOptions);
+ 	  buf.append(", options=").append(uiOptions);
+		buf.append(", pushActions=").append( pushActions );
 		buf.append("]");
 
 		return buf.toString();
@@ -722,21 +583,11 @@ public class Option extends QueryFilterSettings {
 
 		int hashcode = super.hashCode();
 
-		hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
-		hashcode = (31 * hashcode) + field.hashCode();
-		hashcode = (31 * hashcode) + tableConstraint.hashCode();
-		hashcode = (31 * hashcode) + value.hashCode();
-		hashcode = (31 * hashcode) + ref.hashCode();
-		hashcode = (31 * hashcode) + qualifier.hashCode();
-		hashcode = (31 * hashcode) + legalQualifiers.hashCode();
-		hashcode = (31 * hashcode) + type.hashCode();
-		hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
-
 		for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 			hashcode = (31 * hashcode) + iter.next().hashCode();
 		}
 
-		for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
+		for (Iterator iter = pushActions.iterator(); iter.hasNext();) {
 			hashcode = (31 * hashcode) + iter.next().hashCode();
 		}
 
@@ -756,8 +607,8 @@ public class Option extends QueryFilterSettings {
 	 * @return field if set otherwise getParent().getFieldFromContext().
 	 */
 	public String getFieldFromContext() {
-		if (valid(field))
-			return field;
+		if (valid( getAttribute(fieldKey) ))
+			return  getAttribute(fieldKey) ;
 		else
 			return getParent().getFieldFromContext();
 	}
@@ -767,8 +618,8 @@ public class Option extends QueryFilterSettings {
 	 * @return value if set otherwise getParent().getValueFromContext().
 	 */
 	public String getValueFromContext() {
-		if (valid(value))
-			return value;
+		if (valid( getAttribute(valueKey) ))
+			return  getAttribute(valueKey) ;
 		else
 			return getParent().getValueFromContext();
 	}
@@ -778,8 +629,8 @@ public class Option extends QueryFilterSettings {
 	 * @return type if set otherwise getParent().getTypeFromContext().
 	 */
 	public String getTypeFromContext() {
-		if (valid(type))
-			return type;
+		if (valid( getAttribute(typeKey) ))
+			return  getAttribute(typeKey) ;
 		else
 			return getParent().getTypeFromContext();
 	}
@@ -789,8 +640,8 @@ public class Option extends QueryFilterSettings {
    * @return legalQualifiers if set, otherwise getParent().getLegalQualifiersFromContext().
    */
   public String getLegalQualifiersFromContext() {
-    if (valid(legalQualifiers))
-      return legalQualifiers;
+    if (valid( getAttribute(legalQualifiersKey) ))
+      return  getAttribute(legalQualifiersKey) ;
     else
       return getParent().getLegalQualifiersFromContext();
   }
@@ -800,8 +651,8 @@ public class Option extends QueryFilterSettings {
 	 * @return handler if set otherwise getParent().getHandlerFromContext().
 	 */
 	public String getHandlerFromContext() {
-		if (valid(handler))
-			return handler;
+		if (valid( getAttribute(handlerKey) ))
+			return  getAttribute(handlerKey) ;
 		else
 			return getParent().getHandlerFromContext();
 	}
@@ -811,26 +662,10 @@ public class Option extends QueryFilterSettings {
 	 * @return tableConstraint if set otherwise getParent().getTableConstraintFromContext().
 	 */
 	public String getTableConstraintFromContext() {
-		if (valid(tableConstraint))
-			return tableConstraint;
+		if (valid( getAttribute(tableConstraintKey) ))
+			return  getAttribute(tableConstraintKey) ;
 		else
 			return getParent().getTableConstraintFromContext();
-	}
-
-  /**
-   * Set the qualifier for this Option
-   * @param qualifier -- Qualifier to use in BasicFilter objects for this Option.
-   */
-  public void setQualifier(String qualifier) {
-    this.qualifier = qualifier;
-  }
-  
-	/**
-	 * Returns the qualifier
-	 * @return String qualifier
-	 */
-	public String getQualifier() {
-		return qualifier;
 	}
 
 	/**
@@ -838,9 +673,51 @@ public class Option extends QueryFilterSettings {
 	 * @return qualifier if set otherwise getParent().getQualifierFromContext().
 	 */
 	public String getQualifierFromContext() {
-		if (valid(qualifier))
-			return qualifier;
+		if (valid( getAttribute(qualifierKey) ))
+			return  getAttribute(qualifierKey) ;
 		else
 			return getParent().getQualifierFromContext();
+	}
+	
+	/**
+	 * set the hasBrokenOptions flag to true, eg, one or more Option objects (possibly within PushAction
+	 * Objects within an Option tree) contain broken fields or tableConstraints. 
+	 *
+	 */
+	public void setOptionsBroken() {
+		hasBrokenOptions = true;
+	}
+	
+	/**
+	 * Determine if this Option has Broken Options.
+	 * @return boolean, true if one or more Options are broken, false otherwise.
+	 */
+	public boolean hasBrokenOptions() {
+		return hasBrokenOptions;
+	}
+	
+	/**
+	 * set the hasBrokenPushActions flag to true, eg, one or more PushAction objects (possibly within PushAction
+	 * Objects within an subOption tree) contain Options with broken fields or tableConstraints. 
+	 *
+	 */
+	public void setPushActionsBroken() {
+		hasBrokenPushActions = true;
+	}
+	
+	/**
+	 * Determine if this Option has Broken PushActions.
+	 * @return boolean, true if one or more PushActions are broken, false otherwise.
+	 */
+	public boolean hasBrokenPushActions() {
+		return hasBrokenPushActions;
+	}
+	
+	/**
+	 * True if one of hasBrokenField, hasBrokenTableConstraint, hasBrokenOptions, hasBrokenPushActions is true.
+	 * @return boolean
+	 */
+	public boolean isBroken() {
+		return hasBrokenField || hasBrokenTableConstraint || hasBrokenOptions || hasBrokenPushActions;
 	}
 }

@@ -24,59 +24,177 @@ package org.ensembl.mart.lib.config;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public abstract class QueryFilterSettings extends BaseConfigurationObject {
-  
+public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
+
+	protected final String fieldKey = "field";
+	protected final String valueKey = "value";
+	protected final String handlerKey = "handler";
+	protected final String tableConstraintKey = "tableConstraint";
+	protected final String typeKey = "type";
+	protected final String qualifierKey = "qualifier";
+	protected final String legalQualifiersKey = "legal_qualifiers";
+
 	/**
 	 * Copy constructor.  Creates an exact copy of an existing object.
-	 * @param bo - BaseConfigurationObject to copy.
+	 * @param bo - BaseNamedConfigurationObject to copy.
 	 */
-  public QueryFilterSettings(BaseConfigurationObject bo) {
-  	super(bo);
-  }
-  
-  /**
-   * Empty Constructor should only be used by DatasetViewEditor
-   *
-   */
-  public QueryFilterSettings() {
-    super();
-  }
-  
-  /**
+	public QueryFilterSettings(BaseNamedConfigurationObject bo) {
+		super(bo);
+	}
+
+	/**
+	 * Empty Constructor should only be used by DatasetViewEditor
+	 *
+	 */
+	public QueryFilterSettings() {
+		super();
+	}
+
+	/**
 	 * @param internalName
 	 * @param displayName
 	 * @param description
 	 * @throws ConfigurationException
 	 */
-	public QueryFilterSettings(String internalName, String displayName, String description) throws ConfigurationException {
+	public QueryFilterSettings(String internalName, String displayName, String description)
+		throws ConfigurationException {
+			this(internalName, displayName, description, "", "", "", null, "", "", "");
+	}
+
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String handler, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
 		super(internalName, displayName, description);
+		
+    setAttribute(fieldKey, field);
+    setAttribute(valueKey, value);
+		setAttribute(handlerKey, handler);
+		setAttribute(tableConstraintKey, tableConstraint);
+		setAttribute(typeKey, type);
+		setAttribute(qualifierKey, qualifier);
+		setAttribute(legalQualifiersKey, legalQualifiers);
+  }
+  
+	public void setField(String field) {
+		setAttribute(fieldKey, field);
 	}
 	
-  public abstract void setField(String field);
-  public abstract String getField();
-  public abstract String getFieldFromContext();
-  
-  public abstract void setValue(String value);
-  public abstract String getValue();
+	public String getField() {
+		return getAttribute(fieldKey);
+	}
+
+	public abstract String getFieldFromContext();
+
+	public void setHandler(String handler) {
+		setAttribute(handlerKey, handler);
+	}
+
+	public String getHandler() {
+		return getAttribute(handlerKey);
+	}
+
+	public abstract String getHandlerFromContext();
+
+	public void setTableConstraint(String tableConstraint) {
+		setAttribute(tableConstraintKey, tableConstraint);
+	}
+
+	public String getTableConstraint() {
+		return getAttribute(tableConstraintKey);
+	}
+
+	public abstract String getTableConstraintFromContext();
+
+	public void setType(String type) {
+		setAttribute(typeKey, type);
+	}
+
+	public String getType() {
+		return getAttribute(typeKey);
+	}
+
+	public abstract String getTypeFromContext();
+
+	public void setQualifier(String qualifier) {
+		setAttribute(qualifierKey, qualifier);
+	}
+
+	public String getQualifier() {
+		return getAttribute(qualifierKey);
+	}
+
+	public abstract String getQualifierFromContext();
+
+	public void setLegalQualifiers(String legalQualifiers) {
+		setAttribute(legalQualifiersKey, legalQualifiers);
+	}
+
+	public String getLegalQualifiers() {
+		return getAttribute(legalQualifiersKey);
+	}
+	public abstract String getLegalQualifiersFromContext();
+
   public abstract String getValueFromContext();
   
-  public abstract void setHandler(String handler);
-  public abstract String getHandler();
-  public abstract String getHandlerFromContext();
-  
-  public abstract void setTableConstraint(String tableConstraint);
-  public abstract String getTableConstraint();
-  public abstract String getTableConstraintFromContext();
-  
-  public abstract void setType(String type);
-  public abstract String getType();
-  public abstract String getTypeFromContext();
-  
-  public abstract void setQualifier(String qualifier);
-  public abstract String getQualifier();
-  public abstract String getQualifierFromContext();
-  
-  public abstract void setLegalQualifiers(String legalQualifiers);
-  public abstract String getLegalQualifiers();
-  public abstract String getLegalQualifiersFromContext();  
+	public boolean supports(String field, String tableConstraint) {
+		boolean supports = false;
+		
+		//if field is null, this Object cannot support any field x tableConstraint combination 
+		if (getAttribute(fieldKey) != null) {
+				supports = getAttribute(fieldKey).equals(field);
+				
+				if (supports) {
+					String tableConstraintK = getAttribute(tableConstraintKey);
+					
+					//if the field matches, it only depends on the tableConstraints if the given or the object has a non null tableConstraint
+					if (tableConstraint != null || tableConstraintK != null) {
+						supports = tableConstraintK != null && tableConstraint != null && tableConstraintK.equals(tableConstraint);
+					}
+				}
+		}
+		
+		return supports;
+	}
+
+	protected boolean hasBrokenField = false;
+	protected boolean hasBrokenTableConstraint = false;
+	/**
+		 * set the hasBrokenField flag to true, eg. the field
+		 * does not refer to an existing field in a particular Mart Dataset instance.
+		 *
+		 */
+	public void setFieldBroken() {
+		hasBrokenField = true;
+	}
+
+	/**
+		 * Determine if this Option has a broken field reference.
+		 * @return boolean, true if field is broken, false otherwise
+		 */
+	public boolean hasBrokenField() {
+		return hasBrokenField;
+	}
+
+	/**
+		 * set the hasBrokenTableConstraint flag to true, eg. the tableConstraint
+		 * does not refer to an existing table in a particular Mart Dataset instance.
+		 *
+		 */
+	public void setTableConstraintBroken() {
+		hasBrokenTableConstraint = true;
+	}
+
+	/**
+		 * Determine if this Option has a broken tableConstraint reference.
+		 * @return boolean, true if tableConstraint is broken, false otherwise
+		 */
+	public boolean hasBrokenTableConstraint() {
+		return hasBrokenTableConstraint;
+	}
+
+	public void setValue(String value) {
+		setAttribute(valueKey, value);
+	}
+
+	public String getValue() {
+		return getAttribute(valueKey);
+	}
 }

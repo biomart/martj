@@ -29,8 +29,9 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class AttributePage extends BaseConfigurationObject {
+public class AttributePage extends BaseNamedConfigurationObject {
 
+  private boolean hasBrokenGroups = false;
   private List attributeGroups = new ArrayList();
   private Hashtable attGroupNameMap = new Hashtable();
 
@@ -475,4 +476,28 @@ public class AttributePage extends BaseConfigurationObject {
 
 		return tmp;
 	}
+
+  /**
+   * Sets the hasBrokenGroups flag to true, meaning that one or more AttributeGroup Objects
+   * contain broken AttributeDescriptions.
+   */
+  public void setGroupsBroken() {
+    hasBrokenGroups = true;
+  }
+  
+  /**
+   * Determine if this AttributePage has broken AttributeGroups.
+   * @return boolean, true if one or more AttributeGroup Objects contain broken AttributeDescriptions, false otherwise
+   */
+  public boolean hasBrokenGroups() {
+  	return hasBrokenGroups;
+  }
+  
+  /**
+   * True if hasBrokenGroups is true.
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenGroups;
+  }
 }

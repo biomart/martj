@@ -33,7 +33,7 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         String value = (String) newValue;
         System.out.println("in model valueForPathChanged");
         current_node.setName(value);
-        BaseConfigurationObject nodeInfo = (BaseConfigurationObject) current_node.getUserObject();
+        BaseNamedConfigurationObject nodeInfo = (BaseNamedConfigurationObject) current_node.getUserObject();
         //nodeInfo.setInternalName(value);
         //System.out.println(view.containsAttributePage(value));
 

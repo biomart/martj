@@ -84,7 +84,7 @@ public class TreeFilterWidget extends FilterWidget {
 		super(filterGroupWidget, query, filterDescription);
 
 		try {
-			nullOption = new Option("No Filter", true);
+			nullOption = new Option("No Filter", "true");
 		} catch (ConfigurationException e) {
 			// shouldn't happen
 			e.printStackTrace();

@@ -26,8 +26,10 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSFilterGroup extends BaseConfigurationObject {
+public class DSFilterGroup extends BaseNamedConfigurationObject {
 
+	private String handlerKey = "handler";
+	
   /**
    * Copy constructor.  Constructs an exact copy of an existing
    * DSFilterGroup.
@@ -35,8 +37,6 @@ public class DSFilterGroup extends BaseConfigurationObject {
    */
   public DSFilterGroup(DSFilterGroup dsfg) {
   	super(dsfg);
-  	
-  	handler = dsfg.getHandler();
   }
   
   /**
@@ -66,7 +66,7 @@ public class DSFilterGroup extends BaseConfigurationObject {
   public DSFilterGroup(String internalName, String displayName, String description, String handler) throws ConfigurationException {
   	
     super( internalName, displayName, description );
-    this.handler = handler;
+    setAttribute(handlerKey, handler);
   }
  
 	/**
@@ -74,7 +74,7 @@ public class DSFilterGroup extends BaseConfigurationObject {
 	 * @return Sring handler
 	 */
 	public String getHandler() {
-		return handler;
+		return getAttribute(handlerKey);
 	}
 
   /**
@@ -82,7 +82,7 @@ public class DSFilterGroup extends BaseConfigurationObject {
    * @param handler - should be a string capable of being fed as a parameter to the Java ClassLoader system.
    */
   public void setHandler(String handler) {
-    this.handler = handler;
+		setAttribute(handlerKey, handler);
   }
   
   public String toString() {
@@ -90,7 +90,6 @@ public class DSFilterGroup extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append( super.toString() );
-		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -102,15 +101,11 @@ public class DSFilterGroup extends BaseConfigurationObject {
 	public boolean equals(Object o) {
 		return o instanceof DSFilterGroup && hashCode() == ((DSFilterGroup) o).hashCode();
 	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-    int hashcode = super.hashCode();
-    hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
-		return hashcode;
-	}
 
-  private String handler;
+	/**
+	 * Always false
+	 */
+	public boolean isBroken() {
+		return false;
+	}
 }

@@ -25,9 +25,9 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSAttributeGroup extends BaseConfigurationObject {
-
-  private String handler;
+public class DSAttributeGroup extends BaseNamedConfigurationObject {
+  
+  private final String handlerKey = "handler";
   
   /**
    * Copy constructor.  Constructs an exact copy of an existing DSAttributeGroup.
@@ -35,7 +35,6 @@ public class DSAttributeGroup extends BaseConfigurationObject {
    */
   public DSAttributeGroup(DSAttributeGroup dsag) {
   	super(dsag);
-  	handler = dsag.getHandler();
   }
   
 	/**
@@ -59,20 +58,20 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 	 * @param internalName - String name to internally represent the object.
 	 * @param displayName - String name to display in a UI
 	 * @param description - String description of the DSAttributeGroup
-	 * @param handler - String signal to the UI to determine a rendering module
+	 * @param handler - String name of handler Class object to use to process this group
 	 * @throws ConfigurationException when internalName is null or empty
 	 */
-	public DSAttributeGroup(String internalName, String displayName, String description, String objectCode) throws ConfigurationException {
+	public DSAttributeGroup(String internalName, String displayName, String description, String handler) throws ConfigurationException {
 		super(internalName, displayName, description);
-		this.handler = objectCode;
+		setAttribute(handlerKey, handler);
 	}
 
   /**
    * Set the Handler for this DSAttributeGroup
-   * @param handler
+   * @param handler - String name of Object handler code.
    */
 	public void setHandler(String handler) {
-		this.handler = handler;
+		setAttribute(handlerKey, handler);
 	}
 
 	/**
@@ -80,7 +79,7 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 	 * @return Sring handler
 	 */
 	public String getHandler() {
-		return handler;
+		return getAttribute(handlerKey);
 	}
 
 	public String toString() {
@@ -88,7 +87,6 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -101,12 +99,10 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 		return o instanceof DSAttributeGroup && hashCode() == ((DSAttributeGroup) o).hashCode();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * always false. Cannot be broken
 	 */
-	public int hashCode() {
-		int hashcode = super.hashCode();
-		hashcode = (31 * hashcode) + handler.hashCode();
-		return hashcode;
+	public boolean isBroken() {
+		return false;
 	}
 }

@@ -281,7 +281,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
 
         if (lastSelectedNode == null) return;
         String [] data = null;
-        BaseConfigurationObject nodeObject = (BaseConfigurationObject)lastSelectedNode.getUserObject();
+        BaseNamedConfigurationObject nodeObject = (BaseNamedConfigurationObject)lastSelectedNode.getUserObject();
         String nodeObjectClass = nodeObject.getClass().getName();
         if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetView") ||
             nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterPage") ||
@@ -569,7 +569,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
         FilterCollection fc [] = f.getFilterCollections();
     }
 
-    private void insert(BaseConfigurationObject obj, String name) {
+    private void insert(BaseNamedConfigurationObject obj, String name) {
 
         DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
 

@@ -24,13 +24,14 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Container for a group of Mart FilterCollections.
+ * Container for a group of Mart FilterDescriptions.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterCollection extends BaseConfigurationObject {
+public class FilterCollection extends BaseNamedConfigurationObject {
 
+  private boolean hasBrokenFilters = false;
   // FilterDescriptions
   private List filters = new ArrayList();
   private Hashtable filterNameMap = new Hashtable();
@@ -67,7 +68,7 @@ public class FilterCollection extends BaseConfigurationObject {
   }
   
 	/**
-	 * Constructor for a FilterCollection named by intenalName, with a displayName, type.
+	 * Constructor for a FilterCollection named by intenalName
 	 * 
 	 * @param internalName String name to internally represent the FilterCollection.  Must not be null.
 	 * @throws ConfigurationException when paremeter requirements are not met
@@ -77,7 +78,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Constructor for a FilterCollection named by intenalName, with a displayName, type, and optional description.
+	 * Constructor for a FilterCollection named by intenalName, with a displayName, and description.
 	 * 
 	 * @param internalName String name to internally represent the FilterCollection.  Must not be null or empty.
 	 * @param displayName String name to represent the FilterCollection. 
@@ -349,7 +350,7 @@ public class FilterCollection extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", UIFilterDescriptions=").append(filters);
+		buf.append(", FilterDescriptions=").append(filters);
 		buf.append("]");
 
 		return buf.toString();
@@ -372,4 +373,28 @@ public class FilterCollection extends BaseConfigurationObject {
 
 		return hashcode;
 	}
+
+  /**
+   * set the hasBrokenFilters flag to true, meaning that one or more FilterDescription Objects (or their child Option Objects)
+   * within this FilterCollection contain invalid field/tableConstraint references to a specific Mart instance.
+   */
+  public void setFiltersBroken() {
+     hasBrokenFilters = true;
+  }
+  
+  /**
+   * Determine if this FilterCollection has FilterDescriptions that are broken.
+   * @return boolean
+   */
+  public boolean hasBrokenFilters() {
+  	return hasBrokenFilters;
+  }
+  
+  /**
+   * True if hasBrokenFilters is true.
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenFilters;
+  }
 }

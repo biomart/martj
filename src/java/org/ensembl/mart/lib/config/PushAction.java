@@ -29,16 +29,17 @@ import java.util.List;
  * that filter. It contains the name of the filter, available via getRef(),
  * and the options that are to be pushed, available via getOptions().
  */
-public class PushAction extends BaseConfigurationObject {
+public class PushAction extends BaseNamedConfigurationObject {
 
-  private String ref;
+  private final String refKey = "ref";
 	private List options = new ArrayList();
 	private Option lastOption = null; // cache one Option for call to containsOption/getOptionByInternalName
 	private Option lastSupportingOption = null; // cache one Option for call to supports/getOptionByFieldNameTableConstraint
+	
+	private boolean hasBrokenOptions = false;
 
   public PushAction(PushAction pa) {
     super(pa);
-  	ref = pa.getRef();
   	
   	Option[] ops = pa.getOptions();
   	for (int i = 0, n = ops.length; i < n; i++) {
@@ -57,7 +58,8 @@ public class PushAction extends BaseConfigurationObject {
 	 * @param internalName
 	 * @param displayName
 	 * @param description
-	 * @throws ConfigurationException
+	 * @param ref - String ref to FilterDescription to 'push' to.
+	 * @throws ConfigurationException when internalName and ref null or empty
 	 */
 	public PushAction(String internalName, String displayName, String description, String ref) throws ConfigurationException {
 
@@ -66,22 +68,22 @@ public class PushAction extends BaseConfigurationObject {
 		if (ref == null || ref.equals(""))
 			throw new ConfigurationException("Configuration Object must contain a ref\n");
 
-		this.ref = ref;
+		setAttribute(refKey, ref);
 	}
 
   /**
    * Set the internalName of the FilterDescription to push options when this PushAction is activated
-   * @param string -- internalName of FilterDescription to push options when this PushAction is activated
+   * @param ref -- internalName of FilterDescription to push options when this PushAction is activated
    */
-  public void setRef(String string) {
-    ref = string;
+  public void setRef(String ref) {
+		setAttribute(refKey, ref);
   }
   
 	/**
 	 * @return name of filter the options should be set on.
 	 */
 	public String getRef() {
-		return ref;
+		return getAttribute(refKey);
 	}
 
 	/**
@@ -231,7 +233,7 @@ public class PushAction extends BaseConfigurationObject {
 	 * @param tableConstraint -- tableConstraint of the requestedOption
 	 * @return String internalName of the Option supporting the field and tableConstraint, or null if none found
 	 */
-	public String geOptionInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+	public String getOptionInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
 		if (supports(field, tableConstraint))
 			return lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
 		else
@@ -243,7 +245,6 @@ public class PushAction extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", ref=").append(ref);
 		buf.append(", options=").append(options);
 		buf.append("]");
 
@@ -256,7 +257,6 @@ public class PushAction extends BaseConfigurationObject {
   public int hashCode() {
 
     int hashcode = super.hashCode();
-    hashcode = (31 * hashcode) + ref.hashCode();
 
     for (Iterator iter = options.iterator(); iter.hasNext();) {
       hashcode = (31 * hashcode) + iter.next().hashCode();
@@ -271,4 +271,29 @@ public class PushAction extends BaseConfigurationObject {
   public boolean equals(Object o) {
     return o instanceof PushAction && hashCode() == o.hashCode();
   }
+  
+	/**
+	 * set the hasBrokenOptions flag to true, eg, one or more Option objects (possibly within PushAction
+	 * Objects within an Option tree) contain broken fields or tableConstraints. 
+	 *
+	 */
+	public void setOptionsBroken() {
+		hasBrokenOptions = true;
+	}
+	
+	/**
+	 * Determine if this PushAction has Broken Options.
+	 * @return boolean, true if one or more Options are broken, false otherwise.
+	 */
+	public boolean hasBrokenOptions() {
+		return hasBrokenOptions;
+	}
+	
+	/**
+	 * True if hasBrokenOptions is true.
+	 * @return boolean
+	 */
+	public boolean isBroken() {
+		return hasBrokenOptions;
+	}
 }

@@ -40,17 +40,10 @@ public class FilterDescription extends QueryFilterSettings {
 	private List Enables = new ArrayList();
 	private List Disables = new ArrayList();
 
-	private String handler;
-	private String field;
-	private String type;
-	private String legalQualifiers;
-	private String tableConstraint;
-	private String value;
+	private boolean hasBrokenOptions = false;
 	
 	//cache one supporting Option for call to supports
 	Option lastSupportingOption = null;
-
-	private String qualifier;
 
   /**
    * Copy Constructor. Constructs a new FilterDescription which is an
@@ -59,13 +52,6 @@ public class FilterDescription extends QueryFilterSettings {
    */
   public FilterDescription(FilterDescription fd) {
     super( fd );
-    
-  	field = fd.getField();
-  	type = fd.getType();
-  	qualifier = fd.getQualifier();
-  	legalQualifiers = fd.getLegalQualifiers();
-  	tableConstraint = fd.getTableConstraint();
-  	handler = fd.getHandler();
   	
   	Enable[] ens = fd.getEnables();
   	for (int i = 0, n = ens.length; i < n; i++) {
@@ -96,13 +82,10 @@ public class FilterDescription extends QueryFilterSettings {
    */
   public FilterDescription(Option o) {
   	super(o);
-  	
-		field = o.getField();
-		type = o.getType();
-		qualifier = o.getQualifier();
-		legalQualifiers = o.getLegalQualifiers();
-		tableConstraint = o.getTableConstraint();
-		handler = o.getHandler();
+		
+		//need to remove some Option specific attributes
+		attributes.remove("ref");
+		attributes.remove("isSelectable");
 		
 		Option[] os = o.getOptions();
 		for (int i = 0, n = os.length; i < n; i++) {
@@ -145,7 +128,6 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param description String description of the Filter
 	 * 
 	 * @throws ConfigurationException when required values are null or empty
-	 * @see FilterSet
 	 * @see FilterDescription
 	 */
 	public FilterDescription(
@@ -160,17 +142,10 @@ public class FilterDescription extends QueryFilterSettings {
 		String description)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description);
+		super(internalName, displayName, description, field, null, tableConstraint, handler, type, qualifier, legalQualifiers);
 
 		if (type == null || type.equals(""))
 			throw new ConfigurationException("FilterDescription requires a type.");
-
-		this.field = field;
-		this.type = type;
-		this.qualifier = qualifier;
-		this.legalQualifiers = legalQualifiers;
-		this.handler = handler;
-		this.tableConstraint = tableConstraint;
 	}
 
 	/**
@@ -179,8 +154,8 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return String description
 	 */
 	public String getDescription(String internalName) {
-		if (this.internalName.equals(internalName))
-			return description;
+		if ( getAttribute( internalNameKey ).equals(internalName))
+			return  getAttribute(descriptionKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getDescription();
@@ -190,8 +165,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return description;
+				if ( getAttribute( internalNameKey ).equals(refIname))
+					return  getAttribute(descriptionKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getDescription(refIname);
 				else
@@ -207,8 +182,8 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return String displayName
 	 */
 	public String getDisplayname(String internalName) {
-		if (this.internalName.equals(internalName))
-			return displayName;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(displayNameKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getDisplayName();
@@ -218,8 +193,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return displayName;
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(displayNameKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getDisplayName(refIname);
 				else
@@ -230,29 +205,13 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Set the field for this FilterDescription
-	 * @param field -- String field
-	 */
-	public void setField(String field) {
-		this.field = field;
-	}
-
-	/**
-	 * returns the field.
-	 * @return String field
-	 */
-	public String getField() {
-		return field;
-	}
-
-	/**
 	 * Returns the field, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
 	 * @return String field
 	 */
 	public String getField(String internalName) {
-		if (this.internalName.equals(internalName))
-			return field;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(fieldKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getField();
@@ -262,8 +221,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return field;
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(fieldKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getField(refIname);
 				else
@@ -274,30 +233,13 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Set the type for this FilterDescription
-	 * @param type -- String type of FilterDescription
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	/**
-	 * Returns the type.
-	 * 
-	 * @return String type.
-	 */
-	public String getType() {
-		return type;
-	}
-
-	/**
 	 * Returns the type, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
 	 * @return String type
 	 */
 	public String getType(String internalName) {
-		if (this.internalName.equals(internalName))
-			return type;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(typeKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getType();
@@ -307,8 +249,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return type;
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(typeKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getType(refIname);
 				else
@@ -319,30 +261,13 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Sets the tableConstraint for this FilterDescription
-	 * @param tableConstraint -- String tableConstraint
-	 */
-	public void setTableConstraint(String tableConstraint) {
-		this.tableConstraint = tableConstraint;
-	}
-
-	/**
-		 * Returns the tableConstraint for the field.
-		 * 
-		 * @return String tableConstraint
-		 */
-	public String getTableConstraint() {
-		return tableConstraint;
-	}
-
-	/**
 	 * Returns the tableConstraint, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
 	 * @return String tableConstraint
 	 */
 	public String getTableConstraint(String internalName) {
-		if (this.internalName.equals(internalName))
-			return tableConstraint;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(tableConstraintKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getTableConstraint();
@@ -352,8 +277,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return tableConstraint;
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(tableConstraintKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getTableConstraint(refIname);
 				else
@@ -364,29 +289,13 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Sets the handler for this FilterDescription
-	 * @param handler -- String handler.  Should reference a Java package that can be used by the Java Classloader to load an instance of a Class
-	 */
-	public void setHandler(String handler) {
-		this.handler = handler;
-	}
-
-	/**
-	 * Get the Handler for this FilterDescription, if any
-	 * @return String handler, or null.
-	 */
-	public String getHandler() {
-		return handler;
-	}
-
-	/**
 	 * Returns the handler, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
 	 * @return String handler
 	 */
 	public String getHandler(String internalName) {
-		if (this.internalName.equals(internalName))
-			return handler;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(handlerKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getHandler();
@@ -396,8 +305,8 @@ public class FilterDescription extends QueryFilterSettings {
 				String optionIname = names[0];
 				String refIname = names[1];
 
-				if (this.internalName.equals(refIname))
-					return handler;
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(handlerKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getHandler(refIname);
 				else
@@ -408,31 +317,14 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Sets the legalQualifiers for this FilterDescription.
-	 * @param legalQualifiers -- String legalQualifers, Comma separated list
-	 */
-	public void setLegalQualifiers(String legalQualifiers) {
-		this.legalQualifiers = legalQualifiers;
-	}
-
-	/**
-	 * Returns the legalQualifiers to use in MartShell.
-	 * 
-	 * @return String legalQualifiers
-	 */
-	public String getLegalQualifiers() {
-		return legalQualifiers;
-	}
-
-	/**
 	 * Gets the legalQualifiers for the FilterDescription/Option named by internalName, which may be this particular FilterDescription,
 	 * or a child Option (possibly occuring within in a PushAction).
 	 * @param internalName -- String internalName of FilterDescription/Option for which legalQualifiers is desired.
 	 * @return String legalQualifiers.
 	 */
 	public String getLegalQualifiers(String internalName) {
-		if (this.internalName.equals(internalName))
-			return legalQualifiers;
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(legalQualifiersKey);
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptionNameMap.get(internalName)).getLegalQualifiers();
@@ -462,8 +354,8 @@ public class FilterDescription extends QueryFilterSettings {
 		String ret = null;
 
 		if (supports(field, tableConstraint)) {
-			if (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint))
-				ret = internalName;
+			if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint))
+				ret = getAttribute(internalNameKey);
 			else
 				ret = lastSupportingOption.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
 		}
@@ -480,7 +372,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return boolean, true if this FilterDescription or a child Option supports the given FilterDescription, false otherwise.
 	 */
 	public boolean supports(String field, String tableConstraint) {
-		boolean supports = (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint));
+		boolean supports = super.supports(field, tableConstraint);
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
@@ -513,14 +405,7 @@ public class FilterDescription extends QueryFilterSettings {
 
 		buf.append("[ FilterDescription:");
 		buf.append(super.toString());
-		buf.append(", field=").append(field);
-		buf.append(", type=").append(type);
-		buf.append(", qualifier=").append(qualifier);
-		buf.append(", legalQualifiers=").append(legalQualifiers);
-		buf.append(", tableConstraint=").append(tableConstraint);
-
-		if (hasOptions)
-			buf.append(", Options=").append(uiOptions);
+		buf.append(", Options=").append(uiOptions);
 		buf.append("]");
 
 		return buf.toString();
@@ -536,19 +421,6 @@ public class FilterDescription extends QueryFilterSettings {
 	public int hashCode() {
 
 			int hshcode = super.hashCode();
-      
-			if (field != null)
-				hshcode = (31 * hshcode) + field.hashCode();
-			if (type != null)
-				hshcode = (31 * hshcode) + type.hashCode();
-			if (qualifier != null)
-				hshcode = (31 * hshcode) + qualifier.hashCode();
-			if (legalQualifiers != null)
-				hshcode = (31 * hshcode) + legalQualifiers.hashCode();
-			if (tableConstraint != null)
-				hshcode = (31 * hshcode) + tableConstraint.hashCode();
-			if (description != null)
-				hshcode = (31 * hshcode) + description.hashCode();
 
 			for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 				Option option = (Option) iter.next();
@@ -751,10 +623,10 @@ public class FilterDescription extends QueryFilterSettings {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 
-		if (field != null && field.length() > 0 && type != null && type.length() > 0) {
+		if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).length() > 0 &&  getAttribute(typeKey) != null &&  getAttribute(typeKey).length() > 0) {
 			//add internalName, and any PushOption names that are found
-			if (!names.contains(internalName))
-				names.add(internalName);
+			if (!names.contains(getInternalName()))
+				names.add(getInternalName());
 
 			for (Iterator iter = uiOptions.iterator(); iter.hasNext();) {
 				Option element = (Option) iter.next();
@@ -787,10 +659,10 @@ public class FilterDescription extends QueryFilterSettings {
 	public List getCompleterQualifiers(String internalName) {
 		List quals = new ArrayList();
 
-		if (this.internalName.equals(internalName)) {
+		if ( getAttribute(internalNameKey).equals(internalName)) {
 			//filterDescription has legalQualifiers
-			if (this.legalQualifiers != null && this.legalQualifiers.length() > 0)
-				quals.addAll(Arrays.asList(legalQualifiers.split(",")));
+			if ( getAttribute(legalQualifiersKey) != null &&  getAttribute(legalQualifiersKey).length() > 0)
+				quals.addAll(Arrays.asList( getAttribute(legalQualifiersKey).split(",")));
 		} else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 			//PushOption Filter Option has legalQualifiers 
 			String[] iname_info = internalName.split("\\.");
@@ -845,7 +717,7 @@ public class FilterDescription extends QueryFilterSettings {
 	public List getCompleterValues(String internalName) {
 		List vals = new ArrayList();
 
-		if (this.internalName.equals(internalName)) {
+		if ( getAttribute(internalNameKey).equals(internalName)) {
 			Option[] myops = getOptions();
 
 			for (int i = 0, n = myops.length; i < n; i++) {
@@ -916,21 +788,6 @@ public class FilterDescription extends QueryFilterSettings {
 		return vals;
 	}
 
-  /**
-   * Set the value for this FilterDescription.
-   * @param value -- String value.
-   */
-  public void setValue(String value) {
-    this.value = value;
-  }
-  /**
-   * Get the value for this FilterDscription
-   * @return String value
-   */
-	public String getValue() {
-		return value;
-	}
-
 	/**
 	 * Recurses through options beneath all PushAction Objects to set option.parent.
 	 * 
@@ -993,7 +850,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return field
 	 */
 	public String getFieldFromContext() {
-		return field;
+		return  getField();
 	}
 
 	/**
@@ -1002,8 +859,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return value
 	 */
 	public String getValueFromContext() {
-		return value;
-
+		return getValue();
 	}
 
 	/**
@@ -1012,7 +868,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return type
 	 */
 	public String getTypeFromContext() {
-		return type;
+		return getType();
 	}
 
 	/**
@@ -1021,23 +877,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return handler
 	 */
 	public String getHandlerFromContext() {
-		return handler;
-	}
-
-  /**
-   * Sets the Qualifier for this FilterDescription.
-   * @param qualifier -- String qualifier
-   */
-  public void setQualifier(String qualifier) {
-    this.qualifier = qualifier;
-  }
-  
-	/**
-	 * Returns the qualifier
-	 * @return String qualifier
-	 */
-	public String getQualifier() {
-		return qualifier;
+		return getHandler();
 	}
 
 	/**
@@ -1046,7 +886,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return qualifier
 	 */
 	public String getQualifierFromContext() {
-		return qualifier;
+		return getQualifier();
 	}
 
   /**
@@ -1055,7 +895,7 @@ public class FilterDescription extends QueryFilterSettings {
    * @return legalQualifiers
    */
   public String getLegalQualifiersFromContext() {
-    return legalQualifiers;
+    return getLegalQualifiers();
   }
   
 	/**
@@ -1064,6 +904,65 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return tableConstraint
 	 */
 	public String getTableConstraintFromContext() {
-		return tableConstraint;
+		return getTableConstraint();
+	}
+	
+	/**
+	 * set the hasBrokenField flag to true, eg. the field
+	 * does not refer to an existing field in a particular Mart Dataset instance.
+	 *
+	 */
+	public void setFieldBroken() {
+		hasBrokenField = true;
+	}
+	
+	/**
+	 * Determine if this FilterDescription has a broken field reference.
+	 * @return boolean, true if field is broken, false otherwise
+	 */
+	public boolean hasBrokenField() {
+		return hasBrokenField;
+	}
+	
+	/**
+	 * set the hasBrokenTableConstraint flag to true, eg. the tableConstraint
+	 * does not refer to an existing table in a particular Mart Dataset instance.
+	 *
+	 */
+	public void setTableConstraintBroken() {
+		hasBrokenTableConstraint = true;
+	}
+	
+	/**
+	 * Determine if this FilterDescription has a broken tableConstraint reference.
+	 * @return boolean, true if tableConstraint is broken, false otherwise
+	 */
+	public boolean hasBrokenTableConstraint() {
+		return hasBrokenTableConstraint;
+	}
+	
+	/**
+	 * set the hasBrokenOptions flag to true, eg, one or more Option objects (possibly within PushAction
+	 * Objects within an Option tree) contain broken fields or tableConstraints. 
+	 *
+	 */
+	public void setOptionsBroken() {
+		hasBrokenOptions = true;
+	}
+	
+	/**
+	 * Determine if this FilterDescription has Broken Options.
+	 * @return boolean, true if one or more Options are broken, false otherwise.
+	 */
+	public boolean hasBrokenOptions() {
+		return hasBrokenOptions;
+	}
+	
+	/**
+	 * True if one of hasBrokenField, hasBrokenTableConstraint, or hasBrokenOptions is true.
+	 * @return boolean
+	 */
+	public boolean isBroken() {
+		return hasBrokenField || hasBrokenTableConstraint || hasBrokenOptions;
 	}
 }

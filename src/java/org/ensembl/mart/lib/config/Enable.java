@@ -18,19 +18,15 @@
  
 package org.ensembl.mart.lib.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
  /** 
   * Allows a FilterDescription Object to code whether to enable another FilterDescription Object
   * in the UI, possibly based on a particular value of the enabling FilterDescription.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Enable {
-  private String ref;
-  private String valueCondition;
-	private List xmlAttributeTitles = new ArrayList();
+public class Enable extends BaseConfigurationObject {
+  private final String refKey = "ref";
+  private final String valueConditionKey = "valueCondition";
 
 	/**
 	 * Copy Constructor. Constructs a new Enable that is a
@@ -38,11 +34,11 @@ public class Enable {
 	 * @param e Enable Object to copy.
 	 */ 
   public Enable(Enable e) {
-  	ref = e.getRef(); 
-  	valueCondition = e.getValueCondition(); 
+  	super(e); 
   }
   
   public Enable() {
+  	super();
   }
   
   /**
@@ -61,11 +57,13 @@ public class Enable {
    * @throws ConfigurationException when ref is null or empty.
    */
   public Enable(String ref, String valueCondition) throws ConfigurationException {
+  	super();
+  	
   	if (ref == null || "".equals(ref))
   	  throw new ConfigurationException("Enable objects must have a ref.\n");
   	  
-  	this.ref = ref;
-  	this.valueCondition = valueCondition;
+  	setAttribute(refKey, ref);
+  	setAttribute(valueConditionKey, valueCondition);
   }
 
 	/**
@@ -73,7 +71,7 @@ public class Enable {
 	 * @return String internalName of the referring FilterDescription.
 	 */
 	public String getRef() {
-		return ref;
+		return getAttribute(refKey);
 	}
 
 	/**
@@ -81,54 +79,30 @@ public class Enable {
 	 * @return String valueCondition
 	 */
 	public String getValueCondition() {
-		return valueCondition;
+		return getAttribute(valueConditionKey);
 	}
 
   /**
    * Set the internalName of the Filter to Enable when this Filter is used
-   * @param string -- internalName of the filter to enable
+   * @param ref -- internalName of the filter to enable
    */
-  public void setRef(String string) {
-    ref = string;
+  public void setRef(String ref) {
+		setAttribute(refKey, ref);
   }
 
   /**
    * Set a value at which the referenced Filter should be enabled.
-   * @param string -- value at which the referenced Filter should be enabled.
+   * @param valueCondition -- value at which the referenced Filter should be enabled.
    */
-  public void setValueCondition(String string) {
-    valueCondition = string;
+  public void setValueCondition(String valueCondition) {
+		setAttribute(valueConditionKey, valueCondition);
   }
-
-	/**
-	 * Get the XML Attribute Titles for this object. This is meant for use
-	 * by DatasetViewEditor.
-	 * @return String[] List of XMLAttribute Titles.
-	 */
-	public String[] getXmlAttributeTitles() {
-		String[] titles = new String[xmlAttributeTitles.size()];
-		xmlAttributeTitles.toArray(titles);
-		return titles;
-	}
-
-	/**
-	 * Sets the XML Attribute Titles for this object.  This should equal
-	 * the titles of all XML Attributes for the element. This is meant for use
-	 * by DatasetViewEditor.
-	 * @param list
-	 */
-	public void setXmlAttributeTitles(String[] list) {
-		for (int i = 0, n = list.length; i < n; i++) {
-			xmlAttributeTitles.add(list[i]);
-		}
-	}
 	  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("ref=").append(ref);
-		buf.append(", valueCondition=").append(valueCondition);
+		buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
@@ -140,13 +114,11 @@ public class Enable {
 	public boolean equals(Object o) {
 		return o instanceof Enable && hashCode() == o.hashCode();
 	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
+
+	/**
+	 * always false
 	 */
-	public int hashCode() {
-    int hshcode = ref.hashCode();
-    hshcode = (valueCondition != null) ? (31 * hshcode) + valueCondition.hashCode() : hshcode;
-		return hshcode;
-  }
+	public boolean isBroken() {
+		return false;
+	}
 }

@@ -1,179 +1,129 @@
 /*
-    Copyright (C) 2003 EBI, GRL
+	Copyright (C) 2003 EBI, GRL
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
-
 package org.ensembl.mart.lib.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Properties;
 
 /**
- * Basic Object from which all Configuration Objects inherit.
- * 
+ * Base Object from which all Configuration objects inherit. Provides a properties object
+ * to hold attribute keys and values, and setAttribute/getAttribute methods.  
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class BaseConfigurationObject {
-
-  protected String internalName;
-  protected String displayName;
-  protected String description;
-  protected List xmlAttributeTitles = new ArrayList();
+public abstract class BaseConfigurationObject {
+	//Properties Object holds values from XML attributes keyed to AttributeTitle returned by getXMLAttributeTitles.
+	protected Properties attributes = new Properties();
+	
+	/**
+	 * Copy constructor for all Configuration objects. Propogates all keys from the objects
+	 * attributes properties to the new Object.
+	 * @param bo
+	 */
+	public BaseConfigurationObject(BaseConfigurationObject bo) {
+		for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
+			String key = (String) iter.next();
+			setAttribute(new String(key), new String(bo.getAttribute(key)));
+		}
+	}
+	
+	/**
+	 * Initializes the attributes properties.
+	 */
+	public BaseConfigurationObject() {
+		//doesnt do anything, except return an empty object
+	}
+	
+	/**
+	 * Set the XML Attribute for a particular key. This method is primarily for DatasetViewXMLUtils and DatasetViewEditor.  Client code should
+	 * use the setXXX methods. Note, keys with null values are not added to the object. 
+	 * @param key - String key for this attribute
+	 * @param value - String value for this attribute
+	 */
+	public void setAttribute(String key, String value) {
+		if (value != null)
+		  attributes.setProperty(key, value);
+	}
   
 	/**
-	 * Determines if string is an invalid attribute value.
-	 * @param s
-	 * @return true if string is null or the empty string.
+	 * Get the value of an attribute for a given key. This method is primarily for DatasetViewEditor.  Client code should
+	 * use the getXXX methods.
+	 * @param key- 
+	 * @return
 	 */
-	public static final boolean isInvalid(String s) {
-		return s == null && "".equals(s);
+	public String getAttribute(String key) {
+		return attributes.getProperty(key);
 	}
-
-
-  /**
-   * Determines if string is a validate attribute value.
-   * @param s
-   * @return true if string is not null and not empty
-   */
-  public static final boolean valid(String s) {
-    return s!=null && !"".equals(s);
-  }
-
-  /**
-   * Copy constructor.  Creates an exact copy of an existing object.
-   * @param bo - BaseConfigurationObject to copy.
-   */
-  public BaseConfigurationObject(BaseConfigurationObject bo) {
-  	internalName = bo.getInternalName(); 
-  	displayName = bo.getDisplayName();
-  	description = bo.getDescription();
-  	
-  	setXmlAttributeTitles(bo.getXmlAttributeTitles());
-  }
-  
-  public BaseConfigurationObject() {
-    //doesnt do anything, but returns an empty object
-  }
-  
-	public BaseConfigurationObject(
-		String internalName,
-		String displayName,
-		String description)
-		throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("Configuration Object must contain an internalName\n");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
-	}
-
-	/**
-	 * Returns the Description
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the displayName
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-  /**
-   * Sets the description for this object
-   * @param string
-   */
-  public void setDescription(String string) {
-    description = string;
-  }
-
-  /**
-   * Sets the displayName for this object
-   * @param string
-   */
-  public void setDisplayName(String string) {
-    displayName = string;
-  }
-
-  /**
-   * Sets the internalName for this object
-   * @param string
-   */
-  public void setInternalName(String string) {
-    internalName = string;
-  }
-  
+	
 	/**
 	 * Get the XML Attribute Titles for this object. This is meant for use
 	 * by DatasetViewEditor.
 	 * @return String[] List of XMLAttribute Titles.
 	 */
 	public String[] getXmlAttributeTitles() {
-		String[] titles = new String[xmlAttributeTitles.size()];
-		xmlAttributeTitles.toArray(titles);
+		String[] titles = new String[attributes.size()];
+		attributes.keySet().toArray(titles);
 		return titles;
 	}
 
-	/**
-	 * Sets the XML Attribute Titles for this object.  This should equal
-	 * the titles of all XML Attributes for the element. This is meant for use
-	 * by DatasetViewEditor.
-	 * @param list
-	 */
-	public void setXmlAttributeTitles(String[] list) {
-		for (int i = 0, n = list.length; i < n; i++) {
-			xmlAttributeTitles.add(list[i]);
-		}
-	}
-	
-	public int hashCode() {
-    int tmp = 17;
-    tmp = tmp * 37 + ((internalName != null) ? internalName.hashCode() : 0);
-    tmp = tmp * 37 + ((displayName != null) ? displayName.hashCode() : 0);
-    tmp = tmp * 37 + ((description != null) ? description.hashCode() : 0);
-    return tmp;
-	}
-
-	public boolean equals(Object o) {
-		return o instanceof BaseConfigurationObject && o.hashCode() == hashCode();
-	}
-
-	public String toString() {
+  /**
+   * All Configuration Objects must impliment a flag to determine
+   * if a validated version of an object (one that has been returned
+   * by the DatasetView.validate() method) is broken in some way.
+   * @return boolean, true if the Object contains broken members, false otherwise
+   */
+  public abstract boolean isBroken();
+  
+  public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
-		buf.append("]");
+    int i = 0;
+		for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
+			if (i > 0)
+			  buf.append(",");
+			  
+			String key = (String) iter.next();
+			buf.append(" ").append(key).append("=").append( attributes.getProperty(key) );
+		}
 
 		return buf.toString();
 	}
+	
+	/**
+	 * Allows Equality Comparisons manipulation of BaseConfigurationObject objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof BaseConfigurationObject && hashCode() == o.hashCode();
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+	    int tmp = 17;
+	    
+      for (Iterator iter = attributes.values().iterator(); iter.hasNext();) {
+				String value = (String) iter.next();
+				
+				tmp += (value != null) ? value.hashCode() : 0;
+			}
+	    
+	    return tmp;
+	}
+
 }

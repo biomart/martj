@@ -69,7 +69,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartConfiguration extends BaseConfigurationObject {
+public class MartConfiguration extends BaseNamedConfigurationObject {
 
 	private FilterDescription layout = null;
 	private int thisRank = 0;
@@ -218,18 +218,11 @@ public class MartConfiguration extends BaseConfigurationObject {
 		return o instanceof MartConfiguration && hashCode() == o.hashCode();
 	}
 
-	public int hashCode() {
-		int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
-
-		for (Iterator iter = datasets.keySet().iterator(); iter.hasNext();) {
-			DatasetView d = (DatasetView) iter.next();
-			tmp = (31 * tmp) + d.hashCode();
-		}
-    
-    if ( layout!=null ) tmp = (31 * tmp) + layout.hashCode();
-    
-		return tmp;
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.BaseNamedConfigurationObject#isBroken()
+	 */
+	public boolean isBroken() {
+		// TODO Auto-generated method stub
+		return false;
 	}  
 }

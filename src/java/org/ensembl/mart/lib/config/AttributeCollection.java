@@ -22,16 +22,27 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class AttributeCollection extends BaseConfigurationObject {
+public class AttributeCollection extends BaseNamedConfigurationObject {
 
-  private int maxSelect;
-  private List uiAttributes = new ArrayList();
-  private Hashtable uiAttributeNameMap = new Hashtable();
+  private Logger logger = Logger.getLogger(AttributeCollection.class.getName());
+  
+  /**
+   * The default maxSelect is 0, meaning no limit 
+   */
+  public final int DEFAULTMAXSELECT = 0;
+  private boolean hasBrokenAttributes = false;
+  
+  private final String maxSelectKey = "maxSelect";
+  
+  private List AttributeDescriptions = new ArrayList();
+  private Hashtable attributeDescriptionNameMap = new Hashtable();
 
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
@@ -43,8 +54,6 @@ public class AttributeCollection extends BaseConfigurationObject {
    */
   public AttributeCollection(AttributeCollection ac) {
   	super(ac);
-  	
-  	maxSelect = ac.getMaxSelect();
   	
   	List ads = ac.getAttributeDescriptions();
   	for (int i = 0, n = ads.size(); i < n; i++) {
@@ -66,11 +75,11 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * Constructor for an AttributeCollection named by internalName, with a type.
 	 * 
 	*  @param internalName String name to internally represent the AttributeCollection.  Must not be null
-	 * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
+	 * @param maxSelect String maximum allowable combined attribute selections. 0 means no limit.
 	 * @throws ConfigurationException when the required values are null or empty.
 	 */
 	public AttributeCollection(String internalName) throws ConfigurationException {
-		this(internalName, 0, "", "");
+		this(internalName, "0", "", "");
 	}
 
 	/**
@@ -78,31 +87,41 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * May have description description.
 	 * 
 	 * @param internalName String name to internally represent the AttributeCollection.  Must not be null
-	 * @param maxSelect int maximum allowable combined attribute selections.
+	 * @param maxSelect String maximum allowable combined attribute selections. 0 means no limit.
 	 * @param displayName String name to represent the AttributeCollection.
 	 * @param description String description of the AttributeCollection
-	 * @throws ConfigurationException if required parameters are null or empty.
+	 * @throws ConfigurationException if required parameters are null or empty, and if Integer.parseInt(maxSelect) throws a NumberFormatException .
 	 */
-	public AttributeCollection(String internalName, int maxSelect, String displayName, String description) throws ConfigurationException {
+	public AttributeCollection(String internalName, String maxSelect, String displayName, String description) throws ConfigurationException {
     super( internalName, displayName, description);
-		this.maxSelect = maxSelect;
+		setMaxSelect(maxSelect);
 	}
 
   /**
    * Set the maxSelect value for this AttributeCollection
-   * @param i -- int value to limit selections of Attributes in groups.
+   * @param maxSelect -- String value to limit selections of Attributes in groups. 0 means no limit.
+   * @throws ConfigurationException for underlying Integer.parseInt() NumberFormatException
    */
-  public void setMaxSelect(int i) {
-    maxSelect = i;
+  public void setMaxSelect(String maxSelect) throws ConfigurationException {
+  	setAttribute(maxSelectKey, maxSelect);
   }
   
 	/**
 	 * Returns the maxSelect value for attributes in this AttributeCollection.
+	 * If the value for maxSelect provided is not a valid int (eg.
+	 * Integer.parseInt( maxSelect) throws a NumberFormatException)
+	 * this method returns DEFAULTMAXSELECT.
 	 * 
 	 * @return int maxSelect value
 	 */
-	public int getMaxSelect() {
-		return maxSelect;
+	public int getMaxSelect()  {
+		try {
+			 return Integer.parseInt( getAttribute(maxSelectKey) );
+		} catch (NumberFormatException e) {
+			if (logger.isLoggable(Level.WARNING))
+			  logger.warning("maxSelect value " + getAttribute(maxSelectKey) + " could not be parsed into an int: " + e.getMessage());
+			return DEFAULTMAXSELECT;
+		}
 	}
 
 	/**
@@ -111,8 +130,8 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * @param a a AttributeDescription object.
 	 */
 	public void addAttributeDescription(AttributeDescription a) {
-		uiAttributes.add(a);
-		uiAttributeNameMap.put(a.getInternalName(), a);
+		AttributeDescriptions.add(a);
+		attributeDescriptionNameMap.put(a.getInternalName(), a);
 	}
 
   /**
@@ -120,8 +139,8 @@ public class AttributeCollection extends BaseConfigurationObject {
    * @param a -- AttributeDescription to be removed.
    */
   public void removeAttributeDescription(AttributeDescription a) {
-    uiAttributeNameMap.remove(a.getInternalName());
-    uiAttributes.remove(a);
+    attributeDescriptionNameMap.remove(a.getInternalName());
+    AttributeDescriptions.remove(a);
   }
   
   /**
@@ -131,8 +150,8 @@ public class AttributeCollection extends BaseConfigurationObject {
    * @param a -- AttributeDescription to insert
    */
   public void insertAttributeDescription(int position, AttributeDescription a) {
-    uiAttributes.add(position, a);
-    uiAttributeNameMap.put(a.getInternalName(), a);
+    AttributeDescriptions.add(position, a);
+    attributeDescriptionNameMap.put(a.getInternalName(), a);
   }
   
   /**
@@ -142,9 +161,9 @@ public class AttributeCollection extends BaseConfigurationObject {
    * @throws ConfigurationException when the AttributeCollection does not contain an AttributeDescription named by internalName.
    */
   public void insertAttributeDescriptionBeforeAttributeDescription(String internalName, AttributeDescription a) throws ConfigurationException {
-    if (!uiAttributeNameMap.containsKey(internalName))
+    if (!attributeDescriptionNameMap.containsKey(internalName))
       throw new ConfigurationException("AttributeCollection does not contain AttributeDescription " + internalName + "\n");
-    insertAttributeDescription( uiAttributes.indexOf( uiAttributeNameMap.get(internalName) ), a );
+    insertAttributeDescription( AttributeDescriptions.indexOf( attributeDescriptionNameMap.get(internalName) ), a );
   }
   
   /**
@@ -154,9 +173,9 @@ public class AttributeCollection extends BaseConfigurationObject {
    * @throws ConfigurationException when the AttributeCollection does not contain an AttributeDescription named by internalName.
    */
   public void insertAttributeDescriptionAfterAttributeDescription(String internalName, AttributeDescription a) throws ConfigurationException {
-    if (!uiAttributeNameMap.containsKey(internalName))
+    if (!attributeDescriptionNameMap.containsKey(internalName))
       throw new ConfigurationException("AttributeCollection does not contain AttributeDescription " + internalName + "\n");
-    insertAttributeDescription( uiAttributes.indexOf( uiAttributeNameMap.get(internalName) ) + 1, a );
+    insertAttributeDescription( AttributeDescriptions.indexOf( attributeDescriptionNameMap.get(internalName) ) + 1, a );
   }
   
 	/**
@@ -167,8 +186,8 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 */
 	public void addAttributeDescriptions(AttributeDescription[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
-			uiAttributes.add(a[i]);
-			uiAttributeNameMap.put(a[i].getInternalName(), a[i]);
+			AttributeDescriptions.add(a[i]);
+			attributeDescriptionNameMap.put(a[i].getInternalName(), a[i]);
 		}
 	}
 	
@@ -179,7 +198,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 */
 	public List getAttributeDescriptions() {
     //return a copy
-		return new ArrayList(uiAttributes);
+		return new ArrayList(AttributeDescriptions);
 	}
 
 
@@ -191,7 +210,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 		*/
 	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
 		if ( containsAttributeDescription(internalName) )
-			return (AttributeDescription) uiAttributeNameMap.get(internalName);
+			return (AttributeDescription) attributeDescriptionNameMap.get(internalName);
 		else
 			return null;
 	}
@@ -204,7 +223,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsAttributeDescription(String internalName) {
-  	return uiAttributeNameMap.containsKey(internalName);
+  	return attributeDescriptionNameMap.containsKey(internalName);
 	}
   
   /**
@@ -230,7 +249,7 @@ public class AttributeCollection extends BaseConfigurationObject {
   public boolean supports(String field, String tableConstraint) {
   	boolean supports = false;
   	
-  	for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
+  	for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			
 			if (element.supports(field, tableConstraint)) {
@@ -249,7 +268,7 @@ public class AttributeCollection extends BaseConfigurationObject {
   public List getCompleterNames() {
   	List names = new ArrayList();
   	
-  	for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
+  	for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			names.add(element.getInternalName());
 		}
@@ -261,8 +280,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append( super.toString() );
-		buf.append(", maxSelect=").append(maxSelect);
-		buf.append(", AttributeDescriptions=").append(uiAttributes);
+		buf.append(", AttributeDescriptions=").append(AttributeDescriptions);
 		buf.append("]");
 
 		return buf.toString();
@@ -278,10 +296,33 @@ public class AttributeCollection extends BaseConfigurationObject {
 	public int hashCode() {
 		int tmp = super.hashCode();
 		
-		for (Iterator iter = uiAttributes.iterator(); iter.hasNext();) {
+		for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		return tmp;
 	}
+  /**
+   * Sets the hasBrokenAttributes flag to true, meaning that one or more AttributeDescription objects
+   * contains invalid field or tableConstraint references to a particular Mart instance. 
+   */
+  public void setAttributesBroken() {
+    hasBrokenAttributes = true;
+  }
+  
+  /**
+   * Determine if this AttributeCollection contains broken AttributeDescriptions
+   * @return boolean, true if one or more AttributeDescription objects are broken, false otherwise
+   */
+  public boolean hasBrokenAttributes() {
+  	return hasBrokenAttributes;
+  }
+  
+  /**
+   * True if hasBrokenAttributes is true.
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenAttributes;
+  }
 }

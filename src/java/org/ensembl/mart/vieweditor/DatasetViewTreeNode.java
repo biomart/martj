@@ -1,6 +1,6 @@
 package org.ensembl.mart.vieweditor;
 
-import org.ensembl.mart.lib.config.BaseConfigurationObject;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -34,28 +34,28 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 
     public void setUserObject(Object obj) {
         super.setUserObject(obj);
-        BaseConfigurationObject nodeObject = (BaseConfigurationObject) obj;
+        BaseNamedConfigurationObject nodeObject = (BaseNamedConfigurationObject) obj;
         String nodeObjectClass = nodeObject.getClass().getName();
         if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetView"))
-            setName("DatasetView: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("DatasetView: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterPage"))
-            setName("FilterPage: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterPage: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-            setName("AttributePage: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributePage: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-            setName("AttributeGroup: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributeGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
-            setName("FilterGroup: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-            setName("AttributGroup: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-            setName("FilterCollection: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-            setName("AttributeCollection: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributeCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            setName("FilterDescription: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
         else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-            setName("AttributeDescription: " + ((BaseConfigurationObject) obj).getInternalName());
+            setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
     }
 

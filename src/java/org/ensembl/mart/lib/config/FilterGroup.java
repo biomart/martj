@@ -30,8 +30,9 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterGroup extends BaseConfigurationObject {
+public class FilterGroup extends BaseNamedConfigurationObject {
 
+  private boolean hasBrokenCollections = false;
   private List filterCollections = new ArrayList();
   private Hashtable filterCollectionNameMap = new Hashtable();
 
@@ -413,4 +414,29 @@ public class FilterGroup extends BaseConfigurationObject {
 
 		return tmp;
 	}
+
+  /**
+   * Set the hasBrokenCollections flag to true, meaning
+   * one or more FilterCollection objects contain FilterDescriptions
+   * with invalid field, tableConstraint, or Options.
+   */
+  public void setCollectionsBroken() {
+    hasBrokenCollections = true;    
+  }
+  
+  /**
+   * Determine if this FilterGroup has broken Collections
+   * @return boolean
+   */
+  public boolean hasBrokenCollections() {
+  	return hasBrokenCollections;
+  }
+  
+  /**
+   * True if hasBrokenCollections is true.
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenCollections;
+  }
 }

@@ -29,8 +29,9 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterPage extends BaseConfigurationObject {
+public class FilterPage extends BaseNamedConfigurationObject {
 
+  private boolean hasBrokenGroups = false;
   private List filterGroups = new ArrayList();
   private Hashtable filterGroupNameMap = new Hashtable();
 
@@ -541,4 +542,28 @@ public class FilterPage extends BaseConfigurationObject {
 
 		return tmp;
 	}
+
+  /**
+   * Sets the hasBrokenGroups flag to true, meaning the FilterPage
+   * contains one or more FilterGroup objects with broken FilterDescription objects.
+   */
+  public void setGroupsBroken() {
+     hasBrokenGroups = true;
+  }
+  
+  /**
+   * Determine if this FilterPage contains broken FilterGroups
+   * @return boolean, true if one ore more FilterGroups is Broken, false otherwise
+   */
+  public boolean hasBrokenGroups() {
+  	return hasBrokenGroups;
+  }
+  
+  /**
+   * True if hasBrokenGroups is true
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenGroups;
+  }
 }

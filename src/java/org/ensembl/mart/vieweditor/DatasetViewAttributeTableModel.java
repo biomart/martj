@@ -1,6 +1,6 @@
 package org.ensembl.mart.vieweditor;
 
-import org.ensembl.mart.lib.config.BaseConfigurationObject;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.AttributeDescription;
 
@@ -16,14 +16,14 @@ public class DatasetViewAttributeTableModel implements TableModel {
     protected String[] columnNames = {"Attribute", "Value"};
     protected Vector tableModelListenerList;
     protected static final int COLUMN_COUNT = 2;
-    protected BaseConfigurationObject obj;
+    protected BaseNamedConfigurationObject obj;
     protected String objClass;
     protected String[] firstColumnData;
     DatasetViewTreeNode node;
 
     public DatasetViewAttributeTableModel(DatasetViewTreeNode node, String[] firstColumnData, String objClass) {
         this.node = node;
-        this.obj = (BaseConfigurationObject)node.getUserObject();
+        this.obj = (BaseNamedConfigurationObject)node.getUserObject();
         this.firstColumnData = firstColumnData;
         this.objClass = objClass;
         tableModelListenerList = new Vector();
@@ -105,7 +105,7 @@ public class DatasetViewAttributeTableModel implements TableModel {
                         if (objClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
                             return ((FilterDescription) obj).getType();
                         else if (objClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-                            return ((AttributeDescription) obj).getHomePageURL();
+                            return ((AttributeDescription) obj).getHomepageURL();
                     }
                 case 8:
                     {
@@ -193,7 +193,7 @@ public class DatasetViewAttributeTableModel implements TableModel {
         node.setUserObject(obj);
     }
 
-    public void setObject(BaseConfigurationObject obj) {
+    public void setObject(BaseNamedConfigurationObject obj) {
         this.obj = obj;
     }
 

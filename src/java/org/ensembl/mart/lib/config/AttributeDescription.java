@@ -18,44 +18,51 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Contains all of the information required by a UI to display a specific attribute, and create an Attribute object to add to a mart Query.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class AttributeDescription extends BaseConfigurationObject {
+public class AttributeDescription extends BaseNamedConfigurationObject {
 
-  private String field;
-  private String tableConstraint;
-  private String source;
-  private String homepageURL;
-  private String linkoutURL;
-  private int maxLength = 0;
-
-  /**
-   * Copy constructor. Constructs an exact copy of an existing AttributeDescription.
-   * @param a AttributeDescription to copy.
-   */
-  public AttributeDescription(AttributeDescription a) {
-  	super(a);
-  	
-  	field = a.getField();
-  	tableConstraint = a.getTableConstraint();
-  	maxLength = a.getMaxLength();
-  	source = a.getSource();
-  	linkoutURL = a.getLinkoutURL();
-  	homepageURL = a.getHomepageURL();  
-  }
+  private Logger logger = Logger.getLogger(AttributeDescription.class.getName());
   
   /**
-   * Empty Constructor should only be used by DatasetViewEditor
-   *
+   * The default maxLength is 10
    */
-  public AttributeDescription() {
-    super();
-  }
+  public final int DEFAULTMAXLENGTH = 10;
   
+	private final String fieldKey = "field";
+	private final String tableConstraintKey = "tableConstraint";
+	private final String sourceKey = "source";
+	private final String homepageURLKey = "homepageURL";
+	private final String linkoutURLKey = "linkoutURL";
+	private final String maxLengthKey = "maxLength";
+	// helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
+
+	private boolean hasBrokenField = false;
+	private boolean hasBrokenTableConstraint = false;
+
+	/**
+	 * Copy constructor. Constructs an exact copy of an existing AttributeDescription.
+	 * @param a AttributeDescription to copy.
+	 */
+	public AttributeDescription(AttributeDescription a) {
+		super(a);
+	}
+
+	/**
+	 * Empty Constructor should only be used by DatasetViewEditor
+	 *
+	 */
+	public AttributeDescription() {
+		super();
+	}
+
 	/**
 	 * Constructs a AttributeDescription with just the internalName and field.
 	 * 
@@ -64,10 +71,10 @@ public class AttributeDescription extends BaseConfigurationObject {
 	 * @throws ConfigurationException when values are null or empty.
 	 */
 	public AttributeDescription(String internalName, String field) throws ConfigurationException {
-		this(internalName, field, "", 0, "", "", "", "", "");
+		this(internalName, field, "", "0", "", "", "", "", "");
 	}
 	/**
-	 * Constructor for a AttributeDescription.
+	 * Constructor for an AttributeDescription.
 	 * 
 	 * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty.
 	 * @param field String name of the field in the mart for this attribute.  Must not be null or empty.
@@ -84,95 +91,106 @@ public class AttributeDescription extends BaseConfigurationObject {
 		String internalName,
 		String field,
 		String displayName,
-		int maxLength,
+		String maxLength,
 		String tableConstraint,
 		String description,
 		String source,
 		String homePageURL,
 		String linkoutURL)
 		throws ConfigurationException {
-		
-    super( internalName, displayName, description );
-    
-    if ( field == null || field.equals(""))
+
+		super(internalName, displayName, description);
+
+		if (field == null || field.equals(""))
 			throw new ConfigurationException("UIAttributeDescriptions require a field");
 
-		this.field = field;
-		this.maxLength = maxLength;
-		this.tableConstraint = tableConstraint;
-		this.source = source;
-		this.homepageURL = homePageURL;
-		this.linkoutURL = linkoutURL;
+		setAttribute(fieldKey, field);
+
+		setMaxLength(maxLength);
+		setAttribute(tableConstraintKey, tableConstraint);
+		setAttribute(sourceKey, source);
+		setAttribute(homepageURLKey, homePageURL);
+		setAttribute(linkoutURLKey, linkoutURL);
 	}
 
-  /**
-   * @param string
-   */
-  public void setHomepageURL(String string) {
-    homepageURL = string;
-  }
+	/**
+	 * @param homePageURL - url to homepage for the data source
+	 */
+	public void setHomepageURL(String homePageURL) {
+		setAttribute(homepageURLKey, homePageURL);
+	}
 
-  /**
-   * @return
-   */
-  public String getHomepageURL() {
-    return homepageURL;
-  }
+	/**
+	 * @return homepageURL
+	 */
+	public String getHomepageURL() {
+		return getAttribute(homepageURLKey);
+	}
 
-  /**
-   * @param string
-   */
-  public void setTableConstraint(String string) {
-    tableConstraint = string;
-  }
+	/**
+	 * @param tableConstraint - tableConstraint for the field
+	 */
+	public void setTableConstraint(String tableConstraint) {
+		setAttribute(tableConstraintKey, tableConstraint);
+	}
 
-  /**
-   * Returns the TableConstraint.
-   * 
-   * @return String tableConstraint.
-   */
-  public String getTableConstraint() {
-    return tableConstraint;
-  }
+	/**
+	 * Returns the TableConstraint.
+	 * 
+	 * @return String tableConstraint.
+	 */
+	public String getTableConstraint() {
+		return getAttribute(tableConstraintKey);
+	}
 
-  /**
-   * @param string
-   */
-  public void setField(String string) {
-    field = string;
-  }
-  
+	/**
+	 * @param field - field in mart table
+	 */
+	public void setField(String field) {
+		setAttribute(fieldKey, field);
+	}
+
 	/**
 	 * Returns the field.
 	 * 
 	 * @return String field
 	 */
 	public String getField() {
-		return field;
+		return getAttribute(fieldKey);
 	}
- 
-  /**
-   * @param i
-   */
-  public void setMaxLength(int i) {
-    maxLength = i;
-  }
 
 	/**
-	 * Returns the maxLength.
+	 * @param maxLength - String maximum length of the table field
+	 * @throws ConfigurationException for underlying numberFormatException when maxLength is parsed to an integer
+	 */
+	public void setMaxLength(String maxLength) throws ConfigurationException {
+		setAttribute(maxLengthKey, maxLength);
+	}
+
+	/**
+	 * Returns the maxLength. If the value for maxLength
+	 * is not a valid integer (eg, a NumberFormatException is
+	 * thrown by Integer.parseInt( maxLength )) this method will
+	 * return DEFAULTMAXLENGTH
 	 * 
 	 * @return int MaxLength.
 	 */
-	public int getMaxLength() {
-		return maxLength;
+	public int getMaxLength()  {
+		try {
+			return Integer.parseInt(getAttribute(maxLengthKey));
+		} catch (NumberFormatException e) {
+			if (logger.isLoggable(Level.WARNING))
+			  logger.warning("Could not parse maxLength value to integer: " + e.getMessage());
+			return DEFAULTMAXLENGTH;
+		}
 	}
 
-  /**
-   * @param string
-   */
-  public void setSource(String string) {
-    source = string;
-  }
+	/**
+	 * @param source - String name of data source
+	 */
+	public void setSource(String source) {
+		setAttribute(sourceKey, source);
+	}
 
 	/**
 	 * Returns the source.
@@ -180,46 +198,43 @@ public class AttributeDescription extends BaseConfigurationObject {
 	 * @return String source
 	 */
 	public String getSource() {
-		return source;
+		return getAttribute(sourceKey);
 	}
 
-  /**
-   * @param string
-   */
-  public void setLinkoutURL(String string) {
-    linkoutURL = string;
-  }
-  
+	/**
+	 * @param LinkoutURL - String base for HTML link references
+	 */
+	public void setLinkoutURL(String linkoutURL) {
+		setAttribute(linkoutURLKey, linkoutURL);
+	}
+
 	/**
 	 * Returns the linkoutURL.
 	 * @return String linkoutURL.
 	 */
 	public String getLinkoutURL() {
-		return linkoutURL;
+		return getAttribute(linkoutURLKey);
 	}
 
-  /**
-   * Determine if this AttributeDescription supports a given field and tableConstraint. Useful for mapping Query Attribute Objects
-   * back to their corresponding MartConfiguration AttributeDescription.
-   * @param field -- String field of the mart datbase table
-   * @param tableConstraint -- String constraining the field to a particular table or table type
-   * @return boolean, true if given field and given tableConstraint matches underlying values for AttributeDescription 
-   */
-  public boolean supports(String field, String tableConstraint) {
-  	return this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint);
-  }
-  
+	/**
+	 * Determine if this AttributeDescription supports a given field and tableConstraint. Useful for mapping Query Attribute Objects
+	 * back to their corresponding MartConfiguration AttributeDescription.
+	 * @param field -- String field of the mart datbase table
+	 * @param tableConstraint -- String constraining the field to a particular table or table type
+	 * @return boolean, true if given field and given tableConstraint matches underlying values for AttributeDescription 
+	 */
+	public boolean supports(String field, String tableConstraint) {
+		return getAttribute(fieldKey) != null
+			&& getAttribute(fieldKey).equals(field)
+			&& getAttribute(tableConstraintKey) != null
+			&& getAttribute(tableConstraintKey).equals(tableConstraint);
+	}
+
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[ AttributeDescription:");
-		buf.append( super.toString() );
-		buf.append(", field=").append(field);
-		buf.append(", maxLength=").append(maxLength);
-		buf.append(", tableConstraint=").append(tableConstraint);
-		buf.append(", source=").append(source);
-		buf.append(", homePageURL=").append(homepageURL);
-		buf.append(", linkoutURL=").append(linkoutURL);
+		buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
@@ -232,16 +247,45 @@ public class AttributeDescription extends BaseConfigurationObject {
 		return o instanceof AttributeDescription && hashCode() == ((AttributeDescription) o).hashCode();
 	}
 
-	public int hashCode() {
-    int hshcode = internalName.hashCode();
-    hshcode = (displayName != null) ? (31 * hshcode) + displayName.hashCode() : hshcode;
-    hshcode = (field != null) ? (31 * hshcode) + field.hashCode() : hshcode;
-    hshcode = (31 * hshcode) + maxLength;
-    hshcode = (tableConstraint != null) ? (31 * hshcode) + tableConstraint.hashCode() : hshcode;
-    hshcode = (description != null) ? (31 * hshcode) + description.hashCode() : hshcode;
-    hshcode = (source != null) ? (31 * hshcode) + source.hashCode() : hshcode;
-    hshcode = (homepageURL != null) ? (31 * hshcode) + homepageURL.hashCode() : hshcode;
-    hshcode = (linkoutURL != null) ? (31 * hshcode) + linkoutURL.hashCode() : hshcode;
-		return hshcode;
+	/**
+	 * set the hasBrokenField flag to true, eg. the field
+	 * does not refer to an existing field in a particular Mart Dataset instance.
+	 *
+	 */
+	public void setFieldBroken() {
+		hasBrokenField = true;
+	}
+
+	/**
+	 * Determine if this AttributeDescription has a broken field reference.
+	 * @return boolean, true if field is broken, false otherwise
+	 */
+	public boolean hasBrokenField() {
+		return hasBrokenField;
+	}
+
+	/**
+	 * set the hasBrokenTableConstraint flag to true, eg. the tableConstraint
+	 * does not refer to an existing table in a particular Mart Dataset instance.
+	 *
+	 */
+	public void setTableConstraintBroken() {
+		hasBrokenTableConstraint = true;
+	}
+
+	/**
+	 * Determine if this AttributeDescription has a broken tableConstraint reference.
+	 * @return boolean, true if tableConstraint is broken, false otherwise
+	 */
+	public boolean hasBrokenTableConstraint() {
+		return hasBrokenTableConstraint;
+	}
+
+	/**
+	 * True if one of hasBrokenField or hasBrokenTableConstraint is true.
+	 * @return boolean
+	 */
+	public boolean isBroken() {
+		return hasBrokenField || hasBrokenTableConstraint;
 	}
 }

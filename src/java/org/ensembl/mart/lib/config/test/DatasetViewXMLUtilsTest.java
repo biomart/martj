@@ -27,6 +27,7 @@ import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DSFilterGroup;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -62,7 +63,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	private static final String TESTINSERTFIELD = "testInsertField";
 	private static final String TESTINSERTTYPE = "testInsertType";
 	private static final String TESTINSERTQUALIFIERS = "testInsertQualifiers";
-	private static final boolean TESTISSELECTABLE = true;
+	private static final String TESTISSELECTABLE = "true";
 
 	/**
 	 * Returns an instance of the testDatasetView.xml based XML object
@@ -91,7 +92,8 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		DatasetView nDSV = DatasetViewXMLUtils.DocumentToDatasetView(rDoc);
 
-		assertTrue("reference DatasetView does not equal DatasetView after synchronization\n", rDSV.equals(nDSV));
+		//assertTrue("reference DatasetView does not equal DatasetView after synchronization\n", rDSV.equals(nDSV));
+		assertEquals("reference DatasetView does not equal DatasetView after synchronization\n", rDSV, nDSV);
 
 		byte[] nDigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nDSV);
 
@@ -1446,14 +1448,19 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 			d.getAttributeDescriptionByFieldNameTableConstraint(Field, TableConstraint));
 	}
 
+  private void transferAttributes(BaseConfigurationObject from, BaseConfigurationObject to) {
+  	String[] attKeys = from.getXmlAttributeTitles();
+  	for (int i = 0, n = attKeys.length; i < n; i++) {
+			String key = attKeys[i];
+			to.setAttribute( key, from.getAttribute( key ));
+		}
+  }
+  
 	private void validateDatasetViewMutability(DatasetView reference) throws Exception {
 		//Rebuild a DatasetView from scratch, with empty constructors and set/add methods
 		DatasetView newDSV = new DatasetView();
-		newDSV.setInternalName(reference.getInternalName());
-		newDSV.setDisplayName(reference.getDisplayName());
-		newDSV.setDescription(reference.getDescription());
-    newDSV.setDataset(reference.getDataset());
-    
+    transferAttributes(reference, newDSV);
+        
 		Option[] os = reference.getOptions();
 		//dont test Option mutability until FilterDescriptionMutability sub test
 		for (int i = 0, n = os.length; i < n; i++)
@@ -1506,7 +1513,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Warning, newDSV not equal to reference DSV after remove/insert up!\n", reference, newDSV);
 
 		//insert new testinsert versions of 
-		Option testInsertOption = new Option(TESTINSERTINAME, true);
+		Option testInsertOption = new Option(TESTINSERTINAME, TESTISSELECTABLE);
 		newDSV.insertOption(1, testInsertOption);
 		assertEquals("insertOption position 1 did not work\n", testInsertOption, newDSV.getOptions()[1]);
 		newDSV.removeOption(testInsertOption);
@@ -1577,10 +1584,8 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private AttributePage validateAttributePageMutability(AttributePage rpage) throws Exception {
 		AttributePage newAPage = new AttributePage();
-		newAPage.setInternalName(rpage.getInternalName());
-		newAPage.setDisplayName(rpage.getDisplayName());
-		newAPage.setDescription(rpage.getDescription());
-
+    transferAttributes(rpage, newAPage);
+    
 		List groups = rpage.getAttributeGroups();
 		for (int i = 0, n = groups.size(); i < n; i++) {
 			Object group = groups.get(i);
@@ -1665,10 +1670,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private DSAttributeGroup validateDSAttributeGroupMutability(DSAttributeGroup group) throws Exception {
 		DSAttributeGroup newDSAG = new DSAttributeGroup(TESTINSERTINAME);
-		newDSAG.setInternalName(group.getInternalName());
-		newDSAG.setDisplayName(group.getDisplayName());
-		newDSAG.setDescription(group.getDescription());
-		newDSAG.setHandler(group.getHandler());
+		transferAttributes(group, newDSAG);
 		assertEquals("newDSA does not equals reference DSAG after buildup!", group, newDSAG);
 
 		return newDSAG;
@@ -1676,9 +1678,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private AttributeGroup validateAttributeGroupMutability(AttributeGroup group) throws Exception {
 		AttributeGroup newAG = new AttributeGroup(TESTINSERTINAME);
-		newAG.setInternalName(group.getInternalName());
-		newAG.setDisplayName(group.getDisplayName());
-		newAG.setDescription(group.getDescription());
+		transferAttributes(group, newAG);
 
 		AttributeCollection[] cols = group.getAttributeCollections();
 		for (int i = 0, n = cols.length; i < n; i++) {
@@ -1718,10 +1718,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private AttributeCollection validateAttributeCollectionMutability(AttributeCollection collection) throws Exception {
 		AttributeCollection newAC = new AttributeCollection();
-		newAC.setInternalName(collection.getInternalName());
-		newAC.setDisplayName(collection.getDisplayName());
-		newAC.setDescription(collection.getDescription());
-		newAC.setMaxSelect(collection.getMaxSelect());
+    transferAttributes(collection, newAC);
 
 		List descs = collection.getAttributeDescriptions();
 		for (int i = 0, n = descs.size(); i < n; i++) {
@@ -1766,15 +1763,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private AttributeDescription validateAttributeDescriptionMutability(AttributeDescription desc) throws Exception {
 		AttributeDescription newAD = new AttributeDescription();
-		newAD.setInternalName(desc.getInternalName());
-		newAD.setDisplayName(desc.getDisplayName());
-		newAD.setDescription(desc.getDescription());
-		newAD.setField(desc.getField());
-		newAD.setTableConstraint(desc.getTableConstraint());
-		newAD.setMaxLength(desc.getMaxLength());
-		newAD.setSource(desc.getSource());
-		newAD.setLinkoutURL(desc.getLinkoutURL());
-		newAD.setHomepageURL(desc.getHomepageURL());
+		transferAttributes(desc, newAD);
 		assertEquals("newAD does not equal reference AD after buildup!\n", desc, newAD);
 
 		return newAD;
@@ -1782,7 +1771,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private DefaultFilter validateDefaultFilterMutability(DefaultFilter rfilter) throws Exception {
 		DefaultFilter newDF = new DefaultFilter();
-		newDF.setValue(rfilter.getValue());
+		transferAttributes(rfilter, newDF);
 		//dont worry about testing FilterDescription mutability twice
 		newDF.setFilterDescription(rfilter.getFilterDescription());
 
@@ -1792,10 +1781,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private FilterPage validateFilterPageMutability(FilterPage rpage) throws Exception {
 		FilterPage newFP = new FilterPage();
-
-		newFP.setInternalName(rpage.getInternalName());
-		newFP.setDescription(rpage.getDescription());
-		newFP.setDisplayName(rpage.getDisplayName());
+		transferAttributes(rpage, newFP);
 
 		List fgroups = rpage.getFilterGroups();
 		for (int i = 0, n = fgroups.size(); i < n; i++) {
@@ -1885,10 +1871,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private DSFilterGroup validateDSFilterGroupMutability(DSFilterGroup group) throws Exception {
 		DSFilterGroup newDSFG = new DSFilterGroup();
-		newDSFG.setInternalName(group.getInternalName());
-		newDSFG.setDisplayName(group.getDisplayName());
-		newDSFG.setDescription(group.getDescription());
-		newDSFG.setHandler(group.getHandler());
+		transferAttributes(group, newDSFG);
 		assertEquals("newDSFG not equal to reference DSFG after buildup!\n", group, newDSFG);
 
 		return newDSFG;
@@ -1896,9 +1879,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private FilterGroup validateFilterGroupMutability(FilterGroup group) throws Exception {
 		FilterGroup newFG = new FilterGroup();
-		newFG.setInternalName(group.getInternalName());
-		newFG.setDisplayName(group.getDisplayName());
-		newFG.setDescription(group.getDescription());
+		transferAttributes(group, newFG);
 
 		FilterCollection[] cols = group.getFilterCollections();
 		for (int i = 0, n = cols.length; i < n; i++) {
@@ -1938,9 +1919,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private FilterCollection validateFilterCollectionMutability(FilterCollection collection) throws Exception {
 		FilterCollection newFC = new FilterCollection();
-		newFC.setInternalName(collection.getInternalName());
-		newFC.setDisplayName(collection.getDisplayName());
-		newFC.setDescription(collection.getDescription());
+		transferAttributes(collection, newFC);
 
 		List descs = collection.getFilterDescriptions();
 		for (int i = 0, n = descs.size(); i < n; i++) {
@@ -1992,15 +1971,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private FilterDescription validateFilterDescriptionMutability(FilterDescription reference) throws Exception {
 		FilterDescription newFD = new FilterDescription();
-		newFD.setInternalName(reference.getInternalName());
-		newFD.setDisplayName(reference.getDisplayName());
-		newFD.setDescription(reference.getDescription());
-		newFD.setType(reference.getType());
-		newFD.setField(reference.getField());
-		newFD.setTableConstraint(reference.getTableConstraint());
-		newFD.setQualifier(reference.getQualifier());
-		newFD.setLegalQualifiers(reference.getLegalQualifiers());
-		newFD.setHandler(reference.getHandler());
+		transferAttributes(reference, newFD);
 
 		Enable[] ens = reference.getEnables();
 		for (int i = 0, n = ens.length; i < n; i++) {
@@ -2063,34 +2034,21 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private Disable validateDisableMutability(Disable disable) throws Exception {
 		Disable newDis = new Disable();
-		newDis.setRef(disable.getRef());
-		newDis.setValueCondition(disable.getValueCondition());
+		transferAttributes(disable, newDis);
 
 		return newDis;
 	}
 
 	private Enable validateEnableMutability(Enable enable) throws Exception {
 		Enable newEn = new Enable();
-		newEn.setRef(enable.getRef());
-		newEn.setValueCondition(enable.getValueCondition());
+		transferAttributes(enable, newEn);
 
 		return newEn;
 	}
 
 	private Option validateOptionMutability(Option reference) throws Exception {
 		Option newOP = new Option();
-		newOP.setInternalName(reference.getInternalName());
-		newOP.setDisplayName(reference.getDisplayName());
-		newOP.setDescription(reference.getDescription());
-		newOP.setSelectable(reference.isSelectable());
-		newOP.setValue(reference.getValue());
-		newOP.setRef(reference.getRef());
-		newOP.setType(reference.getType());
-		newOP.setField(reference.getField());
-		newOP.setTableConstraint(reference.getTableConstraint());
-		newOP.setQualifier(reference.getQualifier());
-		newOP.setLegalQualifiers(reference.getLegalQualifiers());
-		newOP.setHandler(reference.getHandler());
+		transferAttributes(reference, newOP);
 
 		PushAction[] pas = reference.getPushActions();
 		for (int i = 0, n = pas.length; i < n; i++) {
@@ -2143,10 +2101,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 	private PushAction validatePushActionMutability(PushAction action) throws Exception {
 		PushAction newPA = new PushAction();
-		newPA.setInternalName(action.getInternalName());
-		newPA.setDisplayName(action.getDisplayName());
-		newPA.setDescription(action.getDescription());
-		newPA.setRef(action.getRef());
+		transferAttributes(action, newPA);
 
 		Option[] os = action.getOptions();
 		for (int i = 0, n = os.length; i < n; i++) {

@@ -29,8 +29,9 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public final class AttributeGroup extends BaseConfigurationObject {
+public final class AttributeGroup extends BaseNamedConfigurationObject {
 
+  private boolean hasBrokenCollections;
   private List attributeCollections = new ArrayList();
   private Hashtable attributeCollectionNameMap = new Hashtable();
 
@@ -358,5 +359,29 @@ public final class AttributeGroup extends BaseConfigurationObject {
 		}
 		
 		return tmp;
+  }
+
+  /**
+   * Set the hasBrokenCollections flag to true, meaning the AttributeGroup
+   * contains one or more AttributeGroups with broken AttributeDescription Objects.
+   */
+  public void setCollectionsBroken() {
+    hasBrokenCollections = true;
+  }
+  
+  /**
+   * Determine if this AttributeGroup contains broken AttributeCollections
+   * @return boolean
+   */
+  public boolean hasBrokenCollections() {
+  	return hasBrokenCollections;
+  }
+  
+  /**
+   * True if hasBrokenCollections is true
+   * @return boolean
+   */
+  public boolean isBroken() {
+  	return hasBrokenCollections;
   }
 }
