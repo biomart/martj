@@ -121,8 +121,8 @@ public class InputPageContainer
           toFront(TreeNodeData.FILTERS);
         // disable this the ability to select the dataset and 
         // datasource unless advanced is selected
-        else if (!advanced && tnd.getType()==TreeNodeData.DATASOURCE); 
-        else if (!advanced && tnd.getType()==TreeNodeData.DATASET); 
+        else if (tnd.getType()==TreeNodeData.DATASOURCE); 
+        else if (tnd.getType()==TreeNodeData.DATASET); 
         else
           toFront(tnd.getType());
       }
