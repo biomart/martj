@@ -17,8 +17,7 @@
  */
 package org.ensembl.mart.lib;
 
-import java.sql.*;
-import java.io.*;
+import java.io.OutputStream;
 
 /**
  * Factory class for generating QueryRunner implimenting objects 
