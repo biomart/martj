@@ -164,5 +164,12 @@ public class DatasetViewWidget
 
 	}
 
+	/**
+	 * 
+	 */
+	public void openDatasetViewMenu() {
+		chooser.showTree();
+	}
+
 
 }

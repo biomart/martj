@@ -472,15 +472,25 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
       } else {
 
-        QueryEditor qe;
-        qe = new QueryEditor(this, adaptorManager);
+        final QueryEditor qe = new QueryEditor(this, adaptorManager);
         qe.setName(nextQueryBuilderTabLabel());
         addQueryEditor(qe);
-        // Quick hack to stop dataset and datasource
-        // being "carried" across from previous to
-        // new query. Not sure why it was happening.
-        //qe.getQuery().clear();
         tabs.setSelectedComponent(qe);
+        
+        // "Open" the menu of dataset views. We wait before opening it to give
+        // the panel containing the menu time to come to the front. This is a little
+        // hacky but works.
+        new Thread() {
+         public void run() {
+          try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						// do nothing
+					}
+          qe.openDatasetViewMenu();  
+         }
+        }.start();
+        
       }
     } catch (ConfigurationException e) {
       feedback.warning(e);

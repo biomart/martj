@@ -49,6 +49,8 @@ public class InputPageContainer
 
 	private AdaptorManager adaptorManager;
 
+	private DatasetViewWidget datasetViewWidget;
+
   public InputPageContainer(
     Query query,
     QueryTreeView tree,
@@ -61,8 +63,9 @@ public class InputPageContainer
     if (tree != null)
       tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
+    datasetViewWidget = new DatasetViewWidget(query, adaptorManager, this); 
     add(
-      new DatasetViewWidget(query, adaptorManager, this),
+      datasetViewWidget,
       "DATASET_VIEW");
     add(
       new DatasourceWidget(query, adaptorManager),
@@ -130,5 +133,12 @@ public class InputPageContainer
   void toFront(TreeNodeData.Type tnd) {
     cardLayout.show(this, tnd.getLabel());
   }
+
+	/**
+	 * 
+	 */
+	public void openDatasetViewMenu() {
+		datasetViewWidget.openDatasetViewMenu();
+	}
 
 }

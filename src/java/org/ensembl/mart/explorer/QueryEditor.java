@@ -133,6 +133,7 @@ public class QueryEditor extends JPanel {
   private JSplitPane middleAndBottom;
 
   private JEditorPane outputPanel;
+	private InputPageContainer inputPanelContainer;
 
   /**
    * 
@@ -148,7 +149,7 @@ public class QueryEditor extends JPanel {
     this.query = new Query();
 
     QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getRootAdaptor());
-    InputPageContainer inputPanelContainer =
+    inputPanelContainer =
       new InputPageContainer(
         query,
         treeView,
@@ -709,6 +710,13 @@ public class QueryEditor extends JPanel {
 	 */
 	public void setPreviewLimit(int i) {
 		previewLimit = i;
+	}
+
+	/**
+	 * 
+	 */
+	public void openDatasetViewMenu() {
+		inputPanelContainer.openDatasetViewMenu();
 	}
 
 }
