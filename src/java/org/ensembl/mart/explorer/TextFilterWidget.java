@@ -36,6 +36,7 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
+import org.ensembl.mart.util.StringUtil;
 
 /**
  * Widget with a label and text entry area which adds/removes
@@ -142,7 +143,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
     setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     textField = new JTextField(5);
     textField.addActionListener(this); // listen for user entered changes
-    add(new JLabel(filterDescription.getDisplayName()));
+    add(createLabel());
     add(textField);
     add(Box.createHorizontalGlue());
   }

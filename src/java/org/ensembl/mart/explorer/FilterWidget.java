@@ -23,6 +23,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.logging.Logger;
 
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.event.TreeSelectionEvent;
@@ -35,6 +36,7 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.util.StringUtil;
 
 /**
  * Base class for FilterWidgets. 
@@ -272,6 +274,19 @@ public abstract class FilterWidget
       }
     }
 
+  }
+
+  protected JLabel createLabel() {
+    String label = filterDescription.getDisplayName();
+    if (label == null)
+      label = "";
+    else
+      label =
+        StringUtil.wrapLinesAsHTML(
+          label,
+          Constants.LABEL_WIDTH_IN_CHARS,
+          false);
+    return new JLabel(label);
   }
 
 }

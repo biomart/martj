@@ -112,7 +112,7 @@ public class BooleanFilterWidget
     exclude.addActionListener(this);
     irrelevant.addActionListener(this);
 
-    panel.add(new JLabel(fd.getDisplayName()));
+    panel.add(createLabel());
     if (list != null)
       panel.add(list);
     panel.add(Box.createHorizontalGlue());
