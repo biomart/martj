@@ -1,0 +1,1 @@
+java -cp "..\;..\build\classes;..\lib\libreadline-java.jar;..\lib\mart-explorer.jar;..\lib\log4j-1.2.6.jar;..\lib\ecp1_0beta.jar;..\lib\mysql-connector-java-3.0.7-stable-bin.jar;..\lib\ensj-util.jar;..\lib\jython.jar;..\lib\java-getopt-1.0.9.jar;..\lib\jdom.jar" org.ensembl.mart.shell.MartShell %1 %2 %3 %4 %5 %6 %7 %8 %9
