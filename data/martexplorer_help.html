@@ -104,42 +104,21 @@ Query</b> and all queries by <b>File -> Close All Queries</b>.
 
 <a name="marts"></a><h2>Adding Mart Databases</h2>
 
-It is possible to add new Mart databases in addition to the default 
-ones already present when the application starts up. This can be done in two ways: 
-<br>
-<br>
-A. by specifying an initialisation file 
-<br>
-B. interactively during MartExplorer session
+It is possible to add new Mart databases in addition to the default ones already present when the application starts up. 
+This can be done in two ways:  by specifying an Mart Registry file and/or interactively during MartExplorer session. 
+The former makes added databases available at a start up the latter only for the duration of the Mart Explorer session.
 
-<p>
-A. Initialisation file
-<br>
-At start up MartExplorer reads an initialisation file which
-specifies a set mart databases. The defalut registry file is located in the data directory:
-defaultMartRegistry.xml. It is possible to overide its contents by placing a 
-.userMartRegistry.xml file in the user's home directory. This must be a valid registry file. See
-the default file (data/defaultMartRegistry.xml) for an example and the
-documentation for more details. The easiest approach is to simply copy the defaultMartRegistry.xml to user home directory
-changing its name to .userMartRegistry.xml and edit the file according to one's requirements.
-<p>
+<br><br>Registry file<br> 
+At start up MartExplorer reads an registry file, which specifies a set mart databases. The defalut registry file is located in the data directory: defaultMartRegistry.xml. It is possible to overide its contents by placing a .userMartRegistry.xml file in the user's home directory. This must be a valid registry file. See the default file (data/defaultMartRegistry.xml) for an example and the documentation for more details. The easiest approach is to simply copy the defaultMartRegistry.xml to user home directory changing its name to .userMartRegistry.xml and edit the file according to one's requirements.
 
-B. Interactively
-<br>
-Mart databases can also be added using the
-"Add Mart" settings window. This is opened with the menu item
-<b>Settings -> Add Mart</b>. 
+<br><br>Interactively<br> 
+Mart databases can also be added using the "Add Mart" settings window. 
+This is opened with the menu item Settings -> Add Mart. 
+This button opens the database connection window from which the user can specify mart database connection parameters. 
+Once this is done the marts will be available for use in new queries. 
+Note that some values are "pre-loaded" into the drop down lists that are available by pressing the small downward arrow 
+at the end of each text entry box. This can save you typing the entries.
 
-
-<br>
-
-
-<dt><b>Add Database</b></dt><dd>This button opens the database connection
-window from which the user can specify a database containing
-marts. Once this is done the marts will be available for use in new
-queries. Note that some values are "pre-loaded" into the drop down lists that are
-available by pressing the small downward arrow at the end of each text
-entry box. This can save you typing the entries.
 
 <p>This is a brief description of the parameters together with
 some example values:
@@ -182,10 +161,9 @@ then a default name is used.</dd>
 
 <a name="files"></a><h2>Adding Registry and Configuration Files</h2>
 
-<p>Registry and Configuration Files can be added and removed interactively using the
-Add File settings window. This is opened with the menu item
-<b>Settings -> Add File</b>. The window contains a drop down list of
-loaded adaptors plus several buttons for adding and removing them:
+<p>Registry and Configuration Files can be added and removed interactively using the Add File settings window. 
+This is opened with the menu item Settings -> Add File. 
+The window contains a drop down list of loaded files plus several buttons for adding and removing them:
 </p>
 
 <dl>
@@ -206,16 +184,9 @@ href="#advanced">Advanced Features</a> for the method to change the
 database.</dd>
 
 
-<dt><b>Remove</b></dt><dd>Remove the adaptor currently displayed in the
-drop-down list. Note that it is not possible to create a new query
-while there are no adaptors available.</dd>
+<dt><b>Remove</b></dt><dd>Remove the file currently displayed in the drop-down list.</dd>
 
-<dt><b>Remove All</b></dt><dd>Remove all available adaptors. Note that it is
-not possible to create a new query while there are no adaptors
-available.</dd>
-
-
-
+<dt><b>Remove All</b></dt><dd>Remove all available files. </dd>
 </dl>
 
 <a href="#top">top</a>
@@ -224,8 +195,7 @@ available.</dd>
 
 <a name="advanced"></a><h2>Advanced Features</h2>
 
-These are a variety of features that most users will probably not
-use. With these the user can log output and enable more options
+With these features the user can log output and enable more options
 when constructing queries.
 
 <p>Logging output can be enabled / disabled via <b>Settings -> Advanced
