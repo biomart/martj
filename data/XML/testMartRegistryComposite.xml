@@ -2,7 +2,7 @@
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
   <URLLocation url="file:data/XML/testDatasetViewRegFile.xml"/>
-  <DatabaseLocation databaseType="mysql" jdbcDriverClassName="com.mysql.jdbc.Driver" host="127.0.0.1" instanceName="ensembl_mart_17_1" user="ensro"/>
+  <DatabaseLocation databaseType="mysql" jdbcDriverClassName="com.mysql.jdbc.Driver" host="127.0.0.1" instanceName="ensembl_mart_18_1" user="ensro"/>
   <RegistryLocation url="file:data/XML/testMartRegistryRegFile.xml"/>
   <RegistryLocation url="file:data/XML/testMartRegistryFile.xml"/>  
 </MartRegistry>
