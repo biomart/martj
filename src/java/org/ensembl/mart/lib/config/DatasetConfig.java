@@ -52,6 +52,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String datasetKey = "dataset";
   private final String typeKey = "type";
   private final String visibleKey = "visible";
+  private final String optParameterKey = "optional_parameters";
   
   private DSConfigAdaptor adaptor = null;
   private byte[] digest = null;
@@ -128,6 +129,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       throw new ConfigurationException("You can not copy an existing DatasetConfig using both propogateExistingElements and lazyLoad\n");
       
     setDataset(ds.getDataset());
+    setOptionalParameter(ds.getOptionalParameter());
+    
     byte[] digest = ds.getMessageDigest();
     if (digest != null)
       setMessageDigest(digest);
@@ -177,6 +180,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setAttribute(datasetKey, null);
     setAttribute(typeKey,null);
     setAttribute(visibleKey,null);
+    setAttribute(optParameterKey, null);
   }
 
   /**
@@ -205,7 +209,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description)
     throws ConfigurationException {
     //super(internalName, displayName, description);
-	this(internalName, displayName, dataset, description, "", "0");
+	this(internalName, displayName, dataset, description, "", "0", null);
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
     //setAttribute(datasetKey, dataset);
@@ -224,6 +228,25 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException if required values are null.
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub)
+  throws ConfigurationException {
+    this(internalName, displayName, dataset, description, type, pub, null);
+  }
+  
+  /**
+   * Constructs a DatasetConfig named by internalName and displayName, with a description of
+   *  the dataset.
+   * 
+   * @param internalName String name to represent this DatasetConfig. Must not be null
+   * @param displayName String name to display in an UI.
+   * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
+   * @param description String description of the DatasetConfig.
+   * @param type String type of the DatasetConfig.
+   * @param pub String flag showing whether DatasetConfig is public or not.
+   * @param optParameters String of optional parameters to pass to specific SubSystems for
+   *        implementation specific manipulation.
+   * @throws ConfigurationException if required values are null.
+   */
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String optParameters)
 	throws ConfigurationException {
 	super(internalName, displayName, description);
 
@@ -232,6 +255,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(datasetKey, dataset);
 	setAttribute(typeKey, type);
 	setAttribute(visibleKey, pub);
+    setAttribute(optParameterKey, optParameters);
   }
 
   /**
@@ -263,6 +287,18 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	return attributes.getProperty(visibleKey);
   }
 
+  public void setOptionalParameter(String optParam) {
+    setAttribute(optParameterKey, optParam);
+  }
+  
+  /**
+   * Return any optional parameters set on the DatasetConfig.
+   * @return String optional parameters string
+   */
+  public String getOptionalParameter() {
+    return attributes.getProperty(optParameterKey);
+  }
+  
   /**
    * add a Option object to this DatasetConfig.  Options are stored in the order that they are added.
    * @param o - an Option object
