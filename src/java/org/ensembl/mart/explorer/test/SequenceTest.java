@@ -158,7 +158,7 @@ public class SequenceTest extends Base {
 	public void testTranscriptExonIntronSequence() throws Exception {
 		//test one forward strand gene and one revearse strand gene
 		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCDNA));
+		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONINTRON));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		

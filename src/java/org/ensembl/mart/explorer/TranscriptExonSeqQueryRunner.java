@@ -36,26 +36,39 @@ import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
 
 /**
- * Outputs Transcript Exon sequences in fasta format
+ * Outputs Transcript Exon sequences in one of the supported formats
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @see FormatSpec for supported output formats
  */
-public final class FastaTExonSeqQueryRunner implements QueryRunner {
+public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 	/**
-	 * Constructs a FastaTExonSeqQueryRunner object to execute a Query
-	 * and print fasta output of Exon Sequences for each transcript.
+	 * Constructs a TranscriptExonSeqQueryRunner object to execute a Query
+	 * and print Exon Sequences for each transcript.
 	 * 
 	 * @param query a Query Object
 	 * @param format a FormatSpec object
 	 * @param conn a java.sql.Connection object
 	 * @param os an OutputStream object
 	 */
-	public FastaTExonSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
+	public TranscriptExonSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.os = os;		
+		this.osr = new OutputStreamWriter(os);
+	    
+		switch (format.getFormat()) {
+		  case FormatSpec.TABULATED:
+				this.separator = format.getSeparator();
+			  this.seqWriter = tabulatedWriter;
+			  break;
+	    	    
+		  case FormatSpec.FASTA:
+			  this.separator = "|";
+			this.seqWriter = fastaWriter;
+			break;
+		}
 	}
 
 	private void updateQuery() {
@@ -72,91 +85,8 @@ public final class FastaTExonSeqQueryRunner implements QueryRunner {
 			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
 		}
 	}
-
-	private void writeSequence() throws SequenceException, IOException {
-		OutputStreamWriter osr =  new OutputStreamWriter(os);
-		
-		try {
-			// run through the geneiDs list, for each transcript-exon, make and print output
-			for (Iterator geneIter = geneiDs.keySet().iterator(); geneIter.hasNext();) {
-				Hashtable geneatts = (Hashtable) geneiDs.get( (Integer) geneIter.next() );
-				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
-				String assemblyout = (String) geneatts.get(Assembly);
-				
-				// cache the gene sequence
-				dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-				
-				for (Iterator tranIter = ( (TreeMap) geneatts.get(Transcripts) ).keySet().iterator(); tranIter.hasNext();) {
-					Hashtable tranatts = (Hashtable) ( (TreeMap) geneatts.get(Transcripts) ).get(tranIter.next());
-					
-					for (Iterator exonIter = ( (TreeMap) tranatts.get(Exons) ).keySet().iterator(); exonIter.hasNext();) {
-						Hashtable exonatts = (Hashtable) ( (TreeMap) (tranatts.get(Exons) )).get(exonIter.next());
-						SequenceLocation exonloc = (SequenceLocation) exonatts.get(Location);
-						
-						// write the header, starting with the displayID
-						osr.write(">"+(String) exonatts.get(DisplayID));
-					
-						String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
-						osr.write("\tstrand="+strandout+separator+"chr="+exonloc.getChr()+separator+"assembly="+assemblyout);
-						osr.flush();
-					
-						for (int j = 0, n = fields.size(); j < n; j++) {
-							osr.write(separator);
-							String field = (String) fields.get(j);
-							if (exonatts.containsKey(field)) {
-								List values = (ArrayList) exonatts.get(field);
-							
-								if (values.size() > 1)
-									osr.write(field+" in ");
-								else
-									osr.write(field+"=");
-							    
-								for (int vi = 0; vi < values.size(); vi++) {
-									if (vi > 0) osr.write(",");
-									osr.write((String) values.get(vi));
-								}
-							}
-							else
-								osr.write(field+"= ");
-							osr.flush();
-						}
-					
-						// write the description
-						osr.write(separator+(String) exonatts.get(Description));
-						osr.write("\n");
-						osr.flush();
-					
-						//extend flanking sequence if necessary
-						int lflank = query.getSequenceDescription().getLeftFlank();
-						int rflank = query.getSequenceDescription().getRightFlank();
-					
-						if (lflank > 0)
-						   exonloc = exonloc.extendLeftFlank(lflank);
-						if (rflank > 0)
-						   exonloc = exonloc.extendRightFlank(rflank);
-					
-						// write out the sequence
-						if (exonloc.getStrand() < 0)
-							osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
-						else
-							osr.write( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
-						osr.flush();
-						osr.write("\n");
-						osr.flush();
-					}
-				}
-			}
-			osr.close();			
-		} catch (SequenceException e) {
-		    logger.warn(e.getMessage());
-		    throw e;	
-	    } catch (IOException e) {
-		    logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
-		    throw e;	
-	    }
-	}
-		    
-	public void execute(int limit) throws SQLException, IOException, InvalidQueryException {
+    
+	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
 		dna = new DNAAdaptor(conn);
 
@@ -182,15 +112,19 @@ public final class FastaTExonSeqQueryRunner implements QueryRunner {
 				
 		Attribute[] attributes = query.getAttributes();
 
-		CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
-		String sql = csql.toSQL();
-		if (limit > 0)
-			sql = sql+" limit "+limit;
+    try {
+		  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
+		  String sql = csql.toSQL();
+		  
+		  String structure_table = query.getSpecies()+"_core_"+query.getFocus()+"_structure";
+		  sql += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
+			  
+		  if (limit > 0)
+			  sql = sql+" limit "+limit;
 
-		logger.info( "QUERY : " + query );
-		logger.info( "SQL : " +sql );
+		  logger.info( "QUERY : " + query );
+		  logger.info( "SQL : " +sql );
 
-		try {
 			PreparedStatement ps = conn.prepareStatement( sql );
 			int p=1;
 			for( int i=0, n=query.getFilters().length; i<n; ++i) {
@@ -230,18 +164,25 @@ public final class FastaTExonSeqQueryRunner implements QueryRunner {
 					otherIndices.add(new Integer(i));
 			}
 			
+			Integer lastGene = new Integer(0); // will nold last geneID when new one is encountered
 			while ( rs.next() ) {
 				Integer geneID = new Integer(rs.getInt(queryIDindex));
 				Integer tranID = new Integer(rs.getInt(tranIDindex));
 				Integer rank = new Integer(rs.getInt(rankIndex));
 				
-				if (! geneiDs.containsKey(geneID)) { 
-					Hashtable atts = new Hashtable();
-
-//					order the transcripts by their rank in ascending order					
-					atts.put(Transcripts, new TreeMap());
-					atts.put(Assembly, rs.getString(assemblyIndex));
-					geneiDs.put(geneID, atts);
+				if (! geneiDs.containsKey(geneID)) {
+				  if (geneiDs.size() > 0) {
+				      // write the previous genes data, and refresh the geneiDs TreeMap
+						  seqWriter.writeSequences(lastGene);
+						  geneiDs = new TreeMap();
+						}
+						lastGene = geneID;					 
+					  Hashtable atts = new Hashtable();
+					  
+            //order the transcripts by their rank in ascending order					
+					  atts.put(Transcripts, new TreeMap());
+					  atts.put(Assembly, rs.getString(assemblyIndex));
+					  geneiDs.put(geneID, atts);
 				}
 				
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
@@ -326,18 +267,23 @@ public final class FastaTExonSeqQueryRunner implements QueryRunner {
 				if (! exonatts.containsKey(Description))
 					exonatts.put( Description, seqd.getDescription() );
 			}
-		    writeSequence();
+		  // write the last genes data
+	    seqWriter.writeSequences(lastGene);
+	    osr.close();
 		} catch (SQLException e) {
-			logger.warn(e.getMessage()+ " : " + sql);
-			throw e;
-		}
+			logger.warn(e.getMessage());
+			throw new InvalidQueryException(e);
+		} catch (IOException e) {
+			logger.warn("Could not write to IO "+e.getMessage());
+			throw new SequenceException(e);
+    }
 	}
 	
-	private final String separator = "|";
-	private Logger logger = Logger.getLogger(FastaTExonSeqQueryRunner.class.getName());
+	private String separator;
+	private Logger logger = Logger.getLogger(TranscriptExonSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
-	private OutputStream os = null;
+	private OutputStreamWriter osr = null;
 	private Connection conn = null;
 	
 	private TreeMap geneiDs = new TreeMap(); // holds each objects information, in order
@@ -363,5 +309,169 @@ public final class FastaTExonSeqQueryRunner implements QueryRunner {
 	private final String Location = "location";
 	private final String DisplayID = "displayID";
 	private final String Description = "description";
+	
+	// SeqWriter object
+	SeqWriter seqWriter; 
+	abstract class SeqWriter {
+		abstract void writeSequences(Integer geneID) throws SequenceException;
+	}
+	
+	private final SeqWriter tabulatedWriter = new SeqWriter() {
+		  void writeSequences(Integer geneID) throws SequenceException {
+			  try {
+					Hashtable geneatts = (Hashtable) geneiDs.get( geneID );
+					SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
+					String assemblyout = (String) geneatts.get(Assembly);
+				
+					// cache the gene sequence
+					dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+				
+					for (Iterator tranIter = ( (TreeMap) geneatts.get(Transcripts) ).keySet().iterator(); tranIter.hasNext();) {
+						Hashtable tranatts = (Hashtable) ( (TreeMap) geneatts.get(Transcripts) ).get(tranIter.next());
+					
+						for (Iterator exonIter = ( (TreeMap) tranatts.get(Exons) ).keySet().iterator(); exonIter.hasNext();) {
+							Hashtable exonatts = (Hashtable) ( (TreeMap) (tranatts.get(Exons) )).get(exonIter.next());
+							SequenceLocation exonloc = (SequenceLocation) exonatts.get(Location);
+						
+							// write the header, starting with the displayID
+							osr.write((String) exonatts.get(DisplayID));
+					
+							String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
+							osr.write(separator+"strand="+strandout+separator+"chr="+exonloc.getChr()+separator+"assembly="+assemblyout);
+							osr.flush();
+					
+							for (int j = 0, n = fields.size(); j < n; j++) {
+								osr.write(separator);
+								String field = (String) fields.get(j);
+								if (exonatts.containsKey(field)) {
+									List values = (ArrayList) exonatts.get(field);
+							
+									if (values.size() > 1)
+										osr.write(field+" in ");
+									else
+										osr.write(field+"=");
+							    
+									for (int vi = 0; vi < values.size(); vi++) {
+										if (vi > 0) osr.write(",");
+										osr.write((String) values.get(vi));
+									}
+								}
+								else
+									osr.write(field+"= ");
+								osr.flush();
+							}
+					
+							// write the description
+							osr.write(separator+(String) exonatts.get(Description));
+							osr.write(separator);
+							osr.flush();
+					
+							//extend flanking sequence if necessary
+							int lflank = query.getSequenceDescription().getLeftFlank();
+							int rflank = query.getSequenceDescription().getRightFlank();
+					
+							if (lflank > 0)
+							   exonloc = exonloc.extendLeftFlank(lflank);
+							if (rflank > 0)
+							   exonloc = exonloc.extendRightFlank(rflank);
+					
+							// write out the sequence
+							if (exonloc.getStrand() < 0)
+								osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
+							else
+								osr.write( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
+							osr.flush();
+							osr.write("\n");
+							osr.flush();
+						}
+					}			
+			  } catch (SequenceException e) {
+				  logger.warn(e.getMessage());
+				  throw e;	
+			  } catch (IOException e) {
+				  logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+				  throw new SequenceException(e);	
+			  }		  	
+		  }
+	};
+	
+	private final SeqWriter fastaWriter = new SeqWriter() {
+		void writeSequences(Integer geneID) throws SequenceException {
+			try {
+				  Hashtable geneatts = (Hashtable) geneiDs.get( geneID );
+				  SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
+				  String assemblyout = (String) geneatts.get(Assembly);
+				
+				  // cache the gene sequence
+				  dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+				
+				  for (Iterator tranIter = ( (TreeMap) geneatts.get(Transcripts) ).keySet().iterator(); tranIter.hasNext();) {
+					  Hashtable tranatts = (Hashtable) ( (TreeMap) geneatts.get(Transcripts) ).get(tranIter.next());
+					
+					  for (Iterator exonIter = ( (TreeMap) tranatts.get(Exons) ).keySet().iterator(); exonIter.hasNext();) {
+						  Hashtable exonatts = (Hashtable) ( (TreeMap) (tranatts.get(Exons) )).get(exonIter.next());
+						  SequenceLocation exonloc = (SequenceLocation) exonatts.get(Location);
+						
+						  // write the header, starting with the displayID
+						  osr.write(">"+(String) exonatts.get(DisplayID));
+					
+						  String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
+						  osr.write("\tstrand="+strandout+separator+"chr="+exonloc.getChr()+separator+"assembly="+assemblyout);
+						  osr.flush();
+					
+						  for (int j = 0, n = fields.size(); j < n; j++) {
+							  osr.write(separator);
+							  String field = (String) fields.get(j);
+							  if (exonatts.containsKey(field)) {
+								  List values = (ArrayList) exonatts.get(field);
+							
+								  if (values.size() > 1)
+									  osr.write(field+" in ");
+								  else
+									  osr.write(field+"=");
+							    
+								  for (int vi = 0; vi < values.size(); vi++) {
+									  if (vi > 0) osr.write(",");
+									  osr.write((String) values.get(vi));
+								  }
+							  }
+							  else
+								  osr.write(field+"= ");
+							  osr.flush();
+						  }
+					
+						  // write the description
+						  osr.write(separator+(String) exonatts.get(Description));
+						  osr.write("\n");
+						  osr.flush();
+					
+						  //extend flanking sequence if necessary
+						  int lflank = query.getSequenceDescription().getLeftFlank();
+						  int rflank = query.getSequenceDescription().getRightFlank();
+					
+						  if (lflank > 0)
+							 exonloc = exonloc.extendLeftFlank(lflank);
+						  if (rflank > 0)
+							 exonloc = exonloc.extendRightFlank(rflank);
+					
+						  // write out the sequence
+						  if (exonloc.getStrand() < 0)
+							  osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
+						  else
+							  osr.write( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
+						  osr.flush();
+						  osr.write("\n");
+						  osr.flush();
+					  }
+				  }			
+			} catch (SequenceException e) {
+				logger.warn(e.getMessage());
+				throw e;	
+			} catch (IOException e) {
+				logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+				throw new SequenceException(e);	
+			}		  	
+		}		  			
+	};	
 }
 

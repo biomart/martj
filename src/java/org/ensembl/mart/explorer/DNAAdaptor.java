@@ -57,38 +57,37 @@ public class DNAAdaptor {
 	public void CacheSequence(String species, String chr, int start, int end) throws SequenceException {
 		// if first time called, or required DNA is not from same big seg get a new big seg
 	    if( (sql == null) || (lastChr != chr) || (start < cachedSeqStart) || (start > cachedSeqEnd) || (end > cachedSeqEnd)) {
-	    	cachedSeq = "";
-			int tmp =  start - 1;
-			// exact coord of a chunk start
-			cachedSeqStart = tmp - (tmp % chunkSize) + 1;
+	    	cachedSeq = new StringBuffer();
+			  int tmp =  start - 1;
+			  // exact coord of a chunk start
+			  cachedSeqStart = tmp - (tmp % chunkSize) + 1;
 
-            try {
+        try {
 			    sql = "select sequence from "+species+"_sgp_chunks where chr_start between ? and ? and chr_name = ?";
 		 	    PreparedStatement ps = conn.prepareStatement( sql );
 			    ps.setInt(1, cachedSeqStart);
 			    ps.setInt(2, end);
 			    ps.setString(3, chr);
 
-				ResultSet rs = ps.executeQuery();
-				while ( rs.next() ) {
-				    int nColumns = rs.getMetaData().getColumnCount();
+				  ResultSet rs = ps.executeQuery();
+				  while ( rs.next() ) {
+				     int nColumns = rs.getMetaData().getColumnCount();
 				
-				    if (nColumns > 0) {
-				        for (int i = 1; i <= nColumns; ++i)
-				            cachedSeq = cachedSeq.concat(rs.getString(i));
-				    }
-				    else {
+				     if (nColumns > 0) {
+				       for (int i = 1; i <= nColumns; ++i)
+				         cachedSeq.append(rs.getString(i));
+				     }
+				      else {
 				        logger.error("No Sequence Returned for chromosome "+chr+"\n");
-				    }
-				}
+				      }
+				  }
 					
-				lastChr = chr;
-				cachedSeqEnd = cachedSeqStart + cachedSeq.length() - 1;
-            }
-            catch (SQLException e) {
+				  lastChr = chr;
+				  cachedSeqEnd = cachedSeqStart + cachedSeq.length() - 1;
+        } catch (SQLException e) {
             	throw new SequenceException("Could not cache Sequence for chromosome "+chr+" "+e.getMessage());
-            }
         }
+	    }
 	}
 	
 	/**
@@ -99,14 +98,15 @@ public class DNAAdaptor {
 	 * @return String sequence
 	 */
 	public String getSequence(String species, String chr, int start, int end) throws SequenceException{
-	    CacheSequence(species, chr, start, end); // may not do anything if cachedSeq is sufficient
+	  CacheSequence(species, chr, start, end); // may not do anything if cachedSeq is sufficient
 	    
 		int len = (end - start) + 1;
-		if (cachedSeq == null) {
+		if (cachedSeq.length() < 1) {
 			logger.warn("failed to get DNA for chr "+chr+"\n");
 			return Npad(len);
 		}
-	    // cut out the requested section from the big segment
+		
+	  // cut out the requested section from the big segment
 		int seqstart = start - cachedSeqStart;
 		int seqend = seqstart + len;
 		return cachedSeq.substring(seqstart,seqend);   
@@ -118,18 +118,18 @@ public class DNAAdaptor {
 	 * @return
 	 */
 	private String Npad(int length) {
-		String nseq = null;
+		StringBuffer nseq = new StringBuffer();
 		for (int i = 0; i < length; i++)
-		   nseq.concat("N");
+		   nseq.append("N");
 		   
-		 return nseq;
+		 return nseq.toString();
 	}
 
 	// variables to determine if we need to fetch more sequence for a given request
 	private String lastChr = null;
 	private int cachedSeqStart = 0;
 	private int cachedSeqEnd = 0;
-	private String cachedSeq = ""; // will cache a sequence after calls to CacheSequence for use by getSequence
+	private StringBuffer cachedSeq = new StringBuffer(); // will cache a sequence after calls to CacheSequence for use by getSequence
 	
 	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());	
     private Connection conn;

@@ -309,7 +309,7 @@ public final class TabulatedTFlankSeqQueryRunner implements QueryRunner {
 				throw e;
 			}
 	}
-	private Logger logger = Logger.getLogger(FastaCodingSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(CodingSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
 	private OutputStream os = null;

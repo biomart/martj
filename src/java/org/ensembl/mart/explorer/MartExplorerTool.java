@@ -533,12 +533,12 @@ public class MartExplorerTool {
 	  	     String tmpr = tokens.nextToken();
 	  	     
 	  	     if (SequenceDescription.SEQS.contains(tmpl)) {
-				 typecode = SequenceDescription.SEQS.indexOf(tmpl);
+				       typecode = SequenceDescription.SEQS.indexOf(tmpl);
 	  	         right = Integer.parseInt(tmpr);
 	  	     }
 	  	     else if (SequenceDescription.SEQS.contains(tmpr)) {
 	  	         left = Integer.parseInt(tmpl);
-				typecode = SequenceDescription.SEQS.indexOf(tmpr);
+				       typecode = SequenceDescription.SEQS.indexOf(tmpr);
 	  	     }
 	  	     else {
 	  	        throw new RuntimeException("Couldnt parse sequence request "+seqrequest );
@@ -546,7 +546,7 @@ public class MartExplorerTool {
 	  	     break;
 	  	 case 1:
 	  	     // type
-		     typecode = SequenceDescription.SEQS.indexOf(seqrequest);
+		       typecode = SequenceDescription.SEQS.indexOf(seqrequest);
 	  	     break;
 	  }
 	          

@@ -36,7 +36,10 @@ public class SequenceLocation {
 
 	public SequenceLocation(String chr, int start, int end, int strand) {
      	this.chr = chr;
-     	this.start = start;
+     	if (start > 1)
+     	  this.start = start;
+     else
+        this.start = 1; // sometimes client will ask for more sequence than is available, give as much as is available
      	this.end = end;
      	this.strand = strand;
      	
