@@ -34,9 +34,10 @@ public interface QueryRunner {
 	 * @param conn A JDBC Connection
 	 * @param os An OutputStream
 	 * @param limit An integer limit on the query (adds a limit by clause to the query)
+   * @param isSubQuery - SubQueryListFilterHandler passes true, everything else passes false
 	 * @throws SQLException
 	 * @throws IOException
 	 * @throws InvalidQueryException
 	 */
-	public void execute(int limit) throws SequenceException , InvalidQueryException;
+  public void execute(int limit, boolean isSubQuery) throws SequenceException , InvalidQueryException;
 }

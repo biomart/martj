@@ -134,39 +134,44 @@ public class Engine {
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit)
 		throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
-		//process any unprocessed filters
-		Hashtable needsHandler = new Hashtable();
-
-		Filter[] filters = query.getFilters();
-		for (int i = 0, n = filters.length; i < n; i++) {
-			Filter filter = filters[i];
-			if (filter.getHandler() != null) {
-				String handler = filter.getHandler();
-				if (!needsHandler.containsKey(handler))
-					needsHandler.put(handler, new ArrayList());
-
-				List unhandledFilters = (ArrayList) needsHandler.get(handler);
-				if (!unhandledFilters.contains(filter))
-					unhandledFilters.add(filter);
-				needsHandler.put(handler, unhandledFilters);
-			}
-		}
-
-		for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
-			String handler = (String) iter.next();
-			List unprocessedFilters = (ArrayList) needsHandler.get(handler);
-			UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
-			query = idhandler.ModifyQuery(this, unprocessedFilters, query);
-		}
-
-		logger.info(query.toString());
-		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, os);
-		qr.execute(limit);
+    execute(query, formatspec, os, limit, false);
 	}
 
+  public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit, boolean isSubQuery)
+    throws SequenceException, FormatException, InvalidQueryException, SQLException {
+
+    //process any unprocessed filters
+    Hashtable needsHandler = new Hashtable();
+
+    Filter[] filters = query.getFilters();
+    for (int i = 0, n = filters.length; i < n; i++) {
+      Filter filter = filters[i];
+      if (filter.getHandler() != null) {
+        String handler = filter.getHandler();
+        if (!needsHandler.containsKey(handler))
+          needsHandler.put(handler, new ArrayList());
+
+        List unhandledFilters = (ArrayList) needsHandler.get(handler);
+        if (!unhandledFilters.contains(filter))
+          unhandledFilters.add(filter);
+        needsHandler.put(handler, unhandledFilters);
+      }
+    }
+
+    for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+      String handler = (String) iter.next();
+      List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+      UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+      query = idhandler.ModifyQuery(this, unprocessedFilters, query);
+    }
+
+    logger.info(query.toString());
+    QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, os);
+    qr.execute(limit, isSubQuery);
+  }
 
 
-
+  
 	public String sql(Query query) {
 		throw new RuntimeException();
 	}

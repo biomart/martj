@@ -110,6 +110,54 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
    * @see org.ensembl.mart.lib.QueryRunner#execute(int)
    */
   public void execute(int limit) throws SequenceException, InvalidQueryException {
+    execute(limit, false);
+  }
+
+  protected ResultSet skipNewBatchRedundantRecords(ResultSet rs) throws SQLException {
+    if (lastID > -1) {
+      //If lastID > -1, we know that there are 1 or more rows to skip before beginning to process again
+      while ((resultSetRowsProcessed < lastIDRowsProcessed) && rs.next()) {
+        //skip through rows already processed for a the last id, incrementing only resultSetRowsprocessed
+        //This will only occur at the beginning of a new ResultSet batch
+
+        resultSetRowsProcessed++;
+      }
+    }
+
+    return rs;
+  }
+
+  /**
+   * This Method should first calculate the indices of the various fields that it requires,
+   * using the ResultSet Object ResultSetMetaData.  It should then iterate through each of the
+   * results in the ResultSet, processing them.  While processing, if it should encounter a new 
+   * keyID, it should write out the results from the lastID, and reset lastIDRowsProcessed to zero.
+   * It should end this loop by incrementing the totalRows, resultSetRowsProcessed and lastIDRowsProcessed
+   * integers, and setting the lastID to the current keyID.intValue.
+   * 
+   * @param conn
+   * @param rs
+   * @throws IOException
+   * @throws SQLException
+   */
+  protected abstract void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException;
+
+  protected void writeLastEntry(Connection conn) throws SequenceException {
+    // write the last transcripts data, if present
+    if (lastID > -1)
+      seqWriter.writeSequences(new Integer(lastID), conn);
+  }
+
+  protected abstract class SeqWriter {
+    abstract void writeSequences(Integer tranID, Connection conn) throws SequenceException;
+  }
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryRunner#execute(int, boolean)
+   */
+  public void execute(int limit, boolean isSubQuery) throws SequenceException, InvalidQueryException {
+     if (isSubQuery)
+       throw new SequenceException("SubQuerys cannot return sequences\n");
+     
     boolean moreRows = true;
     boolean userLimit = false;
 
@@ -201,45 +249,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
       throw new InvalidQueryException(e + " :" + sql);
     } finally {
       DetailedDataSource.close(conn);
-    }
+    }  
   }
 
-  protected ResultSet skipNewBatchRedundantRecords(ResultSet rs) throws SQLException {
-    if (lastID > -1) {
-      //If lastID > -1, we know that there are 1 or more rows to skip before beginning to process again
-      while ((resultSetRowsProcessed < lastIDRowsProcessed) && rs.next()) {
-        //skip through rows already processed for a the last id, incrementing only resultSetRowsprocessed
-        //This will only occur at the beginning of a new ResultSet batch
-
-        resultSetRowsProcessed++;
-      }
-    }
-
-    return rs;
-  }
-
-  /**
-   * This Method should first calculate the indices of the various fields that it requires,
-   * using the ResultSet Object ResultSetMetaData.  It should then iterate through each of the
-   * results in the ResultSet, processing them.  While processing, if it should encounter a new 
-   * keyID, it should write out the results from the lastID, and reset lastIDRowsProcessed to zero.
-   * It should end this loop by incrementing the totalRows, resultSetRowsProcessed and lastIDRowsProcessed
-   * integers, and setting the lastID to the current keyID.intValue.
-   * 
-   * @param conn
-   * @param rs
-   * @throws IOException
-   * @throws SQLException
-   */
-  protected abstract void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException;
-
-  protected void writeLastEntry(Connection conn) throws SequenceException {
-    // write the last transcripts data, if present
-    if (lastID > -1)
-      seqWriter.writeSequences(new Integer(lastID), conn);
-  }
-
-  protected abstract class SeqWriter {
-    abstract void writeSequences(Integer tranID, Connection conn) throws SequenceException;
-  }
 }

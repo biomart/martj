@@ -42,10 +42,16 @@ public final class AttributeQueryRunner implements QueryRunner {
   }
 
   public void execute(int hardLimit) throws SequenceException, InvalidQueryException {
+    execute(hardLimit, false);
+  }
+
+
+  public void execute(int hardLimit, boolean isSubQuery) throws SequenceException, InvalidQueryException {
     if (hardLimit > 0)
       hardLimit = Math.min(hardLimit, MAXTOTALROWS);
     else
-      hardLimit = MAXTOTALROWS;
+      if (!isSubQuery)
+       hardLimit = MAXTOTALROWS;
         
     Filter[] filters = query.getFilters();
 
@@ -66,7 +72,8 @@ public final class AttributeQueryRunner implements QueryRunner {
       }
     }
 
-    if (numBigLists > 0) {
+    if (numBigLists > 0) {      
+      boolean moreRows = true;
       String[] idBatch = new String[listSizeMax];
       int batchIter = 0;
 
@@ -83,6 +90,16 @@ public final class AttributeQueryRunner implements QueryRunner {
 
           executeQuery(newQuery, hardLimit);
 
+          if (isSubQuery) {
+//          get all ids for a subQuery
+            lastID = -1; // so nothing is skipped
+            moreRows = true;
+          } else {
+            //only execute batches until all are completed, or totalRows == hardLimit
+            lastID = -1; // so nothing is skipped
+            moreRows = totalRows < hardLimit;
+          }
+            
           idBatch = new String[listSizeMax];
           batchIter = 0;
         }
@@ -91,7 +108,7 @@ public final class AttributeQueryRunner implements QueryRunner {
       }
 
       //last batch is either empty, or less than idBatch.length
-      if (idBatch[0] != null) {
+      if (moreRows && idBatch[0] != null) {
         
         List lastBatch = new ArrayList();
         for (int i = 0, n = idBatch.length; i < n; i++) {
@@ -109,6 +126,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), lbatch);
         newQuery.addFilter(newFilter);
 
+        lastID = -1;
         executeQuery(newQuery, hardLimit);
       }
     } else {
@@ -119,7 +137,8 @@ public final class AttributeQueryRunner implements QueryRunner {
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
-
+    boolean moreRows = true;
+    
     Connection conn = null;
     String sql = null;
     try {
@@ -263,8 +282,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     }
   }
 
-  //batching
-  private boolean moreRows = true; 
+  //batching 
   private final int[] batchModifiers = { 2, 2 };
   private int modIter = 0; //start at 0 
   private int batchLimit = 50000;

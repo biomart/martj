@@ -47,7 +47,7 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			String results = null;
     
 			try {
-				engine.execute(subq, FormatSpec.TABSEPARATEDFORMAT, idstream);
+				engine.execute(subq, FormatSpec.TABSEPARATEDFORMAT, idstream, 0, true);
 
 				results = idstream.toString();
 				idstream.close();
@@ -67,7 +67,7 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			} finally {
         DetailedDataSource.close( conn );
 			}
-		
+		       
 			if (unversionedIds.length > 0)
 				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds));
 		}
