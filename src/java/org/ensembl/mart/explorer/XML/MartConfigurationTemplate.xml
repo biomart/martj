@@ -48,7 +48,7 @@
           <UIFilterDescription description="filter to include/exclude Sanger-Hver1-2-1 ID(s)" displayName="with Sanger-Hver1-2-1 ID(s)" fieldName="Sanger_Hver1_2_1" internalName="FGA_Sanger-Hver1-2-1_ID" tableConstraint="gene_main" type="boolean"/>
           <UIFilterDescription description="filter to include/exclude UMCU Hsapiens 19Kv1 ID(s)" displayName="with UMCU Hsapiens 19Kv1 ID(s)" fieldName="UMCU_Hsapiens_19Kv1" internalName="FGA_UMCU_Hsapiens_19Kv1_ID" tableConstraint="gene_main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list-text-file">
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" fieldName="display_id" internalName="FG_AFFY-HG-U133_ID" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" fieldName="display_id" internalName="FG_AFFY-HG-U95_ID" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of EMBL ID(s)" displayName="EMBL ID(s):" fieldName="display_id" internalName="FG_EMBL_ID" qualifier="in" tableConstraint="gene_xref_EMBL_dm" type="list"/>
@@ -68,6 +68,18 @@
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" fieldName="gene_stable_id" internalName="FG_ens_gene_ID" qualifier="in" tableConstraint="gene_main" type="list"/>
           <UIFilterDescription description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" displayName="Ensembl transcript ID(s)" fieldName="transcript_stable_id" internalName="FG_ens_transcript_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" fieldName="translation_stable_id" internalName="FG_ens_translation_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
+        </FilterCollection>
+      </FilterGroup>
+      <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="EXpression: NOTE Expression datasets are currently being prototyped. The current datasets have sparse coverage of genes and tissues." internalName="expression">
+        <FilterSet internalName="expression_type" type="radio">
+          <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="" internalName="EV_est" tableConstraintModifier="_expression_est_"/>
+          <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="" internalName="EV_gnf" tableConstraintModifier="_expression_gnf_"/>
+        </FilterSet>
+        <FilterCollection filterSetName="expression_type" internalName="ontology" type="text-entry">
+          <UIDSFilterDescription description="Filter for Genes Expressed in Certain Anatomical Sites." displayName="Anatomical Site:" filterSetReq="table" internalName="anatomical_site_term" objectCode="Expression" type="text-entry"/>
+          <UIDSFilterDescription description="Filter for Genes Expressed in Certain Developmental Stages." displayName="Development Stage:" filterSetReq="table" internalName="development_stage_term" objectCode="Expression" type="text"/>
+          <UIDSFilterDescription description="Filter For Genes Associated with Certain Pathologies." displayName="Pathology:" filterSetReq="table" internalName="pathology_term" objectCode="Expression" type="text"/>
+          <UIDSFilterDescription description="Filter For Genes Associated with Certain Cell Types." displayName="Cell Type:" filterSetReq="table" internalName="cell_type_term" objectCode="Expression" type="text"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="MultiSpecies">
@@ -423,7 +435,7 @@
           <UIFilterDescription description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" fieldName="RefSeq" internalName="FGA_RefSeq_ID" tableConstraint="gene_main" type="boolean"/>
           <UIFilterDescription description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="FGA_SWISSPROT_ID" tableConstraint="gene_main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list-text-file">
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" fieldName="display_id" internalName="FG_AFFY-HG-U133_ID" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" fieldName="display_id" internalName="FG_AFFY-HG-U95_ID" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of HUGO ID(s)" displayName="HUGO ID(s):" fieldName="display_id" internalName="FG_HUGO_ID" qualifier="in" tableConstraint="gene_xref_HUGO_dm" type="list"/>
@@ -651,10 +663,10 @@
         </FilterCollection>
       </FilterGroup>
       <FilterGroup displayName="GENERAL SNP FILTERS:" internalName="snpfilters">
-        <FilterCollection internalName="snpfilters" type="list">
+        <FilterCollection internalName="snpfilters" type="list-text-file">
           <UIFilterDescription description="SNP RefSNP ID" displayName="RefSNP ID(s):" fieldName="external_id" internalName="FS_RefSNP_ID" qualifier="in" tableConstraint="snp_main" type="list"/>
         </FilterCollection>
-        <FilterCollection internalName="idlimit" type="boolean">
+        <FilterCollection internalName="idlimit" type="boolean chooser">
           <UIFilterDescription description="Limit to SNPs having TSC IDs" displayName="SNPs with TSC IDs" fieldName="tscid" internalName="tscsnp_bool" tableConstraint="snp_main" type="boolean"/>
           <UIFilterDescription description="Limit to SNPs having HGBASE IDs" displayName="SNPs with HGBASE IDs" fieldName="hgbaseid" internalName="hgbasesnp_bool" tableConstraint="snp_main" type="boolean"/>
         </FilterCollection>
@@ -668,17 +680,17 @@
           <FilterSetDescription description="Filter for SNPs with Relationships to Vega Genes" displayName="Vega genes" fieldNameModifier="vega" internalName="vegagene" tableConstraintModifier="vegagene"/>
         </FilterSet>
         <FilterCollection displayName="Entries with gene associations" filterSetName="genetype" internalName="genetypefilters" type="radio">
-          <UIFilterDescription description="Snps associated with Coding Sequence" displayName="coding Only" fieldName="coding" filterSetReq="1" internalName="coding" tableConstraint="snp_main" type="boolean"/>
-          <UIFilterDescription description="Snps associated with  Intronic Sequence" displayName="Intronic only" fieldName="intronic" filterSetReq="1" internalName="intronic" tableConstraint="snp_main" type="boolean"/>
-          <UIFilterDescription description="Snps associated with  5&quot; Sequence" displayName="5&quot; UTR only" fieldName="5utr" filterSetReq="1" internalName="5utr" tableConstraint="snp_main" type="boolean"/>
-          <UIFilterDescription description="Snps associated with 3&quot; UTR Sequence" displayName="3&quot; UTR Only" fieldName="3utr" filterSetReq="1" internalName="3utr" tableConstraint="snp_main" type="boolean"/>
-          <UIFilterDescription description="Snps associated with 5&quot; Upstream Sequence" displayName="5&quot; Upstream Only" fieldName="5upstream" filterSetReq="1" internalName="5upstream" tableConstraint="snp_main" type="boolean"/>
-          <UIFilterDescription description="Snps associated with 3&quot; Downstream Sequence" displayName="3&quot; Downstream Only" fieldName="3downstream" filterSetReq="1" internalName="3downstream" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with Coding Sequence" displayName="coding Only" fieldName="coding" filterSetReq="field" internalName="coding" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with  Intronic Sequence" displayName="Intronic only" fieldName="intronic" filterSetReq="field" internalName="intronic" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with  5&quot; Sequence" displayName="5&quot; UTR only" fieldName="5utr" filterSetReq="field" internalName="5utr" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with 3&quot; UTR Sequence" displayName="3&quot; UTR Only" fieldName="3utr" filterSetReq="field" internalName="3utr" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with 5&quot; Upstream Sequence" displayName="5&quot; Upstream Only" fieldName="5upstream" filterSetReq="field" internalName="5upstream" tableConstraint="snp_main" type="boolean"/>
+          <UIFilterDescription description="Snps associated with 3&quot; Downstream Sequence" displayName="3&quot; Downstream Only" fieldName="3downstream" filterSetReq="field" internalName="3downstream" tableConstraint="snp_main" type="boolean"/>
         </FilterCollection>
         <FilterCollection internalName="snpeffect" type="boolean">
-          <UIFilterDescription description="Filter only Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" filterSetReq="2" internalName="synsnp" tableConstraint="_dm" type="boolean_num"/>
-          <UIFilterDescription description="Filter only Non-synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" filterSetReq="2" internalName="nonsynsnp" tableConstraint="_dm" type="boolean_num"/>
-          <UIFilterDescription description="Filter only for Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" filterSetReq="2" internalName="stopsnp" tableConstraint="_dm" type="boolean_num"/>
+          <UIFilterDescription description="Filter only Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" filterSetReq="table" internalName="synsnp" tableConstraint="_dm" type="boolean_num"/>
+          <UIFilterDescription description="Filter only Non-synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" filterSetReq="table" internalName="nonsynsnp" tableConstraint="_dm" type="boolean_num"/>
+          <UIFilterDescription description="Filter only for Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" filterSetReq="table" internalName="stopsnp" tableConstraint="_dm" type="boolean_num"/>
         </FilterCollection>
       </FilterGroup>
     </FilterPage>
@@ -834,7 +846,7 @@
           <UIFilterDescription description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="FGA_SWISSPROT_ID" tableConstraint="gene_main" type="boolean"/>
           <UIFilterDescription description="filter to include/exclude Sanger-Mver1-1-1 ID(s)" displayName="with Sanger-Mver1-1-1 ID(s)" fieldName="Sanger_Mver1_1_1" internalName="FGA_Sanger-Mver1-1-1_ID" tableConstraint="gene_main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list-text-file">
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-MG-U74 ID(s)" displayName="FG_AFFY-MG-U74 ID(s)" fieldName="display_id" internalName="FG_AFFY-MG-U74_ID" qualifier="in" tableConstraint="gene_xref_AFFY_MG-U74_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-MG-U74v2 ID(s)" displayName="FG_AFFY-MG-U74v2 ID(s)" fieldName="display_id" internalName="FG_AFFY-MG-U74v2_ID" qualifier="in" tableConstraint="gene_xref_AFFY_MG-U74v2_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of AFFY-MOE430 ID(s)" displayName="FG_AFFY-MOE430 ID(s)" fieldName="display_id" internalName="FG_AFFY-MOE430_ID" qualifier="in" tableConstraint="gene_xref_AFFY_MOE430_dm" type="list"/>
