@@ -40,6 +40,9 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class DatasourceWidget extends InputPage {
 
+  private static int MAX_CONNECTION_POOL_SIZE = 10;
+
+
   private MartSettings martManager;
   private JTextField martName = new JTextField(30);
   private String none = "None";
@@ -102,7 +105,7 @@ public class DatasourceWidget extends InputPage {
     logger.setLevel(Level.FINEST);
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
-    MartSettings mm = QueryEditor.testMartManager();
+    MartSettings mm = QueryEditor.testDatasetViewSettings().getMartSettings();
     Query q = new Query();
     DatasourceWidget dw = new DatasourceWidget(q, mm);
 
@@ -141,5 +144,6 @@ public class DatasourceWidget extends InputPage {
       martName.setText(datasource.toString());
 
   }
+
 
 }

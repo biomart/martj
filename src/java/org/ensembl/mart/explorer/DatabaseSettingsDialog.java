@@ -37,7 +37,9 @@ import javax.swing.JPasswordField;
 public class DatabaseSettingsDialog extends Box {
 
 	
+	
 	private Preferences preferences;
+ 
 	
   private LabelledComboBox databaseType;
   private LabelledComboBox driver;
@@ -155,6 +157,8 @@ public class DatabaseSettingsDialog extends Box {
 		return true;
 
 	}
+
+
 
 	/**
 	 * 

@@ -61,12 +61,26 @@ public class Feedback {
 	/**
 	 * Displays message plus exception.messge in warning dialog box 
 	 * and prints stack trace to console.
-	 * @param e exception
+   * @param message message to display
+   * @param e exception
 	 */
 	public void warn(String message, Exception e) {
-			warn(message + ":" + e.getMessage());
-			e.printStackTrace();
+      warn( message, e, true);
 		}
+
+
+  /**
+   * Prints stacktrace and warning message to screen.
+   * @param message message to display
+   * @param e exception
+   * @param includeExceptionInWarning whether e.getMessage() should be displayed in warning dialog.
+   */
+  public void warn(String message, Exception e, boolean includeExceptionInWarning) {
+    e.printStackTrace();
+    if ( includeExceptionInWarning ) message = message  + ":" + e.getMessage(); 
+    warn(message);
+    
+  }
 
 		/**
 		 * Displays warning dialog and prints stack trace to console.
@@ -81,4 +95,7 @@ public class Feedback {
       Feedback f = new Feedback(null);
       f.warn("A very long test message that goes on and on. It should have been reformated for better display. If not the code needs fixing!");
     }
+
+
+
 }

@@ -67,7 +67,6 @@ public class MartExplorer extends JFrame {
 	// TODO clone query
 	// TODO load registry file
 
-	private MartSettings martManager = new MartSettings();
 	private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
@@ -280,7 +279,7 @@ public class MartExplorer extends JFrame {
 	 */
 	protected void doDatasourceSettings() {
 
-		martManager.showDialog(this);
+		datasetViewSettings.getMartSettings().showDialog(this);
 	}
 
 	/**
@@ -301,7 +300,7 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(null, martManager, datasetViewSettings);
+			qe = new QueryEditor(null, datasetViewSettings);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -333,7 +332,7 @@ public class MartExplorer extends JFrame {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(null, martManager, datasetViewSettings);
+				qe = new QueryEditor(null, datasetViewSettings);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 

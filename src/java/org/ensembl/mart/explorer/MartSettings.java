@@ -38,17 +38,17 @@ import javax.swing.JOptionPane;
 
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 
 /**
- * Widget for selecting, adding and removing Marts.
- * Database addition dialog uses the preferences for this user in this package.XS
- * <p>Normal usage: martManager.showDialog(component), martManager.getSelected() 
- * </p>
- * <p></p>
+ * Widget for storing, selecting, adding and removing Marts.
+ * Database addition dialog uses the preferences for this user in this package.
  */
 public class MartSettings extends Box {
 
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
+  private DatasetViewSettings datasetViewSettings = null;
 
   private final static Logger logger =
     Logger.getLogger(MartSettings.class.getName());
@@ -60,9 +60,15 @@ public class MartSettings extends Box {
   private String selected = none;
   private Feedback feedback = new Feedback(this);
 
-  public MartSettings() {
+  /**
+   * Constructor is deliberably onoly available to package memebers. 
+   * @param datasetViewSettings
+   */
+  MartSettings(DatasetViewSettings datasetViewSettings) {
 
     super(BoxLayout.Y_AXIS);
+
+    this.datasetViewSettings = datasetViewSettings;
 
     databaseDialog.addDatabaseType("mysql");
     databaseDialog.addDriver("com.mysql.jdbc.Driver");
@@ -121,6 +127,17 @@ public class MartSettings extends Box {
             databaseDialog.getPassword(),
             10,
             databaseDialog.getDriver());
+
+        
+        try {
+					DSViewAdaptor a = new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
+					// TODO bind a and ds so that can recreate the link after persistence
+					datasetViewSettings.add( a );
+				} catch (ConfigurationException e1) {
+          feedback.warn("Couldn not load DatasetViews from \"" 
+            + ds
+            + "\". It might be possible to execute queries against this database.",e1, false);
+				}
 
         add(ds);
         selected = ds.toString();
@@ -277,7 +294,8 @@ public class MartSettings extends Box {
    */
   public static void main(String[] args) throws Throwable {
 
-    MartSettings mm = new MartSettings();
+    DatasetViewSettings dsvs = new DatasetViewSettings();
+    MartSettings mm = dsvs.getMartSettings();
 
     // load some test values and check that the
     // manager works. 
@@ -317,5 +335,6 @@ public class MartSettings extends Box {
     }
 
   }
+
 
 }

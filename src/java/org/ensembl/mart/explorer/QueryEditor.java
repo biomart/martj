@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -248,7 +247,6 @@ public class QueryEditor extends JPanel {
    */
   public QueryEditor(
     DSViewAdaptor datasetViewAdaptor,
-    MartSettings martManager,
     DatasetViewSettings datasetViewSettings)
     throws IOException {
 
@@ -263,7 +261,6 @@ public class QueryEditor extends JPanel {
         query,
         datasetViewAdaptor,
         treeView,
-        martManager,
         datasetViewSettings);
 
     outputPanel = new JEditorPane();
@@ -534,25 +531,6 @@ public class QueryEditor extends JPanel {
     return dss;
   }
 
-  /**
-   * @return MartManager with some preloaded datasources.
-   */
-  public static MartSettings testMartManager() {
-    MartSettings mm = new MartSettings();
-
-    List dss;
-    try {
-      dss = testDatasources();
-      for (Iterator iter = dss.iterator(); iter.hasNext();)
-        mm.add((DataSource) iter.next());
-
-    } catch (ConfigurationException e) {
-      e.printStackTrace();
-    }
-
-    return mm;
-  }
-
   public static void main(String[] args) throws Exception {
 
     // enable logging messages
@@ -562,9 +540,8 @@ public class QueryEditor extends JPanel {
     DatasetView[] views = null;
 
     DSViewAdaptor a = testDSViewAdaptor();
-    MartSettings mm = testMartManager();
     DatasetViewSettings dvs = testDatasetViewSettings();
-    final QueryEditor editor = new QueryEditor(a, mm, dvs);
+    final QueryEditor editor = new QueryEditor(a,dvs);
     editor.setName("test_query");
 
     JFrame f = new JFrame("Query Editor (Test Frame)");

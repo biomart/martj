@@ -103,6 +103,7 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  */
 public class DatasetViewSettings extends Box {
 
+	private MartSettings martSettings = new MartSettings(this);
 	private Logger logger = Logger.getLogger(DatasetViewSettings.class.getName());
 	private Feedback feedback = new Feedback(this);
 	// Used to find and remove separators in datasetView.displayNames
@@ -640,6 +641,17 @@ public class DatasetViewSettings extends Box {
 	public DSViewAdaptor getAdaptor() {
 		return adaptor;
 
+	}
+
+
+
+	/**
+   * MartManager handles the management of marts such as adding and removing
+   * datasources.
+	 * @return
+	 */
+	public MartSettings getMartSettings() {
+		return martSettings;
 	}
 
 }

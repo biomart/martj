@@ -50,7 +50,6 @@ public class InputPageContainer
     Query query,
     DSViewAdaptor datasetViewAdaptor,
     QueryTreeView tree,
-    MartSettings martManager,
     DatasetViewSettings datasetViewSettings) {
 
     super();
@@ -62,7 +61,7 @@ public class InputPageContainer
       new DatasetViewWidget(query, datasetViewSettings),
       TreeNodeData.DATASET_VIEW.getLabel());
     add(
-      new DatasourceWidget(query, martManager),
+      new DatasourceWidget(query, datasetViewSettings.getMartSettings()),
       TreeNodeData.DATASOURCE.getLabel());
     add(
       new DatasetWidget(query),
