@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
  * connections, and executes Querys.
@@ -84,38 +82,34 @@ public class Engine {
     if (query.getAttributes().length > 0)
       query.removeAllAttributes();
 
-    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
-      pstream.print("0\n");
-    } else {
-      //process any unprocessed filters
-      Hashtable needsHandler = new Hashtable();
+    //process any unprocessed filters
+    Hashtable needsHandler = new Hashtable();
 
-      Filter[] filters = query.getFilters();
-      for (int i = 0, n = filters.length; i < n; i++) {
-        Filter filter = filters[i];
-        if (filter.getHandler() != null) {
-          String handler = filter.getHandler();
-          if (!needsHandler.containsKey(handler))
-            needsHandler.put(handler, new ArrayList());
+    Filter[] filters = query.getFilters();
+    for (int i = 0, n = filters.length; i < n; i++) {
+      Filter filter = filters[i];
+      if (filter.getHandler() != null) {
+        String handler = filter.getHandler();
+        if (!needsHandler.containsKey(handler))
+          needsHandler.put(handler, new ArrayList());
 
-          List unhandledFilters = (ArrayList) needsHandler.get(handler);
-          if (!unhandledFilters.contains(filter))
-            unhandledFilters.add(filter);
-          needsHandler.put(handler, unhandledFilters);
-        }
+        List unhandledFilters = (ArrayList) needsHandler.get(handler);
+        if (!unhandledFilters.contains(filter))
+          unhandledFilters.add(filter);
+        needsHandler.put(handler, unhandledFilters);
       }
-
-      for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
-        String handler = (String) iter.next();
-        List unprocessedFilters = (ArrayList) needsHandler.get(handler);
-        UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
-        query = idhandler.ModifyQuery(this, unprocessedFilters, query);
-      }
-
-      CompiledSQLQuery csql = new CompiledSQLQuery(query);
-      String fcountSQL = csql.toFocusCountSQL();
-      writeSQLResults(pstream, query.getDataSource(), fcountSQL);
     }
+
+    for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+      String handler = (String) iter.next();
+      List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+      UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+      query = idhandler.ModifyQuery(this, unprocessedFilters, query);
+    }
+
+    CompiledSQLQuery csql = new CompiledSQLQuery(query);
+    String fcountSQL = csql.toFocusCountSQL();
+    writeSQLResults(pstream, query, fcountSQL);
   }
 
   public void countRows(OutputStream os, Query oquery) throws InvalidQueryException, SQLException {
@@ -123,42 +117,38 @@ public class Engine {
     //ensure that we are using a copy of the Query
     Query query = new Query(oquery);
 
-    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
-      pstream.print("0\n");
-      return;
-    } else {
-      //process any unprocessed filters
-      Hashtable needsHandler = new Hashtable();
+    //process any unprocessed filters
+    Hashtable needsHandler = new Hashtable();
 
-      Filter[] filters = query.getFilters();
-      for (int i = 0, n = filters.length; i < n; i++) {
-        Filter filter = filters[i];
-        if (filter.getHandler() != null) {
-          String handler = filter.getHandler();
-          if (!needsHandler.containsKey(handler))
-            needsHandler.put(handler, new ArrayList());
+    Filter[] filters = query.getFilters();
+    for (int i = 0, n = filters.length; i < n; i++) {
+      Filter filter = filters[i];
+      if (filter.getHandler() != null) {
+        String handler = filter.getHandler();
+        if (!needsHandler.containsKey(handler))
+          needsHandler.put(handler, new ArrayList());
 
-          List unhandledFilters = (ArrayList) needsHandler.get(handler);
-          if (!unhandledFilters.contains(filter))
-            unhandledFilters.add(filter);
-          needsHandler.put(handler, unhandledFilters);
-        }
+        List unhandledFilters = (ArrayList) needsHandler.get(handler);
+        if (!unhandledFilters.contains(filter))
+          unhandledFilters.add(filter);
+        needsHandler.put(handler, unhandledFilters);
       }
-
-      for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
-        String handler = (String) iter.next();
-        List unprocessedFilters = (ArrayList) needsHandler.get(handler);
-        UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
-        query = idhandler.ModifyQuery(this, unprocessedFilters, query);
-      }
-
-      CompiledSQLQuery csql = new CompiledSQLQuery(query);
-      String rcountSQL = csql.toRowCountSQL();
-      writeSQLResults(pstream, query.getDataSource(), rcountSQL);
     }
+
+    for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+      String handler = (String) iter.next();
+      List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+      UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+      query = idhandler.ModifyQuery(this, unprocessedFilters, query);
+    }
+
+    CompiledSQLQuery csql = new CompiledSQLQuery(query);
+    String rcountSQL = csql.toRowCountSQL();
+    writeSQLResults(pstream, query, rcountSQL);
   }
 
-  private void writeSQLResults(PrintStream pstream, DataSource dsource, String sql) throws InvalidQueryException {
+  private void writeSQLResults(PrintStream pstream, Query query, String sql) throws InvalidQueryException {
+    DetailedDataSource dsource = query.getDataSource();
     if (dsource == null)
       throw new InvalidQueryException("Query must have a DataSource to execute against\n");
 
@@ -166,6 +156,17 @@ public class Engine {
     try {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
+
+      int p = 1;
+      for (int i = 0, n = query.getFilters().length; i < n; ++i) {
+        Filter f = query.getFilters()[i];
+        String value = f.getValue();
+        if (value != null) {
+          logger.info("SQL (prepared statement value) : " + p + " = " + value);
+          ps.setString(p++, value);
+        }
+      }
+
       ResultSet rs = ps.executeQuery();
 
       if (rs.next())

@@ -190,55 +190,67 @@ public class CompiledSQLQuery {
   }
 
   private void compileFocusCountSQL() throws InvalidQueryException {
-    boolean success = false;
     StringBuffer buf = new StringBuffer();
-    mainTable = null;
+    
+    if (query.getFilters().length < 1) {
+      buf.append(SELECT).append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(FROM).append(" ").append(query.getMainTables()[0]);
+      fcountSQL = buf.toString();
+    } else {
+      boolean success = false;
 
-    success = fromClause(buf);
+      mainTable = null;
 
-    if (success) {
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("from clause:" + buf.toString());
+      success = fromClause(buf);
 
-      success = whereClause(buf);
+      if (success) {
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("from clause:" + buf.toString());
+
+        success = whereClause(buf);
+      }
+
+      if (success && logger.isLoggable(Level.FINE))
+        logger.fine("from + where clauses:" + buf.toString());
+
+      if (!success)
+        throw new InvalidQueryException("Failed to compile query :" + query);
+        
+      StringBuffer sbuf = new StringBuffer(SELECT);
+      sbuf.append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(buf);
+      fcountSQL = sbuf.toString();
     }
-
-    if (success && logger.isLoggable(Level.FINE))
-      logger.fine("from + where clauses:" + buf.toString());
-
-    //}
-    if (!success)
-      throw new InvalidQueryException("Failed to compile query :" + query);
-
-    StringBuffer sbuf = new StringBuffer(SELECT);
-    sbuf.append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(buf);
-    fcountSQL = sbuf.toString();
 
     if (logger.isLoggable(Level.INFO))
       logger.info("fcountSQL: " + fcountSQL + "\n");
   }
 
   private void compileRowCountSQL() throws InvalidQueryException {
-    boolean success = false;
     StringBuffer buf = new StringBuffer(SELECT);
     buf.append(" count(*)");
-    mainTable = null;
+    
+    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
+      buf.append(FROM).append(" ").append(query.getMainTables()[0]);
+    } else {
+      boolean success = false;
+    
+      mainTable = null;
 
-    success = fromClause(buf);
+      success = fromClause(buf);
 
-    if (success) {
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("from clause:" + buf.toString());
+      if (success) {
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("from clause:" + buf.toString());
 
-      success = whereClause(buf);
+        success = whereClause(buf);
+      }
+
+      if (success && logger.isLoggable(Level.FINE))
+        logger.fine("from + where clauses:" + buf.toString());
+
+      //}
+      if (!success)
+        throw new InvalidQueryException("Failed to compile query :" + query);
     }
-
-    if (success && logger.isLoggable(Level.FINE))
-      logger.fine("from + where clauses:" + buf.toString());
-
-    //}
-    if (!success)
-      throw new InvalidQueryException("Failed to compile query :" + query);
 
     rcountSQL = buf.toString();
 
