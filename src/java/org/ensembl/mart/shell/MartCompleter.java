@@ -41,11 +41,8 @@ import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.FilterSet;
-import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.MapFilterDescription;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
@@ -91,13 +88,15 @@ public class MartCompleter implements ReadlineCompleter {
 	private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
 	private Map setMapper = new HashMap(); // will hold special sets, with String keys
 
-	private SortedSet getSet = new TreeSet(); // will hold user supplied values to add to attribte names during completion
+	private SortedSet getSet = new TreeSet();
+	// will hold user supplied values to add to attribte names during completion
 	private SortedSet sequenceSet = new TreeSet(); // will hold sequences
 	private SortedSet datasetSet = new TreeSet(); // will hold datasets
 	private SortedSet whereSet = new TreeSet(); // will hold filters 
 	private SortedSet helpSet = new TreeSet(); // will hold help keys available
 
-	private final List NODATASETWARNING = Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
+	private final List NODATASETWARNING =
+		Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
 
 	//describe Mode variables
 	private Pattern describeStart = Pattern.compile("^describe\\s\\w*$");
@@ -105,10 +104,14 @@ public class MartCompleter implements ReadlineCompleter {
 	private Pattern describePage = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s\\w*$");
 	private Pattern describeGroupStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
 	private Pattern describeGroup = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeCollectionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeCollection = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeDescriptionStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeDescription = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeCollectionStart =
+		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeCollection =
+		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeDescriptionStart =
+		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private Pattern describeDescription =
+		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
 
 	//Query Mode Patterns
 	private Pattern qModeStartPattern = Pattern.compile("^using\\s$");
@@ -121,8 +124,19 @@ public class MartCompleter implements ReadlineCompleter {
 	private final String DATASETS = "datasets";
 
 	private Dataset envDataset = null;
-	private Dataset lastLocalDataset = null;
-	private List LocalDatasetStack = new ArrayList();
+	private Dataset currentDataset = null;
+	private boolean usingLocalDataset = false;
+
+	private List currentApages = new ArrayList();
+	private List currentFpages = new ArrayList();
+	private String lastFilterName = null;
+	private String lastAttributeName = null;
+
+	private boolean attributeMode = false;
+	private boolean whereMode = false;
+	private boolean whereNamesMode = false;
+	private boolean whereQualifiersMode = false;
+	private boolean whereValuesMode = false;
 
 	//listlevel characters
 	public int listLevel = 0;
@@ -186,80 +200,194 @@ public class MartCompleter implements ReadlineCompleter {
 		if (lastLine == null || !(lastLine.equals(currentCommand))) {
 			if (currentCommand.indexOf(DESCRIBE) >= 0)
 				SetDescribeMode();
-			if (currentCommand.indexOf(HELP) >= 0)
+			else if (currentCommand.indexOf(HELP) >= 0)
 				SetHelpMode();
-			if (currentCommand.indexOf(USE) >= 0)
+			else if (currentCommand.indexOf(USE) >= 0)
 				SetDatasetMode();
+			else {
+				int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
 
-			int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
-			int len = MartShellLib.USINGQSTART.length();
-
-			if (usingInd >= 0) {
-				//try pushing any local datasets available
-				int index = currentCommand.indexOf(MartShellLib.USINGQSTART);
-
-				while (index >= 0) {
-					String testString = currentCommand.substring(index);
+				if (usingInd >= 0) {
+					usingLocalDataset = true;
+					//set currentDataset
+					String testString = currentCommand.substring(usingInd);
 
 					Matcher qModeMatcher = qModePattern.matcher(testString);
 					if (qModeMatcher.matches()) {
 						String datasetName = qModeMatcher.group(1);
-						pushLocalDataset(datasetName);
-					}
 
-					index = currentCommand.substring(index + len).indexOf(MartShellLib.USINGQSTART);
-				}
-			}
-
-			if (lastLine == null) {
-				checkListChars(currentCommand);
-			} else {
-				if (!currentCommand.equals(lastLine)) {
-          if (currentCommand.startsWith(lastLine)) {
-						String newBits = currentCommand.substring(lastLine.length());
-						checkListChars(newBits);
-					} else {
-            checkListChars(currentCommand);
+						if (martconf.containsDataset(datasetName))
+							currentDataset = martconf.getDatasetByName(datasetName);
+						else
+							currentDataset = null; // if not contained, no dataset should be set
 					}
 				}
+
+				String[] lineWords = currentCommand.split(" "); // split on single space
+
+				// determine which mode to be in during a query
+				int getInd = currentCommand.lastIndexOf(MartShellLib.GETQSTART);
+				int seqInd = currentCommand.lastIndexOf(MartShellLib.QSEQUENCE);
+				int whereInd = currentCommand.lastIndexOf(MartShellLib.QWHERE);
+				int limitInd = currentCommand.lastIndexOf(MartShellLib.QLIMIT);
+
+				if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd) && (usingInd > limitInd))
+					SetDatasetMode();
+
+				if ((seqInd > usingInd) && (seqInd > getInd) && (seqInd > whereInd) && (seqInd > limitInd))
+					SetSequenceMode();
+
+				if ((getInd > usingInd) && (getInd > seqInd) && (getInd > whereInd) && (getInd > limitInd))
+					attributeMode = true;
+
+				if ((whereInd > usingInd) && (whereInd > seqInd) && (whereInd > getInd) && (whereInd > limitInd)) {
+					attributeMode = false;
+					whereMode = true;
+				}
+
+				if ((limitInd > usingInd) && (limitInd > getInd) && (limitInd > seqInd) && (limitInd > whereInd)) {
+					attributeMode = false;
+					whereMode = false;
+					SetEmptyMode();
+				}
+
+				// if none of the key placeholders are present, may still need to further refine the mode
+				if (attributeMode) {
+					if (lineWords.length > 0) {
+
+						String lastWord = lineWords[lineWords.length - 1];
+
+						if (!(lastWord.equals(MartShellLib.GETQSTART))) {
+							if (lastWord.endsWith(",")) {
+								lastAttributeName = lastWord.substring(0, lastWord.length() - 1);
+								pruneAttributePages();
+							}
+						}
+
+						SetAttributeNames();
+					}
+				}
+
+				if (whereMode) {
+					if (! (whereNamesMode || whereQualifiersMode || whereValuesMode) ) {
+						//first time in
+						whereNamesMode = true;
+						whereQualifiersMode = false;
+						whereValuesMode = true;
+						SetWhereNames();
+					}
+					
+					if (lineWords.length > 0) {
+						String lastWord = lineWords[lineWords.length - 1];
+
+            if (lastWord.equals(MartShellLib.QWHERE)) {
+            	lastFilterName = null;
+							whereNamesMode = true;
+							whereQualifiersMode = false;
+							whereValuesMode = true;
+							SetWhereNames();
+            }
+            
+						if (whereNamesMode) {
+							
+							logger.info("Still in whereNamesMode\n");
+							
+							if (currentDataset != null) {
+								if (currentDataset.containsFilterDescription(lastWord)) {																		
+									String thisField = currentDataset.getFilterDescriptionByInternalName(lastWord).getField(lastWord);
+
+									if (thisField != null && thisField.length() > 0) {
+										lastFilterName = lastWord;
+										pruneFilterPages();
+
+                    logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
+
+										whereNamesMode = false;
+										whereQualifiersMode = true;
+										whereValuesMode = false;
+										SetWhereQualifiers();
+									}
+								}
+							} else if (!usingLocalDataset && envDataset != null) {
+								if (envDataset.containsFilterDescription(lastWord)) {
+									
+									logger.info(lastWord + " is part of dataset, but is it a real filter?\n");
+									
+									FilterDescription thisFilter = envDataset.getFilterDescriptionByInternalName(lastWord);
+									String thisField = thisFilter.getField(lastWord);
+
+                  logger.info("Filter " + thisFilter.getInternalName() + " returned for " + lastWord + " has field " + thisField + "\n");
+                  
+									if (thisField != null && thisField.length() > 0) {
+										lastFilterName = lastWord;
+										pruneFilterPages();
+
+										logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
+										
+										whereNamesMode = false;
+										whereQualifiersMode = true;
+										whereValuesMode = false;
+										SetWhereQualifiers();
+									}
+								}
+							} else
+								SetNoDatasetMode();
+						} else if (whereQualifiersMode) {
+							
+							logger.info("Still in whereQualifiersMode\n");
+							
+							if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
+								
+								logger.info(lastWord + " appears to be a qualifier");
+								
+								if (lineWords.length > 1) {
+									lastFilterName = lineWords[lineWords.length - 2];
+									pruneFilterPages();
+								}
+
+								if (MartShellLib.BOOLEANQUALIFIERS.contains(lastWord)) {
+									
+									logger.info(" staying in whereQualifiers Mode after boolean qualifier\n");
+									
+									SetEmptyMode();
+								} else {
+									
+									logger.info(" going to whereValuesMode\n");
+									
+									whereQualifiersMode = false;
+									whereValuesMode = true;
+									SetWhereValues();
+								}
+							} else if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
+								whereNamesMode = true;
+								whereQualifiersMode = false;
+								whereValuesMode = false;
+
+                logger.info("and encountered after boolean qualifier, going to whereNamesMode\n");
+                
+								pruneFilterPages();
+								SetWhereNames();
+							}
+						} else if (whereValuesMode) {
+							
+							logger.info("Still in whereValuesMode\n");
+							
+							if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
+								whereNamesMode = true;
+								whereQualifiersMode = false;
+								whereValuesMode = false;
+
+                logger.info("and encountered after value, going to whereNamesMode\n");
+                
+								pruneFilterPages();
+								SetWhereNames();
+							}
+						}
+					}
+				}
 			}
-
-			// determine which mode to be in during a query
-			int getInd = currentCommand.lastIndexOf(MartShellLib.GETQSTART);
-			int seqInd = currentCommand.lastIndexOf(MartShellLib.QSEQUENCE);
-			int whereInd = currentCommand.lastIndexOf(MartShellLib.QWHERE);
-
-			if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd))
-				SetDatasetMode();
-			if ((seqInd > usingInd) && (seqInd > getInd) && (seqInd > whereInd))
-				SetSequenceMode();
-			if ((getInd > usingInd) && (getInd > seqInd) && (getInd > whereInd))
-				SetGetMode();
-			if ((whereInd > usingInd) && (whereInd > seqInd) && (whereInd > getInd))
-				SetWhereMode();
 
 			lastLine = currentCommand;
-		}
-	}
-
-	private void checkListChars(String currentCommand) {
-		//test for listLevel characters, and popLocalDataset if needed
-		if (currentCommand.indexOf(MartShellLib.LISTSTARTCHR) >= 0) {
-			for (int i = currentCommand.indexOf(MartShellLib.LISTSTARTCHR), n = currentCommand.length(); i < n; i++) {
-				if (currentCommand.charAt(i) == MartShellLib.LISTSTARTCHR)
-					listLevel++;
-			}
-		}
-
-		if (currentCommand.indexOf(MartShellLib.LISTENDCHR) >= 0) {
-			for (int i = currentCommand.indexOf(MartShellLib.LISTENDCHR), n = currentCommand.length(); i < n; i++) {
-				if (currentCommand.charAt(i) == MartShellLib.LISTENDCHR)
-					listLevel--;
-
-				while (LocalDatasetStack.size() > listLevel)
-					popLocalDataset();
-			}
-      SetWhereMode();
 		}
 	}
 
@@ -272,36 +400,6 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void setEnvDataset(String datasetName) {
 		envDataset = martconf.getDatasetByName(datasetName); // might return null, but that is ok
-	}
-
-	/**
-	 * Pushes a localDataset onto the stack.
-	 * @param datasetName - String name of the requested dataset
-	 */
-	public void pushLocalDataset(String datasetName) {
-		if (lastLocalDataset != null) {
-			if (!lastLocalDataset.getInternalName().equals(datasetName)) {
-				if (martconf.containsDataset(datasetName)) {
-					LocalDatasetStack.add(lastLocalDataset);
-					lastLocalDataset = martconf.getDatasetByName(datasetName);
-				}
-			}
-		} else {
-			if (martconf.containsDataset(datasetName)) {
-				lastLocalDataset = martconf.getDatasetByName(datasetName);
-			}
-		}
-	}
-
-	/**
-	 * Removes the first localDataset from the stack.
-	 */
-	public void popLocalDataset() {
-		if (LocalDatasetStack.size() > 0) {
-			lastLocalDataset = (Dataset) LocalDatasetStack.remove(0);
-		} else {
-			lastLocalDataset = null;
-		}
 	}
 
 	/**
@@ -348,12 +446,8 @@ public class MartCompleter implements ReadlineCompleter {
 					} else if (pageKey.equals("Filter")) {
 						List fdesc = martconf.getDatasetByName(dataset).getAllFilterDescriptions();
 						for (int i = 0, n = fdesc.size(); i < n; i++) {
-							Object desc = fdesc.get(i);
-
-							if (desc instanceof FilterDescription)
-								currentSet.add(((FilterDescription) desc).getInternalName());
-							else
-								currentSet.add(((MapFilterDescription) desc).getInternalName());
+							FilterDescription desc = (FilterDescription) fdesc.get(i);
+							currentSet.add(desc.getInternalName());
 						}
 					} else if (pageKey.equals("AttributePage")) {
 
@@ -419,13 +513,11 @@ public class MartCompleter implements ReadlineCompleter {
 							if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
 								currentSet = new TreeSet();
 
-								List descs = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllFilterDescriptions();
+								List descs =
+									martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllFilterDescriptions();
 								for (int i = 0, n = descs.size(); i < n; i++) {
-									Object desc = descs.get(i);
-									if (desc instanceof FilterDescription)
-										currentSet.add(((FilterDescription) desc).getInternalName());
-									else
-										currentSet.add(((MapFilterDescription) desc).getInternalName());
+									FilterDescription desc = (FilterDescription) descs.get(i);
+									currentSet.add(desc.getInternalName());
 								}
 							}
 						}
@@ -438,7 +530,8 @@ public class MartCompleter implements ReadlineCompleter {
 							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
 								currentSet = new TreeSet();
 
-								List groups = martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroups();
+								List groups =
+									martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroups();
 								for (int i = 0, n = groups.size(); i < n; i++) {
 									Object group = groups.get(i);
 
@@ -476,25 +569,16 @@ public class MartCompleter implements ReadlineCompleter {
 					if (pageKey.equals("FilterPage")) {
 
 						if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-							if (martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).containsFilterGroup(groupName)) {
-								Object group = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
+							if (martconf
+								.getDatasetByName(datasetName)
+								.getFilterPageByName(pageName)
+								.containsFilterGroup(groupName)) {
+								Object group =
+									martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
 
 								if (group instanceof FilterGroup) {
 
-									if (collectionKey.equals("FilterSet")) {
-
-										if (((FilterGroup) group).hasFilterSets()) {
-											currentSet = new TreeSet();
-
-											FilterSet[] fsets = ((FilterGroup) group).getFilterSets();
-											for (int i = 0, n = fsets.length; i < n; i++) {
-												FilterSet set = fsets[i];
-												currentSet.add(set.getInternalName());
-											}
-
-										}
-
-									} else if (collectionKey.equals("FilterCollection")) {
+									if (collectionKey.equals("FilterCollection")) {
 										currentSet = new TreeSet();
 
 										FilterCollection[] cols = ((FilterGroup) group).getFilterCollections();
@@ -507,13 +591,9 @@ public class MartCompleter implements ReadlineCompleter {
 
 										List descs = ((FilterGroup) group).getAllFilterDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
-											Object desc = (Object) descs.get(i);
-											if (desc instanceof FilterDescription)
-												currentSet.add(((FilterDescription) desc).getInternalName());
-											else
-												currentSet.add(((MapFilterDescription) desc).getInternalName());
+											FilterDescription desc = (FilterDescription) descs.get(i);
+											currentSet.add(desc.getInternalName());
 										}
-
 									}
 								}
 							}
@@ -522,8 +602,14 @@ public class MartCompleter implements ReadlineCompleter {
 					} else { // must be AttributePage
 
 						if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-							if (martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).containsAttributeGroup(groupName)) {
-								Object group = martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName);
+							if (martconf
+								.getDatasetByName(datasetName)
+								.getAttributePageByInternalName(pageName)
+								.containsAttributeGroup(groupName)) {
+								Object group =
+									martconf.getDatasetByName(datasetName).getAttributePageByInternalName(
+										pageName).getAttributeGroupByName(
+										groupName);
 
 								if (group instanceof AttributeGroup) {
 
@@ -588,31 +674,20 @@ public class MartCompleter implements ReadlineCompleter {
 					if (pageKey.equals("FilterPage")) {
 						if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
 							if ((martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).containsFilterGroup(groupName))
-								&& (martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName) instanceof FilterGroup)) {
-								FilterGroup group = (FilterGroup) martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
+								&& (martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName)
+									instanceof FilterGroup)) {
+								FilterGroup group =
+									(FilterGroup) martconf.getDatasetByName(datasetName).getFilterPageByName(
+										pageName).getFilterGroupByName(
+										groupName);
 
-								if (collectionKey.equals("FilterSet")) {
-									if (group.containsFilterSet(collectionName)) {
-										currentSet = new TreeSet();
+								if (group.containsFilterCollection(collectionName)) {
+									currentSet = new TreeSet();
 
-										FilterSetDescription[] descs = group.getFilterSetByName(collectionName).getFilterSetDescriptions();
-										for (int i = 0, n = descs.length; i < n; i++) {
-											FilterSetDescription description = descs[i];
-											currentSet.add(description.getInternalName());
-										}
-									}
-								} else {
-									if (group.containsFilterCollection(collectionName)) {
-										currentSet = new TreeSet();
-
-										List descs = group.getFilterCollectionByName(collectionName).getFilterDescriptions();
-										for (int i = 0, n = descs.size(); i < n; i++) {
-											Object desc = descs.get(i);
-											if (desc instanceof FilterDescription)
-												currentSet.add(((FilterDescription) desc).getInternalName());
-											else
-												currentSet.add(((MapFilterDescription) desc).getInternalName());
-										}
+									List descs = group.getFilterCollectionByName(collectionName).getFilterDescriptions();
+									for (int i = 0, n = descs.size(); i < n; i++) {
+										FilterDescription desc = (FilterDescription) descs.get(i);
+										currentSet.add(desc.getInternalName());
 									}
 								}
 							}
@@ -621,10 +696,20 @@ public class MartCompleter implements ReadlineCompleter {
 						//must be AttributePage
 						if (martconf.containsDataset(datasetName)) {
 							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-								if ((martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).containsAttributeGroup(groupName))
-									&& (martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName) instanceof AttributeGroup)) {
+								if ((martconf
+									.getDatasetByName(datasetName)
+									.getAttributePageByInternalName(pageName)
+									.containsAttributeGroup(groupName))
+									&& (martconf
+										.getDatasetByName(datasetName)
+										.getAttributePageByInternalName(pageName)
+										.getAttributeGroupByName(groupName)
+										instanceof AttributeGroup)) {
 									AttributeGroup group =
-										(AttributeGroup) martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName);
+										(AttributeGroup) martconf
+											.getDatasetByName(datasetName)
+											.getAttributePageByInternalName(pageName)
+											.getAttributeGroupByName(groupName);
 
 									if (group.containsAttributeCollection(collectionName)) {
 										currentSet = new TreeSet();
@@ -664,40 +749,82 @@ public class MartCompleter implements ReadlineCompleter {
 	public void SetCommandMode() {
 		currentSet = new TreeSet();
 		currentSet.addAll((SortedSet) setMapper.get(COMMANDS));
-		lastLocalDataset = null;
+
+		// reset state to pristine
+		currentDataset = null;
+		usingLocalDataset = false;
+		currentApages = new ArrayList();
+		currentFpages = new ArrayList();
+		lastFilterName = null;
+		lastAttributeName = null;
+		attributeMode = false;
+		whereMode = false;
+		whereNamesMode = false;
+		whereQualifiersMode = false;
+		whereValuesMode = false;
+		lastLine = null;
 	}
 
 	/**
-	 * Sets the MartCompleter into Get Mode
-	 *
+	 * Sets the completer system to an empty List
 	 */
-	public void SetGetMode() {
-		if (lastLocalDataset != null) {
+	public void SetEmptyMode() {
+		currentSet = new TreeSet();
+	}
+
+	/**
+	 * Sets the AttributeNames for all current Attribute Pages into the completer set
+	 */
+	public void SetAttributeNames() {
+		if (currentDataset != null) {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
-			List attributes = lastLocalDataset.getAllAttributeDescriptions();
-			for (int i = 0, n = attributes.size(); i < n; i++) {
-				Object attribute = attributes.get(i);
-				if (attribute instanceof AttributeDescription)
-					currentSet.add(((AttributeDescription) attribute).getInternalName());
-				//else, if we impliment UIDSAttributeDescription
+			if (currentApages.size() == 0)
+				currentApages = Arrays.asList(currentDataset.getAttributePages());
+
+			for (int i = 0, n = currentApages.size(); i < n; i++) {
+				AttributePage apage = (AttributePage) currentApages.get(i);
+
+				List completers = apage.getCompleterNames();
+				for (int j = 0, m = completers.size(); j < m; j++) {
+					String completer = (String) completers.get(j);
+					if (!currentSet.contains(completer))
+						currentSet.add(completer);
+				}
 			}
-		} else if (envDataset != null) {
+		} else if (!(usingLocalDataset) && envDataset != null) {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
-			List attributes = envDataset.getAllAttributeDescriptions();
-			for (int i = 0, n = attributes.size(); i < n; i++) {
-				Object attribute = attributes.get(i);
-				if (attribute instanceof AttributeDescription)
-					currentSet.add(((AttributeDescription) attribute).getInternalName());
-				//else, if we impliment UIDSAttributeDescription
-			}
+			if (currentApages.size() == 0)
+				currentApages = Arrays.asList(envDataset.getAttributePages());
+			for (int i = 0, n = currentApages.size(); i < n; i++) {
+				AttributePage apage = (AttributePage) currentApages.get(i);
 
-		} else {
-			currentSet = new TreeSet();
-			currentSet.addAll(NODATASETWARNING);
+				List completers = apage.getCompleterNames();
+				for (int j = 0, m = completers.size(); j < m; j++) {
+					String completer = (String) completers.get(j);
+					if (!currentSet.contains(completer))
+						currentSet.add(completer);
+				}
+			}
+		} else
+			SetNoDatasetMode();
+	}
+
+	private void SetNoDatasetMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(NODATASETWARNING);
+	}
+
+	private void pruneAttributePages() {
+		if (currentDataset != null)
+			currentApages = currentDataset.getPagesForAttribute(lastAttributeName);
+		else if (!usingLocalDataset && envDataset != null)
+			currentApages = envDataset.getPagesForAttribute(lastAttributeName);
+		else {
+			currentApages = new ArrayList();
 		}
 	}
 
@@ -706,6 +833,7 @@ public class MartCompleter implements ReadlineCompleter {
 	 *
 	 */
 	public void SetSequenceMode() {
+		attributeMode = false;
 		currentSet = new TreeSet();
 		currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QSEQUENCE));
 	}
@@ -723,36 +851,81 @@ public class MartCompleter implements ReadlineCompleter {
 	 * Sets the MartCompleter into the Where Mode
 	 *
 	 */
-	public void SetWhereMode() {
+	public void SetWhereNames() {
 
-		if (lastLocalDataset != null) {
+		if (currentDataset != null) {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
-			List filters = lastLocalDataset.getAllFilterDescriptions();
-			for (int i = 0, n = filters.size(); i < n; i++) {
-				Object filter = filters.get(i);
+			if (currentFpages.size() == 0)
+				currentFpages = Arrays.asList(currentDataset.getFilterPages());
 
-				if (filter instanceof MapFilterDescription)
-					currentSet.add(((MapFilterDescription) filter).getInternalName());
-				else
-					currentSet.add(((FilterDescription) filter).getInternalName());
+			for (int i = 0, n = currentFpages.size(); i < n; i++) {
+				FilterPage fpage = (FilterPage) currentFpages.get(i);
+
+				List completers = fpage.getCompleterNames();
+				for (int j = 0, m = completers.size(); j < m; j++) {
+					String completer = (String) completers.get(j);
+					if (!currentSet.contains(completer))
+						currentSet.add(completer);
+				}
 			}
-		} else if (envDataset != null) {
+		} else if (!(usingLocalDataset) && envDataset != null) {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
-			List filters = envDataset.getAllFilterDescriptions();
-			for (int i = 0, n = filters.size(); i < n; i++) {
-				Object filter = filters.get(i);
+			if (currentFpages.size() == 0)
+				currentFpages = Arrays.asList(envDataset.getFilterPages());
 
-				if (filter instanceof MapFilterDescription)
-					currentSet.add(((MapFilterDescription) filter).getInternalName());
-				else
-					currentSet.add(((FilterDescription) filter).getInternalName());
+			for (int i = 0, n = currentFpages.size(); i < n; i++) {
+				FilterPage fpage = (FilterPage) currentFpages.get(i);
+
+				List completers = fpage.getCompleterNames();
+				for (int j = 0, m = completers.size(); j < m; j++) {
+					String completer = (String) completers.get(j);
+					if (!currentSet.contains(completer))
+						currentSet.add(completer);
+				}
 			}
 		} else
-			currentSet.add(NODATASETWARNING);
+			SetNoDatasetMode();
+	}
+
+	private void SetWhereQualifiers() {
+		currentSet = new TreeSet();
+
+		if (currentDataset != null) {
+			if (currentDataset.containsFilterDescription(lastFilterName))
+				currentSet.addAll(
+					currentDataset.getFilterDescriptionByInternalName(lastFilterName).getCompleterQualifiers(lastFilterName));
+		} else if (!usingLocalDataset && envDataset != null) {
+			if (envDataset.containsFilterDescription(lastFilterName))
+				currentSet.addAll(envDataset.getFilterDescriptionByInternalName(lastFilterName).getCompleterQualifiers(lastFilterName));
+		} else
+			SetNoDatasetMode();
+	}
+
+	private void SetWhereValues() {
+		currentSet = new TreeSet();
+
+		if (currentDataset != null) {
+			if (currentDataset.containsFilterDescription(lastFilterName))
+				currentSet.addAll(currentDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+		} else if (!usingLocalDataset && envDataset != null) {
+			if (envDataset.containsFilterDescription(lastFilterName)) {
+				currentSet.addAll(envDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+			}
+		} else
+			SetNoDatasetMode();
+	}
+
+	private void pruneFilterPages() {
+		if (currentDataset != null)
+			currentFpages = currentDataset.getPagesForFilter(lastFilterName);
+		else if (!usingLocalDataset && envDataset != null)
+			currentFpages = envDataset.getPagesForFilter(lastFilterName);
+		else
+			currentFpages = new ArrayList();
 	}
 
 	/**

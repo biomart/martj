@@ -66,12 +66,9 @@ import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.FilterSet;
-import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.MapFilterDescription;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
@@ -1457,40 +1454,6 @@ public class MartShell {
 
 								System.out.println();
 
-							} else if (arg3key.equals(FILTERSETKEY)) {
-								if (!group.containsFilterSet(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " FilterPage "
-											+ fpage.getInternalName()
-											+ " FilterGroup "
-											+ group.getInternalName()
-											+ " does not contain FilterSet "
-											+ arg3value
-											+ "\n");
-
-								System.out.print(
-									"Dataset "
-										+ dset.getInternalName()
-										+ " - "
-										+ dset.getDisplayName()
-										+ "\nFilterPage: "
-										+ fpage.getInternalName()
-										+ " - "
-										+ fpage.getDisplayName()
-										+ "\n\tFilterGroup: "
-										+ group.getInternalName()
-										+ " - "
-										+ group.getDisplayName()
-										+ "\n\n");
-
-								String[] lines = DescribeFilterSet(group.getFilterSetByName(arg3value));
-								for (int i = 0, n = lines.length; i < n; i++)
-									System.out.println("\t\t" + lines[i]);
-
-								System.out.println();
-
 							} else if (arg3key.equals(FILTERKEY)) {
 								if (!group.containsFilterDescription(arg3value))
 									throw new InvalidQueryException(
@@ -1756,85 +1719,9 @@ public class MartShell {
 											+ " - "
 											+ collection.getDisplayName());
 
-									if (collection.inFilterSet())
-										System.out.print(
-											"\n\t\tMust be qualified with a FilterSetDescription from FilterSet: "
-												+ collection.getFilterSetName());
-
 									System.out.print("\n\n");
 
 									String[] lines = DescribeFilter(collection.getFilterDescriptionByInternalName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
-										System.out.println("\t\t\t" + lines[i]);
-
-									System.out.println();
-
-								} else {
-									throw new InvalidQueryException(
-										"Recieved describe command with request key: "
-											+ arg1key
-											+ " and second request key: "
-											+ arg2key
-											+ " with third request key: "
-											+ arg3key
-											+ " and invalid fourth request key: "
-											+ arg4key
-											+ "\n");
-								}
-
-							} else if (arg3key.equals(FILTERSETKEY)) {
-								if (!group.containsFilterSet(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " FilterPage "
-											+ fpage.getInternalName()
-											+ " FilterGroup "
-											+ group.getInternalName()
-											+ " does not contain FilterSet "
-											+ arg3value
-											+ "\n");
-
-								arg4 = (String[]) args.get(3);
-								FilterSet fset = group.getFilterSetByName(arg3value);
-								String arg4key = arg4[0];
-								String arg4value = arg4[1];
-
-								if (arg4key.equals(FILTERSETDESCRIPTIONKEY)) {
-									if (!fset.containsFilterSetDescription(arg4value))
-										throw new InvalidQueryException(
-											"Dataset "
-												+ dset.getInternalName()
-												+ " FilterPage "
-												+ fpage.getInternalName()
-												+ " FilterGroup "
-												+ group.getInternalName()
-												+ " FilterSet "
-												+ fset.getInternalName()
-												+ " does not contain FilterSetDescription "
-												+ arg4value
-												+ "\n");
-
-									System.out.print(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " - "
-											+ dset.getDisplayName()
-											+ "\nFilterPage: "
-											+ fpage.getInternalName()
-											+ " - "
-											+ fpage.getDisplayName()
-											+ "\n\tFilterGroup: "
-											+ group.getInternalName()
-											+ " - "
-											+ group.getDisplayName()
-											+ "\n\t\tFilterSet: "
-											+ fset.getInternalName()
-											+ " - "
-											+ fset.getDisplayName()
-											+ "\n\n");
-
-									String[] lines = DescribeFilterSetDescription(fset.getFilterSetDescriptionByName(arg4value));
 									for (int i = 0, n = lines.length; i < n; i++)
 										System.out.println("\t\t\t" + lines[i]);
 
@@ -2065,18 +1952,6 @@ public class MartShell {
 			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
 			lines.add(DASHES);
 
-			if (group.hasFilterSets()) {
-				FilterSet[] fsets = group.getFilterSets();
-				for (int i = 0, n = fsets.length; i < n; i++) {
-					if (i > 0)
-						lines.add("");
-
-					lines.addAll(Arrays.asList(DescribeFilterSet(fsets[i])));
-				}
-				lines.add("");
-				lines.add(DASHES);
-			}
-
 			FilterCollection[] fcs = group.getFilterCollections();
 
 			for (int i = 0, n = fcs.length; i < n; i++) {
@@ -2135,25 +2010,6 @@ public class MartShell {
 		return ret;
 	}
 
-	private String[] DescribeFilterSet(FilterSet fset) {
-		List lines = new ArrayList();
-
-		String setheader = "\tFilterSet: " + fset.getInternalName();
-		if (!fset.getDisplayName().equals(""))
-			setheader += " - " + fset.getDisplayName();
-
-		setheader += " Contains the following FilterSetDescriptions:\n";
-		lines.add(setheader);
-
-		FilterSetDescription[] fsetdescs = fset.getFilterSetDescriptions();
-		for (int i = 0, n = fsetdescs.length; i < n; i++)
-			lines.addAll(Arrays.asList(DescribeFilterSetDescription(fsetdescs[i])));
-
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
-	}
-
 	private String[] DescribeFilterCollection(FilterCollection collection) {
 		List lines = new ArrayList();
 
@@ -2163,21 +2019,9 @@ public class MartShell {
 
 		lines.add(colheader);
 
-		if (collection.inFilterSet()) {
-			String[] clines =
-				ColumnIze(
-					"(Note: Filters from this collection must be qualified with the internalName of one of the FilterSetsDescriptions from FilterSet '"
-						+ collection.getFilterSetName()
-						+ "' above)");
-			for (int j = 0, k = clines.length; j < k; j++)
-				lines.add("\t" + clines[j]);
-
-			lines.add("");
-		}
-
 		List fdescs = collection.getFilterDescriptions();
 		for (int j = 0, n2 = fdescs.size(); j < n2; j++)
-			lines.addAll(Arrays.asList(DescribeFilter(fdescs.get(j))));
+			lines.addAll(Arrays.asList(DescribeFilter((FilterDescription) fdescs.get(j))));
 
 		String[] ret = new String[lines.size()];
 		lines.toArray(ret);
@@ -2213,33 +2057,10 @@ public class MartShell {
 		return ret;
 	}
 
-	private String[] DescribeFilterSetDescription(FilterSetDescription desc) {
+	private String[] DescribeFilter(FilterDescription desc) {
 		List lines = new ArrayList();
 
-		String disp = "\t\t" + desc.getInternalName();
-		if (desc.getDisplayName().length() > 0)
-			disp += " - " + desc.getDisplayName();
-
-		lines.add(disp);
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
-	}
-
-	private String[] DescribeFilter(Object filtero) {
-		List lines = new ArrayList();
-
-		if (filtero instanceof FilterDescription) {
-			FilterDescription desc = (FilterDescription) filtero;
-			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
-		} else {
-			MapFilterDescription desc = (MapFilterDescription) filtero;
-			String disp = "\t\t" + desc.getInternalName();
-			if (desc.getDisplayName().length() > 0)
-				disp += " - " + desc.getDisplayName();
-			disp += " (see 'help " + desc.getHandler() + "' for further information)";
-			lines.add(disp);
-		}
+		lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
 
 		String[] ret = new String[lines.size()];
 		lines.toArray(ret);
@@ -2789,15 +2610,17 @@ public class MartShell {
 
 	private String parseForCommands(String line)
 		throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
-		StringBuffer residual = null;
+		StringBuffer residual = new StringBuffer();
 
 		StringTokenizer commandtokens = new StringTokenizer(line, LINEEND, true);
 
 		while (commandtokens.hasMoreTokens()) {
 			String thisCommand = commandtokens.nextToken().trim();
 			if (thisCommand.equals(LINEEND)) {
-				parseCommand(residual.toString());
-				residual = new StringBuffer();
+				if (residual.length() > 1) {
+					parseCommand(residual.toString());
+					residual = new StringBuffer();
+				}
 			} else
 				residual = new StringBuffer(thisCommand);
 		}
@@ -2862,8 +2685,7 @@ public class MartShell {
 				String storedCommand = storeMatcher.group(1);
 				String key = storeMatcher.group(4);
 
-				mainLogger.info(
-					"as command " + command + "\n\nkey = " + key + "\nstoredCommand = " + storedCommand + "\n");
+				mainLogger.info("as command " + command + "\n\nkey = " + key + "\nstoredCommand = " + storedCommand + "\n");
 
 				if (key.indexOf(LINEEND) > 0)
 					key = key.substring(0, key.indexOf(LINEEND));
