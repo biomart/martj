@@ -19,6 +19,8 @@
  */
 package org.ensembl.mart.lib;
 
+import java.util.logging.Logger;
+
 /**
  * Holds the name of a single field attribute for inclusion in a query.
  * Implements hashCode() and equals() for simple retrieval from Collections.
@@ -28,6 +30,8 @@ package org.ensembl.mart.lib;
  */
 public class FieldAttribute implements Attribute {
 
+  private final static Logger logger =
+    Logger.getLogger(FieldAttribute.class.getName());
 
 	/**
 	 * constructs a FieldAttribute with the given field name
@@ -114,6 +118,10 @@ public class FieldAttribute implements Attribute {
       String tc = getTableConstraint();
       String tc2 = attribute.getTableConstraint();
     
+      if ( f==null ) {
+        logger.warning("Datasetview bug, field missing in FieldAttribute :" + this);
+        return false;
+      }
     
       return f.equals(attribute.getField())
         && ((tc == tc2) || (tc != null && tc.equals(tc2)));
