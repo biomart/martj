@@ -73,7 +73,6 @@ public final class AttributeQueryRunner implements QueryRunner {
               osr.write("\n");
               osr.flush();
             }
-            osr.close();
         }
         catch (IOException e) {
             logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
