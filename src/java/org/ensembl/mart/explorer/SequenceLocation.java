@@ -160,6 +160,7 @@ public class SequenceLocation {
 		}
 		return new SequenceLocation(this.chr, newstart, newend, this.strand);
 	}
+	
 	public boolean equals(Object o) {
 		// test object
 		if (! (o instanceof SequenceLocation) )

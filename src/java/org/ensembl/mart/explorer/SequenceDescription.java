@@ -115,9 +115,9 @@ public final class SequenceDescription {
 		        
 			case TRANSCRIPTFLANKS:
 			    if (lflank > 0 && rflank > 0)
-				    throw new InvalidQueryException("Cannot create both 3' and 5' transcript flanking sequence in one sequence\n");
+				    throw new InvalidQueryException("Cannot create both upstream and downstream transcript flanking sequence in one sequence\n");
 				  if (! (lflank >0 || rflank > 0) )
-				    throw new InvalidQueryException("Transcript flanking requires either 3' or 5' flanking length\n");
+				    throw new InvalidQueryException("Transcript flanking requires either upstream or downstream flanking length\n");
 				    
 				  this.seqt = type;
 				  this.seqtype = (String) SEQS.get(TRANSCRIPTFLANKS);
@@ -156,9 +156,9 @@ public final class SequenceDescription {
 
 			case GENEFLANKS:
 				if (lflank > 0 && rflank > 0)
-					throw new InvalidQueryException("Cannot create both 3' and 5' gene flanking sequence in one sequence\n");
+					throw new InvalidQueryException("Cannot create both upstream and downstream gene flanking sequence in one sequence\n");
 				  if (! (lflank >0 || rflank > 0) )
-					throw new InvalidQueryException("Gene flanking requires either 3' or 5' flanking length\n");
+					throw new InvalidQueryException("Gene flanking requires either upstream or downstream flanking length\n");
 				    
 				  this.seqt = type;
 				  this.seqtype = (String) SEQS.get(GENEFLANKS);
@@ -170,7 +170,35 @@ public final class SequenceDescription {
 				  else
 					this.description = "downstream "+this.description;
 				  break;
-				  		      		              
+				  
+			case DOWNSTREAMUTR:
+			    if (lflank > 0)
+			      throw new InvalidQueryException("Cannot get upstream flanking sequence of downstream UTR");
+			      
+			    this.seqt = type;
+			    this.seqtype = (String)	SEQS.get(DOWNSTREAMUTR);
+			    this.description = "downstream UTR";
+			    this.leftflank = lflank;
+			    this.rightflank = rflank;
+			    
+			    if (rflank > 0)
+			      this.description += " plus downstream flanking region"; 
+			    break;
+			    
+			case UPSTREAMUTR:
+				if (rflank > 0)
+				  throw new InvalidQueryException("Cannot get downstream flanking sequence of upstream UTR");
+			      
+				this.seqt = type;
+				this.seqtype = (String)	SEQS.get(UPSTREAMUTR);
+				this.description = "upstream UTR";
+				this.leftflank = lflank;
+				this.rightflank = rflank;
+			    
+				if (lflank > 0)
+				  this.description = "upstream flanking region "+this.description; 
+				break;
+			       		      		              
 			default:
 				throw new InvalidQueryException("Unknown sequence type"+type);
 		}
@@ -260,7 +288,9 @@ public final class SequenceDescription {
                                                                                                                                                     "transcript_flanks",
                                                                                                                                                     "gene_exon_intron",
                                                                                                                                                     "gene_exons",
-                                                                                                                                                    "gene_flanks"
+                                                                                                                                                    "gene_flanks",
+                                                                                                                                                    "downstream_utr",
+                                                                                                                                                    "upstream_utr"
                                                                                                                                                     }));
 	
 	/**
@@ -275,4 +305,6 @@ public final class SequenceDescription {
 	public static final int GENEEXONINTRON = 6;
 	public static final int GENEEXONS = 7;
 	public static final int GENEFLANKS = 8;
+	public static final int DOWNSTREAMUTR = 9;
+	public static final int UPSTREAMUTR = 10;
 }

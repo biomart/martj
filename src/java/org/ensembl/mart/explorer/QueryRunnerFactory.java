@@ -89,7 +89,15 @@ public class QueryRunnerFactory {
 					      
 					    case SequenceDescription.GENEFLANKS:
 					      thisQueryRunner = new GeneFlankSeqQueryRunner(q,f,conn,out);
-					      break;					
+					      break;
+					      
+					    case SequenceDescription.DOWNSTREAMUTR:
+					      thisQueryRunner = new DownStreamUTRSeqQueryRunner(q,f,conn,out);
+					      break;
+					      
+				      case SequenceDescription.UPSTREAMUTR:
+				        thisQueryRunner = new UpStreamUTRSeqQueryRunner(q,f,conn,out);
+				        break;
       		  }
       		  break;
 		   }
