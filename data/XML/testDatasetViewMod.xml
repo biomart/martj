@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
-<DatasetView description="HAS A SLIGHT MODIFICATION" displayName="Test of a DatasetView" internalName="test_dataset">
+<DatasetView datasetPrefix="test" description="HAS A SLIGHT MODIFICATION" displayName="Test of a DatasetView" internalName="test_dataset">
   <Option description="For Testing Purposes Only" displayName="A Test DatasetView Option" internalName="dataset option" isSelectable="true"/>
   <DefaultFilter value="1">
     <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testDefaultFilterDescription" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list"/>
