@@ -295,6 +295,7 @@ public class LabelledComboBox extends Box implements ActionListener {
 	 * @param anObject
 	 */
 	public void setSelectedItem(Object anObject) {
+    if ( combo.getSelectedItem()==anObject) return;
 		combo.setSelectedItem(anObject);
 	}
 

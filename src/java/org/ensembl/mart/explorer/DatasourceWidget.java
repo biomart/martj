@@ -83,8 +83,10 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
       DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
       for (int i = 0; i < as.length; i++) {
         DSViewAdaptor a = as[i];
-        if (a.getDataSource() != null) 
+        if (a.getDataSource() != null) {
           items.add(a.getName());
+          logger.warning( "Adding datasource: " + a.getName() );
+        }
       }
     } catch (ConfigurationException e) {
       feedback.warning(e);
@@ -96,14 +98,6 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     chooser.removeAllItems();
     l.add(0, none);
     chooser.addAll(l);
-
-  }
-
-  /**
-   * Opens MartSettings dialog and if the user selects a new datasource
-   * that is set on the query.
-   */
-  public void doChange() {
 
   }
 
@@ -164,6 +158,12 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     DataSource ds = null;
     if (selected != null && selected != none)
       try {
+        int n = chooser.getItemCount();
+        for (int i = 0; i < n; i++) {
+					logger.warning("Available datasource: " + chooser.getItemAt(i));
+					
+				}
+        logger.warning("selected datasource: " +selected);
         ds =
           adaptorManager
             .getRootAdaptor()

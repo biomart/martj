@@ -18,6 +18,8 @@
  
 package org.ensembl.mart.lib.config;
 
+import org.ensembl.mart.lib.DetailedDataSource;
+
 /**
  * Object representing a DatabaseLocation element in a DatasetViewLocation element
  * within a MartRegistry.dtd compliant XML document.  
@@ -164,5 +166,17 @@ public class DatabaseLocation extends MartLocationBase {
 	 */
 	public int hashCode() {
     return super.hashCode();
+	}
+  
+  
+  
+	/**
+   * @return "name" if set, otherwise uses default connection string
+	 * @see org.ensembl.mart.lib.config.MartLocation#getName()
+	 */
+	public String getName() {
+		String name = super.getName();
+    if ( name==null || "".equals(name) ) name = DetailedDataSource.simpleRepresentation( getHost(), getPort(), getInstanceName() );
+    return name;
 	}
 }

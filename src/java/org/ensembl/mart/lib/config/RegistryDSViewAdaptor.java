@@ -217,7 +217,8 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 				String port = dbloc.getPort();
 				String password = dbloc.getPassword();
 				String databaseType = dbloc.getDatabaseType();
-				String jdbcDriverClassName = dbloc.getJDBCDriverClassName();
+        String jdbcDriverClassName = dbloc.getJDBCDriverClassName();
+        String name = dbloc.getName();
 
 				// apply defaults only if both dbtype and jdbcdriver are null
 				if (databaseType == null && jdbcDriverClassName == null) {
@@ -225,9 +226,16 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 					jdbcDriverClassName = DetailedDataSource.DEFAULTDRIVER;
 				}
 
-				//use the default poolsize of 10
-				DetailedDataSource dsource =
-					new DetailedDataSource(databaseType, host, port, instanceName, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName);
+
+        String connectionString = DetailedDataSource.getConnectionURL(databaseType, host, port, instanceName);
+        // use default name
+        if ( name==null || "".equals(name))
+          name = connectionString;
+
+        
+        //use the default poolsize of 10        
+        DetailedDataSource dsource =
+					new DetailedDataSource(databaseType, host, port, instanceName, connectionString, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName, name);
 
 				DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(dsource, user);
 

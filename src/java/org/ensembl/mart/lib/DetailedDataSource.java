@@ -110,6 +110,59 @@ public class DetailedDataSource implements DataSource {
    * @param password password, can be null
    * @param maxPoolSize maximum poolsize
    * @param jdbcDriverClassName name of jdbc driver to back the datasource.
+   * @param displayName displayName for datasource, if null a default is set
+   * @return connection pool capable datasource
+   **/
+  public DetailedDataSource(
+    String dbType,
+    String host,
+    String port,
+    String databaseName,
+    String connectionString,
+    String user,
+    String password,
+    int maxPoolSize,
+    String jdbcDriverClassName,
+    String displayName) {
+
+    assert dbType != null : "dbType is null";
+    assert host != null : "host is null";
+    assert port != null : "port is null";
+    assert connectionString != null : "connectionString is null";
+    assert databaseName == null
+      || connectionString.indexOf(databaseName)
+        != -1 : "database is null or is not in connection string";
+    assert user != null : "user is null";
+    assert maxPoolSize >= 0;
+    assert jdbcDriverClassName != null : "jdbcDriver is null";
+
+    this.databaseType = dbType;
+    this.host = host;
+    this.port = port;
+    this.databaseName = databaseName;
+    this.connectionString = connectionString;
+    this.user = user;
+    this.password = password;
+    this.maxPoolSize = maxPoolSize;
+    this.jdbcDriverClassName = jdbcDriverClassName;
+    this.displayName = displayName;
+    if ( this.displayName==null ) this.displayName = simpleRepresentation();
+    
+    //logger.warning(this.toString());
+  }
+
+  /**
+   * Creates a datasource backed by a connection pool. connectionString should 
+   * match the host, port, and dbType. Sets default displayName. 
+   * @param dbType database type e.g. mysql.
+   * @param host host name e.g. ensembldb.ensembl.org
+   * @param port port number. e.g. 3306.
+   * @param database name of database on database server, can be null for "meta" queries e.g. what databasea are available  
+   * @param connectionString database connectionString, e.g. jdbc:mysql://ensembldb.ensembl.org:3036
+   * @param user username
+   * @param password password, can be null
+   * @param maxPoolSize maximum poolsize
+   * @param jdbcDriverClassName name of jdbc driver to back the datasource.
    * @return connection pool capable datasource
    **/
   public DetailedDataSource(
@@ -122,32 +175,11 @@ public class DetailedDataSource implements DataSource {
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
-
-    assert dbType != null : "dbType is null";
-    assert host != null : "host is null";
-    assert port != null : "port is null";
-    assert connectionString != null : "connectionString is null";
-    assert databaseName == null
-      || connectionString.indexOf(databaseName)
-        != -1 : "database is null or is not in connection string";
-    assert user != null : "user is null";
-    assert maxPoolSize >= 0 : "maxPoolSize should be>=0";
-    assert jdbcDriverClassName != null : "jdbcDriver is null";
-
-    this.databaseType = dbType;
-    this.host = host;
-    this.port = port;
-    this.databaseName = databaseName;
-    this.connectionString = connectionString;
-    this.user = user;
-    this.password = password;
-    this.maxPoolSize = maxPoolSize;
-    this.jdbcDriverClassName = jdbcDriverClassName;
-    this.displayName = user + "@" + host + ":" + port + "/" + databaseName;
-
-    //logger.warning(this.toString());
+  	this(dbType, host,port, databaseName, connectionString, user, password, maxPoolSize, jdbcDriverClassName, null);
   }
+  
 
+  
   /**
    * Convenience method which calls createDataSource(DEFAULTDATABASETYPE, host, DEFAULTPORT, database, user, password, DEFAULTPOOLSIZE, DEFAULTDRIVER);
    * @param host host name e.g. ensembldb.ensembl.org
@@ -253,6 +285,8 @@ public class DetailedDataSource implements DataSource {
     return dbURL.toString();
   }
 
+  
+ 
   /**
    * Convenience method for closing a connection and handling any SQLException
    * by printing a stack trace.
@@ -289,6 +323,15 @@ public class DetailedDataSource implements DataSource {
     return databaseName + "@" + host + ":" + port;
   }
 
+  
+  /**
+   * @return databaseName@host:port
+   */
+  public static String simpleRepresentation(String host, String port, String databaseName) {
+    return databaseName + "@" + host + ":" + port;
+  }
+
+  
   /**
    * A connection pool is created when this merthod is first called
    * and then connections are returned from it.
