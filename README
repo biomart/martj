@@ -35,9 +35,9 @@ martexplorer.sh. Do this by either:
 a) prompt>sh bin/martgui.sh
 
 b) prompt>chmod +x bin/martgui.sh (make it executable, only have to do this once).
-   prompt>bin/martexplorer.sh 
+   prompt>bin/martgui.sh 
 
-Windows users might be able to 'click' on the file
+Windows users might be able to run the program by 'clicking' on the file
 ./lib/mart-explorer.jar.
 
 
@@ -53,7 +53,7 @@ they have the classpath set up to include ./lib/*.jar:
 Un*x users can also run the tool by running the script
 martcl.sh. Do this by either:
 
-a) prompt>sh bin/martgui.sh
+a) prompt>sh bin/martcl.sh
 
 b) prompt>chmod +x bin/martcl.sh (make it executable, only have to do this once).
    prompt>bin/martcl.sh 
