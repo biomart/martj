@@ -24,8 +24,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,6 +96,7 @@ public class DatasetWidget
   private String lastSelectedDisplayName = null;
 
   private DatasetView[] availableDatasetViews = null;
+  private Set availableDatasetNames = new HashSet();
   private Set availableDisplayNames = new HashSet();
   private Map displayNameToDatasetView = new HashMap();
   private Map displayNameToShortName = new HashMap();
@@ -100,7 +104,7 @@ public class DatasetWidget
 
   // --- GUI components
   private JMenuBar treeMenu = new JMenuBar();
-  private JMenu treeTopMenu = null;
+  private JMenu treeTopMenu = new JMenu();
   private JLabel label = new JLabel("Dataset");
   private JTextField currentSelectedText = new JTextField(30);
   private JButton button = new JButton("change");
@@ -134,6 +138,7 @@ public class DatasetWidget
     // make the menu appear beneath the row of components 
     // containing the label, textField and button when displayed.
     treeMenu.setMaximumSize(new Dimension(0, 100));
+    treeMenu.add( treeTopMenu );
 
     Box box = Box.createHorizontalBox();
     box.add(treeMenu);
@@ -258,29 +263,30 @@ public class DatasetWidget
               + "on the current query: ",
             "Dataset View problem",
             JOptionPane.WARNING_MESSAGE);
-            
+
         } else if (o instanceof List) {
-          
+
           // dataSetName maps to more than one datasetView, user must choose
           // which one to use
-          List l = (List)o;
-          Object[] possibleValues = new Object[ l.size()];
-          for (int i=0; i<l.size(); ++i) {
+          List l = (List) o;
+          Object[] possibleValues = new Object[l.size()];
+          for (int i = 0; i < l.size(); ++i) {
             DatasetView dsv = (DatasetView) l.get(i);
-            possibleValues[ i ] = dsv.getDisplayName();
+            possibleValues[i] = dsv.getDisplayName();
           }
           Object displayName =
             JOptionPane.showInputDialog(
               this,
               "Choose DatasetView",
-              "Several datasetViews are availble for the dataset" +              "set on the query, which do you want to use?",
+              "Several datasetViews are availble for the dataset"
+                + "set on the query, which do you want to use?",
               JOptionPane.INFORMATION_MESSAGE,
               null,
               possibleValues,
               possibleValues[0]);
 
-          
-          currentSelectedText.setText( (String)displayNameToShortName.get( displayName) );
+          currentSelectedText.setText(
+            (String) displayNameToShortName.get(displayName));
         }
 
       }
@@ -303,33 +309,129 @@ public class DatasetWidget
   public void setDatasetViews(DatasetView[] datasetViews) {
     this.availableDatasetViews = datasetViews;
 
-    datasetNameToDatasetView.clear();
-    displayNameToDatasetView.clear();
-    displayNameToShortName.clear();
-    
+    unpack(datasetViews);
+
     lastSelectedDisplayName = null;
     selectedDatasetView = null;
-    
+
     updateQueryDatasetName(null);
+
+    currentSelectedText.setText("");
 
     updateMenu(datasetViews);
 
   }
 
   /**
+   * Unpacks the datasetViews into several sets and maps that enable
+   * easy lookup of information.
+   * 
+   * displayName -> shortName
+   * datasetName -> datasetView | List-of-datasetViews
+   * displayName -> datasetView | List-of-datasetViews
+   * 
+   * @param datasetViews dataset views, should be sorted by displayNames.
+   */
+  private void unpack(DatasetView[] datasetViews) {
+
+    availableDisplayNames.clear();
+    availableDatasetNames.clear();
+    displayNameToShortName.clear();
+
+    if ( datasetViews==null ) return;
+
+    Set clashingDisplayNames = new HashSet();
+    Set clashingDatasetNames = new HashSet();
+
+    for (int i = 0; i < datasetViews.length; i++) {
+
+      DatasetView view = datasetViews[i];
+
+      String displayName = view.getDisplayName();
+      if (availableDisplayNames.contains(displayName))
+        clashingDisplayNames.add(view);
+      else
+        availableDisplayNames.add(displayName);
+
+      String datasetName = view.getInternalName();
+      if (availableDatasetNames.contains(datasetName))
+        clashingDatasetNames.add(view);
+      else
+        availableDatasetNames.add(datasetName);
+
+      String[] elements = displayName.split("__");
+      String shortName = elements[elements.length - 1];
+      displayNameToShortName.put(displayName, shortName);
+    }
+
+    datasetNameToDatasetView.clear();
+    displayNameToDatasetView.clear();
+
+    for (int i = 0; i < datasetViews.length; i++) {
+
+      DatasetView view = datasetViews[i];
+
+      String displayName = view.getDisplayName();
+      if (clashingDisplayNames.contains(view)) {
+        List list = (List) displayNameToDatasetView.get(displayName);
+        if (list == null) {
+          list = new LinkedList();
+          displayNameToDatasetView.put(displayName, list);
+        }
+        list.add(view);
+      } else {
+        displayNameToDatasetView.put(displayName, view);
+      }
+
+      String datasetName = view.getInternalName();
+      if (clashingDatasetNames.contains(view)) {
+        List list = (List) datasetNameToDatasetView.get(datasetName);
+        if (list == null) {
+          list = new LinkedList();
+          datasetNameToDatasetView.put(datasetName, list);
+        }
+        list.add(view);
+      } else {
+        datasetNameToDatasetView.put(datasetName, view);
+      }
+
+    }
+
+  }
+
+  /**
+   * Update the menu to reflect the datasetViews. 
+   * Menu item names and position in the menu tree are
+   * derived from the displayNames of the datasetViews. 
    * @param datasetViews
    */
   private void updateMenu(DatasetView[] datasetViews) {
-    // TODO Auto-generated method stub
-    //  for each datasetView
-    //    create a qualified name
-    //    map qualified name to dataset
 
-    // sort by displayName
+    treeTopMenu.removeAll();
 
-    // use last component of displayName as menu item's text
+    if (datasetViews == null || datasetViews.length == 0)
+      return;
 
-    // construct JMenu - see addOptions(...)
+    //  we need the dsvs sorted so we can construct the menu tree
+    // by parsing the array once
+    Arrays.sort(datasetViews, new Comparator() {
+      public int compare(Object o1, Object o2) {
+        DatasetView d1 = (DatasetView) o1;
+        DatasetView d2 = (DatasetView) o2;
+        return d1.getDisplayName().compareTo(d2.getDisplayName());
+      }
+    });
+
+    treeTopMenu.add(clearDatasetMenuItem);
+    
+    for (int i = 0; i < datasetViews.length; i++) {
+      DatasetView view = datasetViews[i];
+      
+      String displayName = view.getDisplayName();
+      JMenuItem item = new JMenuItem(displayName);
+      treeTopMenu.add( item );   
+   
+    }
 
   }
 
@@ -343,40 +445,40 @@ public class DatasetWidget
    * @param prefix prepended to option.getDisplayName() to create internal name for menu item 
    * created for each option.
    */
-//  private void addOptions(JMenu menu, Option[] options, String prefix) {
-//
-//    for (int i = 0; options != null && i < options.length; i++) {
-//
-//      final Option option = options[i];
-//
-//      String displayName = option.getDisplayName();
-//      String qualifiedName = prefix + " " + displayName;
-//
-//      if (option.getOptions().length == 0) {
-//
-//        // add menu item
-//        JMenuItem item = new JMenuItem(displayName);
-//        item.setName(qualifiedName);
-//        menu.add(item);
-//        item.addActionListener(new ActionListener() {
-//          public void actionPerformed(ActionEvent event) {
-//            setOption(option);
-//          }
-//        });
-//
-//        valueToOption.put(option.getValue(), option);
-//
-//      } else {
-//
-//        // Add sub menu
-//        JMenu subMenu = new JMenu(displayName);
-//        menu.add(subMenu);
-//        addOptions(subMenu, option.getOptions(), qualifiedName);
-//
-//      }
-//    }
-//
-//  }
+  //  private void addOptions(JMenu menu, Option[] options, String prefix) {
+  //
+  //    for (int i = 0; options != null && i < options.length; i++) {
+  //
+  //      final Option option = options[i];
+  //
+  //      String displayName = option.getDisplayName();
+  //      String qualifiedName = prefix + " " + displayName;
+  //
+  //      if (option.getOptions().length == 0) {
+  //
+  //        // add menu item
+  //        JMenuItem item = new JMenuItem(displayName);
+  //        item.setName(qualifiedName);
+  //        menu.add(item);
+  //        item.addActionListener(new ActionListener() {
+  //          public void actionPerformed(ActionEvent event) {
+  //            setOption(option);
+  //          }
+  //        });
+  //
+  //        valueToOption.put(option.getValue(), option);
+  //
+  //      } else {
+  //
+  //        // Add sub menu
+  //        JMenu subMenu = new JMenu(displayName);
+  //        menu.add(subMenu);
+  //        addOptions(subMenu, option.getOptions(), qualifiedName);
+  //
+  //      }
+  //    }
+  //
+  //  }
 
   /**
    * @return
