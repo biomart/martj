@@ -32,10 +32,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Stateful dialog for entering and editing database settings.
  */
 public class DatabaseSettingsDialog extends Box {
 
