@@ -628,8 +628,8 @@ class FormatPage(Page):
         Page.__init__(self)
         
         self.tabulated = JRadioButton( "Tabulated Format", 0, actionPerformed=self.actionPerformed )
-	self.tab = JRadioButton( "tabs", 1, actionPerformed=self.actionPerformed )
-	self.comma = JRadioButton( "comma", 0, actionPerformed=self.actionPerformed )
+	self.tab = JRadioButton( "tabs", 0, actionPerformed=self.actionPerformed )
+	self.comma = JRadioButton( "comma", 1, actionPerformed=self.actionPerformed )
 
 	self.fasta = JRadioButton( "FASTA Format", 0, actionPerformed=self.actionPerformed )
 
@@ -731,7 +731,7 @@ class FormatPage(Page):
         self.fasta.setSelected(0)
         self.group.add( self.tabulated  )
         self.group.add( self.fasta  )
-        self.comma.setSelected(1)
+        self.tab.setSelected(1)
         self.dependencies()
         
         
