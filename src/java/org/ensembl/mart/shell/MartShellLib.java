@@ -2501,7 +2501,8 @@ public class MartShellLib {
   public static final Pattern STOREPAT = Pattern.compile("(.*)\\s+(a|A)(s|S)\\s+(\\w+)$", Pattern.DOTALL);
 
   public static List ALLQUALIFIERS =
-    Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "only", "excluded", "in" });
+    Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "only", "excluded", "in", "like" });
+  //TODO: need to make MartShell get a union set of all possible qualifiers from DatasetConfig
 
   public static List BOOLEANQUALIFIERS = Arrays.asList(new String[] { "only", "excluded" });
   public final String[] BOOLEAN_NUMCONDITIONS = { BooleanFilter.isNotNULL_NUM, BooleanFilter.isNULL_NUM };
