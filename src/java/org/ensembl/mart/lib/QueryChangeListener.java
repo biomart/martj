@@ -41,47 +41,47 @@ public interface QueryChangeListener {
 
   void queryNameChanged(Query sourceQuery, String oldName, String newName);
 
-  void queryDatasetInternalNameChanged(
-    Query sourceQuery,
-    String oldDatasetInternalName,
-    String newDatasetInternalName);
+  void datasetChanged(
+    Query source,
+    String oldDataset,
+    String newDataset);
 
-  void queryDatasourceChanged(
+  void datasourceChanged(
     Query sourceQuery,
     DataSource oldDatasource,
     DataSource newDatasource);
 
-  void queryAttributeAdded(Query sourceQuery, int index, Attribute attribute);
+  void attributeAdded(Query sourceQuery, int index, Attribute attribute);
 
-  void queryAttributeRemoved(Query sourceQuery, int index, Attribute attribute);
+  void attributeRemoved(Query sourceQuery, int index, Attribute attribute);
 
-  void queryFilterAdded(Query sourceQuery, int index, Filter filter);
+  void filterAdded(Query sourceQuery, int index, Filter filter);
 
-  void queryFilterRemoved(Query sourceQuery, int index, Filter filter);
+  void filterRemoved(Query sourceQuery, int index, Filter filter);
 
-  void queryFilterChanged(
+  void filterChanged(
     Query sourceQuery,
     Filter oldFilter,
     Filter newFilter);
 
-  void querySequenceDescriptionChanged(
+  void sequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription);
 
-  void queryLimitChanged(Query query, int oldLimit, int newLimit);
+  void limitChanged(Query query, int oldLimit, int newLimit);
 
-  void queryStarBasesChanged(
+  void starBasesChanged(
     Query sourceQuery,
     String[] oldStarBases,
     String[] newStarBases);
 
-  void queryPrimaryKeysChanged(
+  void primaryKeysChanged(
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys);
 
-  void queryDatasetViewChanged(
+  void datasetViewChanged(
     Query query,
     DatasetView oldDatasetView,
     DatasetView newDatasetView);

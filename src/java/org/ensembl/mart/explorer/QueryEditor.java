@@ -107,71 +107,71 @@ public class QueryEditor extends JPanel {
 			String newName) {
 		}
 
-		public void queryDatasetInternalNameChanged(
+		public void datasetChanged(
 			Query sourceQuery,
 			String oldDatasetInternalName,
 			String newDatasetInternalName) {
 			stale = true;
 		}
 
-		public void queryDatasourceChanged(
+		public void datasourceChanged(
 			Query sourceQuery,
 			DataSource oldDatasource,
 			DataSource newDatasource) {
 			stale = true;
 		}
 
-		public void queryAttributeAdded(
+		public void attributeAdded(
 			Query sourceQuery,
 			int index,
 			Attribute attribute) {
 			stale = true;
 		}
 
-		public void queryAttributeRemoved(
+		public void attributeRemoved(
 			Query sourceQuery,
 			int index,
 			Attribute attribute) {
 			stale = true;
 		}
 
-		public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+		public void filterAdded(Query sourceQuery, int index, Filter filter) {
 			stale = true;
 		}
 
-		public void queryFilterRemoved(
+		public void filterRemoved(
 			Query sourceQuery,
 			int index,
 			Filter filter) {
 			stale = true;
 		}
 
-		public void queryFilterChanged(
+		public void filterChanged(
 			Query sourceQuery,
 			Filter oldFilter,
 			Filter newFilter) {
 			stale = true;
 		}
 
-		public void querySequenceDescriptionChanged(
+		public void sequenceDescriptionChanged(
 			Query sourceQuery,
 			SequenceDescription oldSequenceDescription,
 			SequenceDescription newSequenceDescription) {
 			stale = true;
 		}
 
-		public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+		public void limitChanged(Query query, int oldLimit, int newLimit) {
 			stale = true;
 		}
 
-		public void queryStarBasesChanged(
+		public void starBasesChanged(
 			Query sourceQuery,
 			String[] oldStarBases,
 			String[] newStarBases) {
 			stale = true;
 		}
 
-		public void queryPrimaryKeysChanged(
+		public void primaryKeysChanged(
 			Query sourceQuery,
 			String[] oldPrimaryKeys,
 			String[] newPrimaryKeys) {
@@ -189,7 +189,7 @@ public class QueryEditor extends JPanel {
     /* (non-Javadoc)
      * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
      */
-    public void queryDatasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+    public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
       // TODO Auto-generated method stub
       
     }

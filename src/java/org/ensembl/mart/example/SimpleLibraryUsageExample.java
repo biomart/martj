@@ -70,7 +70,7 @@ public class SimpleLibraryUsageExample {
 		query.setDataSource(ds);
     
     // dataset query applies to
-    query.setDatasetInternalName("hsapiens_ensemblgene");
+    query.setDataset("hsapiens_ensemblgene");
 
 		// prefixes for databases we want to use
 		query.setStarBases(

@@ -70,7 +70,7 @@ public class Query {
    */
   public void initialise(Query oq) {
 
-    setDatasetInternalName(oq.getDatasetInternalName());
+    setDataset(oq.getDataset());
     setDataSource(oq.getDataSource());
 
     removeAllAttributes();
@@ -157,7 +157,7 @@ public class Query {
     if (index > -1) {
       filters.remove(index);
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).queryFilterRemoved(
+        ((QueryChangeListener) listeners.get(i)).filterRemoved(
           this,
           index,
           filter);
@@ -219,7 +219,7 @@ public class Query {
   public void addFilter(int index, Filter filter) {
     filters.add(index, filter);
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryFilterAdded(
+      ((QueryChangeListener) listeners.get(i)).filterAdded(
         this,
         index,
         filter);
@@ -235,7 +235,7 @@ public class Query {
     if (index > -1) {
       attributes.remove(index);
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).queryAttributeRemoved(
+        ((QueryChangeListener) listeners.get(i)).attributeRemoved(
           this,
           index,
           attribute);
@@ -251,7 +251,7 @@ public class Query {
     this.sequenceDescription = s;
     this.querytype = Query.SEQUENCE;
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).querySequenceDescriptionChanged(
+      ((QueryChangeListener) listeners.get(i)).sequenceDescriptionChanged(
         this,
         oldSequenceDescription,
         this.sequenceDescription);
@@ -282,7 +282,7 @@ public class Query {
     String[] old = this.primaryKeys;
     this.primaryKeys = primaryKeys;
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryPrimaryKeysChanged(
+      ((QueryChangeListener) listeners.get(i)).primaryKeysChanged(
         this,
         old,
         this.primaryKeys);
@@ -304,7 +304,7 @@ public class Query {
     String[] old = this.starBases;
     this.starBases = starBases;
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryStarBasesChanged(
+      ((QueryChangeListener) listeners.get(i)).starBasesChanged(
         this,
         old,
         this.starBases);
@@ -319,7 +319,7 @@ public class Query {
       int old = this.limit;
       this.limit = inlimit;
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).queryLimitChanged(
+        ((QueryChangeListener) listeners.get(i)).limitChanged(
           this,
           old,
           this.limit);
@@ -357,7 +357,7 @@ public class Query {
     StringBuffer buf = new StringBuffer();
 
     buf.append("[");
-    buf.append(" datasetInternalName=").append(datasetInternalName);
+    buf.append(" dataset=").append(dataset);
     buf.append(", dataSource=").append(dataSource);
     buf.append(", starBases=[").append(StringUtil.toString(starBases));
     buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));
@@ -435,7 +435,7 @@ public class Query {
   /**
    * Name of dataset this query applies to.
    */
-  private String datasetInternalName;
+  private String dataset;
 
   public synchronized QueryChangeListener[] getQueryChangeListeners() {
     return (QueryChangeListener[]) listeners.toArray(
@@ -498,7 +498,7 @@ public class Query {
     filters.add(index, newFilter);
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryFilterChanged(
+      ((QueryChangeListener) listeners.get(i)).filterChanged(
         this,
         oldFilter,
         newFilter);
@@ -517,37 +517,37 @@ public class Query {
     DataSource oldDatasource = this.dataSource;
     this.dataSource = dataSource;
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryDatasourceChanged(
+      ((QueryChangeListener) listeners.get(i)).datasourceChanged(
         this,
         oldDatasource,
         this.dataSource);
   }
 
-  public String getDatasetInternalName() {
-    return datasetInternalName;
+  public String getDataset() {
+    return dataset;
   }
 
   /**
    * Sets the value and propagates a PropertyChange event to listeners. The 
-   * property name is in the event is "datasetInternalName". No event is propagated 
-   * if the parameter is equal to the current datasetInternalName.
-   * @param datasetInternalName new datasetInternalName.
+   * property name is in the event is "dataset". No event is propagated 
+   * if the parameter is equal to the current dataset.
+   * @param dataset new dataset.
    */
-  public void setDatasetInternalName(String datasetName) {
+  public void setDataset(String datasetName) {
 
-    if (this.datasetInternalName == datasetName
+    if (this.dataset == datasetName
       || datasetName != null
-      && datasetName.equals(this.datasetInternalName))
+      && datasetName.equals(this.dataset))
       return;
 
-    String oldDatasetName = this.datasetInternalName;
-    this.datasetInternalName = datasetName;
+    String oldDatasetName = this.dataset;
+    this.dataset = datasetName;
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryDatasetInternalNameChanged(
+      ((QueryChangeListener) listeners.get(i)).datasetChanged(
         this,
         oldDatasetName,
-        this.datasetInternalName);
+        this.dataset);
   }
 
   /**
@@ -577,7 +577,7 @@ public class Query {
     if (!attributes.contains(attribute)) {
       attributes.add(index, attribute);
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).queryAttributeAdded(
+        ((QueryChangeListener) listeners.get(i)).attributeAdded(
           this,
           index,
           attribute);
@@ -591,7 +591,7 @@ public class Query {
   public void clear() {
     removeAllAttributes();
     removeAllFilters();
-    setDatasetInternalName(null);
+    setDataset(null);
     setDataSource(null);
     setLimit(0);
     setPrimaryKeys(null);
@@ -606,7 +606,7 @@ public class Query {
     DatasetView old = this.datasetView;
     this.datasetView = datasetView;
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryDatasetViewChanged(
+      ((QueryChangeListener) listeners.get(i)).datasetViewChanged(
         this,
         old,
         datasetView);

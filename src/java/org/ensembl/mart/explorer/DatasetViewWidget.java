@@ -216,7 +216,7 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
 
         // initialise the query with settings from the datasetview.
         query.setDatasetView( dsv );
-        query.setDatasetInternalName(dsv.getDataset());
+        query.setDataset(dsv.getDataset());
         query.setDataSource(dsv.getDatasource());
         query.setPrimaryKeys(dsv.getPrimaryKeys());
         query.setStarBases(dsv.getStarBases());
@@ -328,7 +328,7 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
       }
     });
 
-    if (query.getDatasetInternalName() != null)
+    if (query.getDataset() != null)
       treeTopMenu.add(clearDatasetMenuItem);
 
     String[][] tree = new String[][] {
@@ -385,59 +385,59 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
     String newName) {
   }
 
-  public void queryDatasetInternalNameChanged(
+  public void datasetChanged(
     Query sourceQuery,
     String oldDatasetInternalName,
     String newDatasetInternalName) {
 
   }
 
-  public void queryDatasourceChanged(
+  public void datasourceChanged(
     Query sourceQuery,
     DataSource oldDatasource,
     DataSource newDatasource) {
   }
 
-  public void queryAttributeAdded(
+  public void attributeAdded(
     Query sourceQuery,
     int index,
     Attribute attribute) {
   }
 
-  public void queryAttributeRemoved(
+  public void attributeRemoved(
     Query sourceQuery,
     int index,
     Attribute attribute) {
   }
 
-  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+  public void filterAdded(Query sourceQuery, int index, Filter filter) {
   }
 
-  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+  public void filterRemoved(Query sourceQuery, int index, Filter filter) {
   }
 
-  public void queryFilterChanged(
+  public void filterChanged(
     Query sourceQuery,
     Filter oldFilter,
     Filter newFilter) {
   }
 
-  public void querySequenceDescriptionChanged(
+  public void sequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
   }
 
-  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+  public void limitChanged(Query query, int oldLimit, int newLimit) {
   }
 
-  public void queryStarBasesChanged(
+  public void starBasesChanged(
     Query sourceQuery,
     String[] oldStarBases,
     String[] newStarBases) {
   }
 
-  public void queryPrimaryKeysChanged(
+  public void primaryKeysChanged(
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys) {
@@ -466,7 +466,7 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
    * Responds to a change in dataset view on the query. Updates the state of
    * this widget by changing the currently selected item in the list.
    */
-  public void queryDatasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+  public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
     String s = "";
     if ( newDatasetView!=null )
       s = newDatasetView.getDisplayName();

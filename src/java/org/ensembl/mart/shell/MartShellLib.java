@@ -211,7 +211,7 @@ public class MartShellLib {
 	 */
 	public String QueryToMQL(Query query) throws InvalidQueryException, ConfigurationException {
 
-		String datasetName = query.getDatasetInternalName();
+		String datasetName = query.getDataset();
 
 		//	get datasetName first
 		if (datasetName == null)
@@ -533,7 +533,7 @@ public class MartShellLib {
 								throw new InvalidQueryException("DatasetView " + datasetviewreq + " has not been loaded\n");
 
 							dset = adaptor.getDatasetViewByInternalName(datasetviewreq);
-							query.setDatasetInternalName(datasetviewreq);
+							query.setDataset(datasetviewreq);
 
 							if (martreq != null) {
 								if (!dataSourceMap.containsKey(martreq))
@@ -558,7 +558,7 @@ public class MartShellLib {
 							if (!adaptor.supportsInternalName(envDataset))
 								throw new InvalidQueryException("DatasetView " + envDataset + " is not found in this mart\n");
 							dset = adaptor.getDatasetViewByInternalName(envDataset);
-							query.setDatasetInternalName(envDataset);
+							query.setDataset(envDataset);
 						}
 					}
 
@@ -572,7 +572,7 @@ public class MartShellLib {
 							throw new InvalidQueryException("Invalid Query Recieved, could not get a Mart from the environment or the DatasetView: " + newquery + "\n");
 					}
 
-					query.setDatasetInternalName(dset.getInternalName());
+					query.setDataset(dset.getInternalName());
 					query.setStarBases(dset.getStarBases());
 					query.setPrimaryKeys(dset.getPrimaryKeys());
 

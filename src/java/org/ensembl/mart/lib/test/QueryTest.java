@@ -169,8 +169,8 @@ public class QueryTest extends TestCase implements QueryChangeListener {
 
   public void testSettingDatasetInternalName() throws Exception {
     String datasetInternalName = "DS1";
-    q.setDatasetInternalName( datasetInternalName );
-    assertEquals(datasetInternalName, q.getDatasetInternalName());
+    q.setDataset( datasetInternalName );
+    assertEquals(datasetInternalName, q.getDataset());
     expectedNumChanges++;
     assertEquals(expectedNumChanges, numChanges);
   }
@@ -178,7 +178,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
-  public void queryDatasetInternalNameChanged(
+  public void datasetChanged(
     Query sourceQuery,
     String oldDatasetInternalName,
     String newDatasetInternalName) {
@@ -188,7 +188,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
-  public void queryStarBasesChanged(
+  public void starBasesChanged(
     Query sourceQuery,
     String[] oldStarBases,
     String[] newStarBases) {
@@ -198,7 +198,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
-  public void queryPrimaryKeysChanged(
+  public void primaryKeysChanged(
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys) {
@@ -218,7 +218,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
    */
-  public void queryDatasourceChanged(
+  public void datasourceChanged(
     Query sourceQuery,
     DataSource oldDatasource,
     DataSource newDatasource) {
@@ -228,7 +228,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Attribute)
    */
-  public void queryAttributeAdded(
+  public void attributeAdded(
     Query sourceQuery,
     int index,
     Attribute attribute) {
@@ -238,7 +238,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeRemoved(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Attribute)
    */
-  public void queryAttributeRemoved(
+  public void attributeRemoved(
     Query sourceQuery,
     int index,
     Attribute attribute) {
@@ -248,21 +248,21 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+  public void filterAdded(Query sourceQuery, int index, Filter filter) {
     numChanges++;
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+  public void filterRemoved(Query sourceQuery, int index, Filter filter) {
     numChanges++;
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
    */
-  public void querySequenceDescriptionChanged(
+  public void sequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
@@ -272,14 +272,14 @@ public class QueryTest extends TestCase implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
    */
-  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+  public void limitChanged(Query query, int oldLimit, int newLimit) {
     numChanges++;
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterChanged(
+  public void filterChanged(
     Query sourceQuery,
     Filter oldFilter,
     Filter newFilter) {

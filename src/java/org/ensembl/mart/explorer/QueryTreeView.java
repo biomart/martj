@@ -428,7 +428,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 
     // preload some default settings
-    query.setDatasetInternalName("ensembl_genes_homo_sapiens");
+    query.setDataset("ensembl_genes_homo_sapiens");
     query.addAttribute(new FieldAttribute("ensembl_gene_id"));
     query.addFilter(new BasicFilter("ensembl_gene_id", "=", "ENSG001"));
     query.addFilter(new BasicFilter("chr_name", "=", "3"));
@@ -456,7 +456,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * specifies.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
-  public void queryDatasetInternalNameChanged(
+  public void datasetChanged(
     Query sourceQuery,
     String oldDatasetInternalName,
     String newDatasetInternalName) {
@@ -469,7 +469,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * TODO Set the Datasource node with the newDatasource.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
    */
-  public void queryDatasourceChanged(
+  public void datasourceChanged(
     Query sourceQuery,
     DataSource oldDatasource,
     DataSource newDatasource) {
@@ -483,7 +483,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * position in the list of attributes.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
    */
-  public void queryAttributeAdded(
+  public void attributeAdded(
     Query sourceQuery,
     int index,
     Attribute attribute) {
@@ -540,7 +540,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * the next attribute if available, otherwise the attributesNode.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
    */
-  public void queryAttributeRemoved(
+  public void attributeRemoved(
     Query sourceQuery,
     int index,
     Attribute attribute) {
@@ -557,7 +557,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * from the dsView, otherwise it is based solely on the filter.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+  public void filterAdded(Query sourceQuery, int index, Filter filter) {
 
     // Try to get a user friendly fieldName, 
     // otherwise use the raw one from filter
@@ -581,7 +581,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+  public void filterRemoved(Query sourceQuery, int index, Filter filter) {
 
     filtersNode.remove(index);
     treeModel.reload(filtersNode);
@@ -592,7 +592,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
    */
-  public void queryFilterChanged(
+  public void filterChanged(
     Query sourceQuery,
     Filter oldFilter,
     Filter newFilter) {
@@ -604,7 +604,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
    */
-  public void querySequenceDescriptionChanged(
+  public void sequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
@@ -614,14 +614,14 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
    */
-  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+  public void limitChanged(Query query, int oldLimit, int newLimit) {
   }
 
   /**
    * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
-  public void queryStarBasesChanged(
+  public void starBasesChanged(
     Query sourceQuery,
     String[] oldStarBases,
     String[] newStarBases) {
@@ -631,13 +631,13 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
    * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
-  public void queryPrimaryKeysChanged(
+  public void primaryKeysChanged(
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys) {
   }
 
-  public void queryDatasetViewChanged(
+  public void datasetViewChanged(
     Query query,
     DatasetView oldDatasetView,
     DatasetView newDatasetView) {
