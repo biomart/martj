@@ -20,6 +20,8 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.naming.ConfigurationException;
 import javax.swing.Box;
@@ -35,6 +37,7 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
  * A boolean filter widget has a description and three radio buttons;
@@ -149,7 +152,8 @@ public class BooleanFilterWidget
     else
       currentFilter = null;
 
-    query.addFilter(currentFilter);
+    if ( currentFilter!=null )
+      query.addFilter(currentFilter);
   }
 
   /* (non-Javadoc)
@@ -196,6 +200,10 @@ public class BooleanFilterWidget
   public static void main(String[] args)
     throws org.ensembl.mart.lib.config.ConfigurationException {
 
+    // switch on logging for test purposes.
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
+    
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);

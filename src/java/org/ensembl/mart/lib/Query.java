@@ -21,6 +21,8 @@ package org.ensembl.mart.lib;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -34,6 +36,9 @@ import org.ensembl.util.StringUtil;
  * are notified of changes in the query's state such as the addition of an attribute or remval of
  * a filter.
  * 
+ * <p>If the log level is set to >= FINE then the query is written to the log
+ * after it's state is changed but before calling the listeners.</p>
+ * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @see Attribute
@@ -43,6 +48,8 @@ import org.ensembl.util.StringUtil;
  */
 
 public class Query {
+
+  private final static Logger logger = Logger.getLogger(Query.class.getName());
 
   private List listeners = new ArrayList();
 
@@ -156,12 +163,14 @@ public class Query {
     int index = filters.indexOf(filter);
     if (index > -1) {
       filters.remove(index);
+      log();
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).filterRemoved(
           this,
           index,
           filter);
     }
+    
   }
 
   /**
@@ -218,11 +227,9 @@ public class Query {
    */
   public void addFilter(int index, Filter filter) {
     filters.add(index, filter);
+    log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).filterAdded(
-        this,
-        index,
-        filter);
+      ((QueryChangeListener) listeners.get(i)).filterAdded(this, index, filter);
   }
 
   /**
@@ -234,6 +241,7 @@ public class Query {
     int index = attributes.indexOf(attribute);
     if (index > -1) {
       attributes.remove(index);
+      log();
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).attributeRemoved(
           this,
@@ -250,6 +258,9 @@ public class Query {
     SequenceDescription oldSequenceDescription = this.sequenceDescription;
     this.sequenceDescription = s;
     this.querytype = Query.SEQUENCE;
+    
+    log();
+    
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).sequenceDescriptionChanged(
         this,
@@ -281,6 +292,7 @@ public class Query {
   public void setPrimaryKeys(String[] primaryKeys) {
     String[] old = this.primaryKeys;
     this.primaryKeys = primaryKeys;
+    log();
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).primaryKeysChanged(
         this,
@@ -303,6 +315,9 @@ public class Query {
   public void setStarBases(String[] starBases) {
     String[] old = this.starBases;
     this.starBases = starBases;
+    
+    log();
+    
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).starBasesChanged(
         this,
@@ -318,6 +333,7 @@ public class Query {
     if (inlimit > 0) {
       int old = this.limit;
       this.limit = inlimit;
+      log();
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).limitChanged(
           this,
@@ -410,7 +426,6 @@ public class Query {
     tmp *= 31;
     if (queryName != null)
       tmp += queryName.hashCode();
-
 
     return tmp;
   }
@@ -516,6 +531,7 @@ public class Query {
   public void setDataSource(DataSource dataSource) {
     DataSource oldDatasource = this.dataSource;
     this.dataSource = dataSource;
+    log();
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).datasourceChanged(
         this,
@@ -543,6 +559,8 @@ public class Query {
     String oldDatasetName = this.dataset;
     this.dataset = datasetName;
 
+    log();
+
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).datasetChanged(
         this,
@@ -561,8 +579,21 @@ public class Query {
   /**
    * @param string -- String name to apply to this Query.
    */
-  public void setQueryName(String string) {
-    queryName = string;
+  public void setQueryName(String queryName) {
+    
+    if (this.queryName.equals( queryName ) )
+      return;
+    
+    String old = this.queryName;
+    this.queryName = queryName;
+    
+    log();
+    
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryNameChanged(
+        this,
+        old,
+        this.queryName);
   }
 
   /**
@@ -576,6 +607,7 @@ public class Query {
 
     if (!attributes.contains(attribute)) {
       attributes.add(index, attribute);
+      log();
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).attributeAdded(
           this,
@@ -586,6 +618,17 @@ public class Query {
   }
 
   /**
+   * Cause the result of toString() to be printed to the log if 
+   * logging level for this class is >= FINE. Useful for debugging
+   * and test purposes. Called automatically by all the state changing
+   * methods such as addFilter(...) and setDataset(...).
+   */
+  public void log() {
+    if ( logger.isLoggable( Level.FINE ))
+      logger.fine(this.toString());
+  }
+
+  /**
    * Unsets all property values.
    */
   public void clear() {
@@ -593,7 +636,7 @@ public class Query {
     setDataSource(null);
     setDataset(null);
     setDatasetView(null);
-    
+
     removeAllAttributes();
     removeAllFilters();
 
@@ -610,6 +653,7 @@ public class Query {
   public void setDatasetView(DatasetView datasetView) {
     DatasetView old = this.datasetView;
     this.datasetView = datasetView;
+    log();
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).datasetViewChanged(
         this,
