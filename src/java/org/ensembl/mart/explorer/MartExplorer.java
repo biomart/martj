@@ -30,7 +30,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -60,7 +59,6 @@ import javax.swing.KeyStroke;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.util.SimpleTimer;
 
 /**
  * MartExplorer is a graphical application that enables a 
