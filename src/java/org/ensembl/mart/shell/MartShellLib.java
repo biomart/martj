@@ -578,13 +578,16 @@ public class MartShellLib {
 					usingClause = false;
 					getClause = true;
 				} else {
-					if (dset != null)
+					if (dset != null) {
+						logger.info("Recieved " + thisToken + " as appearent dataset, after it had already been set\n");
 						throw new InvalidQueryException(
 							"Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
-					else {
+					} else {
 						if (!martconf.containsDataset(thisToken))
 							throw new InvalidQueryException("Dataset " + thisToken + " is not found in this mart\n");
+							
 						dset = martconf.getDatasetByName(thisToken);
+						logger.info("setting local dataset to " + dset.getInternalName() + "\n");
 					}
 
 				}
@@ -659,12 +662,13 @@ public class MartShellLib {
 					whereFilterVal = false;
 					whereFilterName = true;
 				} else if (whereFilterName) {
-					if (thisToken.matches(".+(=|>|<|>=|<=).+")) {
-						Pattern pat = Pattern.compile(".+(=|>|<|>=|<=).+");
+					if (thisToken.matches("[^>=<]+([>=<]+)[^>=<]*")) {
+						Pattern pat = Pattern.compile("[^>=<]+([>=<]+)[^>=<]*"); //one or more non qualifier characters followed immediately by a qualifier, followed by zero or more non qualifier characters
 						Matcher m = pat.matcher(thisToken);
 
 						m.find(); // know its there, just have to find it
 						filterCondition = m.group(1);
+						
 						StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
 
 						if (filtToks.countTokens() == 2) {
@@ -698,14 +702,16 @@ public class MartShellLib {
 						whereFilterName = false;
 						whereFilterCond = false;
 						whereFilterVal = false;
-					} else if (thisToken.matches("(=|>|<|>=|<=).+")) {
-						Pattern p = Pattern.compile("(=|>|<|>=|<=).+");
+					} else if (thisToken.matches("([>=<]+)([^>=<]+)")) {
+						Pattern p = Pattern.compile("([>=<]+)([^>=<]+)");
 						Matcher m = p.matcher(thisToken);
 						m.find();
 						filterCondition = m.group(1);
+						String thisFilterValue = m.group(2);
 
-						StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
-						query = addBasicFilter(query, dset, filterName, filterCondition, filtToks.nextToken());
+            logger.info(" storing qual value " + filterCondition + " , " + thisFilterValue + "\n");
+            
+						query = addBasicFilter(query, dset, filterName, filterCondition, thisFilterValue);
 
 						filterValue = new StringBuffer();
 						filterName = null;
@@ -714,6 +720,9 @@ public class MartShellLib {
 						whereFilterCond = false;
 						whereFilterVal = false;
 					} else {
+						
+						logger.info("Storing " + thisToken + " as filterCondition, moving to whereFilterVal\n");
+						
 						filterCondition = thisToken;
 						whereFilterCond = false;
 						whereFilterVal = true;
@@ -928,13 +937,6 @@ public class MartShellLib {
 			nestedQuery = qbuf.toString();
 		}
 
-		nestedLevel++;
-
-		logger.info("Recieved nested query " + nestedQuery + "\n\nat nestedLevel " + nestedLevel + "\n");
-
-		if (nestedLevel > MAXNESTING)
-			throw new InvalidQueryException("Only " + MAXNESTING + " levels of nested Query are allowed\n");
-
 		//validate, then call parseQuery on the subcommand
 		String[] tokens = nestedQuery.split("\\s");
 		if (!tokens[0].trim().equals(USINGQSTART))
@@ -949,11 +951,21 @@ public class MartShellLib {
 			//else not needed
 		}
 
+		nestedLevel++;
+
+		logger.info("Recieved nested query " + nestedQuery + "\n\nat nestedLevel " + nestedLevel + "\n");
+
+		if (nestedLevel > MAXNESTING) {
+			nestedLevel--;
+			throw new InvalidQueryException("Only " + MAXNESTING + " levels of nested Query are allowed\n");
+		}
+
 		Query subQuery = null;
 		try {
 			subQuery = MQLtoQuery(nestedQuery);
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not parse Nested Query : " + e.getMessage());
+			nestedLevel--;
+			throw new InvalidQueryException("Could not parse Nested Query : " + e.getMessage(), e);
 		}
 
 		Filter f = null;
