@@ -63,7 +63,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true);
+		//autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -215,7 +216,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						if (traniDs.size() > 0) {
 							//					  process the previous tranID, if this isnt the first time through, then refresh the traniDs TreeMap
 							if (lastTran.intValue() > 0)
-							  seqWriter.writeSequences(lastTran);
+								seqWriter.writeSequences(lastTran);
 							traniDs = new TreeMap();
 						}
 						lastTran = tranID;
@@ -362,8 +363,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						+ "assembly="
 						+ assemblyout);
 
-               if (osr.checkError())
-                 throw new IOException();
+				if (osr.checkError())
+					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
 					osr.print(separator);
@@ -388,8 +389,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				osr.print(separator + (String) atts.get(Description));
 				osr.print(separator);
 
-               if (osr.checkError())
-                 throw new IOException();
+				if (osr.checkError())
+					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
 				dna.CacheSequence(
@@ -399,52 +400,57 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					geneloc.getEnd());
 
 				List locbytes = new ArrayList();
-				 // to collect all sequence before translation
+				int seqLen = 0;
 
-				 for (Iterator lociter = locations.keySet().iterator();
-					 lociter.hasNext();
-					 ) {
-					 SequenceLocation loc =
-						 (SequenceLocation) locations.get(
-							 (Integer) lociter.next());
-					 if (loc.getStrand() < 0)
-						 locbytes.add(
-							 SequenceUtil.reverseComplement(
-								 dna.getSequence(
-									 species,
-									 loc.getChr(),
-									 loc.getStart(),
-									 loc.getEnd())));
-					 else
-						 locbytes.add(
-							 dna.getSequence(
-								 species,
-								 loc.getChr(),
-								 loc.getStart(),
-								 loc.getEnd()));
-				 }
-				
-				 //iterate through locbytes twice, once to calculate desired length of sequence byte[], and once to fill sequence byte[]
-				 int seqLen = 0;
-				 for (int i = 0, n = locbytes.size(); i < n; i++) {
-					 byte[] thesebytes = (byte[]) locbytes.get(i);
-					 seqLen += thesebytes.length;
-				 }
-				
-				 byte[] sequence = new byte[seqLen];
-				 int nextPos = 0;
-				 for (int i = 0, n = locbytes.size(); i < n; i++) {
-					 byte[] thisChunk = (byte[]) locbytes.get(i);
-					 System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
-					 nextPos += thisChunk.length;
-				 }
-				
-				 osr.write( SequenceUtil.dna2protein(sequence));
+				// to collect all sequence before translation
+				for (Iterator lociter = locations.keySet().iterator();
+					lociter.hasNext();
+					) {
+					SequenceLocation loc =
+						(SequenceLocation) locations.get(
+							(Integer) lociter.next());
+					byte[] theseBytes = null;
+					if (loc.getStrand() < 0)
+						theseBytes =
+							SequenceUtil.reverseComplement(
+								dna.getSequence(
+									species,
+									loc.getChr(),
+									loc.getStart(),
+									loc.getEnd()));
+					else
+						theseBytes =
+							dna.getSequence(
+								species,
+								loc.getChr(),
+								loc.getStart(),
+								loc.getEnd());
+
+					locbytes.add(theseBytes);
+					seqLen += theseBytes.length;
+				}
+
+				//iterate through locbytes to fill sequence byte[]
+				byte[] sequence = new byte[seqLen];
+				int nextPos = 0;
+				for (int i = 0, n = locbytes.size(); i < n; i++) {
+					byte[] thisChunk = (byte[]) locbytes.get(i);
+					System.arraycopy(
+						thisChunk,
+						0,
+						sequence,
+						nextPos,
+						thisChunk.length);
+					nextPos += thisChunk.length;
+				}
+
+				locbytes = null;
+				osr.write(SequenceUtil.dna2protein(sequence));
 				osr.print("\n");
 
-                if (osr.checkError())
-                  throw new IOException();
-                  
+				if (osr.checkError())
+					throw new IOException();
+
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -478,8 +484,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						+ "assembly="
 						+ assemblyout);
 
-                if (osr.checkError())
-                  throw new IOException();
+				if (osr.checkError())
+					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
 					osr.print(separator);
@@ -504,8 +510,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				osr.print(separator + (String) atts.get(Description));
 				osr.print("\n");
 
-                if (osr.checkError())
-                  throw new IOException();
+				if (osr.checkError())
+					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
 				dna.CacheSequence(
@@ -514,54 +520,60 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					geneloc.getStart(),
 					geneloc.getEnd());
 
-                List locbytes = new ArrayList();
-				// to collect all sequence before translation
+				List locbytes = new ArrayList();
+				int seqLen = 0;
 
+				// to collect all sequence before translation
 				for (Iterator lociter = locations.keySet().iterator();
 					lociter.hasNext();
 					) {
 					SequenceLocation loc =
 						(SequenceLocation) locations.get(
 							(Integer) lociter.next());
+					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
-						locbytes.add(
+						theseBytes =
 							SequenceUtil.reverseComplement(
 								dna.getSequence(
 									species,
 									loc.getChr(),
 									loc.getStart(),
-									loc.getEnd())));
+									loc.getEnd()));
 					else
-						locbytes.add(
+						theseBytes =
 							dna.getSequence(
 								species,
 								loc.getChr(),
 								loc.getStart(),
-								loc.getEnd()));
+								loc.getEnd());
+
+					locbytes.add(theseBytes);
+					seqLen += theseBytes.length;
 				}
-				
-				//iterate through locbytes twice, once to calculate desired length of sequence byte[], and once to fill sequence byte[]
-				int seqLen = 0;
-				for (int i = 0, n = locbytes.size(); i < n; i++) {
-					byte[] thesebytes = (byte[]) locbytes.get(i);
-					seqLen += thesebytes.length;
-				}
-				
+
+				//iterate through locbytes to fill sequence byte[]
 				byte[] sequence = new byte[seqLen];
 				int nextPos = 0;
 				for (int i = 0, n = locbytes.size(); i < n; i++) {
 					byte[] thisChunk = (byte[]) locbytes.get(i);
-					System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
+					System.arraycopy(
+						thisChunk,
+						0,
+						sequence,
+						nextPos,
+						thisChunk.length);
 					nextPos += thisChunk.length;
 				}
-				
-				osr.writeSequence( SequenceUtil.dna2protein(sequence));
-				osr.print("\n");
-        osr.resetColumnCount();
 
-                if (osr.checkError())
-                  throw new IOException();
-                  
+				locbytes = null;
+
+				osr.writeSequence(SequenceUtil.dna2protein(sequence));
+				osr.print("\n");
+				osr.resetColumnCount();
+
+				if (osr.checkError())
+					throw new IOException();
+
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -572,7 +584,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		}
 	};
 
-  private final int maxColumnLen = 80;
+	private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;

@@ -65,7 +65,8 @@ public class DNAAdaptor {
 			|| (start > cachedSeqEnd)
 			|| (end > cachedSeqEnd)) {
 			List bytes = new ArrayList();
-
+			int seqLength = 0;
+			
 			int tmp = start - 1;
 			// exact coord of a chunk start
 			cachedSeqStart = tmp - (tmp % chunkSize) + 1;
@@ -87,8 +88,11 @@ public class DNAAdaptor {
 					int nColumns = rs.getMetaData().getColumnCount();
 
 					if (nColumns > 0) {
-						for (int i = 1; i <= nColumns; ++i)
-							bytes.add(rs.getBytes(i));
+						for (int i = 1; i <= nColumns; ++i) {
+							byte[] theseBytes = rs.getBytes(i);
+							bytes.add(theseBytes);
+							seqLength += theseBytes.length;
+						}
 					} else {
 						logger.error(
 							"No Sequence Returned for chromosome "
@@ -96,10 +100,6 @@ public class DNAAdaptor {
 								+ "\n");
 					}
 				}
-
-				int seqLength = 0;
-				for (int i = 0, n = bytes.size(); i < n; i++)
-					seqLength += ((byte[]) bytes.get(i)).length;
 
 				cachedSeq = new byte[seqLength];
 				int nextPos = 0;
@@ -115,8 +115,6 @@ public class DNAAdaptor {
 				}
 
 				bytes = null;
-				System.gc();
-				// try to garbage collect some time after this method runs
 
 				lastChr = chr;
 				cachedSeqEnd = cachedSeqStart + cachedSeq.length - 1;
