@@ -15,17 +15,17 @@ import java.io.*;
 import java.net.*;
 
 
-public class MartExplorerGUI extends JFrame {
+public class MartExplorerApplication extends JFrame {
   private final static int WIDTH = 600;
   private final static int HEIGHT = 600;
 
   private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:hvs:c:g:";
 
   /** Creates new form JFrame */
-  public MartExplorerGUI() {
+  public MartExplorerApplication() {
     initGUI();
     setSize( new Dimension(WIDTH, HEIGHT) );
-	queryPanel.setMartExplorerGUI( this );
+	queryPanel.setMartExplorerApplication( this );
   }
 
   public static void main (String[] args) {
@@ -69,7 +69,7 @@ public class MartExplorerGUI extends JFrame {
        System.exit(0);
      }
      else {
-	    new MartExplorerGUI().run();
+	    new MartExplorerApplication().run();
 	 }
   }
 
@@ -272,7 +272,7 @@ public class MartExplorerGUI extends JFrame {
 
   public static String usage() {
     return 
-      "MartExplorerGUI <OPTIONS>"
+      "MartExplorerApplication <OPTIONS>"
       + "\n"
       + "\n-h                             - this screen"
       + "\n-v                             - verbose logging output"
@@ -296,7 +296,7 @@ public class MartExplorerGUI extends JFrame {
   }
 
   private Map resultWindows = new TreeMap();
-  private static final Logger logger = Logger.getLogger(MartExplorerGUI.class.getName());
+  private static final Logger logger = Logger.getLogger(MartExplorerApplication.class.getName());
   private QueryPanel queryPanel = new QueryPanel();
   private JMenuBar menuBar = new JMenuBar();
   private JMenu fileMenu = new JMenu();

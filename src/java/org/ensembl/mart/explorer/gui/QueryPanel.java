@@ -12,9 +12,9 @@ import javax.swing.JScrollPane;
 /** Panel in which user enters a query. */
 public class QueryPanel extends JPanel {
     /** Creates new form QueryPanel */
-    public QueryPanel( MartExplorerGUI martExplorerGUI) {
+    public QueryPanel( MartExplorerApplication martExplorerApplication) {
         this();
-        this.martExplorerGUI = martExplorerGUI;
+        this.martExplorerApplication = martExplorerApplication;
     }
 
     public QueryPanel() {
@@ -54,12 +54,12 @@ public class QueryPanel extends JPanel {
 
     }
 
-    public MartExplorerGUI getMartExplorerGUI(){
-            return martExplorerGUI;
+    public MartExplorerApplication getMartExplorerApplication(){
+            return martExplorerApplication;
         }
 
-    public void setMartExplorerGUI(MartExplorerGUI martExplorerGUI){
-            this.martExplorerGUI = martExplorerGUI;
+    public void setMartExplorerApplication(MartExplorerApplication martExplorerApplication){
+            this.martExplorerApplication = martExplorerApplication;
         }
 
     private JTabbedPane queryTabs = new JTabbedPane();
@@ -71,5 +71,5 @@ public class QueryPanel extends JPanel {
 			databaseTab
       ,exportTab
       ,filterTab,attributeTab };
-    private MartExplorerGUI martExplorerGUI;
+    private MartExplorerApplication martExplorerApplication;
 }
