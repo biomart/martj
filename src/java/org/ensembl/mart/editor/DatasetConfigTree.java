@@ -712,7 +712,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 		
 	    for (int i = 0; i < options.length; i++ ){
 			Option op = options[i];
-			String opName = op.getInternalName();
+			//String opName = op.getInternalName();
+			String opName = op.getDisplayName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
 			pa.addOptions(MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField,pushTableName,field,opName,orderSQL));
