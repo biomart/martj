@@ -152,8 +152,61 @@ public class IDListFilterWidget
 
   }
 
+  /**
+   * Selects the button and item in list (if necessary) when filter changed.
+   * This is a callback method called when a filter with the same fieldName 
+   * as this widget is added or
+   * removed to/from the query.
+   */
   protected void setFilter(Filter filter) {
-    // TODO Auto-generated method stub
+
+    if (filter == null) {
+
+      noneButton.removeActionListener(this);
+      noneButton.setSelected(true);
+      noneButton.addActionListener(this);
+
+    } else {
+
+      IDListFilter f = (IDListFilter) filter;
+
+      String[] ids = null;
+      URL u = null;
+      File fl = null;
+
+      if ((ids = f.getIdentifiers()) != null && ids.length != 0) {
+
+        idStringRadioButton.removeActionListener(this);
+        idStringRadioButton.setSelected(true);
+        idStringRadioButton.addActionListener(this);
+
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < ids.length; i++) 
+          buf.append(ids[i]).append('\n');
+        
+        idString.setText(buf.toString());
+        
+      } else if ((u = f.getUrl()) != null) {
+
+        urlRadioButton.removeActionListener(this);
+        urlRadioButton.setSelected(true);
+        urlRadioButton.addActionListener(this);
+
+        url.setText(u.toExternalForm());
+
+      } else if ((fl = f.getFile()) != null) {
+
+        fileRadioButton.removeActionListener(this);
+        fileRadioButton.setSelected(true);
+        fileRadioButton.addActionListener(this);
+
+        file.setText(fl.toString());
+
+      }
+
+    }
+
+    this.filter = filter;
 
   }
 
@@ -260,6 +313,53 @@ public class IDListFilterWidget
     new QuickFrame(
       IDListFilterWidget.class.getName(),
       new IDListFilterWidget(null, q, fd, null));
+  }
+
+  protected boolean equivalentFilter(Object otherFilter) {
+
+    if (super.equivalentFilter(otherFilter))
+      return true;
+
+    if (otherFilter == null || !(otherFilter instanceof Filter))
+      return false;
+
+    if (indexOfListItemMatchingFilter((Filter) otherFilter) > -1)
+      return true;
+
+    return false;
+
+  }
+
+  /**
+   * 
+   * @param otherFilter
+   * @return -1 if filter not relat
+   */
+  private int indexOfListItemMatchingFilter(Filter filter) {
+    
+    int index = -1;
+    final int n = list.getItemCount();
+    for (int i = 0; index==-1 && i < n; i++) {
+
+      OptionToStringWrapper op = (OptionToStringWrapper) list.getItemAt(i);
+      Option o = op.option;
+      String f = filter.getField();
+      String tc = filter.getTableConstraint();
+      String k = filter.getKey();
+
+      if (f != null
+        && tc != null
+        && k != null
+        && !"".equals(f)
+        && !"".equals(tc)
+        && !"".equals(k)
+        && f.equals(o.getFieldFromContext())
+        && tc.equals(o.getTableConstraintFromContext())
+        && k.equals(o.getKeyFromContext())) 
+          index = i;
+    }
+
+    return index;
   }
 
 }
