@@ -365,9 +365,9 @@
 
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
-      <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_hdcoded.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_hdcoded.sh" tofile="${dist.dir}/bin/martshell.sh" />
+      <!-- copy the bat and shell martshell startup scripts -->
+      <copy file="${bin.dir}/martshell.bat" tofile="${dist.dir}/bin/martshell.bat" />
+      <copy file="${bin.dir}/martshell.sh" tofile="${dist.dir}/bin/martshell.sh" />
 
       <!-- now copy the other bin files without hardcoded info -->
       <copy todir="${dist.dir}/bin" >
@@ -465,8 +465,8 @@
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
       <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
+      <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
+      <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
 
       <!-- now copy the other bin files without hardcoded info -->
       <copy todir="${dist.dir}/bin" >
@@ -582,8 +582,8 @@
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
       <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
+      <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
+      <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
 
       <!-- now copy the other bin files without hardcoded info -->
       <copy todir="${dist.dir}/bin" >
@@ -699,8 +699,8 @@
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
       <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_hdcoded_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
+      <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
+      <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
 
       <!-- now copy the other bin files without hardcoded info -->
       <copy todir="${dist.dir}/bin" >
