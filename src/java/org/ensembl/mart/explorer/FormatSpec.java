@@ -94,4 +94,24 @@ public class FormatSpec {
      public String getSeparator() {
          return separator;
 	 }
+	 
+	 
+	/** Object state.
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		
+		StringBuffer buf = new StringBuffer();
+		buf.append("[");
+		buf.append("format=");
+		if (format==FASTA)buf.append("FASTA");
+		else if (format==TABULATED ) {
+			buf.append("TABULATED, ");
+			buf.append("separator=").append(separator);
+		}
+		buf.append("]");
+		
+		return buf.toString();
+			}
+
 }
