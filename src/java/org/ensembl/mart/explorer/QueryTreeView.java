@@ -457,8 +457,9 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 		// preload some default settings
 		query.setDatasetInternalName("ensembl_genes_homo_sapiens");
-    query.addAttribute(new FieldAttribute("ensembl_gene_id"));
-    query.addFilter(new BasicFilter("ensembl_gene_id","=","ENSG001"));
+		query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+		query.addFilter(new BasicFilter("ensembl_gene_id", "=", "ENSG001"));
+		query.addFilter(new BasicFilter("chr_name", "=", "3"));
 
 		f.setVisible(true);
 		f.pack();
@@ -501,9 +502,9 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 						+ " with internalName='"
 						+ newDatasetInternalName
 						+ "'.");
-      else
-			 ((NodeUserObject) datasetViewNode.getUserObject()).rightText =
-				dsv.getDisplayName();
+			else
+				((NodeUserObject) datasetViewNode.getUserObject()).rightText =
+					dsv.getDisplayName();
 
 			treeModel.reload();
 		} catch (ConfigurationException e) {
@@ -610,17 +611,23 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	}
 
 	/**
-   	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+	 * Adds a child node to the filtersNode to represent the filter at the specified index.
+	 * The node label is partly derived from a corresponding FilterDescription retrieved
+	 * from the dsView, otherwise it is based solely on the filter.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
 	 */
 	public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
-	
-    FilterDescription fd = dsv.getFilterDescriptionByInternalName( filter.getField() );
-  
-  	NodeUserObject userObject =
-			new NodeUserObject(
-				null,
-				null,
-				fd.getDisplayName() + filter.getRightHandClause());
+
+    // Try to get a user friendly fieldName, 
+    // otherwise use the raw one from filter
+		FilterDescription fd =
+			dsv.getFilterDescriptionByFieldNameTableConstraint(
+				filter.getField(),
+				filter.getTableConstraint());
+		String fieldName = (fd != null) ? fd.getDisplayName() : filter.getField();
+
+		String nodeLabel = fieldName + filter.getCondition() + filter.getValue();
+		NodeUserObject userObject = new NodeUserObject(null, null, nodeLabel);
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		filtersNode.insert(treeNode, index);
 		treeModel.reload(filtersNode);
