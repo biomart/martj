@@ -30,6 +30,8 @@ import junit.textui.TestRunner;
 import org.ensembl.mart.explorer.config.AttributeCollection;
 import org.ensembl.mart.explorer.config.AttributeGroup;
 import org.ensembl.mart.explorer.config.AttributePage;
+import org.ensembl.mart.explorer.config.DSAttributeGroup;
+import org.ensembl.mart.explorer.config.DSFilterGroup;
 import org.ensembl.mart.explorer.config.Dataset;
 import org.ensembl.mart.explorer.config.FilterCollection;
 import org.ensembl.mart.explorer.config.FilterGroup;
@@ -190,10 +192,38 @@ public class ConfigurationTest extends Base {
 		}
 
 		//FilterGroup data correct
-		FilterGroup[] fgs = fp.getFilterGroups();
-		assertEquals("Warning, should only get one filterGroup\n", 1, fgs.length);
+		List fgs = fp.getFilterGroups();
+		assertEquals("Warning, should get two filterGroups in FilterPage\n", 2, fgs.size());
 
-		FilterGroup fg = fgs[0];
+    // first filterGroup is a DSFilterGroup object
+		assertTrue("First FilterGroup in the FilterPage should be a DSFilterGroup object", fgs.get(0) instanceof DSFilterGroup);
+		
+		DSFilterGroup dsfg = (DSFilterGroup) fgs.get(0);
+    testIName = "testDSFilterGroup";
+    IName = dsfg.getInternalName();
+    testDName = "Test A DSFilterGroup:";
+    DName = dsfg.getDisplayName();
+    Desc = dsfg.getDescription();
+		String testObjectCode = "testObjectCode";
+    String ObjectCode = dsfg.getObjectCode();
+    
+		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", testDesc, Desc);
+		assertEquals("Warning, ObjectCode not set correctly for DSFilterGroup\n", testObjectCode, ObjectCode);
+
+		// contains/get for FilterPage-FilterGroup
+		containsTest = fp.containsFilterGroup(testIName);
+		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ( (DSFilterGroup) fp.getFilterGroupByName(testIName)).getInternalName();
+			assertEquals("Warning, getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
+		}
+				
+    // second FilterGroup is a DSFilterGroup object, with everything contained within it
+    assertTrue("Second FilterGroup in the FilterPage should be a FilterGroup object", fgs.get(1) instanceof FilterGroup);
+    
+		FilterGroup fg = (FilterGroup) fgs.get(1);
 		testIName = "testFilterGroup";
 		IName = fg.getInternalName();
 		testDName = "Test A FilterGroup:";
@@ -208,7 +238,7 @@ public class ConfigurationTest extends Base {
 		containsTest = fp.containsFilterGroup(testIName);
 		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = fp.getFilterGroupByName(testIName).getInternalName();
+			testGetByName = ( (FilterGroup) fp.getFilterGroupByName(testIName)).getInternalName();
 			assertEquals("Warning, getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
@@ -361,8 +391,7 @@ public class ConfigurationTest extends Base {
 		Desc = dsf.getDescription();
 		Type = dsf.getType();
 		testFieldName = "test_id";
-    String testObjectCode = "testObjectCode";
-    String ObjectCode = dsf.getObjectCode();
+    ObjectCode = dsf.getObjectCode();
 
 		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
@@ -539,10 +568,29 @@ public class ConfigurationTest extends Base {
 		}
 
 		//AttributeGroup data correct
-		AttributeGroup[] ags = ap.getAttributeGroups();
-		assertEquals("Warning, should only get one AttributeGroup\n", 1, ags.length);
+		List ags = ap.getAttributeGroups();
+		assertEquals("Warning, should get two AttributeGroup\n", 2, ags.size());
 
-		AttributeGroup ag = ags[0];
+    //first AttributeGroup in the AttributePage is a DSAttributeGroup
+    assertTrue("Warning, First AttributeGroup in the AttributePage should be a DSAttributeGroup", ags.get(0) instanceof DSAttributeGroup);
+
+    DSAttributeGroup dsag = (DSAttributeGroup) ags.get(0);
+		testIName = "testDSAttributeGroup";
+		IName = dsag.getInternalName();
+		testDName = "test of an DSAttribute Group:";
+		DName = dsag.getDisplayName();
+		Desc = dsag.getDescription();
+		ObjectCode = dsag.getObjectCode();
+    
+		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", testDesc, Desc);
+		assertEquals("Warning, ObjectCode not set correctly for DSFilterGroup\n", testObjectCode, ObjectCode);
+		    
+    //second AttributeGroup in the AttributePage is an AttributeGroup, with everything in it
+		assertTrue("Warning, Second AttributeGroup in the AttributePage should be an AttributeGroup", ags.get(1) instanceof AttributeGroup);
+		
+		AttributeGroup ag = (AttributeGroup) ags.get(1);
 		testIName = "testAttributeGroup";
 		IName = ag.getInternalName();
 		testDName = "test of an Attribute Group:";
@@ -557,7 +605,7 @@ public class ConfigurationTest extends Base {
 		containsTest = ap.containsAttributeGroup(testIName);
 		assertTrue("Warning, AttributePage should contain testAttributeGroup, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = ap.getAttributeGroupByName(testIName).getInternalName();
+			testGetByName = ( (AttributeGroup) ap.getAttributeGroupByName(testIName) ).getInternalName();
 			assertEquals("Warning, getAttributeGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
