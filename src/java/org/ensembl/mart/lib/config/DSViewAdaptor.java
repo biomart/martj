@@ -135,7 +135,7 @@ public interface DSViewAdaptor {
    * @return DatasetViews with the given dataset name, empty array if non found
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset)
+  public DatasetView[] getDatasetViewsByDataset(String dataset)
     throws ConfigurationException;
 
   /**

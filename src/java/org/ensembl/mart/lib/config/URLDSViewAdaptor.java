@@ -230,7 +230,7 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset) throws ConfigurationException {
+  public DatasetView[] getDatasetViewsByDataset(String dataset) throws ConfigurationException {
 
     if (supportsDataset(dataset))
       return new DatasetView[] { dsv };

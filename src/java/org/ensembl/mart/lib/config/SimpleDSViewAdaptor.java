@@ -187,7 +187,7 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset)
+  public DatasetView[] getDatasetViewsByDataset(String dataset)
     throws ConfigurationException {
 
     if (supportsDataset(dataset))
