@@ -17,9 +17,25 @@
 */
 
 package org.ensembl.mart.explorer;
- 
+
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -57,398 +73,556 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
  * to select nodes and delete attributes and filters.
  * 
  * <p>TODO use DSV to correctly render nodes 
- * <p>TODO support dnd reordering of attribute nodes
- * <p>TODO Finish documentation.
+  * <p>TODO Finish documentation.
  */
 public class QueryTreeView extends JPanel implements QueryChangeListener {
 
-  /**
-   * If an attribute or filter is currently selected delete it.
-   */
-  private final class DeleteAction extends AbstractAction {
-    public void actionPerformed(ActionEvent e) {
+	/**
+	 * Handles all DnD behaviour for the tree. Uses several call back
+	 * methods defined by the interfaces it implements to respond to user actions.
+	 */
+	private class DnDHandler
+		implements DragSourceListener, DragGestureListener, DropTargetListener {
 
-      TreePath path = jTree.getSelectionModel().getSelectionPath();
-      if ( path==null ) return;
-      
-      DefaultMutableTreeNode child = (DefaultMutableTreeNode) path.getLastPathComponent();
-      TreeNode parent = child.getParent();
-      int index = parent.getIndex( child );      
+		// We need to create and pass a transferable around even though we
+		// don't use it so we need to create one.
+		private Transferable dummyTransferable =
+			new StringSelection("DUMMY DATA - NOT USED");
+		private DefaultMutableTreeNode selected;
+		private DragSource dragSource;
 
-      if ( parent==attributesNode )
-        query.removeAttribute( query.getAttributes()[index] );
-      else if ( parent==filtersNode )
-        query.removeFilter( query.getFilters()[index] );
+		/**
+		 * Initialises dnd source and target for the tree and registers
+		 * itself as a listener.
+		 */
+		private DnDHandler() {
 
-    }
-  }
+			DropTarget target = new DropTarget(jTree, this);
+			dragSource = new DragSource();
+			dragSource.createDefaultDragGestureRecognizer(
+				jTree,
+				DnDConstants.ACTION_MOVE,
+				this);
 
-  /**
-   * Object with a toString() implementation that generates a small
-   * piece of html based on the instances optional attributes.
-   * This is used to create the "labels" for tree nodes.
-   */
-  private class NodeUserObject {
+		}
 
-    private String label = null;
-    private String separator = null;
-    private String rightText = null;
+		private TreeNode getNodeForLocation(Point p) {
+			TreePath path = jTree.getClosestPathForLocation(p.x, p.y);
+			return (TreeNode) path.getLastPathComponent();
+		}
 
-    private NodeUserObject(String label, String separator, String rightText) {
-      this.label = label;
-      this.separator = separator;
-      this.rightText = rightText;
-    }
+		public void dragEnter(DropTargetDragEvent dtde) {
+			dragOver(dtde);
+		}
 
-    public String toString() {
-      StringBuffer buf = new StringBuffer();
-      buf.append("<html>");
-      buf.append("<b>");
-      if (label != null)
-        buf.append(label);
-      if (separator != null)
-        buf.append(separator);
+		/**
+		 * Determine whether drop is allowed. Attributes can be dropped
+		 * on other "attribute" nodes or the "atributes" node. Filters can be
+		 * dropped on other "filter" nodes or the "filters" node.
+		 */
+		public void dragOver(DropTargetDragEvent dtde) {
 
-      buf.append("</b> ");
-      if (rightText != null)
-        buf.append(rightText);
-      buf.append("</html>");
-      return buf.toString();
-    }
+			TreeNode node = getNodeForLocation(dtde.getLocation());
 
-  }
+			if (node == attributesNode
+				|| attributesNode.isNodeChild(node)
+				&& node != selected)
+				dtde.acceptDrag(DnDConstants.ACTION_MOVE);
+			else
+				dtde.rejectDrag();
 
-  private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
+		}
 
-  private DefaultMutableTreeNode datasetViewNode =
-    new DefaultMutableTreeNode(new NodeUserObject("DatasetView", ":", null));
+		/**
+		 * Move the desired attribute or filter to it's new position. Called
+		 * in response to a drop action.
+		 */
+		public void drop(DropTargetDropEvent dtde) {
 
-  private DefaultMutableTreeNode dataSourceNode =
-    new DefaultMutableTreeNode(new NodeUserObject("DataSource", ":", null));
+			TreeNode target = getNodeForLocation(dtde.getLocation());
 
-  private DefaultMutableTreeNode attributesNode =
-    new DefaultMutableTreeNode(new NodeUserObject("Attributes", null, null));
+			// remove node from old position
+			int oldIndex = attributesNode.getIndex(selected);
+			Attribute attribute = query.getAttributes()[oldIndex];
+			query.removeAttribute(attribute);
 
-  private DefaultMutableTreeNode filtersNode =
-    new DefaultMutableTreeNode(new NodeUserObject("Filters", null, null));
+			// insert selected node into the tree by adding to the query in the
+			// correct position.
+			int newIndex = -1;
+			if (target == attributesNode)
+				newIndex = 0;
+			else if (attributesNode.isNodeChild(target))
+				newIndex = attributesNode.getIndex(target) + 1;
+			query.addAttribute(newIndex, attribute);
 
-  private DefaultMutableTreeNode formatNode =
-    new DefaultMutableTreeNode(new NodeUserObject("Format", null, null));
+			dtde.getDropTargetContext().dropComplete(true);
+		}
 
-  private DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
+		/**
+		 * Set cursor to show that a drop is allowed. Called after
+		 * dragOver(DropTargetDragEvent dtde) if 
+		 * dtde.acceptDrag(DnDConstants.ACTION_MOVE) was called.
+		 */
+		public void dragOver(DragSourceDragEvent dsde) {
+			dsde.getDragSourceContext().setCursor(DragSource.DefaultMoveDrop);
+		}
 
-  private JTree jTree = new JTree(treeModel);
+		/**
+		 * Set cursor to show that the drop is not allowed.Called after
+		 * dragOver(DropTargetDragEvent dtde) if dtde.reject() was called.
+		 */
+		public void dragExit(DragSourceEvent dse) {
+			dse.getDragSourceContext().setCursor(DragSource.DefaultMoveNoDrop);
+		}
 
-  private final static Logger logger =
-    Logger.getLogger(QueryTreeView.class.getName());
+		/**
+		 * Start the drag if an attribute is selected, otherwise do nothing.
+		 */
+		public void dragGestureRecognized(DragGestureEvent dge) {
 
-  private DSViewAdaptor dsvAdaptor;
+			TreePath path = jTree.getSelectionPath();
 
-  private Query query;
+			if (path == null || path.getPathCount() <= 1)
+				return;
 
-  /**
-   * Tree view showing the current state of the query. The current datasetView
-   * is retrieved from the adaptor and this is used to determine how to render
-   * the values stored in the query.
-   * 
-   * @param query Query represented by tree.
-   * @param dsvAdaptor source of DatasetViews used to interpret query.
-   */
-  public QueryTreeView(Query query, DSViewAdaptor dsvAdaptor) {
+			selected = (DefaultMutableTreeNode) path.getLastPathComponent();
 
-    super();
+			// only allow attributes to be dragged
+			if (!attributesNode.isNodeChild(selected))
+				return;
 
-    this.query = query;
-    this.dsvAdaptor = dsvAdaptor;
-    query.addQueryChangeListener(this);
+			// And start the drag process. We start with a no-drop cursor, assuming that the
+			// user won't want to drop the item right where she picked it up.
+			dragSource.startDrag(
+				dge,
+				DragSource.DefaultMoveNoDrop,
+				dummyTransferable,
+				this);
 
-    jTree.setRootVisible(false);
+		}
 
-    rootNode.add(datasetViewNode);
-    rootNode.add(dataSourceNode);
-    rootNode.add(attributesNode);
-    rootNode.add(filtersNode);
-    rootNode.add(formatNode);
+		public void dropActionChanged(DropTargetDragEvent dtde) {
+		}
 
-    jTree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
+		public void dragExit(DropTargetEvent dte) {
+		}
 
-    // ensure the 1st level of nodes are visible
-    TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
-    jTree.makeVisible(path);
+		public void dragEnter(DragSourceDragEvent dsde) {
+		}
 
-    jTree.getInputMap().put(
-      KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),
-      "doDelete");
-    jTree.getActionMap().put("doDelete", new DeleteAction());
+		public void dropActionChanged(DragSourceDragEvent dsde) {
+		}
 
-    add(new JScrollPane(jTree) );
-  }
+		public void dragDropEnd(DragSourceDropEvent dsde) {
+		}
 
-  /**
-   * Runs an interactive test program where the user can interact
-   * with the QueryTreeView.
-   */
-  public static void main(String[] args) throws Exception {
+	}
 
-    final Query query = new Query();
-    DSViewAdaptor adaptor = QueryEditor.testDSViewAdaptor();
-    final QueryTreeView qtv = new QueryTreeView(query, adaptor);
-    qtv.setSize(300, 500);
+	/**
+	 * If an attribute or filter is currently selected delete it.
+	 */
+	private final class DeleteAction extends AbstractAction {
+		public void actionPerformed(ActionEvent e) {
 
-    Box c = Box.createVerticalBox();
+			TreePath path = jTree.getSelectionModel().getSelectionPath();
+			if (path == null)
+				return;
 
-    qtv.addTreeSelectionListener(new TreeSelectionListener() {
-      public void valueChanged(TreeSelectionEvent e) {
-        if (e != null && e.getNewLeadSelectionPath() != null)
-          logger.info(
-            "Selected:" + e.getNewLeadSelectionPath().getLastPathComponent());
-      }
-    });
+			DefaultMutableTreeNode child =
+				(DefaultMutableTreeNode) path.getLastPathComponent();
+			TreeNode parent = child.getParent();
+			int index = parent.getIndex(child);
 
-    c.add(new JLabel("Delete key should work for attributes+filters"));
+			if (parent == attributesNode)
+				query.removeAttribute(query.getAttributes()[index]);
+			else if (parent == filtersNode)
+				query.removeFilter(query.getFilters()[index]);
 
-    JButton b;
-    Box box;
+		}
+	}
 
-    box = Box.createHorizontalBox();
-    c.add(box);
-    b = new JButton("Add attribute");
-    box.add(b);
-    b.addActionListener(new ActionListener() {
-      private int count = 0;
-      public void actionPerformed(ActionEvent e) {
-        int index = (int) (query.getAttributes().length * Math.random());
-        Attribute a = new FieldAttribute("attribute" + count++);
-        query.addAttribute(index, a);
-      }
-    });
-    b = new JButton("Remove attribute");
-    box.add(b);
-    b.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        Attribute[] a = query.getAttributes();
-        if (a.length > 0) {
-          int index = (int) (Math.random() * a.length);
-          logger.info("Removing attribute " + index + " " + a[index]);
-          query.removeAttribute(a[index]);
-        }
-      }
-    });
+	/**
+	 * Object with a toString() implementation that generates a small
+	 * piece of html based on the instances optional attributes.
+	 * This is used to create the "labels" for tree nodes.
+	 */
+	private class NodeUserObject {
 
-    // ---------
-    box = Box.createHorizontalBox();
-    c.add(box);
-    b = new JButton("Add filter");
-    box.add(b);
-    b.addActionListener(new ActionListener() {
-      private int count = 0;
-      public void actionPerformed(ActionEvent e) {
-        int index = (int) (query.getFilters().length * Math.random());
-        Filter f = new BasicFilter("filterField" + count++, "=", "value");
-        query.addFilter(index, f);
-      }
-    });
-    b = new JButton("Remove random filter");
-    box.add(b);
-    b.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        Filter[] f = query.getFilters();
-        if (f.length > 0) {
-          int index = (int) (Math.random() * f.length);
-          logger.info("Removing filter " + index + " " + f[index]);
-          query.removeFilter(f[index]);
-        }
-      }
-    });
+		private String label = null;
+		private String separator = null;
+		private String rightText = null;
 
-    c.add(qtv);
+		private NodeUserObject(String label, String separator, String rightText) {
+			this.label = label;
+			this.separator = separator;
+			this.rightText = rightText;
+		}
 
-    query.setDatasetInternalName("Some dataset");
-    query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+		public String toString() {
+			StringBuffer buf = new StringBuffer();
+			buf.append("<html>");
+			buf.append("<b>");
+			if (label != null)
+				buf.append(label);
+			if (separator != null)
+				buf.append(separator);
 
-    JFrame f = new JFrame("QueryTreeView unit test");
-    f.getContentPane().add(c);
-    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    f.setVisible(true);
-    f.pack();
+			buf.append("</b> ");
+			if (rightText != null)
+				buf.append(rightText);
+			buf.append("</html>");
+			return buf.toString();
+		}
+
+	}
+
+	private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
+
+	private DefaultMutableTreeNode datasetViewNode =
+		new DefaultMutableTreeNode(new NodeUserObject("DatasetView", ":", null));
+
+	private DefaultMutableTreeNode dataSourceNode =
+		new DefaultMutableTreeNode(new NodeUserObject("DataSource", ":", null));
+
+	private DefaultMutableTreeNode attributesNode =
+		new DefaultMutableTreeNode(new NodeUserObject("Attributes", null, null));
+
+	private DefaultMutableTreeNode filtersNode =
+		new DefaultMutableTreeNode(new NodeUserObject("Filters", null, null));
+
+	private DefaultMutableTreeNode formatNode =
+		new DefaultMutableTreeNode(new NodeUserObject("Format", null, null));
+
+	private DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
+
+	private JTree jTree = new JTree(treeModel);
+
+	private final static Logger logger =
+		Logger.getLogger(QueryTreeView.class.getName());
+
+	private DSViewAdaptor dsvAdaptor;
+
+	private Query query;
+
+	/**
+	 * Tree view showing the current state of the query. The current datasetView
+	 * is retrieved from the adaptor and this is used to determine how to render
+	 * the values stored in the query.
+	 * 
+	 * @param query Query represented by tree.
+	 * @param dsvAdaptor source of DatasetViews used to interpret query.
+	 */
+	public QueryTreeView(Query query, DSViewAdaptor dsvAdaptor) {
+
+		super();
+
+		this.query = query;
+		this.dsvAdaptor = dsvAdaptor;
+		query.addQueryChangeListener(this);
+
+		jTree.setRootVisible(false);
+
+		rootNode.add(datasetViewNode);
+		rootNode.add(dataSourceNode);
+		rootNode.add(attributesNode);
+		rootNode.add(filtersNode);
+		rootNode.add(formatNode);
+
+		jTree.getSelectionModel().setSelectionMode(
+			TreeSelectionModel.SINGLE_TREE_SELECTION);
+
+		// ensure the 1st level of nodes are visible
+		TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
+		jTree.makeVisible(path);
+
+		jTree.getInputMap().put(
+			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),
+			"doDelete");
+		jTree.getActionMap().put("doDelete", new DeleteAction());
+
+		// handles dnd for this component
+		new DnDHandler();
+
+		add(new JScrollPane(jTree));
+	}
+
+	/**
+	 * Runs an interactive test program where the user can interact
+	 * with the QueryTreeView.
+	 */
+	public static void main(String[] args) throws Exception {
+
+		final Query query = new Query();
+		DSViewAdaptor adaptor = QueryEditor.testDSViewAdaptor();
+		final QueryTreeView qtv = new QueryTreeView(query, adaptor);
+		qtv.setSize(300, 500);
+
+		Box c = Box.createVerticalBox();
+
+		qtv.addTreeSelectionListener(new TreeSelectionListener() {
+			public void valueChanged(TreeSelectionEvent e) {
+				if (e != null && e.getNewLeadSelectionPath() != null)
+					logger.info(
+						"Selected:" + e.getNewLeadSelectionPath().getLastPathComponent());
+			}
+		});
+
+		c.add(new JLabel("Delete key should work for attributes+filters"));
+
+		JButton b;
+		Box box;
+
+		box = Box.createHorizontalBox();
+		c.add(box);
+		b = new JButton("Add attribute");
+		box.add(b);
+		b.addActionListener(new ActionListener() {
+			private int count = 0;
+			public void actionPerformed(ActionEvent e) {
+				int index = (int) (query.getAttributes().length * Math.random());
+				Attribute a = new FieldAttribute("attribute" + count++);
+				query.addAttribute(index, a);
+			}
+		});
+		b = new JButton("Remove attribute");
+		box.add(b);
+		b.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Attribute[] a = query.getAttributes();
+				if (a.length > 0) {
+					int index = (int) (Math.random() * a.length);
+					logger.info("Removing attribute " + index + " " + a[index]);
+					query.removeAttribute(a[index]);
+				}
+			}
+		});
+
+		// ---------
+		box = Box.createHorizontalBox();
+		c.add(box);
+		b = new JButton("Add filter");
+		box.add(b);
+		b.addActionListener(new ActionListener() {
+			private int count = 0;
+			public void actionPerformed(ActionEvent e) {
+				int index = (int) (query.getFilters().length * Math.random());
+				Filter f = new BasicFilter("filterField" + count++, "=", "value");
+				query.addFilter(index, f);
+			}
+		});
+		b = new JButton("Remove random filter");
+		box.add(b);
+		b.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Filter[] f = query.getFilters();
+				if (f.length > 0) {
+					int index = (int) (Math.random() * f.length);
+					logger.info("Removing filter " + index + " " + f[index]);
+					query.removeFilter(f[index]);
+				}
+			}
+		});
+
+		box = Box.createHorizontalBox();
+		c.add(box);
+		b = new JButton("Print Query");
+		box.add(b);
+		b.addActionListener(new ActionListener() {
+			private int count = 0;
+			public void actionPerformed(ActionEvent e) {
+				System.out.println(query.toString());
+			}
+		});
+
+		c.add(qtv);
+
+		query.setDatasetInternalName("Some dataset");
+		query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+
+		JFrame f = new JFrame("QueryTreeView unit test");
+		f.getContentPane().add(c);
+		f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		f.setVisible(true);
+		f.pack();
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		int x = screen.width / 2 - f.getWidth() / 2;
 		int y = screen.height / 2 - f.getHeight() / 2;
 		f.setLocation(x, y);
 
-  }
+	}
 
-  public void addTreeSelectionListener(TreeSelectionListener tsl) {
-    jTree.addTreeSelectionListener(tsl);
-  }
+	public void addTreeSelectionListener(TreeSelectionListener tsl) {
+		jTree.addTreeSelectionListener(tsl);
+	}
 
-  /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
-   */
-  public void queryNameChanged(
-    Query sourceQuery,
-    String oldName,
-    String newName) {
-  }
+	/**
+	 * Do nothing.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+	 */
+	public void queryNameChanged(
+		Query sourceQuery,
+		String oldName,
+		String newName) {
+	}
 
-  /**
-   * Update the name of the datasetview shown in the tree.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
-   */
-  public void queryDatasetInternalNameChanged(
-    Query sourceQuery,
-    String oldDatasetInternalName,
-    String newDatasetInternalName) {
+	/**
+	 * Update the name of the datasetview shown in the tree.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+	 */
+	public void queryDatasetInternalNameChanged(
+		Query sourceQuery,
+		String oldDatasetInternalName,
+		String newDatasetInternalName) {
 
-    ((NodeUserObject) datasetViewNode.getUserObject()).rightText =
-      newDatasetInternalName;
-    treeModel.reload();
-  }
+		((NodeUserObject) datasetViewNode.getUserObject()).rightText =
+			newDatasetInternalName;
+		treeModel.reload();
+	}
 
-  /**
-   * TODO Set the Datasource node with the newDatasource.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
-   */
-  public void queryDatasourceChanged(
-    Query sourceQuery,
-    DataSource oldDatasource,
-    DataSource newDatasource) {
+	/**
+	 * TODO Set the Datasource node with the newDatasource.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+	 */
+	public void queryDatasourceChanged(
+		Query sourceQuery,
+		DataSource oldDatasource,
+		DataSource newDatasource) {
 
-  }
+	}
 
-  /**
-   * Adds a representation of the attribute to the tree in the correct
-   * position in the list of attributes.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
-   */
-  public void queryAttributeAdded(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
+	/**
+	 * Adds a representation of the attribute to the tree in the correct
+	 * position in the list of attributes.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+	 */
+	public void queryAttributeAdded(
+		Query sourceQuery,
+		int index,
+		Attribute attribute) {
 
-    NodeUserObject userObject =
-      new NodeUserObject(null, null, attribute.getField());
-    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
-    attributesNode.insert(treeNode, index);
-    treeModel.reload(attributesNode);
-    select(attributesNode, index, false);
+		NodeUserObject userObject =
+			new NodeUserObject(null, null, attribute.getField());
+		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
+		attributesNode.insert(treeNode, index);
+		treeModel.reload(attributesNode);
+		select(attributesNode, index, false);
 
-  }
+	}
 
-  /**
-   * Select a node. 
-   * @param treeNode
-   */
-  private void select(
-    DefaultMutableTreeNode parentNode,
-    int selectedChildIndex,
-    boolean select) {
+	/**
+	 * Select a node. 
+	 * @param treeNode
+	 */
+	private void select(
+		DefaultMutableTreeNode parentNode,
+		int selectedChildIndex,
+		boolean select) {
 
-    DefaultMutableTreeNode next = parentNode;
-    int nChildren = parentNode.getChildCount();
-    if (nChildren > 0)
-      if (selectedChildIndex < nChildren)
-        next =
-          (DefaultMutableTreeNode) parentNode.getChildAt(selectedChildIndex);
-      else
-        next = (DefaultMutableTreeNode) parentNode.getChildAt(nChildren - 1);
+		DefaultMutableTreeNode next = parentNode;
+		int nChildren = parentNode.getChildCount();
+		if (nChildren > 0)
+			if (selectedChildIndex < nChildren)
+				next =
+					(DefaultMutableTreeNode) parentNode.getChildAt(selectedChildIndex);
+			else
+				next = (DefaultMutableTreeNode) parentNode.getChildAt(nChildren - 1);
 
-    TreePath path = new TreePath(next.getPath());
-    jTree.scrollPathToVisible(path);
-    if ( select ) jTree.setSelectionPath(path);
+		TreePath path = new TreePath(next.getPath());
+		jTree.scrollPathToVisible(path);
+		if (select)
+			jTree.setSelectionPath(path);
 
-  }
+	}
 
-  /**
-   * Remove node from tree that corresponds to the attribute and select
-   * the next attribute if available, otherwise the attributesNode.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
-   */
-  public void queryAttributeRemoved(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
+	/**
+	 * Remove node from tree that corresponds to the attribute and select
+	 * the next attribute if available, otherwise the attributesNode.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+	 */
+	public void queryAttributeRemoved(
+		Query sourceQuery,
+		int index,
+		Attribute attribute) {
 
-    attributesNode.remove(index);
-    treeModel.reload(attributesNode);
-    select(attributesNode, index, true);
+		attributesNode.remove(index);
+		treeModel.reload(attributesNode);
+		select(attributesNode, index, true);
 
-  }
+	}
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
-   */
-  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
-    NodeUserObject userObject =
-      new NodeUserObject(
-        null,
-        null,
-        filter.getField() + filter.getRightHandClause());
-    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
-    filtersNode.insert(treeNode, index);
-    treeModel.reload(filtersNode);
-    select(filtersNode, index, false);
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+	 */
+	public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+		NodeUserObject userObject =
+			new NodeUserObject(
+				null,
+				null,
+				filter.getField() + filter.getRightHandClause());
+		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
+		filtersNode.insert(treeNode, index);
+		treeModel.reload(filtersNode);
+		select(filtersNode, index, false);
 
-  }
+	}
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
-   */
-  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+	 */
+	public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
 
-    filtersNode.remove(index);
-    treeModel.reload(filtersNode);
-    select(filtersNode, index, true);
+		filtersNode.remove(index);
+		treeModel.reload(filtersNode);
+		select(filtersNode, index, true);
 
-  }
+	}
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
-   */
-  public void queryFilterChanged(
-    Query sourceQuery,
-    Filter oldFilter,
-    Filter newFilter) {
-    // TODO Auto-generated method stub
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
+	 */
+	public void queryFilterChanged(
+		Query sourceQuery,
+		Filter oldFilter,
+		Filter newFilter) {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
-  /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
-   */
-  public void querySequenceDescriptionChanged(
-    Query sourceQuery,
-    SequenceDescription oldSequenceDescription,
-    SequenceDescription newSequenceDescription) {
-  }
+	/**
+	 * Do nothing.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
+	 */
+	public void querySequenceDescriptionChanged(
+		Query sourceQuery,
+		SequenceDescription oldSequenceDescription,
+		SequenceDescription newSequenceDescription) {
+	}
 
-  /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
-   */
-  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
-  }
+	/**
+	 * Do nothing.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
+	 */
+	public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+	}
 
-  /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
-   */
-  public void queryStarBasesChanged(
-    Query sourceQuery,
-    String[] oldStarBases,
-    String[] newStarBases) {
-  }
+	/**
+	 * Do nothing.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+	 */
+	public void queryStarBasesChanged(
+		Query sourceQuery,
+		String[] oldStarBases,
+		String[] newStarBases) {
+	}
 
-  /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
-   */
-  public void queryPrimaryKeysChanged(
-    Query sourceQuery,
-    String[] oldPrimaryKeys,
-    String[] newPrimaryKeys) {
-  }
+	/**
+	 * Do nothing.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+	 */
+	public void queryPrimaryKeysChanged(
+		Query sourceQuery,
+		String[] oldPrimaryKeys,
+		String[] newPrimaryKeys) {
+	}
 
 }
