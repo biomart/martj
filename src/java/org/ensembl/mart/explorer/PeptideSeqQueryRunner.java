@@ -87,13 +87,13 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	}
 	
 	private void updateQuery() {
-		query.addAttribute(new FieldAttribute(queryID));
-		query.addAttribute(new FieldAttribute(Rank));
-		query.addAttribute(new FieldAttribute(AssemblyColumn));
-		query.addAttribute(new FieldAttribute(coordStart));
-		query.addAttribute(new FieldAttribute(coordEnd));
-		query.addAttribute(new FieldAttribute(Chr));
-		query.addAttribute(new FieldAttribute(StrandColumn));
+		query.addAttribute(new FieldAttribute(queryID,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(Rank,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(AssemblyColumn,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordStart,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordEnd,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(Chr,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(StrandColumn,"_structure_dm"));
 		
 		for (int i=0; i< displayIDs.size(); i++) {
 			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
