@@ -351,7 +351,7 @@ public class DatasetViewXMLUtils {
 	private static FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
 		FilterDescription f = new FilterDescription();
 		loadAttributesFromElement(thisElement, f);
-
+		
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
 			Element option = (Element) iter.next();
 			Option o = getOption(option);
@@ -360,7 +360,13 @@ public class DatasetViewXMLUtils {
 		}
 
 		for (Iterator iter = thisElement.getChildElements(ENABLE).iterator(); iter.hasNext();) {
-			f.addEnable(getEnable((Element) iter.next()));
+			
+			Element enable = (Element) iter.next();
+			Enable e = getEnable(enable);
+			//e.setParent(f);
+			f.addEnable(e);
+			
+			//f.addEnable(getEnable((Element) iter.next()));
 		}
 
 		for (Iterator iter = thisElement.getChildElements(DISABLE).iterator(); iter.hasNext();) {
