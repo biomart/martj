@@ -227,7 +227,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 				}
 
 
-        String connectionString = DetailedDataSource.getConnectionURL(databaseType, host, port, instanceName);
+        String connectionString = DetailedDataSource.connectionURL(databaseType, host, port, instanceName);
         // use default name
         if ( name==null || "".equals(name))
           name = connectionString;

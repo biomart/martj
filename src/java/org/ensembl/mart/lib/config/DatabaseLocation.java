@@ -176,7 +176,7 @@ public class DatabaseLocation extends MartLocationBase {
 	 */
 	public String getName() {
 		String name = super.getName();
-    if ( name==null || "".equals(name) ) name = DetailedDataSource.simpleRepresentation( getHost(), getPort(), getInstanceName() );
+    if ( name==null || "".equals(name) ) name = DetailedDataSource.defaultName( getHost(), getPort(), getInstanceName(), getUser() );
     return name;
 	}
 }

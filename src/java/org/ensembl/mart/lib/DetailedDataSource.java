@@ -94,7 +94,7 @@ public class DetailedDataSource implements DataSource {
   private String password;
   private String user;
   private String jdbcDriverClassName;
-  private String displayName;
+  private String name;
   private DataSource dataSource;
   private String connectionString;
 
@@ -145,8 +145,8 @@ public class DetailedDataSource implements DataSource {
     this.password = password;
     this.maxPoolSize = maxPoolSize;
     this.jdbcDriverClassName = jdbcDriverClassName;
-    this.displayName = displayName;
-    if ( this.displayName==null ) this.displayName = simpleRepresentation();
+    this.name = displayName;
+    if ( this.name==null ) this.name = defaultName();
     
     //logger.warning(this.toString());
   }
@@ -233,7 +233,7 @@ public class DetailedDataSource implements DataSource {
       host,
       port,
       database,
-      getConnectionURL(databaseType, host, port, database),
+      connectionURL(databaseType, host, port, database),
       user,
       password,
       maxPoolSize,
@@ -257,7 +257,7 @@ public class DetailedDataSource implements DataSource {
    * @param databaseName of database on database server  
    * @return String connectionURL
    */
-  public static String getConnectionURL(
+  public static String connectionURL(
     String dbType,
     String host,
     String port,
@@ -319,16 +319,16 @@ public class DetailedDataSource implements DataSource {
   /**
    * @return databaseName@host:port
    */
-  public String simpleRepresentation() {
-    return databaseName + "@" + host + ":" + port;
+  public String defaultName() {
+    return defaultName(host, port, databaseName, user);
   }
 
   
   /**
    * @return databaseName@host:port
    */
-  public static String simpleRepresentation(String host, String port, String databaseName) {
-    return databaseName + "@" + host + ":" + port;
+  public static String defaultName(String host, String port, String databaseName, String user) {
+    return user +"/" +databaseName + "@" + host + ":" + port;
   }
 
   
@@ -456,7 +456,7 @@ public class DetailedDataSource implements DataSource {
    * @return
    */
   public String getDisplayName() {
-    return displayName;
+    return name;
   }
 
   /**
@@ -523,7 +523,7 @@ public class DetailedDataSource implements DataSource {
     buf.append(", password=").append(password);
     buf.append(", user=").append(user);
     buf.append(", jdbcDriverClassName=").append(jdbcDriverClassName);
-    buf.append(", displayName=").append(displayName);
+    buf.append(", displayName=").append(name);
     buf.append(", dataSource=").append(dataSource);
     buf.append(", connectionString=").append(connectionString);
     buf.append("]");
