@@ -525,7 +525,7 @@ public class FilterDescription extends QueryFilterSettings {
 			return null;
 	}
 
-	/**
+  /**
 	 * Get all Option objects available as an array.  Options are returned in the order they were added.
 	 * @return Option[]
 	 */

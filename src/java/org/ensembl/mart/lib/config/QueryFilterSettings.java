@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.lib.config;
 
+
 /**
  * @author craig
  *
@@ -49,6 +50,13 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	public QueryFilterSettings() {
 		super();
 	}
+
+  /**
+   * Get all Option objects available as an array.  Options are returned in the order they were added.
+   * @return Option[]
+   */
+  public abstract Option[] getOptions();
+
 
 	/**
 	 * @param internalName
@@ -196,5 +204,46 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
 	public String getValue() {
 		return getAttribute(valueKey);
+	}
+
+	/**
+	   * Returns specific option matching field and value. Does a deep search through options and push actions.
+	   * @param field field in target option
+	   * @param value value in target option
+	   * @return option if found, otherwise null
+	   */
+	public Option getOptionByFieldNameValue(String field, String value) {
+    
+	  Option o = null;
+    
+	  Option[] os = getOptions();
+	  for (int i = 0; o==null && i < os.length; i++) {
+			
+      Option option = os[i];
+      
+      String f = option.getFieldFromContext(); 
+      String v = option.getValueFromContext();
+			
+      if ( f!=null && f.equals(field ) && v!=null && v.equals(value) ) {
+	      o = option;
+      }  
+
+	    if ( o==null ) {
+        PushAction[] pas = option.getPushActions();
+        for (int j = 0; o==null && i < pas.length; i++) {
+          Option[] ospa = pas[i].getOptions();
+          for (int k = 0; o==null && k < ospa.length; k++) {
+						Option optionpa = ospa[k];
+						o = optionpa.getOptionByFieldNameValue( field, value );
+					}
+        }
+        
+	    }
+    
+      if ( o==null ) {
+	      o = option.getOptionByFieldNameValue( field, value);
+      }		
+    }
+	  return o;
 	}
 }

@@ -27,11 +27,7 @@ package org.ensembl.mart.lib;
  */
 public interface Filter extends Field {
 
-    /**
-     * Field, null if not needed.  This is used by the UnprcessedFilterHandler implimenting classes
-     */
-    String getField();
-    
+
     /**
      * Condition, null if not needed.  This is used by the UnprcessedFilterHandler implimenting classes
      */

@@ -29,16 +29,16 @@ package org.ensembl.mart.lib;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public interface Field {
+
 	/**
-	 * @return name of the attribute
+	 * @return field if available, otherwise null.
 	 */
-    String getField();
-    
-    
-    /**
-     * Sub string that must appear in the name of any table containing 
-     * the column __name__.
-     * @return null or part of a tablename.
-     */
-    String getTableConstraint();
+	String getField();
+
+	/**
+	 * Sub string that must appear in the name of any table containing 
+	 * the column __name__.
+	 * @return null or part of a tablename.
+	 */
+	String getTableConstraint();
 }
