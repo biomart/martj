@@ -109,7 +109,6 @@ public abstract class FilterWidget extends InputPage {
       pushOptionHandlers[i] =
         new PushOptionsHandler(optionPushes[i], filterGroupWidget);
       pushOptionHandlers[i].push();
-      System.out.println("Pushing options" + optionPushes);
     }
   }
 
