@@ -41,7 +41,7 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
  * and pressing <code>return</code> removes the filter.
  */
 public class TextFilterWidget
-  extends FilterDescriptionWidget
+  extends FilterWidget
   implements ActionListener, PropertyChangeListener {
 
   private JTextField textField;
@@ -93,10 +93,16 @@ public class TextFilterWidget
         filterDescription.getQualifier(),
         value));
 
-    query.removePropertyChangeListener( this );
-    if (old == null) query.addFilter(filter);
-    else query.replaceFilter(old, filter);
-    query.addPropertyChangeListener( this );
+    updateQueryFilters( old, filter );
+
+  }
+
+  /**
+   * @param filter
+   */
+  private void addFilterToQuery(BasicFilter filter) {
+    // TODO Auto-generated method stub
+    
   }
 
   /**

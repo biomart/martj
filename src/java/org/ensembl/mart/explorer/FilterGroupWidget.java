@@ -99,8 +99,8 @@ public class FilterGroupWidget extends PageWidget {
         UIFilterDescription a = (UIFilterDescription) element;
         FilterPageSetWidget.TYPES.add( a.getType() );
         
-        //FilterDescriptionWidget w = new FilterDescriptionWidget(query, a);
-        FilterDescriptionWidget w = createFilterDescriptionWidget(query, a);
+        //FilterWidget w = new FilterWidget(query, a);
+        FilterWidget w = createFilterDescriptionWidget(query, a);
         if ( w!=null ) 
           pages.add(w);
       } 
@@ -118,19 +118,19 @@ public class FilterGroupWidget extends PageWidget {
 	}
 
 
-  private FilterDescriptionWidget createFilterDescriptionWidget(
+  private FilterWidget createFilterDescriptionWidget(
     Query query,
     UIFilterDescription filterDescription) {
       
     String type = filterDescription.getType();
-    FilterDescriptionWidget w = null;
+    FilterWidget w = null;
 
     if ("text_entry".equals(type)) {
       w = new TextFilterWidget( query, filterDescription );
     } else if ("list".equals(type)) {
-    } else if ("boolean_num".equals(type)) {
     } else if ("range".equals(type)) {
-    } else if ("boolean".equals(type)) {
+    } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
+      w = new BooleanFilterWidget( query, filterDescription );
     }
     
     if ( w==null ) 

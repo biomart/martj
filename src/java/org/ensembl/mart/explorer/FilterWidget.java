@@ -18,31 +18,30 @@
 
 package org.ensembl.mart.explorer;
 
+import java.beans.PropertyChangeListener;
+
+import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Base class for FilterWidgets.
  */
-public class FilterDescriptionWidget extends InputPage{
+public abstract class FilterWidget extends InputPage
+implements PropertyChangeListener {
 
   protected UIFilterDescription filterDescription;
-  protected Filter filter;
 
 	/**
 	 * @param query
 	 * @param name
 	 */
-	public FilterDescriptionWidget(Query query, UIFilterDescription filterDescription) {
+	public FilterWidget(Query query, UIFilterDescription filterDescription) {
 		
     super(query, filterDescription.getDisplayName() );
     this.filterDescription = filterDescription;
     
-		// TODO Auto-generated constructor stub
     
 	}
   
@@ -54,11 +53,24 @@ public class FilterDescriptionWidget extends InputPage{
     return filterDescription;
   }
 
+
+
   /**
-   * @return
-   */
-  public Filter getFilter() {
-    return filter;
+     * Updates the filter(s) on the query. Removes oldFilter if set and
+     * adds newFilter if set.
+     * @param oldFilter
+     * @param newFilter
+     */
+  protected void updateQueryFilters(Filter oldFilter, Filter newFilter) {
+  
+    query.removePropertyChangeListener( this );
+  
+    if ( oldFilter!=null && newFilter!=null ) query.replaceFilter( oldFilter, newFilter);
+    else if ( newFilter!=null ) query.addFilter( newFilter );
+    else if ( oldFilter!=null ) query.removeFilter( oldFilter );
+    
+    query.addPropertyChangeListener( this );    
+  
   }
 
 }

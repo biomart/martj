@@ -607,7 +607,7 @@ public class Query {
    * @param newFilter
    * @throws RuntimeException if oldFilter is not currently in the query.
    */
-  public void replaceFilter(BasicFilter oldFilter, BasicFilter newFilter) {
+  public void replaceFilter(Filter oldFilter, Filter newFilter) {
 
     int index = filters.indexOf( oldFilter );
     if ( index==-1 ) 
