@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +76,7 @@ import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
+
 
 /**
  * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a description of the Mart Query Language).
@@ -500,6 +502,62 @@ public class MartShell {
 				mcl.AddAvailableCommandsTo(QSEQUENCE, SequenceDescription.SEQS);
 
 				// add describe
+        HashMap describeCommands = new HashMap();
+        
+        //      set up FilterPage keys
+        HashMap FilterMap = new HashMap();
+        FilterMap.put(FILTERKEY, new HashMap());
+        
+        describeCommands.put(FILTERKEY, FilterMap);
+        
+        HashMap FpageMap = new HashMap();
+        FpageMap.put(FILTERKEY, FilterMap);
+        
+        HashMap FgroupMap = new HashMap();
+        FgroupMap.put(FILTERKEY, FilterMap);
+        
+        HashMap FColMap = new HashMap();
+        FColMap.put(FILTERKEY, FilterMap);
+        
+        HashMap FDescMap = new HashMap();
+        FDescMap.put(FILTERKEY, FilterMap);
+        
+        HashMap FsetMap = new HashMap();
+        FsetMap.put(FILTERSETDESCRIPTIONKEY, new HashMap());
+        
+        FColMap.put(FILTERSETKEY, FsetMap);
+        FColMap.put(FILTERKEY, FDescMap);
+        
+        FgroupMap.put(FILTERCOLLECTIONKEY, FColMap);
+        
+        FpageMap.put(FILTERGROUPKEY, FgroupMap);
+        
+        describeCommands.put(FILTERPAGEKEY, FpageMap);
+        
+        // set up AttributePage Keys
+        HashMap AttMap = new HashMap();
+        AttMap.put(ATTRIBUTEKEY, new HashMap());
+        describeCommands.put(ATTRIBUTEKEY, AttMap);
+        
+        HashMap ApageMap = new HashMap();
+        ApageMap.put(ATTRIBUTEKEY, AttMap);
+        
+        HashMap AgroupMap = new HashMap();
+        AgroupMap.put(ATTRIBUTEKEY, AttMap);
+        
+        HashMap AColMap = new HashMap();
+        AColMap.put(ATTRIBUTEKEY, AttMap);
+        
+        HashMap AdescMap = new HashMap();
+        AdescMap.put(ATTRIBUTEKEY, AttMap);
+        
+        AColMap.put(ATTRIBUTEKEY, AdescMap);
+        AgroupMap.put(ATTRIBUTECOLLECTIONKEY, AColMap);
+        ApageMap.put(ATTRIBUTEGROUPKEY, AgroupMap);
+        
+        describeCommands.put(FILTERPAGEKEY, FpageMap);
+        describeCommands.put(ATTRIBUTEPAGEKEY, ApageMap);
+        
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
 				mcl.SetCommandMode();
@@ -1009,14 +1067,14 @@ public class MartShell {
 				arg1key = arg1[0];
 				arg1value = arg1[1];
 
-				if (arg1key.equals(FILTERPAGE)) {
+				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
 
 					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nFilterPage: ");
 
 					DescribeFilterPage(dset.getFilterPageByName(arg1value));
-				} else if (arg1key.equals(FILTER)) {
+				} else if (arg1key.equals(FILTERKEY)) {
 					if (!dset.containsUIFilterDescription(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Filter " + arg1value + "\n");
 
@@ -1027,14 +1085,14 @@ public class MartShell {
 						System.out.println(lines[i]);
 
 					System.out.println();
-				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
 					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nAttributePage: ");
 					DescribeAttributePage(dset.getAttributePageByName(arg1value));
 
-				} else if (arg1key.equals(ATTRIBUTE)) {
+				} else if (arg1key.equals(ATTRIBUTEKEY)) {
 					if (!dset.containsUIAttributeDescription(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Attribute " + arg1value + "\n");
 
@@ -1055,7 +1113,7 @@ public class MartShell {
 				arg1value = arg1[1];
 
 				String[] arg2 = null;
-				if (arg1key.equals(FILTERPAGE)) {
+				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
 
@@ -1064,7 +1122,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(FILTERGROUP)) {
+					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
@@ -1086,7 +1144,7 @@ public class MartShell {
 
             System.out.println();
             
-					} else if (arg2key.equals(FILTER)) {
+					} else if (arg2key.equals(FILTERKEY)) {
 						if (!fpage.containsUIFilterDescription(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain Filter " + arg2value + "\n");
@@ -1113,7 +1171,7 @@ public class MartShell {
 						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
 					}
 
-				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
@@ -1122,7 +1180,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(ATTRIBUTEGROUP)) {
+					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
@@ -1142,7 +1200,7 @@ public class MartShell {
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
-					} else if (arg2key.equals(ATTRIBUTE)) {
+					} else if (arg2key.equals(ATTRIBUTEKEY)) {
 						if (!apage.containsUIAttributeDescription(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain Attribute " + arg2value + "\n");
@@ -1181,7 +1239,7 @@ public class MartShell {
 
 				arg2 = null;
 				String[] arg3 = null;
-				if (arg1key.equals(FILTERPAGE)) {
+				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
 
@@ -1190,7 +1248,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(FILTERGROUP)) {
+					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
@@ -1202,7 +1260,7 @@ public class MartShell {
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
-							if (arg3key.equals(FILTERCOLLECTION)) {
+							if (arg3key.equals(FILTERCOLLECTIONKEY)) {
 								if (!group.containsFilterCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1236,7 +1294,7 @@ public class MartShell {
 
                 System.out.println();
                 
-							} else if (arg3key.equals(FILTERSET)) {
+							} else if (arg3key.equals(FILTERSETKEY)) {
                 if (!group.containsFilterSet(arg3value))
                 throw new InvalidQueryException(
                   "Dataset "
@@ -1270,7 +1328,7 @@ public class MartShell {
 
                 System.out.println();
                 
-              } else if (arg3key.equals(FILTER)) {							
+              } else if (arg3key.equals(FILTERKEY)) {							
 								if (!group.containsUIFilterDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1322,7 +1380,7 @@ public class MartShell {
 						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request key: " + arg2key + "\n");
 					}
 
-				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
@@ -1331,7 +1389,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(ATTRIBUTEGROUP)) {
+					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
@@ -1342,7 +1400,7 @@ public class MartShell {
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
-							if (arg3key.equals(ATTRIBUTECOLLECTION)) {
+							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
 								if (!group.containsAttributeCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1376,7 +1434,7 @@ public class MartShell {
                   
                 System.out.println();
 
-							} else if (arg3key.equals(ATTRIBUTE)) {
+							} else if (arg3key.equals(ATTRIBUTEKEY)) {
 								if (!group.containsUIAttributeDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1439,7 +1497,7 @@ public class MartShell {
 				arg2 = null;
 				arg3 = null;
 				String[] arg4 = null;
-				if (arg1key.equals(FILTERPAGE)) {
+				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
 
@@ -1448,7 +1506,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(FILTERGROUP)) {
+					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
@@ -1460,7 +1518,7 @@ public class MartShell {
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
-							if (arg3key.equals(FILTERCOLLECTION)) {
+							if (arg3key.equals(FILTERCOLLECTIONKEY)) {
 								if (!group.containsFilterCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1478,7 +1536,7 @@ public class MartShell {
 								String arg4key = arg4[0];
 								String arg4value = arg4[1];
 
-								if (arg4key.equals(FILTER)) {
+								if (arg4key.equals(FILTERKEY)) {
 									if (!collection.containsUIFilterDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
@@ -1535,7 +1593,7 @@ public class MartShell {
 											+ "\n");
 								}
 
-							} else if (arg3key.equals(FILTERSET)) {
+							} else if (arg3key.equals(FILTERSETKEY)) {
                 if (!group.containsFilterSet(arg3value))
                   throw new InvalidQueryException(
                     "Dataset "
@@ -1553,7 +1611,7 @@ public class MartShell {
                 String arg4key = arg4[0];
                 String arg4value = arg4[1];
                 
-                if (arg4key.equals(FILTERSETDESCRIPTION)) {
+                if (arg4key.equals(FILTERSETDESCRIPTIONKEY)) {
                    if(!fset.containsFilterSetDescription(arg4value))
                   throw new InvalidQueryException(
                     "Dataset "
@@ -1623,7 +1681,7 @@ public class MartShell {
 						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
 					}
 
-				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
 						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
@@ -1632,7 +1690,7 @@ public class MartShell {
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
-					if (arg2key.equals(ATTRIBUTEGROUP)) {
+					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
 								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
@@ -1643,7 +1701,7 @@ public class MartShell {
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
-							if (arg3key.equals(ATTRIBUTECOLLECTION)) {
+							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
 								if (!group.containsAttributeCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
@@ -1661,7 +1719,7 @@ public class MartShell {
 								String arg4key = arg4[0];
 								String arg4value = arg4[1];
 
-								if (arg4key.equals(ATTRIBUTE)) {
+								if (arg4key.equals(ATTRIBUTEKEY)) {
 									if (!collection.containsUIAttributeDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
@@ -2616,20 +2674,16 @@ public class MartShell {
 					QSTART }));
 
 	// describe instructions
-	private final String FILTERPAGE = "FilterPage";
-	private final String FILTERGROUP = "FilterGroup";
-	private final String FILTERCOLLECTION = "FilterCollection";
-  private final String FILTERSET = "FilterSet";
-  private final String FILTERSETDESCRIPTION = "FilterSetDescription";
-	private final String FILTER = "Filter";
-	private final String ATTRIBUTEPAGE = "AttributePage";
-	private final String ATTRIBUTEGROUP = "AttributeGroup";
-	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
-	private final String ATTRIBUTE = "Attribute";
-
-	private final List describeCommands =
-		Collections.unmodifiableList(
-			Arrays.asList(new String[] { FILTERPAGE, FILTERGROUP, FILTERCOLLECTION, FILTER, ATTRIBUTEPAGE, ATTRIBUTEGROUP, ATTRIBUTECOLLECTION, ATTRIBUTE }));
+	private final String FILTERPAGEKEY = "FilterPage";
+	private final String FILTERGROUPKEY = "FilterGroup";
+	private final String FILTERCOLLECTIONKEY = "FilterCollection";
+  private final String FILTERSETKEY = "FilterSet";
+  private final String FILTERSETDESCRIPTIONKEY = "FilterSetDescription";
+	private final String FILTERKEY = "Filter";
+	private final String ATTRIBUTEPAGEKEY = "AttributePage";
+	private final String ATTRIBUTEGROUPKEY = "AttributeGroup";
+	private final String ATTRIBUTECOLLECTIONKEY = "AttributeCollection";
+	private final String ATTRIBUTEKEY = "Attribute";
 
 	// strings used to show/set output format settings
 	private final String FILE = "file";
