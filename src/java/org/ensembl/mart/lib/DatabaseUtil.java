@@ -225,8 +225,8 @@ public class DatabaseUtil {
 				e);
 		} catch (ClassNotFoundException e) {
 			throw new ConfigurationException(
-				"Failed to initialise database connection pool "
-					+ "(is the connection pool jar available?) : ",
+				"Failed to initialise database connection pool for "
+					+ jdbcDriverClassName + " (is the connection pool jar available?) : ",
 				e);
 		} catch (IllegalAccessException e) {
 			throw new ConfigurationException(
