@@ -175,6 +175,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 				TESTLEGALQUALIFIERS,
 				"A TEST ID, DOESNT EXIST",
 				"gene_main",
+				"gene_id_key",
 				null,
 				TESTDESC);
 
