@@ -83,6 +83,7 @@ public class DatasetConfigXMLUtils {
 
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
+  private final String OPTPARAM = "optional_parameters";
   private final String HIDDEN = "hidden";
 
   private boolean validate = false;
@@ -223,6 +224,10 @@ public class DatasetConfigXMLUtils {
   public void loadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+    String optParam = thisElement.getAttributeValue(OPTPARAM, "");
+    
+    if (optParam.length() > 0)
+      dsv.setOptionalParameter(optParam);
 
     // a DatasetConfig object must have been constructed with an internalName
     // test that the internalNames match , throw an exception if they are not
