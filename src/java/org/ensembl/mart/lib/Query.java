@@ -325,6 +325,8 @@ public class Query {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
+    buf.append( " datasetName=").append(datasetName);
+    buf.append(", dataSource=").append( dataSource );
 		buf.append(", starBases=[").append(StringUtil.toString(starBases));
 		buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));
 		buf.append("], querytype=").append(querytype);
@@ -533,10 +535,16 @@ public class Query {
 
   /**
    * Sets the value and propagates a PropertyChange event to listeners. The 
-   * property name is in the event is "datasetName".
+   * property name is in the event is "datasetName". No event is propagated 
+   * if the parameter is equal to the current datasetName.
    * @param datasetName new datasetName.
    */
 	public void setDatasetName(String datasetName) {
+    
+    if ( this.datasetName==datasetName 
+        || datasetName!=null && datasetName.equals(this.datasetName) )
+        return;
+         
     String oldDatasetName = this.datasetName;
 		this.datasetName = datasetName;
     changeSupport.firePropertyChange("datasetName", oldDatasetName, datasetName );
