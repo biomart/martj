@@ -20,6 +20,7 @@ package org.ensembl.mart.lib.config;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.StringTokenizer;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -35,6 +36,7 @@ import org.xml.sax.SAXException;
 public class MartDTDEntityResolver implements EntityResolver {
 
    private Connection conn = null;
+   private final String MARTDBPROTOCAL = "martdatabase";
    
    /**
     * Constructs a MartDTDEntityResolver object to add to an XML (SAX, DOM) Parser for MartConfiguration.xml
@@ -46,12 +48,24 @@ public class MartDTDEntityResolver implements EntityResolver {
    	this.conn = conn;     
    }
    
-	/* (non-Javadoc)
+	/**
+   * Implements the resolveEntity method, but overrides systemIDs starting with the protocal
+   * 'martdatabase:' to get the entity represented in the path component of the URL from the RDBMS serving the
+   * mart. If the systemID does not contain martdatabase: as the protocal, then it returns
+   * a null InputSource, allowing JDOM to locate the requested Entity in its default manner.
+   * (eg. if you want the system to fetch myConfiguration.dtd from the RDBMS use 'martdatabase:myConfiguration.dtd', but if you want
+   * it to fetch 'myConfiguration.dtd' from the file system, or some other URL, use 'file:myConfiguration.dtd', 'myConfiguration.dtd', 
+   * or 'http://url_to_myConfiguration.dtd'). 
+   * 
 	 * @see org.xml.sax.EntityResolver#resolveEntity(java.lang.String, java.lang.String)
 	 */
 	public InputSource resolveEntity(String publicID, String systemID) throws SAXException, IOException {
 		
-		if (systemID.equals("MartConfiguration.dtd")) {
+		if (systemID.startsWith(MARTDBPROTOCAL)) {
+      StringTokenizer tokens = new StringTokenizer(systemID, ":");
+      tokens.nextToken();
+      systemID = tokens.nextToken();
+      
 			   try {
 					return org.ensembl.mart.lib.config.MartXMLutils.getInputSourceFor(conn, systemID);
 				} catch (ConfigurationException e) {
