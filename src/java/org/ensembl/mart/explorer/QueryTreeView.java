@@ -66,7 +66,11 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
 import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Tree view showing the current state of the query. Allows the user
@@ -276,6 +280,12 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 	}
 
+	private DatasetView dsv;
+
+	private Feedback feedback = new Feedback(this);
+
+	private String dsvInternalName;
+
 	private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
 	private DefaultMutableTreeNode datasetViewNode =
@@ -352,10 +362,14 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		final Query query = new Query();
+		// default adaptor for retrieving datasetviews
 		DSViewAdaptor adaptor = QueryEditor.testDSViewAdaptor();
+
+		final Query query = new Query();
 		final QueryTreeView qtv = new QueryTreeView(query, adaptor);
-		qtv.setSize(300, 500);
+		Dimension d = new Dimension(500, 600);
+		qtv.setPreferredSize(d);
+		qtv.setMinimumSize(d);
 
 		Box c = Box.createVerticalBox();
 
@@ -436,15 +450,18 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 		c.add(qtv);
 
-		query.setDatasetInternalName("Some dataset");
-		query.addAttribute(new FieldAttribute("ensembl_gene_id"));
-
 		JFrame f = new JFrame("QueryTreeView unit test");
 		f.getContentPane().add(c);
 		f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+
+		// preload some default settings
+		query.setDatasetInternalName("ensembl_genes_homo_sapiens");
+    query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+    query.addFilter(new BasicFilter("ensembl_gene_id","=","ENSG001"));
+
 		f.setVisible(true);
 		f.pack();
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		int x = screen.width / 2 - f.getWidth() / 2;
 		int y = screen.height / 2 - f.getHeight() / 2;
 		f.setLocation(x, y);
@@ -466,7 +483,8 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	}
 
 	/**
-	 * Update the name of the datasetview shown in the tree.
+	 * Update the name of the datasetview shown in the tree and load the datasetview it
+	 * specifies.
 	 * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetInternalNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
 	 */
 	public void queryDatasetInternalNameChanged(
@@ -474,9 +492,23 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		String oldDatasetInternalName,
 		String newDatasetInternalName) {
 
-		((NodeUserObject) datasetViewNode.getUserObject()).rightText =
-			newDatasetInternalName;
-		treeModel.reload();
+		try {
+			dsv = dsvAdaptor.getDatasetViewByInternalName(newDatasetInternalName);
+
+			if (dsv == null)
+				feedback.warn(
+					"Failed to load a Dataset "
+						+ " with internalName='"
+						+ newDatasetInternalName
+						+ "'.");
+      else
+			 ((NodeUserObject) datasetViewNode.getUserObject()).rightText =
+				dsv.getDisplayName();
+
+			treeModel.reload();
+		} catch (ConfigurationException e) {
+			feedback.warn(e);
+		}
 	}
 
 	/**
@@ -500,8 +532,35 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		int index,
 		Attribute attribute) {
 
+		if (dsv == null) {
+			feedback.warn(
+				"Error: can not represent attribute because no dataset view loaded.");
+			return;
+		}
+
+		// TODO disambiguate: one attribute.getField()-> N*AttributeDescription
+		AttributeDescription ad =
+			dsv.getAttributeDescriptionByInternalName(attribute.getField());
+
+		if (ad == null) {
+			feedback.warn(
+				"Error: no attribute description for field '"
+					+ attribute.getField()
+					+ "' in dataset view in current '"
+					+ dsvInternalName
+					+ "'.");
+			return;
+		}
+
+		if (dsv == null) {
+			feedback.warn(
+				"Error: can not represent attribute because dataset view unavailable for:"
+					+ dsvInternalName);
+			return;
+		}
+
 		NodeUserObject userObject =
-			new NodeUserObject(null, null, attribute.getField());
+			new NodeUserObject(null, null, ad.getDisplayName());
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		attributesNode.insert(treeNode, index);
 		treeModel.reload(attributesNode);
@@ -550,15 +609,18 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+	/**
+   	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
 	 */
 	public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
-		NodeUserObject userObject =
+	
+    FilterDescription fd = dsv.getFilterDescriptionByInternalName( filter.getField() );
+  
+  	NodeUserObject userObject =
 			new NodeUserObject(
 				null,
 				null,
-				filter.getField() + filter.getRightHandClause());
+				fd.getDisplayName() + filter.getRightHandClause());
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		filtersNode.insert(treeNode, index);
 		treeModel.reload(filtersNode);
