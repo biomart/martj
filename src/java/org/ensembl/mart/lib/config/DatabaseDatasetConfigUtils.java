@@ -2993,7 +2993,8 @@ public class DatabaseDatasetConfigUtils {
       value = rs.getString(1);
       op = new Option();
       op.setDisplayName(value);
-      op.setInternalName(value);
+      String intName = value.replaceAll(" ", "_");
+      op.setInternalName(intName.toLowerCase());
       //NN
       if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
         //if (!columnName.startsWith("silent_"))
