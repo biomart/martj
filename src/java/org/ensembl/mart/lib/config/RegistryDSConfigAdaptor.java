@@ -42,6 +42,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	private boolean validate = false;
 	private boolean ignoreCache = false;
 	private boolean includeHiddenMembers = false;
+	private boolean loadFully = false;
 
 	/**
 	 * Constructs an empty RegistryDSConfigAdaptor.  A URL for
@@ -72,13 +73,36 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
 	 */
 	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean includeHiddenMembers)
+	  throws ConfigurationException {
+	    this(url, validate, ignoreCache, false, includeHiddenMembers);
+	}
+	
+	/**
+	 * Constructs a RegistryDSConfigAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
+	 * @param url -- URL pointing to MartRegistry.dtd compliant XML Document
+	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
+	 * will be validated.
+	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
+	 * objects in the given MartRegistry
+	 * @param loadFully - if set to true, all XML objects will be fully loaded into memory, and no lazy loading
+	 *                    will occur.  This sets ignoreCache to true by default. Recommended only for servers
+	 *                    with adequate memory.
+	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
+	 * hidden members.
+	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
+	 */
+	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean loadFully, boolean includeHiddenMembers)
 		throws ConfigurationException {
 		super();
-		setRegistryURL(url);
 		this.validate = validate;
 		this.ignoreCache = ignoreCache;
 		this.includeHiddenMembers = includeHiddenMembers;
-
+        this.loadFully = loadFully;
+        
+        if (loadFully)
+            this.ignoreCache = true;
+		setRegistryURL(url);
+		
 		adaptorName = url.toString();
 	}
 
@@ -352,7 +376,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 							name);
 
 					DatabaseDSConfigAdaptor adaptor =
-						new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, validate, includeHiddenMembers);
+						new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, validate, includeHiddenMembers);
 					adaptor.setName(location.getName());
 					add(adaptor);
 

@@ -58,6 +58,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   private boolean clearCache = false; //developer hack to clear the cache
   //will be replaced soon with user supported clearing
   private boolean ignoreCache = false;
+  
+  private boolean loadFully = false;
 
   //To propogate update exceptions from thread
   private Thread updateThread = null;
@@ -79,14 +81,44 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     boolean validate,
     boolean includeHiddenMembers)
     throws ConfigurationException {
+      this(ds, user, ignoreCache, false, validate, includeHiddenMembers);
+  }
+  
+  /**
+   * Constructor for a DatabaseDSConfigAdaptor
+   * @param ds -- DataSource for Mart RDBMS
+   * @param user -- user for RDBMS connection, AND meta_DatasetConfig_user table
+   * @param ignoreCache -- if true, cached XML is completely ignored, and all XML is pulled from the Database
+   * @param loadFully -- if true, all DatasetConfiguration Objects are fully loaded into memory,
+   *                      no lazy loading occurs (this should only be used by big servers with reasonable memory).
+   *                      Note, setting this true also be default sets ignoreCache to true.
+   * @param validate -- if true, all XML is validated as it is parsed
+   * @param includeHiddenMembers -- if true, hidden members are included in DatasetConfig objects, otherwise they are not included
+   * @throws ConfigurationException if DataSource or user is null
+   */
+  public DatabaseDSConfigAdaptor(
+    DetailedDataSource ds,
+    String user,
+    boolean ignoreCache,
+    boolean loadFully,
+    boolean validate,
+    boolean includeHiddenMembers)
+    throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSConfigAdaptor Objects must be instantiated with a DataSource and User\n");
 
     this.user = user;
     dataSource = ds;
     this.ignoreCache = ignoreCache;
-
+    this.loadFully = loadFully;
+    
     dscutils = new DatasetConfigXMLUtils(validate, includeHiddenMembers);
+    
+    if (loadFully) {
+        dscutils.setFullyLoadMode(loadFully);
+        this.ignoreCache = true;
+    }
+    
     dbutils = new DatabaseDatasetConfigUtils(dscutils, dataSource);
 
     String host = ds.getHost();
@@ -248,6 +280,10 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
 
     DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname);
+    
+    if (loadFully)
+        dscutils.loadDatasetConfigWithDocument(newDSV, dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, iname));
+    
     addDatasetConfig(newDSV);
   }
 
@@ -400,8 +436,13 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     for (int i = 0; view == null && i < dsviews.size(); ++i) {
 
       DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
-      if (dsv.getDataset().equals(dataset) && dsv.getInternalName().equals(internalName))
-        view = new DatasetConfig(dsv, false, true); //lazyLoaded copy
+      if (dsv.getDataset().equals(dataset) && dsv.getInternalName().equals(internalName)) {
+        //lazyLoaded copy unless loadFully is true
+        if (loadFully)
+            view = new DatasetConfig(dsv, true, false);
+        else
+            view = new DatasetConfig(dsv, false, true);
+      }
     }
 
     return view;
@@ -640,7 +681,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
               if (logger.isLoggable(Level.FINE))
                 logger.fine("Checking for dataset " + dataset + " internamName " + iname + "\n");
 
-              if (cache.cacheExists(dataset, iname))
+              if (!ignoreCache && cache.cacheExists(dataset, iname))
                 loadCacheOrUpdate(dataset, iname);
               else {
                 //load datasetview from database
