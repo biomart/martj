@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
-<MartConfiguration description="First Mart Created from version 14 Ensembl Datasources" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
+<MartConfiguration description="For Testing Purposes Only" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
   <Dataset description="For Testing Purposes Only" displayName="Test of a Dataset" internalName="test_dataset">
+    <Option description="For Testing Purposes Only" displayName="A Test Dataset Option" internalName="dataset option" isSelectable="true"/>
+    <DefaultFilter value="1">
+      <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" fieldName="test_id" internalName="testDefaultFilterDescription" qualifier="in" tableConstraint="gene_main" type="list"/>
+    </DefaultFilter>
     <StarBase>test_starbase</StarBase>
     <PrimaryKey>test_primaryKey</PrimaryKey>
     <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
       <DSFilterGroup description="For Testing Purposes Only" displayName="Test A DSFilterGroup:" internalName="testDSFilterGroup" objectCode="testObjectCode"/>
       <FilterGroup description="For Testing Purposes Only" displayName="Test A FilterGroup:" internalName="testFilterGroup">
-        <FilterSet description="For Testing Purposes Only" displayName="Test of a Filter Set" internalName="testFilterSet" type="radio">
+        <FilterSet description="For Testing Purposes Only" displayName="Test of a Filter Set" internalName="testFilterSet" type="list">
           <FilterSetDescription description="For Testing Purposes Only" displayName="Test of a FilterSetDescription" fieldNameModifier="ensembl" internalName="testFilterSetDescription" tableConstraintModifier="ensemblgene"/>
         </FilterSet>
         <FilterCollection description="For Testing Purposes Only" displayName="Test of a FilterCollection" internalName="testFilterCollection" type="list">
