@@ -3,7 +3,7 @@
 package org.ensembl.mart.lib;
 
 public class CompositeAttribute implements Attribute {
-    public String getName(){
+    public String getField(){
         // Write your code here
         return null;
     }

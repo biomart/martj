@@ -47,7 +47,7 @@ public class FileIDListFilterHandler extends IDListFilterHandlerBase {
 		} 
 		
 		if (unversionedIds.length > 0) {
-			Filter newFilter = new IDListFilter(idfilter.getName(), idfilter.getTableConstraint(), unversionedIds);
+			Filter newFilter = new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds);
 			newQuery.addFilter(newFilter);
 		}
 		return newQuery;

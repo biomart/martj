@@ -149,7 +149,7 @@ public class CompiledSQLQuery {
 
 		for (int i = 0; i < query.getAttributes().length; ++i) {
 			Attribute attribute = query.getAttributes()[i];
-			String colName = attribute.getName();
+			String colName = attribute.getField();
 			if (!mapper.canMap( attribute ))
 				return false;
 
@@ -158,7 +158,7 @@ public class CompiledSQLQuery {
 
 		for (int i = 0; i < query.getFilters().length; ++i) {
 			Filter filter = query.getFilters()[i];
-			String colName = filter.getName();
+			String colName = filter.getField();
 			if (!mapper.canMap( filter ))
 				return false;
 

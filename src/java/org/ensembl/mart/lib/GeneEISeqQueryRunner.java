@@ -245,7 +245,7 @@ public final class GeneEISeqQueryRunner implements QueryRunner {
 					  for (int i = 0, n = otherIndices.size(); i < n; i++) {
 						  int currindex = ((Integer) otherIndices.get(i)).intValue();
 						  if (rs.getString(currindex) != null ) { 					    
-							  String field = attributes[currindex-1].getName();
+							  String field = attributes[currindex-1].getField();
 							  if (! fields.contains(field)) 
 								  fields.add(field);
 						

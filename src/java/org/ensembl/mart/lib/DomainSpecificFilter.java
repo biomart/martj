@@ -56,6 +56,9 @@ public class DomainSpecificFilter {
 	public DomainSpecificFilter(String objectCode, String handlerParameter) {
 		this.objectCode = objectCode;
 		this.handlerParameter = handlerParameter;
+    
+    hashcode = handlerParameter.hashCode();
+    hashcode = (31 * hashcode) + objectCode.hashCode();
 	}
 
   /**
@@ -65,6 +68,9 @@ public class DomainSpecificFilter {
   public DomainSpecificFilter(DomainSpecificFilter o) {
   	objectCode = o.getObjectCode();
   	handlerParameter = o.getHandlerParameter();
+    
+    hashcode = handlerParameter.hashCode();
+    hashcode = (31 * hashcode) + objectCode.hashCode();
   }
   
 	/**
@@ -107,10 +113,9 @@ public class DomainSpecificFilter {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-    int tmp = handlerParameter.hashCode();
-		tmp = (31 * tmp) + objectCode.hashCode();
-		return tmp;
+		return hashcode;
 	}
 
   private final String handlerParameter, objectCode;
+  private int hashcode = 0; //hashcode for immutable object
 }

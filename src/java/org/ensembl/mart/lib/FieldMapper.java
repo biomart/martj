@@ -104,7 +104,7 @@ public class FieldMapper {
 
 		// TODO possible optimisation: cache field->qName
 		String qName = null;
-		String name = field.getName();
+		String name = field.getField();
 		String constraint = field.getTableConstraint();
 		 
 		if ( constraint==null ) {

@@ -55,9 +55,13 @@ public class IDListFilter implements Filter {
 	 * @param o - an IDListFilter object
 	 */
 	public IDListFilter(IDListFilter o) {
-		name = o.getName();
+		field = o.getField();
 		tableConstraint = o.getTableConstraint();
     type = o.getType();
+    
+    File thisFile = null;
+    Query thisSubQ = null;
+    URL thisUrl = null;
     
     switch (type) {
     	case STRING:
@@ -65,42 +69,23 @@ public class IDListFilter implements Filter {
     	  break;
     	  
     	case FILE:
-    	  file = o.getFile();
+    	  thisFile = o.getFile();
     	  break;
     	  
     	case URL:
-    	  url = o.getUrl();
+    	  thisUrl = o.getUrl();
     	  break;    	 
     	
     	case SUBQUERY:
-    	  subQuery = o.getSubQuery();
+    	  thisSubQ = o.getSubQuery();
     	  break;    	
     }
-	}
-
-	/**
-	 * Constructor for a STRING type IDListFilter object with a given field_name with a single identifier.
-	 * @param name
-	 * @param identifier
-	 */
-	public IDListFilter(String name, String identifier) {
-		this(name, "", identifier);
-	}
-
-	/**
-	 * Constructor for a STRING type IDListFilter object of a given field name,
-	 * and table Constraint, with a single identifier.
-	 * Other identifiers can be added later with addIdentifier.
-	 *  
-	 * @param String name = field name
-	 * @param String tableConstraint = table Constraint for field name
-	 * @param String identifier
-	 */
-	public IDListFilter(String name, String tableConstraint, String identifier) {
-		this.name = name;
-		this.tableConstraint = tableConstraint;
-		identifiers.add(identifier);
-		type = STRING;
+    
+    file = thisFile;
+    subQuery = thisSubQ;
+    url = thisUrl;
+    
+    setHashCode();
 	}
 
 	/**
@@ -110,8 +95,8 @@ public class IDListFilter implements Filter {
 	 * @param String name - field name
 	 * @param String[] identifiers
 	 */
-	public IDListFilter(String name, String[] identifiers) {
-		this(name, "", identifiers);
+	public IDListFilter(String field, String[] identifiers) {
+		this(field, null, identifiers);
 	}
 
 	/**
@@ -122,11 +107,15 @@ public class IDListFilter implements Filter {
 	 * @param String tableConstraint - table constraint for field name
 	 * @param String[] identifiers
 	 */
-	public IDListFilter(String name, String tableConstraint, String[] identifiers) {
-		this.name = name;
+	public IDListFilter(String field, String tableConstraint, String[] identifiers) {
+		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.identifiers = Arrays.asList(identifiers);
+    this.file = null;
+    this.url = null;
+    this.subQuery = null;
 		type = STRING;
+    setHashCode();
 	}
 
 	/**
@@ -136,8 +125,8 @@ public class IDListFilter implements Filter {
 	 * @param String name - field name
 	 * @param File file
 	 */
-	public IDListFilter(String name, File file) {
-		this(name, "", file);
+	public IDListFilter(String field, File file) {
+		this(field, null, file);
 	}
 
 	/**
@@ -149,10 +138,13 @@ public class IDListFilter implements Filter {
 	 * @param File file
 	 */
 	public IDListFilter(String name, String tableConstraint, File file) {
-		this.name = name;
+		this.field = name;
 		this.tableConstraint = tableConstraint;
 		this.file = file;
+    this.url = null;
+    this.subQuery = null;
 		type = FILE;
+    setHashCode();
 	}
 
 	/**
@@ -163,7 +155,7 @@ public class IDListFilter implements Filter {
 	 * @param URL url
 	 */
 	public IDListFilter(String name, URL url) {
-		this(name, "", url);
+		this(name, null, url);
 	}
 
 	/**
@@ -175,10 +167,13 @@ public class IDListFilter implements Filter {
 	 * @param URL url - url pointing to resource with IDs
 	 */
 	public IDListFilter(String name, String tableConstraint, URL url) {
-		this.name = name;
+		this.field = name;
 		this.tableConstraint = tableConstraint;
 		this.url = url;
+    this.file = null;
+    this.subQuery = null;
 		type = URL;
+    setHashCode();
 	}
 
 	/**
@@ -189,7 +184,7 @@ public class IDListFilter implements Filter {
 	 * @see QueryIDListFilterHandler 
 	 */
 	public IDListFilter(String name, Query subQuery) {
-		this(name, "", subQuery);
+		this(name, null, subQuery);
 	}
 
 	/**
@@ -202,25 +197,41 @@ public class IDListFilter implements Filter {
 	 * @see QueryIDListFilterHandler 
 	 */
 	public IDListFilter(String name, String tableConstraint, Query subQuery) {
-		this.name = name;
+		this.field = name;
 		this.tableConstraint = tableConstraint;
 		this.subQuery = subQuery;
+    this.file = null;
+    this.url = null;
 		type = SUBQUERY;
+    setHashCode();
 	}
 
-	/**
-	  * add an identifier to the STRING type IDListFilter
-	  * 
-	  * @param String identifier
-	  */
-	public void addIdentifier(String identifier) throws InvalidListException {
-		if (!(type == STRING))
-			throw new InvalidListException("You can only add identifiers to a STRING type list\n");
+  private void setHashCode() {
+    hashcode = (field == null) ? 0 : field.hashCode();
+    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
 
-		if (!identifiers.contains(identifier))
-			identifiers.add(identifier);
-	}
+    switch (type) {
+      case STRING :
+        for (int i = 0, n = identifiers.size(); i < n; i++) {
+          String element = (String) identifiers.get(i);
+          hashcode = (31 * hashcode) + element.hashCode();
+        }
+        break;
 
+      case FILE :
+        hashcode = (31 * hashcode) + ( (file == null) ? 0 : file.hashCode() );
+        break;
+
+      case URL :
+        hashcode = (31 * hashcode) + ( (url == null) ? 0 : url.hashCode() );
+        break;
+
+      case SUBQUERY :
+        hashcode = (31 * hashcode) + ( (subQuery == null) ? 0 : subQuery.hashCode() );
+        break;
+    }
+  }
+  
 	/**
 	 * returns the Where Clause for the SQL
 	 * 
@@ -229,7 +240,7 @@ public class IDListFilter implements Filter {
 	 */
 	public String getWhereClause() {			
 		StringBuffer buf = new StringBuffer();
-		buf.append(name).append(" IN (");
+		buf.append(field).append(" IN (");
 		for (int i = 0, n = identifiers.size(); i < n; i++) {
 			String element = (String) identifiers.get(i);
 			if (i > 0)
@@ -274,8 +285,8 @@ public class IDListFilter implements Filter {
 	 * 
 	 * @return String field name
 	 */
-	public String getName() {
-		return name;
+	public String getField() {
+		return field;
 	}
 
 	public String getValue() {
@@ -333,7 +344,7 @@ public class IDListFilter implements Filter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" field=").append(name);
+		buf.append(" field=").append(field);
 		buf.append(", tableConstraint=").append(tableConstraint);
 
 		switch (type) {
@@ -370,38 +381,17 @@ public class IDListFilter implements Filter {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-		int tmp = name.hashCode();
-		tmp = (31 * tmp) + tableConstraint.hashCode();
-
-		switch (type) {
-			case STRING :
-				for (int i = 0, n = identifiers.size(); i < n; i++) {
-					String element = (String) identifiers.get(i);
-					tmp = (31 * tmp) + element.hashCode();
-				}
-				break;
-
-			case FILE :
-				tmp = (31 * tmp) + file.hashCode();
-				break;
-
-			case URL :
-				tmp = (31 * tmp) + url.hashCode();
-				break;
-
-			case SUBQUERY :
-				tmp = (31 * tmp) + subQuery.hashCode();
-				break;
-		}
-
-		return tmp;
+		return hashcode;
 	}
 
-	private final String name, tableConstraint;
+	private final String field, tableConstraint;
 	private final int type;
-	private Query subQuery; // for Query based Filter
-	private File file;
-	private URL url;
+  
+	private final Query subQuery; // for Query based Filter
+	private final File file;
+	private final URL url;
 	
 	private List identifiers = new ArrayList();
+  
+  private int hashcode = 0; //hashcode for immutable object
 }

@@ -35,7 +35,7 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String condition, String value) {
-		this(field, "", condition,value);
+		this(field, null, condition,value);
 	}
 
 
@@ -48,10 +48,15 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String tableConstraint, String condition, String value) {
-		this.name = field;
+		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.condition = condition;
 		this.value = value;
+    
+    hashcode = (this.field == null) ? 0 : this.field.hashCode();
+    hashcode = (31 * hashcode) + ( (this.condition == null) ? 0 : this.condition.hashCode() );
+    hashcode = (31 * hashcode) + ( (this.value == null) ? 0 : this.value.hashCode() );
+    hashcode = (31 * hashcode) + ( (this.tableConstraint == null) ? 0 : this.tableConstraint.hashCode() );
 	}
 
   /**
@@ -59,37 +64,23 @@ public class BasicFilter implements Filter {
    * @param o - a BasicFilter object to copy
    */
   public BasicFilter(BasicFilter o) {
-  	name = o.getName();
+  	field = o.getField();
   	tableConstraint = o.getTableConstraint();
   	condition = o.getCondition();
   	value = o.getValue();
+    
+    hashcode = (field == null) ? 0 : field.hashCode();
+    hashcode = (31 * hashcode) + ( (condition == null) ? 0 : condition.hashCode() );
+    hashcode = (31 * hashcode) + ( (value == null) ? 0 : value.hashCode() );
+    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
   }
   
-	/**
-	 * sets the condition for the filter.  Conditions can be =,<, or >.
-	 * 
-	 * @param condition -- String =<>
-	 */
-	public void setCondition(String condition) {
-		this.condition = condition;
-	}
-
 	/**
 	 * returns the condition for the filter
 	 * @return String condition =<>
 	 */
 	public String getCondition() {
 		return condition;
-	}
-
-	/**
-	 * sets the value of the condition, which is the actual filter string to
-	 * apply to the query.
-	 * 
-	 * @param value -- String value that is applicable to the specified type.
-	 */
-	public void setValue(String value) {
-		this.value = value;
 	}
 
 	/**
@@ -106,14 +97,10 @@ public class BasicFilter implements Filter {
 	 * 
 	 * @return String type
 	 */
-	public String getName() {
-		return name;
+	public String getField() {
+		return field;
 	}
 
-	
-	public void setTableConstraint(String tableConstraint) {
-		this.tableConstraint = tableConstraint;
-	}
 	
 	public String getTableConstraint() {
 		return tableConstraint;
@@ -128,7 +115,7 @@ public class BasicFilter implements Filter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" name=").append(name);
+		buf.append(" name=").append(field);
 		buf.append(" ,condition=").append(condition);
 		buf.append(" ,value=").append(value);
 		buf.append(", tableConstraint=").append(tableConstraint);
@@ -144,7 +131,7 @@ public class BasicFilter implements Filter {
 	 * @return String where clause
 	 */
 	public String getWhereClause() {
-		return name + condition + "?";
+		return field + condition + "?";
 	}
 
 	/**
@@ -172,12 +159,9 @@ public class BasicFilter implements Filter {
 	}
 	
   public int hashCode() {
-  	int tmp = name.hashCode();
-  	tmp = (31 * tmp) + condition.hashCode();
-		tmp = (31 * tmp) + value.hashCode();
-		tmp = (31 * tmp) + tableConstraint.hashCode();
-		return tmp;
+		return hashcode;
   }
   
-	private String name, condition, value, tableConstraint;
+	private final String field, condition, value, tableConstraint;
+  private int hashcode = 0; //hashcode for immutable object
 }

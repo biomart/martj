@@ -49,6 +49,10 @@ public class FieldAttribute implements Attribute {
 		public FieldAttribute(String field, String tableConstraint) {
 			this.field = field;
 			this.tableConstraint = tableConstraint;
+
+      hashcode = 17;
+      hashcode = 37*hashcode + ((field == null) ? 0 : field.hashCode()); 
+      hashcode = 37*hashcode + ((tableConstraint == null) ? 0 : tableConstraint.hashCode());
 		}
     
     /**
@@ -56,14 +60,28 @@ public class FieldAttribute implements Attribute {
      * @param a - a FieldAttribute object to copy
      */
     public FieldAttribute(FieldAttribute a) {
-    	this(a.getName(), a.getTableConstraint());
+    	this(a.getField(), a.getTableConstraint());
     }
-    
-    public int hashCode() {
-    		int result = 17;
-    		result = 37*result + ((field == null) ? 0 : field.hashCode()); 
-				result = 37*result + ((tableConstraint == null) ? 0 : tableConstraint.hashCode()); 
-        return result;
+
+  /**
+   * returns the field name
+   * 
+   * @return String field
+   */
+  public String getField(){
+    return field;
+  }
+  
+  /**
+   * Returns the table constraint
+   * @return String tableConstraint
+   */
+    public String getTableConstraint() {
+      return tableConstraint;
+    }
+      
+    public int hashCode() { 
+        return hashcode;
     }
 
     /**
@@ -89,24 +107,7 @@ public class FieldAttribute implements Attribute {
       return buf.toString();
     }
 
-    /**
-     * returns the field name
-     * 
-     * @return String field
-     */
-    public String getName(){
-			return field;
-    }
-
-		public void setTableConstraint(String tableConstraint) {
-			this.tableConstraint = tableConstraint;
-		}
-
-		public String getTableConstraint() {
-			return tableConstraint;
-		}
-
-
-		private String tableConstraint;
-    private String field;
+		private final String tableConstraint;
+    private final String field;
+    private int hashcode = 0; //hashcode for immutable object
 }

@@ -32,7 +32,7 @@ public interface Field {
 	/**
 	 * @return name of the attribute
 	 */
-    String getName();
+    String getField();
     
     
     /**

@@ -54,50 +54,33 @@ public class Query {
   
   public Query(Query oq) {
   	if (oq.getAttributes().length > 0) {
-  	  Attribute[] oa = oq.getAttributes();
-  	  Attribute[] na = new Attribute[oa.length];
-  	  for (int i = 0, n = oa.length; i < n; i++)
-			  na[i] = new FieldAttribute((FieldAttribute) oa[i]);
-			  
-      setAttributes(na);
+      Attribute[] oatts = oq.getAttributes();
+      Attribute[] natts = new Attribute[oatts.length];
+      System.arraycopy(oatts, 0, natts, 0, oatts.length);
+      setAttributes(natts);
   	}
     
     if (oq.getFilters().length > 0) {
-      Filter[] ofs = oq.getFilters();
-      Filter[] nfs = new Filter[ofs.length];
-      for (int i = 0, n = ofs.length; i < n; i++) {
-				Filter fo = ofs[i];
-				Filter fn = null;
-				
-				if (fo instanceof BasicFilter)
-				  fn = new BasicFilter((BasicFilter) fo);
-				else if (fo instanceof IDListFilter)
-				  fn = new IDListFilter((IDListFilter) fo);
-				else
-				  fn = new NullableFilter((NullableFilter) fo); //only three possible
-				  
-				nfs[i] = fn;
-			}
-      
-      setFilters(nfs);
+      Filter[] ofilts = oq.getFilters();
+      Filter[] nfilts = new Filter[ofilts.length];
+      System.arraycopy(ofilts,0,nfilts,0,ofilts.length);
+      setFilters(nfilts);
     }
   	
   	if (oq.hasUnprocessedListFilters) {
-  		IDListFilter[] olfs = oq.getUnprocessedListFilters();
-  		IDListFilter[] nlfs = new IDListFilter[olfs.length];
-  		for (int i = 0, n = olfs.length; i < n; i++)
-  		  nlfs[i] = new IDListFilter(olfs[i]);
-  		
-  		setFilters(nlfs);
+      IDListFilter[] ofilts = oq.getUnprocessedListFilters();
+      Filter[] nfilts = new Filter[ofilts.length];
+      for (int i = 0, n = ofilts.length; i < n; i++)
+        nfilts[i] = (Filter) ofilts[i];
+      
+      setFilters(nfilts);
   	}
   	
   	if (oq.hasDomainSpecificFilters) {
-  		DomainSpecificFilter[] odsfs = oq.getDomainSpecificFilters();
-  		DomainSpecificFilter[] ndsfs = new DomainSpecificFilter[odsfs.length];
-  		for (int i = 0, n = odsfs.length; i < n; i++)
-  		  ndsfs[i] = new DomainSpecificFilter(odsfs[i]);
-  		  
-  		setDomainSpecificFilters(ndsfs);
+      DomainSpecificFilter[] odsfilts = oq.getDomainSpecificFilters();
+      DomainSpecificFilter[] ndsfilts = new DomainSpecificFilter[odsfilts.length];
+      System.arraycopy(odsfilts, 0, ndsfilts,0,odsfilts.length);
+  		setDomainSpecificFilters(ndsfilts);
     }
     
     if (oq.querytype == Query.SEQUENCE)
@@ -209,12 +192,12 @@ public class Query {
   public Filter getFilterByName(String name) {
   	for (int i = 0, n = filters.size(); i < n; i++) {
 			Filter element = (Filter) filters.get(i);
-			if (element.getName().equals(name))
+			if (element.getField().equals(name))
 			  return element;
 		}
 		for (int i = 0, n = unprocessedfilters.size(); i < n; i++) {
 			Filter element = (Filter) unprocessedfilters.get(i);
-			if (element.getName().equals(name))
+			if (element.getField().equals(name))
 			  return element;
 		}
 		return null;

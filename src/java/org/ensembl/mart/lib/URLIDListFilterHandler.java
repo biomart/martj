@@ -55,7 +55,7 @@ public class URLIDListFilterHandler extends IDListFilterHandlerBase {
 		throw new InvalidQueryException("Non File URLs are not currently supported\n"); 
 		
 		if (unversionedIds.length > 0) {
-			Filter newFilter = new IDListFilter(idfilter.getName(), idfilter.getTableConstraint(), unversionedIds);
+			Filter newFilter = new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds);
 			newQuery.addFilter(newFilter);
 		}
 		return newQuery;

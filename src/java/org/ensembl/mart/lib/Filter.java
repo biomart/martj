@@ -31,12 +31,7 @@ public interface Filter extends Field {
      * Value, null if not needed. This can be added to the prepared statment.
      */
     String getValue();
-
-    /**
-     * Returns TableConstraint for the Filter
-     */
-    String getTableConstraint();
-    
+   
     /**
      * String to be included in where clause.
      * TODO: remove this?

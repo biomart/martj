@@ -34,21 +34,14 @@ public class NullableFilter implements Filter {
 	public static final String isNULL_NUM = "!= 1";
 	public static final String isNotNULL_NUM = "= 1";
 
-	/**
-	 * default constructor
-	 */
-	public NullableFilter() {
-	}
-
-
 /**
- * Constructor for a basic NullableFilter, with type and condition set.
+ * Constructor for a basic NullableFilter, with field and condition set.
  * 
-	 * @param type - String, type of filter
+	 * @param field - String, field of filter
 	 * @param condition - String, one of isNULL or isNotNull
  */
-	public NullableFilter(String type, String condition) {
-    this(type, "", condition);
+	public NullableFilter(String field, String condition) {
+    this(field, null, condition);
 	}
 
 	/**
@@ -56,55 +49,44 @@ public class NullableFilter implements Filter {
 	 * static isNULL and isNotNull variables can be used
 	 * to set the condition
 	 * 
-	 * @param type - String, type of filter
+	 * @param field - String, field of filter
 	 * @param tableConstraint - String, tableConstraint for the Filter
 	 * @param condition - String, one of isNULL or isNotNull
 	 */	
-	public NullableFilter(String type, String tableConstraint, String condition) {
-		this.type = type;
+	public NullableFilter(String field, String tableConstraint, String condition) {
+		this.field = field;
 		this.tableConstraint = tableConstraint;
-		this.condition = condition;		
+		this.condition = condition;
+    
+    hashcode = (this.field == null) ? 0 : this.field.hashCode();
+    hashcode = (31 * hashcode) + ( (this.tableConstraint == null) ? 0 : this.tableConstraint.hashCode() );
+    hashcode = (31 * hashcode) + ( (this.condition == null) ? 0 : this.condition.hashCode() );		
 	}
 	
 	public NullableFilter(NullableFilter o) {
-		type = o.getName();
+		field = o.getField();
+    tableConstraint = o.getTableConstraint();
 		condition = o.getRightHandClause();
+    
+    hashcode = (field == null) ? 0 : field.hashCode();
+    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
+    hashcode = (31 * hashcode) + ( (condition == null) ? 0 : condition.hashCode() );
 	}
 	
 	/**
-	 * returns the type specified
+	 * returns the field specified
 	 * 
-	 * @return String type
+	 * @return String field
 	 */
-	public String getName() {
-		return type;
+	public String getField() {
+		return field;
 	}
 
 	/**
-	 * sets the type
-	 * 
-	 * @param type -- String type of the query (roughly corresponds to
-	 * a field in a mart table).
-	 */
-	public void setType(String type) {
-		this.type = type;
-	}
-
-	/**
-	 * returns the where clause for the SQL as type is null
+	 * returns the where clause for the SQL as field is null
 	 */
 	public String getWhereClause() {
-		return type + " " + condition;
-	}
-
-	/**
-	 * sets the condition.  condition can be specified by explicit use
-	 * of the static isNULL and isNotNull variables.
-	 * 
-	 * @param condition - String
-	 */
-	public void setCondition(String condition) {
-		this.condition = condition;
+		return field + " " + condition;
 	}
 
 	/**
@@ -121,10 +103,6 @@ public class NullableFilter implements Filter {
 		return null;
 	}
 
-	public void setTableConstraint(String tableConstraint) {
-		this.tableConstraint = tableConstraint;
-	}
-
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
@@ -133,7 +111,7 @@ public class NullableFilter implements Filter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("field=").append(type);
+		buf.append("field=").append(field);
 		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append(", condition=").append(condition);
 		buf.append("]");
@@ -152,13 +130,9 @@ public class NullableFilter implements Filter {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-    int tmp = type.hashCode();
-    tmp = (31 * tmp) + tableConstraint.hashCode();
-		tmp = (31 * tmp) + condition.hashCode();
-    return tmp;
+    return hashcode;
 	}
 
-	private String tableConstraint;
-	private String type;
-	private String condition;
+	private final String field, tableConstraint, condition;
+  private int hashcode = 0; //hashcode for immutable object
 }
