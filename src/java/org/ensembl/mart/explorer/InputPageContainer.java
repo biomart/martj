@@ -48,7 +48,6 @@ public class InputPageContainer
 
   public InputPageContainer(
     Query query,
-    DSViewAdaptor datasetViewAdaptor,
     QueryTreeView tree,
     DatasetViewSettings datasetViewSettings) {
 
@@ -67,10 +66,10 @@ public class InputPageContainer
       new DatasetWidget(query),
       TreeNodeData.DATASET.getLabel());
     add(
-      new AttributesWidget(query, datasetViewAdaptor, tree),
+      new AttributesWidget(query, datasetViewSettings.getAdaptor(), tree),
       TreeNodeData.ATTRIBUTES.getLabel());
     add(
-      new FiltersWidget(query, datasetViewAdaptor, tree),
+      new FiltersWidget(query, datasetViewSettings.getAdaptor(), tree),
       TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }

@@ -194,10 +194,11 @@ public class QueryEditor extends JPanel {
     }
   }
 
-  private LabelledComboBox datasetViewCombo;
+  private DatasetViewSettings datasetViewSettings;
 
-	/** DatasetViewAdaptor defines the "query space" of available dataset views. */
-  private DSViewAdaptor datasetViewAdaptor;
+  private QueryEditorContext editorManager;
+
+  private LabelledComboBox datasetViewCombo;
 
   private static final Logger logger =
     Logger.getLogger(QueryEditor.class.getName());
@@ -250,20 +251,20 @@ public class QueryEditor extends JPanel {
    * @throws IOException if fails to create temporary results file.
    */
   public QueryEditor(
-    DSViewAdaptor datasetViewAdaptor,
+    QueryEditorContext editorManager,
     DatasetViewSettings datasetViewSettings)
     throws IOException {
 
-    this.datasetViewAdaptor = datasetViewAdaptor;
+    this.datasetViewSettings = datasetViewSettings;
+    this.editorManager = editorManager;
     this.query = new Query();
     this.query.addQueryChangeListener(resultsStatus);
 
     JComponent toolBar = createToolbar();
-    QueryTreeView treeView = new QueryTreeView(query, datasetViewAdaptor);
+    QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getAdaptor());
     InputPageContainer inputPanelContainer =
       new InputPageContainer(
         query,
-        datasetViewAdaptor,
         treeView,
         datasetViewSettings);
 
@@ -289,10 +290,27 @@ public class QueryEditor extends JPanel {
 
   private JComponent createToolbar() {
 
-    Box toolBar = Box.createHorizontalBox();
-    toolBar.add(new JLabel("Query"));
-
     int gap = 5;
+    
+    Box toolBar = Box.createHorizontalBox();
+    
+    datasetViewCombo = new LabelledComboBox("DatasetView", new ChangeListener() {
+      public void stateChanged(ChangeEvent e) {
+        doDatasetViewChanged();
+      }
+    });
+    datasetViewCombo.setEditable( false );
+    Dimension s = new Dimension(250, 40);
+    datasetViewCombo.setPreferredSize( s );
+    datasetViewCombo.setMaximumSize( s );
+    toolBar.add( datasetViewCombo );
+    
+    
+    
+    toolBar.add(Box.createHorizontalStrut(4*gap));
+    
+    toolBar.add(new JLabel("Query"));
+    
     toolBar.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
     toolBar.add(createButton("Execute", new ActionListener() {
@@ -313,7 +331,8 @@ public class QueryEditor extends JPanel {
       }
     }, true));
 
-    toolBar.add(Box.createHorizontalStrut(20));
+
+    toolBar.add(Box.createHorizontalStrut(4*gap));
 
     toolBar.add(new JLabel("Results"));
 
@@ -328,19 +347,26 @@ public class QueryEditor extends JPanel {
         doSaveResultsAs();
       }
     }, true));
+
     
-    datasetViewCombo = new LabelledComboBox("DatasetView", new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-        doDatasetViewChanged();
-			}
-    });
-    datasetViewCombo.setEditable( false );
-    Dimension s = new Dimension(250, 40);
-    datasetViewCombo.setPreferredSize( s );
-    datasetViewCombo.setMaximumSize( s );
-    toolBar.add( datasetViewCombo );
+    toolBar.add( Box.createHorizontalGlue() );
+    
+    toolBar.add(createButton("Close", new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doClose();
+      }
+    }, true));
+
 
     return toolBar;
+  }
+
+  /**
+   * 
+   */
+  protected void doClose() {
+    if ( editorManager!=null ) 
+      editorManager.remove(this);
   }
 
   /**
@@ -375,7 +401,7 @@ public class QueryEditor extends JPanel {
 
       logger.fine("Loaded MQL: " + buf.toString());
 
-      MartShellLib msl = new MartShellLib(datasetViewAdaptor);
+      MartShellLib msl = new MartShellLib(datasetViewSettings.getAdaptor());
       setQuery(msl.MQLtoQuery(buf.toString()));
       logger.fine("Loaded Query:" + getQuery());
 
@@ -563,9 +589,8 @@ public class QueryEditor extends JPanel {
 
     DatasetView[] views = null;
 
-    DSViewAdaptor a = testDSViewAdaptor();
     DatasetViewSettings dvs = testDatasetViewSettings();
-    final QueryEditor editor = new QueryEditor(a,dvs);
+    final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
 
     JFrame f = new JFrame("Query Editor (Test Frame)");
@@ -577,7 +602,7 @@ public class QueryEditor extends JPanel {
     f.setVisible(true);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetView(a.getDatasetViews()[0]);
+    editor.getQuery().setDatasetView(dvs.getAdaptor().getDatasetViews()[0]);
 
   }
 
@@ -839,13 +864,6 @@ public class QueryEditor extends JPanel {
       throw new IllegalArgumentException(
         "File is not a directory: " + directory);
     currentDirectory = directory;
-  }
-
-  /**
-   * @return
-   */
-  public DSViewAdaptor getDatasetViewAdaptor() {
-    return datasetViewAdaptor;
   }
 
   /**

@@ -48,311 +48,321 @@ import org.ensembl.mart.util.LoggingUtil;
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartExplorer extends JFrame {
+public class MartExplorer extends JFrame implements QueryEditorContext {
 
-	/*
-	  jdbc driver [mysql default, add, remove]
-	  database
-	  dataset (view)
-	  a+f+os
-	 */
+  /*
+    jdbc driver [mysql default, add, remove]
+    database
+    dataset (view)
+    a+f+os
+   */
 
-	// TODO test save/load query
+  // TODO test save/load query
 
-	// TODO chained queries
-	// TODO user resolve datasetView name space clashes
+  // TODO chained queries
+  // TODO user resolve datasetView name space clashes
 
-	// TODO support user renaming queries 
+  // TODO support user renaming queries 
 
-	// TODO clone query
-	// TODO load registry file
+  // TODO clone query
+  // TODO load registry file
 
-	private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
+  private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
 
-	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
+  private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
-	private final static String TITLE =
-		" MartExplorer(Developement version- incomplete and unstable)";
+  private final static String TITLE =
+    " MartExplorer(Developement version- incomplete and unstable)";
 
-	private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
+  private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
-	/** Currently available datasets. */
-	private List datasetViews = new ArrayList();
+  /** Currently available datasets. */
+  private List datasetViews = new ArrayList();
 
-	/** Currently available databases. */
-	private List databaseDSViewAdaptors = new ArrayList();
+  /** Currently available databases. */
+  private List databaseDSViewAdaptors = new ArrayList();
 
-	/** Currently visible QueryEditors **/
-	private List queryEditors = new ArrayList();
+  private JTabbedPane queryEditorTabbedPane = new JTabbedPane();
 
-	private JTabbedPane queryEditorTabbedPane = new JTabbedPane();
+  private DatabaseSettingsDialog databaseDialog;
 
-	private DatabaseSettingsDialog databaseDialog;
+  /** Persistent preferences object used to hold user history. */
+  private Preferences prefs;
 
-	/** Persistent preferences object used to hold user history. */
-	private Preferences prefs;
+  private Feedback feedback = new Feedback(this);
 
-	private Feedback feedback = new Feedback(this);
+  public static void main(String[] args) throws ConfigurationException {
 
-	public static void main(String[] args) throws ConfigurationException {
+    if (!LoggingUtil.isLoggingConfigFileSet())
+      Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
+    MartExplorer me = new MartExplorer();
+    me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    me.setVisible(true);
 
-		if (!LoggingUtil.isLoggingConfigFileSet())
-			Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
-		MartExplorer me = new MartExplorer();
-		me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		me.setVisible(true);
+    // test mode preloads datasets and sets up a query ready to use.
+    if (true) {
+      DSViewAdaptor a = QueryEditor.testDSViewAdaptor();
+      DatasetView dsv = a.getDatasetViews()[0];
 
-		// test mode preloads datasets and sets up a query ready to use.
-		if (true) {
-			DSViewAdaptor a = QueryEditor.testDSViewAdaptor();
-			DatasetView dsv = a.getDatasetViews()[0];
+      //me.datasetViewSettings.add(a);
+      //me.doNewQuery();
+      //			((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
+      //				.getQuery()
+      //				.setDatasetView(dsv);
+    }
 
-			//me.datasetViewSettings.add(a);
-			//me.doNewQuery();
-//			((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
-//				.getQuery()
-//				.setDatasetView(dsv);
-		}
-
-    if ( me.datasetViewSettings.getAdaptor().getDatasetViews().length>0 )
+    if (me.datasetViewSettings.getAdaptor().getDatasetViews().length > 0)
       me.doNewQuery();
 
-	}
+  }
 
-	public MartExplorer() {
+  public MartExplorer() {
 
-		super(TITLE);
+    super(TITLE);
 
-		setJMenuBar(createMenuBar());
-		getContentPane().add(queryEditorTabbedPane);
-		setSize(PREFERRED_SIZE);
+    setJMenuBar(createMenuBar());
+    getContentPane().add(queryEditorTabbedPane);
+    setSize(PREFERRED_SIZE);
 
-	}
+  }
 
-	/**
-	 * TODO Displays "about" dialog.
-	 *
-	 */
-	public void doAbout() {
-	}
+  /**
+   * TODO Displays "about" dialog.
+   *
+   */
+  public void doAbout() {
+  }
 
-	/**
-	 * Adds component to application as a tabbed pane. The tab's
-	 * name id component.getName().
-	 */
-	private void addQueryEditor(JComponent component) {
-		queryEditorTabbedPane.add(component.getName(), component);
-	}
+  /**
+   * Adds component to application as a tabbed pane. The tab's
+   * name id component.getName().
+   */
+  private void addQueryEditor(JComponent component) {
+    queryEditorTabbedPane.add(component.getName(), component);
+  }
 
-	/**
-	 * 
-	 * @return "Query_INDEX" where INDEX is the next highest
-	 * unique number used in the tab names.
-	 */
-	private String nextQueryBuilderTabLabel() {
+  /**
+   * 
+   * @return "Query_INDEX" where INDEX is the next highest
+   * unique number used in the tab names.
+   */
+  private String nextQueryBuilderTabLabel() {
 
-		int next = 1;
+    int next = 1;
 
-		int n = queryEditorTabbedPane.getTabCount();
-		Pattern p = Pattern.compile("Query_(\\d+)");
-		for (int i = 0; i < n; i++) {
-			String title = queryEditorTabbedPane.getTitleAt(i);
-			Matcher m = p.matcher(title);
-			if (m.matches()) {
-				int tmp = Integer.parseInt(m.group(1)) + 1;
-				if (tmp > next)
-					next = tmp;
-			}
-		}
+    int n = queryEditorTabbedPane.getTabCount();
+    Pattern p = Pattern.compile("Query_(\\d+)");
+    for (int i = 0; i < n; i++) {
+      String title = queryEditorTabbedPane.getTitleAt(i);
+      Matcher m = p.matcher(title);
+      if (m.matches()) {
+        int tmp = Integer.parseInt(m.group(1)) + 1;
+        if (tmp > next)
+          next = tmp;
+      }
+    }
 
-		return "Query_" + next;
-	}
+    return "Query_" + next;
+  }
 
-	/**
-	 * @return
-	 */
-	private JMenuBar createMenuBar() {
+  /**
+   * @return
+   */
+  private JMenuBar createMenuBar() {
 
-		JMenu file = new JMenu("File");
+    JMenu file = new JMenu("File");
 
-		JMenuItem importRegistry = new JMenuItem("Import registry file");
-		importRegistry.setEnabled(false);
-		file.add(importRegistry);
+    JMenuItem importRegistry = new JMenuItem("Import registry file");
+    importRegistry.setEnabled(false);
+    file.add(importRegistry);
 
-		JMenuItem exportRegistry = new JMenuItem("Export registry file");
-		exportRegistry.setEnabled(false);
-		file.add(exportRegistry);
-		file.addSeparator();
-		JMenuItem exit = new JMenuItem("Exit");
-		exit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doExit();
-			}
+    JMenuItem exportRegistry = new JMenuItem("Export registry file");
+    exportRegistry.setEnabled(false);
+    file.add(exportRegistry);
+    file.addSeparator();
+    JMenuItem exit = new JMenuItem("Exit");
+    exit.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doExit();
+      }
 
-		});
-		file.add(exit);
+    });
+    file.add(exit);
 
-		JMenu settings = new JMenu("Settings");
+    JMenu settings = new JMenu("Settings");
 
-		JMenuItem datasources = new JMenuItem("Datasources");
-		settings.add(datasources);
-		datasources.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doDatasourceSettings();
-			}
-		});
+    JMenuItem datasources = new JMenuItem("Datasources");
+    settings.add(datasources);
+    datasources.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doDatasourceSettings();
+      }
+    });
 
-		JMenuItem datasetviews = new JMenuItem("DatasetViews");
-		settings.add(datasetviews);
-		datasetviews.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doDatasetViewSettings();
-			}
-		});
+    JMenuItem datasetviews = new JMenuItem("DatasetViews");
+    settings.add(datasetviews);
+    datasetviews.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doDatasetViewSettings();
+      }
+    });
 
-		JMenu query = new JMenu("Query");
-		JMenuItem newQuery = new JMenuItem("New Query");
-		newQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doNewQuery();
-			}
-		});
-		query.add(newQuery);
+    JMenu query = new JMenu("Query");
+    JMenuItem newQuery = new JMenuItem("New Query");
+    newQuery.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doNewQuery();
+      }
+    });
+    query.add(newQuery);
 
-		JMenuItem newVirtualQuery = new JMenuItem("New Virtual Query");
-		newVirtualQuery.setEnabled(false);
-		newVirtualQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doNewVirtualQuery();
-			}
-		});
-		query.add(newVirtualQuery);
+    JMenuItem newVirtualQuery = new JMenuItem("New Virtual Query");
+    newVirtualQuery.setEnabled(false);
+    newVirtualQuery.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doNewVirtualQuery();
+      }
+    });
+    query.add(newVirtualQuery);
 
-		JMenuItem removeQuery = new JMenuItem("Remove");
-		removeQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doRemoveQuery();
-			}
-		});
-		query.add(removeQuery);
+    JMenuItem removeQuery = new JMenuItem("Remove");
+    removeQuery.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doRemoveQuery();
+      }
+    });
+    query.add(removeQuery);
 
-		JMenuItem load = new JMenuItem("Load");
-		load.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doLoadQueryFromMQL();
-			}
+    JMenuItem load = new JMenuItem("Load");
+    load.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doLoadQueryFromMQL();
+      }
 
-		});
-		query.add(load);
+    });
+    query.add(load);
 
-		query.addSeparator();
-		JMenuItem importQuery = new JMenuItem("Import MQL");
-		importQuery.setEnabled(false);
-		query.add(importQuery);
+    query.addSeparator();
+    JMenuItem importQuery = new JMenuItem("Import MQL");
+    importQuery.setEnabled(false);
+    query.add(importQuery);
 
-		JMenu help = new JMenu("Help");
-		JMenuItem about = new JMenuItem("About");
-		about.setEnabled(false);
-		about.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doAbout();
-			}
+    JMenu help = new JMenu("Help");
+    JMenuItem about = new JMenuItem("About");
+    about.setEnabled(false);
+    about.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doAbout();
+      }
 
-		});
-		help.add(about);
+    });
+    help.add(about);
 
-		JMenuBar all = new JMenuBar();
-		all.add(file);
-		all.add(settings);
-		all.add(query);
-		all.add(help);
-		return all;
-	}
+    JMenuBar all = new JMenuBar();
+    all.add(file);
+    all.add(settings);
+    all.add(query);
+    all.add(help);
+    return all;
+  }
 
-	/**
-	 * 
-	 */
-	protected void doDatasetViewSettings() {
-		datasetViewSettings.showDialog(this);
+  /**
+   * 
+   */
+  protected void doDatasetViewSettings() {
+    datasetViewSettings.showDialog(this);
 
-	}
+  }
 
-	/**
-	 * 
-	 */
-	protected void doDatasourceSettings() {
+  /**
+   * 
+   */
+  protected void doDatasourceSettings() {
 
-		datasetViewSettings.getMartSettings().showDialog(this);
-	}
+    datasetViewSettings.getMartSettings().showDialog(this);
+  }
 
-	/**
-	 * Delete currently selected QueryBuilder from tabbed pane if one is 
-	 * selected.
-	 */
-	protected void doRemoveQuery() {
+  /**
+   * Delete currently selected QueryBuilder from tabbed pane if one is 
+   * selected.
+   */
+  protected void doRemoveQuery() {
+    remove( (QueryEditor)queryEditorTabbedPane.getSelectedComponent() );
+  }
 
-		int index = queryEditorTabbedPane.getSelectedIndex();
-		if (index > -1) {
-			queryEditorTabbedPane.remove(index);
-		}
-	}
+  /**
+  	 * 
+  	 */
+  public void doLoadQueryFromMQL() {
+    QueryEditor qe = null;
+    try {
+      qe = new QueryEditor(this, datasetViewSettings);
+      addQueryEditor(qe);
+      qe.doLoadQuery();
+    } catch (IOException e) {
+      feedback.warning(e);
+      if (qe != null)
+        queryEditorTabbedPane.remove(qe);
+    }
+  }
 
-	/**
-		 * 
-		 */
-	public void doLoadQueryFromMQL() {
-		QueryEditor qe = null;
-		try {
-			qe = new QueryEditor(null, datasetViewSettings);
-			addQueryEditor(qe);
-			qe.doLoadQuery();
-		} catch (IOException e) {
-			feedback.warning(e);
-			if (qe != null)
-				queryEditorTabbedPane.remove(qe);
-		}
-	}
+  /**
+   * Exits the programs.
+   */
+  public void doExit() {
+    System.exit(0);
+  }
 
-	/**
-	 * Exits the programs.
-	 */
-	public void doExit() {
-		System.exit(0);
-	}
+  /**
+  	 * 
+  	 */
+  public void doNewQuery() {
 
-	/**
-		 * 
-		 */
-	public void doNewQuery() {
+    try {
 
-		try {
+      if (datasetViewSettings.getAdaptor().getDatasetViews().length == 0) {
+        feedback.warning(
+          "No dataset views available. You need load one or more "
+            + "datasets before you can create a query.");
 
-			if (datasetViewSettings.getAdaptor().getDatasetViews().length == 0) {
-				feedback.warning(
-					"No dataset views available. You need load one or more "
-						+ "datasets before you can create a query.");
+      } else {
 
-			} else {
+        QueryEditor qe;
+        qe = new QueryEditor(this, datasetViewSettings);
+        qe.setName(nextQueryBuilderTabLabel());
+        addQueryEditor(qe);
 
-				QueryEditor qe;
-				qe = new QueryEditor(null, datasetViewSettings);
-				qe.setName(nextQueryBuilderTabLabel());
-				addQueryEditor(qe);
+      }
+    } catch (ConfigurationException e) {
+      feedback.warning(e);
+    } catch (IOException e) {
+      feedback.warning(e);
+    }
 
-			}
-		} catch (ConfigurationException e) {
-			feedback.warning(e);
-		} catch (IOException e) {
-			feedback.warning(e);
-		}
+  }
 
-	}
+  /**
+   * TODO Creates a new query from the results of other queries.
+   */
+  public void doNewVirtualQuery() {
 
-	/**
-	 * TODO Creates a new query from the results of other queries.
-	 */
-	public void doNewVirtualQuery() {
+  }
 
-	}
+
+  /**
+   * @see org.ensembl.mart.explorer.QueryEditorManager#remove(org.ensembl.mart.explorer.QueryEditor)
+   */
+  public void remove(QueryEditor editor) {
+    queryEditorTabbedPane.remove( editor);
+    
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.QueryEditorManager#getQueryEditors()
+   */
+  public QueryEditor[] getQueryEditors() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
 }
