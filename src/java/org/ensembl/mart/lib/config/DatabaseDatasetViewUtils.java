@@ -34,6 +34,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.StringTokenizer;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -108,9 +110,12 @@ public class DatabaseDatasetViewUtils {
 
   private static final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
 
-  private static String DEFAULTLEGALQUALIFIERS = "in,=,>,<,>=,<=";
-  private static String DEFAULTQUALIFIER = "in";
-  private static String DEFAULTTYPE = "list";
+  //private static String DEFAULTLEGALQUALIFIERS = "in,=,>,<,>=,<=";
+  //private static String DEFAULTQUALIFIER = "in";
+  //private static String DEFAULTTYPE = "list";
+  private static String DEFAULTLEGALQUALIFIERS = "=";
+  private static String DEFAULTQUALIFIER = "=";
+  private static String DEFAULTTYPE = "text";
   private static final String DEFAULTGROUP = "defaultGroup";
   private static final String DEFAULTPAGE = "defaultPage";
 
@@ -2029,27 +2034,29 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a list of potential (nieve) dataset names from a given Mart compliant database hosted on a given DetailedDataSource.
-   * These names can be used as an argument to getNieveMainTablesFor, getNieveDimensionTablesFor and getNieveDatasetViewFor.
+   * Returns a list of potential (Naive) dataset names from a given Mart compliant database hosted on a given DetailedDataSource.
+   * These names can be used as an argument to getNaiveMainTablesFor, getNaiveDimensionTablesFor and getNaiveDatasetViewFor.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential datasets
    * @return String[] of potential dataset names
    * @throws SQLException
    */
-  public static String[] getNieveDatasetNamesFor(DetailedDataSource dsource, String databaseName) throws SQLException {
-    String[] potentials = getNieveMainTablesFor(dsource, databaseName, null);
+  public static String[] getNaiveDatasetNamesFor(DetailedDataSource dsource, String databaseName) throws SQLException {
+    String[] potentials = getNaiveMainTablesFor(dsource, databaseName, null);
 
     //now weed them to a subset, attempting to unionize conformed dimension names
-    List retList = new ArrayList();
+    //List retList = new ArrayList();
+    Set retSet = new HashSet();
+
 
     for (int i = 0, n = potentials.length; i < n; i++) {
       String curval = potentials[i];
 
-      retList.add(curval.replaceFirst("_[Mm][Aa][Ii][Nn]", ""));
+      retSet.add(curval.replaceFirst("__.+__[Mm][Aa][Ii][Nn]", ""));
     }
 
-    String[] dsList = new String[retList.size()];
-    retList.toArray(dsList);
+    String[] dsList = new String[retSet.size()];
+    retSet.toArray(dsList);
     return dsList;
   }
 
@@ -2059,11 +2066,11 @@ public class DatabaseDatasetViewUtils {
    * the database are returned.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
-   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
    * @return String[] of potential main table names
    * @throws SQLException
    */
-  public static String[] getNieveMainTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
+  public static String[] getNaiveMainTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws SQLException {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
@@ -2108,17 +2115,56 @@ public class DatabaseDatasetViewUtils {
     potentials.toArray(retList);
     return retList;
   }
+  
+  /**
+	 * Retruns a String[] of main tables sorted on the number of join keys they contain 
+	 * @param dsource -- DetailedDataSource housing a connection to an RDBMS
+	 * @param databaseName -- name of the RDBMS instance to search for potential tables
+	 * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
+	 * @return String[] of potential main table names
+	 * @throws SQLException
+	 */
+	public static String[] sortNaiveMainTables(String[] mainTables, DetailedDataSource dsource, String databaseName)
+	  throws SQLException {
+	  List sortedMainTables = new ArrayList();
+
+      int resolution = 1;
+      int numberKeys;
+      
+      while (sortedMainTables.size() < mainTables.length){
+		for (int i = 0, n = mainTables.length; i < n; i++) {
+			numberKeys = 0;
+			String tableName = mainTables[i];
+            TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
+            for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+			  ColumnDescription column = table.columnDescriptions[j];
+              String cname = column.name;
+              if (cname.endsWith("_key"))
+                numberKeys++;
+			}
+			if (numberKeys == resolution){
+			  sortedMainTables.add(tableName);
+			  resolution++;
+			  break;
+			}
+		}
+      }
+
+	  String[] retList = new String[sortedMainTables.size()];
+	  sortedMainTables.toArray(retList);
+	  return retList;
+	}
 
   /**
    * Returns a String[] of potential dimension tables from a given Mart Compliant database, hosted on a
    * given RDBMS, constrained to an (optional) dataset.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
-   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
    * @return String[] of potential dimension table names
    * @throws SQLException
    */
-  public static String[] getNieveDimensionTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
+  public static String[] getNaiveDimensionTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws SQLException {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
@@ -2206,7 +2252,7 @@ public class DatabaseDatasetViewUtils {
 
   //TODO: change this when Mart Compliant Schema is fully optimized
   /**
-   * Returns a nieve DatasetView for a given dataset within a given Mart Compliant database, hosted on a given
+   * Returns a Naive DatasetView for a given dataset within a given Mart Compliant database, hosted on a given
    * RDBMS.  This will consist of an unordered set of starbases, no primary keys, and one FilterPage and AttributePage
    * containing one group with Collections for each table containing descriptions for each field.  Filters are only
    * described for main tables, and no Option grouping is attempted.  All Descriptions are fully constrained to
@@ -2214,73 +2260,120 @@ public class DatabaseDatasetViewUtils {
    * Schema.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
-   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
    * @return
    * @throws ConfigurationException
    * @throws SQLException
    */
-  public static DatasetView getNieveDatasetViewFor(DetailedDataSource dsource, String databaseName, String datasetName)
+  public static DatasetView getNaiveDatasetViewFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws ConfigurationException, SQLException {
     DatasetView dsv = new DatasetView();
 
-    List starbases = new ArrayList();
-    String[] primaryKeys = new String[] { "!!! MUST ADD PRIMARY KEYS MANUALLY !!!" };
-
-    dsv.setInternalName(datasetName);
+    //dsv.setInternalName(datasetName);
+	dsv.setInternalName("default");
     dsv.setDisplayName(datasetName + " ( " + databaseName + " )");
     dsv.setDataset(datasetName);
-    dsv.addPrimaryKeys(primaryKeys);
+    
 
     AttributePage ap = new AttributePage();
-    ap.setInternalName(DEFAULTPAGE);
-    ap.setDisplayName(DEFAULTPAGE);
+    ap.setInternalName("attributes");
+    ap.setDisplayName("ATTRIBUTES");
 
     FilterPage fp = new FilterPage();
-    fp.setInternalName(DEFAULTPAGE);
-    fp.setDisplayName(DEFAULTPAGE);
+    fp.setInternalName("filters");
+    fp.setDisplayName("FILTERS");
 
     AttributeGroup ag = new AttributeGroup();
-    ag.setInternalName(DEFAULTGROUP);
-    ag.setDisplayName(DEFAULTGROUP);
+    ag.setInternalName("features");
+    ag.setDisplayName("FEATURES");
 
     FilterGroup fg = new FilterGroup();
-    fg.setInternalName(DEFAULTGROUP);
-    fg.setDisplayName(DEFAULTGROUP);
+    fg.setInternalName("filters");
+    fg.setDisplayName("FILTERS");
 
-    List allTables = new ArrayList();
-    allTables.addAll(Arrays.asList(getNieveMainTablesFor(dsource, databaseName, datasetName)));
-    allTables.addAll(Arrays.asList(getNieveDimensionTablesFor(dsource, databaseName, datasetName)));
+    //need to sort starbases in order of the number of keys they contain
+    //primaryKeys should be in this same order
+    
+	List starbases = new ArrayList();
+    
+    starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(dsource, databaseName, datasetName), dsource, databaseName)));
+    
+	List primaryKeys = new ArrayList();
+	
+	for (int i = 0, n = starbases.size(); i < n; i++) {
+	  String tableName = (String) starbases.get(i);
+	  TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
+      
+	  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+        ColumnDescription column = table.columnDescriptions[j];
+        String cname = column.name;
+        if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+          primaryKeys.add(cname);
+	  }	
+	}
+	
+	String[] sbases = new String[starbases.size()];
+	starbases.toArray(sbases);    
+	dsv.addStarBases(sbases);
+	
+	String[] pkeys = new String[primaryKeys.size()];
+	primaryKeys.toArray(pkeys);  
+	dsv.addPrimaryKeys(pkeys);
+
+	List allTables = new ArrayList();
+	allTables.addAll(starbases);
+	allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(dsource, databaseName, datasetName)));
+
+    List allCols = new ArrayList();
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
-
+	  String content = null;
+	  String fullTableName = tableName;
       AttributeCollection ac = new AttributeCollection();
-      ac.setInternalName(tableName);
-      ac.setDisplayName(tableName);
+      String[] tableTokenizer = tableName.split("__");
+      content = tableTokenizer[1];
+      ac.setInternalName(content);
+      ac.setDisplayName(content.replaceAll("_"," "));
 
       FilterCollection fc = null;
       if (isMainTable(tableName)) {
-        String starbase = tableName;
-        starbase = starbase.replaceAll("_[Mm][Aa][Ii][Nn]", "");
-        // replace _MAIN or _main or _MaIn, etc with the empty string
-
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Starbase " + starbase + "\n");
-
-        if (!starbases.contains(starbase))
-          starbases.add(starbase);
-
+        
         fc = new FilterCollection();
-        fc.setInternalName(tableName);
-        fc.setDisplayName(tableName);
+        fc.setInternalName(content);
+        fc.setDisplayName(content.replaceAll("_"," "));
       }
 
       TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
-
+      
+      // need to find the lowest joinKey for table first;
+      String joinKey = null;
+      outer:for (int k = pkeys.length - 1; k > -1; k--){
+	    for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+		  ColumnDescription column = table.columnDescriptions[j];
+          String cname = column.name;
+          if (cname.equals(pkeys[k])){
+            joinKey = cname;
+            break outer;		
+          }
+	    }
+      }
+      
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
-
+        
         String cname = column.name;
+        
+        // ignore the key columns as atts and filters
+        if (cname.endsWith("_key"))
+          continue;
+        
+        // if the column already seen in a higher resolution
+        // main table ignore
+        
+        if (isMainTable(tableName) && allCols.contains(cname))
+          continue;
+        
         int ctype = column.javaType; // java generalized type across all JDBC instances
         //String ctype = column.dbType; //as in RDBMS table definition
         int csize = column.maxLength;
@@ -2289,11 +2382,15 @@ public class DatabaseDatasetViewUtils {
           logger.info(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
-          ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize));
-
-          if (isMainTable(tableName)) {
-            fc.addFilterDescription(getFilterDescription(cname, tableName, ctype));
-          }
+          
+		  if (isMainTable(tableName)) {
+		  	tableName = "main";
+		  	allCols.add(cname);
+			fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName));
+		  }
+          if (!cname.endsWith("_bool"))
+            ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize, joinKey));
+          
         } else {
           if (logger.isLoggable(Level.INFO))
             logger.info("Skipping " + tableName + "\n");
@@ -2312,10 +2409,7 @@ public class DatabaseDatasetViewUtils {
     dsv.addAttributePage(ap);
     dsv.addFilterPage(fp);
 
-    String[] sbases = new String[starbases.size()];
-    starbases.toArray(sbases);
 
-    dsv.addStarBases(sbases);
     return dsv;
   }
 
@@ -2331,25 +2425,47 @@ public class DatabaseDatasetViewUtils {
     return false;
   }
 
-  private static AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize)
+  private static AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize, String joinKey)
     throws ConfigurationException {
     AttributeDescription att = new AttributeDescription();
+	att.setField(columnName);
     att.setInternalName(columnName.toLowerCase());
-    att.setDisplayName(columnName);
-    att.setField(columnName);
+    att.setDisplayName(columnName.replaceAll("_"," "));
+    att.setKey(joinKey);
     att.setTableConstraint(tableName);
     att.setMaxLength(String.valueOf(maxSize));
 
     return att;
   }
 
-  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType) {
+  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType, String joinKey, DetailedDataSource dsource, String fullTableName)
+    throws SQLException, ConfigurationException {
     FilterDescription filt = new FilterDescription();
-    filt.setInternalName(columnName.toLowerCase());
-    filt.setDisplayName(columnName);
-    filt.setField(columnName);
+	filt.setField(columnName);
+	String descriptiveName = columnName;
+	if (columnName.endsWith("_bool")){
+	  descriptiveName = columnName.replaceFirst("_bool", "");
+	  filt.setType("boolean");
+	  filt.setQualifier("only");
+	  filt.setLegalQualifiers("only,excluded");
+	}
+	//else if (columnName.endsWith("_list")){
+    //  descriptiveName = columnName.replaceFirst("_list", "");
+    //  filt.setType("list");
+    //  filt.setQualifier("=");
+    //  filt.setLegalQualifiers("=");
+      // add an option for each distinct value
+    //  filt.addOptions(getOptions(columnName, fullTableName, dsource));
+	//}
+	else{
+	  filt.setType(DEFAULTTYPE);
+	  filt.setQualifier(DEFAULTQUALIFIER);
+	  filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);  
+	}
+    filt.setInternalName(descriptiveName.toLowerCase());
+    filt.setDisplayName(descriptiveName.replaceAll("_"," "));
     filt.setTableConstraint(tableName);
-
+    filt.setKey(joinKey); 
     //this is just to debug possibility of using java.sql.Types values to determine suitable filter types
     if (logger.isLoggable(Level.INFO)) {
       if (columnType == java.sql.Types.TINYINT) {
@@ -2359,9 +2475,67 @@ public class DatabaseDatasetViewUtils {
       }
     }
 
-    filt.setType(DEFAULTTYPE);
-    filt.setQualifier(DEFAULTQUALIFIER);
-    filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
     return filt;
   }
+  
+  public static Option[] getOptions(String columnName, String tableName, String joinKey, DetailedDataSource dsource, DatasetView dsView)
+	  throws SQLException, ConfigurationException{
+	  
+	  List options = new ArrayList();
+	  
+	  if (tableName.equals("main")){
+	    String[] starNames = dsView.getStarBases();
+	    String[] primaryKeys = dsView.getPrimaryKeys();
+		   for (int k = 0; k < primaryKeys.length; k++) {
+		     if (primaryKeys[k].equals(joinKey))
+		       tableName = starNames[k];
+		   }
+	  }
+	  
+	  Connection conn = dsource.getConnection();
+      String sql = "SELECT DISTINCT " + columnName + " FROM " + tableName+ " ORDER BY " + columnName;
+	  PreparedStatement ps = conn.prepareStatement(sql);
+	  ResultSet rs = ps.executeQuery();
+	  String value;
+	  Option op;
+	  while (rs.next()){
+	    value = rs.getString(1);
+	    op = new Option();
+	    op.setDisplayName(value);
+		op.setInternalName(value);
+		op.setValue(value);
+		op.setSelectable("true");
+		options.add(op);
+	  }
+	  
+	  Option[] retOptions = new Option[options.size()];
+	  options.toArray(retOptions);  
+	  return retOptions;
+  }
+  
+  public static Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, DetailedDataSource dsource)
+		throws SQLException, ConfigurationException{
+	  
+		List options = new ArrayList();
+		Connection conn = dsource.getConnection();
+		String sql = "SELECT " + columnName + " FROM " + tableName+ " WHERE " + whereName + "='" + whereValue + "' ORDER BY " + columnName;
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		String value;
+		Option op;
+		
+		while (rs.next()){
+		  value = rs.getString(1);
+		  op = new Option();
+		  op.setDisplayName(value);
+		  op.setInternalName(value);
+		  op.setValue(value);
+		  op.setSelectable("true");
+		  options.add(op);
+		}
+	    conn.close();
+		Option[] retOptions = new Option[options.size()];
+		options.toArray(retOptions);  
+		return retOptions;
+	}
 }
