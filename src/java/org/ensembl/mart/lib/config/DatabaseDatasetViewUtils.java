@@ -173,7 +173,8 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (tcheck == null) {
-      logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
       return false;
     }
 
@@ -257,8 +258,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("\ninserting with SQL " + insertSQL + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("\ninserting with SQL " + insertSQL + "\n");
 
       Connection conn = dsource.getConnection();
       MessageDigest md5digest = MessageDigest.getInstance(DIGESTTYPE);
@@ -319,8 +320,8 @@ public class DatabaseDatasetViewUtils {
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
       String oraclehackSQL = SELECTXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("\ninserting with SQL " + insertSQL + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("\ninserting with SQL " + insertSQL + "\n");
 
       Connection conn = dsource.getConnection();
       conn.setAutoCommit(false);
@@ -403,8 +404,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("\ninserting with SQL " + insertSQL + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("\ninserting with SQL " + insertSQL + "\n");
 
       Connection conn = dsource.getConnection();
       MessageDigest md5digest = MessageDigest.getInstance(DIGESTTYPE);
@@ -468,8 +469,8 @@ public class DatabaseDatasetViewUtils {
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
       String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("\ninserting with SQL " + insertSQL + "\nOracle: " + oraclehackSQL + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("\ninserting with SQL " + insertSQL + "\nOracle: " + oraclehackSQL + "\n");
 
       Connection conn = dsource.getConnection();
       conn.setAutoCommit(false);
@@ -552,8 +553,8 @@ public class DatabaseDatasetViewUtils {
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETALLDATASETSQL + metatable;
 
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Getting all dataset names with sql: " + sql + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Getting all dataset names with sql: " + sql + "\n");
 
     try {
       Connection conn = ds.getConnection();
@@ -591,8 +592,8 @@ public class DatabaseDatasetViewUtils {
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDATASET;
 
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Getting all InternalNames with sql: " + sql + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Getting all InternalNames with sql: " + sql + "\n");
 
     try {
       Connection conn = ds.getConnection();
@@ -632,8 +633,8 @@ public class DatabaseDatasetViewUtils {
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETDNAMESQL + metatable + GETANYNAMESWHEREDATASET;
 
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Getting all displayNames with sql: " + sql + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Getting all displayNames with sql: " + sql + "\n");
 
     try {
       Connection conn = ds.getConnection();
@@ -678,8 +679,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHERINAME;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using " + sql + " to get displayName for internalName " + internalName + " and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
@@ -711,6 +712,116 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
+  public static byte[] getDatasetViewByteArrayByDatasetInternalName(
+  DetailedDataSource dsource,
+  String user,
+  String dataset,
+  String internalName)
+  throws ConfigurationException {
+    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+      return getDatasetViewByteArrayByDatasetInternalNameOracle(dsource, user, dataset, internalName);
+    
+    try {
+      String metatable = getDSViewTableFor(dsource, user);
+      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
+
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
+          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+
+      Connection conn = dsource.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ps.setString(1, internalName);
+      ps.setString(2, dataset);
+
+      ResultSet rs = ps.executeQuery();
+      if (!rs.next()) {
+        // will only get one result
+        rs.close();
+        conn.close();
+        return null;
+      }
+
+      byte[] stream = rs.getBytes(1);
+      byte[] cstream = rs.getBytes(2);
+      
+      rs.close();
+      conn.close();
+
+      InputStream rstream = null;
+      if (cstream != null)
+        rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+      else
+        rstream = new ByteArrayInputStream(stream);
+
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      int i = 0;
+      while ( (i = rstream.read()) != -1)
+        bout.write(i);
+      rstream.close();
+      
+      return bout.toByteArray();      
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        e);
+    } catch (IOException e) {
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+    }  
+  }
+  
+  public static byte[] getDatasetViewByteArrayByDatasetInternalNameOracle(DetailedDataSource dsource,
+  String user,
+  String dataset,
+  String internalName) throws ConfigurationException {
+    try {
+      String metatable = getDSViewTableFor(dsource, user);
+      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
+
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
+          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+
+      Connection conn = dsource.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ps.setString(1, internalName);
+      ps.setString(2, dataset);
+
+      ResultSet rs = ps.executeQuery();
+      if (!rs.next()) {
+        // will only get one result
+        rs.close();
+        conn.close();
+        return null;
+      }
+
+      CLOB stream = (CLOB) rs.getClob(1);
+      BLOB cstream = (BLOB) rs.getBlob(2);
+
+      InputStream rstream = null;
+      if (cstream != null) {
+        rstream = new GZIPInputStream( cstream.getBinaryStream() );
+      } else
+        rstream = stream.getAsciiStream();
+
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      int i = 0;
+      while ( (i = rstream.read()) != -1)
+        bout.write(i);
+      rstream.close();
+      
+      rs.close();
+      conn.close();
+      return bout.toByteArray();
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        e);
+    } catch (IOException e) {
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+    }
+  }
+  
   /**
    * Returns a DatasetView JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
@@ -734,8 +845,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
@@ -783,8 +894,8 @@ public class DatabaseDatasetViewUtils {
           String metatable = getDSViewTableFor(dsource, user);
           String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
-          if (logger.isLoggable(Level.INFO))
-            logger.info(
+          if (logger.isLoggable(Level.FINE))
+            logger.fine(
               "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
 
           Connection conn = dsource.getConnection();
@@ -843,8 +954,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHEREDNAME;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
@@ -889,8 +1000,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using "
             + sql
             + " to get DatasetView Document for displayName "
@@ -946,8 +1057,8 @@ public class DatabaseDatasetViewUtils {
         String metatable = getDSViewTableFor(dsource, user);
         String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
 
-        if (logger.isLoggable(Level.INFO))
-          logger.info(
+        if (logger.isLoggable(Level.FINE))
+          logger.fine(
             "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
 
         Connection conn = dsource.getConnection();
@@ -1005,8 +1116,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYINAMEWHERE;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using " + sql + " to get Digest for internalName " + internalName + " and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
@@ -1051,8 +1162,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDNAMESQL + metatable + GETANYNAMESWHERINAME;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "Using " + sql + " to get displayName for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
@@ -1096,8 +1207,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYDNAMEWHERE;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -1141,8 +1252,8 @@ public class DatabaseDatasetViewUtils {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDNAME;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Using " + sql + " to get Digest for displayName " + displayName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -1175,8 +1286,8 @@ public class DatabaseDatasetViewUtils {
     String displayName)
     throws ConfigurationException {
     String existSQL = EXISTSELECT + metatable + EXISTWHERE;
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Getting DSViewEntryCount with SQL " + existSQL + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Getting DSViewEntryCount with SQL " + existSQL + "\n");
 
     int ret;
     try {
@@ -1225,8 +1336,8 @@ public class DatabaseDatasetViewUtils {
     String deleteSQL = DELETEOLDXML + metatable + DELETEOLDXMLWHERE;
 
     int rowstodelete = getDSViewEntryCountFor(dsrc, metatable, dataset, internalName, displayName);
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Deleting old DSViewEntries with SQL " + deleteSQL + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Deleting old DSViewEntries with SQL " + deleteSQL + "\n");
 
     int rowsdeleted;
     try {
@@ -1322,8 +1433,8 @@ public class DatabaseDatasetViewUtils {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
     }
     conn.close();
     DatasetView validatedDatasetView = new DatasetView(dsv);
@@ -1508,8 +1619,8 @@ public class DatabaseDatasetViewUtils {
         isBroken = false;
         break;
       } else {
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Recieved table " + thisTable + " when querying for " + table + "\n");
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("Recieved table " + thisTable + " when querying for " + table + "\n");
       }
     }
     conn.close();
@@ -1538,8 +1649,8 @@ public class DatabaseDatasetViewUtils {
         isBroken = false;
         break;
       } else {
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Recieved column " + thisColumn + " during query for primary key " + primaryKey + "\n");
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("Recieved column " + thisColumn + " during query for primary key " + primaryKey + "\n");
       }
     }
     conn.close();
@@ -1643,8 +1754,8 @@ public class DatabaseDatasetViewUtils {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
     }
     conn.close(); 
     FilterCollection validatedFilterCollection = new FilterCollection(collection);
@@ -2001,8 +2112,8 @@ public class DatabaseDatasetViewUtils {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
     }
     conn.close();
     
@@ -2118,8 +2229,8 @@ public class DatabaseDatasetViewUtils {
         if (tableName.toLowerCase().indexOf(descriptionTableConstraint.toLowerCase()) > -1) {
           validFlags[1] = true;
         } else {
-          if (logger.isLoggable(Level.INFO))
-            logger.info(
+          if (logger.isLoggable(Level.FINE))
+            logger.fine(
               "Recieved correct field, but tableName "
                 + tableName
                 + " does not contain "
@@ -2130,8 +2241,8 @@ public class DatabaseDatasetViewUtils {
         validFlags[1] = true;
       }
     } else {
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
+      if (logger.isLoggable(Level.FINE))
+        logger.fine(
           "RECIEVED "
             + columnName
             + " WHEN EXPECTING "
@@ -2641,8 +2752,8 @@ System.out.println("database type: "+ dsource.getDatabaseType());
         //String ctype = column.dbType; //as in RDBMS table definition
         int csize = column.maxLength;
 
-        if (logger.isLoggable(Level.INFO))
-          logger.info(tableName + ": " + cname + "-- type : " + ctype + "\n");
+        if (logger.isLoggable(Level.FINE))
+          logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
           
@@ -2686,8 +2797,8 @@ System.out.println("database type: "+ dsource.getDatabaseType());
         }
         
         else {
-          if (logger.isLoggable(Level.INFO))
-            logger.info("Skipping " + tableName + "\n");
+          if (logger.isLoggable(Level.FINE))
+            logger.fine("Skipping " + tableName + "\n");
         }
       }
       if (ac != null)
@@ -2840,8 +2951,8 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 			//String ctype = column.dbType; //as in RDBMS table definition
 			int csize = column.maxLength;
 
-			if (logger.isLoggable(Level.INFO))
-			  logger.info(tableName + ": " + cname + "-- type : " + ctype + "\n");
+			if (logger.isLoggable(Level.FINE))
+			  logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
 			if (isMainTable(tableName) || isDimensionTable(tableName)) {
           
@@ -2972,8 +3083,8 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 			}
         
 			else {
-			  if (logger.isLoggable(Level.INFO))
-				logger.info("Skipping " + tableName + "\n");
+			  if (logger.isLoggable(Level.FINE))
+				logger.fine("Skipping " + tableName + "\n");
 			}
 		  }
 		  if (ac != null && ac.getAttributeDescriptions().size() > 0)

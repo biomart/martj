@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides a view of a mart dataset where a dataset is one or more main tables plus zero 
@@ -98,14 +100,21 @@ public class DatasetView extends BaseNamedConfigurationObject {
   //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
   private FilterDescription lastSupportingFilter = null;
 
+  private Logger logger = Logger.getLogger(DatasetView.class.getName());
+  
   /**
-   * Copy Constructor. Creates a new, exact copy of an existing DatasetView object.
-   * @param ds DatasetView to copy
+   * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
+   * than defering to a call to getXXX.
+   * @param ds -- DatasetView to copy
+   * @param lazyLoad - boolean, if true, copy will lazyLoad, if false, copy will defer lazyLoading until a getXXX method is called.
    */
-  public DatasetView(DatasetView ds) {
+  public DatasetView(DatasetView ds, boolean lazyLoad) {
     super(ds);
 
     setDataset(ds.getDataset());
+    byte[] digest = ds.getMessageDigest();
+    if (digest != null)
+      setMessageDigest(digest);
 
     //if the DatasetView has an underlying DSViewAdaptor implementing Object, this can be substituted for the
     //actual element content, and defer the loading of this content to the lazyLoad system.  This requires that
@@ -138,6 +147,21 @@ public class DatasetView extends BaseNamedConfigurationObject {
       }
     } else
       setDSViewAdaptor(ds.getAdaptor());
+    
+    if (lazyLoad)
+      lazyLoad();
+  }
+  
+  /**
+   * Copy Constructor. Creates a new copy of an existing DatasetView object.
+   * Note, if the existing DatasetView object has a DatasetViewAdaptor set to it, 
+   * this is transferred instead of the actual filterPages and attributePages, deferring
+   * the population of these objects to the lazyLoad method called when a getXXX method is
+   * called.
+   * @param ds DatasetView to copy
+   */
+  public DatasetView(DatasetView ds) {
+    this(ds, false);
   }
 
   /**
@@ -1172,8 +1196,8 @@ public class DatasetView extends BaseNamedConfigurationObject {
       if (adaptor == null)
         throw new RuntimeException("DatasetView objects must be provided a DSViewAdaptor to facilitate lazyLoading\n");
       try {
-
-        System.out.println("LAZYLOAD");
+        if (logger.isLoggable(Level.INFO))
+          logger.info("LAZYLOAD\n");
 
         adaptor.lazyLoad(this);
       } catch (ConfigurationException e) {

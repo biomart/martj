@@ -21,7 +21,6 @@ package org.ensembl.mart.lib.config;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -32,6 +31,8 @@ import java.util.prefs.Preferences;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.BigPreferences;
 import org.ensembl.util.StringUtil;
+
+import com.sun.rsasign.l;
 
 /**
  * DSViewAdaptor implimentation that retrieves DatasetView objects from
@@ -126,7 +127,11 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public DatasetView[] getDatasetViews() throws ConfigurationException {
     DatasetView[] ret = new DatasetView[dsviews.size()];
-    dsviews.toArray(ret);
+    
+    for (int i = 0, n = dsviews.size(); i < n; i++) {
+      DatasetView dsvorig = (DatasetView) dsviews.get(i);
+      ret[i] = new DatasetView(dsvorig); //return copy of datasetview, so that lazyLoad doesnt expand reference to original
+    }
     return ret;
   }
 
@@ -173,49 +178,59 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
         datasetNameMap.put(dsv.getDataset(), maps);
       }
     }
-
-    updateXMLCache();
   }
 
-  private void updateXMLCache() throws ConfigurationException {
-    String iname = null;
-    String dataset = null;
-
-    try {
-      for (Iterator iter = dsviews.iterator(); iter.hasNext();) {
-        DatasetView dsv = (DatasetView) iter.next();
-        iname = dsv.getInternalName();
-        dataset = dsv.getDataset();
-
-        if (xmlCache.nodeExists(dataset) && xmlCache.node(dataset).nodeExists(iname)) {
-          byte[] md5 = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-
-          if (!MessageDigest.isEqual(md5, dsv.getMessageDigest()))
-            addToXMLCache(dsv);
-        } else
-          addToXMLCache(dsv);
-      }
-      xmlCache.flush();
-    } catch (BackingStoreException e) {
-      throw new ConfigurationException(
-        "Caught BackingStoreException checking for Preferences node "
-          + dataset
-          + " internalname "
-          + iname
-          + " "
-          + e.getMessage()
-          + "\nAssuming it doesnt exist\n",
-        e);
-    } catch (ConfigurationException e) {
-      throw e;
-    }
-  }
+  //  private void updateXMLCache() throws ConfigurationException {
+  //    String iname = null;
+  //    String dataset = null;
+  //
+  //    try {
+  //      for (Iterator iter = dsviews.iterator(); iter.hasNext();) {
+  //        DatasetView dsv = (DatasetView) iter.next();
+  //        iname = dsv.getInternalName();
+  //        dataset = dsv.getDataset();
+  //
+  //        if (xmlCache.nodeExists(dataset) && xmlCache.node(dataset).nodeExists(iname)) {
+  //          byte[] md5 = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
+  //
+  //          if (!MessageDigest.isEqual(md5, dsv.getMessageDigest()))
+  //            addToXMLCache(dsv);
+  //        } else
+  //          addToXMLCache(dsv);
+  //      }
+  //      xmlCache.flush();
+  //    } catch (BackingStoreException e) {
+  //      throw new ConfigurationException(
+  //        "Caught BackingStoreException checking for Preferences node "
+  //          + dataset
+  //          + " internalname "
+  //          + iname
+  //          + " "
+  //          + e.getMessage()
+  //          + "\nAssuming it doesnt exist\n",
+  //        e);
+  //    } catch (ConfigurationException e) {
+  //      throw e;
+  //    }
+  //  }
 
   private void addToXMLCache(DatasetView dsv) throws ConfigurationException {
     String iname = dsv.getInternalName();
     String dataset = dsv.getDataset();
-    xmlCache.node(dataset).node(iname).putByteArray(DIGESTKEY, dsv.getMessageDigest());
-    xmlCache.node(dataset).node(iname).putByteArray(XMLKEY, DatasetViewXMLUtils.DatasetViewToByteArray(dsv));
+
+    if (logger.isLoggable(Level.INFO))
+      logger.info("adding DatasetView " + dataset + " " + iname + " to cache\n");
+    byte[] xml = DatasetViewXMLUtils.DatasetViewToByteArray(dsv);
+    byte[] digest = dsv.getMessageDigest();
+    
+    if (logger.isLoggable(Level.INFO))
+      logger.info("Storing " + xml.length + " bytes of XML to cache\n");
+      
+    if (digest == null)
+      throw new ConfigurationException("Recieved DatasetView to lazyLoad without a stored MessageDigest\n");
+
+    xmlCache.node(dataset).node(iname).putByteArray(DIGESTKEY, digest);
+    xmlCache.node(dataset).node(iname).putByteArray(XMLKEY, xml);
 
     try {
       xmlCache.flush();
@@ -231,9 +246,9 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     }
   }
 
-  private void removeFromXMLCache(DatasetView dsv) throws ConfigurationException {
-    String iname = dsv.getInternalName();
-    String dataset = dsv.getDataset();
+  private void removeFromXMLCache(String dataset, String iname) throws ConfigurationException {
+    if (logger.isLoggable(Level.INFO))
+      logger.info("Removing old cache for " + dataset + " " + iname + " if any\n");
 
     try {
       xmlCache.node(dataset).remove(iname); //removes this node entirely
@@ -269,7 +284,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
         dsviews.remove(dsv);
         views.remove(dsv);
         dsv.setDSViewAdaptor(null);
-        removeFromXMLCache(dsv);
+        removeFromXMLCache(dsv.getDataset(), dsv.getInternalName());
 
         //if this dataset is completely removed from the adaptor, make sure its keys reflect its removal
         if (views.size() > 0) {
@@ -308,33 +323,77 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     }
   }
 
-  private boolean cacheUpToDate(String dataset, String iname, byte[] cacheDigest) throws ConfigurationException {
-    byte[] nDigest =
-      DatabaseDatasetViewUtils.getDSViewMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
+  private boolean cacheUpToDate(String dataset, String iname) throws ConfigurationException {
+    boolean ret = false;
+    try {
+      ret = xmlCache.nodeExists(dataset);
 
-    //if the cache cannot return the digest for some reason, it should return an empty byte[]
+      if (logger.isLoggable(Level.INFO))
+        logger.info("cache node Dataset: " + dataset + " exists: " + ret + "\n");
+      if (ret) {
+        ret = xmlCache.node(dataset).nodeExists(iname);
 
-    return MessageDigest.isEqual(cacheDigest, nDigest);
+        if (logger.isLoggable(Level.INFO))
+          logger.info("cache node Dataset: " + dataset + " internalName: " + iname + " exists: " + ret + "\n");
+      }
+    } catch (BackingStoreException e) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info(
+          "Caught BackingStoreException checking for Preferences node "
+            + dataset
+            + " "
+            + e.getMessage()
+            + "\nAssuming it doesnt exist\n");
+      ret = false;
+    }
+
+    if (ret) {
+      byte[] nDigest =
+        DatabaseDatasetViewUtils.getDSViewMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
+      byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
+
+      //if the cache cannot return the digest for some reason, it should return an empty byte[]
+      
+      ret = MessageDigest.isEqual(cacheDigest, nDigest);
+
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Message Digests equal: " + ret + "\n");
+    }
+
+    if (!ret) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Cache is not up to date for " + dataset + " " + iname + ", removing cache\n");
+      removeFromXMLCache(dataset, iname);
+    }
+    return ret;
   }
 
   private void loadCacheOrUpdate(String dataset, String iname) throws ConfigurationException {
     if (logger.isLoggable(Level.INFO))
       logger.info("Not loaded yet, is it in cache and is cache up to date?");
 
-    byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-    if (cacheUpToDate(dataset, iname, cacheDigest)) {
+    if (cacheUpToDate(dataset, iname)) {
       if (logger.isLoggable(Level.INFO))
         logger.info("getting from cache\n");
 
+      byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
       byte[] cachedXML = xmlCache.node(dataset).node(iname).getByteArray(XMLKEY, null);
+        
       // should return a null if it cant load for some reason
 
       if (cachedXML != null) {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Recieved " + cachedXML.length + " bytes of xml from cache\n");
+          
         DatasetView newDSV = DatasetViewXMLUtils.ByteArrayToDatasetView(cachedXML);
         newDSV.setMessageDigest(cacheDigest);
         addDatasetView(newDSV);
-      } else
-        loadFromDatabase(dataset, iname);
+      } else {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Recieved null xml from cache\n");
+          
+        loadFromDatabase(dataset, iname); 
+      }
     } else {
       if (logger.isLoggable(Level.INFO))
         logger.info("Need to update cache\n");
@@ -345,7 +404,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
   private void loadFromDatabase(String dataset, String iname) throws ConfigurationException {
     if (logger.isLoggable(Level.INFO))
-      logger.info("Not in cache, loading from database\n");
+      logger.info("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
 
     DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByDatasetInternalName(dataSource, user, dataset, iname);
     addDatasetView(newDSV);
@@ -479,7 +538,10 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       compress);
   }
 
-  private void lazyLoadWithDataBase(DatasetView dsv) throws ConfigurationException {
+  private void lazyLoadWithDatabase(DatasetView dsv) throws ConfigurationException {
+    if (logger.isLoggable(Level.INFO))
+      logger.info("lazy loading from database\n");
+
     DatasetViewXMLUtils.LoadDatasetViewWithDocument(
       dsv,
       DatabaseDatasetViewUtils.getDatasetViewDocumentByDatasetInternalName(
@@ -487,28 +549,42 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
         user,
         dsv.getDataset(),
         dsv.getInternalName()));
+
+    //cache this DatasetView, as, for some reason, it is needing to be cached
+    removeFromXMLCache(dsv.getDataset(), dsv.getInternalName());
+    addToXMLCache(dsv);
   }
-  
-  private void lazyLoadWithCache(DatasetView dsv, byte[] cachedXML) throws ConfigurationException {
-    DatasetViewXMLUtils.LoadDatasetViewWithDocument(dsv, DatasetViewXMLUtils.ByteArrayToDocument(cachedXML));
+
+  private void lazyLoadWithCache(DatasetView dsv) throws ConfigurationException {
+    if (logger.isLoggable(Level.INFO))
+      logger.info("Attempting to lazy load with cache\n");
+
+    byte[] cachedXML = xmlCache.node(dsv.getDataset()).node(dsv.getInternalName()).getByteArray(XMLKEY, null);
+    //  should return a null if it cant load for some reason
+
+    if (cachedXML != null) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("lazyLoading from non null cache of length " +  cachedXML.length + "\n");
+
+      DatasetViewXMLUtils.LoadDatasetViewWithDocument(dsv, DatasetViewXMLUtils.ByteArrayToDocument(cachedXML));
+    } else {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("preferences returned null byte[], loading from database\n");
+      lazyLoadWithDatabase(dsv);
+    }
   }
-  
+
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetView)
    */
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
     String dataset = dsv.getDataset();
     String iname = dsv.getInternalName();
-    byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-    if (cacheUpToDate(dataset, iname, cacheDigest)) {
-      byte[] cachedXML = xmlCache.node(dataset).node(iname).getByteArray(XMLKEY, null);
-            // should return a null if it cant load for some reason
-      if (cachedXML != null)
-        lazyLoadWithCache(dsv, cachedXML);
-      else
-        lazyLoadWithDataBase(dsv);
-    } else
-      lazyLoadWithDataBase(dsv);
+
+    if (cacheUpToDate(dataset, iname))
+      lazyLoadWithCache(dsv);
+    else
+      lazyLoadWithDatabase(dsv);
   }
 
   /**
@@ -580,7 +656,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     for (int i = 0, n = dsviews.size(); i < n; i++) {
       DatasetView view = (DatasetView) dsviews.get(i);
       if (view.getDataset().equals(dataset)) {
-        l.add(view);
+        l.add(new DatasetView(view)); //return copy of datasetview, so that lazyLoad doesnt expand reference to original
       }
     }
 
