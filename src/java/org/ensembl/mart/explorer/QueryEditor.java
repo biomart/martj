@@ -325,10 +325,13 @@ public class QueryEditor
     DataSource ds =
       DatabaseUtil.createDataSource(
         "mysql",
-        "127.0.0.1",
-        "3313",
+        //"127.0.0.1",
+        //"3313",
+        "ensembldb.ensembl.org",
+        "3306",
         "ensembl_mart_17_1",
-        "ensro",
+        //"ensro",
+        "anonymous",
         null,
         10,
         "com.mysql.jdbc.Driver");
