@@ -20,6 +20,7 @@ package org.ensembl.mart.vieweditor;
 
 import org.ensembl.mart.lib.config.*;
 import javax.swing.*;
+import javax.swing.table.TableCellEditor;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -212,7 +213,6 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     private void doOnSelection() {
         lastSelectedNode = (DatasetViewTreeNode) this.getLastSelectedPathComponent();
-
         if (lastSelectedNode == null) return;
         BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
         String nodeObjectClass = nodeObject.getClass().getName();
@@ -361,6 +361,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     protected class DatasetViewTreeMouseListener implements MouseListener {
         public void mousePressed(MouseEvent e) {
+            if(attrTable != null)
+                if (attrTable.getEditorComponent() != null) {
+                TableCellEditor attrTableEditor = attrTable.getCellEditor();
+                attrTableEditor.stopCellEditing();
+            }
         }
 
         public void mouseReleased(MouseEvent e) {
