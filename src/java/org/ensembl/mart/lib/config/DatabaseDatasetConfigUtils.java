@@ -252,6 +252,9 @@ public class DatabaseDatasetConfigUtils {
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
+    System.out.println("Updating\t" + user);
+	configInfo = new HashMap();
+	initMartConfigForUser(user);
     if (rowsupdated < 1)
       if (logger.isLoggable(Level.WARNING))
         logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
@@ -572,7 +575,6 @@ public class DatabaseDatasetConfigUtils {
     try {
       String metatable = getDSConfigTableFor(user);
       String sql = GETALLNAMESQL + metatable;
-
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
@@ -586,6 +588,7 @@ public class DatabaseDatasetConfigUtils {
         String dname = rs.getString(2);
         String dset = rs.getString(3);
         String description = rs.getString(4);
+        System.out.println(iname + "\t" + dset);
         byte[] digest = rs.getBytes(5);
         DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description);
         dsv.setMessageDigest(digest);
@@ -1105,7 +1108,7 @@ public class DatabaseDatasetConfigUtils {
 	* @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
 	*/
 
-  public void deleteDatasetConfigsForDatasetIntName(String dataset, String internalName) throws ConfigurationException {
+  public void deleteDatasetConfigsForDatasetIntName(String dataset, String internalName, String user) throws ConfigurationException {
 	String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
 
 	Connection conn = null;
@@ -1116,6 +1119,11 @@ public class DatabaseDatasetConfigUtils {
 	  ds.setString(2,internalName);
 	  ds.executeUpdate();
 	  ds.close();
+	  // update the config
+	  System.out.println("Updating\t" + user);
+	  configInfo = new HashMap();
+	  initMartConfigForUser(user);
+	  
 	} catch (SQLException e) {
 	  throw new ConfigurationException("Caught SQLException during delete\n");
 	} finally {
