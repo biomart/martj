@@ -3,12 +3,25 @@
 
 # copyright EBI, GRL 2003
 
+# TODO scroll results to top
+
+# glue save button to dialog and save.
+
+# exec on thread + "busy" bar.
+
+# TODO 1 - complete kaka dummy query sets all gui values, format, 
+# format
+# output to window
+
+
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
 # stubs to InputPage
 
-# TODO 1 - complete kaka dummy query sets all gui values
-
 # TODO 2 - implement execute query.
+
+# TODO implement results window. Clicking on it in tree cause EXECUTE
+# and results to be displayed in page (buffer to avoid blowing up) and
+# optional "save to file" <NAME> and "copy to window" <NAME>
 
 # TODO 3 - FilterManagerPage + XXXFilterPages. add implementation for
 # Filter . Clicking should cause a list of available (not already
@@ -24,18 +37,28 @@
 # TODO fetch chromosomes from db and load into drop down list.
 
 
+
+# Move database to menu
+
+# Handle tabs of queries / results
+
+# Toggleable auto-update
+
+# TODO AboutDialog
+
+
 import thread
 from jarray import array
 from java.lang import System, String, ClassLoader, RuntimeException
 from java.lang import Thread
-from java.io import File, FileOutputStream
+from java.io import File, FileOutputStream, ByteArrayOutputStream
 from java.net import URL
 from java.util import Arrays, Vector
-from java.awt import CardLayout, Dimension, BorderLayout
+from java.awt import CardLayout, Dimension, BorderLayout, Rectangle
 from java.awt.event import ActionListener
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
-from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane
+from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane, JTextArea
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
@@ -79,7 +102,7 @@ class Page(Box, ChangeListener):
     def htmlSummary(self):
 
 	""" Returns summary description of the state of this input
-	page in HTML format. Call back method to be implemented by
+	page in HTML format. This method should be implemented by
 	derived classes. """
 
 	return "TODO"
@@ -307,41 +330,41 @@ class DatabasePage(Page):
 
     
 
-class DestinationPage(Page):
+class ResultsPage(Page):
 
     def __init__(self):
         Page.__init__(self)
-        group = ButtonGroup()
-        
-        self.file = LabelledComboBox("File", self, group)
-        self.window = LabelledComboBox("Window", self, group)
-        
-        self.add( self.file )
-        self.add( self.window )
+
+        self.textArea = JTextArea(25,60)
+        self.add( JScrollPane(self.textArea) )
+        self.outputStream = GUIOutputStream( self.textArea ) 
+
 
     def htmlSummary(self):
-	desc = "<b>Destnation</b> "
-        if self.file.isSelected():
-            desc = desc + " File (" + self.file.getText() + ")"
-        elif self.window.isSelected():
-            desc =  desc + " Window (" + self.window.getText() + ")"
+	desc = "<b>Results</b> "
 	return desc
 
 
     def getOutputStream(self):
+        return self.outputStream
 
-        if self.file.isSelected():
-            filename = self.file.getText()
-            validate(filename, "Filename")
-            return FileOutputStream(filename)
 
-        elif self.window.isSelected():
-            windowname = self.window.getText()
-            validate( windowname, "Window name" )
-            return WindowOutputStream.fetch( windowname )
+    def scrollToTop( self ):
+        print "scrolling to top"
+        self.textArea.scrollRectToVisible( Rectangle(1,1) )
         
-        else:
-            raise InvalidQueryException("output destination not set.")
+
+class GUIOutputStream( ByteArrayOutputStream ):
+
+    def __init__(self, targetComponent):
+        self.targetComponent = targetComponent
+
+    def close( self ):
+        ByteArrayOutputStream.close(self)
+        self.targetComponent.text = self.toString( "utf8" )
+        # clear buffer ready for next viewing
+        ByteArrayOutputStream.reset(self)
+
 
 class FormatPage(Page):
 
@@ -425,6 +448,23 @@ class FormatPage(Page):
             raise InvalidQueryException("Format not set")
 
 
+    def setFormatSpec(self, formatSpec):
+        format = formatSpec.format
+        if format==FormatSpec.FASTA:
+            self.fasta.setSelected(1)
+        elif format==FormatSpec.TABULATED:
+            self.tabulated.setSelected(1)
+            if formatSpec.separator==",":
+                self.comma.setSelected(1)
+            elif formatSpec.separator=="\t":
+                self.tab.setSelected(1)
+            else:
+                raise InvalidQueryException("Unrecognised separator")
+        else:
+            raise InvalidQueryException("Unrecognised format.")
+
+        self.dependencies()
+        
 class OutputPage(Page):
     def htmlSummary(self):
 	return "<html><b>Output</b></html>"
@@ -700,7 +740,7 @@ class QueryEditor(JPanel):
 
         self.databasePage = DatabasePage()
 	self.formatPage = FormatPage()
-	self.destinationPage = DestinationPage()
+	self.resultsPage = ResultsPage()
 	
         dbNode = QueryTreeNode( tree, self.rootNode, 0, cardContainer,
 				self.databasePage, "DATABASE" )
@@ -721,8 +761,8 @@ class QueryEditor(JPanel):
 					attributesPage,"attribute" )
         formatNode = QueryTreeNode( tree, outputNode, 1, cardContainer,
 				    self.formatPage,"format" )
-        destinationNode = QueryTreeNode( tree, outputNode, 2, cardContainer,
-                                         self.destinationPage,"destination" )
+        resultsNode = QueryTreeNode( tree, outputNode, 2, cardContainer,
+                                         self.resultsPage,"results" )
         
         # expand branches in tree
 	path = TreePath(self.rootNode).pathByAddingChild( filtersNode )
@@ -741,7 +781,7 @@ class QueryEditor(JPanel):
 	scrollPane = JScrollPane(tree)
 	scrollPane.setPreferredSize( Dimension(350,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( JScrollPane( cardContainer ), BorderLayout.CENTER )
+	self.add( cardContainer , BorderLayout.CENTER )
 
 
     def updateQuery(self, query):
@@ -785,7 +825,9 @@ class QueryEditor(JPanel):
         return self.formatPage.getFormatSpec()
 
     def getOutputStream(self):
-        return self.destinationPage.getOutputStream()
+        return self.resultsPage.getOutputStream()
+
+
 
 class MartGUIApplication(JFrame):
 
@@ -840,9 +882,22 @@ class MartGUIApplication(JFrame):
     def createToolBar(self):
         toolBar = JToolBar()
         toolBar.add( JButton("Clear", actionPerformed=self.doClear) )
-        toolBar.add( JButton("Execute", actionPerformed=self.doExecute) )
+        toolBar.add( JButton("View Results", actionPerformed=self.doViewResults) )
+        toolBar.add( JButton("Save Results", actionPerformed=self.doSaveResults) )
         toolBar.add( JButton("Test Query", actionPerformed=self.doInsertKakaQuery) )
         return toolBar
+
+
+    def doViewResults(self, event=None):
+        self.viewResults()
+
+    def doSaveResults(self, event=None):
+        # open popup window window asking for filename
+
+        # execute query, piping results to file.
+        pass
+
+
 
     def doExit(self, event=None):
         System.exit(0)
@@ -853,11 +908,14 @@ class MartGUIApplication(JFrame):
         self.editor.databasePage.user.setText( "anonymous" )
         self.editor.databasePage.database.setText( "ensembl_mart_11_1" )
 
+        self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, ",") )
+
         q = Query(species = "homo_sapiens"
+                  
                   ,focus = "gene" )
 	q.addFilter( BasicFilter("chr_name", "=", "22") )
 	q.addFilter( BasicFilter("start", "=", "1") )
-	q.addFilter( BasicFilter("end", "=", "1000000") )
+	q.addFilter( BasicFilter("end", "=", "100000") )
 	q.addFilter( BasicFilter("strand", "=", "1") )
 
         # load test data file via classpath; this works from a
@@ -876,7 +934,20 @@ class MartGUIApplication(JFrame):
 
 
 
-    def executeQuery( self, dummy=None ):
+
+    def viewResults( self ):
+        # execute query, piping results to window.
+        os = self.editor.resultsPage.getOutputStream()
+        # TODO start loading data bar
+        self.executeQuery( None, os)
+        # TODO stop loading data bar
+        os.close()
+        # scroll to top of results
+        self.editor.resultsPage.scrollToTop()
+
+
+
+    def executeQuery( self, dummy=None, outputStream=None ):
 
         host = self.editor.getHost()
         port = self.editor.getPort()
@@ -892,7 +963,7 @@ class MartGUIApplication(JFrame):
             validate(user, "User")
             validate(database, "Database")
             formatSpec = self.editor.getFormatSpec()
-            outputStream = self.editor.getOutputStream()
+            #outputStream = self.editor.getOutputStream()
         
             self.editor.updateQuery( query )
 
@@ -912,11 +983,13 @@ class MartGUIApplication(JFrame):
 
 
     def doExecute(self, event=None):
-        thread.start_new_thread( self.executeQuery, (self,) )
+        thread.start_new_thread( self.executeQuery, (self, "f") )
 
     def doAbout(self, event=None):
-        AboutDialog( visible=1 )
-
+        JOptionPane.showMessageDialog(self,
+                                      "MartExplorer development version. Copyright EBI and GRL.",
+                                      "About MartExplorer",
+                                      JOptionPane.OK_OPTION )
 
 
     def doClear(self, event=None):
