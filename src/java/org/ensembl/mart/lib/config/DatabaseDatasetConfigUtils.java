@@ -3108,9 +3108,10 @@ public class DatabaseDatasetConfigUtils {
       String intName = value.replaceAll(" ", "_");
       op.setInternalName(intName.toLowerCase());
       //NN
-      if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
+      //if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
         //if (!columnName.startsWith("silent_"))
-        op.setValue(value);
+      op.setValue(value);
+	  //op.setValue(intName);
       op.setSelectable("true");
       options.add(op);
     }
