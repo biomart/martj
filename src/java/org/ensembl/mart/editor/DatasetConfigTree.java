@@ -581,13 +581,45 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
             DatasetConfigTreeNode selnode = (DatasetConfigTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));
             DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
             String result = new String();
+            
+
+			
             if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
-                result = treemodel.insertNodeInto(selnode, (DatasetConfigTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
+            	// make sure internalName is unique within its parent group
+				Enumeration children = dropnode.getParent().children();
+				DatasetConfigTreeNode childNode = null;
+				while (children.hasMoreElements()){
+					childNode = (DatasetConfigTreeNode) children.nextElement();
+					BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
+							
+					BaseNamedConfigurationObject sel = (BaseNamedConfigurationObject) selnode.getUserObject();
+					if (sel.getInternalName().equals(ch.getInternalName())){
+					   sel.setInternalName(sel.getInternalName() + "_copy");
+					   selnode.setName(selnode.name + "_copy");
+					   break;
+					}
+				}
+                result = treemodel.insertNodeInto(selnode, (DatasetConfigTreeNode) dropnode.getParent(),dropnode.getParent().getIndex(dropnode) + 1);
             } else {
                 if (selnode.getUserObject() instanceof org.ensembl.mart.lib.config.AttributePage) {
                     result = treemodel.insertNodeInto(selnode, dropnode, ((DatasetConfig) dropnode.getUserObject()).getFilterPages().length);
-                } else
+                } else{
+                    // make sure internalName is unique within its parent group
+					Enumeration children = dropnode.children();
+					DatasetConfigTreeNode childNode = null;
+					while (children.hasMoreElements()){
+						childNode = (DatasetConfigTreeNode) children.nextElement();
+						BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
+							
+						BaseNamedConfigurationObject sel = (BaseNamedConfigurationObject) selnode.getUserObject();
+						if (sel.getInternalName().equals(ch.getInternalName())){
+						   sel.setInternalName(sel.getInternalName() + "_copy");
+						   selnode.setName(selnode.name + "_copy");
+						   break;
+						}
+					}
                     result = treemodel.insertNodeInto(selnode, dropnode, 0);
+                }
             }
             if (result.startsWith("Error")) {
                 JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
