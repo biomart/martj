@@ -876,7 +876,7 @@ public class MartShellLib {
 							while (toks.hasMoreTokens())
 								listFilterValues.add(toks.nextToken().trim());
 
-							addListFilter(query, dset, filterName, listFilterValues);
+							query = addListFilter(query, dset, filterName, listFilterValues);
 
 							filterValue = new StringBuffer();
 							filterName = null;
@@ -905,7 +905,7 @@ public class MartShellLib {
 								while (toks.hasMoreTokens())
 									listFilterValues.add(toks.nextToken().trim());
 							}
-							addListFilter(query, dset, filterName, listFilterValues);
+							query = addListFilter(query, dset, filterName, listFilterValues);
 
 							filterValue = new StringBuffer();
 							filterName = null;
@@ -1048,6 +1048,16 @@ public class MartShellLib {
 
 	private Query addSequenceDescription(Query inquery, Dataset dset, String seqrequest) throws InvalidQueryException {
 		currentApage = dset.getAttributePageByName("sequences");
+		for (int i = 0, n = atts.size(); i < n; i++) {
+					String element = (String) atts.get(i);
+
+					if ( !currentApage.containsUIAttributeDescription( element ) )
+						throw new InvalidQueryException(
+							"Cannot request attribute "
+								+ element
+								+ " together with sequences in the same query.  Use show attributes for a list of attributes that can be selected with sequences\n");
+				}		
+		
 		Query newQuery = new Query(inquery);
 
 		int typecode = 0;
@@ -1091,31 +1101,42 @@ public class MartShellLib {
 	}
 
 	private Query addAttribute(Query inquery, Dataset dset, String attname) throws InvalidQueryException {
+    checkAttributeValidity(dset, attname);
+    
+		Query newQuery = new Query(inquery);
+		AttributeDescription attdesc = (AttributeDescription) dset.getUIAttributeDescriptionByName(attname);
+		Attribute attr = new FieldAttribute(attdesc.getFieldName(), attdesc.getTableConstraint());
+		newQuery.addAttribute(attr);
+
+		return newQuery;
+	}
+
+  private void checkAttributeValidity(Dataset dset, String attname) throws InvalidQueryException {
 		if (!dset.containsUIAttributeDescription(attname))
 			throw new InvalidQueryException(
 				"Attribute " + attname + " is not found in this mart for dataset " + dset.getInternalName() + "\n");
 
+    //check page
 		if (currentApage == null) {
 			currentApage = dset.getPageForAttribute(attname);
 		} else {
 			if (!currentApage.containsUIAttributeDescription(attname)) {
-				if (currentApage.getInternalName().equals("sequences"))
-					throw new InvalidQueryException("Cannot request attribute " + attname + " with a sequence request\n");
-
 				currentApage = dset.getPageForAttribute(attname);
 
 				for (int i = 0, n = atts.size(); i < n; i++) {
-					AttributeDescription element = (AttributeDescription) atts.get(i);
+					String element = (String) atts.get(i);
 
-					if (!currentApage.containsUIAttributeDescription(element.getInternalName()))
+					if ( !currentApage.containsUIAttributeDescription( element ) )
 						throw new InvalidQueryException(
-							"Cannot request attributes from different Attribute Pages "
+							"Cannot request attributes "
 								+ attname
-								+ " in "
-								+ currentApage
-								+ " intName is not\n");
+								+ " and "
+								+ element
+								+ " together in the same query.  Use show attributes for a list of attributes that can be selected together\n");
 				}
 			}
+			
+			atts.add(attname);
 		}
 
 		//check maxSelect
@@ -1134,15 +1155,8 @@ public class MartShellLib {
 			} else
 				maxSelects.put(colname, new Integer(1));
 		}
-
-		Query newQuery = new Query(inquery);
-		AttributeDescription attdesc = (AttributeDescription) dset.getUIAttributeDescriptionByName(attname);
-		Attribute attr = new FieldAttribute(attdesc.getFieldName(), attdesc.getTableConstraint());
-		newQuery.addAttribute(attr);
-
-		return newQuery;
-	}
-
+  }
+  
 	private Query addBooleanFilter(Query inquery, Dataset dset, String filterName, String filterCondition)
 		throws InvalidQueryException {
 		String filterSetName = null;
@@ -1372,6 +1386,7 @@ public class MartShellLib {
 
 	private Query addListFilter(Query inquery, Dataset dset, String filterName, List filterValues)
 		throws InvalidQueryException {
+		
 		String filterSetName = null;
 
 		if (filterName.indexOf(".") > 0) {
@@ -1445,9 +1460,9 @@ public class MartShellLib {
 		}
 
 		Query newQuery = new Query(inquery);
-		String[] filtvalues = new String[filterValues.size()];
-		filterValues.toArray(filtvalues);
+		String[] filtvalues = (String[]) filterValues.toArray(new String[filterValues.size()]);
 		newQuery.addFilter(new IDListFilter(thisFieldName, thisTableConstraint, filtvalues));
+		
 		return newQuery;
 	}
 
@@ -1762,16 +1777,16 @@ public class MartShellLib {
 					String element = (String) filtNames.get(i);
 					if (!currentFpage.containsUIFilterDescription(element))
 						throw new InvalidQueryException(
-							"Cannot use filters from different FilterPages: filter "
+							"Cannot use filters "
 								+ filterName
-								+ " in page "
-								+ currentFpage
-								+ "filter "
+								+ " and "
 								+ element
-								+ "is not\n");
+								+ " together in the same query.  Use 'show filters' to get a list of filters that can be used in the same query.\n");
 				}
 			}
 		}
+		
+		filtNames.add(filterName);
 	}
 
 	boolean mapsLoaded = false; // true when LoadMaps called for first time
@@ -1800,6 +1815,7 @@ public class MartShellLib {
 	private List filtNames = new ArrayList();
 
 	// query instructions
+	public static final String STOREC = "storeCommand";
 	public static final String GETQSTART = "get";
 	public static final String USINGQSTART = "using";
 	public static final String QSEQUENCE = "sequence";
@@ -1817,7 +1833,7 @@ public class MartShellLib {
 	private final String ANDC = "and";
 
 	protected final List availableCommands =
-		Collections.unmodifiableList(Arrays.asList(new String[] { QSEQUENCE, QWHERE, QLIMIT, FASTA }));
+		Collections.unmodifiableList(Arrays.asList(new String[] { STOREC, QSEQUENCE, QWHERE, QLIMIT, FASTA }));
 
 	// variables for subquery
 	private int nestedLevel = 0;
