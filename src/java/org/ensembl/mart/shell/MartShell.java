@@ -493,7 +493,8 @@ public class MartShell {
    */
   public void RunInteractive() {
     continueQuery = false;
-
+    interactiveMode = true;
+    
     try {
       Readline.load(ReadlineLibrary.Getline);
       //		Getline doesnt support completion, or history manipulation/files
@@ -2209,12 +2210,8 @@ public class MartShell {
       Matcher storeMatcher = MartShellLib.STOREPAT.matcher(command);
       if (storeMatcher.matches()) {
 
-        mainLogger.info("Recieved storeCommand " + command + "\n");
-
         String storedCommand = storeMatcher.group(1);
         String key = storeMatcher.group(4);
-
-        mainLogger.info("as command " + command + "\n\nkey = " + key + "\nstoredCommand = " + storedCommand + "\n");
 
         if (key.indexOf(LINEEND) > 0)
           key = key.substring(0, key.indexOf(LINEEND));
@@ -2284,9 +2281,14 @@ public class MartShell {
         } else
           fspec = FormatSpec.TABSEPARATEDFORMAT;
 
-        int hardLimit = INTERACTIVE_MAX_ROWS;
+        //no hardLimit for -e/-E
+        int hardLimit = 0;
+        
+        if (interactiveMode)
+          hardLimit = INTERACTIVE_MAX_ROWS;
+          
         if (sessionOutputFileName != null) {
-          hardLimit = 0; // no hardLimit for file output
+          hardLimit = 0; //no hardLimit for file output, even in interactive mode
           sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
         }
 
@@ -2320,6 +2322,7 @@ public class MartShell {
   }
 
   // MartShell instance variables
+  private boolean interactiveMode = false;
   private final int INTERACTIVE_MAX_ROWS = 1000;
   private MartShellLib msl = null;
   private boolean verbose = false;
