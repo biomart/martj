@@ -24,7 +24,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -41,8 +40,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.MartConfigurationFactory;
+import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
  * MartExplorer Graphical User Interface provides a graphical interface
@@ -292,19 +290,18 @@ public class MartExplorer extends JPanel {
 		if (action == JFileChooser.APPROVE_OPTION) {
 			File f = configFileChooser.getSelectedFile().getAbsoluteFile();
 			prefs.put(CONFIG_FILE_KEY, f.toString());
-			try {
-        // TODO load a dataset rather than martconfiguration file!
-				MartConfiguration config =
-					new MartConfigurationFactory().getInstance(f.toURL());
-          System.out.println( config.getDatasets().length );
-          List datasetList = Arrays.asList( config.getDatasets() );
-          System.out.println( "Num datasets in "+ f + " = " + datasetList.size() );
-          datasets.addAll( datasetList );
-			} catch (MalformedURLException e) {
-				warn("Couldn't find file. " + e);
-			} catch (ConfigurationException e) {
-				warn("Problem loading configuration file. ", e);
-			}
+			
+      
+      try {
+        URLDSViewAdaptor adaptor = new URLDSViewAdaptor( f.toURL(), false );
+      } catch (MalformedURLException e) {
+        JOptionPane.showMessageDialog(this, "File "+f.toString()+" not found: " 
+           + e.getMessage() );
+      } catch (ConfigurationException e) {
+        JOptionPane.showMessageDialog(this, "Problem loading the Failed to load file: " 
+          + f.toString() + ": " + e.getMessage() );
+          
+      }
 
 		}
 	}
