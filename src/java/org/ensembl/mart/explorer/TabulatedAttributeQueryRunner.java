@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
  * @see Query
  * @see FormatSpec
  */
-public class TabulatedAttributeQueryRunner implements QueryRunner {
+public final class TabulatedAttributeQueryRunner implements QueryRunner {
 
     /**
      * Constructs a TabulatedQueryRunner object to execute a Query
@@ -37,13 +37,7 @@ public class TabulatedAttributeQueryRunner implements QueryRunner {
         this.os = os;
 	}
 
-    /**
-     * Impliments the execute method of the interface.  For tabulated queries,
-     * the SQL is executed, and the ResultSet is written to the OutputStream
-     * via a OutputStreamWriter.  Each field of a ResultSet is separated by
-     * the separator defined in the FormatSpec object in the output.
-     */
-    public void execute(int limit) throws SQLException, IOException, InvalidQueryException {
+    public void execute(int limit) throws SQLException, SequenceException, IOException, InvalidQueryException {
         OutputStreamWriter osr =  new OutputStreamWriter(os);
 
         CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
@@ -57,7 +51,7 @@ public class TabulatedAttributeQueryRunner implements QueryRunner {
         try {
             PreparedStatement ps = conn.prepareStatement( sql );
             int p=1;
-            for( int i=0; i<query.getFilters().length; ++i) {
+            for( int i=0, n=query.getFilters().length; i<n; ++i) {
                 Filter f = query.getFilters()[i];
                 String value = f.getValue();
                 if ( value!=null ) {
@@ -68,10 +62,9 @@ public class TabulatedAttributeQueryRunner implements QueryRunner {
             }
             
             ResultSet rs = ps.executeQuery();
-			int nColumns = rs.getMetaData().getColumnCount();
 			
             while ( rs.next() ) {
-              for (int i = 1; i <= nColumns; ++i) {
+              for (int i = 1, nColumns = rs.getMetaData().getColumnCount(); i <= nColumns; ++i) {
                 if (i>1) osr.write( format.getSeparator() );
                 String v = rs.getString(i);
                 if (  v!= null ) osr.write( v );

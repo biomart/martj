@@ -36,7 +36,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-//import org.ensembl.util.NotImplementedYetException;
+import org.ensembl.util.NotImplementedYetException;
 
 /**
  * CommandLine Tool for extraction of data from a mart database.
@@ -512,7 +512,7 @@ public class MartExplorerTool {
   }
 
   public static void addSequenceDescription(String seqrequest) {
-  	  String type = "";
+	  int typecode = 0;
   	  int left = 0;
   	  int right = 0;
   	  
@@ -523,7 +523,7 @@ public class MartExplorerTool {
 	  	     // left+type+right
 	  	     left = Integer.parseInt(tokens.nextToken());
 	  	     tokens.nextToken(); // skip plus
-	  	     type = tokens.nextToken();
+	  	     typecode = SequenceDescription.SEQS.indexOf(tokens.nextToken());
 	  	     tokens.nextToken();
 	  	     right = Integer.parseInt(tokens.nextToken());
 	  	     break;
@@ -534,12 +534,12 @@ public class MartExplorerTool {
 	  	     String tmpr = tokens.nextToken();
 	  	     
 	  	     if (SequenceDescription.SEQS.contains(tmpl)) {
-	  	         type =  tmpl;
+				 typecode = SequenceDescription.SEQS.indexOf(tmpl);
 	  	         right = Integer.parseInt(tmpr);
 	  	     }
 	  	     else if (SequenceDescription.SEQS.contains(tmpr)) {
 	  	         left = Integer.parseInt(tmpl);
-	  	         type = tmpr;
+				typecode = SequenceDescription.SEQS.indexOf(tmpr);
 	  	     }
 	  	     else {
 	  	        throw new RuntimeException("Couldnt parse sequence request "+seqrequest );
@@ -547,21 +547,9 @@ public class MartExplorerTool {
 	  	     break;
 	  	 case 1:
 	  	     // type
-	  	     type = seqrequest;
+		     typecode = SequenceDescription.SEQS.indexOf(seqrequest);
 	  	     break;
 	  }
-	  
-	  int typecode = 0;
-	  if (type.equals(SequenceDescription.CODINGSEQ))
-	      typecode = SequenceDescription.TRANSCRIPTCODING;
-	  else if (type.equals(SequenceDescription.PEPTIDESEQ))
-	      typecode = SequenceDescription.TRANSCRIPTPEPTIDE;
-	  else if (type.equals(SequenceDescription.CDNASEQ))
-	      typecode = SequenceDescription.TRANSCRIPTCDNA;
-	  else if (type.equals(SequenceDescription.TRANSCRIPTEXONSEQ))
-	      typecode = SequenceDescription.TRANSCRIPTEXONS;
-	  else
-	      throw new RuntimeException(type+" is not a supported sequence type\n"+usage());
 	          
   	  try {
   	  	seqDescription = new SequenceDescription(typecode, left, right);

@@ -17,6 +17,7 @@
  */
 
 package org.ensembl.mart.explorer;
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public final class SequenceDescription {
 					throw new InvalidQueryException("Cannot extend flanks on a coding sequence\n");
 		       
 				this.seqt = type;
-				this.seqtype = CODINGSEQ;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTCODING);
 				this.description = "coding sequence of transcript";
 				break;
 				
@@ -75,7 +76,7 @@ public final class SequenceDescription {
 					throw new InvalidQueryException("Cannot extend flanks on a peptide sequence\n");
 		       
 				this.seqt = type;
-				this.seqtype = PEPTIDESEQ;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTPEPTIDE);
 				this.description = "peptide sequence";
 				break;
 			    
@@ -84,18 +85,26 @@ public final class SequenceDescription {
 					throw new InvalidQueryException("Cannot extend flanks on a cdna sequence\n");
 		       
 				this.seqt = type;
-				this.seqtype = CDNASEQ;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTCDNA);
 				this.description = "cdna sequence";
 				break;
 				
 			case TRANSCRIPTEXONS:
 			    this.seqt = type;
-			    this.seqtype = TRANSCRIPTEXONSEQ;
+			    this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
 			    this.description = "exon";
 			    this.leftflank = lflank;
 			    this.rightflank = rflank;
 			    break;
-			      
+			
+		    case TRANSCRIPTEXONINTRON:
+		        this.seqt = type;
+		        this.seqtype = (String) SEQS.get(TRANSCRIPTEXONINTRON);
+		        this.description = "exon and intron sequence for transcript";
+		        this.leftflank = lflank;
+		        this.rightflank = rflank;
+		        break;
+		              
 			default:
 				throw new InvalidQueryException("Unknown sequence type"+type);
 		}
@@ -177,23 +186,16 @@ public final class SequenceDescription {
 	private Logger logger = Logger.getLogger(SequenceDescription.class.getName());
 	
 	//TODO: add new enums as new types of sequences are implimented
-	public static final List SEQS = Arrays.asList( new String[]{"coding", "peptide" , "cdna", "transcript_exons"});
+	public static final List SEQS = Collections.unmodifiableList(Arrays.asList( new String[]{"coding", "peptide" , "cdna", "transcript_exons", "transcript_exon_intron"}));
 	
 	/**
 	 * enums over sequence type that objects can use to test the type, and SequenceDescription can use to set seqtype
 	 */
-	public static final int TRANSCRIPTCODING = 1;
-	public static final String CODINGSEQ = "coding";
-	public static final int TRANSCRIPTPEPTIDE = 2;
-	public static final String PEPTIDESEQ = "peptide";
-	public static final int TRANSCRIPTCDNA = 3;
-	public static final String CDNASEQ = "cdna";
-	public static final int TRANSCRIPTEXONS = 4;
-	public static final String TRANSCRIPTEXONSEQ = "transcript_exons";
-	public static final int TRANSCRIPTEXONINTRON = 5;
-	public static final String TRANSCRIPTEISEQ = "transcript_exon_intron";
-	public static final int GENEEXONINTRON = 6;
-	public static final String GENEEISEQ = "gene_exon_intron";
-	public static final int GENEEXONS = 7;
-	public static final String GENEEXONSEQ = "gene_exons";
+	public static final int TRANSCRIPTCODING = 0;
+	public static final int TRANSCRIPTPEPTIDE = 1;
+	public static final int TRANSCRIPTCDNA = 2;
+	public static final int TRANSCRIPTEXONS = 3;
+	public static final int TRANSCRIPTEXONINTRON = 4;
+	public static final int GENEEXONINTRON = 5;
+	public static final int GENEEXONS = 6;
 }

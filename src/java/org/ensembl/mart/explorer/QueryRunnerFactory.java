@@ -42,7 +42,7 @@ public class QueryRunnerFactory {
      *  @see Query
      *  @see FormatSpec
      */
-    public static QueryRunner createQueryRunner(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException, NotImplementedYetException {
+    public static QueryRunner getInstance(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException, NotImplementedYetException {
     	QueryRunner thisQueryRunner = null;
 		switch (q.getType()) {
  
@@ -74,9 +74,8 @@ public class QueryRunnerFactory {
 					    break;
 					    
 					case SequenceDescription.TRANSCRIPTEXONINTRON:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
-//					thisQueryRunner = new TabulatedTranscriptEISeqQueryRunner(q,f,conn,out);
-					    //break;
+					     thisQueryRunner = new TabulatedTranscriptEISeqQueryRunner(q,f,conn,out);
+					     break;
 					    
 					case SequenceDescription.GENEEXONINTRON:
 					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
@@ -109,9 +108,8 @@ public class QueryRunnerFactory {
 					    break;
 					    
 				    case SequenceDescription.TRANSCRIPTEXONINTRON:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
-                        //thisQueryRunner = new FastaTranscriptEISeqQueryRunner(q,f,conn,out);
-					    //break;
+					    thisQueryRunner = new FastaTranscriptEISeqQueryRunner(q,f,conn,out);
+					    break;
 					    
 				    case SequenceDescription.GENEEXONINTRON:
 					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");

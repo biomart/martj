@@ -31,7 +31,8 @@ import java.io.*;
 public interface QueryRunner {
 	/**
 	 * execute a Query using a specified mySQL database Connection, and output
-	 * the results to a specified OutputStream
+	 * the results to a specified OutputStream.  Different implimentations can format the output
+	 * as required.
 	 * 
 	 * @param conn A JDBC Connection
 	 * @param os An OutputStream
@@ -40,5 +41,5 @@ public interface QueryRunner {
 	 * @throws IOException
 	 * @throws InvalidQueryException
 	 */
-	public void execute(int limit) throws SQLException, IOException, InvalidQueryException;
+	public void execute(int limit) throws SQLException, SequenceException , IOException, InvalidQueryException;
 }

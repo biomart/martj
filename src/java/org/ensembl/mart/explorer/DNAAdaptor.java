@@ -78,7 +78,7 @@ public class DNAAdaptor {
 				            cachedSeq = cachedSeq.concat(rs.getString(i));
 				    }
 				    else {
-				        logger.info("No Sequence Returned for chromosome "+chr+"\n");
+				        logger.error("No Sequence Returned for chromosome "+chr+"\n");
 				    }
 				}
 					
@@ -103,7 +103,7 @@ public class DNAAdaptor {
 	    
 		int len = (end - start) + 1;
 		if (cachedSeq == null) {
-			logger.info("failed to get DNA for chr "+chr+"\n");
+			logger.warn("failed to get DNA for chr "+chr+"\n");
 			return Npad(len);
 		}
 	    // cut out the requested section from the big segment

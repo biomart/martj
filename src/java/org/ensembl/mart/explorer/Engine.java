@@ -109,6 +109,7 @@ public class Engine {
      * @param formatspec - A FormatSpec Object
      * @param os - An OutputStream
      * @throws SQLException
+     * @throws SequenceException
      * @throws IOException
      * @throws FormatException
      * @throws InvalidQueryException
@@ -119,10 +120,10 @@ public class Engine {
      * @see TabulatedQueryRunner
      */
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
-        throws SQLException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
+        throws SQLException, SequenceException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
     
           Connection conn = getDatabaseConnection();
-	      QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec, conn, os);
+	      QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
           qr.execute(0);
     }
     
@@ -137,6 +138,7 @@ public class Engine {
 	 * @param os An OutputStream
 	 * @param limit limits the number of records returned by the query
 	 * @throws SQLException
+	 * @throws SequenceException
 	 * @throws IOException
 	 * @throws FormatException
 	 * @throws InvalidQueryException
@@ -147,10 +149,10 @@ public class Engine {
 	 * @see TabulatedQueryRunner
 	 */
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
-		throws SQLException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
+		throws SQLException, SequenceException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
     
 		  Connection conn = getDatabaseConnection();
-		  QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec, conn, os);
+		  QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
 		  qr.execute(limit);
 	}
 
