@@ -21,6 +21,8 @@ package org.ensembl.mart.shell;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -158,7 +160,7 @@ public class MartShellLib {
     if (confURL == null)
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
-    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL);
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, false); //see notes to adaptorManager for boolean settings
     harvestAdaptorsFrom(adaptor);
   }
 
@@ -890,6 +892,7 @@ public class MartShellLib {
    * @param martPass
    * @param martDriver
    * @param sourceKey - name to reference Mart in queries
+   * @return boolean, true if the Database settings resulted in a successful connection, false otherwise
    * @throws InvalidQueryException
    * @see org.ensembl.mart.lib.DetailedDataSource for further information about parameter meanings
    */
@@ -903,6 +906,7 @@ public class MartShellLib {
     String martDriver,
     String sourceKey)
     throws InvalidQueryException {
+    
     DetailedDataSource ds =
       new DetailedDataSource(
         martDatabaseType,
@@ -915,12 +919,20 @@ public class MartShellLib {
         martDriver,
         sourceKey);
 
-    addMart(ds);
+    Connection conn = null;
+    try {
+      conn = ds.getConnection();
+      addMart(ds);
+    } catch (SQLException e) {
+      throw new InvalidQueryException("Could not connect to Database with given settings, please try again\n", e);
+    } finally {
+      DetailedDataSource.close(conn);
+    }
   }
 
   public void addMart(DetailedDataSource ds) throws InvalidQueryException {
     try {
-      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser());
+      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser(), false, false, false); //see notes for adaptorManager for boolean settings
       adaptor.setName(ds.getName());
       adaptorManager.add(adaptor);
     } catch (ConfigurationException e) {
@@ -939,7 +951,7 @@ public class MartShellLib {
 
       try {
         URL regURL = InputSourceUtil.getURLForString(source);
-        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL);
+        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL, false, false, false); // see notes for adaptorManager for boolean settings
 
         harvestAdaptorsFrom(regadaptor);
       } catch (MalformedURLException e) {
@@ -979,7 +991,7 @@ public class MartShellLib {
 
       try {
         URL dsvURL = InputSourceUtil.getURLForString(source);
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false, false); // see notes for adaptorManager for boolean settings
 
         if (userName == null) {
           CompositeDSConfigAdaptor fileAdaptor = null;
@@ -2525,7 +2537,7 @@ public class MartShellLib {
   private String MQLError = null;
 
   //these allow the MartShellLib to act as controller to the MartShell and MartCompleter
-  protected RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor();
+  protected RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor(false, false, false); //dont ignore cache, dont validate, and dont include hidden Members (these are for MartEditor only)
   protected DatasetConfig envDataset = null;
   protected DetailedDataSource envMart = null;
   protected DatasetConfig localDataset = null;

@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -1165,11 +1166,21 @@ public class MartShell {
 
       String thisLine = null;
 
+      List oldHistory = new Vector();
+      Readline.getHistory(oldHistory);
+      Readline.clearHistory();
       try {
+        if (lastDBSettings[HOSTITER] != null)
+          Readline.addToHistory(lastDBSettings[HOSTITER]);
+            
         thisLine = Readline.readline("\nPlease enter the host address of the mart database: ", false);
         if (thisLine != null)
           martHost = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[DBTYPEITER] != null)
+          Readline.addToHistory(lastDBSettings[DBTYPEITER]);
+          
         thisLine =
           Readline.readline(
             "\nPlease enter the type of RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
@@ -1181,6 +1192,10 @@ public class MartShell {
         if (thisLine != null)
           martDatabaseType = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[DRIVERITER] != null)
+          Readline.addToHistory(lastDBSettings[DRIVERITER]);
+          
         thisLine =
           Readline.readline(
             "\nPlease enter the Driver Class Name of the RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
@@ -1192,6 +1207,10 @@ public class MartShell {
         if (thisLine != null)
           martDriver = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[PORTITER] != null)
+          Readline.addToHistory(lastDBSettings[PORTITER]);
+          
         thisLine =
           Readline.readline(
             "\nPlease enter the port on which the mart database is running (defaults to "
@@ -1203,18 +1222,34 @@ public class MartShell {
         if (thisLine != null)
           martPort = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[USERITER] != null)
+          Readline.addToHistory(lastDBSettings[USERITER]);
+          
         thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database: ", false);
         if (thisLine != null)
           martUser = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[PASSITER] != null)
+          Readline.addToHistory(lastDBSettings[PASSITER]);
+          
         thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database: ", false);
         if (thisLine != null)
           martPass = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[DBNAMEITER] != null)
+          Readline.addToHistory(lastDBSettings[DBNAMEITER]);
+          
         thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query: ", false);
         if (thisLine != null)
           martDatabase = thisLine;
 
+        Readline.clearHistory();
+        if (lastDBSettings[SOURCEKEYITER] != null)
+          Readline.addToHistory(lastDBSettings[SOURCEKEYITER]);
+          
         thisLine =
           Readline.readline(
             "\nPlease enter a name to refer to this Mart in Shell commands (defaults to "
@@ -1228,6 +1263,13 @@ public class MartShell {
 
       } catch (Exception e) {
         throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
+      } finally {
+        //reset the history
+        Readline.clearHistory();
+        for (int i = 0, n = oldHistory.size(); i < n; i++) {
+          String hist = (String) oldHistory.get(i);
+          Readline.addToHistory(hist);
+        }
       }
     }
 
@@ -1243,9 +1285,22 @@ public class MartShell {
     if (sourceKey == null)
       sourceKey = DetailedDataSource.defaultName(martHost, martPort, martDatabase, martUser);
 
+    setLastDatabaseSettings(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, martDriver, sourceKey);
+    
     msl.addMart(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, martDriver, sourceKey);
   }
 
+  private void setLastDatabaseSettings(String martDatabaseType, String martHost, String martPort, String martDatabase, String martUser, String martPass, String martDriver, String sourceKey) {
+    lastDBSettings[HOSTITER] = martHost;
+    lastDBSettings[DBTYPEITER] = martDatabaseType;
+    lastDBSettings[DRIVERITER] = martDriver;
+    lastDBSettings[PORTITER] = martPort;
+    lastDBSettings[USERITER] = martUser;
+    lastDBSettings[PASSITER] = martPass;
+    lastDBSettings[DBNAMEITER] = martDatabase;
+    lastDBSettings[SOURCEKEYITER] = sourceKey; 
+  }
+  
   private void removeRequest(String command) throws InvalidQueryException {
     StringTokenizer toks = new StringTokenizer(command, " ");
     toks.nextToken(); // skip remove
@@ -2335,4 +2390,15 @@ public class MartShell {
 
   //other strings needed
   private final String LINEEND = ";";
+  
+  //database settings history
+  private String[] lastDBSettings = new String[8];
+  private final int HOSTITER = 0;
+  private final int DBTYPEITER = 1;
+  private final int DRIVERITER = 2;
+  private final int PORTITER = 3;
+  private final int USERITER = 4;
+  private final int PASSITER = 5;
+  private final int DBNAMEITER = 6;
+  private final int SOURCEKEYITER = 7;
 }
