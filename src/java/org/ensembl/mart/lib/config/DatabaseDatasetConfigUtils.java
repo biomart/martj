@@ -3044,6 +3044,7 @@ public class DatabaseDatasetConfigUtils {
     // main table fds
     else {
       if (columnName.endsWith("_bool")) {
+		filt.setInternalName(descriptiveName.toLowerCase());
         descriptiveName = columnName.replaceFirst("_bool", "");
         filt.setType("boolean");
         filt.setQualifier("only");
@@ -3057,12 +3058,14 @@ public class DatabaseDatasetConfigUtils {
         if (descriptiveName.equals("display_id")) {
           descriptiveName = tableName.split("__")[1].replaceFirst("xref_", "");
         }
+		filt.setInternalName(descriptiveName.toLowerCase());
       } else {
+		filt.setInternalName(descriptiveName.toLowerCase());
         filt.setType(DEFAULTTYPE);
         filt.setQualifier(DEFAULTQUALIFIER);
         filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
       }
-      filt.setInternalName(descriptiveName.toLowerCase());
+      
       filt.setDisplayName(descriptiveName.replaceAll("_", " "));
       filt.setTableConstraint(tableName);
       filt.setKey(joinKey);
