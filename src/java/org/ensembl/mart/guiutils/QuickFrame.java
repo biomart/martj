@@ -79,7 +79,6 @@ public class QuickFrame extends JFrame {
     setVisible(true);
     pack();
 
-    // TODO Auto-generated constructor stub
   }
 
 }
