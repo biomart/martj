@@ -23,6 +23,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -128,16 +130,489 @@ public class MartShellLib {
 		this.martconf = martconf;
 	}
 
-  /**
-   * Set or Reset the MartConfiguration object to use in parsing Queries and MQL
-   * statements.
-   * 
-   * @param martconf
-   */
-  public void setMartConfiguration(MartConfiguration martconf) {
-  	this.martconf = martconf;
-  }
-  
+	/**
+	 * Set or Reset the MartConfiguration object to use in parsing Queries and MQL
+	 * statements.
+	 * 
+	 * @param martconf
+	 */
+	public void setMartConfiguration(MartConfiguration martconf) {
+		this.martconf = martconf;
+	}
+
+	private void LoadMaps() {
+		if (!mapsLoaded) {
+			Dataset[] dsets = martconf.getDatasets();
+
+			for (int i = 0, n = dsets.length; i < n; i++) {
+				Dataset dataset = dsets[i];
+				String datasetName = dataset.getInternalName();
+				starBase_Dataset.put(dataset.getStarBases()[0], datasetName); // first starbase only
+
+				if (!field_Attribute.containsKey(datasetName))
+					field_Attribute.put(datasetName, new ArrayList());
+
+				List attMaps = (ArrayList) field_Attribute.get(datasetName);
+
+				List attributes = dataset.getAllUIAttributeDescriptions();
+				for (int j = 0, k = attributes.size(); j < k; j++) {
+					Object attribute = attributes.get(j);
+					if (attribute instanceof UIAttributeDescription) {
+						UIAttributeDescription uiattribute = (UIAttributeDescription) attribute;
+
+						String iname = uiattribute.getInternalName();
+						String fname = uiattribute.getFieldName();
+						String tconstraint = uiattribute.getTableConstraint();
+
+						UIMapper attMap = null;
+						if (tconstraint != null && !(tconstraint.equals("")))
+							attMap = new UIMapper(fname, tconstraint, iname);
+						else
+							attMap = new UIMapper(fname, iname);
+
+						if (!attMaps.contains(attMap))
+							attMaps.add(attMap);
+					}
+					//else { UIDSAttributeDescription code goes here}
+				}
+
+        // get FilterSetDescription mappings
+        if (!field_FilterSet.containsKey(datasetName))
+          field_FilterSet.put(datasetName, new ArrayList());
+
+        List fsetMaps = (ArrayList) field_FilterSet.get(datasetName);
+        
+        FilterPage[] fpages = dataset.getFilterPages();
+        for (int j = 0, u = fpages.length; j < u; j++) {
+					FilterPage page = fpages[j];
+					
+          FilterSetDescription[] fsetdescs = page.getAllFilterSetDescriptions();
+          for (int m = 0, b = fsetdescs.length; j < b; j++) {
+            FilterSetDescription description = fsetdescs[m];
+            fsetMaps.add(new UIMapper(description.getFieldNameModifier(), description.getInternalName()));
+            fsetMaps.add(new UIMapper(description.getTableConstraintModifier(), description.getInternalName()));
+          }          
+				}
+        
+				if (!field_Filter.containsKey(datasetName))
+					field_Filter.put(datasetName, new ArrayList());
+
+				List fieldMaps = (ArrayList) field_Filter.get(datasetName);
+
+				List filters = dataset.getAllUIFilterDescriptions();
+				for (Iterator iter = filters.iterator(); iter.hasNext();) {
+					Object filter = iter.next();
+
+					if (filter instanceof UIFilterDescription) {
+						UIFilterDescription uifilter = (UIFilterDescription) filter;
+
+						String iname = uifilter.getInternalName();
+						String fname = uifilter.getFieldName();
+						String tconstraint = uifilter.getTableConstraint();
+
+						UIMapper fieldMap = null;
+						if (tconstraint != null && !(tconstraint.equals("")))
+							fieldMap = new UIMapper(fname, tconstraint, iname);
+						else
+							fieldMap = new UIMapper(fname, iname);
+
+						if (!fieldMaps.contains(fieldMap))
+							fieldMaps.add(fieldMap);
+					} else {
+						UIDSFilterDescription uifilter = (UIDSFilterDescription) filter;
+						fieldMaps.add(new UIMapper(uifilter.getObjectCode(), uifilter.getInternalName()));
+					}
+				}
+				field_Attribute.put(datasetName, new ArrayList());
+				field_Filter.put(datasetName, new ArrayList());
+			}
+		}
+	}
+
+	/**
+	 * Creates a Mart Query Language command from a Query object.
+	 * 
+	 * @param query Query object to be transformed into MQL
+	 * @return String MQL statement
+	 * throws InvalidQueryException for all underlying exceptions
+	 */
+	public String QueryToMQL(Query query) throws InvalidQueryException {
+		LoadMaps();
+
+		StringBuffer mqlbuf = new StringBuffer();
+		boolean success = false;
+
+		String datasetName = getDataset(query);
+
+		//	get datasetName first
+		if (datasetName == null)
+			throw new InvalidQueryException("Could not determine dataset with starbases from query provided\n");
+
+		if (!martconf.containsDataset(datasetName))
+			throw new InvalidQueryException("Dataset " + datasetName + " is not supported by the martConfiguration provided\n");
+
+		Dataset dataset = martconf.getDatasetByName(datasetName);
+
+		success = getSelectClause(query, dataset, mqlbuf);
+
+		if (success && (query.getType() == Query.SEQUENCE))
+			getSequenceClause(query, mqlbuf.append(" "));
+
+		if (success)
+			mqlbuf.append("from ").append(dataset);
+
+		if (success && (query.getTotalFilterCount() > 0))
+			success = getWhereClause(query, dataset, mqlbuf.append(" "));
+
+		if (success && query.hasLimit())
+			mqlbuf.append("limit ").append(query.getLimit());
+
+		if (!success)
+			throw new InvalidQueryException("Could not compile MQL from Query\n" + MQLError + "\n");
+		return mqlbuf.append(LINEEND).toString();
+	}
+
+	private String getDataset(Query query) {
+		String datasetName = null;
+
+		String[] starbases = query.getStarBases();
+		for (int i = 0, n = starbases.length; i < n; i++) {
+			if (starBase_Dataset.containsKey(starbases[i])) {
+				datasetName = (String) starBase_Dataset.get(starbases[i]);
+				break;
+			}
+		}
+		return datasetName;
+	}
+
+	private boolean getSelectClause(Query query, Dataset dataset, StringBuffer mqlbuf) {
+		Attribute[] attributes = query.getAttributes();
+		mqlbuf.append("select");
+
+		if (attributes.length == 0) {
+			if (query.getType() == Query.SEQUENCE)
+				return true;
+			else {
+				MQLError = "Empty attributes, no Sequence.";
+				return false;
+			}
+		}
+
+		mqlbuf.append(" ");
+		boolean success = true;
+
+		List attMaps = (ArrayList) field_Attribute.get(dataset.getInternalName());
+
+		for (int i = 0, n = attributes.length;(success && i < n); i++) {
+			if (i > 0)
+				mqlbuf.append(", ");
+
+			Attribute attribute = attributes[i];
+			String fname = attribute.getField();
+			String tconstraint = attribute.getTableConstraint();
+
+			boolean thisMapped = false;
+
+			for (Iterator iter = attMaps.iterator(); !(thisMapped) && iter.hasNext();) {
+				UIMapper attMap = (UIMapper) iter.next();
+
+				if (attMap.canMap(fname) || attMap.canMap(fname, tconstraint)) {
+					mqlbuf.append(attMap.getInternalName());
+					thisMapped = true;
+				}
+			}
+
+			if (!thisMapped) {
+				success = false;
+				MQLError = "Could not map attribute " + attribute;
+			}
+		}
+
+		return success;
+	}
+
+	private void getSequenceClause(Query query, StringBuffer mqlbuf) {
+		mqlbuf.append("sequence ");
+
+		SequenceDescription seqd = query.getSequenceDescription();
+		String seqtype = seqd.getTypeAsString();
+
+		int lflank = seqd.getLeftFlank();
+		if (lflank > 0)
+			mqlbuf.append(lflank).append("+");
+
+		mqlbuf.append(seqtype);
+
+		int rflank = seqd.getRightFlank();
+		if (rflank > 0)
+			mqlbuf.append("+").append(rflank);
+	}
+
+	private boolean getWhereClause(Query query, Dataset dataset, StringBuffer mqlbuf) {
+		boolean success = true;
+
+		mqlbuf.append("where ");
+		List filtMaps = (ArrayList) field_Filter.get(dataset.getInternalName());
+		List FiltSetMaps = (ArrayList) field_FilterSet.get(dataset.getInternalName());
+
+		if (query.hasDomainSpecificFilters()) {
+			DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
+
+			for (int i = 0, n = dsfilters.length;(success && (i < n)); i++) {
+				if (i > 0)
+					mqlbuf.append(", ");
+
+				DomainSpecificFilter dsfilter = dsfilters[i];
+				boolean thisMapped = false;
+
+				String objectCode = dsfilter.getObjectCode();
+				String value = dsfilter.getHandlerParameter();
+
+				for (Iterator iter = filtMaps.iterator(); !(thisMapped) && iter.hasNext();) {
+					UIMapper filtMap = (UIMapper) iter.next();
+
+					if (filtMap.canMap(objectCode)) {
+						mqlbuf.append(filtMap.getInternalName()).append(" = ").append(value);
+						thisMapped = true;
+					}
+				}
+
+				if (!thisMapped) {
+					success = false;
+					MQLError = "Could not map domain specific filter " + dsfilter;
+				}
+			}
+		}
+
+		if (success && query.hasUnprocessedListFilters()) {
+			IDListFilter[] unprocessedFilters = query.getUnprocessedListFilters();
+
+			for (int i = 0, n = unprocessedFilters.length;(success && (i < n)); i++) {
+				if (i > 0)
+					mqlbuf.append(", ");
+
+				IDListFilter idfilter = unprocessedFilters[i];
+				boolean thisMapped = false;
+
+				String fname = idfilter.getField();
+				String tconstraint = idfilter.getTableConstraint();
+
+				for (Iterator iter = filtMaps.iterator(); success && !(thisMapped) && iter.hasNext();) {
+					UIMapper filtMapper = (UIMapper) iter.next();
+
+					String filterSetReq = null;
+
+					if (filtMapper.canMap(fname)) {
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						filterSetReq = uifilter.getFilterSetReq();
+
+						if (filterSetReq == null || filterSetReq.equals("")) {
+							// perfect field -> internalName relationship
+							thisMapped = true;
+							success = mapIDListFilter(idfilter, mqlbuf.append(filtMapper.getInternalName()).append(" in "));
+						}
+					} else if (filtMapper.canMap(fname, tconstraint)) {
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						filterSetReq = uifilter.getFilterSetReq();
+
+						if (filterSetReq == null || filterSetReq.equals("")) {
+							// perfect field + tableconstraint -> internalName relationship
+							thisMapped = true;
+							success = mapIDListFilter(idfilter, mqlbuf.append(filtMapper.getInternalName()).append(" in "));
+						}
+					} else {
+						// filterSet
+						String filterInternalName = filtMapper.getInternalName();
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a UIFilterDescription
+
+						if (uifilter.inFilterSet()) {
+							if (uifilter.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
+								if (fname.endsWith(filtMapper.getPrimaryKey())) {
+									// field modifier
+									String fieldModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getPrimaryKey()));
+
+									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
+										UIMapper setMap = (UIMapper) iterator.next();
+										if (setMap.canMap(fieldModifier)) {
+											thisMapped = true;
+											success =
+												mapIDListFilter(idfilter, mqlbuf.append(setMap.getInternalName()).append(".").append(filtMapper.getInternalName()).append(" in "));
+										}
+									}
+								}
+							} else {
+								if (tconstraint.endsWith(filtMapper.getCompositeKey())) {
+									// table modifier
+									String tableModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getCompositeKey()));
+
+									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
+										UIMapper setMap = (UIMapper) iterator.next();
+										if (setMap.canMap(tableModifier)) {
+											thisMapped = true;
+											success =
+												mapIDListFilter(idfilter, mqlbuf.append(setMap.getInternalName()).append(".").append(filtMapper.getInternalName()).append(" in "));
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (!thisMapped) {
+					success = false;
+					MQLError = "Could not map IDListFilter " + idfilter;
+				}
+			}
+		}
+
+		Filter[] filters = query.getFilters();
+
+		if (success && filters.length > 0) {
+			for (int i = 0, n = filters.length; ( success && ( i < n ) ); i++) {
+				Filter filter = filters[i];
+				boolean thisMapped = false;
+
+				String fname = filter.getField();
+				String tconstraint = filter.getTableConstraint();
+
+				for (Iterator iter = filtMaps.iterator(); success && !(thisMapped) && iter.hasNext();) {
+					UIMapper filtMapper = (UIMapper) iter.next();
+
+					String filterSetReq = null;
+
+					if (filtMapper.canMap(fname)) {
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						filterSetReq = uifilter.getFilterSetReq();
+
+						if (filterSetReq == null || filterSetReq.equals("")) {
+							// perfect field -> internalName relationship
+							thisMapped = true;
+							success = mapBasicFilter(filter, mqlbuf.append(filtMapper.getInternalName()).append(" "));
+						}
+					} else if (filtMapper.canMap(fname, tconstraint)) {
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						filterSetReq = uifilter.getFilterSetReq();
+
+						if (filterSetReq == null || filterSetReq.equals("")) {
+							// perfect field + tableconstraint -> internalName relationship
+							thisMapped = true;
+							success = mapBasicFilter(filter, mqlbuf.append(filtMapper.getInternalName()).append(" "));
+						}
+					} else {
+						// filterSet
+						String filterInternalName = filtMapper.getInternalName();
+						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a UIFilterDescription
+
+						if (uifilter.inFilterSet()) {
+							if (uifilter.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
+								if (fname.endsWith(filtMapper.getPrimaryKey())) {
+									// field modifier
+									String fieldModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getPrimaryKey()));
+
+									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
+										UIMapper setMap = (UIMapper) iterator.next();
+										if (setMap.canMap(fieldModifier)) {
+											thisMapped = true;
+											success = mapBasicFilter(filter, mqlbuf.append(setMap.getInternalName()).append(".").append(filtMapper.getInternalName()).append(" "));
+										}
+									}
+								}
+							} else {
+								if (tconstraint.endsWith(filtMapper.getCompositeKey())) {
+									// table modifier
+									String tableModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getCompositeKey()));
+
+									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
+										UIMapper setMap = (UIMapper) iterator.next();
+										if (setMap.canMap(tableModifier)) {
+											thisMapped = true;
+											success = mapBasicFilter(filter, mqlbuf.append(setMap.getInternalName()).append(".").append(filtMapper.getInternalName()).append(" "));
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (!thisMapped) {
+					success = false;
+					MQLError = "Could not map Filter " + filter;
+				}
+			}
+		}
+
+		return success;
+	}
+
+	private boolean mapIDListFilter(IDListFilter idfilter, StringBuffer mqlbuf) {
+		boolean success = true;
+
+		switch (idfilter.getType()) {
+			case IDListFilter.FILE :
+				mqlbuf.append(idfilter.getFile());
+				break;
+
+			case IDListFilter.URL :
+				mqlbuf.append(idfilter.getUrl());
+				break;
+
+			case IDListFilter.SUBQUERY :
+				Query subq = idfilter.getSubQuery();
+
+				try {
+					mqlbuf.append("(").append(QueryToMQL(subq)).append(")");
+				} catch (InvalidQueryException e) {
+					success = false;
+					MQLError = ("Could not map subquery:\n" + subq + "\n" + e);
+				}
+				break;
+			
+			case IDListFilter.STRING:
+			  String[] ids = idfilter.getIdentifiers();
+			  mqlbuf.append("(");
+			  
+			  for (int i = 0, n = ids.length; i < n; i++) {
+					if (i > 0)
+					  mqlbuf.append(", ");
+					mqlbuf.append(ids[i]);
+				}
+				
+				mqlbuf.append(")");
+		}
+		return success;
+	}
+
+	private boolean mapBasicFilter(Filter filter, StringBuffer mqlbuf) {
+		boolean success = true;
+
+    if (filter instanceof NullableFilter) {
+    	String condition = ( (NullableFilter) filter).getRightHandClause();
+    	if (condition.equals(NullableFilter.isNULL) || condition.equals(NullableFilter.isNULL_NUM))
+    	  mqlbuf.append("excluded");
+    	else
+    	  mqlbuf.append("exclusive");
+    }      
+    else if (filter instanceof IDListFilter) {
+    	success = mapIDListFilter((IDListFilter) filter, mqlbuf.append("in "));
+    }
+    else if (filter instanceof BasicFilter) {
+    	BasicFilter bfilter = (BasicFilter) filter;
+    	mqlbuf.append( bfilter.getCondition() ).append(" ").append(bfilter.getValue());
+    }
+    //dont need else
+    
+		return success;
+	}
+
+	/** 
+	 * Creates a Query object from a Mart Query Language command.
+	 * 
+	 * @param mql - String MQL command to parse into a Query object
+	 * @return Query object
+	 * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, Dataset/Attributes/Sequences/Filters not found, etc.)
+	 */
 	public Query MQLtoQuery(String newquery) throws InvalidQueryException {
 		boolean start = true;
 		boolean selectClause = false;
@@ -177,10 +652,10 @@ public class MartShellLib {
 				else if (thisToken.equalsIgnoreCase(QSEQUENCE)) {
 					selectClause = false;
 					sequenceClause = true;
-			  //else if (thisToken.equalsIgnoreCase(USER_SUPPLIED_KEYWORDS) {
-			  //  selectClause = false;
-			  //  USERSUPPLIEDMODE = true;
-			  //}
+					//else if (thisToken.equalsIgnoreCase(USER_SUPPLIED_KEYWORDS) {
+					//  selectClause = false;
+					//  USERSUPPLIEDMODE = true;
+					//}
 				} else if (thisToken.equalsIgnoreCase(QFROM)) {
 					selectClause = false;
 					fromClause = true;
@@ -198,9 +673,9 @@ public class MartShellLib {
 					fromClause = true;
 				} else
 					sequenceString.append(thisToken);
-			// else if (USERSUPPLIEDMODE) {
-			//   user code goes here to parse new modes
-			//}
+				// else if (USERSUPPLIEDMODE) {
+				//   user code goes here to parse new modes
+				//}
 			} else if (fromClause) {
 				if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement after from statement: " + newquery + "\n");
@@ -302,20 +777,19 @@ public class MartShellLib {
 		query.setPrimaryKeys(dset.getPrimaryKeys());
 
 		if (sequenceString.length() > 0)
-      query = addSequenceDescription(query, dset, sequenceString.toString());
-
+			query = addSequenceDescription(query, dset, sequenceString.toString());
 
 		//parse attributes, if present
 		if (attString.length() > 1)
-		  query = addAttributes(query, dset, attString.toString());
+			query = addAttributes(query, dset, attString.toString());
 
 		//parse filters, if present
 		if (whereString.toString().endsWith(LINEEND))
 			whereString.deleteCharAt(whereString.length() - 1);
-			
+
 		if (whereString.length() > 0)
-		  query = addFilters(query, dset, whereString.toString());
-		  
+			query = addFilters(query, dset, whereString.toString());
+
 		query.setLimit(limit);
 		return query;
 	}
@@ -357,10 +831,10 @@ public class MartShellLib {
 		return f;
 	}
 
-  private Query addSequenceDescription(Query inquery, Dataset dset, String seqrequest) throws InvalidQueryException {
+	private Query addSequenceDescription(Query inquery, Dataset dset, String seqrequest) throws InvalidQueryException {
 		currentApage = dset.getAttributePageByName("sequences");
-  	Query newQuery = new Query(inquery);
- 
+		Query newQuery = new Query(inquery);
+
 		int typecode = 0;
 		int left = 0;
 		int right = 0;
@@ -399,11 +873,11 @@ public class MartShellLib {
 		}
 		newQuery.setSequenceDescription(new SequenceDescription(typecode, left, right));
 		return newQuery;
-  }
-  
-  private Query addAttributes(Query inquery, Dataset dset, String attString) throws InvalidQueryException {
-  	Query newQuery = new Query(inquery);
-  	
+	}
+
+	private Query addAttributes(Query inquery, Dataset dset, String attString) throws InvalidQueryException {
+		Query newQuery = new Query(inquery);
+
 		List atts = new ArrayList();
 		StringTokenizer attTokens = new StringTokenizer(attString.toString(), ",");
 
@@ -413,14 +887,14 @@ public class MartShellLib {
 				throw new InvalidQueryException("Attribute " + attname + " is not found in this mart for dataset " + dset.getInternalName() + "\n");
 
 			if (currentApage == null) {
-				currentApage = dset.getPageForUIAttributeDescription(attname);
+				currentApage = dset.getPageForAttribute(attname);
 				atts.add(dset.getUIAttributeDescriptionByName(attname));
 			} else {
 				if (!currentApage.containsUIAttributeDescription(attname)) {
 					if (currentApage.getInternalName().equals("sequences"))
 						throw new InvalidQueryException("Cannot request attribute " + attname + " with a sequence request\n");
 
-					currentApage = dset.getPageForUIAttributeDescription(attname);
+					currentApage = dset.getPageForAttribute(attname);
 
 					for (int i = 0, n = atts.size(); i < n; i++) {
 						UIAttributeDescription element = (UIAttributeDescription) atts.get(i);
@@ -439,13 +913,13 @@ public class MartShellLib {
 			Attribute attr = new FieldAttribute(attd.getFieldName(), attd.getTableConstraint());
 			newQuery.addAttribute(attr);
 		}
-  	
-  	return newQuery;
-  }
-  
-  private Query addFilters(Query inquery, Dataset dset, String whereString) throws InvalidQueryException {
-  	Query newQuery = new Query(inquery);
-  	
+
+		return newQuery;
+	}
+
+	private Query addFilters(Query inquery, Dataset dset, String whereString) throws InvalidQueryException {
+		Query newQuery = new Query(inquery);
+
 		List filtNames = new ArrayList();
 		String filterName = null;
 		String cond = null;
@@ -461,7 +935,7 @@ public class MartShellLib {
 
 		boolean isList = false;
 		boolean isNested = false;
-    
+
 		List idlist = null; // will hold ids from a list
 		StringBuffer subquery = null; // will build up a subquery
 
@@ -495,10 +969,10 @@ public class MartShellLib {
 					throw new InvalidQueryException("Filter " + filterName + " not supported by mart dataset " + dset.getInternalName() + "\n");
 				else {
 					if (currentFpage == null)
-						currentFpage = dset.getPageForUIFilterDescription(filterName);
+						currentFpage = dset.getPageForFilter(filterName);
 					else {
 						if (!currentFpage.containsUIFilterDescription(filterName)) {
-							currentFpage = dset.getPageForUIFilterDescription(filterName);
+							currentFpage = dset.getPageForFilter(filterName);
 
 							for (int i = 0, n = filtNames.size(); i < n; i++) {
 								String element = (String) filtNames.get(i);
@@ -576,13 +1050,13 @@ public class MartShellLib {
 					} else if (fds.getType().equals("boolean_num")) {
 						String thisCondition;
 						if (cond.equalsIgnoreCase("exclusive"))
-							thisCondition = "=";
+							thisCondition = NullableFilter.isNULL_NUM;
 						else if (cond.equalsIgnoreCase("excluded"))
-							thisCondition = "!=";
+							thisCondition = NullableFilter.isNotNULL_NUM;
 						else
 							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
 
-						thisFilter = new BasicFilter(thisFieldName, thisTableConstraint, thisCondition, "1");
+						thisFilter = new NullableFilter(thisFieldName, thisTableConstraint, thisCondition);
 					} else
 						throw new InvalidQueryException("Recieved invalid exclusive/excluded query\n");
 
@@ -640,9 +1114,9 @@ public class MartShellLib {
 						Filter thisFilter = null;
 						try {
 							if (thisToken.matches("\\w+\\:.*"))
-							  thisFilter = new IDListFilter(thisFieldName, thisTableConstraint, new URL(thisToken));
+								thisFilter = new IDListFilter(thisFieldName, thisTableConstraint, new URL(thisToken));
 							else
-							  thisFilter = new IDListFilter(thisFieldName, thisTableConstraint, new File(thisToken));
+								thisFilter = new IDListFilter(thisFieldName, thisTableConstraint, new File(thisToken));
 						} catch (Exception e) {
 							throw new InvalidQueryException("URL provided in list Filter not valid: " + e.getMessage());
 						}
@@ -723,8 +1197,7 @@ public class MartShellLib {
 
 							UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
 							if (!fds.getType().equals("list"))
-								throw new InvalidQueryException(
-									"Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
+								throw new InvalidQueryException("Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
 
 							if (fds.inFilterSet()) {
 								if (fset == null)
@@ -743,14 +1216,14 @@ public class MartShellLib {
 								thisFieldName = fds.getFieldName();
 								thisTableConstraint = fds.getTableConstraint();
 							}
-							
+
 							// subquery will overwrite page states, need to return them to original after it is parsed
 							AttributePage bakApage = currentApage;
 							FilterPage bakFpage = currentFpage;
-							
+
 							Filter thisFilter = getIDFilterForSubQuery(thisFieldName, thisTableConstraint, subquery.toString());
 							newQuery.addFilter(thisFilter);
-							
+
 							currentApage = bakApage;
 							currentFpage = bakFpage;
 							start = true;
@@ -818,16 +1291,24 @@ public class MartShellLib {
 			}
 			//dont need else
 		}
-		
-		return newQuery;  	
-  }
-  
+
+		return newQuery;
+	}
+
+	boolean mapsLoaded = false; // true when LoadMaps called for first time
+	// mapping hashes for QueryToMQL
+	private Hashtable starBase_Dataset = new Hashtable(); // starbase to Dataset internalName
+	private Hashtable field_Attribute = new Hashtable(); // dataset internal_name to List of UIMappers for Attributes
+	private Hashtable field_Filter = new Hashtable(); // dataset internal_name to List of UIMappers for Filters
+	private Hashtable field_FilterSet = new Hashtable(); // dataset internal_name to List of UIMappers for FilterSets  
+
+	private String MQLError = null;
+
 	//MartShellLib instance variables
 	private MartConfiguration martconf;
-	private boolean continueQuery = false;
-  private AttributePage currentApage = null; // keeps track of the AttributePage
-  private FilterPage currentFpage = null; // keeps track of the FilterPage
-  
+	private AttributePage currentApage = null; // keeps track of the AttributePage
+	private FilterPage currentFpage = null; // keeps track of the FilterPage
+
 	// query instructions
 	private final String QSTART = "select";
 	private final String QSEQUENCE = "sequence";
