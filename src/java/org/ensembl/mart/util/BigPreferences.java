@@ -171,6 +171,15 @@ public class BigPreferences extends Preferences {
     int byteIter = 0;
     int listIter = 0;
     Preferences curNode = subPrefs;
+    curNode.remove(HAS_MORE_NODES);
+    curNode.remove(NEXT_NODE);
+    try {
+     if (curNode.nodeExists(String.valueOf(listIter)))
+       curNode.node(String.valueOf(listIter)).removeNode();
+    } catch (BackingStoreException e) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Could not clear first node of BigPreferences byte array\n" + e.getMessage() + "\n");
+    }
 
     //there is a maximum length of bytes that one can store with one key in a preferences object
     //must store multiple parts
@@ -196,7 +205,6 @@ public class BigPreferences extends Preferences {
       byteIter++;
     }
     
-    //TODO: store remaining bits of curBytes
     if (byteIter > 0) {
       if (listIter > 0) {
         curNode.putBoolean(HAS_MORE_NODES, true);
@@ -209,6 +217,7 @@ public class BigPreferences extends Preferences {
       for (int i = 0; i < byteIter; i++) {
         lastBytes[i] = curBytes[i];
       }
+      curNode.putBoolean(HAS_MORE_NODES, false);
       curNode.putByteArray(key, lastBytes);
     }
   }
