@@ -2,17 +2,7 @@
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
 
-    <DatabaseLocation name="Uniprot" databaseType="mysql"
-    jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_8" user="anonymous"/>
-
-    <DatabaseLocation name="MSD" databaseType="mysql"
-    jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_2"
-    user="anonymous"/>
-
-    <DatabaseLocation name="Ensembl" databaseType="mysql"
-    jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_22_1" user="anonymous"/>
+<RegistryDBLocation name="pointer" databaseType="mysql"
+    host="martdb.ebi.ac.uk" port="3306" instanceName="central_registry" user="anonymous"/>
 
 </MartRegistry>
