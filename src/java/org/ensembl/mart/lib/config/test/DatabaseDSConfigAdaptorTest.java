@@ -31,7 +31,6 @@ import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;
 import org.ensembl.mart.lib.test.Base;
-import org.ensembl.mart.util.BigPreferences;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -39,7 +38,12 @@ import org.ensembl.mart.util.BigPreferences;
  */
 public class DatabaseDSConfigAdaptorTest extends Base {
 	private Logger logger = Logger.getLogger(DatabaseDSConfigAdaptorTest.class.getName());
+  private DatasetConfigXMLUtils dscutils = DatasetConfigXMLUtilsTest.DEFAULTUTILS;
+  
+  private DatabaseDatasetConfigUtils dbutils = null;
+  
 	public static final String USER = "test";
+
 	private static final String MODTESTDATASETVIEWFILE = "data/XML/testDatasetConfigMod.xml";
 
 	/**
@@ -50,11 +54,11 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 	 * @return DatabaseDSConfigAdaptor
 	 * @throws Exception when meta_DatasetConfig_[user] doesnt exist, and for all underlying exceptions
 	 */
-	public static DatabaseDSConfigAdaptor getSampleDatasetConfigAdaptor(DetailedDataSource dsource) throws Exception {
-		if (!DatabaseDatasetConfigUtils.DSConfigUserTableExists(dsource, USER))
+	public static DatabaseDSConfigAdaptor getSampleDatasetConfigAdaptor(DetailedDataSource dsource, DatabaseDatasetConfigUtils dbutils) throws Exception {
+		if (!dbutils.datasetConfigUserTableExists(USER))
 			throw new Exception("meta_DatasetConfig_" + USER + " must exist in the Mart Database\n");
 
-		DatabaseDSConfigAdaptor ret = new DatabaseDSConfigAdaptor(dsource, USER);
+		DatabaseDSConfigAdaptor ret = new DatabaseDSConfigAdaptor(dsource, USER, true, false, true);
 
 		return ret;
 	}
@@ -68,14 +72,14 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 
 	public void testDatabaseDSConfigAdaptor() throws Exception {
     //TODO: major refactor
-		assertTrue("meta_DatasetConfig_test does not exist, must exist for test to run\n", DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER));
+		assertTrue("meta_DatasetConfig_test does not exist, must exist for test to run\n", dbutils.datasetConfigUserTableExists(USER));
 
-		DatabaseDSConfigAdaptor refdbdsva = getSampleDatasetConfigAdaptor(martJDataSource);
+		DatabaseDSConfigAdaptor refdbdsva = getSampleDatasetConfigAdaptor(martJDataSource, dbutils);
 
 		assertTrue("meta_DatasetConfig_test must be empty for test to run\n", refdbdsva.getNumDatasetConfigs() == 0);
 
 		DatasetConfig refdsv = DatasetConfigXMLUtilsTest.TestDatasetConfigInstance(false);
-		byte[] refDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(refdsv);
+		byte[] refDigest = dscutils.getMessageDigestForDatasetConfig(refdsv);
 
 		DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, refdsv, true);
 
@@ -105,8 +109,8 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 //		assertTrue("DatabaseDSConfigAdaptor should support displayName of reference DatasetConfig\n", refdbdsva.supportsDisplayName(refdsv.getDisplayName()));
 
 		DatasetConfig modDSV =
-			DatasetConfigXMLUtils.XMLStreamToDatasetConfig(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(MODTESTDATASETVIEWFILE), false);
-		modDSV.setMessageDigest(DatasetConfigXMLUtils.DatasetConfigToMessageDigest(modDSV));
+			dscutils.getDatasetConfigForXMLStream(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(MODTESTDATASETVIEWFILE));
+		modDSV.setMessageDigest(dscutils.getMessageDigestForDatasetConfig(modDSV));
 
 		DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, modDSV, true);
 		refdbdsva.update();
@@ -163,8 +167,8 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 	 * @see junit.framework.TestCase#tearDown()
 	 */
 	protected void tearDown() throws Exception {
-    if (DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER)) {
-      String metaTable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, USER);
+    if (dbutils.datasetConfigUserTableExists(USER)) {
+      String metaTable = dbutils.getDSConfigTableFor(USER);
       Connection conn = martJDataSource.getConnection();
       conn.createStatement().executeUpdate("delete from " + metaTable);
       conn.close();
@@ -177,13 +181,10 @@ public class DatabaseDSConfigAdaptorTest extends Base {
 	 */
 	public void setUp() throws Exception {
 		super.setUp();
-
-    //clear the entire DataseDSConfigAdaptor preferences, so that it can be properly tested
-    BigPreferences.userNodeForPackage(DatabaseDSConfigAdaptor.class).removeNode();
-    BigPreferences.userNodeForPackage(DatabaseDSConfigAdaptor.class).flush();
     
-		if (DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER)) {
-			String metaTable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, USER);
+    dbutils = new DatabaseDatasetConfigUtils(dscutils, martJDataSource);
+		if (dbutils.datasetConfigUserTableExists(USER)) {
+			String metaTable = dbutils.getDSConfigTableFor(USER);
 			Connection conn = martJDataSource.getConnection();
 			conn.createStatement().executeUpdate("delete from " + metaTable);
 			conn.close();

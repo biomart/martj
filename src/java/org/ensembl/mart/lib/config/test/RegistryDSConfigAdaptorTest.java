@@ -26,6 +26,7 @@ import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
+import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
@@ -53,6 +54,8 @@ public class RegistryDSConfigAdaptorTest extends Base {
 //  private final String TESTMARTREGISTRYDUP = "data/XML/testMartRegistryRegistryDuplicate.xml";
   private final String TESTMARTREGISTRYCOMPOSITE = "data/XML/testMartRegistryComposite.xml";
   
+  private DatabaseDatasetConfigUtils dbutils;
+  
   private URL getURL(String path) throws Exception {
     URL url = RegistryDSConfigAdaptor.class.getClassLoader().getResource(path);
     assertNotNull("Missing file " + path + "\n", url);
@@ -62,7 +65,7 @@ public class RegistryDSConfigAdaptorTest extends Base {
   public void testAll() throws Exception {
     //TODO: major refactor
     //empty
-    RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor();
+    RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(false, true, true);
     assertNotNull("Empty RegistryDSConfigAdaptor should not be null\n", regadaptor);
     
     //set URL to load File, just to test if it has a DatasetConfig
@@ -71,26 +74,26 @@ public class RegistryDSConfigAdaptorTest extends Base {
     assertEquals("File RegistryDSConfigAdaptor should have 1 DatasetConfig after setRegistryURL on empty\n", 1, regadaptor.getNumDatasetConfigs());
     
     //testMartRegistryFile
-    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYFILE));
+    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYFILE), false, true, true);
     //assertEquals("RECIEVED WRONG DatasetConfig internalName for File RegistryDSConfigAdaptor\n", TESTMARTREGFILEINAME, regadaptor.getDatasetInternalNames()[0]);
     
 //    RegistryDSConfigAdaptor filebak = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYFILE)); // to test dup
     
     //testMartRegistryDB
-    assertTrue("meta_DatasetConfig_ensro does not exist, must exist for test to run\n", DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER));
+    assertTrue("meta_DatasetConfig_ensro does not exist, must exist for test to run\n", dbutils.datasetConfigUserTableExists(USER));
     
-    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB));
+    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB), false, true, true);
     //assertEquals("DB RegistryDSConfigAdaptor should be empty before store and update\n", 0, regadaptor.getDatasetInternalNames().length);
-    DatasetConfig dbdsview = (DatasetConfig) new URLDSConfigAdaptor(getURL(TESTDBDSVIEW)).getDatasetConfigs().next();
+    DatasetConfig dbdsview = (DatasetConfig) new URLDSConfigAdaptor(getURL(TESTDBDSVIEW), false, true, true).getDatasetConfigs().next();
     DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, USER, dbdsview, true);
     
-    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB));
+    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYDB), false, true, true);
     
     //assertEquals("DB RegistryDSConfigAdaptor should have 1 DatasetConfig after store, recreate\n", 1, regadaptor.getDatasetDisplayNames().length);
     assertEquals("DB RegistryDSConfigAdaptor Dataset internalName is incorrect\n", TESTMARTREGDBINAME, ((DatasetConfig) regadaptor.getDatasetConfigs().next()).getInternalName());
     
     //testMartRegistryRegistry
-    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYREGISTRY));
+    regadaptor = new RegistryDSConfigAdaptor(getURL(TESTMARTREGISTRYREGISTRY), false, true, true);
     assertEquals("Registry RegistryDSConfigAdaptor should have 1 DatasetConfig\n", 1, regadaptor.getNumDatasetConfigs());
     //assertEquals("Registry RegistryDSConfigAdaptor Dataset internalName is incorrect\n", TESTMARTREGISTRYREGINAME, regadaptor.getDatasetInternalNames()[0]);
     
@@ -110,7 +113,7 @@ public class RegistryDSConfigAdaptorTest extends Base {
 //    assertEquals("Dup RegistryDSConfigAdaptor should equal File RegistryDSConfigAdaptor after add(filebak)\n", filebak, regadaptor);
     
     //testMartRegistryComposite
-    regadaptor = new RegistryDSConfigAdaptor( getURL( TESTMARTREGISTRYCOMPOSITE ) );
+    regadaptor = new RegistryDSConfigAdaptor( getURL( TESTMARTREGISTRYCOMPOSITE ), false, true, true );
     
     assertEquals("Composite RegistryDSConfigAdaptor should have 3 DatasetConfigs\n", 3, regadaptor.getNumDatasetConfigs());
     
@@ -140,7 +143,7 @@ public class RegistryDSConfigAdaptorTest extends Base {
 //    assertEquals("MartRegistry+URL RegistryDSConfigAdaptor should equal Non URL RegistryDSConfigAdaptor\n", regreg, regurl); 
     
     //get rid of stored DatasetConfig on ensro user table
-    DatabaseDatasetConfigUtils.DeleteOldDSConfigEntriesFor(martJDataSource, DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, USER), newDatasetConfig.getDataset(), newDatasetConfig.getInternalName(), newDatasetConfig.getDisplayName());
+    dbutils.deleteOldDSConfigEntriesFor(dbutils.getDSConfigTableFor(USER), newDatasetConfig.getDataset(), newDatasetConfig.getInternalName(), newDatasetConfig.getDisplayName());
 
 //  TODO: sameness issue    
 //    //storeMartRegistry and retrieve
@@ -173,8 +176,9 @@ public class RegistryDSConfigAdaptorTest extends Base {
   public void setUp() throws Exception {
     super.setUp();
 
-    if (DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER)) {
-      String metaTable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, USER);
+    dbutils = new DatabaseDatasetConfigUtils(DatasetConfigXMLUtilsTest.DEFAULTUTILS, martJDataSource);
+    if (dbutils.datasetConfigUserTableExists(USER)) {
+      String metaTable = dbutils.getDSConfigTableFor(USER);
       Connection conn = martJDataSource.getConnection();
       conn.createStatement().executeUpdate("delete from " + metaTable);
       conn.close();
@@ -186,8 +190,8 @@ public class RegistryDSConfigAdaptorTest extends Base {
    * @see junit.framework.TestCase#tearDown()
    */
   protected void tearDown() throws Exception {
-    if (DatabaseDatasetConfigUtils.DSConfigUserTableExists(martJDataSource, USER)) {
-      String metaTable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, USER);
+    if (dbutils.datasetConfigUserTableExists(USER)) {
+      String metaTable = dbutils.getDSConfigTableFor(USER);
       Connection conn = martJDataSource.getConnection();
       conn.createStatement().executeUpdate("delete from " + metaTable);
       conn.close();

@@ -51,6 +51,7 @@ import org.jdom.Document;
  */
 public class DatasetConfigXMLUtilsTest extends TestCase {
 
+  public static final DatasetConfigXMLUtils DEFAULTUTILS = new DatasetConfigXMLUtils(false, true); //doesnt validate, but includes hidden members
 	public static final String TESTDATASETCONFIGFILE = "data/XML/testDatasetConfig.xml";
 
 	private static final String TESTDESC = "For Testing Purposes Only";
@@ -72,7 +73,8 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 	 * @throws Exception 
 	 */
 	public static DatasetConfig TestDatasetConfigInstance(boolean validate) throws Exception {
-		return DatasetConfigXMLUtils.XMLStreamToDatasetConfig(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETCONFIGFILE), validate);
+    DatasetConfigXMLUtils utils = new DatasetConfigXMLUtils(validate, true);
+		return utils.getDatasetConfigForXMLStream(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETCONFIGFILE));
 	}
 
 	public DatasetConfigXMLUtilsTest(String arg0) {
@@ -87,15 +89,15 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 	}
 
 	public static void validateDatasetConfigSynchronization(DatasetConfig rDSV) throws Exception {
-		Document rDoc = DatasetConfigXMLUtils.DatasetConfigToDocument(rDSV);
-		byte[] rDigest = DatasetConfigXMLUtils.DocumentToMessageDigest(rDoc);
+		Document rDoc = DEFAULTUTILS.getDocumentForDatasetConfig(rDSV);
+		byte[] rDigest = DEFAULTUTILS.getMessageDigestForDocument(rDoc);
 
-		DatasetConfig nDSV = DatasetConfigXMLUtils.DocumentToDatasetConfig(rDoc);
+		DatasetConfig nDSV = DEFAULTUTILS.getDatasetConfigForDocument(rDoc);
 
 		//assertTrue("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV.equals(nDSV));
 		assertEquals("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV, nDSV);
 
-		byte[] nDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nDSV);
+		byte[] nDigest = DEFAULTUTILS.getMessageDigestForDatasetConfig(nDSV);
 
 		assertTrue("Message Digests do not equal for same DatasetConfig object after synchronization\n", java.security.MessageDigest.isEqual(rDigest, nDigest));
 	}

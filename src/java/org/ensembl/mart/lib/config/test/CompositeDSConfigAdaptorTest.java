@@ -22,6 +22,7 @@ import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.lib.test.Base;
 
@@ -34,6 +35,9 @@ public class CompositeDSConfigAdaptorTest extends Base {
   public void testAll() throws Exception {
     //TODO: major refactor
     setUp();
+    
+    DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, true);
+    DatabaseDatasetConfigUtils dbutils = new DatabaseDatasetConfigUtils(dscutils, martJDataSource);
     
     CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
   
@@ -67,7 +71,7 @@ public class CompositeDSConfigAdaptorTest extends Base {
     assertTrue( "adaptor should be empty after clear after removeDatasetConfig\n", adaptor.getNumDatasetConfigs()==0 );
     
     // this falls over if meta_DatasetConfig_DatabaseDSConfigAdaptorTest.USER doesnt exist
-    DatabaseDSConfigAdaptor dbAdaptor = DatabaseDSConfigAdaptorTest.getSampleDatasetConfigAdaptor(martJDataSource);
+    DatabaseDSConfigAdaptor dbAdaptor = DatabaseDSConfigAdaptorTest.getSampleDatasetConfigAdaptor(martJDataSource, new DatabaseDatasetConfigUtils(DatasetConfigXMLUtilsTest.DEFAULTUTILS, martJDataSource));
     
     // make sure testDataset.xml is stored in the table, then update it
     DatabaseDSConfigAdaptor.storeDatasetConfig(martJDataSource, DatabaseDSConfigAdaptorTest.USER, DatasetConfigXMLUtilsTest.TestDatasetConfigInstance(false), true);
@@ -82,8 +86,8 @@ public class CompositeDSConfigAdaptorTest extends Base {
     assertTrue( "DatasetConfig should have filter descriptions but doesnt\n", view.getAllFilterDescriptions().size()>0 );
     
     //clean up the meta_DatasetConfig table
-    String metatable = DatabaseDatasetConfigUtils.getDSConfigTableFor(martJDataSource, DatabaseDSConfigAdaptorTest.USER);
-    DatabaseDatasetConfigUtils.DeleteOldDSConfigEntriesFor(martJDataSource, metatable, view.getDataset(), view.getInternalName(), view.getDisplayName());
+    String metatable = dbutils.getDSConfigTableFor(DatabaseDSConfigAdaptorTest.USER);
+    dbutils.deleteOldDSConfigEntriesFor(metatable, view.getDataset(), view.getInternalName(), view.getDisplayName());
     
     assertTrue( "Could not remove dbAdaptor\n", adaptor.remove( dbAdaptor ));
     //assertTrue("getDatasetDisplayNames should return zero elements after remove\n", adaptor.getDatasetDisplayNames().length==0 );

@@ -83,7 +83,7 @@ public class DatasetConfigCacheTest extends TestCase {
     cache.addDatasetConfig(orig);
     DatasetConfig newDigestDSC = new DatasetConfig(orig, false, false);
     newDigestDSC.setDescription("THIS IS A TOTALLY NEW DESCRIPTION");
-    byte[] newDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(newDigestDSC);
+    byte[] newDigest = DatasetConfigXMLUtilsTest.DEFAULTUTILS.getMessageDigestForDatasetConfig(newDigestDSC);
     
     assertTrue("Cache should NOT be up to date at this point!\n", !cache.cacheUpToDate(newDigest, orig.getDataset(), orig.getInternalName()));
     assertTrue("Cache should NOT contain orig after cacheUpToDate fails!\n", !cache.cacheExists(orig.getDataset(), orig.getInternalName()));
@@ -114,10 +114,10 @@ public class DatasetConfigCacheTest extends TestCase {
        throw new ConfigurationException("Couldnt get original DatasetConfig from URLDSViewAdaptorTest\n");
      
      orig = new DatasetConfig((DatasetConfig) iter.next(), false, false); //non lazyLoad copy
-     orig.setMessageDigest(DatasetConfigXMLUtils.DatasetConfigToMessageDigest(orig));
-     cache = new DatasetConfigCache(adaptor, keys);
+     orig.setMessageDigest(DatasetConfigXMLUtilsTest.DEFAULTUTILS.getMessageDigestForDatasetConfig(orig));
+     cache = new DatasetConfigCache(adaptor, keys, DatasetConfigXMLUtilsTest.DEFAULTUTILS);
      clearCache();
-     cache = new DatasetConfigCache(adaptor, keys);
+     cache = new DatasetConfigCache(adaptor, keys, DatasetConfigXMLUtilsTest.DEFAULTUTILS);
   }
 
   /* (non-Javadoc)

@@ -26,7 +26,6 @@ import junit.framework.TestCase;
 
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
-import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
@@ -70,11 +69,11 @@ public class URLDSConfigAdaptorTest extends TestCase {
     
     assertTrue("Test File Doesnt Exist after URLDSConfigAdaptor.store\n", testFile.exists());
     
-    URLDSConfigAdaptor nadapt = new URLDSConfigAdaptor(testFile.toURL());
+    URLDSConfigAdaptor nadapt = new URLDSConfigAdaptor(testFile.toURL(), true, false, true);
     DatasetConfig nview = (DatasetConfig) nadapt.getDatasetConfigs().next();
     
-    byte[] odigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(view);
-    byte[] ndigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nview);
+    byte[] odigest = DatasetConfigXMLUtilsTest.DEFAULTUTILS.getMessageDigestForDatasetConfig(view);
+    byte[] ndigest = DatasetConfigXMLUtilsTest.DEFAULTUTILS.getMessageDigestForDatasetConfig(nview);
     
     assertTrue("Digests from DatasetConfig loaded from test file differs from original DatasetConfig\n", MessageDigest.isEqual(odigest, ndigest));
     
@@ -99,7 +98,7 @@ public class URLDSConfigAdaptorTest extends TestCase {
 	}
   
   public static URLDSConfigAdaptor getSampleDSConfigAdaptor() throws Exception {
-    URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor( getTestDatasetURL(), false);
+    URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor( getTestDatasetURL(), true, false, true);
     assertNotNull( adaptor );
     return adaptor;
   }
