@@ -39,6 +39,8 @@ from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, Basic
 GAP = 5
 SPACE=" &nbsp;"
         
+def toVector(list):
+    return Vector( Arrays.asList( list ) )
 
 class InputPage(Box, ChangeListener):
 
@@ -404,7 +406,7 @@ class AttributeManagerPage(InputPage):
     def __init__(self):
         InputPage.__init__(self)
         self.selected = []
-        self.available = ["gene_stable_id", "chr_name", "end", "strand"]
+        self.available = toVector(["gene_stable_id", "chr_name", "end", "strand"])
         self.availableWidget = JList( self.available,
                                       valueChanged=self.valueChanged,
                                       selectionMode=ListSelectionModel.SINGLE_SELECTION)
@@ -457,7 +459,7 @@ class AttributeManagerPage(InputPage):
         available attributes."""
         
         self.selected.remove( attributePage.field )
-        self.available.append( attributePage.field )
+        self.available.add( attributePage.field )
         self.tree.model.removeNodeFromParent( attributePage.node)
         self.refreshView()
 
@@ -465,12 +467,9 @@ class AttributeManagerPage(InputPage):
     def refreshView(self):
         self.cardContainer.show( self.node.targetCardName )
 
-        # must convert to Vector explicitly to work on macs
-        available = Vector( Arrays.asList(self.available) )
-        
         # must explicitly call setListData() rather than .listData=
         # to avoid conversion problems on linux and windows
-        self.availableWidget.setListData( available ) 
+        self.availableWidget.setListData( self.available )
 
         self.tree.expandPath( self.path )
 
