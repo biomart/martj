@@ -20,32 +20,35 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
  * Represents a list of user options. Some options cause the
- * options available in other widgets to be modified.
+ * options available in other widgets to be modified. Selecting
+ * an option causes a Filter to be added to query.
  */
 public class ListFilterWidget extends FilterWidget implements ActionListener {
 
   private Filter filter;
 
   private Map filterValueToItem;
-
-  private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
   private JComboBox list;
   private Object lastSelectedItem;
@@ -81,9 +84,12 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     String field = filterDescription.getField();
 
-    if (BaseNamedConfigurationObject.isInvalid(field) && !filterDescription.hasOptions())
-      throw new RuntimeException(
-        "Invalid filterDescription: " + filterDescription);
+    if (BaseNamedConfigurationObject.isInvalid(field))
+      throw new IllegalArgumentException(
+        "Invalid field in filterDescription: "
+          + field
+          + ", "
+          + filterDescription);
 
     setOptions(filterDescription.getOptions());
 
@@ -91,25 +97,31 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
   /**
    * Synchronises the state of this Filter with the specified filter.
-   * Sets the appropriate selercted item and assigns / unassigns any PushOption.
+   * Sets the filter on this widget and the query. If a filter was already set
+   * this is removed first. Any already assigned PushOptions are unassigned
+   * and new ones are assigned.
    * @param filter filter to assign, or null if filter is to be removed.
    */
   protected void setFilter(Filter filter) {
 
+    if (this.filter!=null ) query.removeFilter( this.filter );
+    
     this.filter = filter;
 
     if (filter == null) {
 
       setSelectedItem(emptySelection);
       unassignPushOptions();
-    
+
     } else {
-     
+
       OptionWrapper ow =
         (OptionWrapper) filterValueToItem.get(filter.getValue());
       setSelectedItem(ow);
       assignPushOptions(ow.option.getPushActions());
-
+      
+      query.addFilter( filter );
+      
     }
   }
 
@@ -139,7 +151,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     if (selectedItem == emptySelection) {
 
-      filter = null;
+      setFilter( null );
 
     } else if (selectedItem != emptySelection) {
 
@@ -153,25 +165,22 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
         if (value != null) {
 
-          filter =
+          Filter f =
             new InputPageAwareBasicFilter(
               filterDescription.getField(),
               option.getTableConstraint(),
               "=",
               value,
               this);
+              
+          setFilter( f );
         }
-
-        setNodeLabel(
-          null,
-          filterDescription.getField() + " = " + option.getValue());
 
         assignPushOptions(option.getPushActions());
       }
     }
 
     lastSelectedItem = selectedItem;
-    updateQueryFilters(oldFilter, filter);
   }
 
   /**
@@ -205,7 +214,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
         String value = option.getValue();
         String field = option.getField();
-        if (BaseNamedConfigurationObject.isInvalid(value) && BaseNamedConfigurationObject.isInvalid(field))
+        if (BaseNamedConfigurationObject.isInvalid(value)
+          && BaseNamedConfigurationObject.isInvalid(field))
           throw new RuntimeException("Invalid option = " + option);
 
         // add each option, via a surrogate, to the list. 
@@ -229,12 +239,77 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     unassignPushOptions();
 
-    removeFilterFromQuery( filter );
-
-    filter = null;
+    setFilter( null );
 
     filterValueToItem = resetList(list, options);
 
   }
 
+  /**
+   * Test program; a simple GUI using test data.
+   * @param args
+   * @throws org.ensembl.mart.lib.config.ConfigurationException
+   */
+  public static void main(String[] args)
+    throws org.ensembl.mart.lib.config.ConfigurationException {
+
+    // switch on logging for test purposes.
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
+
+    Query q = new Query();
+    FilterGroup fg = new FilterGroup();
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterDescription fd =
+      new FilterDescription(
+        "someInternalName",
+        "someField",
+        "boolean",
+        "someQualifier",
+        "someLegalQualifiers",
+        "someDisplayName",
+        "someTableConstraint",
+        null,
+        "someDescription");
+      fd.addOption(
+        new Option(
+          "optionInternalName1",
+          "true",
+          "displayName1",
+          "description1",
+          "field1",
+          "tableConstraint1",
+          "value1",
+          "ref1",
+          "type1",
+          "qualifier1",
+          "legalQualifiers1",
+           null));
+      fd.addOption(
+        new Option(
+          "optionInternalName2",
+          "true",
+          "displayName2",
+          "description2",
+          "field2",
+          "tableConstraint2",
+          "value2",
+          "ref2",
+          "type2",
+          "qualifier2",
+          "legalQualifiers2",
+           null));
+    // TODO handle "simple" Options. 
+    // Either throw an exception in the following case OR
+    // use internalID>displayName?
+    // fd.addOption( new Option("optionInternalName3","true") );           
+
+    ListFilterWidget lfw = new ListFilterWidget(fgw, q, fd);
+
+    JFrame f = new JFrame("Boolean Filter - test");
+    f.getContentPane().add(lfw);
+    f.pack();
+    f.setVisible(true);
+
+  }
 }
