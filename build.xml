@@ -133,6 +133,7 @@
   <patternset id="readline.libs" >
     <include name="alpha/**" />
     <include name="linux/**" />
+    <include name="macosx/**" />
   </patternset>
 
   <!-- binary distribution data files -->
@@ -268,7 +269,6 @@
       includes="org/**">
       <fileset dir=".">
         <include name="data/**" />
-        <include name="src/jython/martexplorer/*.py" />
         <exclude name="*~" />
         <exclude name="**/CVS/**" />
         <exclude name="**/*Test*" />
@@ -327,14 +327,12 @@
       <fileset refid="lib.classpath"/>
     </copy>
 
-    <copy todir="${dist.dir}/lib/linux" >
-       <fileset dir="${lib.dir}/linux"/> 
+    <copy todir="${dist.dir}/lib/" >
+       <fileset dir="${lib.dir}">
+         <patternset refid="readline.libs" />
+       </fileset> 
     </copy>
    
-    <copy todir="${dist.dir}/lib/alpha" >
-       <fileset dir="${lib.dir}/alpha"/> 
-    </copy>
-    
     <copy todir="${dist.dir}/data">
       <fileset dir="${data.dir}">
          <include name="**/*"/>
