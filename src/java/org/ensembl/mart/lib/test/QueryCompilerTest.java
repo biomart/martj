@@ -20,28 +20,28 @@ import org.ensembl.util.PropertiesUtil;
  * @testkind testsuite
  * @testsetup Default TestSuite
  * @testpackage org.ensembl.mart.explorer.test*/
-public class CompiledSQLQueryTest extends Base {
+public class QueryCompilerTest extends Base {
 
   private Logger logger =
-		Logger.getLogger(CompiledSQLQueryTest.class.getName());
+		Logger.getLogger(QueryCompilerTest.class.getName());
 
 	public final String STABLE_ID_REL = "data/unitTests/gene_stable_id.test";
 	private StatOutputStream stats = new StatOutputStream();
 	private FormatSpec formatspec = new FormatSpec(FormatSpec.TABULATED, "\t");
 
-	public CompiledSQLQueryTest(String name) {
+	public QueryCompilerTest(String name) {
 		super(name);
 	}
 
 	public static Test suite() {
 		TestSuite suite = new TestSuite();
-		suite.addTestSuite(CompiledSQLQueryTest.class);
+		suite.addTestSuite(QueryCompilerTest.class);
 		return suite;
 	}
 
 	public static Test TestClass(String testclass) {
 		TestSuite suite = new TestSuite();
-		suite.addTest(new CompiledSQLQueryTest(testclass));
+		suite.addTest(new QueryCompilerTest(testclass));
 		return suite;
 	}
 
@@ -99,7 +99,7 @@ public class CompiledSQLQueryTest extends Base {
 
 		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
-		URL stableidurl = CompiledSQLQueryTest.class.getClassLoader().getResource(STABLE_ID_REL);
+		URL stableidurl = QueryCompilerTest.class.getClassLoader().getResource(STABLE_ID_REL);
 		q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", stableidurl));
 		executeQuery(q);
 	}
