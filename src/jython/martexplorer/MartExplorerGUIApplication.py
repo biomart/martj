@@ -4,22 +4,18 @@
 
 # copyright EBI, GRL 2003
 
-# TODO 1 - add gene_stable_id attribute, make attributes managed by AttributesInputPage
+# TODO 1 - complete kaka dummy query sets all gui values
 
-# TODO 2 - construct query, and execute it.
+# TODO 2 - implement execute query.
 
-# TODO Region filter, add / remove, manage via RegionInputPage
+# TODO 3 - FilterManagerPage + XXXFilterPages. add implementation for
+# Filter . Clicking should cause a list of available (not already
+# added) items to be shown. Selecting one of these will cause the
+# respective config panel to be displayed. If the OK button is pressed
+# on these then they are added to the query. Support removing filter
+# and attribute items from quesry. "Delete" and or right click/delete.
 
-# TODO Filter page, list of unadded filters
-
-# TODO Attributes page, list of unadded attributes
-
-# TODO add implementation for Filter and Attributes. Clicking should
-# cause a list of available (not already added) items to be
-# shown. Selecting one of these will cause the respective config panel
-# to be displayed. If the OK button is pressed on these then they are
-# added to the query. Support removing filter and attribute items from
-# quesry. "Delete" and or right click/delete.
+# TODO 4 - Add Sequence attribute support
 
 # TODO validation: chr start>0, end>start,
 # TODO strand = -1, Unstranded +1
@@ -31,8 +27,9 @@ from java.io import File
 from java.net import URL
 from java.awt import CardLayout, Dimension, BorderLayout
 from java.awt.event import ActionListener
-from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout, ButtonGroup, JRadioButton
-from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree
+from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
+from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
+from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
@@ -372,9 +369,102 @@ class OutputPage(InputPage):
 	return "<html><b>Output</b></html>"
 
 
-class AttributePage(InputPage):
+
+class SimpleAttributePage(InputPage):
+
+
+    def __init__(self, attributeManager, field):
+        InputPage.__init__(self)
+        self.attributeManager = attributeManager
+        self.field = field
+        self.add( JLabel( self.field ) )
+        self.add( JButton("remove", actionPerformed=self.actionPerformed) )
+
+
+    def actionPerformed( self, event=None ):
+        self.attributeManager.deselect( self )
+
+
+    def htmlSummary(self):
+        return self.field
+
+
+
+class AttributeManagerPage(InputPage):
+
+    """ Manages the attributes by supporting selecting and deselecting
+    atributes. A list of available attributes is maintained and this
+    is displayed in this page. Items selected from this list have a
+    tree node constructed and inserted into the tree. Attributes
+    removed from the tree (via the "remove" button on the
+    SimpleAttribute page are readded to the available list."""
+
+
+    def __init__(self):
+        InputPage.__init__(self)
+        self.selected = []
+        self.available = ["gene_stable_id", "chr_name", "end", "strand"]
+        self.availableWidget = JList( self.available,
+                                      valueChanged=self.valueChanged,
+                                      selectionMode=ListSelectionModel.SINGLE_SELECTION)
+        panel = JPanel()
+        
+        panel.add( JLabel("Select an attribute to add it") )
+        panel.add( JScrollPane( self.availableWidget ) )
+        self.add( panel )
+        # these must be set before select() is called.
+        self.node = None
+        self.tree = None
+        self.path = None
+
+
+    def valueChanged(self, event=None):
+        """ Handles user clicking on an available attribute. """
+        selected = self.availableWidget.selectedValue
+        if selected:
+            self.select( selected )
+
+
+    def select( self, value ):
+        
+        """ Selecting an attribute means removing it from available
+        and adding it to the tree."""
+
+        self.selected.append( value )
+        self.available.remove( value )
+
+        attributePage = SimpleAttributePage(self, value)
+        node = QueryTreeNode( self.tree,
+                              self.node,
+                              self.node.childCount,
+                              self.cardContainer,
+                              attributePage,
+                              value)
+        attributePage.node = node
+        self.refreshView()
+
+
+    def deselect( self, attributePage ):
+
+        """ Remove attribute from tree and add it to the list of
+        available attributes."""
+        
+        self.selected.remove( attributePage.field )
+        self.available.append( attributePage.field )
+        self.tree.model.removeNodeFromParent( attributePage.node)
+        self.refreshView()
+
+
+    def refreshView(self):
+        self.cardContainer.show( self.node.targetCardName )
+        self.availableWidget.listData = self.available
+        self.tree.expandPath( self.path )
+
+
     def htmlSummary(self):
 	return "<html><b>Attributes</b></html>"
+
+
 
 class FilterPage(InputPage):
     def htmlSummary(self):
@@ -447,7 +537,7 @@ class GeneTypeFilterPage(InputPage):
     def htmlSummary(self):
 	id = self.id.getText()
 	if not id: id ==""
-	return "<b>Gene Stable ID</b> " + id
+	return "<b>Gene Type</b> " + id
 
     def updatePage(self, query):
 	# todo
@@ -505,47 +595,47 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
 
 	""" Brings the targetComponent to the front of the
 	cardContainer if this was the node selected in the tree"""
-	if self == event.newLeadSelectionPath.lastPathComponent:
+	if event.newLeadSelectionPath and self == event.newLeadSelectionPath.lastPathComponent:
 	    self.cardContainer.show( self.targetCardName )
-            #revalidate()
 
     def stateChanged(self, event=None):
         # redraw tree
         self.tree.repaint()
 
 
-class TreeNavigationPanel(JPanel):
+class QueryEditor(JPanel):
 
 
     def __init__(self):
         self.rootNode = DefaultMutableTreeNode( "Query" )
         treeModel = DefaultTreeModel( self.rootNode )
         tree = JTree( treeModel )
-        configPanel = CardContainer()
+        cardContainer = CardContainer()
 
         self.databasePage = DatabaseInputPage()
 	self.formatPage = FormatInputPage()
 	self.destinationPage = DestinationInputPage()
 	
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel,
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, cardContainer,
 				self.databasePage, "DATABASE" )
-        speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel,
+        speciesNode = QueryTreeNode( tree, self.rootNode, 1, cardContainer,
 				     SpeciesInputPage(),"SPECIES" )
-        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel,
+        focusNode = QueryTreeNode( tree, self.rootNode, 2, cardContainer,
 				   FocusInputPage(),"focus" )
-        filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel,
+        filtersNode = QueryTreeNode( tree, self.rootNode, 3, cardContainer,
 				     FilterPage(),"filter" )
-        regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel,
+        regionNode = QueryTreeNode( tree, filtersNode, 0, cardContainer,
 				    RegionPage(),"region" )
-	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, configPanel,
+	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, cardContainer,
 						GeneTypeFilterPage(), "gene_stable_id" )
-        outputNode = QueryTreeNode( tree, self.rootNode, 4, configPanel,
+        outputNode = QueryTreeNode( tree, self.rootNode, 4, cardContainer,
 				    OutputPage(),"output" )
-        attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel,
-					AttributePage(),"attribute" )
-        formatNode = QueryTreeNode( tree, outputNode, 1, configPanel,
+        attributesPage = AttributeManagerPage()
+        attributesNode = QueryTreeNode( tree, outputNode, 0, cardContainer,
+					attributesPage,"attribute" )
+        formatNode = QueryTreeNode( tree, outputNode, 1, cardContainer,
 				    self.formatPage,"format" )
-        destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel,
+        destinationNode = QueryTreeNode( tree, outputNode, 2, cardContainer,
                                          self.destinationPage,"destination" )
         
         # expand branches in tree
@@ -556,22 +646,25 @@ class TreeNavigationPanel(JPanel):
         path = path.pathByAddingChild( attributesNode )
 	tree.expandPath( path )
 
+        attributesPage.node = attributesNode
+        attributesPage.path = path
+        attributesPage.tree = tree
+        attributesPage.cardContainer = cardContainer
+
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
 	scrollPane.setPreferredSize( Dimension(350,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( JScrollPane( configPanel ), BorderLayout.CENTER )
+	self.add( JScrollPane( cardContainer ), BorderLayout.CENTER )
 
 
     def updateQuery(self, query):
-        print "updating query"
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
                 node.updateQuery( query )
 
                 
     def updatePage(self, query):
-        print "updating pages"
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
                 node.targetComponent.updatePage( query )
@@ -585,7 +678,7 @@ class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
-        self.queryPages = TreeNavigationPanel()
+        self.queryPages = QueryEditor()
         self.buildGUI()
         self.visible=1
 
