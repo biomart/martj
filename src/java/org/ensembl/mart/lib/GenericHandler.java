@@ -129,9 +129,15 @@ public class GenericHandler implements UnprocessedFilterHandler {
                 boolean and = false;
                 
 				for (int k = 0; k < lookCols.length; k++) {
+				  
 				  Filter filt = query.getFilterByName(lookCols[k]);
+				  
 				  if (filt == null)
 				     filt = newQuery.getFilterByName(lookCols[k]);
+				  if (filt == null){//may be in the same lookup table
+				     filt = query.getFilterByName("olook_" + lookCols[k]);  
+					 newQuery.removeFilter(filt);
+				  } 
 				  if (filt == null)
 					throw new InvalidQueryException("Requires a particular Filter to have already been added to the Query." + lookCols[k]);
                   buf.append(" AND ");
@@ -152,29 +158,46 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				ps = conn.prepareStatement(sql);
 				
 				ResultSet rs = ps.executeQuery();
-				rs.next(); // will only be one result
-				for (int k = 0; k < newfilterCols.length; ++k) {
-				  filterValue = rs.getString(k+1);
+				
+				if (rs.isLast()){//only 1 row returned
+					rs.next(); // will only be one result
+				    for (int k = 0; k < newfilterCols.length; ++k) {
+				      filterValue = rs.getString(k+1);
 				  
-				  logger.info("Recieved filterValue " + filterValue + " from SQL\n");
+				      logger.info("Recieved filterValue " + filterValue + " from SQL\n");
 				  
-				  if (filterValue != null && filterValue.length() > 0) {
-					  DatasetView dsv = query.getDatasetView();
-					  FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[k]);
-					  Filter posFilter =
-					  	new BasicFilter(fd.getField(), fd.getTableConstraint(), fd.getKey(), fd.getQualifier(), filterValue);
-					  newQuery.addFilter(posFilter);
-				  } else
-					  throw new InvalidQueryException(
-						  "Did not recieve a filterValue for Marker "
-							  //+ marker_value
-							  + ", Marker may not be on chromosome "
-							  //+ chrvalue
-							  + "\n");
-				  }				  
-				  
-				  
+				      if (filterValue != null && filterValue.length() > 0) {
+					    DatasetView dsv = query.getDatasetView();
+					    FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[k]);
+					    Filter posFilter =
+					  	  new BasicFilter(fd.getField(), fd.getTableConstraint(), fd.getKey(), fd.getQualifier(), filterValue);
+					    newQuery.addFilter(posFilter);
+				      } else
+					    throw new InvalidQueryException("Did not recieve a filterValue ");
+				    }				  
 				}
+				else{//multiple rows - need to set an ID list filter
+					List tranIds = new ArrayList();
+					while(rs.next())
+						tranIds.add(rs.getString(1));
+					
+					String[] tids = new String[tranIds.size()];
+					tranIds.toArray(tids);
+					//set the id list filter(s) - code for just 1 per lookup table at moment - may need changing in future
+				
+					if (tranIds.size() > 0) {
+						DatasetView dsv = query.getDatasetView();
+						FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[0]);
+						
+						
+						Filter posFilter =
+							new IDListFilter(fd.getFieldFromContext(), fd.getTableConstraintFromContext(), fd.getKeyFromContext(), tids);
+						
+						newQuery.addFilter(posFilter);
+					 } else
+						  throw new InvalidQueryException("Did not recieve a filterValue ");
+				}
+		    }
 
 			return newQuery;
 		} catch (SQLException e) {
