@@ -305,7 +305,7 @@ public class TabulatedCodingSeqQueryRunner implements QueryRunner {
 		}
 	}
 		
-	private Logger logger = Logger.getLogger(TabulatedSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(TabulatedCodingSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
 	private OutputStream os = null;

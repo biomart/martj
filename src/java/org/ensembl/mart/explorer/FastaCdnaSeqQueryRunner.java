@@ -317,7 +317,7 @@ public class FastaCdnaSeqQueryRunner implements QueryRunner {
 	}
 
     private final String separator = "|";		
-	private Logger logger = Logger.getLogger(TabulatedSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(FastaCdnaSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
 	private OutputStream os = null;

@@ -341,7 +341,7 @@ public class TabulatedTExonSeqQueryRunner implements QueryRunner {
 		}
 	}
 	
-	private Logger logger = Logger.getLogger(TabulatedSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(TabulatedTExonSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
 	private OutputStream os = null;
