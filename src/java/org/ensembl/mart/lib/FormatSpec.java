@@ -30,6 +30,9 @@
  */
 public class FormatSpec {
 
+    public static FormatSpec TABSEPARATEDFORMAT = new FormatSpec(FormatSpec.TABULATED, "\t");
+    public static FormatSpec FASTAFORMAT = new FormatSpec(FormatSpec.FASTA);
+    
     private String separator = null;
     private int format = -1;
 
@@ -37,7 +40,7 @@ public class FormatSpec {
      *  enums over TABULATED and FASTA, extend as needed
      *  client can setFormat with FormatSpec.TABULATED or FormatSpec.FASTA
      */
-	public static final int TABULATED = 1;
+	  public static final int TABULATED = 1;
     public static final int FASTA = 2;
 
     /**
