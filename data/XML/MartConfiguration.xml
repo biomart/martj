@@ -70,7 +70,7 @@
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" fieldName="translation_stable_id" internalName="ensembl_translation_id" qualifier="in" tableConstraint="transcript_main" type="list"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="EXpression: NOTE Expression datasets are currently being prototyped. The current datasets have sparse coverage of genes and tissues." internalName="expression">
+      <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="Expression: NOTE Expression datasets are currently being prototyped. The current datasets have sparse coverage of genes and tissues." internalName="expression">
         <FilterSet internalName="expression_type" type="radio">
           <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="est" internalName="sanbi_est" tableConstraintModifier="na"/>
           <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="gnf" internalName="gnf" tableConstraintModifier="na"/>
@@ -79,7 +79,7 @@
           <UIDSFilterDescription description="" displayName="" filterSetReq="field" internalName="expression_profile" objectCode="Expression" type="select"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multi_species">
+      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multispecies">
         <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs" type="boolean">
           <UIFilterDescription description="Filter for Genes having mouse homologous Genes" displayName="Entries associated with homologous mouse genes" fieldName="mmusculus_homolog" internalName="mouse_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <UIFilterDescription description="Filter for Genes having rat homologous Genes" displayName="Entries associated with homologous rat genes" fieldName="rat_homolog" internalName="rat_homologs" qualifier="" tableConstraint="main" type="boolean"/>
@@ -366,7 +366,7 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
-      <DSAttributeGroup displayName="Type of Sequence to Export:" internalName="sequences" objectCode="sequence"/>
+      <DSAttributeGroup displayName="Sequences Available:" internalName="sequences" objectCode="sequence"/>
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsome_attributes">
           <UIAttributeDescription description="Chromsome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
@@ -427,26 +427,6 @@
           <UIAttributeDescription displayName="PFAM ID" fieldName="pfam" internalName="pfam_id" maxLength="7" tableConstraint="gene_prot_pfam_dm"/>
           <UIAttributeDescription displayName="PRINTS ID" fieldName="prints" internalName="prints_id" maxLength="7" tableConstraint="gene_prot_prints_dm"/>
           <UIAttributeDescription displayName="Prosite ID" fieldName="prosite" internalName="prosite_id" maxLength="7" tableConstraint="gene_prot_prosite_dm"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Homo sapiens (NCBI 31) -- EST Genes" internalName="homo_sapiens_est_genes">
-    <StarBase>hsapiens_estgene</StarBase>
-    <StarBase>hsapiens_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
         </AttributeCollection>
       </AttributeGroup>
     </AttributePage>
@@ -953,7 +933,7 @@
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" fieldName="translation_stable_id" internalName="ensembl_translation_id" qualifier="in" tableConstraint="transcript_main" type="list"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="MultiSpecies">
+      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multispecies">
         <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs" type="boolean">
           <UIFilterDescription description="Filter for Genes having Human homologous Genes" displayName="Entries associated with homologous human genes" fieldName="hsapiens_homolog" internalName="human_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <UIFilterDescription description="Filter for Genes having rat homologous Genes" displayName="Entries associated with homologous rat genes" fieldName="rat_homolog" internalName="rat_homologs" qualifier="" tableConstraint="main" type="boolean"/>
@@ -1248,280 +1228,6 @@
   <Dataset displayName="Mus musculus (NCBIM 30) -- EST Genes" internalName="mus_musculus_est_genes">
     <StarBase>mmusculus_estgene</StarBase>
     <StarBase>mmusculus_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Mus musculus (NCBIM 30) -- SNPs" internalName="mmusculus_snp">
-    <StarBase>mmusculus_snp</StarBase>
-    <PrimaryKey>snp_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Rattus norvegicus (RGSC 2) -- Ensembl Genes" internalName="rnorvegicus_ensemblgene">
-    <StarBase>rnorvegicus_ensemblgene</StarBase>
-    <StarBase>rnorvegicus_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Rattus norvegicus (RGSC 2) -- EST Genes" internalName="rnorvegicus_estgene">
-    <StarBase>rnorvegicus_estgene</StarBase>
-    <StarBase>rnorvegicus_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Rattus norvegicus (RGSC 2) -- SNPs" internalName="rnorvegicus_snp">
-    <StarBase>rnorvegicus_snp</StarBase>
-    <PrimaryKey>snp_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Fugu rubripes (FUGU 2) -- Ensembl Genes" internalName="frubripes_ensemblgene">
-    <StarBase>frubripes_ensemblgene</StarBase>
-    <StarBase>frubripes_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Anopheles gambiae (MOZ 2) -- Ensembl Genes" internalName="agambiae_ensemblgene">
-    <StarBase>agambiae_ensemblgene</StarBase>
-    <StarBase>agambiae_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Anopheles gambiae (MOZ 2) -- EST Genes" internalName="agambiae_estgene">
-    <StarBase>agambiae_estgene</StarBase>
-    <StarBase>agambiae_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Anopheles gambiae (MOZ 2) -- SNPs" internalName="agambiae_snp">
-    <StarBase>agambiae_snp</StarBase>
-    <PrimaryKey>snp_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Drosophila melanogaster (DROM 3) -- Ensembl Genes" internalName="dmelanogaster_ensemblgene">
-    <StarBase>dmelanogaster_ensemblgene</StarBase>
-    <StarBase>dmelanogaster_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Danio rerio (ZFISH 2) -- Ensembl Genes" internalName="drerio_ensemblgene">
-    <StarBase>drerio_ensemblgene</StarBase>
-    <StarBase>drerio_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Danio rerio (ZFISH 2) -- EST Genes" internalName="drerio_estgene">
-    <StarBase>drerio_estgene</StarBase>
-    <StarBase>drerio_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Caenorhabditis elegans (CEL 98) -- Ensembl Genes" internalName="celegans_ensemblgene">
-    <StarBase>celegans_ensemblgene</StarBase>
-    <StarBase>celegans_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Caenorhabditis briggsae (CBR 25) -- Ensembl Genes" internalName="cbriggsae_ensemblgene">
-    <StarBase>cbriggsae_ensemblgene</StarBase>
-    <StarBase>cbriggsae_ensembltranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
-  <Dataset displayName="Caenorhabditis briggsae (CBR 25) -- EST Genes" internalName="cbriggsae_estgene">
-    <StarBase>cbriggsae_estgene</StarBase>
-    <StarBase>cbriggsae_esttranscript</StarBase>
     <PrimaryKey>gene_id</PrimaryKey>
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
