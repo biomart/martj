@@ -276,9 +276,15 @@ public class Query {
 	* @param s A SequenceDescription object.
 	*/
 	public synchronized void setSequenceDescription(SequenceDescription s) {
+
+    
 		SequenceDescription oldSequenceDescription = this.sequenceDescription;
 		this.sequenceDescription = s;
-		this.querytype = Query.SEQUENCE;
+    
+    if (s==null) 
+      this.querytype = Query.ATTRIBUTE;
+    else
+      this.querytype = Query.SEQUENCE;
 
 		log();
 
