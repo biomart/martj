@@ -93,6 +93,8 @@ public class StringUtil {
    * @return HTML representation of str, or str .
    */
   public static String wrapLinesAsHTML(String str, int maxLineLength, boolean convertShortLines) {
+    
+    if (str==null) return "";
 
     if (!convertShortLines && str.length()<=maxLineLength)
       return str;
