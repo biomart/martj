@@ -1096,7 +1096,7 @@ public class MartShellLib {
 		FilterDescription fdesc = dset.getFilterDescriptionByInternalName(filterName);
 		String thisType = fdesc.getType(filterName);
 
-		if (!thisType.matches("boolean*"))
+		if (!thisType.startsWith("boolean"))
 			throw new InvalidQueryException(
 				filterName + " is not a boolean filter, cannot process with " + filterCondition + "\n");
 
