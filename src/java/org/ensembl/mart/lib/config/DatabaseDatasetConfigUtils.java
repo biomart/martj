@@ -2746,6 +2746,11 @@ System.out.println("database type: "+ dsource.getDatabaseType());
         if (cname.endsWith("_key"))
           continue;
         
+        // if column only contains nulls
+        if (isAllNull(cname, fullTableName, dsource)){
+          System.out.println("IGNORING");
+          continue;
+        }
         // if the column already seen in a higher resolution
         // main table ignore
         
@@ -2944,6 +2949,13 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 			// ignore the key columns as atts and filters
 			if (cname.endsWith("_key"))
 			  continue;
+        
+			// if column only contains nulls
+			if (isAllNull(cname, fullTableName, dsource)){
+			  System.out.println("IGNORING");
+			  continue;
+			}        
+        
         
 			// if the column already seen in a higher resolution
 			// main table ignore
@@ -3260,7 +3272,37 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 	  return true;
 	return false;
   }
+    
+  private static boolean isAllNull (String cname, String tableName, DetailedDataSource dsource) 
+     throws SQLException, ConfigurationException {
 
+	  try {
+		Connection conn = dsource.getConnection();
+		
+		String sql = "SELECT " + cname + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL LIMIT 1";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ResultSet rs = ps.executeQuery();
+		
+		rs.next();
+		String ret = rs.getString(1);
+		
+		if (ret != null) {
+			rs.close();
+			conn.close();
+		    return false;
+		}
+		else {
+			System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
+			rs.close();
+			conn.close();  
+			return true;  
+		}
+		
+	  } catch (SQLException e) {
+		throw new ConfigurationException("Caught SQLException during attempt to count non-null values\n", e);
+	  } 
+  }
+  
   private static AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize, String joinKey)
     throws ConfigurationException {
     AttributeDescription att = new AttributeDescription();
