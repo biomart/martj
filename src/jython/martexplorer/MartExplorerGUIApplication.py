@@ -31,9 +31,30 @@
 
 # Toggleable auto-update
 
+# TODO $HOME/.mart-explorer-history file
+
 # TODO Feature group boxes list collapsable
 
 # TODO add sequence images (see wills email)
+
+# TODO combine species + focus into treenode=Dataset,
+# page=species+focus, make the titles "species" and "focus"
+# configurable.
+
+# TODO make Attribute pages be LIST + CardContainer Panel because list
+# could be v. long.
+
+# TODO schema -> dumb_configure.xml where each table is a card in the
+# Features page.
+
+# TODO support 2 stage queries.
+
+# TODO low: redo sequence page with clever dependency checking:
+# leftFlank, leftUTR, Thing-in-middle, rightUTR, rightFlank
+
+# TODO low: count, autocount update checkbox
+
+# TODO low: karyotype preview
 
 import thread
 from jarray import array
@@ -59,9 +80,11 @@ from org.apache.log4j import Logger, Level, PropertyConfigurator
 #PropertyConfigurator.configure( System.getProperty("user.home")
 #				+"/dev/mart-explorer/data/logging.conf" )
 
-DEFAULT_HOST = "kaka.sanger.ac.uk"
-DEFAULT_DATABASE = "ensembl_mart_11_1"
-DEFAULT_PORT = ""
+#DEFAULT_HOST = "kaka.sanger.ac.uk"
+#DEFAULT_DATABASE = "ensembl_mart_11_1"
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_DATABASE = "dl_testmart_newnames"
+DEFAULT_PORT = "3310"
 DEFAULT_USER  = "anonymous"
 DEFAULT_PASSWORD = ""
 
