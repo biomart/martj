@@ -1362,8 +1362,9 @@ public class DatabaseDatasetConfigUtils {
 
     String tablePattern = "%" + MAINTABLESUFFIX;
     
-	if(dsource.getDatabaseType().equals("oracle:thin")) tablePattern=tablePattern.toUpperCase();
-    
+	if(dsource.getDatabaseType().equals("oracle")) tablePattern=tablePattern.toUpperCase();
+        //System.out.println("databaseType() "+dsource.getDatabaseType());        
+ 
     boolean isBroken = true;
 
     Connection conn = null;
@@ -1533,8 +1534,9 @@ public class DatabaseDatasetConfigUtils {
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
       
-	  if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
-      
+	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
+          //System.out.println("databaseType() "+dsource.getDatabaseType());          
+ 
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
       Connection conn = dsource.getConnection();
       
@@ -1614,8 +1616,10 @@ public class DatabaseDatasetConfigUtils {
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
       
-	  if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
-      
+	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
+          //System.out.println("databaseType() "+dsource.getDatabaseType());          
+
+     
       Connection conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
@@ -1866,8 +1870,8 @@ public class DatabaseDatasetConfigUtils {
 
     String field = description.getField();
     // oracle case sensitive
-    if(dsource.getDatabaseType().equals("oracle:thin")) field=field.toUpperCase();
-    
+    if(dsource.getDatabaseType().equals("oracle")) field=field.toUpperCase();
+   //System.out.println("databaseType() "+dsource.getDatabaseType()); 
    
     String tableConstraint = description.getTableConstraint();
 
@@ -1884,8 +1888,11 @@ public class DatabaseDatasetConfigUtils {
     //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     
-	if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
-    
+	if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
+        //System.out.println("databaseType() "+dsource.getDatabaseType());   
+
+
+ 
     Connection conn = dsource.getConnection();
     catalog=null;
     //schema=null;
@@ -2031,7 +2038,9 @@ public class DatabaseDatasetConfigUtils {
 
     //get all main tables
 
-    if (dsource.getDatabaseType().equals("oracle:thin")) {
+    if (dsource.getDatabaseType().equals("oracle")) {
+    //System.out.println("databaseType() "+dsource.getDatabaseType());
+
 
       //System.out.println("database type: " + dsource.getDatabaseType());
 
@@ -2561,8 +2570,8 @@ public class DatabaseDatasetConfigUtils {
   public DatasetConfig getNewFiltsAtts(String databaseName, DatasetConfig dsv)
     throws ConfigurationException, SQLException {
 
-  	if (dsource.getDatabaseType().equals("oracle:thin")) databaseName=getSchema();
-  	
+  	if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();
+  //System.out.println("databaseType() "+dsource.getDatabaseType());	
   	
   	
     String datasetName = dsv.getDataset();
@@ -3171,7 +3180,9 @@ public class DatabaseDatasetConfigUtils {
        
       StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + tableName + " WHERE " + cname + " IS NOT NULL");
       
-      if (dsource.getDatabaseType().equals("oracle:thin")){
+      if (dsource.getDatabaseType().equals("oracle")){
+     //System.out.println("databaseType() "+dsource.getDatabaseType());
+
       sql.append (" and rownum <=1");
       } 
       if (dsource.getDatabaseType().equals("mysql")) {

@@ -488,7 +488,6 @@ public class DetailedDataSource implements DataSource {
    * @return String databaseType
    */
   public String getDatabaseType() {
-    if (databaseType.equals("oracle")) databaseType="oracle:thin";
     return databaseType;
   }
 
