@@ -29,14 +29,12 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ensembl.mart.lib.DetailedDataSource;
+import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSConfigAdaptor;
-import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
 
@@ -77,7 +75,7 @@ public class MartCompleter implements ReadlineCompleter {
 
   private Iterator possibleValues; // iterator for subsequent calls.
   private SortedSet currentSet = new TreeSet();
-  private CompositeDSConfigAdaptor adaptorManager = null;
+  private MartShellLib msl = null;
 
   private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
   private SortedSet domainSpecificSet = new TreeSet(); // will hold sequences
@@ -96,7 +94,8 @@ public class MartCompleter implements ReadlineCompleter {
 
   private SortedSet martSet = new TreeSet(); // will hold  String names for remove, and set 
   private SortedSet adaptorLocationSet = new TreeSet(); // will hold adaptor names for update and remove
-  private SortedSet datasetConfigSet = new TreeSet(); // will hold DatasetConfig names for use, set, remove, and describe 
+  private SortedSet datasetConfigSet = new TreeSet();
+  // will hold DatasetConfig names for use, set, remove, and describe
 
   private final List NODATASETWARNING =
     Collections.unmodifiableList(Arrays.asList(new String[] { "No DatasetConfigs loaded", "!" }));
@@ -115,12 +114,6 @@ public class MartCompleter implements ReadlineCompleter {
   private final String USEC = "use";
   private final String ENVC = "environment";
   private final String EXECC = "execute";
-
-  private DatasetConfig envDataset = null;
-  private DatasetConfig currentDataset = null;
-  private boolean usingLocalDataset = false;
-
-  private DetailedDataSource envMart = null;
 
   private List currentApages = new ArrayList();
   private List currentFpages = new ArrayList();
@@ -144,20 +137,22 @@ public class MartCompleter implements ReadlineCompleter {
    * object, and stores important internal_names into the completion sets that are applicable to the given MartConfiguration object.
    * @param adaptorManager - a MartConfiguration Object
    */
-  public MartCompleter(CompositeDSConfigAdaptor adaptorManager) throws ConfigurationException {
-    this.adaptorManager = adaptorManager;
-
-    if (adaptorManager.getDatasetNames().length > 0) {
-      DatasetConfig[] dsets = adaptorManager.getDatasetConfigs();
-      for (int i = 0, n = dsets.length; i < n; i++) {
-        DatasetConfig dataset = dsets[i];
-        datasetConfigSet.add(dataset.getInternalName());
-      }
-    }
-
-    setCommandMode();
+  public MartCompleter() {
   }
 
+  public void setController(MartShellLib msl) throws ConfigurationException {
+    this.msl = msl;
+    RegistryDSConfigAdaptor adaptorManager = msl.adaptorManager;
+    if (adaptorManager.getDatasetNames().length > 0) {
+      String[] dsets = adaptorManager.getDatasetNames();
+
+      for (int i = 0, n = dsets.length; i < n; i++) {
+        String dataset = dsets[i];
+        datasetConfigSet.addAll(Arrays.asList(adaptorManager.getDatasetConfigInternalNamesByDataset(dataset)));
+      }
+    }
+  }
+  
   /**
    * Implimentation of the ReadlineCompleter completer method.  Switches its state based on the presence and position of keywords in the command.
    * <ul>
@@ -214,7 +209,7 @@ public class MartCompleter implements ReadlineCompleter {
         int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
 
         if (usingInd >= 0) {
-          usingLocalDataset = true;
+          msl.usingLocalDataset = true;
 
           String[] toks = currentCommand.split("\\s+");
 
@@ -230,7 +225,11 @@ public class MartCompleter implements ReadlineCompleter {
             if (datasetreq.indexOf(">") > 0)
               datasetreq = datasetreq.substring(0, datasetreq.indexOf(">"));
 
-            currentDataset = getCurrentDatasetFor(datasetreq);
+            try {
+              msl.setLocalDatasetFor(datasetreq);
+            } catch (InvalidQueryException e) {
+              //ignore this.  If they have specified a strange dataset, and then do get, it will complain              
+            }
           }
         }
 
@@ -324,9 +323,9 @@ public class MartCompleter implements ReadlineCompleter {
             }
 
             if (whereNamesMode) {
-              if (currentDataset != null) {
-                if (currentDataset.containsFilterDescription(lastWord)) {
-                  String thisField = currentDataset.getFilterDescriptionByInternalName(lastWord).getField(lastWord);
+              if (msl.localDataset != null) {
+                if (msl.localDataset.containsFilterDescription(lastWord)) {
+                  String thisField = msl.localDataset.getFilterDescriptionByInternalName(lastWord).getField(lastWord);
 
                   if (thisField != null && thisField.length() > 0) {
                     lastFilterName = lastWord;
@@ -338,9 +337,9 @@ public class MartCompleter implements ReadlineCompleter {
                     setWhereQualifiers();
                   }
                 }
-              } else if (!usingLocalDataset && envDataset != null) {
-                if (envDataset.containsFilterDescription(lastWord)) {
-                  FilterDescription thisFilter = envDataset.getFilterDescriptionByInternalName(lastWord);
+              } else if (!msl.usingLocalDataset && msl.envDataset != null) {
+                if (msl.envDataset.containsFilterDescription(lastWord)) {
+                  FilterDescription thisFilter = msl.envDataset.getFilterDescriptionByInternalName(lastWord);
                   String thisField = thisFilter.getField(lastWord);
 
                   if (thisField != null && thisField.length() > 0) {
@@ -396,27 +395,6 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   /**
-   * Sets the Environment DatasetConfig for the session.  This dataset remains in effect
-   * for the duration of the MartCompleter objects existence, and can only be over ridden
-   * by a subsequent call to setEnvDataset, or a local dataset in the command
-   * 
-   * @param dataset - datasetconfig to set as environmental dataset
-   */
-  public void setEnvDataset(DatasetConfig dsv) {
-    envDataset = dsv;
-  }
-
-  /**
-   * Sets the Environment Mart for the session. This mart remains in effect
-   * for the duration of the MartCompleter Objects existence, and can only be over ridden
-   * by a subsequent call to setEnvMart, or a local mart in the comand
-   * @param mart - DetailedDataSource environmental Mart
-   */
-  public void setEnvMart(DetailedDataSource mart) {
-    envMart = mart;
-  }
-
-  /**
    * Sets the MartCompleter into COMMAND mode
    *
    */
@@ -425,8 +403,7 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet.addAll(commandSet);
 
     // reset state to pristine
-    currentDataset = null;
-    usingLocalDataset = false;
+    setNoLocalDataset();
     currentApages = new ArrayList();
     currentFpages = new ArrayList();
     lastFilterName = null;
@@ -439,99 +416,9 @@ public class MartCompleter implements ReadlineCompleter {
     lastLine = null;
   }
 
-  private DatasetConfig getCurrentDatasetFor(String name) {
-    DatasetConfig ret = null;
-    String[] toks = name.split("\\.");
-
-    try {
-      if (toks.length == 3) {
-        //sourcename.datasetname.configname
-
-        if (!adaptorManager.supportsAdaptor(toks[0])) {
-          setErrorMode("Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
-          return null;
-        }
-
-        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-        if (!adaptor.supportsDataset(toks[1])) {
-          setErrorMode(
-            "Dataset "
-              + toks[1]
-              + " is not supported by sourcename "
-              + toks[0]
-              + " in datasetconfig request "
-              + name
-              + "\n");
-          return null;
-        }
-
-        ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], toks[2]);
-        
-        System.err.println("Recieved dataset " + ret.getDataset() + "." + ret.getInternalName());
-      } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.configname relative to envMart
-        if (adaptorManager.supportsAdaptor(toks[0])) {
-          //assume it is sourcename.datasetname
-          if (!adaptorManager.supportsAdaptor(toks[0])) {
-            setErrorMode("Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
-            return null;
-          }
-
-          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-          if (!adaptor.supportsDataset(toks[1])) {
-            setErrorMode(
-              "Dataset "
-                + toks[1]
-                + " is not supported by sourcename "
-                + toks[0]
-                + " in datasetconfig request "
-                + name
-                + "\n");
-            return null;
-          }
-
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], MartShellLib.DEFAULTDATASETCONFIGNAME);
-        } else {
-          //assume it is datasetname.configname relative to envMart
-          if (envMart == null) {
-            setErrorMode("Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
-            return null;
-          }
-
-          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], toks[1]);
-        }
-      } else if (toks.length == 1) {
-        if (envMart == null) {
-          setErrorMode("Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
-          return null;
-        }
-
-        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-
-        //either datasetname relative to envMart or configname relative to envMart.envDataset
-        if (adaptorManager.supportsDataset(toks[0])) {
-          //assume it is datasetname relative to envMart
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], MartShellLib.DEFAULTDATASETCONFIGNAME);
-        } else {
-          //assume it is configname relative to envMart and envDataset
-          if (envDataset == null) {
-            setErrorMode("Must set environmental Dataset to manipulate DatasetConfigs with relative name " + name + "\n");
-            return null;
-          }
-
-          ret = adaptor.getDatasetConfigByDatasetInternalName(envDataset.getDataset(), toks[0]);
-        }
-      }
-    } catch (Exception e) {
-      setErrorMode("Caught Exception manipulating DatasetConfig named " + name + " " + e.getMessage() + "\n");
-      return null;
-    }
-
-    //may be null if not found
-    return ret;
+  private void setNoLocalDataset() {
+    msl.localDataset = null;
+    msl.usingLocalDataset = false;
   }
 
   private void setHelpMode() {
@@ -646,12 +533,12 @@ public class MartCompleter implements ReadlineCompleter {
       try {
         if (toks[0].equals(SETC)) {
           if (toks[1].equalsIgnoreCase("mart")) {
-            if (toks.length == 3 && adaptorManager.supportsAdaptor(toks[2]))
+            if (toks.length == 3 && msl.adaptorManager.supportsAdaptor(toks[2]))
               setEmptyMode();
             else
               setMartReqMode();
           } else if (toks[1].equalsIgnoreCase("dataset")) {
-            if (toks.length == 3 && adaptorManager.supportsDataset( toks[2] ))
+            if (toks.length == 3 && msl.adaptorManager.supportsDataset(toks[2]))
               setEmptyMode();
             else
               setDatasetReqMode();
@@ -701,12 +588,12 @@ public class MartCompleter implements ReadlineCompleter {
 
       try {
         if (request.equalsIgnoreCase("dataset")) {
-          if (toks.length == 3 && adaptorManager.supportsDataset(toks[2]))
+          if (toks.length == 3 && msl.adaptorManager.supportsDataset(toks[2]))
             setEmptyMode();
           else
             setDatasetReqMode();
         } else if (request.equalsIgnoreCase("Mart")) {
-          if (toks.length == 3 && adaptorManager.supportsAdaptor(toks[2]))
+          if (toks.length == 3 && msl.adaptorManager.supportsAdaptor(toks[2]))
             setEmptyMode();
           else
             setMartReqMode();
@@ -731,17 +618,17 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setDatasetReqMode() {
-    if (envMart == null)
+    if (msl.envMart == null)
       setNoEnvMode();
     else
-      setDatasetReqMode(envMart.getName());
+      setDatasetReqMode(msl.envMart.getName());
   }
 
   private void setDatasetReqMode(String martName) {
     currentSet = new TreeSet();
     try {
-      if (adaptorManager.supportsAdaptor(martName))
-        currentSet.addAll(Arrays.asList(adaptorManager.getAdaptorByName(martName).getDatasetNames()));
+      if (msl.adaptorManager.supportsAdaptor(martName))
+        currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorByName(martName).getDatasetNames()));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
@@ -750,22 +637,23 @@ public class MartCompleter implements ReadlineCompleter {
 
   private void setDatasetConfigReqMode() {
     currentSet = new TreeSet();
-    if (envMart == null)
+    if (msl.envMart == null)
       setNoEnvMode();
     else {
-      if (envDataset == null)
+      if (msl.envDataset == null)
         setNoEnvMode();
       else
-        setDatasetConfigReqMode(envMart.getName(), envDataset.getDataset());
+        setDatasetConfigReqMode(msl.envMart.getName(), msl.envDataset.getDataset());
     }
   }
 
   private void setDatasetConfigReqMode(String martName, String datasetName) {
     try {
-      if (adaptorManager.supportsAdaptor(martName)
-        && adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName))
+      if (msl.adaptorManager.supportsAdaptor(martName)
+        && msl.adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName))
         currentSet.addAll(
-          Arrays.asList(adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName)));
+          Arrays.asList(
+            msl.adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName)));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       if (logger.isLoggable(Level.INFO))
@@ -774,20 +662,20 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setDescribeFilterMode() {
-    if (envDataset == null)
+    if (msl.envDataset == null)
       setNoEnvMode();
     else {
       currentSet = new TreeSet();
-      currentSet.addAll(envDataset.getFilterCompleterNames());
+      currentSet.addAll(msl.envDataset.getFilterCompleterNames());
     }
   }
 
   private void setDescribeAttributeMode() {
-    if (envDataset == null)
+    if (msl.envDataset == null)
       setNoEnvMode();
     else {
       currentSet = new TreeSet();
-      currentSet.addAll(envDataset.getAttributeCompleterNames());
+      currentSet.addAll(msl.envDataset.getAttributeCompleterNames());
     }
   }
 
@@ -797,11 +685,11 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setAttributeNames() {
-    if (currentDataset != null) {
+    if (msl.localDataset != null) {
       currentSet = new TreeSet();
 
       if (currentApages.size() == 0)
-        currentApages = Arrays.asList(currentDataset.getAttributePages());
+        currentApages = Arrays.asList(msl.localDataset.getAttributePages());
 
       for (int i = 0, n = currentApages.size(); i < n; i++) {
         AttributePage apage = (AttributePage) currentApages.get(i);
@@ -813,11 +701,11 @@ public class MartCompleter implements ReadlineCompleter {
             currentSet.add(completer);
         }
       }
-    } else if (!(usingLocalDataset) && envDataset != null) {
+    } else if (!(msl.usingLocalDataset) && msl.envDataset != null) {
       currentSet = new TreeSet();
 
       if (currentApages.size() == 0)
-        currentApages = Arrays.asList(envDataset.getAttributePages());
+        currentApages = Arrays.asList(msl.envDataset.getAttributePages());
       for (int i = 0, n = currentApages.size(); i < n; i++) {
         AttributePage apage = (AttributePage) currentApages.get(i);
 
@@ -859,10 +747,10 @@ public class MartCompleter implements ReadlineCompleter {
 
   private void pruneAttributePages() {
     List newPages = new ArrayList();
-    if (currentDataset != null)
-      newPages = currentDataset.getPagesForAttribute(lastAttributeName);
-    else if (!usingLocalDataset && envDataset != null)
-      newPages = envDataset.getPagesForAttribute(lastAttributeName);
+    if (msl.localDataset != null)
+      newPages = msl.localDataset.getPagesForAttribute(lastAttributeName);
+    else if (!msl.usingLocalDataset && msl.envDataset != null)
+      newPages = msl.envDataset.getPagesForAttribute(lastAttributeName);
     else
       newPages = new ArrayList();
 
@@ -880,7 +768,7 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     currentSet.add("all");
     try {
-      currentSet.addAll(Arrays.asList(adaptorManager.getAdaptorNames()));
+      currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorNames()));
     } catch (ConfigurationException e) {
       if (logger.isLoggable(Level.INFO))
         logger.info("Caught ConfigurationException getting adaptor names: " + e.getMessage() + "\n");
@@ -897,12 +785,12 @@ public class MartCompleter implements ReadlineCompleter {
 
     try {
       if (toks.length <= 1) {
-        if (envMart == null)
+        if (msl.envMart == null)
           setNoEnvMode();
         else
           setDatasetReqMode();
       } else {
-        if (adaptorManager.supportsDataset(toks[1]))
+        if (msl.adaptorManager.supportsDataset(toks[1]))
           setEmptyMode();
       }
     } catch (ConfigurationException e) {
@@ -916,11 +804,11 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setWhereNames() {
-    if (currentDataset != null) {
+    if (msl.localDataset != null) {
       currentSet = new TreeSet();
 
       if (currentFpages.size() == 0)
-        currentFpages = Arrays.asList(currentDataset.getFilterPages());
+        currentFpages = Arrays.asList(msl.localDataset.getFilterPages());
 
       for (int i = 0, n = currentFpages.size(); i < n; i++) {
         FilterPage fpage = (FilterPage) currentFpages.get(i);
@@ -932,11 +820,11 @@ public class MartCompleter implements ReadlineCompleter {
             currentSet.add(completer);
         }
       }
-    } else if (!(usingLocalDataset) && envDataset != null) {
+    } else if (!(msl.usingLocalDataset) && msl.envDataset != null) {
       currentSet = new TreeSet();
 
       if (currentFpages.size() == 0)
-        currentFpages = Arrays.asList(envDataset.getFilterPages());
+        currentFpages = Arrays.asList(msl.envDataset.getFilterPages());
 
       for (int i = 0, n = currentFpages.size(); i < n; i++) {
         FilterPage fpage = (FilterPage) currentFpages.get(i);
@@ -955,18 +843,18 @@ public class MartCompleter implements ReadlineCompleter {
   private void setWhereQualifiers() {
     currentSet = new TreeSet();
 
-    if (currentDataset != null) {
-      if (currentDataset.containsFilterDescription(lastFilterName))
-        currentSet.addAll(currentDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
-    } else if (!usingLocalDataset && envDataset != null) {
+    if (msl.localDataset != null) {
+      if (msl.localDataset.containsFilterDescription(lastFilterName))
+        currentSet.addAll(msl.localDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
+    } else if (!msl.usingLocalDataset && msl.envDataset != null) {
       if (logger.isLoggable(Level.INFO))
         logger.info("getting qualifiers for filter " + lastFilterName + "\n");
 
-      if (envDataset.containsFilterDescription(lastFilterName)) {
+      if (msl.envDataset.containsFilterDescription(lastFilterName)) {
         if (logger.isLoggable(Level.INFO))
           logger.info("Its a filter, getting from dataset\n");
 
-        currentSet.addAll(envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
+        currentSet.addAll(msl.envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
       }
     } else
       setNoDatasetConfigMode();
@@ -975,16 +863,16 @@ public class MartCompleter implements ReadlineCompleter {
   private void setWhereValues(String lastWord) {
     currentSet = new TreeSet();
 
-    if (currentDataset != null) {
-      if (currentDataset.containsFilterDescription(lastFilterName)) {
-        currentSet.addAll(currentDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+    if (msl.localDataset != null) {
+      if (msl.localDataset.containsFilterDescription(lastFilterName)) {
+        currentSet.addAll(msl.localDataset.getFilterCompleterValuesByInternalName(lastFilterName));
 
         if (lastWord.equalsIgnoreCase("in"))
           currentSet.addAll(procSet);
       }
-    } else if (!usingLocalDataset && envDataset != null) {
-      if (envDataset.containsFilterDescription(lastFilterName)) {
-        currentSet.addAll(envDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+    } else if (!msl.usingLocalDataset && msl.envDataset != null) {
+      if (msl.envDataset.containsFilterDescription(lastFilterName)) {
+        currentSet.addAll(msl.envDataset.getFilterCompleterValuesByInternalName(lastFilterName));
 
         if (lastWord.equalsIgnoreCase("in"))
           currentSet.addAll(procSet);
@@ -996,10 +884,10 @@ public class MartCompleter implements ReadlineCompleter {
   private void pruneFilterPages() {
     List newPages = new ArrayList();
 
-    if (currentDataset != null)
-      newPages = currentDataset.getPagesForFilter(lastFilterName);
-    else if (!usingLocalDataset && envDataset != null)
-      newPages = envDataset.getPagesForFilter(lastFilterName);
+    if (msl.localDataset != null)
+      newPages = msl.localDataset.getPagesForFilter(lastFilterName);
+    else if (!msl.usingLocalDataset && msl.envDataset != null)
+      newPages = msl.envDataset.getPagesForFilter(lastFilterName);
     else
       newPages = new ArrayList();
 

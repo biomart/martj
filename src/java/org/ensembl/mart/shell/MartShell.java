@@ -551,66 +551,55 @@ public class MartShell {
         mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
     }
 
-    try {
-      if (completionOn) {
-        mcl = new MartCompleter(msl.getAdaptorManager());
-
-        // add commands
-        List allCommands = new ArrayList();
-        allCommands.addAll(availableCommands);
-        allCommands.addAll(msl.availableCommands);
-        mcl.setBaseCommands(allCommands);
-
-        mcl.setAddCommands(addRequests);
-        mcl.setRemoveBaseCommands(removeRequests);
-        mcl.setListCommands(listRequests);
-        mcl.setUpdateBaseCommands(updateRequests);
-        mcl.setSetBaseCommands(setRequests);
-        mcl.setDescribeBaseCommands(describeRequests);
-        mcl.setEnvironmentBaseCommands(envRequests);
-        mcl.setExecuteBaseCommands(executeRequests);
-
-        // add sequences
-        mcl.setDomainSpecificCommands(SequenceDescription.SEQS); // will need to modify this if others are added
-
-        if (helpLoaded)
-          mcl.setHelpCommands(commandHelp.keySet());
-
-        if (msl.getEnvDataset() != null)
-          mcl.setEnvDataset(msl.getEnvDataset());
-
-        updateCompleter();
-        mcl.setCommandMode();
-
-        Readline.setCompleter(mcl);
+    if (completionOn) {
+      mcl = new MartCompleter();
+      try {
+        mcl.setController(msl);
+      } catch (ConfigurationException e) {
+         System.err.println(
+            "Recieved Exception Loading DatasetNames into Completer: "
+              + e.getMessage()
+              + "\ncontinuing without this information!\n");
       }
 
-      if (mainLogger.isLoggable(Level.INFO))
-        mainLogger.info("Completer set\n");
+      // add commands
+      List allCommands = new ArrayList();
+      allCommands.addAll(availableCommands);
+      allCommands.addAll(msl.availableCommands);
+      mcl.setBaseCommands(allCommands);
 
-      if (readlineLoaded && historyOn) {
+      mcl.setAddCommands(addRequests);
+      mcl.setRemoveBaseCommands(removeRequests);
+      mcl.setListCommands(listRequests);
+      mcl.setUpdateBaseCommands(updateRequests);
+      mcl.setSetBaseCommands(setRequests);
+      mcl.setDescribeBaseCommands(describeRequests);
+      mcl.setEnvironmentBaseCommands(envRequests);
+      mcl.setExecuteBaseCommands(executeRequests);
+
+      // add sequences
+      mcl.setDomainSpecificCommands(SequenceDescription.SEQS); // will need to modify this if others are added
+
+      if (helpLoaded)
+        mcl.setHelpCommands(commandHelp.keySet());
+
+      updateCompleter();
+      mcl.setCommandMode();
+
+      Readline.setCompleter(mcl);
+    }
+
+    if (readlineLoaded && historyOn) {
+      try {
         File histFile = new File(history_file);
         if (!histFile.exists())
           histFile.createNewFile();
         else
           LoadScriptFromFile(history_file);
+      } catch (Exception e1) {
+        if (mainLogger.isLoggable(Level.FINE))
+          mainLogger.fine("Could not load history: " + e1.getMessage() + "\n continuing to load!\n");
       }
-
-    } catch (Exception e1) {
-      System.err.println("Could not initialize connection: " + e1.getMessage());
-
-      StackTraceElement[] stacks = e1.getStackTrace();
-      StringBuffer stackout = new StringBuffer();
-
-      for (int i = 0, n = stacks.length; i < n; i++) {
-        StackTraceElement element = stacks[i];
-        stackout.append(element.toString()).append("\n");
-      }
-
-      if (mainLogger.isLoggable(Level.INFO))
-        mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
-
-      System.exit(1);
     }
 
     String thisline = null;
@@ -624,8 +613,8 @@ public class MartShell {
           if (thisline.startsWith(HELPC))
             System.out.print(Help(normalizeCommand(thisline)));
           else {
-          parse(thisline);
-          thisline = null;
+            parse(thisline);
+            thisline = null;
           }
         }
       } catch (Exception e) {
@@ -633,7 +622,7 @@ public class MartShell {
           System.out.println();
           break;
         }
-        
+
         System.err.println(e.getMessage());
 
         StackTraceElement[] stacks = e.getStackTrace();
@@ -1285,7 +1274,7 @@ public class MartShell {
     if (completionOn) {
       try {
         List martNames = new ArrayList();
-        DSConfigAdaptor[] adaptorNames = msl.getAdaptorManager().getAdaptors();
+        DSConfigAdaptor[] adaptorNames = msl.adaptorManager.getAdaptors();
         for (int i = 0, n = adaptorNames.length; i < n; i++) {
           DSConfigAdaptor adaptor = adaptorNames[i];
           if (!(adaptor instanceof URLDSConfigAdaptor))
@@ -1293,16 +1282,13 @@ public class MartShell {
         }
         mcl.setMartNames(martNames);
 
-        mcl.setAdaptorLocations(Arrays.asList(msl.getAdaptorManager().getAdaptorNames()));
+        mcl.setAdaptorLocations(Arrays.asList(msl.adaptorManager.getAdaptorNames()));
         mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
 
-        mcl.setEnvMart(msl.getEnvMart());
-        mcl.setEnvDataset(msl.getEnvDataset());
-
         List datasetInames = new ArrayList();
-        if (msl.getEnvMart() != null) {
+        if (msl.envMart != null) {
           //get all datasets relative to envMart
-          DSConfigAdaptor adaptor = msl.getAdaptorManager().getAdaptorByName(msl.getEnvMart().getName());
+          DSConfigAdaptor adaptor = msl.adaptorManager.getAdaptorByName(msl.envMart.getName());
 
           String[] datasets = adaptor.getDatasetNames();
           for (int i = 0, n = datasets.length; i < n; i++) {
@@ -1310,11 +1296,11 @@ public class MartShell {
           }
         } else {
           //dump absolute path names for all Datasets (not configs)
-          String[] adaptors = msl.getAdaptorManager().getAdaptorNames();
+          String[] adaptors = msl.adaptorManager.getAdaptorNames();
           for (int i = 0, n = adaptors.length; i < n; i++) {
             String adaptor = adaptors[i];
 
-            String[] datasets = msl.getAdaptorManager().getAdaptorByName(adaptor).getDatasetNames();
+            String[] datasets = msl.adaptorManager.getAdaptorByName(adaptor).getDatasetNames();
             for (int j = 0, m = datasets.length; j < m; j++) {
               String dataset = datasets[j];
               datasetInames.add(adaptor + "." + dataset);
@@ -1343,7 +1329,7 @@ public class MartShell {
         throw new InvalidQueryException("Invalid update request recieved " + command + "\n" + Help(UPDATEC) + "\n");
     } else
       throw new InvalidQueryException("Invalid update request recieved " + command + "\n" + Help(UPDATEC) + "\n");
-    
+
     updateCompleter();
   }
 
@@ -1455,7 +1441,7 @@ public class MartShell {
       }
     } else
       throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
-    
+
     updateCompleter();
   }
 
@@ -1704,8 +1690,10 @@ public class MartShell {
     StringTokenizer toks = new StringTokenizer(command, " ");
     toks.nextToken(); //skip use
 
+    if (!toks.hasMoreTokens())
+      throw new InvalidQueryException("Invalid Use Command Recieved: " + command + "\n");
     msl.setEnvDataset(toks.nextToken());
-    
+
     updateCompleter();
   }
 
@@ -2156,7 +2144,7 @@ public class MartShell {
           fspec = FormatSpec.TABSEPARATEDFORMAT;
 
         Engine engine = new Engine();
-        
+
         int hardLimit = INTERACTIVE_MAX_ROWS;
         if (sessionOutputFileName != null) {
           hardLimit = 0; // no hardLimit for file output
