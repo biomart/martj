@@ -31,7 +31,7 @@ import java.util.StringTokenizer;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class SubQueryIDListFilterHandler extends IDListFilterHandlerIMPL {
+public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)

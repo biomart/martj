@@ -29,7 +29,7 @@ import java.io.InputStreamReader;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FileIDListFilterHandler extends IDListFilterHandlerIMPL {
+public class FileIDListFilterHandler extends IDListFilterHandlerBase {
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)

@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public abstract class IDListFilterHandlerIMPL implements IDListFilterHandler {
+public abstract class IDListFilterHandlerBase implements IDListFilterHandler {
 
   private String sql = "select versioned_ids from _meta_release_info where mart_species = ?";
   
@@ -123,5 +123,5 @@ public abstract class IDListFilterHandlerIMPL implements IDListFilterHandler {
 		  return ModifyVersionedIDs(conn, query_with_starbases, harvestedIds);
 	}
 	
-	protected Logger logger = Logger.getLogger(IDListFilterHandlerIMPL.class.getName());
+	protected Logger logger = Logger.getLogger(IDListFilterHandlerBase.class.getName());
 }
