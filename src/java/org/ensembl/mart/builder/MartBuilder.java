@@ -20,48 +20,44 @@ public class MartBuilder {
 	
 	private static SourceSchema source_schema;
 	private static String config ="data/builder_connection_mysql.properties";
+	private static String dataset;
+	
 	
 	public static void main(String[] args) {
 		
 		source_schema = new SourceSchema(config);
-		String dataset = getUserInput("DATASET: ");
-		source_schema.dataset=dataset;
-		
-		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
-		String output;
 		
 		
-		// Get source schema info
-		do
-			output=getUserInput(prompt);
-		while (!(output.equals("M") || output.equals("D") || output.equals("E")));
+		String config_info= "";
 		
-		while (output.equals("M") || output.equals("D")){
-			String table_name = getUserInput("TABLE NAME: ");
-			LinkedTables linked_tables=getLinked(table_name);
-			StringBuffer final_table = new StringBuffer(dataset + "__"+table_name+"__");
-			if (output.equals("M")){
-				linked_tables.final_table_type ="MAIN";
-				linked_tables.final_table_name= final_table.append("main").toString();
-			} else { 
-				linked_tables.final_table_type = "DM";
-				linked_tables.final_table_name= final_table.append("dm").toString();
-			}
-			linked_tables.dataset=dataset;
-			
-			linked_tables=setColumnsToFinal(linked_tables);
-			
-			source_schema.addLinkedTables(linked_tables);
-			output=getUserInput(prompt);
+		while (! (config_info.equals("C") || config_info.equals("R"))){
+			config_info=getUserInput("Configuration Create [C] Read [R]: ");
 		}
 		
+		String user_dataset = getUserInput("DATASET: ");
+		dataset=user_dataset;
+		source_schema.dataset=user_dataset;
+		
+		
+		if (config_info.equals("C")){
+			String output_file=getUserInput("OUTPUT CONFIG FILE: ");
+			output_file = "data/"+output_file;	
+			createConfiguration(output_file);
+			readConfiguration(output_file);
+			
+		} else {
+			String input_file=getUserInput("INPUT CONFIG FILE: ");
+			input_file = "data/"+input_file;
+			readConfiguration(input_file);
+		}
 		
 		
 		// Create Target schema and transformations	
 		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
 		
-/**		
+		/**		
+		 
 		// final key
 		String key = getUserInput("Final KEY: ");
 		
@@ -70,17 +66,16 @@ public class MartBuilder {
 			Column [] columns = transformations[i].getFinalUnit().getTemp_end().getColumns();
 			
 			for (int j=0;j<columns.length;j++){
-				
 				if(columns[j].name.equals(key)){
 					columns[j].setAlias(columns[j].name +"_key");
-			
-				System.out.println("resetting "+ columns[j].name);
-				
+					System.out.println("resetting "+ columns[j].name);
+					
 				}	
 			}
 		}
 		
-	*/	
+		*/
+		
 		
 		// Include extensions
 		LinkedTables [] extlinked = source_schema.getLinkedTables();
@@ -123,9 +118,9 @@ public class MartBuilder {
 			String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
 			if (input.equals("Y")){
 				tran[i].central=true;		
-			
-			//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
-			//tran[i].getFinalUnit().getTemp_end().central_extension=extension;
+				
+				//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
+				//tran[i].getFinalUnit().getTemp_end().central_extension=extension;
 			}
 			
 		}
@@ -154,13 +149,125 @@ public class MartBuilder {
 	
 	
 	
-	private static  LinkedTables getLinked(String table_name){
+	private static void createConfiguration(String output_file){
+		
+		File f = new File(output_file);
+		f.delete();
+		
+		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
+		String output;
+		
+		do
+			output=getUserInput(prompt);
+		while (!(output.equals("M") || output.equals("D") || output.equals("E")));
+		
+		while (output.equals("M") || output.equals("D")){
+			String table_name = getUserInput("TABLE NAME: ");
+			
+			writeConfigFile(output_file,table_name,output);
+			output=getUserInput(prompt);
+		}	
+	}
+	
+	
+	private static void readConfiguration(String input_file){
+		
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(input_file));
+			
+			String line;
+			String last_table = null;
+			String last_type = null;
+			Table [] referenced_tables = null;
+			ArrayList list = new ArrayList();
+			int counter =0;
+			
+			while((line = in.readLine()) != null){
+				
+				String [] items = line.split("\t");
+				
+				if (!items[2].equals(last_table)){
+					
+					referenced_tables = source_schema.getReferencedTables(items[2]);
+					
+					if (counter !=0){
+						createLinkedTables(list,last_type,last_table);
+						list.clear();
+					}
+				}
+				
+				for (int i=0; i<referenced_tables.length;i++){
+					
+					Table ref_table = referenced_tables[i];
+					
+					if(ref_table.getName().equals(items[3])){
+						if (!items[4].equals("S")){
+							ref_table.setCardinality(items[4]);
+							if (items[4].equals("1n")){
+								ref_table.skip= true;
+							}
+							list.add(ref_table);
+						}
+					}
+				}	
+				
+				last_table=items[2];
+				last_type=items[1];
+				counter++;
+			}
+			
+			in.close();
+			createLinkedTables(list,last_type,last_table);
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
+		
+		
+		
+		
+	}
+	
+	
+	
+	private static void createLinkedTables(ArrayList list,String last_type, String last_table){
+		
+		Table [] b = new Table [list.size()];	
+		LinkedTables linked_tables= source_schema.createLinkedTables(last_table,(Table []) list.toArray(b));
+		
+		StringBuffer final_table = new StringBuffer(dataset + "__"+last_table+"__");
+		if (last_type.equals("M")){
+			linked_tables.final_table_type ="MAIN";
+			linked_tables.final_table_name= final_table.append("main").toString();
+		} else { 
+			linked_tables.final_table_type = "DM";
+			linked_tables.final_table_name= final_table.append("dm").toString();
+		}
+		linked_tables.dataset=dataset;	
+		source_schema.addLinkedTables(linked_tables);
+	}
+	
+	
+	
+	
+	
+	private static void writeConfigFile (String output_file,String table_name, String output){
 		
 		Table [] referenced_tables = source_schema.getReferencedTables(table_name);
-		ArrayList list = new ArrayList();
+		
+		BufferedWriter out =null;
+		try {
+			out = new BufferedWriter(new FileWriter(output_file, true));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		
 		String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
+		
 		for (int i=0;i<referenced_tables.length; i++){
+			
 			String cardinality = "";
 			Table ref_tab=referenced_tables[i];
 			
@@ -170,23 +277,21 @@ public class MartBuilder {
 				
 			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
-			if (!cardinality.equals("S")){
-				
-				ref_tab.setCardinality(cardinality);
-				
-				if (cardinality.equals("1n")){
-					ref_tab.skip= true;
-				}
-					
-				list.add(ref_tab);
-			}
+			try {
+				out.write(dataset+"\t"+ output+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	
 		}
 		
-		Table [] b = new Table [list.size()];	
-		LinkedTables linked_tables= source_schema.createLinkedTables(table_name,(Table []) list.toArray(b));
-		
-		return linked_tables;
+		try {
+			out.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
+	
 	
 	
 	private static String getUserInput (String prompt ){
@@ -204,17 +309,7 @@ public class MartBuilder {
 	}
 	
 	
-	private static LinkedTables setColumnsToFinal (LinkedTables linked){
-		
-		Table [] reftables = linked.getReferencedTables();
-		for (int i=0;i<reftables.length;i++){
-			Column [] columns = reftables[i].getColumns();
-			for (int j=0;j<columns.length;j++){
-
-			}
-		}
-		return linked;
-	}
+	
 }
 
 
