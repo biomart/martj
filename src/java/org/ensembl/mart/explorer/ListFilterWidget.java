@@ -28,6 +28,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
+import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.UIFilterDescription;
@@ -36,12 +38,47 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
  * Represents a list of user options. Some options cause the
  * options available in other widgets to be modified.
  */
-public class ListFilterWidget extends FilterWidget 
-implements ActionListener {
+public class ListFilterWidget extends FilterWidget implements ActionListener {
+
+  /**
+   * BasicFilter containing an InputPage, this page is used by the QueryEditor
+   * when it detects the filter has been added or removed from the query.
+   */
+  private class InputPageAwareBasicFilter
+    extends BasicFilter
+    implements InputPageAware {
+
+    private InputPage inputPage;
+
+    public InputPageAwareBasicFilter(
+      String field,
+      String condition,
+      String value,
+      InputPage inputPage) {
+      this(field, null, condition, value, inputPage);
+    }
+
+    public InputPageAwareBasicFilter(
+      String field,
+      String tableConstraint,
+      String condition,
+      String value,
+      InputPage inputPage) {
+      super(field, tableConstraint, condition, value);
+      this.inputPage = inputPage;
+    }
+
+    public InputPage getInputPage() {
+      return inputPage;
+    }
+  }
 
   private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
   private JComboBox list;
+  private Filter filter;
+  private Object lastSelectedItem;
+  private OptionWrapper emptySelection = new OptionWrapper(null);
 
   /**
    * Holds an Option and returns option.getDisplayName() from
@@ -50,13 +87,13 @@ implements ActionListener {
    */
   private class OptionWrapper {
     private Option option;
-    
-    private OptionWrapper(Option option ){
+
+    private OptionWrapper(Option option) {
       this.option = option;
     }
-    
+
     public String toString() {
-      return (option==null) ? "" : option.getDisplayName();
+      return (option == null) ? "No Filter" : option.getDisplayName();
     }
   }
 
@@ -66,34 +103,52 @@ implements ActionListener {
    */
   public ListFilterWidget(Query query, UIFilterDescription filterDescription) {
     super(query, filterDescription);
-    
-    list = new JComboBox(  );
-    list.addActionListener( this );
-    
-    configureList( list, filterDescription );
-    
-    setLayout( new BoxLayout( this, BoxLayout.X_AXIS ) );
-    add( new JLabel( filterDescription.getDisplayName() ) );
-    add( Box.createHorizontalStrut( 5 ) );
-    add( list );
+
+    list = new JComboBox();
+    list.addActionListener(this);
+
+    configureList(list, filterDescription);
+
+    setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    add(new JLabel(filterDescription.getDisplayName()));
+    add(Box.createHorizontalStrut(5));
+    add(list);
   }
 
   /**
+   * Configures the options based on the filterDescription.
    * @param list
    * @param filterDescription
    */
-  private void configureList(JComboBox list, UIFilterDescription filterDescription) {
-    
+  private void configureList(
+    JComboBox list,
+    UIFilterDescription filterDescription) {
+
+    String field = filterDescription.getFieldName();
+    if (field == null || "".equals(field))
+      throw new RuntimeException(
+        "field invalid: >"
+          + field
+          + "<\nfilterDescritoion = "
+          + filterDescription);
+
     // make first option be empty
-    list.addItem( new OptionWrapper(null) );
-    
+    list.addItem(emptySelection);
+
     // add each option, via a surrogate, to the list.     
     Option[] options = filterDescription.getOptions();
     for (int i = 0; i < options.length; i++) {
+
       Option option = options[i];
-      list.addItem( new OptionWrapper( option )  );
+
+      String value = option.getValue();
+      if (value == null || "".equals(value))
+        throw new RuntimeException(
+          "Option.value invalid: >" + value + "<\noption = " + option);
+
+      list.addItem(new OptionWrapper(option));
     }
-    
+
   }
 
   /* (non-Javadoc)
@@ -101,20 +156,45 @@ implements ActionListener {
    */
   public void propertyChange(PropertyChangeEvent evt) {
     // TODO Auto-generated method stub
-    
+
   }
 
-  /* (non-Javadoc)
+  /**
+   * Handles user selecting an item from the list.
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
   public void actionPerformed(ActionEvent e) {
-    // TODO remove item currently set on query if there is one
+    Object selectedItem = list.getSelectedItem();
+
+    if (selectedItem == lastSelectedItem
+      || (lastSelectedItem == null && selectedItem == emptySelection))
+      return;
+
+    if (lastSelectedItem != emptySelection) {
+      query.removeFilter(filter);
+
+      // TODO remove OptionPushes if set
+    }
+
+    lastSelectedItem = selectedItem;
+
+    if (selectedItem != emptySelection) {
+
+      Option option = ((OptionWrapper) selectedItem).option;
+
+      filter =
+        new InputPageAwareBasicFilter(
+          filterDescription.getFieldName(),
+          option.getTableConstraint(),
+          "=",
+          option.getValue(),
+          this);
+      query.addFilter(filter);
+
+      // TODO propagate OptionPushes if set, remember so we can remove them
     
-    // TODO add item to query
-    
-    // TODO propagate OptionPushes if necessary
-    
-    System.out.println("item selected");
+    }
+
   }
 
 }
