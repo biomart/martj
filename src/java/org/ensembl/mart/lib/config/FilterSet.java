@@ -29,7 +29,7 @@ import java.util.Iterator;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterSet {
+public class FilterSet extends BaseConfigurationObject {
 
   /**
    * This will throw a ConfigurationException.
@@ -61,14 +61,10 @@ public class FilterSet {
    * @throws ConfigurationException when internalName or type are null or empty.
    */
   public FilterSet(String internalName, String type, String displayName, String description) throws ConfigurationException {
-    if ( internalName == null || internalName.equals("")
-          || type == null || type.equals("") )
-       throw new ConfigurationException("FilterSets must be instantiated with an internalName and type");
-     
-    this.internalName = internalName;
+    
+    super(internalName, displayName, description );
     this.type = type;
-    this.displayName = displayName;
-    this.description = description;  	
+    
   }
   
   /**
@@ -93,33 +89,6 @@ public class FilterSet {
 		}
   }
   
-	/**
-	 * Returns the description.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the displayName.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
 	/**
 	 * Returns the type.
 	 * 
@@ -168,9 +137,7 @@ public class FilterSet {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", FilterSetDescriptions=").append(filterSetDescriptions);
 		buf.append("]");
 
@@ -185,10 +152,9 @@ public class FilterSet {
 	}
 	
   public int hashCode() {
-		int tmp = internalName.hashCode();
+		int tmp = super.hashCode();
 		tmp = (31 * tmp) + type.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		
 		
 		for (Iterator iter = filterSetDescriptions.values().iterator(); iter.hasNext();) {
 			FilterSetDescription element = (FilterSetDescription) iter.next();
@@ -197,7 +163,7 @@ public class FilterSet {
 		return tmp;  	
   }
   
-  private final String internalName, displayName, description, type;
+  private String type;
   
   private Hashtable filterSetDescriptions = new Hashtable();
 }

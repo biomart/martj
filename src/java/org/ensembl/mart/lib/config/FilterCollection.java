@@ -30,7 +30,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterCollection {
+public class FilterCollection extends BaseConfigurationObject {
 
 	/*
 	 * FilterCollection must have a internalName, and type.  So disable parameterless constructor
@@ -61,45 +61,14 @@ public class FilterCollection {
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
 	public FilterCollection(String internalName, String type, String displayName, String filterSetName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals("") || type == null || type.equals(""))
-			throw new ConfigurationException("FilterCollections must have an internalName and type");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
 		
+    super( internalName, displayName, description );
+    
 		if ( ! ( filterSetName == null || filterSetName.equals("")  ) )
 		 inFilterSet = true;
 		 
 		this.filterSetName = filterSetName;
-		this.description = description;
 		this.type = type;
-	}
-
-	/**
-	 * Returns the internalName of the FilterCollection
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName of the FilterGroup.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the description of the FilterCollection
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
 	}
 
 	/**
@@ -295,9 +264,7 @@ public class FilterCollection {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", type=").append(type);
 
     if (hasOptions)
@@ -321,11 +288,9 @@ public class FilterCollection {
 
 	public int hashCode() {
 		int hashcode = inFilterSet ? 1 : 0;
-		hashcode = (31 * hashcode) + internalName.hashCode();
-		hashcode = (31 * hashcode) + displayName.hashCode();
+		hashcode = super.hashCode();
 		hashcode = (31 * hashcode) + filterSetName.hashCode();
-		hashcode = (31 * hashcode) + description.hashCode();
-
+		
 		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof UIFilterDescription) 
@@ -342,7 +307,8 @@ public class FilterCollection {
 		return hashcode;
 	}
 
-	private final String internalName, displayName, description, filterSetName, type;
+  private String filterSetName;
+  private String type;
 	private boolean inFilterSet = false;
 	private boolean hasOptions = false;
 	

@@ -26,7 +26,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSFilterGroup {
+public class DSFilterGroup extends BaseConfigurationObject {
 
   /**
    * This will throw a ConfigurationException
@@ -54,43 +54,16 @@ public class DSFilterGroup {
    * @throws ConfigurationException when internalName is null or empty
    */
   public DSFilterGroup(String internalName, String displayName, String description, String objectCode) throws ConfigurationException {
-  	if (internalName == null || internalName.equals(""))
-  	  throw new ConfigurationException("DSFilterGroup objects must be initialized with an internalName\n");
   	
-  	this.internalName = internalName;
-  	hashcode = internalName.hashCode();
-  	this.displayName = displayName;
+    super( internalName, displayName, description );
+    this.objectCode = objectCode;
+    
+    hashcode = internalName.hashCode();
   	hashcode = (31 * hashcode) + displayName.hashCode();
-  	this.description = description;
   	hashcode = (31 * hashcode) + description.hashCode();
-  	this.objectCode = objectCode;
   	hashcode = (31 * hashcode) + objectCode.hashCode();
   }
  
-	/**
-	 * Returns the description
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the displayName
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
 	/**
 	 * Returns the objectCode
 	 * @return Sring objectCode
@@ -103,9 +76,7 @@ public class DSFilterGroup {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" DSFilterGroup: internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", objectCode=").append(objectCode);
 		buf.append("]");
 
@@ -126,6 +97,7 @@ public class DSFilterGroup {
 		return hashcode;
 	}
 
-	private final String internalName, displayName, description, objectCode;
+ 
+  private String objectCode;
 	private int hashcode = 0;
 }

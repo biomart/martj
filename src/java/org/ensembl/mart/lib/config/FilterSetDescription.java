@@ -28,7 +28,7 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterSetDescription {
+public class FilterSetDescription extends BaseConfigurationObject {
 	
 	/**
 	 * If this gets called, it will throw a MartConfigurationException.
@@ -65,16 +65,16 @@ public class FilterSetDescription {
 	 * @throws ConfigurationException when internalName, tableConstraintModifier, or fieldNameModifier are null or empty
 	 */
 	public FilterSetDescription(String internalName, String tableConstraintModifier, String fieldNameModifier, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals("")
-		    || tableConstraintModifier == null || tableConstraintModifier.equals("")
+		
+    super( internalName, displayName, description );
+    
+    if ( tableConstraintModifier == null || tableConstraintModifier.equals("")
 		    || fieldNameModifier == null || fieldNameModifier.equals(""))
 		    throw new ConfigurationException("FilterSets must be defined with an internalName, tableConstraintModifier, and fieldNameModifier");
 		    
-		this.internalName = internalName;
 		this.tableConstraintModifier = tableConstraintModifier;
 		this.fieldNameModifier = fieldNameModifier;
-		this.displayName = displayName;
-		this.description = description;
+
 		
 		thisHashCode = internalName.hashCode();
 		thisHashCode = (31 * thisHashCode) + tableConstraintModifier.hashCode();
@@ -83,33 +83,6 @@ public class FilterSetDescription {
 		thisHashCode = (31 * thisHashCode) + description.hashCode(); 
 	}
 	
-	/**
-	 * Returns the description of the FilterSetDescription.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the displayName to represent the FilterSetDescription in a UI
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName to internally represent the FilterSetDescription
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
 	/**
 	 * Returns the tableConstraintModifier.
 	 * 
@@ -132,9 +105,7 @@ public class FilterSetDescription {
 		StringBuffer buf = new StringBuffer();
 		
 		buf.append("[");
-		buf.append("internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", tableConstraintModifier=").append(tableConstraintModifier);
 		buf.append(", fieldNameModifier=").append(fieldNameModifier);
 		buf.append("[");
@@ -156,8 +127,9 @@ public class FilterSetDescription {
 		return thisHashCode;
 	}
 	
-	private final String internalName, tableConstraintModifier, fieldNameModifier, displayName, description;
-	private int thisHashCode = 0;
+ private String tableConstraintModifier;
+ private String fieldNameModifier;
+ private int thisHashCode = 0;
 	
 	public static final List SUPPORTED_MOD = Collections.unmodifiableList(Arrays.asList( new String[] {"field", "table" } ) );
 	

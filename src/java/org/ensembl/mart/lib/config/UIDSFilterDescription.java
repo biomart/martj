@@ -26,7 +26,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see org.ensembl.mart.lib.DSFilterHandler
  */
-public class UIDSFilterDescription {
+public class UIDSFilterDescription extends BaseConfigurationObject {
 	
 	/**
 	 * This will throw a ConfigurationException
@@ -64,12 +64,13 @@ public class UIDSFilterDescription {
    * @throws ConfigurationException when internalName, type, or objectCode are null
    */
   public UIDSFilterDescription(String internalName, String type, String objectCode, String filterSetReq, String displayName, String description, String optionName) throws ConfigurationException {
-  	if (internalName == null || internalName.equals("")
-  	  || type == null || type.equals("")
+  	
+    super( internalName, displayName, description );
+    
+    if ( type == null || type.equals("")
   	  || objectCode == null || objectCode.equals(""))
-  	  throw new ConfigurationException("UIDSFilterDescription object must have an internalName, type and objectCode");
+  	  throw new ConfigurationException("UIDSFilterDescription object must have a type and objectCode");
   	  
-  	this.internalName = internalName;
   	this.type = type;
   	this.objectCode = objectCode;
   	
@@ -77,8 +78,6 @@ public class UIDSFilterDescription {
   	  inFilterSet = true;
   	  
   	this.filterSetReq = filterSetReq;
-  	this.displayName = displayName;
-  	this.description = description;
   	this.optionName = optionName;
   	
   	//generate hashcode for immutable object
@@ -92,33 +91,6 @@ public class UIDSFilterDescription {
 		hshcode = (31 * hshcode) + optionName.hashCode();
   }  
   
-	/**
-	 * Returns the Description of this UIDSFilterDescription.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the displayName of this UIDSFilterDescription
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the internalName of this UIDSFilterDescription
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
 	/**
 	 * Returns the objectCode of this UIDSFilterDescription
 	 * 
@@ -168,9 +140,7 @@ public class UIDSFilterDescription {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[ UIDSFilterDescription:");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", type=").append(type);
 		buf.append(", objectCode=").append(objectCode);
 		
@@ -198,7 +168,10 @@ public class UIDSFilterDescription {
 		 return hshcode;
 	}
 	
-  private final String internalName, displayName, description, type, objectCode, filterSetReq, optionName;
+  private String type;
+  private String objectCode;
+  private String filterSetReq;
+  private String optionName;
   private boolean inFilterSet = false;
   private int hshcode = 0;
 }

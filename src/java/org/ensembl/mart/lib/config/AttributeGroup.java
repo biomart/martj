@@ -30,7 +30,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public final class AttributeGroup {
+public final class AttributeGroup extends BaseConfigurationObject {
 
 	/*
 	 * AttributeGroups must have an internalName, so disable parameterless constructor.
@@ -58,39 +58,8 @@ public final class AttributeGroup {
 	 * @throws ConfigurationException when required parameters are null or empty
 	 */
 	public AttributeGroup(String internalName, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("AttributeGroup must have an internalName");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
-	}
-
-	/**
-	 * Returns internalName
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns displayName
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns description.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
+		super( internalName, displayName, description);
+    
 	}
 
 	/**
@@ -256,10 +225,8 @@ public final class AttributeGroup {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
-		buf.append(", attributeCollections=").append(attributeCollections);
+    buf.append( super.toString() );
+    buf.append(", attributeCollections=").append(attributeCollections);
 		buf.append("]");
 
 		return buf.toString();
@@ -273,9 +240,7 @@ public final class AttributeGroup {
 	}
 
   public int hashCode() {
-		int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int tmp = super.hashCode();
 		
 		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
 			AttributeCollection element = (AttributeCollection) iter.next();
@@ -285,7 +250,6 @@ public final class AttributeGroup {
 		return tmp;
   }
   
-	private final String internalName, displayName, description;
 	private int cRank = 0;
 	private TreeMap attributeCollections = new TreeMap();
 	private Hashtable attributeCollectionNameMap = new Hashtable();

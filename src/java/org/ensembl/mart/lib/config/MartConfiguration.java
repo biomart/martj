@@ -67,7 +67,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartConfiguration {
+public class MartConfiguration extends BaseConfigurationObject {
 
 	/*
 	* MartConfigurations must have a internalName, so dont allow parameterless construction
@@ -96,13 +96,11 @@ public class MartConfiguration {
 	 * @param description String description of the mart database for this configuration
 	 * @throws ConfigurationException when internalName is null.
 	 */
-	public MartConfiguration(String martname, String displayName, String description) throws ConfigurationException {
-		if (martname == null)
-			throw new ConfigurationException("MartConfiguration must have a martname");
+	public MartConfiguration(String internalName, String displayName, String description) throws ConfigurationException {
 
-		this.internalName = martname;
-		this.description = description;
-		this.displayName = displayName;
+    super( internalName, displayName, description );
+    
+		
 	}
 
 	/**
@@ -132,33 +130,6 @@ public class MartConfiguration {
 			datasetNameMap.put(d[i].getInternalName(), rankInt);
 			thisRank++;
 		}
-	}
-
-	/**
-	 * Returns the name of the mart for this configuration.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the description of the mart for this configuration.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Returns the DisplayName of the MartConfiguration.  To display in a UI.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
 	}
 
 	/**
@@ -202,9 +173,7 @@ public class MartConfiguration {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", datasets=").append(datasets);
 		buf.append("]");
 
@@ -230,7 +199,6 @@ public class MartConfiguration {
 		return tmp;
 	}
 
-	private final String internalName, description, displayName;
 	private int thisRank = 0;
 	private TreeMap datasets = new TreeMap();
 	private Hashtable datasetNameMap = new Hashtable();

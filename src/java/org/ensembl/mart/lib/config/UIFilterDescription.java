@@ -25,7 +25,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class UIFilterDescription {
+public class UIFilterDescription extends BaseConfigurationObject {
 
 	/**
 	 * This will throw a ConfigurationException.
@@ -75,11 +75,12 @@ public class UIFilterDescription {
 		String description,
 		String optionName)
 		throws ConfigurationException {
-		if (internalName == null || internalName.equals("") || fieldName == null || fieldName.equals("") || type == null || type.equals(""))
-			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
+      
+    super( internalName, displayName, description );
+      
+		if ( fieldName == null || fieldName.equals("") || type == null || type.equals(""))
+			throw new ConfigurationException("UIFilterDescription requires a fieldName and type.");
 
-		this.internalName = internalName;
-		this.displayName = displayName;
 		this.fieldName = fieldName;
 		this.type = type;
 		this.qualifier = qualifier;
@@ -90,8 +91,7 @@ public class UIFilterDescription {
 		if (!(filterSetReq == null || filterSetReq.equals("")))
 			inFilterSet = true;
 
-		this.description = description;
-
+		
 		hshcode = inFilterSet ? 1 : 0;
 		hshcode = (31 * hshcode) + internalName.hashCode();
 		hshcode = (31 * hshcode) + displayName.hashCode();
@@ -102,24 +102,6 @@ public class UIFilterDescription {
 		hshcode = (31 * hshcode) + filterSetReq.hashCode();
 		hshcode = (31 * hshcode) + description.hashCode();
 		hshcode = (31 * hshcode) + optionName.hashCode();
-	}
-
-	/**
-	 * Returns the InternalName of the UIFilterDescription.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName of the UIFilterDescription.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
 	}
 
 	/**
@@ -178,15 +160,6 @@ public class UIFilterDescription {
 	}
 
 	/**
-	 * Returns the description.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
-	}
-
-	/**
 	 * Returns the optionName
 	 * @return String optionName
 	 */
@@ -198,8 +171,7 @@ public class UIFilterDescription {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[ UIFilterDescription:");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
+		buf.append( super.toString());
 		buf.append(", fieldName=").append(fieldName);
 		buf.append(", type=").append(type);
 		buf.append(", qualifier=").append(qualifier);
@@ -208,7 +180,6 @@ public class UIFilterDescription {
 		if (inFilterSet)
 			buf.append(", filterSetReq=").append(filterSetReq);
 
-		buf.append(", description=").append(description);
 		buf.append(", optionName=").append(optionName);
 		buf.append("]");
 
@@ -226,7 +197,12 @@ public class UIFilterDescription {
 		return hshcode;
 	}
 
-	private final String internalName, displayName, fieldName, type, qualifier, filterSetReq, tableConstraint, description, optionName;
+  private String fieldName;
+  private String type;
+  private String qualifier;
+  private String filterSetReq;
+  private String tableConstraint;
+  private String optionName;
 	private boolean inFilterSet = false;
 	private int hshcode = 0;
 }

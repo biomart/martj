@@ -30,7 +30,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class AttributePage {
+public class AttributePage extends BaseConfigurationObject {
 
 	/*
 	 * AttributePages must have an internalName. So disable paremeterless construction
@@ -59,39 +59,8 @@ public class AttributePage {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public AttributePage(String internalName, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("AttributePage must have an internalName");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
-	}
-
-	/**
-	 * Returns the internalName of the AttributePage
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName to display in a UI.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the description of the AttributePage
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
+    super( internalName, displayName, description);
+    
 	}
 
 	/**
@@ -312,10 +281,8 @@ public class AttributePage {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
-		buf.append(", AttributeGroups=").append(attributeGroups);
+    buf.append( super.toString() );
+    buf.append(", AttributeGroups=").append(attributeGroups);
 		buf.append("]");
 
 		return buf.toString();
@@ -329,9 +296,7 @@ public class AttributePage {
 	}
 	
   public int hashCode() {
-  	int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+  	int tmp = super.hashCode();
 		
 		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
 			Object element = (AttributeGroup) iter.next();
@@ -344,8 +309,7 @@ public class AttributePage {
   	return tmp;
   }
   
-	private final String internalName, displayName, description;
-	private int agroupRank = 0;
+private int agroupRank = 0;
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 

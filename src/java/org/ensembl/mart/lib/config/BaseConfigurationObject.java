@@ -33,6 +33,12 @@ public class BaseConfigurationObject {
       this.internalName = internalName;
       this.displayName = displayName;
       this.description = description;
+      
+      int tmp = 17;
+      tmp = tmp*37 + (( internalName!=null ) ? internalName.hashCode() : 0);
+      tmp = tmp*37 + (( displayName!=null ) ? displayName.hashCode() : 0);
+      tmp = tmp*37 + (( description!=null ) ? description.hashCode() : 0);
+      hashCode = tmp; 
     }
       
     /**
@@ -59,6 +65,16 @@ public class BaseConfigurationObject {
 			return internalName;
 		}
     
+    
+    public int hashCode() {
+      return hashCode;
+    }
+    
+    
+    public boolean equals(Object o) {
+      return o instanceof BaseConfigurationObject && o.hashCode()==hashCode();
+    }
+    
     public String toString() {
 			StringBuffer buf = new StringBuffer();
 
@@ -72,4 +88,5 @@ public class BaseConfigurationObject {
 		}
     
   protected final String internalName, displayName, description;
+  protected final int hashCode;
 }

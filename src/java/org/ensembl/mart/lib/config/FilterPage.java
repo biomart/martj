@@ -31,7 +31,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterPage {
+public class FilterPage extends BaseConfigurationObject {
 
 	/*
 	* FilterPages must have an internalName, so disable parameterless construction
@@ -58,39 +58,8 @@ public class FilterPage {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public FilterPage(String internalName, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("FilterPage must have an internalName");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
-	}
-
-	/**
-	 * Returns the internalName to internally represent the FilterPage.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName of the FilterPage
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the description of the FilterPage.
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
+    super( internalName, displayName, description);
+    
 	}
 
 	/**
@@ -376,9 +345,7 @@ public class FilterPage {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", FilterGroups=").append(filterGroups);
 		buf.append("]");
 		return buf.toString();
@@ -392,9 +359,7 @@ public class FilterPage {
 	}
 
 	public int hashCode() {
-		int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int tmp = super.hashCode();
 
 		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
@@ -407,7 +372,7 @@ public class FilterPage {
 		return tmp;
 	}
 
-	private final String displayName, description, internalName;
+ 
 
 	private int fcRank = 0;
 	private TreeMap filterGroups = new TreeMap();

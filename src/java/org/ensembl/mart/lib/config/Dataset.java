@@ -649,10 +649,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	public int hashCode() {
-		int tmp = internalName.hashCode();
-
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int tmp = super.hashCode();
 
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);

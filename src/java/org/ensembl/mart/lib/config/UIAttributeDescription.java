@@ -24,7 +24,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class UIAttributeDescription {
+public class UIAttributeDescription extends BaseConfigurationObject {
 
 	/*
 	 * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
@@ -68,15 +68,15 @@ public class UIAttributeDescription {
 		String homePageURL,
 		String linkoutURL)
 		throws ConfigurationException {
-		if (internalName == null || internalName.equals("") || fieldName == null || fieldName.equals(""))
-			throw new ConfigurationException("UIAttributeDescriptions require a displayName, and fieldName");
+		
+    super( internalName, displayName, description );
+    
+    if ( fieldName == null || fieldName.equals(""))
+			throw new ConfigurationException("UIAttributeDescriptions require a fieldName");
 
-		this.internalName = internalName;
-		this.displayName = displayName;
 		this.fieldName = fieldName;
 		this.maxLength = maxLength;
 		this.tableConstraint = tableConstraint;
-		this.description = description;
 		this.source = source;
 		this.homepageURL = homePageURL;
 		this.linkoutURL = linkoutURL;
@@ -90,24 +90,6 @@ public class UIAttributeDescription {
 		hshcode = (31 * hshcode) + source.hashCode();
 		hshcode = (31 * hshcode) + homepageURL.hashCode();
 		hshcode = (31 * hshcode) + linkoutURL.hashCode();
-	}
-
-	/**
-	 * Returns the internalName.
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
 	}
 
 	/**
@@ -135,15 +117,6 @@ public class UIAttributeDescription {
 	 */
 	public String getTableConstraint() {
 		return tableConstraint;
-	}
-
-	/**
-	 * Returns the Description.
-	 * 
-	 * @return String description.
-	 */
-	public String getDescription() {
-		return description;
 	}
 
 	/**
@@ -176,12 +149,10 @@ public class UIAttributeDescription {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[ UIAttributeDescription:");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
+		buf.append( super.toString() );
 		buf.append(", fieldName=").append(fieldName);
 		buf.append(", maxLength=").append(maxLength);
 		buf.append(", tableConstraint=").append(tableConstraint);
-		buf.append(", description=").append(description);
 		buf.append(", source=").append(source);
 		buf.append(", homePageURL=").append(homepageURL);
 		buf.append(", linkoutURL=").append(linkoutURL);
@@ -201,7 +172,11 @@ public class UIAttributeDescription {
 		return hshcode;
 	}
 
-	private final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
+  private String fieldName;
+  private String tableConstraint;
+  private String source;
+  private String homepageURL;
+  private String linkoutURL;
 	private final int maxLength;
 	private int hshcode = 0;
 

@@ -28,7 +28,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class AttributeCollection {
+public class AttributeCollection extends BaseConfigurationObject {
 
 	/*
 	 * AttributeCollections must have a internalName, type, and maxSelect
@@ -60,40 +60,8 @@ public class AttributeCollection {
 	 * @throws ConfigurationException if required parameters are null or empty.
 	 */
 	public AttributeCollection(String internalName, int maxSelect, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("AttributeCollections must contain an internalName and maxSelect value");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
+    super( internalName, displayName, description);
 		this.maxSelect = maxSelect;
-	}
-
-	/**
-	 * Returns the internalName of the AttributeCollection.
-	 * 
-	 * @return String internalName of the AttributeCollection
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName of the AttributeCollection.
-	 * 
-	 * @return String displayName.
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the description of the AttributeCollection
-	 * 
-	 * @return String description of the AttributeCollection
-	 */
-	public String getDescription() {
-		return description;
 	}
 
 	/**
@@ -170,9 +138,7 @@ public class AttributeCollection {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", maxSelect=").append(maxSelect);
 		buf.append(", AttributeDescriptions=").append(uiAttributes);
 		buf.append("]");
@@ -188,9 +154,7 @@ public class AttributeCollection {
 	}
 
 	public int hashCode() {
-		int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int tmp = super.hashCode();
 		
 		for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
 			UIAttributeDescription element = (UIAttributeDescription) iter.next();
@@ -199,7 +163,6 @@ public class AttributeCollection {
 		return tmp;
 	}
   
-	private final String internalName, displayName, description;
 	private final int maxSelect;
 	private int aRank = 0;
 	private TreeMap uiAttributes = new TreeMap();

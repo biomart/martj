@@ -32,7 +32,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterGroup {
+public class FilterGroup extends BaseConfigurationObject {
 
 	/*
 	 * FilterGroups must have an internalName, so disable parameterless construction.
@@ -60,39 +60,7 @@ public class FilterGroup {
 	 * @throws ConfigurationException when internalName is null or empty.
 	 */
 	public FilterGroup(String internalName, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals(""))
-			throw new ConfigurationException("FilterGroup must contain an internalName");
-
-		this.internalName = internalName;
-		this.displayName = displayName;
-		this.description = description;
-	}
-
-	/**
-	 * Returns the internalName of the FilterGroup
-	 * 
-	 * @return String internalName
-	 */
-	public String getInternalName() {
-		return internalName;
-	}
-
-	/**
-	 * Returns the displayName of the FilterGroup.
-	 * 
-	 * @return String displayName
-	 */
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	/**
-	 * Returns the description of the FilterGroup
-	 * 
-	 * @return String description
-	 */
-	public String getDescription() {
-		return description;
+		super( internalName, displayName, description );
 	}
 
 	/**
@@ -400,9 +368,7 @@ public class FilterGroup {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
+		buf.append( super.toString() );
 		buf.append(", filterCollections=").append(filterCollections);
 		if (hasFilterSets)
 			buf.append(", filterSets=").append(filterSets);
@@ -419,9 +385,7 @@ public class FilterGroup {
 	}
 
   public int hashCode() {
-		int tmp = internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int tmp = super.hashCode();
 		
 		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
 			FilterCollection element = (FilterCollection) iter.next();
@@ -438,8 +402,7 @@ public class FilterGroup {
 		return tmp;
   }
   
-	private final String internalName, displayName, description;
-	private int cRank = 0; //keep track of collection order
+private int cRank = 0; //keep track of collection order
 	private boolean hasFilterSets = false;
 	
 	private TreeMap filterCollections = new TreeMap();
