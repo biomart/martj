@@ -64,6 +64,7 @@ DEFAULT_USER  = "anonymous"
 DEFAULT_PASSWORD = ""
 
 APPLICATION_SIZE = (1000,700)
+ATTRIBUTE_WIDGET_SIZE = (170, 30)
 GAP = 5
 SPACE=" &nbsp;"
 
@@ -178,7 +179,7 @@ class AttributeManager(ChangeListener ):
         self.attributePage = attributePage
 
         self.__widget = JPanel( BorderLayout() )
-        self.__widget.preferredSize = (170, 30)
+        self.__widget.preferredSize = ATTRIBUTE_WIDGET_SIZE
         self.name = str(self)
 
         if group:
@@ -199,6 +200,9 @@ class AttributeManager(ChangeListener ):
     def getNode( self ):
 	return self.__node
 
+
+    def deselect( self ):
+        self.button.selected = 0
 
     def stateChanged( self, event=None):
 
@@ -981,6 +985,68 @@ class SequencePage(Page):
 
 
 
+class AttributeSubPage(Page):
+
+    def __init__(self, attributePage, configuration):
+	Page.__init__(self)
+        self.attributePage = attributePage
+        self.name = configuration[0]
+        self.attributeManagers = []
+        self.noneButtons = []
+        tabPanel = Box.createVerticalBox()
+        clearButton = JButton("Clear", actionPerformed=self.clear )
+        tabPanel.add( clearButton )
+        for groupData in configuration[1:]:
+            # groupData level
+            groupPanel = Box.createVerticalBox()
+            groupPanel.border=BorderFactory.createTitledBorder( groupData[0] ) 
+            tabPanel.add( groupPanel ) 
+            for subGroup in groupData[1:]:
+                # option group level
+                groupTitle = subGroup[0][0]
+                
+                # Support 2 column lists of options
+                colPanel = ColumnContainer()
+                colPanel.border = BorderFactory.createTitledBorder( subGroup[0][0] )
+                groupPanel.add( colPanel )
+                
+                # handle radio button lists
+                radio = subGroup[0][1]==1
+                if radio:
+                    radioGroup = ButtonGroup()
+                    noneButton = JRadioButton("None", selected=1)
+                    radioGroup.add( noneButton )
+                    self.noneButtons.append( noneButton )
+                    colPanel.add( noneButton )
+                else:
+                    radioGroup = None
+                    clearButton = None
+                    
+                for attribute in subGroup[1]:
+                    am = AttributeManager( attribute, self, radioGroup )
+                    self.attributeManagers.append( am )
+                    colPanel.add( am.getWidget() )
+                    
+                # prevent panel being stretched by layout manager
+                colPanel.freezeMaximumSize()
+
+        self.add( tabPanel )
+        self.add( Box.createVerticalGlue() )
+
+
+    def addNode(self, node):
+        self.attributePage.addNode( node )
+
+    def removeNode(self, node):
+        self.attributePage.removeNode( node )
+
+
+    def clear(self, event=None):
+        for b in self.noneButtons:
+            b.selected = 1
+        for am in self.attributeManagers:
+            am.deselect()
+
 
 class AttributePage(Page):
 
@@ -1012,50 +1078,8 @@ class AttributePage(Page):
 	
 	# add All AttributeSubPages (add user attributes to features, snps)
         for tabData in configuration:
-            tabPanel = Box.createVerticalBox()
-            tabbedPane.add( tabPanel, tabData[0] )
-            for groupData in tabData[1:]:
-                # groupData level
-                groupPanel = Box.createVerticalBox()
-                groupPanel.border=BorderFactory.createTitledBorder( groupData[0] ) 
-                tabPanel.add( groupPanel ) 
-                for subGroup in groupData[1:]:
-                    # option group level
-                    groupTitle = subGroup[0][0]
-            
-                    # Support 2 column lists of options
-                    list = ( Box.createVerticalBox(), Box.createVerticalBox() )
-                    listPanel = Box.createHorizontalBox()
-                    listPanel.border = BorderFactory.createTitledBorder( subGroup[0][0] )
-                    listPanel.add( list[0] )
-                    listPanel.add( list[1] )
-                    groupPanel.add( listPanel )
-                    
-                    # handle radio button lists
-                    radio = subGroup[0][1]==1
-                    if radio:
-                        radioGroup = ButtonGroup()
-                        clearButton = JRadioButton("None", selected=1)
-                        radioGroup.add( clearButton )
-                        cbPanel = JPanel( BorderLayout() )
-                        cbPanel.add( clearButton, BorderLayout.WEST )
-                        list[0].add( cbPanel )
-		    else:
-			radioGroup = None
-			clearButton = None
-                       
-                    i = 0
-                    for attribute in subGroup[1]:
-			am = AttributeManager( attribute, self, radioGroup )
-                        list[i%2].add( am.getWidget() )
-                        i = i+1
-                        
-                # prevent grouppanels being stretched to fill the
-                # available space.
-                groupPanel.maximumSize = groupPanel.preferredSize
-
-            tabPanel.add( Box.createVerticalGlue() )
-
+            subPage = AttributeSubPage( self, tabData )
+            tabbedPane.add( subPage, subPage.name )
     
 
     def updateQuery(self, query):
