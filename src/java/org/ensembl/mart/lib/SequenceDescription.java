@@ -434,9 +434,9 @@ public final class SequenceDescription {
                                                                                            "cdna", 
                                                                                            "transcript_exons", 
                                                                                            "transcript_exon_intron",
-                                                                                           "transcript_flanks",
-		                                                                                       "gene_exons",                                                                                           
+                                                                                           "transcript_flanks",                                                                                           
                                                                                            "gene_exon_intron",
+                                                                                           "gene_exons",                                                                                           
                                                                                            "gene_flanks",
                                                                                            "downstream_utr",
                                                                                            "upstream_utr"
