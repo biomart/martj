@@ -2623,6 +2623,7 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
+      System.out.println("getting table name "+tableName);
       TableDescription table = getTableDescriptionFor(databaseName, tableName);
 
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
@@ -2663,6 +2664,7 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
+      System.out.println ("Second time tablename "+ tableName);
       String content = null;
 
       String[] tableTokenizer = tableName.split("__");
@@ -2723,12 +2725,14 @@ public class DatabaseDatasetConfigUtils {
           logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
-
-          if (isAllNull(cname, tableName))
-            continue;
+System.out.println ("tableName before AllNULL "+tableName);
+          //if (isAllNull(cname, tableName))
+           // continue;
 
           if (isMainTable(tableName)) {
             tableName = "main";
+             System.out.println("Resetting table name to: "+ tableName);
+
             allCols.add(cname);
             if (!cname.endsWith("_bool"))
               fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
@@ -2820,7 +2824,8 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
-      TableDescription table = getTableDescriptionFor(databaseName, tableName);
+
+     TableDescription table = getTableDescriptionFor(databaseName, tableName);
 
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
@@ -3347,6 +3352,7 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
 
       String sql = "SELECT " + cname + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL LIMIT 1";
+      System.out.println("Offending SQL: "+ sql);
       PreparedStatement ps = conn.prepareStatement(sql);
       ResultSet rs = ps.executeQuery();
 
