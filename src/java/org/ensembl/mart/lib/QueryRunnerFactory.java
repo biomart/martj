@@ -96,8 +96,16 @@ public class QueryRunnerFactory {
 				      case SequenceDescription.UPSTREAMUTR:
 				        thisQueryRunner = new UpStreamUTRSeqQueryRunner(q,f,conn,out);
 				        break;
+				        
+				      default:
+							  //TODO: impliment java ClassLoader system to pull in client SeqQueryRunner object
+							  throw new FormatException("Unsuported Query Type\n");
       		  }
       		  break;
+      		  
+      		  default:
+      		    //TODO: impliment java ClassLoader system to pull in client QueryRunner object
+      		    throw new FormatException("Unsuported Query Type\n");
 		   }
 		   return thisQueryRunner;
 	}
