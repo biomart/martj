@@ -18,6 +18,8 @@
 
 package org.ensembl.mart.lib;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.*;
 
 import org.ensembl.util.StringUtil;
@@ -37,7 +39,9 @@ import org.ensembl.util.StringUtil;
  * @see DSFilter
  */
 public class Query {
-	/**
+  
+	
+  /**
 	 * enums over query types
 	 * clients can set type using the constant
 	 * and test / get results as well
@@ -145,18 +149,23 @@ public class Query {
 	 * @param Attribute attribute
 	 */
 	public void addAttribute(Attribute attribute) {
-		if (!attributes.contains(attribute))
+		if (!attributes.contains(attribute)) {
 			attributes.add(attribute);
+      changeSupport.firePropertyChange("attribute", null, attribute);
+    }
 	}
 
 	/**
-	 * remove an Attribute object from the list of Attributes
+	 * remove a Filter object from the list of Attributes
 	 * 
-	 * @param Attribute attribute
+	 * @param Filter filter
 	 */
-	public void removeAttribute(Attribute attribute) {
-		if (attributes.contains(attribute))
-			attributes.remove(attribute);
+	public void removeFilter(Filter filter) {
+		if (filters.contains(filter)) {
+		
+			filters.remove(filter);
+      changeSupport.firePropertyChange("filter", filter, null);
+    }
 	}
 
 	/**
@@ -175,7 +184,9 @@ public class Query {
 	 * @param List attributes
 	 */
 	public void setAttributes(Attribute[] attributes) {
+    Object old = this.attributes;
 		this.attributes = new ArrayList(Arrays.asList(attributes));
+    changeSupport.firePropertyChange("attribute", old, this.attributes);
 	}
 
 	/**
@@ -219,8 +230,10 @@ public class Query {
 	 * @param Filter[] filters
 	 */
 	public void setFilters(Filter[] filters) {
+    Object old = getFilters();
 		for (int i = 0, n = filters.length; i < n; i++)
       addFilter(filters[i]);
+    changeSupport.firePropertyChange("filters", old, getFilters() );
 	}
 
 	/**
@@ -231,13 +244,30 @@ public class Query {
 	 * @param Filter filter
 	 */
 	public void addFilter(Filter filter) {
+    Object old = getFilters();
 		if (filter instanceof IDListFilter && ( (IDListFilter) filter).getType() != IDListFilter.STRING ) {
 		  unprocessedfilters.add((IDListFilter) filter);
 		  hasUnprocessedListFilters = true;
 		}
 		else
 		  filters.add(filter);
+      
+
+    changeSupport.firePropertyChange("filters", old, getFilters() );
 	}
+
+  /**
+   * remove an Attribute object from the list of Attributes
+   * 
+   * @param Attribute attribute
+   */
+  public void removeAttribute(Attribute attribute) {
+    if (attributes.contains(attribute)) {
+    
+      attributes.remove(attribute);
+      changeSupport.firePropertyChange("attribute", attribute, null);
+    }
+  }
 
   /**
    * get all DomainSpecificFilter objects as a DomainSpecificFilter[] Array
@@ -257,8 +287,11 @@ public class Query {
    * @param DomainSpecificFilter[] dsfilters
    */
   public void setDomainSpecificFilters(DomainSpecificFilter[] dsfilters) {
+    Object old = getDomainSpecificFilters();
   	hasDomainSpecificFilters = true;
   	this.dsfilters.addAll(Arrays.asList(dsfilters));
+
+    changeSupport.firePropertyChange("domain_specific_filters", old, getDomainSpecificFilters() );
   }
   
   /**
@@ -267,8 +300,10 @@ public class Query {
    * @param DomainSpecificFilter dsfilter
    */
   public void addDomainSpecificFilter(DomainSpecificFilter dsfilter) {
-  	hasDomainSpecificFilters = true;
+    Object old = getDomainSpecificFilters();
+    hasDomainSpecificFilters = true;
    	dsfilters.add(dsfilter);
+    changeSupport.firePropertyChange("domain_specific_filters", old, getDomainSpecificFilters() );  
   }
   
   /**
@@ -298,8 +333,10 @@ public class Query {
 	* @param s A SequenceDescription object.
 	*/
 	public void setSequenceDescription(SequenceDescription s) {
+    Object old = getSequenceDescription();
 		this.seqd = s;
 		this.querytype = Query.SEQUENCE;
+    changeSupport.firePropertyChange("sequence_description", old, getSequenceDescription() );
 	}
 
 	/**
@@ -323,7 +360,9 @@ public class Query {
 	 * @param String primaryKeys
 	 */
 	public void setPrimaryKeys(String[] primaryKeys) {
+    Object old = getPrimaryKeys();
 		this.primaryKeys = primaryKeys;
+    changeSupport.firePropertyChange("primary_keys", old, getPrimaryKeys() );
 	}
 
 	/**
@@ -339,7 +378,9 @@ public class Query {
 	 * @param String starBases
 	 */
 	public void setStarBases(String[] starBases) {
+    Object old = getStarBases();
 		this.starBases = starBases;
+    changeSupport.firePropertyChange("star_bases", old, getStarBases() );
 	}
 
   /**
@@ -347,8 +388,11 @@ public class Query {
    * @param inlimit - int limit to add to the Query
    */
   public void setLimit(int inlimit) {
-  	if (inlimit > 0)
+  	if (inlimit > 0) {
+      int old = this.limit;
   	  this.limit = inlimit;
+      changeSupport.firePropertyChange("limit", old, this.limit );
+    }
   }
 	/**
 	 * Determine if the Query has a limit > 0.
@@ -471,4 +515,62 @@ public class Query {
 	private String[] primaryKeys;
 	private String[] starBases;
 	private int limit = 0; // add a limit clause to the SQL with an int > 0
+  private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
+  /**
+   * @param listener
+   */
+  public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
+    changeSupport.addPropertyChangeListener(listener);
+  }
+
+  /**
+   * @param propertyName
+   * @param listener
+   */
+  public synchronized void addPropertyChangeListener(
+    String propertyName,
+    PropertyChangeListener listener) {
+    changeSupport.addPropertyChangeListener(propertyName, listener);
+  }
+
+  /**
+   * @return
+   */
+  public synchronized PropertyChangeListener[] getPropertyChangeListeners() {
+    return changeSupport.getPropertyChangeListeners();
+  }
+
+  /**
+   * @param propertyName
+   * @return
+   */
+  public synchronized PropertyChangeListener[] getPropertyChangeListeners(String propertyName) {
+    return changeSupport.getPropertyChangeListeners(propertyName);
+  }
+
+  /**
+   * @param propertyName
+   * @return
+   */
+  public synchronized boolean hasListeners(String propertyName) {
+    return changeSupport.hasListeners(propertyName);
+  }
+
+  /**
+   * @param listener
+   */
+  public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
+    changeSupport.removePropertyChangeListener(listener);
+  }
+
+  /**
+   * @param propertyName
+   * @param listener
+   */
+  public synchronized void removePropertyChangeListener(
+    String propertyName,
+    PropertyChangeListener listener) {
+    changeSupport.removePropertyChangeListener(propertyName, listener);
+  }
+
 }

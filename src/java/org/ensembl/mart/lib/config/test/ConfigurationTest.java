@@ -855,7 +855,7 @@ public class ConfigurationTest extends Base {
 
     public void testConfFile() throws Exception {    	
 		String confFile = "data/xmltest/test_file.xml";
-		URL confURL = org.apache.log4j.helpers.Loader.getResource(confFile);
+		URL confURL = ClassLoader.getSystemResource(confFile);
 		MartConfiguration martconf = new MartConfigurationFactory().getInstance(confURL);
 		
 		String testMartName = "test_file";

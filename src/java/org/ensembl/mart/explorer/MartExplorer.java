@@ -72,7 +72,7 @@ public class MartExplorer extends JPanel {
   private Preferences prefs;
   
     
-	private QueryManager queryManager = new QueryManager();
+	//private QueryEditor queryManager = new QueryEditor();
 	//private Engine engine = new Engine();
 	  
     
