@@ -315,7 +315,7 @@ public class LabelledComboBox extends Box implements ActionListener {
     int index = -1;
     ComboBoxModel model = combo.getModel();
     for (int i = 0; index==-1 && i < model.getSize(); i++) {
-      if ( model.getElementAt(i)== item ) index = i;
+      if ( model.getElementAt(i).equals(item)  ) index = i;
     }
     return index;
 	}
