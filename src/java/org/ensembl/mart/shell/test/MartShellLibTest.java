@@ -18,13 +18,15 @@
  
 package org.ensembl.mart.shell.test;
 
+import java.net.URL;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.MartConfiguration;
+import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.lib.test.StatOutputStream;
 import org.ensembl.mart.shell.MartShellLib;
@@ -35,6 +37,8 @@ import org.ensembl.mart.shell.MartShellLib;
  */
 public class MartShellLibTest extends Base {
 
+  private final String HSAPDSETFILE = "data/XML/homo_sapiens__ensembl_genes.xml";
+  
 	public static void main(String[] args) {
 		if (args.length > 0)
 			TestRunner.run(TestClass(args[0]));
@@ -57,13 +61,17 @@ public class MartShellLibTest extends Base {
 	}
 
   public void testMQLtoQuery() throws Exception {
-  	MartConfiguration martconf = engine.getMartConfiguration();
+    URL hsapdsetXMLURL = MartShellLibTest.class.getClassLoader().getResource(HSAPDSETFILE);
+    assertNotNull("Missing dataset file: " + HSAPDSETFILE + "\n", hsapdsetXMLURL);
+    
+    URLDSViewAdaptor adaptor = new URLDSViewAdaptor(hsapdsetXMLURL);
   	
-  	MartShellLib msl = new MartShellLib(martconf);
+  	MartShellLib msl = new MartShellLib(adaptor);
   	
-  	String martSQL = "select ensembl_gene_id from homo_sapiens_ensembl_genes limit 100";
+  	String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
 		StatOutputStream stats = new StatOutputStream();
     Query query = msl.MQLtoQuery(martSQL);
+    query.setDataSource(martJDataSource);
     
     engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, stats);
     

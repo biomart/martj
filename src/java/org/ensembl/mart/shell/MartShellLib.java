@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,10 +45,11 @@ import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.MartConfiguration;
 
 /**
  * <p>Library allowing client code to parse Mart Query Language (MQL)
@@ -127,8 +129,8 @@ import org.ensembl.mart.lib.config.MartConfiguration;
  */
 public class MartShellLib {
 
-	public MartShellLib(MartConfiguration martconf) {
-		this.martconf = martconf;
+	public MartShellLib(DSViewAdaptor adaptor) {
+		this.adaptor = adaptor;
 	}
 
 	/**
@@ -142,18 +144,18 @@ public class MartShellLib {
 	}
 
 	/**
-	 * Set or Reset the MartConfiguration object to use in parsing Queries and MQL
+	 * Set or Reset the DSViewAdaptor object to use in parsing Queries and MQL
 	 * statements.
 	 * 
-	 * @param martconf
+	 * @param adaptor
 	 */
-	public void setMartConfiguration(MartConfiguration martconf) {
-		this.martconf = martconf;
+	public void setDSViewAdaptor(DSViewAdaptor adaptor) {
+		this.adaptor = adaptor;
 	}
 
-	private void LoadMaps() {
+	private void LoadMaps() throws ConfigurationException {
 		if (!mapsLoaded) {
-			DatasetView[] dsets = martconf.getDatasets();
+			DatasetView[] dsets = adaptor.getDatasetViews();
 
 			for (int i = 0, n = dsets.length; i < n; i++) {
 				DatasetView dataset = dsets[i];
@@ -230,24 +232,24 @@ public class MartShellLib {
 	 * @return String MQL statement
 	 * throws InvalidQueryException for all underlying exceptions
 	 */
-	public String QueryToMQL(Query query) throws InvalidQueryException {
+	public String QueryToMQL(Query query) throws InvalidQueryException, ConfigurationException {
 		String commandEnd = ";";
 		LoadMaps();
 
 		StringBuffer mqlbuf = new StringBuffer();
 		boolean success = false;
 
-		String datasetName = getDataset(query);
+		String datasetName = query.getDatasetName();
 
 		//	get datasetName first
 		if (datasetName == null)
-			throw new InvalidQueryException("Could not determine dataset with starbases from query provided\n");
+			throw new InvalidQueryException("Recieved null DatasetName from query provided\n");
 
-		if (!martconf.containsDataset(datasetName))
+		if (!adaptor.supportsInternalName(datasetName))
 			throw new InvalidQueryException(
 				"DatasetView " + datasetName + " is not supported by the martConfiguration provided\n");
 
-		DatasetView dataset = martconf.getDatasetByName(datasetName);
+		DatasetView dataset = adaptor.getDatasetViewByInternalName(datasetName);
 
 		success = getGetClause(query, dataset, mqlbuf);
 
@@ -266,19 +268,6 @@ public class MartShellLib {
 		if (!success)
 			throw new InvalidQueryException("Could not compile MQL from Query\n" + MQLError + "\n");
 		return mqlbuf.append(commandEnd).toString();
-	}
-
-	private String getDataset(Query query) {
-		String datasetName = null;
-
-		String[] starbases = query.getStarBases();
-		for (int i = 0, n = starbases.length; i < n; i++) {
-			if (starBase_Dataset.containsKey(starbases[i])) {
-				datasetName = (String) starBase_Dataset.get(starbases[i]);
-				break;
-			}
-		}
-		return datasetName;
 	}
 
 	private boolean getGetClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
@@ -457,7 +446,7 @@ public class MartShellLib {
 
 			try {
 				mqlbuf.append("(").append(QueryToMQL(subq)).append(")");
-			} catch (InvalidQueryException e) {
+			} catch (Exception e) {
 				success = false;
 				MQLError = ("Could not map subquery:\n" + subq + "\n" + e);
 			}
@@ -504,10 +493,24 @@ public class MartShellLib {
 	 * @param mql - String mql subquery.
 	 */
 	public void addStoredMQLCommand(String key, String mql) {
-		logger.info("Storing command with key " + key + "\n");
+    if (logger.isLoggable(Level.INFO))
+		  logger.info("Storing command with key " + key + "\n");
 		storedCommands.put(key, mql);
 	}
 
+  /**
+   * Remove a stored MQL statement with its key.
+   * @param key -- key for stored MQL command
+   */
+  public void removeStoredMQLCommand(String key) {
+    if (storedCommands.containsKey(key)) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Removing stored MQL command for key " + key + "\n");
+      
+      storedCommands.remove(key);
+    }
+  }
+  
 	/** 
 	 * Creates a Query object from a Mart Query Language command.
 	 * 
@@ -516,165 +519,207 @@ public class MartShellLib {
 	 * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, DatasetView/Attributes/Sequences/Filters not found, etc.)
 	 */
 	public Query MQLtoQuery(String newquery) throws InvalidQueryException {
-		boolean start = true;
-		boolean getClause = false;
-		boolean usingClause = false;
-		boolean domainSpecificClause = false;
-		boolean fromClause = false;
-		boolean whereClause = false;
-		boolean limitClause = false;
-		boolean inList = false;
-		boolean inBind = false;
-		boolean inQuotedValue = false;
-		boolean whereFilterName = false;
-		boolean whereFilterCond = false;
-		boolean whereFilterVal = false;
-
-		logger.info("Recieved Query " + newquery + "\n");
-
-		DatasetView dset = null;
-		Query query = new Query();
-		currentFpage = null;
-		currentApage = null;
-		atts = new ArrayList();
-		filtNames = new ArrayList();
-		maxSelects = new Hashtable();
-
-		String filterName = null;
-		String filterCondition = null;
-		StringBuffer filterValue = new StringBuffer();
-		StringBuffer storedCommand = new StringBuffer();
-		List listFilterValues = new ArrayList();
-		String domainSpecificKeyword = null;
-
-		StringTokenizer cTokens = new StringTokenizer(newquery, " ");
-
-		if (cTokens.countTokens() < 2)
-			throw new InvalidQueryException("\nInvalid Query Recieved " + newquery + "\n");
-
-		while (cTokens.hasMoreTokens()) {
-			String thisToken = cTokens.nextToken();
-			if (start) {
-				if (!(thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, should begin with either 'using' or 'get': " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(GETQSTART)) {
-					start = false;
-					getClause = true;
-				} else {
-					start = false;
-					usingClause = true;
-				}
-			} else if (usingClause) {
-				if (thisToken.equalsIgnoreCase(QSEQUENCE))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, sequence clause before " + GETQSTART + " clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, where clause before " + GETQSTART + " clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QLIMIT))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, limit clause before " + GETQSTART + " clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)) {
-					usingClause = false;
-					getClause = true;
-				} else {
-					if (dset != null) {
-						logger.info("Recieved " + thisToken + " as appearent dataset, after it had already been set\n");
+		try {
+			boolean start = true;
+			boolean getClause = false;
+			boolean usingClause = false;
+			boolean domainSpecificClause = false;
+			boolean fromClause = false;
+			boolean whereClause = false;
+			boolean limitClause = false;
+			boolean inList = false;
+			boolean inBind = false;
+			boolean inQuotedValue = false;
+			boolean whereFilterName = false;
+			boolean whereFilterCond = false;
+			boolean whereFilterVal = false;
+			
+			if (logger.isLoggable(Level.INFO))
+			  logger.info("Recieved Query " + newquery + "\n");
+			
+			DatasetView dset = null;
+			Query query = new Query();
+			currentFpage = null;
+			currentApage = null;
+			atts = new ArrayList();
+			filtNames = new ArrayList();
+			maxSelects = new Hashtable();
+			
+			String filterName = null;
+			String filterCondition = null;
+			StringBuffer filterValue = new StringBuffer();
+			StringBuffer storedCommand = new StringBuffer();
+			List listFilterValues = new ArrayList();
+			String domainSpecificKeyword = null;
+			
+			StringTokenizer cTokens = new StringTokenizer(newquery, " ");
+			
+			if (cTokens.countTokens() < 2)
+				throw new InvalidQueryException("\nInvalid Query Recieved " + newquery + "\n");
+			
+			while (cTokens.hasMoreTokens()) {
+				String thisToken = cTokens.nextToken();
+				if (start) {
+					if (!(thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)))
 						throw new InvalidQueryException(
-							"Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
+							"Invalid Query Recieved, should begin with either 'using' or 'get': " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(GETQSTART)) {
+						start = false;
+						getClause = true;
 					} else {
-						if (!martconf.containsDataset(thisToken))
-							throw new InvalidQueryException("DatasetView " + thisToken + " is not found in this mart\n");
+						start = false;
+						usingClause = true;
+					}
+				} else if (usingClause) {
+					if (thisToken.equalsIgnoreCase(QSEQUENCE))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, sequence clause before " + GETQSTART + " clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QWHERE))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, where clause before " + GETQSTART + " clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QLIMIT))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, limit clause before " + GETQSTART + " clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)) {
+						usingClause = false;
+						getClause = true;
+					} else {
+						if (dset != null) {
+							logger.info("Recieved " + thisToken + " as appearent dataset, after it had already been set\n");
+							throw new InvalidQueryException(
+								"Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
+						} else {
+							if (!adaptor.supportsInternalName(thisToken))
+								throw new InvalidQueryException("DatasetView " + thisToken + " is not found in this mart\n");
+								
+							dset = adaptor.getDatasetViewByInternalName(thisToken);
+							logger.info("setting local dataset to " + dset.getInternalName() + "\n");
+						}
+			
+					}
+				} else if (getClause) {
+					if (thisToken.endsWith(","))
+						thisToken = thisToken.substring(0, thisToken.length() - 1);
+			
+					// set dataset and update query with starbases, or throw an exception if dataset not set
+					if (dset == null) {
+						if (envDataset == null) {
+							throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
+						} else {
+							if (!adaptor.supportsInternalName(envDataset))
+								throw new InvalidQueryException("DatasetView " + envDataset + " is not found in this mart\n");
+							dset = adaptor.getDatasetViewByInternalName(envDataset);
+						}
+					}
+          query.setDatasetName(dset.getInternalName());
+					query.setStarBases(dset.getStarBases());
+					query.setPrimaryKeys(dset.getPrimaryKeys());
+			
+					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, "
+								+ GETQSTART
+								+ " clause in the middle of a "
+								+ GETQSTART
+								+ " clause: "
+								+ newquery
+								+ "\n");
+					else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						getClause = false;
+						limitClause = true;
+					} else if (domainSpecificHandlerAvailable(thisToken)) {
+						domainSpecificKeyword = thisToken;
+						getClause = false;
+						domainSpecificClause = true;
+					} else if (thisToken.equalsIgnoreCase(QWHERE)) {
+						getClause = false;
+						whereClause = true;
+						whereFilterName = true;
+					} else {
+						StringTokenizer attToks = new StringTokenizer(thisToken, ",");
+						while (attToks.hasMoreTokens())
+							query = addAttribute(query, dset, attToks.nextToken().trim());
+					}
+				} else if (domainSpecificClause) {
+					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, " + GETQSTART + " clause in the middle of a sequence clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						domainSpecificClause = false;
+						limitClause = true;
+					} else if (thisToken.equalsIgnoreCase(QWHERE)) {
+						domainSpecificClause = false;
+						whereClause = true;
+						whereFilterName = true;
+					} else
+						query = modifyQueryForDomainSpecificKeyword(domainSpecificKeyword, query, dset, thisToken);
+				} else if (whereClause) {
+					if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						whereClause = false;
+						limitClause = true;
+					} else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, " + GETQSTART + " clause after where clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QWHERE))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, where clause after where clause: " + newquery + "\n");
+			
+					else if (thisToken.equalsIgnoreCase(FILTERDELIMITER)) {
+						whereFilterCond = false;
+						whereFilterVal = false;
+						whereFilterName = true;
+					} else if (whereFilterName) {
+						if (thisToken.matches("[^>=<]+([>=<]+)[^>=<]*")) {
+							Pattern pat = Pattern.compile("[^>=<]+([>=<]+)[^>=<]*"); //one or more non qualifier characters followed immediately by a qualifier, followed by zero or more non qualifier characters
+							Matcher m = pat.matcher(thisToken);
+			
+							m.find(); // know its there, just have to find it
+							filterCondition = m.group(1);
 							
-						dset = martconf.getDatasetByName(thisToken);
-						logger.info("setting local dataset to " + dset.getInternalName() + "\n");
-					}
-
-				}
-			} else if (getClause) {
-				if (thisToken.endsWith(","))
-					thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-				// set dataset and update query with starbases, or throw an exception if dataset not set
-				if (dset == null) {
-					if (envDataset == null) {
-						throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
-					} else {
-						if (!martconf.containsDataset(envDataset))
-							throw new InvalidQueryException("DatasetView " + envDataset + " is not found in this mart\n");
-						dset = martconf.getDatasetByName(envDataset);
-					}
-				}
-				query.setStarBases(dset.getStarBases());
-				query.setPrimaryKeys(dset.getPrimaryKeys());
-
-				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, "
-							+ GETQSTART
-							+ " clause in the middle of a "
-							+ GETQSTART
-							+ " clause: "
-							+ newquery
-							+ "\n");
-				else if (thisToken.equalsIgnoreCase(QLIMIT)) {
-					getClause = false;
-					limitClause = true;
-				} else if (domainSpecificHandlerAvailable(thisToken)) {
-					domainSpecificKeyword = thisToken;
-					getClause = false;
-					domainSpecificClause = true;
-				} else if (thisToken.equalsIgnoreCase(QWHERE)) {
-					getClause = false;
-					whereClause = true;
-					whereFilterName = true;
-				} else {
-					StringTokenizer attToks = new StringTokenizer(thisToken, ",");
-					while (attToks.hasMoreTokens())
-						query = addAttribute(query, dset, attToks.nextToken().trim());
-				}
-			} else if (domainSpecificClause) {
-				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, " + GETQSTART + " clause in the middle of a sequence clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QLIMIT)) {
-					domainSpecificClause = false;
-					limitClause = true;
-				} else if (thisToken.equalsIgnoreCase(QWHERE)) {
-					domainSpecificClause = false;
-					whereClause = true;
-					whereFilterName = true;
-				} else
-					query = modifyQueryForDomainSpecificKeyword(domainSpecificKeyword, query, dset, thisToken);
-			} else if (whereClause) {
-				if (thisToken.equalsIgnoreCase(QLIMIT)) {
-					whereClause = false;
-					limitClause = true;
-				} else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, " + GETQSTART + " clause after where clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, where clause after where clause: " + newquery + "\n");
-
-				else if (thisToken.equalsIgnoreCase(FILTERDELIMITER)) {
-					whereFilterCond = false;
-					whereFilterVal = false;
-					whereFilterName = true;
-				} else if (whereFilterName) {
-					if (thisToken.matches("[^>=<]+([>=<]+)[^>=<]*")) {
-						Pattern pat = Pattern.compile("[^>=<]+([>=<]+)[^>=<]*"); //one or more non qualifier characters followed immediately by a qualifier, followed by zero or more non qualifier characters
-						Matcher m = pat.matcher(thisToken);
-
-						m.find(); // know its there, just have to find it
-						filterCondition = m.group(1);
-						
-						StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
-
-						if (filtToks.countTokens() == 2) {
-							query = addBasicFilter(query, dset, filtToks.nextToken(), filterCondition, filtToks.nextToken());
-
+							StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
+			
+							if (filtToks.countTokens() == 2) {
+								query = addBasicFilter(query, dset, filtToks.nextToken(), filterCondition, filtToks.nextToken());
+			
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+							} else {
+								filterName = filtToks.nextToken();
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = true;
+							}
+						} else {
+							filterName = thisToken;
+							whereFilterName = false;
+							whereFilterCond = true;
+							whereFilterVal = false;
+						}
+					} else if (whereFilterCond) {
+						if (BOOLEANQUALIFIERS.contains(thisToken)) {
+							query = addBooleanFilter(query, dset, filterName, thisToken);
+			
+							filterValue = new StringBuffer();
+							filterName = null;
+							filterCondition = null;
+							whereFilterName = false;
+							whereFilterCond = false;
+							whereFilterVal = false;
+						} else if (thisToken.matches("([>=<]+)([^>=<]+)")) {
+							Pattern p = Pattern.compile("([>=<]+)([^>=<]+)");
+							Matcher m = p.matcher(thisToken);
+							m.find();
+							filterCondition = m.group(1);
+							String thisFilterValue = m.group(2);
+			
+			        logger.info(" storing qual value " + filterCondition + " , " + thisFilterValue + "\n");
+			        
+							query = addBasicFilter(query, dset, filterName, filterCondition, thisFilterValue);
+			
 							filterValue = new StringBuffer();
 							filterName = null;
 							filterCondition = null;
@@ -682,238 +727,206 @@ public class MartShellLib {
 							whereFilterCond = false;
 							whereFilterVal = false;
 						} else {
-							filterName = filtToks.nextToken();
-							whereFilterName = false;
+							filterCondition = thisToken;
 							whereFilterCond = false;
 							whereFilterVal = true;
 						}
-					} else {
-						filterName = thisToken;
-						whereFilterName = false;
-						whereFilterCond = true;
-						whereFilterVal = false;
-					}
-				} else if (whereFilterCond) {
-					if (BOOLEANQUALIFIERS.contains(thisToken)) {
-						query = addBooleanFilter(query, dset, filterName, thisToken);
-
-						filterValue = new StringBuffer();
-						filterName = null;
-						filterCondition = null;
-						whereFilterName = false;
-						whereFilterCond = false;
-						whereFilterVal = false;
-					} else if (thisToken.matches("([>=<]+)([^>=<]+)")) {
-						Pattern p = Pattern.compile("([>=<]+)([^>=<]+)");
-						Matcher m = p.matcher(thisToken);
-						m.find();
-						filterCondition = m.group(1);
-						String thisFilterValue = m.group(2);
-
-            logger.info(" storing qual value " + filterCondition + " , " + thisFilterValue + "\n");
-            
-						query = addBasicFilter(query, dset, filterName, filterCondition, thisFilterValue);
-
-						filterValue = new StringBuffer();
-						filterName = null;
-						filterCondition = null;
-						whereFilterName = false;
-						whereFilterCond = false;
-						whereFilterVal = false;
-					} else {
-						filterCondition = thisToken;
-						whereFilterCond = false;
-						whereFilterVal = true;
-					}
-				} else if (whereFilterVal) {
-					if (thisToken.startsWith(QUOTE)) {
-						String tok = thisToken.substring(1);
-						
-						inQuotedValue = true;
-
-            if (thisToken.endsWith(QUOTE)) {
-            	tok = tok.substring(0, tok.length() - 1);
-							query = addBasicFilter(query, dset, filterName, filterCondition, tok);
-
-							inQuotedValue = false;
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;
-            } else
-              filterValue.append(tok);
-					} else if (inQuotedValue) {
-						if (thisToken.endsWith(QUOTE)) {
-							filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
+					} else if (whereFilterVal) {
+						if (thisToken.startsWith(QUOTE)) {
+							String tok = thisToken.substring(1);
 							
-							query = addBasicFilter(query, dset, filterName, filterCondition, filterValue.toString());
-
-							inQuotedValue = false;
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;						
-						} else
-							filterValue.append(" ").append(thisToken);
-					} else if (thisToken.equals(LSTART)) {
-						inList = true;
-					} else if (thisToken.startsWith(LSTART)) {
-						inList = true;
-
-						String tmp = thisToken.substring(1);
-
-						if (tmp.indexOf(LEND) > 0) {
-							inList = false;
-
-							tmp = tmp.substring(0, tmp.indexOf(LEND));
-							StringTokenizer toks = new StringTokenizer(tmp, ",");
-							while (toks.hasMoreTokens())
-								listFilterValues.add(toks.nextToken().trim());
-
-							query = addListFilter(query, dset, filterName, listFilterValues);
-
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;
-							listFilterValues = new ArrayList();
-						} else {
-							if (tmp.indexOf(",") >= 0) {
+							inQuotedValue = true;
+			
+			        if (thisToken.endsWith(QUOTE)) {
+			        	tok = tok.substring(0, tok.length() - 1);
+								query = addBasicFilter(query, dset, filterName, filterCondition, tok);
+			
+								inQuotedValue = false;
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+			        } else
+			          filterValue.append(tok);
+						} else if (inQuotedValue) {
+							if (thisToken.endsWith(QUOTE)) {
+								filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
+								
+								query = addBasicFilter(query, dset, filterName, filterCondition, filterValue.toString());
+			
+								inQuotedValue = false;
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;						
+							} else
+								filterValue.append(" ").append(thisToken);
+						} else if (thisToken.equals(LSTART)) {
+							inList = true;
+						} else if (thisToken.startsWith(LSTART)) {
+							inList = true;
+			
+							String tmp = thisToken.substring(1);
+			
+							if (tmp.indexOf(LEND) > 0) {
+								inList = false;
+			
+								tmp = tmp.substring(0, tmp.indexOf(LEND));
 								StringTokenizer toks = new StringTokenizer(tmp, ",");
-
 								while (toks.hasMoreTokens())
 									listFilterValues.add(toks.nextToken().trim());
+			
+								query = addListFilter(query, dset, filterName, listFilterValues);
+			
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+								listFilterValues = new ArrayList();
 							} else {
-								listFilterValues.add(tmp);
-							}
-						}
-					} else if (inList) {
-						if (thisToken.indexOf(LEND) >= 0) {
-							inList = false;
-							String tmp = thisToken.substring(0, thisToken.indexOf(LEND));
-							if (tmp.length() > 0) {
-								StringTokenizer toks = new StringTokenizer(tmp, ",");
-
-								while (toks.hasMoreTokens())
-									listFilterValues.add(toks.nextToken().trim());
-							}
-							query = addListFilter(query, dset, filterName, listFilterValues);
-
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;
-							listFilterValues = new ArrayList();
-						} else {
-							StringTokenizer toks = new StringTokenizer(thisToken, ",");
-
-							while (toks.hasMoreTokens())
-								listFilterValues.add(toks.nextToken().trim());
-						}
-					} else if (thisToken.indexOf(LSTART) > 0) {
-						if (thisToken.endsWith(LEND)) {
-							// storedCommand with bindValues, no whitespaces
-							query = addListFilter(query, dset, filterName, thisToken);
-
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;
-							inBind = false;
-							storedCommand = new StringBuffer();
-						} else {
-							//append to storedCommand
-							inBind = true;
-							if (storedCommand.length() > 0)
-								storedCommand.append(" ");
-							storedCommand.append(thisToken);
-						}
-					} else if (inBind) {
-						if (thisToken.endsWith(LEND)) {
-							// add storedCommand
-							query = addListFilter(query, dset, filterName, storedCommand.append(" ").append(thisToken).toString());
-
-							filterValue = new StringBuffer();
-							filterName = null;
-							filterCondition = null;
-							whereFilterName = false;
-							whereFilterCond = false;
-							whereFilterVal = false;
-							inBind = false;
-							storedCommand = new StringBuffer();
-						} else {
-							//append to storedCommand
-							if (storedCommand.length() > 0)
-								storedCommand.append(" ");
-							storedCommand.append(thisToken);
-						}
-					} else {
-						if (filterCondition.equalsIgnoreCase("in")) {
-							if (thisToken.indexOf(":") >= 0) {
-								//url
-								try {
-									query = addListFilter(query, dset, filterName, new URL(thisToken));
-								} catch (Exception e) {
-									throw new InvalidQueryException(
-										"Error adding url filter " + filterName + " " + thisToken + " " + e.getMessage(),
-										e);
+								if (tmp.indexOf(",") >= 0) {
+									StringTokenizer toks = new StringTokenizer(tmp, ",");
+			
+									while (toks.hasMoreTokens())
+										listFilterValues.add(toks.nextToken().trim());
+								} else {
+									listFilterValues.add(tmp);
 								}
-							} else if (storedCommands.containsKey(thisToken)) {
-								//storedCommand without bindvalues
-								query = addListFilter(query, dset, filterName, thisToken);
+							}
+						} else if (inList) {
+							if (thisToken.indexOf(LEND) >= 0) {
+								inList = false;
+								String tmp = thisToken.substring(0, thisToken.indexOf(LEND));
+								if (tmp.length() > 0) {
+									StringTokenizer toks = new StringTokenizer(tmp, ",");
+			
+									while (toks.hasMoreTokens())
+										listFilterValues.add(toks.nextToken().trim());
+								}
+								query = addListFilter(query, dset, filterName, listFilterValues);
+			
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+								listFilterValues = new ArrayList();
 							} else {
-								//file
-								query = addListFilter(query, dset, filterName, new File(thisToken));
+								StringTokenizer toks = new StringTokenizer(thisToken, ",");
+			
+								while (toks.hasMoreTokens())
+									listFilterValues.add(toks.nextToken().trim());
+							}
+						} else if (thisToken.indexOf(LSTART) > 0) {
+							if (thisToken.endsWith(LEND)) {
+								// storedCommand with bindValues, no whitespaces
+								query = addListFilter(query, dset, filterName, thisToken);
+			
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+								inBind = false;
+								storedCommand = new StringBuffer();
+							} else {
+								//append to storedCommand
+								inBind = true;
+								if (storedCommand.length() > 0)
+									storedCommand.append(" ");
+								storedCommand.append(thisToken);
+							}
+						} else if (inBind) {
+							if (thisToken.endsWith(LEND)) {
+								// add storedCommand
+								query = addListFilter(query, dset, filterName, storedCommand.append(" ").append(thisToken).toString());
+			
+								filterValue = new StringBuffer();
+								filterName = null;
+								filterCondition = null;
+								whereFilterName = false;
+								whereFilterCond = false;
+								whereFilterVal = false;
+								inBind = false;
+								storedCommand = new StringBuffer();
+							} else {
+								//append to storedCommand
+								if (storedCommand.length() > 0)
+									storedCommand.append(" ");
+								storedCommand.append(thisToken);
 							}
 						} else {
-							query = addBasicFilter(query, dset, filterName, filterCondition, thisToken);
+							if (filterCondition.equalsIgnoreCase("in")) {
+								if (thisToken.indexOf(":") >= 0) {
+									//url
+									try {
+										query = addListFilter(query, dset, filterName, new URL(thisToken));
+									} catch (Exception e) {
+										throw new InvalidQueryException(
+											"Error adding url filter " + filterName + " " + thisToken + " " + e.getMessage(),
+											e);
+									}
+								} else if (storedCommands.containsKey(thisToken)) {
+									//storedCommand without bindvalues
+									query = addListFilter(query, dset, filterName, thisToken);
+								} else {
+									//file
+									query = addListFilter(query, dset, filterName, new File(thisToken));
+								}
+							} else {
+								query = addBasicFilter(query, dset, filterName, filterCondition, thisToken);
+							}
+			
+							filterValue = new StringBuffer();
+							filterName = null;
+							filterCondition = null;
+							whereFilterName = false;
+							whereFilterCond = false;
+							whereFilterVal = false;
 						}
-
-						filterValue = new StringBuffer();
-						filterName = null;
-						filterCondition = null;
-						whereFilterName = false;
-						whereFilterCond = false;
-						whereFilterVal = false;
-					}
-				} else
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, invalid filter statement in where clause: " + newquery + "\n");
-			} else if (limitClause) {
-				if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, " + GETQSTART + " clause in limit clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
-					throw new InvalidQueryException(
-						"Invalid Query Recieved, sequence clause in limit clause: " + newquery + "\n");
-				else if (thisToken.equalsIgnoreCase(QWHERE))
-					throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
-				else {
-					if (query.getLimit() > 0)
-						throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + newquery + "\n");
+					} else
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, invalid filter statement in where clause: " + newquery + "\n");
+				} else if (limitClause) {
+					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, " + GETQSTART + " clause in limit clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QSEQUENCE))
+						throw new InvalidQueryException(
+							"Invalid Query Recieved, sequence clause in limit clause: " + newquery + "\n");
+					else if (thisToken.equalsIgnoreCase(QWHERE))
+						throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
 					else {
-						query.setLimit(Integer.parseInt(thisToken));
+						if (query.getLimit() > 0)
+							throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + newquery + "\n");
+						else {
+							query.setLimit(Integer.parseInt(thisToken));
+						}
 					}
 				}
+				// else not needed, as these are the only states present
 			}
-			// else not needed, as these are the only states present
+			
+			if (query.getAttributes().length == 0 && query.getSequenceDescription() == null)
+				throw new InvalidQueryException(
+					"Invalid Query Recieved, no attributes or sequence description found " + newquery + "\n");
+			
+			return query;
+		} catch (NumberFormatException e) {
+      throw new InvalidQueryException("Recieved NumberFormatException parsing MQL " + e.getMessage(), e);
+		} catch (InvalidQueryException e) {
+      throw e;
+		} catch (ConfigurationException e) {
+      throw new InvalidQueryException("Recieved ConfigurationException parsing MQL " + e.getMessage(), e);
 		}
-
-		if (query.getAttributes().length == 0 && query.getSequenceDescription() == null)
-			throw new InvalidQueryException(
-				"Invalid Query Recieved, no attributes or sequence description found " + newquery + "\n");
-
-		return query;
 	}
 
 	private Query modifyQueryForDomainSpecificKeyword(
@@ -1317,7 +1330,7 @@ public class MartShellLib {
 	private String MQLError = null;
 
 	//MartShellLib instance variables
-	private MartConfiguration martconf;
+	private DSViewAdaptor adaptor;
 	private String envDataset = null;
 	private AttributePage currentApage = null;
 	// keeps track of the AttributePage
