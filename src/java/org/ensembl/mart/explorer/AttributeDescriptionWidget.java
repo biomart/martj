@@ -37,128 +37,111 @@ import org.ensembl.mart.lib.config.AttributeDescription;
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class AttributeDescriptionWidget
-	extends InputPage
-	implements PropertyChangeListener {
+  extends InputPage {
 
-	private AttributeDescription attributeDescription;
-	private Query query;
-	private Attribute attribute;
-	private JCheckBox button;
-
+  private AttributeDescription attributeDescription;
+  private Query query;
+  private Attribute attribute;
+  private JCheckBox button;
 
   /**
    * BooleanFilter containing an InputPage, this page is used by the QueryEditor
    * when it detects the filter has been added or removed from the query.
    */
-  private class InputPageAwareAttribute extends FieldAttribute implements InputPageAware {
+  private class InputPageAwareAttribute
+    extends FieldAttribute
+    implements InputPageAware {
 
     private InputPage inputPage;
 
-		public InputPageAwareAttribute(String field, InputPage inputPage) {
-			super(field);
+    public InputPageAwareAttribute(String field, InputPage inputPage) {
+      super(field);
       this.inputPage = inputPage;
-		}
+    }
 
-		public InputPageAwareAttribute(String field, String tableConstraint, InputPage inputPage) {
-			super(field, tableConstraint);
+    public InputPageAwareAttribute(
+      String field,
+      String tableConstraint,
+      InputPage inputPage) {
+      super(field, tableConstraint);
       this.inputPage = inputPage;
-		}
+    }
 
-    
     public InputPage getInputPage() {
       return inputPage;
     }
   }
 
-	/**
-	 * @param query
-	 * @param name
+  /**
+   * @param query
+   * @param name
    */
-	public AttributeDescriptionWidget(
-		final Query query,
-		AttributeDescription attributeDescription) {
+  public AttributeDescriptionWidget(
+    final Query query,
+    AttributeDescription attributeDescription) {
 
-		super(query, attributeDescription.getDisplayName());
+    super(query, attributeDescription.getDisplayName());
 
-		this.attributeDescription = attributeDescription;
-		this.query = query;
+    this.attributeDescription = attributeDescription;
+    this.query = query;
 
-		attribute =
-			new InputPageAwareAttribute(
-				attributeDescription.getField(),
-				attributeDescription.getTableConstraint(),
+    attribute =
+      new InputPageAwareAttribute(
+        attributeDescription.getField(),
+        attributeDescription.getTableConstraint(),
         this);
-    setField( attribute );
-    
-		button = new JCheckBox(attributeDescription.getDisplayName());
-		button.addActionListener(new ActionListener() {
-			
+    setField(attribute);
+
+    button = new JCheckBox(attributeDescription.getDisplayName());
+    button.addActionListener(new ActionListener() {
+
       public void actionPerformed(ActionEvent event) {
-        
-        if ( button.isSelected() ) query.addAttribute(attribute);
-        else query.removeAttribute(attribute);
 
-			}
-		});
+        if (button.isSelected())
+          query.addAttribute(attribute);
+        else
+          query.removeAttribute(attribute);
 
-		query.addPropertyChangeListener(this);
+      }
+    });
 
-		add(button);
-	}
+    query.addQueryChangeListener(this);
+
+    add(button);
+  }
 
   public Attribute getAttribute() {
     return attribute;
   }
 
-	/** 
-	 * Listens to changes in query. If an attribute corresponding to this widget is added then
-	 * this the state of this widget is set to selected. If such an attribute is removed then
-	 * the state is set to deselected.
-	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-	 */
-	public void propertyChange(PropertyChangeEvent evt) {
 
-    // respond to property changes if propertyName=="attribute" 
-    // and changed value is of type FieldAttribute and it matches
-    // and the changed value's field matches attribute.field
+  /** 
+   * If the attribute added corresponds to this widget then show it is
+   * selected.
+   * @see org.ensembl.mart.lib.QueryChangeListener#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+   */
+  public void attributeAdded(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
 
-		if (evt.getSource() == query) {
+    if (this.attribute.getField().equals(attribute.getField()))
+      button.setSelected(true);
 
-			if (evt.getPropertyName().equals("attribute")) {
+  }
 
-				Object newValue = evt.getNewValue();
-				Object oldValue = evt.getOldValue();
+  /**
+   * If removed attribute corresponds to this widget then show 
+   * it is not selected.
+   * @see org.ensembl.mart.lib.QueryChangeListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+   */
+  public void attributeRemoved(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
 
-				// attribute removed
-				if (oldValue == null
-					&& newValue != null
-					&& newValue instanceof FieldAttribute) {
+    if (this.attribute.getField().equals(attribute.getField()))
+      button.setSelected(false);
+  }
 
-					FieldAttribute tmp = (FieldAttribute) newValue;
-					if (tmp.getField().equals(attribute.getField())) {
-						button.setSelected( true );
-
-					}
-				}
-
-				// attribute removed
-				else if (
-					oldValue != null
-						&& newValue == null
-						&& oldValue instanceof FieldAttribute) {
-
-					FieldAttribute tmp = (FieldAttribute) oldValue;
-					if (tmp.getField().equals(attribute.getField())) {
-						button.setSelected( false );
-
-					}
-				}
-
-			}
-		}
-
-	}
-
-	
-	
 }

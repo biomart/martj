@@ -49,8 +49,14 @@ public class InputPage extends JPanel implements QueryChangeListener {
     setLayout(new BorderLayout());   
   }
 
+
+  /**
+   * Adds this instance as a query change listener.
+   * @param query
+   */
   public InputPage(Query query) {
-      this(query, null);   
+      this(query, null); 
+      query.addQueryChangeListener(this);  
     }
   public MutableTreeNode getNode() {
     return node;

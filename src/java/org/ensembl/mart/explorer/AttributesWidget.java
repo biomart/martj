@@ -18,22 +18,62 @@
 
 package org.ensembl.mart.explorer;
 
+import javax.swing.JLabel;
+import javax.swing.JTabbedPane;
+
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class AttributesWidget extends InputPage {
 
+  private JTabbedPane tabbedPane = new JTabbedPane();
+  private JLabel unavailableLabel =
+    new JLabel("Unavailable. Choose DatasetView first.");
+  
+  
   /**
+   * Displays the attributes grouped according to query.datasetView.
+   * If none are available if displays a message to that effect. 
    * @param query
    */
   public AttributesWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
     super(query);
-    // TODO Auto-generated constructor stub
+    clearAttributes();
   }
 
-  public static void main(String[] args) {
+  private void clearAttributes() {
+    remove(tabbedPane);
+    add(unavailableLabel);
+    validate();
   }
+
+  /**
+   * Loads attributes from datasetView when a new datasetView is set on
+   * the query.
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   */
+  public void datasetViewChanged(
+    Query query,
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView) {
+
+    if (newDatasetView == null) {
+      clearAttributes();
+    } else {
+      remove( unavailableLabel );
+      tabbedPane.removeAll();
+      AttributePage[] aps = newDatasetView.getAttributePages();
+      for (int i = 0; i < aps.length; i++)
+        tabbedPane.add(
+          new AttributePageWidget(query, aps[i].getDisplayName(), aps[i]));
+      add(tabbedPane);
+      validate();
+    }
+  }
+
 }
