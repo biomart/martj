@@ -54,6 +54,9 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected SequenceDescription seqd = null;
   protected String dataset = null;
   protected String species = null;
+  protected String focus = null;
+  protected String dset = null;
+  protected String structureTable = null;
   protected FormatSpec format = null;
   protected FormattedSequencePrintStream osr;
   protected SeqWriter seqWriter;
@@ -73,8 +76,8 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected String queryID;
   protected String coordStart, coordEnd;
   protected List displayIDs = new ArrayList();
-  protected final String GENEID = "gene_id";
-  protected final String TRANID = "transcript_id";
+  protected final String GENEID = "gene_id_key";
+  protected final String TRANID = "transcript_id_key";
   protected final String RANK = "rank";
   protected final String CHR = "chr_name";
   protected final String ASSEMBLYCOLUMN = "assembly_type";
@@ -175,7 +178,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
       CompiledSQLQuery csql = new CompiledSQLQuery(query);
       String sqlbase = csql.toSQL();
 
-      String structure_table = dataset + "_structure_dm";
+      String structure_table = dset + "__structure__dm";
 
       while (moreRows) {
         sql = sqlbase;
