@@ -762,11 +762,10 @@ class SequencePage(Page):
     def __init__(self, attributePage):
         Page.__init__(self)
         self.attributePage = attributePage
-        self.field = "sequence"
-        self.name = self.field + "_attribute_page"
+        self.name = "sequence"
 	self.node = DefaultMutableTreeNode( self )
 	self.nodeInTree = None
-        self.remove = JButton("Clear", actionPerformed=self.removeAction)
+        self.clearButton = JButton("Clear", actionPerformed=self.clear)
 
         self.transcript = JRadioButton( "Transcripts/proteins"
                                         ,actionPerformed=self.actionPerformed)
@@ -867,11 +866,12 @@ class SequencePage(Page):
         # left of panel it is added to.
         hPanel = Box.createHorizontalBox()
         vPanel = Box.createVerticalBox()
-        map( vPanel.add, (self.remove, self.gene, self.transcript) )
+        map( vPanel.add, (self.gene, self.transcript) )
         hPanel.add( vPanel )
         hPanel.add( Box.createHorizontalGlue() )
         
-        map( self.add, (hPanel
+        map( self.add, (self.clearButton
+                        ,hPanel
                         , includePanel
                         , Box.createVerticalGlue()) )
 	self.changeEvent = ChangeEvent( self )
@@ -928,7 +928,7 @@ class SequencePage(Page):
         #self.stateChanged( self.changeEvent ) # ?
 
 
-    def removeAction( self, event=None ):
+    def clear( self, event=None ):
 	self.noInclude.selected = 1
 	self.noType.selected = 1
         if self.nodeInTree:
@@ -981,6 +981,7 @@ class SequencePage(Page):
             self.includePeptide.selected = 1
         else:
             raise InvalidQueryException("Unsupported sequence description")
+
 
 
 
@@ -1055,10 +1056,10 @@ class AttributePage(Page):
     def __init__(self, cardContainer):
 	Page.__init__(self)
 	self.cardContainer = cardContainer
-	tp = JTabbedPane()
+        self.tabs = []
+	tp = JTabbedPane( stateChanged=self.clear)
 	self.add( tp )
 	self.addTabs(tp, defaultAttributeConfiguration)
-	tp.add( SequencePage(self), "Sequence" )
 
 	# these must be set before add/removeNode() is called.
         self.tree = None
@@ -1078,8 +1079,13 @@ class AttributePage(Page):
 	
 	# add All AttributeSubPages (add user attributes to features, snps)
         for tabData in configuration:
-            subPage = AttributeSubPage( self, tabData )
-            tabbedPane.add( subPage, subPage.name )
+            tab = AttributeSubPage( self, tabData )
+            tabbedPane.add( tab, tab.name )
+            self.tabs.append( tab )
+            
+        sp = SequencePage(self)
+	tabbedPane.add( sp, sp.name )
+        self.tabs.append(sp)
     
 
     def updateQuery(self, query):
@@ -1088,8 +1094,10 @@ class AttributePage(Page):
     def updatePage(self, query):
 	print "todo updatePage"
 
-    def clear( self):
-	print "todo clear"
+    def clear( self, event=None):
+        for tab in self.tabs:
+            tab.clear()
+        
 
     def addNode(self, node):
 	self.tree.model.insertNodeInto( node, self.attributesNode, self.attributesNode.childCount)
