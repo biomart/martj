@@ -625,6 +625,8 @@ public class MartShell {
           thisline = null;
         }
       } catch (Exception e) {
+        if (e instanceof EOFException)
+          break;
         System.err.println(e.getMessage());
 
         StackTraceElement[] stacks = e.getStackTrace();
