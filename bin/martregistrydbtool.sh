@@ -30,6 +30,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ecp1_0beta.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jdbc2_0-stdext.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/p6spy.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ojdbc14.jar
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/pg73jdbc3.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${CLASSPATH}
 
 java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.util.MartRegistryDBTool $@
