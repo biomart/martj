@@ -1,8 +1,8 @@
 <!ENTITY % desc_data 
                   "internalName CDATA #REQUIRED  
                    displayName CDATA #IMPLIED    
-                   description CDATA #IMPLIED"
->
+                   description CDATA #IMPLIED
+                   hidden      CDATA #IMPLIED">
 
                    
 <!ELEMENT DatasetView (Option*, DefaultFilter*, MainTable+, Key+, FilterPage+, AttributePage+)>

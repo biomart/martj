@@ -57,7 +57,7 @@ public class DatasetConfigXMLUtils {
 
 	// element names
 	private static final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
-	private static final String DATASETCONFIG = "DatasetConfig";
+	private static final String DATASETCONFIG = "DatasetView";
 	private static final String STARBASE = "MainTable";
 	private static final String PRIMARYKEY = "Key";
 	private static final String ENABLE = "Enable";
