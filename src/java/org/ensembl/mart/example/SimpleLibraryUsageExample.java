@@ -31,9 +31,7 @@ public class SimpleLibraryUsageExample {
     Logger.getRoot().setLevel(Level.INFO);
     
     // Initialise an engine encapsualting a specific Mart database.
-    Engine engine = new Engine();
-    engine.setConnectionString( "jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1" );
-    engine.setUser( "anonymous" );
+    Engine engine = new Engine( "jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1", "anonymous", "" );
     
     // Create a Query object.
     Query query = new Query();

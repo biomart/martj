@@ -39,6 +39,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.FilterSet;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
+import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.MartDTDEntityResolver;
 import org.ensembl.mart.lib.config.MartXMLutils;
 import org.ensembl.mart.lib.config.Option;
@@ -121,8 +122,16 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, initial xml does not match final xml after a roundtrip.\n", initxml, newxml);
 	}
 
+
+
+
+
+
+
 	public void testMartConfiguration() throws Exception {
-		MartConfiguration martconf = engine.getMartConfiguration(xmlTestID);
+		MartConfiguration martconf = new MartConfigurationFactory().getInstance(
+    engine.getConnection(),
+    xmlTestID);
 
 		//Mart Data Correct
 		String testIName = "ensembl_mart_14_1";
@@ -847,7 +856,7 @@ public class ConfigurationTest extends Base {
     public void testConfFile() throws Exception {    	
 		String confFile = "data/xmltest/test_file.xml";
 		URL confURL = org.apache.log4j.helpers.Loader.getResource(confFile);
-		MartConfiguration martconf = engine.getMartConfiguration(confURL);
+		MartConfiguration martconf = new MartConfigurationFactory().getInstance(confURL);
 		
 		String testMartName = "test_file";
 		String martName = martconf.getInternalName();

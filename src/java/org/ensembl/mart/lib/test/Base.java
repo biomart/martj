@@ -4,6 +4,7 @@ package org.ensembl.mart.lib.test;
 
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -14,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.ensembl.driver.ConfigurationException;
 import org.ensembl.driver.Driver;
 import org.ensembl.driver.DriverManager;
+import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.Query;
 
@@ -26,8 +28,10 @@ public abstract class Base extends TestCase {
 	private final static String connprops = "data/testconnection.conf";
 	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
 
-	private String dbURL = null;
-	private String user = null;
+	private String host = null;
+  private String port = null;
+  private String databaseName = null;
+  private String user = null;
 	private String password = null;
 	private Properties p = new Properties();
 	private URL connectionconf;
@@ -38,13 +42,16 @@ public abstract class Base extends TestCase {
 	protected Query snpquery = new Query();
 
 	public void init() {
-		connectionconf = org.apache.log4j.helpers.Loader.getResource(connprops);
+    
+		connectionconf = ClassLoader.getSystemResource(connprops);
 
 		if (connectionconf != null) {
 			try {
 				p.load(connectionconf.openStream());
 
-				dbURL = p.getProperty("dburl");
+				host = p.getProperty("mysqlhost");
+        port = p.getProperty("mysqlport");
+        databaseName = p.getProperty("mysqldatabase");
 				user = p.getProperty("mysqluser");
 				password = p.getProperty("mysqlpass");
 			} catch (java.io.IOException e) {
@@ -54,7 +61,8 @@ public abstract class Base extends TestCase {
 		} else {
 			System.out.println("Failed to find connection configuration file " + connprops + " using default connection parameters");
 
-			dbURL = "jdbc://mysql/kaka.sanger.ac.uk/ensembl_mart_11_1";
+			host = "kaka.sanger.ac.uk";
+      databaseName = "ensembl_mart_15_1";
 			user = "anonymous";
 		}
 
@@ -66,14 +74,11 @@ public abstract class Base extends TestCase {
 
 	}
 
-	public void setUp() {
+	public void setUp() throws SQLException {
 		init();
 
-		engine = new Engine();
-    engine.setConnectionString(dbURL);
-    engine.setUser(user);
-    engine.setPassword(password);
-		genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+		engine = new Engine( "mysql", host, port, databaseName, user, password);
+    genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		snpquery.setStarBases(new String[] { "hsapiens_snp" });
 		snpquery.setPrimaryKeys(new String[] { "snp_id" });
@@ -90,8 +95,7 @@ public abstract class Base extends TestCase {
   public Connection getDBConnection() throws Exception {
 
 		Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-		logger.info( dbURL );
     		
-		return java.sql.DriverManager.getConnection(dbURL, user, password );
+		return DatabaseUtil.getConnection("mysql", host, port, databaseName, user, password );
   }
 }

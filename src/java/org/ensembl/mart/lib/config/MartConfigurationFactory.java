@@ -86,44 +86,32 @@ public class MartConfigurationFactory {
 
 	private MartConfiguration martconf = null;
 
-	/**
-	 * Overloaded getInstance method allowing user to supply an alternate xml configuration to use.  This configuration
-	 * must exist in the database, and must conform to the MartConfiguration.dtd.  Intended mostly for use by the Unit Test
-	 * ConfigurationTest.testMartConfiguration
-	 * 
-	 * @param conn
-	 * @param martName
-	 * @param system_id
-	 * @return MartConfiguration martconf
-	 * @throws ConfigurationException
-	 */
-	public MartConfiguration getInstance(Connection conn, String martName, String system_id) throws ConfigurationException {
-		martConfSystemID = system_id;
-		return getInstance(conn, martName);
-	}
-
+  public MartConfiguration getInstance(Connection conn) throws ConfigurationException {
+  
+    return getInstance( conn, martConfSystemID);
+  }
+  
+  
 	/**
 	 * Default getInstance method.  Fetches the MartConfiguration.xml document from the mart database named by martName.
 	 * 
 	 * @param conn - A java.sql.Connection object
-	 * @param martName - name of the mart database for which the configuration is requested
+   * @param sytemID - id of config file to be retrieved from database
 	 * 
 	 * @return MartConfiguration object for the requested mart database
 	 * @throws ConfigurationException.  Chains all Exceptions resulting from SQL, JDOM parsing, etc. into a ConfigurationException.
 	 */
-	public MartConfiguration getInstance(Connection conn, String martName) throws ConfigurationException {
+	public MartConfiguration getInstance(Connection conn, String systemID) throws ConfigurationException {
 
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			builder.setValidation(true); // validate against the DTD
 			builder.setEntityResolver(new MartDTDEntityResolver(conn)); // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
 
-			Document doc = builder.build(MartXMLutils.getInputSourceFor(conn, martConfSystemID));
+			Document doc = builder.build(MartXMLutils.getInputSourceFor(conn, systemID));
 
 			Element martconfElement = doc.getRootElement();
 			String mname = martconfElement.getAttributeValue(INTERNALNAME, "");
-			if (!mname.equals(martName))
-				logger.warn("Warning, xml from " + martName + " contains different internalName " + mname + " may need to load a different xml into the mart database");
 
 			String dispname = martconfElement.getAttributeValue(DISPLAYNAME, "");
 			String desc = martconfElement.getAttributeValue(DESCRIPTION, "");

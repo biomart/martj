@@ -68,6 +68,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.FilterSet;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
+import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.UIAttributeDescription;
 import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
@@ -659,13 +660,10 @@ public class MartShell {
 	}
 
 	private void Initialize() throws MalformedURLException, ConfigurationException, SQLException {
-		engine = new Engine();
-    engine.setConnectionString(  "mysql", martHost, martPort, martDatabase);
-    engine.setUser(martUser);
-    engine.setPassword(martPass);
-
+		engine = new Engine("mysql", martHost, martPort, martDatabase, martUser, martPass);
+    
 		if (altConfigurationFile != null)
-			martconf = engine.getMartConfiguration(new URL(altConfigurationFile));
+			martconf = new MartConfigurationFactory().getInstance(new URL(altConfigurationFile));
 		else
 			martconf = engine.getMartConfiguration();
 
