@@ -30,6 +30,19 @@ public class MartExplorerApplication {
     public MartExplorerApplication() {
     }
 
+
+  /**
+   * Initialise logging system to print to logging messages of level >= WARN
+   * to console. Does nothing if system property log4j.configuration is set.
+   */
+  public static void defaultLoggingConfiguration() {
+    if (System.getProperty("log4j.configuration") == null) {
+      
+      BasicConfigurator.configure();
+      Logger.getRoot().setLevel(Level.WARN);
+    }
+  }
+
     /** Examines the command line parameters and then passes them to the appropriate front end implementation. */
     public static void main(String[] args) {
         System.out.println("MartExplorer is running.");
@@ -72,12 +85,8 @@ public class MartExplorerApplication {
         if (loggingURL != null) {
             PropertyConfigurator.configure(loggingURL);
         }
-        else if (System.getProperty("log4j.configuration") == null) {
-            // Initialise logging system to print to logging messages of level >=
-            // WARN to console. Don't bother if the system property
-            // log4j.configuration is set.
-            BasicConfigurator.configure();
-            Logger.getRoot().setLevel(Level.WARN);
+        else {
+          defaultLoggingConfiguration();
         }
         Engine engine = new Engine();
         // start interface: if -c then run CommandLineFrontEnd else SwingFrontEnd
