@@ -49,7 +49,6 @@ import org.ensembl.mart.lib.DetailedDataSource;
  */
 public class DatasetView extends BaseNamedConfigurationObject {
 
-//TODO: remove dataSource from DatasetView, use getAdaptor().getDataSource() instead
 	private final String datasetKey = "dataset";
 	private DSViewAdaptor adaptor = null;
 	private byte[] digest = null;
