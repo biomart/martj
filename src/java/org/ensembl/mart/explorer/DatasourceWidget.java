@@ -115,7 +115,7 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     if (ds == null) {
       chooser.setSelectedItem(none);
     } else {
-      String item = ds.getDisplayName();
+      String item = ds.getName();
       if (!chooser.hasItem(item))
         chooser.addItem(item);
       chooser.setSelectedItem(item);

@@ -75,7 +75,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     String port = ds.getPort();
     String databaseName = ds.getDatabaseName();
 
-    adaptorName = ds.getDisplayName();
+    adaptorName = ds.getName();
 
     try {
       //set up the preferences node with the datasource information as the root node
