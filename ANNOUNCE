@@ -2,7 +2,7 @@
 We are pleased to announce the release of version 0.1 of MartJ - a java
 based set of interfaces and administration tools for BioMart databases.
 
-This release has been extensively tested on Oracle 9i and MySQL 4 and
+This release has been tested on Oracle 9i and MySQL 4 and
 contains fully functional MartEditor, MartShell and most features
 for MartExplorer. It also includes many bug fixes, performance,
 reliability and usability improvements. In addition user documentation
