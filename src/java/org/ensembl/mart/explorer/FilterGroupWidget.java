@@ -76,7 +76,7 @@ public class FilterGroupWidget extends PageWidget {
       InputPage[] attributes = getFilterWidgets(collection);
       widgets.addAll(Arrays.asList(attributes));
       GridPanel p =
-        new GridPanel(attributes, 1, 35, collection.getDisplayName());
+        new GridPanel(attributes, 1, 400, 35, collection.getDisplayName());
       panel.add(p);
 
     }

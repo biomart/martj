@@ -79,7 +79,7 @@ public class AttributeGroupWidget extends GroupWidget {
       InputPage[] attributes = getAttributeWidgets(collection);
       widgets.addAll(Arrays.asList(attributes));
       GridPanel p =
-        new GridPanel(attributes, 2, 25, collection.getDisplayName());
+        new GridPanel(attributes, 2, 200, 35, collection.getDisplayName());
       container.add(p);
 
     }

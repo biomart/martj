@@ -19,12 +19,14 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.border.TitledBorder;
 
 /**
@@ -32,40 +34,25 @@ import javax.swing.border.TitledBorder;
  */
 public class GridPanel extends Box {
 
+  private Dimension componentSize;
   private JComponent[] components;
   private int nColumns;
-  private int rowHeight;
   private int lastWidth;
 
   public GridPanel(
     JComponent[] components,
     int nColumns,
+    int colWidth,
     int rowHeight,
     String title) {
+
     super(BoxLayout.Y_AXIS);
 
     this.components = components;
     this.nColumns = nColumns;
-    this.rowHeight = rowHeight;
+    componentSize = new Dimension(colWidth, rowHeight);
 
     setBorder(new TitledBorder(title));
-    
-    // We manually control the size of the components
-    // in this container.
-    addComponentListener(new ComponentListener() {
-
-      public void componentResized(ComponentEvent e) {
-        resizeComponents( getParent().getSize().width );
-      }
-
-      public void componentMoved(ComponentEvent e) {
-      }
-      public void componentShown(ComponentEvent e) {
-      }
-      public void componentHidden(ComponentEvent e) {
-      }
-
-    });
 
     addComponents(components);
   }
@@ -76,42 +63,32 @@ public class GridPanel extends Box {
 
     for (int i = 0; i < components.length; i++) {
 
-      if (row == null)
+      if (row == null) {
         row = Box.createHorizontalBox();
-      add(row);
+        add(row);
+      }
 
       JComponent c = components[i];
+      setComponentSize(c);
       row.add(c);
 
       if ((i + 1) % nColumns == 0)
         row = null;
     }
-    
-    if ( components.length % nColumns != 0 ) row.add(Box.createHorizontalGlue()); 
+
+    int nPadingCells = components.length % nColumns;
+    for ( int i=0; i<nPadingCells; ++i ) {
+      JComponent c = new JLabel();
+      setComponentSize( c );
+      row.add( c );
+    }
   }
 
-  /**
-   * Resizes leafWidgets to fill width of parent
-   * container.
-   */
-  private void resizeComponents( int width ) {
 
-    if (width != lastWidth) {
-
-      int noScrollWidth = width / nColumns - 10;
-      int height = rowHeight;
-      Dimension size = new Dimension(noScrollWidth, height);
-
-      for (int i = 0, n = components.length; i < n; i++) {
-
-        components[i].setPreferredSize(size);
-        components[i].setMinimumSize(size);
-        components[i].setMaximumSize(size);
-        components[i].invalidate();
-      }
-
-      lastWidth = width;
-    }
+  private void setComponentSize(JComponent c) {
+    c.setPreferredSize(componentSize);
+    c.setMinimumSize(componentSize);
+    c.setMaximumSize(componentSize);
   }
 
 }
