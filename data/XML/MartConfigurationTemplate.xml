@@ -70,7 +70,7 @@
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" fieldName="translation_stable_id" internalName="ensembl_translation_id" qualifier="in" tableConstraint="transcript_main" type="list"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="Expression: NOTE Expression datasets are currently being prototyped. The current datasets have sparse coverage of genes and tissues." internalName="expression">
+      <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="Expression" internalName="expression">
         <FilterSet internalName="expression_type" type="radio">
           <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="est" internalName="sanbi_est" tableConstraintModifier="na"/>
           <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="gnf" internalName="gnf" tableConstraintModifier="na"/>
@@ -79,7 +79,7 @@
           <UIDSFilterDescription description="" displayName="" filterSetReq="field" handler="Expression" internalName="expression_profile" type="select"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multispecies">
+      <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTISPECIES" internalName="multispecies">
         <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs" type="boolean">
           <UIFilterDescription description="Filter for Genes having mouse homologous Genes" displayName="Entries associated with homologous mouse genes" fieldName="mmusculus_homolog" internalName="mouse_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <UIFilterDescription description="Filter for Genes having rat homologous Genes" displayName="Entries associated with homologous rat genes" fieldName="rat_homolog" internalName="rat_homologs" qualifier="" tableConstraint="main" type="boolean"/>
@@ -91,7 +91,7 @@
           <UIFilterDescription description="filter for genes having upstream conserved regions mapped onto the rat genome" displayName="Entries associated with upstream matches in rat genome" fieldName="rnorvegicus_upstream_conserved_regions" internalName="rattus_norvegicu_upstream_conserved_regions" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter on Protein data" displayName=" PROTEIN:" internalName="protein">
+      <FilterGroup description="Filter on Protein data" displayName=" PROTEIN" internalName="protein">
         <FilterCollection description="Limit to genes with these family or domain IDs:" displayName="Limit to genes with these family or domain IDs:" internalName="family_domain_id_list" type="list">
           <UIFilterDescription description="Filter for Genes mapped to a list of Interpro ID(s)" displayName="Interpro ID(s):" fieldName="interpro" internalName="Interpro_ids" qualifier="in" tableConstraint="gene_prot_interpro_dm" type="list"/>
           <UIFilterDescription description="Filter for Genes mapped to a list of PFAM ID(s)" displayName="PFAM ID(s):" fieldName="pfam" internalName="pfam_ids" qualifier="in" tableConstraint="gene_prot_pfam_dm" type="list"/>
@@ -107,7 +107,7 @@
           <UIFilterDescription description="Filter for genes including/excluding Signal Domains" displayName="Signal Domains:" fieldName="signal_peptide" internalName="signal_domains" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
-      <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP:" internalName="snp">
+      <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP" internalName="snp">
         <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype" type="radio">
           <UIFilterDescription description="Include/exclude genes with coding SNPs" displayName="coding SNPs" fieldName="coding" internalName="coding_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <UIFilterDescription description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" fieldName="intronic" internalName="intronic_snps" qualifier="" tableConstraint="main" type="boolean"/>
@@ -137,7 +137,7 @@
       </FilterGroup>
     </FilterPage>
     <AttributePage description="General Gene Features" displayName="Features" internalName="feature_page">
-      <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
+      <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
@@ -229,7 +229,7 @@
           <UIAttributeDescription description="Chromosomal End Coordinate of the Human Sequence conserved with rat" displayName="Chromosome End (Matches with Rat)" fieldName="match_chrom_end" internalName="rat_upstream_cr_chromosome_end" maxLength="9" tableConstraint="gene_upstreamcr_rnorvegicus_dm"/>
         </AttributeCollection>
       </AttributeGroup>
-      <AttributeGroup description="Data for proteins associated with Genes." displayName="PROTEIN:" internalName="proteinatts">
+      <AttributeGroup description="Data for proteins associated with Genes." displayName="PROTEIN" internalName="proteinatts">
         <AttributeCollection description="Interpro protein identifiers and data." displayName="Interpro Attributes" internalName="interproatts">
           <UIAttributeDescription description="InterPro Accession ID" displayName="InterPro ID" fieldName="interpro" internalName="interpro_accession_id" maxLength="9" tableConstraint="gene_prot_interpro_dm"/>
           <UIAttributeDescription description="InterPro Description" displayName="InterPro Description" fieldName="description" internalName="interpro_description" maxLength="78" tableConstraint="gene_prot_interpro_dm"/>
@@ -247,8 +247,8 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Details on Gene - SNP Associations" displayName="SNPs" internalName="snp">
-      <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
-        <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
+      <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region" internalName="region">
+        <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes" internalName="chromosome_attributes">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
@@ -256,8 +256,8 @@
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
-      <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="gene">
-        <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensembl_attributes">
+      <AttributeGroup description="Features of Genes" displayName="GENE" internalName="gene">
+        <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes" internalName="ensembl_attributes">
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensembl_gene_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensembl_transcript_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
