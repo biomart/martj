@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
+<!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
 <DatasetView dataset="test" description="HAS A SLIGHT MODIFICATION" displayName="Test of a DatasetView" internalName="test_dataset">
   <Option description="For Testing Purposes Only" displayName="A Test DatasetView Option" internalName="dataset option" isSelectable="true"/>
   <DefaultFilter value="1">

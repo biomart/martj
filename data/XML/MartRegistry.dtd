@@ -9,7 +9,8 @@
                            databaseType CDATA #IMPLIED
                            instanceName CDATA #REQUIRED
                            user CDATA #REQUIRED
-                           password CDATA #IMPLIED>
+                           password CDATA #IMPLIED
+                           jdbcDriverClassName CDATA #IMPLIED>
 
 <!ELEMENT RegistryLocation EMPTY>
 <!ATTLIST RegistryLocation url CDATA #REQUIRED>
