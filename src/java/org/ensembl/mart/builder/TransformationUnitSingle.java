@@ -25,8 +25,9 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public String toSQL (){
 		
-		String sql = "CREATE TABLE "+ temp_end_name+" SELECT DISTINCT("+ ref_table.key+") " +
-		"FROM "+ ref_table.getName()+" WHERE "+ ref_table.central_extension+";";
+		String sql = "CREATE TABLE "+ temp_end.getName()+" SELECT DISTINCT("+ temp_start.key+") " +
+		"FROM "+ ref_table.getName()+";";
+
 		return sql;
 		
 	}
@@ -38,7 +39,9 @@ public class TransformationUnitSingle extends TransformationUnit {
 		Table new_ref=convertTable(ref_table);
 		Table temp_end = copyTable(new_ref);
 		temp_end.final_table=false;
+		//this.setRef_table(new_ref);
 		this.setTemp_end(temp_end);
+		this.setTemp_start(temp_start);
 		
 	}
 
@@ -50,7 +53,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 		Column [] newcol = new Column [1];
 		
 		for (int i=0;i<columns.length;i++){
-			if (columns[i].getName().equals(ref_table.key)){
+			if (columns[i].getName().equals(key)){
 				
 				newcol[0]=columns[i];
 				newcol[0].setAlias(newcol[0].original_table+"__bool");

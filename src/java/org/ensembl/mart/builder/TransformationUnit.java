@@ -22,6 +22,7 @@ public abstract class TransformationUnit {
 	String column_operations;
 	String cardinality;
 	String final_table_name;
+	String key;
 	boolean is_extension=false;
 	boolean has_extension=false;
 	boolean useFK=false;
@@ -51,7 +52,7 @@ public abstract class TransformationUnit {
 	public String addIndex(){
 		
 		String sql = "";
-		sql = "ALTER TABLE "+temp_end.getName()+" ADD INDEX ("+temp_end.key+");";
+		sql = "ALTER TABLE "+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
 		return sql;
 		
 	}

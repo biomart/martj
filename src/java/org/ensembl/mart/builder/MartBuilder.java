@@ -104,8 +104,8 @@ public class MartBuilder {
 			if (input.equals("Y")){
 				tran[i].central=true;		
 			
-			String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
-			tran[i].getFinalUnit().getTemp_end().central_extension=extension;
+			//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
+			//tran[i].getFinalUnit().getTemp_end().central_extension=extension;
 			}
 			
 		}

@@ -190,7 +190,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		tempsql.append(temp+ "  SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
 				temp_start.getName()+ ONE +ref_table.getName()+ TWO +ref_table.getName()+"."+
-				ref_table.getKey()+" = "+ temp_start.getName()+"."+temp_start.getKey());
+				key+" = "+ temp_start.getName()+"."+key);
+		
+		
 		if (ref_table.hasExtension()){
 			tempsql.append(" AND "+ref_table.getName()+"."+ref_table.getExtension());	
 		} 
