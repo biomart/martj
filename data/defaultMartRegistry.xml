@@ -4,7 +4,7 @@
 
     <DatabaseLocation name="Uniprot" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_7" user="anonymous"/>
+    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_8" user="anonymous"/>
 
     <DatabaseLocation name="MSD" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
@@ -13,6 +13,6 @@
 
     <DatabaseLocation name="Ensembl" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="ensembldb.ensembl.org" port="3306" instanceName="ensembl_mart_22_1" user="anonymous"/>
+    host="ensembldb.ensembl.org" port="3306" instanceName="ensembl_mart_23_1" user="anonymous"/>
 
 </MartRegistry>
