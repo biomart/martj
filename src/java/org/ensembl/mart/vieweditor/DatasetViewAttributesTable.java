@@ -16,8 +16,8 @@ public class DatasetViewAttributesTable extends JTable implements Autoscroll{
      protected DatasetView dsView = null;
 
      public DatasetViewAttributesTable(DatasetView dsView, JInternalFrame frame) {
-        super(new DatasetViewAttributeTableModel());
-        //super(null);
+        //super(new DatasetViewAttributeTableModel());
+        super(null);
         this.dsView = dsView;
         this.frame = frame;
 

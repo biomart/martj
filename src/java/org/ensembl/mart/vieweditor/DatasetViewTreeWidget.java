@@ -23,6 +23,7 @@ import java.io.File;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.TableColumn;
+
 import org.ensembl.mart.explorer.QueryEditor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
@@ -48,7 +49,6 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * //@see org.ensembl.mart.config.DatasetView
  */
-
 public class DatasetViewTreeWidget extends JInternalFrame {
 
     // NOTE see org.ensembl.mart.explorer.QueryEditor for examples of using JTree
@@ -87,21 +87,35 @@ public class DatasetViewTreeWidget extends JInternalFrame {
             DatasetView view = adaptor.getDatasetViews()[0];
             this.setTitle(view.getInternalName());
             JFrame.setDefaultLookAndFeelDecorated(true);
-            //this.getContentPane().add(new JScrollPane(new DatasetViewTree(view,this)));
+            /*
             constraints = new GridBagConstraints();
             GridBagLayout layout = new GridBagLayout();
             this.getContentPane().setLayout(layout);
             constraints.fill = GridBagConstraints.BOTH;
 
             constraints.weightx = 10;
-            constraints.weighty = 10;
+            constraints.weighty = 10;  */
+            DatasetViewAttributesTable attrTable = new DatasetViewAttributesTable(
+                    view, this);
+            //TableColumn column = attrTable.getColumnModel().getColumn(1);
 
-            DatasetViewAttributesTable attrTable = new DatasetViewAttributesTable(view, this);
-            TableColumn column = attrTable.getColumnModel().getColumn(1);
-            //column.setPreferredWidth(250);
-            //attrTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-            add(this.getContentPane(), new JScrollPane(new DatasetViewTree(view, this, attrTable)), constraints, 0, 0, 1, 1);
-            add(this.getContentPane(), new JScrollPane(attrTable), constraints, 1, 0, 1, 1);
+            JScrollPane treeScrollPane = new JScrollPane(new DatasetViewTree(view,
+                    this, attrTable));
+            JScrollPane tableScrollPane = new JScrollPane(attrTable);
+            JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                    treeScrollPane, tableScrollPane);
+            splitPane.setOneTouchExpandable(true);
+            splitPane.setDividerLocation(150);
+
+            //Provide minimum sizes for the two components in the split pane.
+            Dimension minimumSize = new Dimension(100, 50);
+            treeScrollPane.setMinimumSize(minimumSize);
+            tableScrollPane.setMinimumSize(minimumSize);
+
+            this.getContentPane().add(splitPane);
+
+            //add(this.getContentPane(), new JScrollPane(new DatasetViewTree(view, this, attrTable)), constraints, 0, 0, 1, 1);
+            //add(this.getContentPane(), new JScrollPane(attrTable), constraints, 1, 0, 1, 1);
 
             //...Then set the window size or call pack...
             setSize(500, 400);
@@ -181,6 +195,5 @@ public class DatasetViewTreeWidget extends JInternalFrame {
             return null;
         }
     }
-
 
 }

@@ -34,7 +34,7 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         System.out.println("in model valueForPathChanged");
         current_node.setName(value);
         BaseConfigurationObject nodeInfo = (BaseConfigurationObject) current_node.getUserObject();
-        nodeInfo.setInternalName(value);
+        //nodeInfo.setInternalName(value);
         //System.out.println(view.containsAttributePage(value));
 
         nodeChanged(current_node);
@@ -123,6 +123,7 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             String error_string = "Error: AttributeDescription is a leaf node, no insertions are allowed.";
             return error_string;
         }
+        System.out.println(index);
         super.insertNodeInto(editingNode, parentNode, index);
         return "success";
     }
