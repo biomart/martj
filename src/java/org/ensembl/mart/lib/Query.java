@@ -89,6 +89,10 @@ public class Query {
     
     if (oq.hasLimit())
       limit = oq.getLimit();
+
+    setDatasetName( oq.getDatasetName() );
+    setDataSource( oq.getDataSource() );
+
   }
   
 	/**
