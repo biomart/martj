@@ -68,7 +68,7 @@ public class ClasspathDTDEntityResolver implements EntityResolver {
 		    
 		if (systemID.indexOf(MARTJARPROTOCAL) >= 0) {
       if (logger.isLoggable(Level.INFO))
-      logger.info("Getting DTD " + systemID + " from martj.jar\n");
+      logger.fine("Getting DTD " + systemID + " from martj.jar\n");
         
       StringTokenizer tokens = new StringTokenizer(systemID, ":");
       tokens.nextToken();
