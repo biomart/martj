@@ -58,8 +58,8 @@ public class DatasetViewXMLUtils {
 	// element names
 	private static final String DATASETVIEWDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
 	private static final String DATASETVIEW = "DatasetView";
-	private static final String STARBASE = "StarBase";
-	private static final String PRIMARYKEY = "PrimaryKey";
+	private static final String STARBASE = "MainTable";
+	private static final String PRIMARYKEY = "Key";
 	private static final String ENABLE = "Enable";
 	private static final String DISABLE = "Disable";
 	private static final String FILTERPAGE = "FilterPage";
