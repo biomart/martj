@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -246,9 +247,9 @@ public class FilterPage {
 		List filts = new ArrayList();
   	
 		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
-			FilterGroup fg = (FilterGroup) filterGroups.get((Integer) iter.next());
-  		
-			filts.addAll( fg.getAllUIFilterDescriptions() );
+			Object fg = (FilterGroup) filterGroups.get((Integer) iter.next());
+  		if (fg instanceof FilterGroup)
+			  filts.addAll( ( (FilterGroup) fg).getAllUIFilterDescriptions() );
 		}
 		
 		return filts;  	
@@ -266,12 +267,14 @@ public class FilterPage {
   	
   	if (lastFSetDescription == null) {
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-				FilterGroup group = (FilterGroup) filterGroups.get((Integer) iter.next());
-				if (group.containsFilterSetDescription(internalName)) {
-					lastFSetDescription = group.getFilterSetDescriptionByName(internalName);
-					found = true;
-					break;
-				}  		
+				Object group = filterGroups.get((Integer) iter.next());
+				if (group instanceof FilterGroup) {
+  				if ( ( (FilterGroup) group ).containsFilterSetDescription(internalName)) {
+	  				lastFSetDescription = ( (FilterGroup) group ).getFilterSetDescriptionByName(internalName);
+		  			found = true;
+			  		break;
+				  }
+				}
 			}
   	}
   	else {
@@ -296,6 +299,20 @@ public class FilterPage {
   	  return lastFSetDescription;
   	else
   	  return null;
+  }
+  
+  public FilterSetDescription[] getAllFilterSetDescriptions() {
+  	List fsds = new ArrayList();
+  	
+  	for (Iterator iter = (Iterator) filterGroups.values().iterator(); iter.hasNext();) {
+  		Object group = iter.next();
+  		if (group instanceof FilterGroup) {
+  			fsds.addAll(Arrays.asList( ( (FilterGroup) group ).getAllFilterSetDescriptions() ) );
+  		}
+  	}
+  	FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
+  	fsds.toArray(f);
+  	return f;
   }
   
 	public String toString() {

@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -364,6 +365,18 @@ public class FilterGroup {
 		return buf.toString();
 	}
 
+  public FilterSetDescription[] getAllFilterSetDescriptions() {
+  	List fsds = new ArrayList();
+  	
+  	for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
+			FilterSet fset = (FilterSet) iter.next();
+			fsds.addAll( Arrays.asList( fset.getFilterSetDescriptions() ) );			
+		}
+  	FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
+  	fsds.toArray(f);
+  	return f;
+  }
+  
   /**
 	 * Allows Equality Comparisons manipulation of FilterGroup objects
 	 */
