@@ -663,6 +663,19 @@ public class martShell {
 			+ "\n";
 	}
 
+  private void setVerbose(String command) throws InvalidQueryException {
+  	if (command.endsWith(lineEnd))
+  	  command = command.substring(0, command.length() - 1);
+  	  
+  	if (! command.matches("\\w+\\s(true|false)"))
+  	  throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
+  	  
+  	boolean verbose = Boolean.valueOf(command.split("\\s")[1]).booleanValue();
+  	String val = (verbose) ? "on" : "off";
+  	System.out.println("Logging now "+val+"\n");
+		defaultLoggingConfiguration(verbose); 	
+  }
+  
 	private void parseCommand(String command) throws IOException, InvalidQueryException {
 		int cLen = command.length();
 
@@ -680,6 +693,8 @@ public class martShell {
 			setOutputFormat(command);
 		else if (command.startsWith(showOutputSettings))
 			showOutputSettings();
+	  else if (command.startsWith(setVerbose))
+	    setVerbose(command);
 		else if (command.equals(exit) || command.equals(quit))
 			ExitShell();
 		else {
@@ -1887,7 +1902,10 @@ public class martShell {
 	private final String mysqldbase = "mysqldbase";
 	private final String alternateConfigurationFile = "alternateConfigurationFile";
 
-	private final int sublevel = 0;
+  // strings used to show/set logging verbosity
+  private final String setVerbose = "setVerbose";
+  private final String showVerbose = "showVerbose";
+  
 	private List qualifiers = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "exclusive", "excluded", "in" });
 
 	private boolean continueQuery = false;
