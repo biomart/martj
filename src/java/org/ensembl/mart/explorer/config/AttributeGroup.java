@@ -164,21 +164,7 @@ public final class AttributeGroup {
 		* @return UIAttributeDescription object, or null
 		*/
 	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
-				AttributeCollection collection = (AttributeCollection) attributeCollections.get((Integer) iter.next());
-				if (collection.containsUIAttributeDescription(internalName)) {
-					lastAtt = collection.getUIAttributeDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
+		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
 			return null;

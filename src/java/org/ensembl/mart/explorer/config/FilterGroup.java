@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -229,36 +228,22 @@ public class FilterGroup {
   }
   
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular UIFilterDescription.
-		* Note, it is best to first call containsUIFilterDescription,
-		* as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
+		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular UIFilterDescription/UIDSFilterDescription object.
+		* Note, it is best to first call containsUIFilterDescription, as there is a caching system to cache a UIFilterDescription during a call 
+		* to containsUIFilterDescription.
 		* 
 		* @param internalName name of the requested UIFilterDescription
-		* @return UIFilterDescription object, or null.
+		* @return requested Object (either instanceof UIFilterDescription or UIDSFilterDescription), or null.
 		*/
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
-				FilterCollection collection = (FilterCollection) filterCollections.get((Integer) iter.next());
-				if (collection.containsUIFilterDescription(internalName)) {
-					lastFilt = collection.getUIFilterDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
+	public Object getUIFilterDescriptionByName(String internalName) {
+		if ( containsUIFilterDescription(internalName) )
 			return lastFilt;
 		else
 			return null;
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific UIFilterDescription.
+		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific UIFilterDescription/UIDSFilterDescription object.
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
 		*  found, this method caches the UIFilterDescription it has found.
 		* 
@@ -268,9 +253,7 @@ public class FilterGroup {
 	public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
 				FilterCollection collection = (FilterCollection) filterCollections.get((Integer) iter.next());
 				if (collection.containsUIFilterDescription(internalName)) {
@@ -280,26 +263,41 @@ public class FilterGroup {
 				}
 			}
 		}
+		else {
+			String lastIntName;
+			if (lastFilt instanceof UIFilterDescription)
+			  lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
+			else if (lastFilt instanceof UIDSFilterDescription)
+			  lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+			else
+			  lastIntName = ""; // should not get here
+			  
+			if ( lastIntName.equals(internalName) )
+			  found = true;
+			else {
+				lastFilt = null;
+				found = containsUIFilterDescription(internalName);
+			}
+		}
 		return found;
 	}
 
   /**
-   * Convenience method to get all UIFilterDescriptions contained in all FilterCollections in this FilterGroup.
+   * Convenience method to get all UIFilterDescription/UIDSFilterDescription objects 
+   * contained in all FilterCollections in this FilterGroup.
    * 
-   * @return UIFilterDescription[] array of UIFilterDescription objects.
+   * @return List of FilterDescription objects.
    */
-  public UIFilterDescription[] getAllUIFilterDescriptions() {
+  public List getAllUIFilterDescriptions() {
   	List filts = new ArrayList();
   	
 		for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
 			FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
   		
-			filts.addAll(Arrays.asList(fc.getUIFilterDescriptions()));
+			filts.addAll(fc.getUIFilterDescriptions());
 		}
 		
-		UIFilterDescription[] f = new UIFilterDescription[filts.size()];
-		filts.toArray(f);
-		return f;
+		return filts;
   }
   
 	public String toString() {
@@ -405,6 +403,6 @@ public class FilterGroup {
 	private Hashtable filterCollectionNameMap = new Hashtable();
   private Hashtable filterSets = new Hashtable(); // do not need to presever order of filterSets
   
-	//cache one UIFilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private UIFilterDescription lastFilt = null;
+	//cache one FilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
+	private Object lastFilt = null;
 }

@@ -22,21 +22,15 @@ import org.jdom.filter.Filter;
 import org.jdom.Element;
 
 /**
- * JDOM Filter for specific MartConfiguration Elements.  Allows
- * the MartConfigurationFactory to harvest only elements of a particular
- * type.
+ * JDOM Filter specific to UIFilterDescription/UIDSFilterDescription objects in a Mart FilterCollection.
+ * Allows MartConfigurationFactory to harvest all FilterDescription objects of both types, in the order
+ * they occur in the xml configuration document.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartElementFilter implements Filter {
+public class MartFilterDescriptionFilter implements Filter {
 
-  private final String thisName;
-  
-  public MartElementFilter(String thisName) {
-  	this.thisName = thisName;
-  }
-  
 	/* (non-Javadoc)
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
@@ -44,11 +38,14 @@ public class MartElementFilter implements Filter {
 		if (obj instanceof Element) {
 			Element e = (Element) obj;
 			
-			if (e.getName().equals(thisName))
-			  return true;
+			if (e.getName().equals(uifilter) || e.getName().equals(uidsfilter))
+				return true;
 			else
-			  return false;
+				return false;
 		}
 		return false;
 	}
+
+  private final String uifilter = "UIFilterDescription";
+  private final String uidsfilter = "UIDSFilterDescription";
 }

@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -161,22 +160,8 @@ public class FilterPage {
 		* @param internalName name of the requested UIFilterDescription
 		* @return UIFilterDescription object, or null.
 		*/
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-				FilterGroup group = (FilterGroup) filterGroups.get((Integer) iter.next());
-				if (group.containsUIFilterDescription(internalName)) {
-					lastFilt = group.getUIFilterDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
+	public Object getUIFilterDescriptionByName(String internalName) {
+  	if ( containsUIFilterDescription(internalName) )
 			return lastFilt;
 		else
 			return null;
@@ -193,9 +178,7 @@ public class FilterPage {
 	public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+		if (lastFilt == null){
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 				FilterGroup group = (FilterGroup) filterGroups.get((Integer) iter.next());
 				if (group.containsUIFilterDescription(internalName)) {
@@ -205,26 +188,41 @@ public class FilterPage {
 				}
 			}
 		}
+		else {
+			String lastIntName;
+			if (lastFilt instanceof UIFilterDescription)
+				lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
+			else if (lastFilt instanceof UIDSFilterDescription)
+				lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+			else
+				lastIntName = ""; // should not get here
+			  
+			if ( lastIntName.equals(internalName) )
+			 found = true;
+			else {
+			 lastFilt = null;
+			 found = containsUIFilterDescription(internalName);			
+			}
+		}
 		return found;
 	}
 
   /**
-   * Convenience Method to get all UIFilterDescription objects in all Groups/Collections within a FilterPage.
+   * Convenience Method to get all UIFilterDescription/UIDSFilterDescription objects 
+   * in all Groups/Collections within a FilterPage.
    * 
-   * @return UIFilterDescription[]
+   * @return List of UIFilterDescription/UIDSFilterDescription objects
    */
-  public UIFilterDescription[] getAllUIFilterDescriptions() {
+  public List getAllUIFilterDescriptions() {
 		List filts = new ArrayList();
   	
 		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
 			FilterGroup fg = (FilterGroup) filterGroups.get((Integer) iter.next());
   		
-			filts.addAll(Arrays.asList(fg.getAllUIFilterDescriptions()));
+			filts.addAll( fg.getAllUIFilterDescriptions() );
 		}
 		
-		UIFilterDescription[] f = new UIFilterDescription[filts.size()];
-		filts.toArray(f);
-		return f;  	
+		return filts;  	
   }
   
 	public String toString() {
@@ -293,6 +291,6 @@ public class FilterPage {
 	private TreeMap filterGroups = new TreeMap();
 	private Hashtable filterGroupNameMap = new Hashtable();
 
-	//cache one UIFilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private UIFilterDescription lastFilt = null;
+	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
+	private Object lastFilt = null;
 }

@@ -52,6 +52,7 @@ public class MartConfigurationFactory {
 	private final String filtergroup = "FilterGroup";
 	private final String filtercollection = "FilterCollection";
 	private final String filterdescription = "UIFilterDescription";
+	private final String dsfilterdescription = "UIDSFilterDescription";
 	private final String attributepage = "AttributePage";
 	private final String attributegroup = "AttributeGroup";
 	private final String attributecollection = "AttributeCollection";
@@ -74,6 +75,7 @@ public class MartConfigurationFactory {
 	private final String fieldNameModifierA = "fieldNameModifier"; 
 	private final String filterSetNameA = "filterSetName";
 	private final String filterSetReqA = "filterSetReq";
+	private final String objectCode = "objectCode";
 
 	private MartConfiguration martconf = null;
 
@@ -269,12 +271,29 @@ public class MartConfigurationFactory {
 		String typeval = thisElement.getAttributeValue(type, "");
 
 		FilterCollection fc = new FilterCollection(intName, typeval, dispname, filterSetName, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterdescription)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartFilterDescriptionFilter()); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			fc.addUIFilter(getUIFilterDescription(element));
+			if (element.getName().equals(filterdescription))
+			  fc.addUIFilter(getUIFilterDescription(element));
+			else if (element.getName().equals(dsfilterdescription))
+			  fc.addUIDSFilterDescription(getUIDSFilterDescription(element));
 		}
 
 		return fc;
+	}
+
+	private UIDSFilterDescription getUIDSFilterDescription(Element element) throws ConfigurationException {
+		String intName = element.getAttributeValue(internalName, "");
+		String dispname = element.getAttributeValue(displayName, "");
+		String desc = element.getAttributeValue(description, "");
+		String typeval = element.getAttributeValue(type, "");
+    int objCode = 0;
+    if (! element.getAttributeValue(objectCode, "").equals(""))
+      objCode = Integer.parseInt( element.getAttributeValue(objectCode) );
+
+		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, dispname, desc);
+
+		return f;
 	}
 
 	private UIFilterDescription getUIFilterDescription(Element thisElement) throws ConfigurationException {

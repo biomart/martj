@@ -21,6 +21,7 @@ package org.ensembl.mart.explorer.test;
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
 import java.sql.Connection;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -39,6 +40,7 @@ import org.ensembl.mart.explorer.config.MartConfiguration;
 import org.ensembl.mart.explorer.config.MartDTDEntityResolver;
 import org.ensembl.mart.explorer.config.MartXMLutils;
 import org.ensembl.mart.explorer.config.UIAttributeDescription;
+import org.ensembl.mart.explorer.config.UIDSFilterDescription;
 import org.ensembl.mart.explorer.config.UIFilterDescription;
 import org.jdom.Document;
 import org.jdom.input.SAXBuilder;
@@ -112,7 +114,7 @@ public class ConfigurationTest extends Base {
 		String newxml = out.toString();
 		out.close();
 
-		assertEquals("Warning, initial xml does not match final xml after a roundtrip.", initxml, newxml);
+		assertEquals("Warning, initial xml does not match final xml after a roundtrip.\n", initxml, newxml);
 	}
 
 	public void testMartConfiguration() throws Exception {
@@ -126,13 +128,13 @@ public class ConfigurationTest extends Base {
 		String testDesc = "First Mart Created from version 14 Ensembl Datasources";
 		String Desc = martconf.getDescription();
 
-		assertEquals("Warning, MartName not correctly set for MartConfiguration", testIName, IName);
-		assertEquals("Warning Mart Display Name not correctly set for MartConfiguration", testDName, DName);
-		assertEquals("Warning Mart Description not correctly set for MartConfiguration", testDesc, Desc);
+		assertEquals("Warning, MartName not correctly set for MartConfiguration\n", testIName, IName);
+		assertEquals("Warning Mart Display Name not correctly set for MartConfiguration\n", testDName, DName);
+		assertEquals("Warning Mart Description not correctly set for MartConfiguration\n", testDesc, Desc);
 
 		// Dataset Data Correct
 		Dataset[] ds = martconf.getDatasets();
-		assertEquals("Warning, should only be one dataset, got " + ds.length, 1, ds.length);
+		assertEquals("Warning, should only be one dataset, got " + ds.length + "\n", 1, ds.length);
 
 		Dataset d = ds[0];
 		testIName = "test_dataset";
@@ -142,31 +144,31 @@ public class ConfigurationTest extends Base {
 		testDesc = "For Testing Purposes Only";
 		Desc = d.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for Dataset", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for Dataset", testDName, DName);
-		assertEquals("Warning, Description not correctly set for Dataset", testDesc, Desc);
+		assertEquals("Warning, Internal Name not correctly set for Dataset\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for Dataset\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for Dataset\n", testDesc, Desc);
 
 		//contains/get for MartConfiguration-Dataset
 		boolean containsTest = martconf.containsDataset(testIName);
 		String testGetByName = null;
 
-		assertTrue("Warning, MartConfiguration should contain test_dataset, but doesnt", containsTest);
+		assertTrue("Warning, MartConfiguration should contain test_dataset, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = martconf.getDatasetByName(testIName).getInternalName();
-			assertEquals("Warning, getDatasetByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getDatasetByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		String[] sbs = d.getStarBases();
-		assertEquals("Warning, should only get one starbase", 1, sbs.length);
-		assertEquals("Warning, didnt get the expected starbase", "test_starbase", sbs[0]);
+		assertEquals("Warning, should only get one starbase\n", 1, sbs.length);
+		assertEquals("Warning, didnt get the expected starbase\n", "test_starbase", sbs[0]);
 
 		String[] pks = d.getPrimaryKeys();
-		assertEquals("Warning, should only get one primary key", 1, pks.length);
-		assertEquals("Warning, didnt get the expected primary key", "test_primaryKey", pks[0]);
+		assertEquals("Warning, should only get one primary key\n", 1, pks.length);
+		assertEquals("Warning, didnt get the expected primary key\n", "test_primaryKey", pks[0]);
 
 		//FilterPage data correct
 		FilterPage[] fps = d.getFilterPages();
-		assertEquals("Warning, should only get one filter page", 1, fps.length);
+		assertEquals("Warning, should only get one filter page\n", 1, fps.length);
 
 		FilterPage fp = fps[0];
 		testIName = "testFilterPage";
@@ -175,21 +177,21 @@ public class ConfigurationTest extends Base {
 		DName = fp.getDisplayName();
 		Desc = fp.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterPage", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterPage", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterPage", testDesc, Desc);
+		assertEquals("Warning, Internal Name not correctly set for FilterPage\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterPage\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterPage\n", testDesc, Desc);
 
 		// contains/get for Dataset-FilterPage
 		containsTest = d.containsFilterPage(testIName);
-		assertTrue("Warning, Dataset should contain testFilterPage, but doesnt", containsTest);
+		assertTrue("Warning, Dataset should contain testFilterPage, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = d.getFilterPageByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterPageByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterPageByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterGroup data correct
 		FilterGroup[] fgs = fp.getFilterGroups();
-		assertEquals("Warning, should only get one filterGroup", 1, fgs.length);
+		assertEquals("Warning, should only get one filterGroup\n", 1, fgs.length);
 
 		FilterGroup fg = fgs[0];
 		testIName = "testFilterGroup";
@@ -198,22 +200,22 @@ public class ConfigurationTest extends Base {
 		DName = fg.getDisplayName();
 		Desc = fg.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterGroup", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterGroup", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterGroup", testDesc, Desc);
+		assertEquals("Warning, Internal Name not correctly set for FilterGroup\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterGroup\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterGroup\n", testDesc, Desc);
 
 		// contains/get for FilterPage-FilterGroup
 		containsTest = fp.containsFilterGroup(testIName);
-		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt", containsTest);
+		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = fp.getFilterGroupByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterGroupByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterSet data correct
-		assertTrue("Warning, FilterGroup should contain a FilterSet", fg.hasFilterSets());
+		assertTrue("Warning, FilterGroup should contain a FilterSet\n", fg.hasFilterSets());
 		FilterSet[] fsets = fg.getFilterSets();
-		assertEquals("Warning, should only get one FilterSet", 1, fsets.length);
+		assertEquals("Warning, should only get one FilterSet\n", 1, fsets.length);
 
 		FilterSet fset = fsets[0];
 		testIName = "testFilterSet";
@@ -225,22 +227,22 @@ public class ConfigurationTest extends Base {
 		String testType = "radio";
 		String Type = fset.getType();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterSet", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterSet", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterSet", testDesc, Desc);
-		assertEquals("Warning, Type not correctly set for FilterSet", testType, Type);
+		assertEquals("Warning, Internal Name not correctly set for FilterSet\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterSet\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterSet\n", testDesc, Desc);
+		assertEquals("Warning, Type not correctly set for FilterSet\n", testType, Type);
 
 		//	contains/get for FilterGroup-FilterSet
 		containsTest = fg.containsFilterSet(testIName);
-		assertTrue("Warning, FilterGroup should contain testFilterSet, but doesnt", containsTest);
+		assertTrue("Warning, FilterGroup should contain testFilterSet, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = fg.getFilterSetByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterSetByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterSetByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterSetDescription data correct
 		FilterSetDescription[] fsds = fset.getFilterSetDescriptions();
-		assertEquals("Warning, FilterSet should contain only one FilterSetDescription", 1, fsds.length);
+		assertEquals("Warning, FilterSet should contain only one FilterSetDescription\n", 1, fsds.length);
 
 		FilterSetDescription fsd = fsds[0];
 		testIName = "testFilterSetDescription";
@@ -253,23 +255,23 @@ public class ConfigurationTest extends Base {
 		String testFieldNameModifier = "ensembl";
 		String FieldNameModifier = fsd.getFieldNameModifier();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterSetDescription", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterSetDescription", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterSetDescription", testDesc, Desc);
-		assertEquals("Warning, tableConstraintModifier not set correctly for FilterSetDescription", testTableConstraintModifier, TableConstraintModifier);
-		assertEquals("Warning, fieldNameModifier not set correctly for FilterSetDescription", testFieldNameModifier, FieldNameModifier);
+		assertEquals("Warning, Internal Name not correctly set for FilterSetDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterSetDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterSetDescription\n", testDesc, Desc);
+		assertEquals("Warning, tableConstraintModifier not set correctly for FilterSetDescription\n", testTableConstraintModifier, TableConstraintModifier);
+		assertEquals("Warning, fieldNameModifier not set correctly for FilterSetDescription\n", testFieldNameModifier, FieldNameModifier);
 
 		//contains/get for FIlterSet-FilterSetDescription
 		containsTest = fset.containsFilterSetDescription(testIName);
-		assertTrue("Warning, FilterSet should contain testFilterSetDescription, but doesnt", containsTest);
+		assertTrue("Warning, FilterSet should contain testFilterSetDescription, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = fset.getFilterSetDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterSetDescriptionByName internalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterSetDescriptionByName internalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterCollection data correct
 		FilterCollection[] fcs = fg.getFilterCollections();
-		assertEquals("Warning, should get two filter collections", 2, fcs.length);
+		assertEquals("Warning, should get two filter collections\n", 2, fcs.length);
 
 		// first FilterCollection is not in a FilterSet
 		FilterCollection fc = fcs[0];
@@ -281,25 +283,28 @@ public class ConfigurationTest extends Base {
 		testType = "list";
 		Type = fc.getType();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterCollection", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterCollection", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterCollection", testDesc, Desc);
-		assertEquals("Warning, Type not correctly set for FilterCollection", testType, Type);
-		assertTrue("First FilterCollection should not be in a FilterSet", !fc.inFilterSet());
+		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterCollection\n", testDesc, Desc);
+		assertEquals("Warning, Type not correctly set for FilterCollection\n", testType, Type);
+		assertTrue("First FilterCollection should not be in a FilterSet\n", !fc.inFilterSet());
 
 		//	contains/get for FilterGroup-FilterCollection
 		containsTest = fg.containsFilterCollection(testIName);
-		assertTrue("Warning, FilterGroup should contain testFilterCollection, but doesnt", containsTest);
+		assertTrue("Warning, FilterGroup should contain testFilterCollection, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterCollectionByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//UIFilterDescription data correct
-		UIFilterDescription[] fs = fc.getUIFilterDescriptions();
-		assertEquals("Warning, should only get one filter description with first FilterCollection", 1, fs.length);
+    List fs = fc.getUIFilterDescriptions();
+		assertEquals("Warning, should get two filter descriptions with first FilterCollection\n", 2, fs.size());
 
-		UIFilterDescription f = fs[0];
+    Object ob = fs.get(0);
+    assertTrue("Warning, First FilterDescription of First FilterCollection should be an instance of UIFilterDescription.\n", ob instanceof UIFilterDescription);
+    
+		UIFilterDescription f = (UIFilterDescription) ob; 
 		testIName = "testUIFilterDescription";
 		IName = f.getInternalName();
 		testDName = "A TEST ID, DOESNT EXIST";
@@ -313,37 +318,80 @@ public class ConfigurationTest extends Base {
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
-		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIFilterDescription", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIFilterDescription", testDesc, Desc);
-		assertEquals("Warning, Type not set correctly for UIFilterDescription", testType, Type);
-		assertEquals("Warning, FieldName not set correctly for UIFilterDescription", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription", testQualifier, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescription", testTableConstraint, TableConstraint);
-		assertTrue("Warning, first FilterCollections UIFilterDescription should not be in a FilterSet", !f.inFilterSet());
+		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIFilterDescription\n", testType, Type);
+		assertEquals("Warning, FieldName not set correctly for UIFilterDescription\n", testFieldName, FieldName);
+		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", testQualifier, Qualifier);
+		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescription\n", testTableConstraint, TableConstraint);
+		assertTrue("Warning, first FilterCollections UIFilterDescription should not be in a FilterSet\n", !f.inFilterSet());
 
 		//	contains/get for FilterCollection-UIFilterDescription
 		containsTest = fc.containsUIFilterDescription(testIName);
-		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt", containsTest);
+		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = fc.getUIFilterDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect", testIName, testGetByName);
+			testGetByName = ( (UIFilterDescription) fc.getUIFilterDescriptionByName(testIName) ).getInternalName();
+			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//	contains/get for FilterPage-UIFilterDescription (Tests all lower groups getByName as well
 		containsTest = fp.containsUIFilterDescription(testIName);
-		assertTrue("Warning, FilterPage should contain testUIFilterDescription, but doesnt", containsTest);
+		assertTrue("Warning, FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = fp.getUIFilterDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect", testIName, testGetByName);
+			testGetByName = ( (UIFilterDescription) fp.getUIFilterDescriptionByName(testIName) ).getInternalName();
+			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well
 			assertEquals(
-				"Warning, Did not get the correct Page for the UIFilterDescription",
+				"Warning, Did not get the correct Page for the UIFilterDescription\n",
 				"testFilterPage",
 				d.getPageForUIFilterDescription(testIName).getInternalName());
 		}
 
+    // second FilterDescription is a UIDSFilterDescription object
+		ob = fs.get(1);
+		assertTrue("Warning, Second FilterDescription of First FilterCollection should be an instance of UIDSFilterDescription.\n", ob instanceof UIDSFilterDescription);
+    
+		UIDSFilterDescription dsf = (UIDSFilterDescription) ob; 
+		testIName = "testUIDSFilterDescription";
+		IName = dsf.getInternalName();
+		testDName = "A TEST ID, DOESNT EXIST";
+		DName = dsf.getDisplayName();
+		Desc = dsf.getDescription();
+		Type = dsf.getType();
+		testFieldName = "test_id";
+    int testObjectCode = 1;
+    int ObjectCode = dsf.getObjectCode();
+
+		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", testType, Type);
+    assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", testObjectCode, ObjectCode);
+
+		//	contains/get for FilterCollection-UIFilterDescription
+		containsTest = fc.containsUIFilterDescription(testIName);
+		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ( (UIDSFilterDescription) fc.getUIFilterDescriptionByName(testIName) ).getInternalName();
+			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+		}
+
+		//	contains/get for FilterPage-UIFilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsUIFilterDescription(testIName);
+		assertTrue("Warning, FilterPage should contain testUIDSFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ( (UIDSFilterDescription) fp.getUIFilterDescriptionByName(testIName) ).getInternalName();
+			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals(
+				"Warning, Did not get the correct Page for the UIFilterDescription\n",
+				"testFilterPage",
+				d.getPageForUIFilterDescription(testIName).getInternalName());
+		}
+				 
 		//second FilterCollection is a member of the FilterSet
 		fc = fcs[1];
 		testIName = "testFilterSetCollection";
@@ -356,27 +404,27 @@ public class ConfigurationTest extends Base {
 		String testFilterSetName = "testFilterSet";
 		String FilterSetName = fc.getFilterSetName();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterCollection", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterCollection", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterCollection", testDesc, Desc);
-		assertEquals("Warning, Type not correctly set for FilterCollection", testType, Type);
-		assertEquals("Warning, FilterSetName not correctly set for FilterCollection", testFilterSetName, FilterSetName);
-		assertTrue("First FilterCollection should not be in a FilterSet", !fc.inFilterSet());
+		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterCollection\n", testDesc, Desc);
+		assertEquals("Warning, Type not correctly set for FilterCollection\n", testType, Type);
+		assertEquals("Warning, FilterSetName not correctly set for FilterCollection\n", testFilterSetName, FilterSetName);
+		assertTrue("First FilterCollection should not be in a FilterSet\n", !fc.inFilterSet());
 
 		//	contains/get for FilterGroup-FilterCollection
 		containsTest = fg.containsFilterCollection(testIName);
-		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt", containsTest);
+		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterCollectionByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//UIFilterDescription data correct
 		fs = fc.getUIFilterDescriptions();
-		assertEquals("Warning, should get two filter descriptions", 2, fs.length);
+		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
 
 		// first UIFilterDescription of this Collection is part of the FilterSet, and requires a fieldNameModifier		
-		UIFilterDescription fField = fs[0];
+		UIFilterDescription fField = (UIFilterDescription) fs.get(0);
 		testIName = "filterSetUIFilterDescriptionField";
 		IName = fField.getInternalName();
 		testDName = "A TEST FIELD MODIFIER";
@@ -404,19 +452,19 @@ public class ConfigurationTest extends Base {
 				break;
 		}
 
-		assertEquals("Warning, Internal Name not correctly set for UIFilterDescriptionField", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIFilterDescriptionField", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIFilterDescriptionField", testDesc, Desc);
-		assertEquals("Warning, Type not set correctly for UIFilterDescriptionField", testType, Type);
-		assertEquals("Warning, FieldName not set correctly for UIFilterDescriptionField", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescriptionField", testQualifier, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescriptionField", testTableConstraint, TableConstraint);
-		assertEquals("Warning, filterSetReq not set correctly for UIFilterDescriptionField", testFilterSetReq, FilterSetReq);
-		assertEquals("Warning, modified Field Name not correct", testModifiedName, ModifiedName);
-		assertTrue("Warning, second FilterCollections UIFilterDescriptionField should be in a FilterSet", fField.inFilterSet());
+		assertEquals("Warning, Internal Name not correctly set for UIFilterDescriptionField\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIFilterDescriptionField\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIFilterDescriptionField\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIFilterDescriptionField\n", testType, Type);
+		assertEquals("Warning, FieldName not set correctly for UIFilterDescriptionField\n", testFieldName, FieldName);
+		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescriptionField\n", testQualifier, Qualifier);
+		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescriptionField\n", testTableConstraint, TableConstraint);
+		assertEquals("Warning, filterSetReq not set correctly for UIFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
+		assertEquals("Warning, modified Field Name not correct\n", testModifiedName, ModifiedName);
+		assertTrue("Warning, second FilterCollections UIFilterDescriptionField should be in a FilterSet\n", fField.inFilterSet());
 
 		//second UIFilterDescription of this FilterCollection is part of the FilterSet, and requires a tableConstraintModifier
-		UIFilterDescription fTable = fs[1];
+		UIFilterDescription fTable = (UIFilterDescription) fs.get(1);
 		testIName = "filterSetUIFilterDescriptionTable";
 		IName = fTable.getInternalName();
 		testDName = "A TEST TABLE MODIFIER";
@@ -442,19 +490,19 @@ public class ConfigurationTest extends Base {
 				break;
 		}
 
-		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIFilterDescription", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIFilterDescription", testDesc, Desc);
-		assertEquals("Warning, Type not set correctly for UIFilterDescription", testType, Type);
-		assertEquals("Warning, FieldName not set correctly for UIFilterDescription", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription", testQualifier, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescription", testTableConstraint, TableConstraint);
-		assertEquals("Warning, Modified TableConstraint not correct", testModifiedName, ModifiedName);
-		assertTrue("Warning, second FilterCollection second UIFilterDescription should be in a FilterSet", fTable.inFilterSet());
+		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIFilterDescription\n", testType, Type);
+		assertEquals("Warning, FieldName not set correctly for UIFilterDescription\n", testFieldName, FieldName);
+		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", testQualifier, Qualifier);
+		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescription\n", testTableConstraint, TableConstraint);
+		assertEquals("Warning, Modified TableConstraint not correct\n", testModifiedName, ModifiedName);
+		assertTrue("Warning, second FilterCollection second UIFilterDescription should be in a FilterSet\n", fTable.inFilterSet());
 
 		// AttributePage data correct
 		AttributePage[] aps = d.getAttributePages();
-		assertEquals("Warning, should only get one filter page", 1, aps.length);
+		assertEquals("Warning, should only get one filter page\n", 1, aps.length);
 
 		AttributePage ap = aps[0];
 		testIName = "testAttributePage";
@@ -463,21 +511,21 @@ public class ConfigurationTest extends Base {
 		DName = ap.getDisplayName();
 		Desc = ap.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributePage", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributePage", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributePage", testDesc, Desc);
+		assertEquals("Warning, Internal Name not correctly set for AttributePage\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for AttributePage\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for AttributePage\n", testDesc, Desc);
 
 		// contains/get for Dataset-AttributePage
 		containsTest = d.containsAttributePage(testIName);
-		assertTrue("Warning, Dataset should contain testAttributePage, but doesnt", containsTest);
+		assertTrue("Warning, Dataset should contain testAttributePage, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = d.getAttributePageByName(testIName).getInternalName();
-			assertEquals("Warning, getAttributePageByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getAttributePageByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//AttributeGroup data correct
 		AttributeGroup[] ags = ap.getAttributeGroups();
-		assertEquals("Warning, should only get one AttributeGroup", 1, ags.length);
+		assertEquals("Warning, should only get one AttributeGroup\n", 1, ags.length);
 
 		AttributeGroup ag = ags[0];
 		testIName = "testAttributeGroup";
@@ -486,21 +534,21 @@ public class ConfigurationTest extends Base {
 		DName = ag.getDisplayName();
 		Desc = ag.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributeGroup", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributeGroup", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributeGroup", testDesc, Desc);
+		assertEquals("Warning, Internal Name not correctly set for AttributeGroup\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for AttributeGroup\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for AttributeGroup\n", testDesc, Desc);
 
 		// contains/get for AttributePage-AttributeGroup
 		containsTest = ap.containsAttributeGroup(testIName);
-		assertTrue("Warning, AttributePage should contain testAttributeGroup, but doesnt", containsTest);
+		assertTrue("Warning, AttributePage should contain testAttributeGroup, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ap.getAttributeGroupByName(testIName).getInternalName();
-			assertEquals("Warning, getAttributeGroupByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getAttributeGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//AttributeCollection data correct
 		AttributeCollection[] acs = ag.getAttributeCollections();
-		assertEquals("Warning, should only get one attribute collection", 1, acs.length);
+		assertEquals("Warning, should only get one attribute collection\n", 1, acs.length);
 
 		AttributeCollection ac = acs[0];
 		testIName = "testAttributeCollection";
@@ -511,22 +559,22 @@ public class ConfigurationTest extends Base {
 		int testMaxSelect = 1;
 		int MaxSelect = ac.getMaxSelect();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributeCollection", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributeCollection", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributeCollection", testDesc, Desc);
-		assertEquals("Warning, Max Select not correctly set for AttributeCollection", testMaxSelect, MaxSelect);
+		assertEquals("Warning, Internal Name not correctly set for AttributeCollection\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for AttributeCollection\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for AttributeCollection\n", testDesc, Desc);
+		assertEquals("Warning, Max Select not correctly set for AttributeCollection\n", testMaxSelect, MaxSelect);
 
 		//	contains/get for AttributeGroup-AttributeCollection
 		containsTest = ag.containsAttributeCollection(testIName);
-		assertTrue("Warning, AttributeGroup should contain testAttributeCollection, but doesnt", containsTest);
+		assertTrue("Warning, AttributeGroup should contain testAttributeCollection, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ag.getAttributeCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getAttributeCollectionByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getAttributeCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//UIAttributeDescription data correct
 		UIAttributeDescription[] as = ac.getUIAttributeDescriptions();
-		assertEquals("Warning, should only get one attribute description", 1, as.length);
+		assertEquals("Warning, should only get one attribute description\n", 1, as.length);
 
 		UIAttributeDescription a = as[0];
 		testIName = "testUIAttributeDescription";
@@ -547,34 +595,34 @@ public class ConfigurationTest extends Base {
 		String testLPage = "http://test.org?test";
 		String LPage = a.getLinkoutURL();
 
-		assertEquals("Warning, Internal Name not correctly set for UIAttributeDescription", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIAttributeDescription", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIAttributeDescription", testDesc, Desc);
-		assertEquals("Warning, FieldName not correctly set for UIAttributeDescription", testFieldName, FieldName);
-		assertEquals("Warning, TableConstraint not correctly set for UIAttributeDescription", testTableConstraint, TableConstraint);
-		assertEquals("Warning, MaxLength not correctly set for UIAttributeDescription", testMaxLength, MaxLength);
-		assertEquals("Warning, Source not correctly set for UIAttributeDescription", testSource, Source);
-		assertEquals("Warning, HomepageURL not correctly set for UIAttributeDescription", testHPage, HPage);
-		assertEquals("Warning, LinkoutURL not correctly set for UIAttributeDescription", testLPage, LPage);
+		assertEquals("Warning, Internal Name not correctly set for UIAttributeDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIAttributeDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIAttributeDescription\n", testDesc, Desc);
+		assertEquals("Warning, FieldName not correctly set for UIAttributeDescription\n", testFieldName, FieldName);
+		assertEquals("Warning, TableConstraint not correctly set for UIAttributeDescription\n", testTableConstraint, TableConstraint);
+		assertEquals("Warning, MaxLength not correctly set for UIAttributeDescription\n", testMaxLength, MaxLength);
+		assertEquals("Warning, Source not correctly set for UIAttributeDescription\n", testSource, Source);
+		assertEquals("Warning, HomepageURL not correctly set for UIAttributeDescription\n", testHPage, HPage);
+		assertEquals("Warning, LinkoutURL not correctly set for UIAttributeDescription\n", testLPage, LPage);
 
 		//	contains/get for AttributeCollection-UIAttributeDescription
 		containsTest = ac.containsUIAttributeDescription(testIName);
-		assertTrue("Warning, AttributeCollection should contain testUIAttributeDescription, but doesnt", containsTest);
+		assertTrue("Warning, AttributeCollection should contain testUIAttributeDescription, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ac.getUIAttributeDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//	contains/get for AttributePage-UIAttributeDescription (Tests all lower groups getByName as well
 		containsTest = ap.containsUIAttributeDescription(testIName);
-		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt", containsTest);
+		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ap.getUIAttributeDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect", testIName, testGetByName);
+			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well
 			assertEquals(
-				"Warning, Did not get the correct Page for the UIAttributeDescription",
+				"Warning, Did not get the correct Page for the UIAttributeDescription\n",
 				"testAttributePage",
 				d.getPageForUIAttributeDescription(testIName).getInternalName());
 		}

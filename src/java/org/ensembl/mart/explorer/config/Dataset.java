@@ -298,24 +298,7 @@ public class Dataset {
 		* @return UIAttributeDescription object
 		*/
 	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) attributePages.keySet().iterator();
-				iter.hasNext();
-				) {
-				AttributePage page =
-					(AttributePage) attributePages.get((Integer) iter.next());
-				if (page.containsUIAttributeDescription(internalName)) {
-					lastAtt = page.getUIAttributeDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
+		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
 			return null;
@@ -351,19 +334,33 @@ public class Dataset {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular UIFilterDescription.
-		* Note, it is best to first call containsUIFilterDescription,
-		* as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
+		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular 
+		* UIFilterDescription/UIDSFilterDescription Object. Note, it is best to first call 
+		* containsUIFilterDescription, as there is a caching system to cache a FilterDescription Object 
+		* during a call to containsUIFilterDescription.
 		* 
 		* @param displayName name of the requested UIFilterDescription
-		* @return UIFilterDescription object
+		* @return Object (either instanceof UIFilterDescription or UIDSFilterDescription)
 		*/
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
+	public Object getUIFilterDescriptionByName(String internalName) {
+		if ( containsUIFilterDescription(internalName) )
+			return lastFilt;
+		else
+			return null;
+	}
+
+	/**
+		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific UIFilterDescription/UIDSFilterDescription object.
+		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
+		*  found, this method caches the UIFilterDescription Object it has found.
+		* 
+		* @param displayName name of the requested UIFilterDescription object
+		* @return boolean, true if found, false if not.
+		*/
+	public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
+		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterPages.keySet().iterator();
 				iter.hasNext();
 				) {
@@ -375,36 +372,21 @@ public class Dataset {
 				}
 			}
 		}
-		if (found)
-			return lastFilt;
-		else
-			return null;
-	}
-
-	/**
-		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific UIFilterDescription.
-		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
-		*  found, this method caches the UIFilterDescription it has found.
-		* 
-		* @param displayName name of the requested UIFilterDescription object
-		* @return boolean, true if found, false if not.
-		*/
-	public boolean containsUIFilterDescription(String internalName) {
-		boolean found = false;
-
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) filterPages.keySet().iterator();
-				iter.hasNext();
-				) {
-				FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
-				if (page.containsUIFilterDescription(internalName)) {
-					lastFilt = page.getUIFilterDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
+		else {
+			String lastIntName;
+			if (lastFilt instanceof UIFilterDescription)
+				lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
+			else if (lastFilt instanceof UIDSFilterDescription)
+				lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+			else
+				lastIntName = ""; // should not get here
+			  
+			if ( lastIntName.equals(internalName) )
+				found = true;
+		  else {
+		  	lastFilt = null;
+		  	found = containsUIFilterDescription(internalName);			
+		  }
 		}
 		return found;
 	}
@@ -462,22 +444,20 @@ public class Dataset {
   }
   
 	/**
-	 * Convenience Method to get all UIFilterDescription objects in all Pages/Groups/Collections within a Dataset.
+	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a Dataset.
 	 * 
-	 * @return UIFilterDescription[]
+	 * @return List of UIFilterDescription/UIDSFilterDescription objects
 	 */
-	public UIFilterDescription[] getAllUIFilterDescriptions() {
+	public List getAllUIFilterDescriptions() {
 		List filts = new ArrayList();
   	
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
 			FilterPage fp = (FilterPage) filterPages.get((Integer) iter.next());
   		
-			filts.addAll(Arrays.asList(fp.getAllUIFilterDescriptions()));
+			filts.addAll( fp.getAllUIFilterDescriptions() );
 		}
 		
-		UIFilterDescription[] f = new UIFilterDescription[filts.size()];
-		filts.toArray(f);
-		return f;  	
+		return filts;  	
 	}
 
 	/**
@@ -662,6 +642,6 @@ public class Dataset {
 
 	// cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
 	private UIAttributeDescription lastAtt = null;
-	//cache one UIFilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private UIFilterDescription lastFilt = null;
+	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
+	private Object lastFilt = null;
 }

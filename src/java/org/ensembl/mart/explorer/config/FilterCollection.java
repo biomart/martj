@@ -18,8 +18,10 @@
 
 package org.ensembl.mart.explorer.config;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -133,51 +135,81 @@ public class FilterCollection {
 		}
 	}
 
-   /**
-    * Returns the internalName of the FilterSet this Collection belongs within.
-    * 
-    * @return String filterSetName
-    */
-    public String getFilterSetName() {
-    	return filterSetName;
-    }
-    
-    /**
-     * Check if this FilterCollection is a member of a FilterSet.
-     * 
-     * @return boolean true if member of a FilterSet, false if not
-     */
-    public boolean inFilterSet() {
-    	return inFilterSet;
-    }
 	/**
-	 * Returns a array of UIFilterDescription objects, in the order they were added.
-	 * 
-	 * @return array of UIFilterDescription objects
+	 * add a UIDSFilterDescription object to this FilterCollection. Both UIFIlterDescriptions
+	 * and UIDSFIlterDescriptions are stored in the same List, in the order they are
+	 * added.  Subsequent calls to add or set methods for both types of filters
+	 * will add to all filters added previously. 
+	 * @param f a UIDSFilterDescription object
 	 */
-	public UIFilterDescription[] getUIFilterDescriptions() {
-		UIFilterDescription[] uf = new UIFilterDescription[uiFilters.size()];
-		uiFilters.values().toArray(uf);
-		return uf;
+	public void addUIDSFilterDescription(UIDSFilterDescription f) {
+		Integer fRankInt = new Integer(fRank);
+		uiFilters.put(fRankInt, f);
+		uiFilterNameMap.put(f.getInternalName(), fRankInt);
+		fRank++;
 	}
 
 	/**
-	 * Returns a specific UIFilterDescription, named by internalName.
-	 * 
-	 * @param internalName String name of the requested UIFilterDescription
-	 * @return UIFilterDescription object, or null.
+	 * set a group of UIDSFilterDescription objects to this FilterCollection in one call. 
+	 * Both UIFIlterDescriptions and UIDSFIlterDescriptions are stored in the same List, 
+	 * in the order they are added.  Subsequent calls to add or set methods for both types of 
+	 * filters will add to all filters added previously.
+	 * @param f an array of UIDSFilterDescription objects
 	 */
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
+	public void setUIDSFilterDescriptions(UIDSFilterDescription[] f) {
+		for (int i = 0, n = f.length; i < n; i++) {
+			Integer fRankInt = new Integer(fRank);
+			uiFilters.put(fRankInt, f[i]);
+			uiFilterNameMap.put(f[i].getInternalName(), fRankInt);
+			fRank++;
+		}
+	}
+
+	/**
+	 * Returns the internalName of the FilterSet this Collection belongs within.
+	 * 
+	 * @return String filterSetName
+	 */
+	public String getFilterSetName() {
+		return filterSetName;
+	}
+
+	/**
+	 * Check if this FilterCollection is a member of a FilterSet.
+	 * 
+	 * @return boolean true if member of a FilterSet, false if not
+	 */
+	public boolean inFilterSet() {
+		return inFilterSet;
+	}
+
+	/**
+	 * Returns a List of UIFilterDescription/UIDSFilterDescription objects, 
+	 * in the order they were added.
+	 * 
+	 * @return List of FilterDescription objects
+	 */
+	public List getUIFilterDescriptions() {
+		return new ArrayList(uiFilters.values());
+	}
+
+	/**
+	 * Returns a specific UIFilterDescription/UIDSFilterDescription, named by internalName.
+	 * 
+	 * @param internalName String name of the requested FilterDescription
+	 * @return Object requested, or null.
+	 */
+	public Object getUIFilterDescriptionByName(String internalName) {
 		if (uiFilterNameMap.containsKey(internalName))
-			return (UIFilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(internalName));
+			return uiFilters.get((Integer) uiFilterNameMap.get(internalName));
 		else
 			return null;
 	}
 
 	/**
-	 * Check if this FilterCollection contains a specific UIFilterDescription.
+	 * Check if this FilterCollection contains a specific UIFilterDescription/UIDSFilterDescription object.
 	 * 
-	 * @param internalName String name of the requested UIFilterDescription
+	 * @param internalName String name of the requested FilterDescription
 	 * @return boolean, true if FilterCollection contains the UIFilterDescription, false if not.
 	 */
 	public boolean containsUIFilterDescription(String internalName) {
@@ -193,77 +225,90 @@ public class FilterCollection {
 		buf.append(", description=").append(description);
 		buf.append(", type=").append(type);
 
-        if (inFilterSet)
-          buf.append(", filterSetName=").append(filterSetName);
-          
+		if (inFilterSet)
+			buf.append(", filterSetName=").append(filterSetName);
+
 		buf.append(", UIFilterDescriptions=").append(uiFilters);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
+	public boolean equals(Object o) {
 		if (!(o instanceof FilterCollection))
 			return false;
 
 		FilterCollection otype = (FilterCollection) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;				
 
-    if (! ( type.equals( otype.getType() ) ) )
-      return false;
-    
-    if (inFilterSet) {
-    	if (! otype.inFilterSet() )
-    	  return false;
-    	if (! ( filterSetName.equals( otype.getFilterSetName() )  ) )
-    	  return false;  
-    }
-    
-    if (otype.inFilterSet()) {
-    	if (! inFilterSet )
-    	  return false;
-    	  
-    	if (! ( otype.getFilterSetName().equals(filterSetName) ) )
-    	  return false;
-    }
-    
-    //other FilterCollection must contain all UIFilterDescriptions that this FilterCollection contains
-    for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-			UIFilterDescription element = (UIFilterDescription) iter.next();
-			if (! ( otype.containsUIFilterDescription( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getUIFilterDescriptionByName( element.getInternalName() ) ) ) )
-			  return false;
+		if (!(internalName.equals(otype.getInternalName())))
+			return false;
+
+		if (!(displayName.equals(otype.getDisplayName())))
+			return false;
+
+		if (!(description.equals(otype.getDescription())))
+			return false;
+
+		if (!(type.equals(otype.getType())))
+			return false;
+
+		if (inFilterSet) {
+			if (!otype.inFilterSet())
+				return false;
+			if (!(filterSetName.equals(otype.getFilterSetName())))
+				return false;
 		}
-		
+
+		if (otype.inFilterSet()) {
+			if (!inFilterSet)
+				return false;
+
+			if (!(otype.getFilterSetName().equals(filterSetName)))
+				return false;
+		}
+
+		//other FilterCollection must contain all FilterDescriptions that this FilterCollection contains
+		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+			Object ob = iter.next();
+			
+			if (ob instanceof UIFilterDescription) {
+				UIFilterDescription element = (UIFilterDescription) ob;
+				if (!(otype.containsUIFilterDescription(element.getInternalName())))
+					return false;
+				if (! ( element.equals(otype.getUIFilterDescriptionByName(element.getInternalName() ) ) ) )
+					return false;				
+			}
+			else if (ob instanceof UIDSFilterDescription) {
+				UIDSFilterDescription element = (UIDSFilterDescription) ob;
+				if (!(otype.containsUIFilterDescription(element.getInternalName())))
+					return false;
+				if (! ( element.equals(otype.getUIFilterDescriptionByName(element.getInternalName() ) ) ) )
+					return false;				
+			}
+			else
+			  return false; // shouldnt get here
+		}
+
 		return true;
 	}
 
-  public int hashCode() {
-	int tmp = internalName.hashCode();
-	tmp = (31 * tmp) + displayName.hashCode();
-	tmp = (31 * tmp) + filterSetName.hashCode();
-	tmp = (31 * tmp) + description.hashCode();
-		
-    for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+	public int hashCode() {
+		int tmp = internalName.hashCode();
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + filterSetName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+
+		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 			UIFilterDescription element = (UIFilterDescription) iter.next();
-			tmp = (31 * tmp) + element.hashCode();	
+			tmp = (31 * tmp) + element.hashCode();
 		}
-		
+
 		return tmp;
-  }
+	}
 
 	private final String internalName, displayName, description, filterSetName, type;
 	private boolean inFilterSet = false;
-	
+
 	private int fRank = 0;
 	private TreeMap uiFilters = new TreeMap();
 	private Hashtable uiFilterNameMap = new Hashtable();

@@ -143,58 +143,27 @@ public class AttributeCollection {
 
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the AttributeCollection for a particular UIAttributeDescription.
-		* Note, it is best to first call containsUIAttributeDescription,
-		*  as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
-		* 
+		* Get a specific UIAttributeDescription, named by internalName.
+		*  
 		* @param internalName name of the requested UIAttributeDescription
 		* @return UIAttributeDescription object
 		*/
 	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) uiAttributes.keySet().iterator(); iter.hasNext();) {
-				UIAttributeDescription attribute = (UIAttributeDescription) uiAttributes.get((Integer) iter.next());
-				if (attribute.getInternalName().equals(internalName)) {
-					lastAtt = attribute;
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
-			return lastAtt;
+		if ( containsUIAttributeDescription(internalName) )
+			return (UIAttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
 		else
 			return null;
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the AttributeCollection contains a specific UIAttributeDescription.
-		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
-		*  found, this method caches the UIAttributeDescription it has found.
-		* 
+		* Check if this AttributeCollection contains a specific UIAttributeDescription named
+		* by internalName.
+		*  
 		* @param internalName name of the requested UIAttributeDescription object
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName) {
-		boolean found = false;
-
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) uiAttributes.keySet().iterator(); iter.hasNext();) {
-				UIAttributeDescription attribute = (UIAttributeDescription) uiAttributes.get((Integer) iter.next());
-				if (attribute.getInternalName().equals(internalName)) {
-					lastAtt = attribute;
-					found = true;
-					break;
-				}
-			}
-		}
-		return found;
+  	return uiAttributeNameMap.containsKey(internalName);
 	}
   
 	public String toString() {

@@ -165,21 +165,7 @@ public class AttributePage {
 		* @return UIAttributeDescription object, or null
 		*/
 	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
-				AttributeGroup group = (AttributeGroup) attributeGroups.get((Integer) iter.next());
-				if (group.containsUIAttributeDescription(internalName)) {
-					lastAtt = group.getUIAttributeDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
+		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
 			return null;

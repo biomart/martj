@@ -45,10 +45,12 @@ import java.util.TreeMap;
  *                </ul>
  *                   <li><p>FilterPage:  contains a List of FilterCollections</p>
  *                     <ul>
- *                         <li><p>FilterCollection: contains a List of UIFilters</p>
+ *                         <li><p>FilterCollection: contains a List of UIFilterDescription/UIDSFilterDescription objects</p>
  *                            <ul>
- *                                <li><p>UIFilterDescription: holds all of the information needed by the UI for displaying a filter and its information,
+ *                                <li><p>UIFilterDescription: holds all of the information needed by the UI for displaying a filter,
  *                                             and the information that it needs to add a filter to a mart Query</p>
+ *                                <li><p>UIDSFilterDescription: holds all of the information needed by the UI for displaying a Domain Specific Filter,
+ *                                             and the information that it needs to add a Domain Specific Filter to a mart Query</p> 
  *                            </ul>
  *                </ul>
  *         </ul>
