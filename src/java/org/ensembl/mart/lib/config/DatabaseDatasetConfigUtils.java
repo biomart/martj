@@ -63,10 +63,10 @@ public class DatabaseDatasetConfigUtils {
 
   private static final String DIGESTTYPE = "MD5";
 
-  private static final String BASEMETATABLE = "meta_DatasetView"; // append user if necessary
+  private static final String BASEMETATABLE = "meta_configuration"; // append user if necessary
 
   /*
-   * meta_DatasetView<_username>
+   * meta_configuration<_username>
    * -----------------------
    * internalName   varchar(100)
    * displayName    varchar(100)
@@ -124,11 +124,11 @@ public class DatabaseDatasetConfigUtils {
   private static Logger logger = Logger.getLogger(DatabaseDatasetConfigUtils.class.getName());
 
   /**
-   * Verify if a meta_DatasetView_[user] table exists.  Returns false if user is null, or
+   * Verify if a meta_configuration_[user] table exists.  Returns false if user is null, or
    * if the table does not exist. 
    * @param dsource - DetailedDataSource containing connection to Mart Database
    * @param user - user to query
-   * @return true if meta_DatasetView_[user] exists, false otherwise
+   * @return true if meta_configuration_[user] exists, false otherwise
    * @throws ConfigurationException for SQLExceptions
    */
   public static boolean DSConfigUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
@@ -188,9 +188,9 @@ public class DatabaseDatasetConfigUtils {
   }
 
   /**
-   * Determine if meta_DatasetView exists in a Mart Database defined by the given DetailedDataSource.
+   * Determine if meta_configuration exists in a Mart Database defined by the given DetailedDataSource.
    * @param dsource -- DetailedDataSource for the Mart Database being querried.
-   * @return true if meta_DatasetView exists, false if it does not exist
+   * @return true if meta_configuration exists, false if it does not exist
    * @throws ConfigurationException for all underlying Exceptions
    */
   public static boolean BaseDSConfigTableExists(DetailedDataSource dsource) throws ConfigurationException {
@@ -208,16 +208,16 @@ public class DatabaseDatasetConfigUtils {
 
   /**
    * Store a DatesetConfig.dtd compliant (compressed or uncompressed) XML Document in the Mart Database with a given internalName and displayName.  
-   * If user is not null and meta_DatsetConfig_[user] exists, this table is the target, otherwise, meta_DatasetView is the target.
+   * If user is not null and meta_DatsetConfig_[user] exists, this table is the target, otherwise, meta_configuration is the target.
    * Along with the internalName and displayName of the XML, an MD5 messageDigest of the xml is computed, and stored as well. 
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
+   * @param user -- Specific User to look for meta_configuration_[user] table, if null, or non-existent, uses meta_configuration
    * @param internalName -- internalName of the DatasetConfigXML being stored.
    * @param displayName -- displayName of the DatasetConfig XML being stored.
    * @param dataset -- dataset of the DatasetConfig XML being stored
    * @param doc - JDOM Document object representing the XML for the DatasetConfig   
    * @param compress -- if true, the XML is compressed using GZIP.
-   * @throws ConfigurationException when no meta_DatasetView table exists, and for all underlying Exceptions
+   * @throws ConfigurationException when no meta_configuration table exists, and for all underlying Exceptions
    */
   public static void storeConfiguration(
     DetailedDataSource dsource,
@@ -542,11 +542,11 @@ public class DatabaseDatasetConfigUtils {
   }
 
   /**
-   * Returns all dataset names from the meta_DatasetView table for the given user.
+   * Returns all dataset names from the meta_configuration table for the given user.
    * @param ds -- DetailedDataSource for mart database
-   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
+   * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
    * @return String[] dataset names
-   * @throws ConfigurationException when valid meta_DatasetView table does not exist, and for all underlying SQL Exceptions
+   * @throws ConfigurationException when valid meta_configuration table does not exist, and for all underlying SQL Exceptions
    */
   public static String[] getAllDatasetNames(DetailedDataSource ds, String user) throws ConfigurationException {
     SortedSet names = new TreeSet();
@@ -578,13 +578,13 @@ public class DatabaseDatasetConfigUtils {
   }
 
   /**
-   * Returns all of the internalNames for the given dataset, as stored in the meta_DatasetView table for
+   * Returns all of the internalNames for the given dataset, as stored in the meta_configuration table for
    * the Mart Database for the given user.
    * @param ds -- DetailedDataSource for Mart database
-   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
+   * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
    * @param dataset -- dataset for which internalNames are requested
    * @return String[] containing all of the internalNames for the requested dataset.
-   * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
+   * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying Exceptons.
    */
   public static String[] getAllInternalNamesForDataset(DetailedDataSource ds, String user, String dataset)
     throws ConfigurationException {
@@ -619,13 +619,13 @@ public class DatabaseDatasetConfigUtils {
   }
 
   /**
-   * Returns all of the displayNames for the requested dataset, as stored in the meta_DatasetView table for
+   * Returns all of the displayNames for the requested dataset, as stored in the meta_configuration table for
    * the Mart Database for the given user.
    * @param ds -- DetailedDataSource for Mart database
-   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
+   * @param user -- user for meta_configuration table, if meta_configuration_user does not exist, meta_configuration is attempted.
    * @param dataset -- dataset for which displayNames are requested
    * @return String[] containing all of the displayNames for the requested dataset
-   * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
+   * @throws ConfigurationException when valid meta_configuration tables do not exist, and for all underlying Exceptons.
    */
   public static String[] getAllDisplayNamesForDataset(DetailedDataSource ds, String user, String dataset)
     throws ConfigurationException {
@@ -663,11 +663,11 @@ public class DatabaseDatasetConfigUtils {
    * Returns a DatasetConfig object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
+   * @param user -- Specific User to look for meta_configuration_[user] table, if null, or non-existent, uses meta_configuration
    * @param dataset -- dataset for which DatasetConfig is requested
    * @param internalName -- internalName of desired DatasetConfig object
    * @return DatasetConfig defined by given internalName
-   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
   public static DatasetConfig getDatasetConfigByDatasetInternalName(
     DetailedDataSource dsource,
@@ -826,11 +826,11 @@ public class DatabaseDatasetConfigUtils {
    * Returns a DatasetConfig JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
+   * @param user -- Specific User to look for meta_configuration_[user] table, if null, or non-existent, uses meta_configuration
    * @param dataset -- dataset for which DatasetConfig document is requested
    * @param internalName -- internalName of desired DatasetConfig document
    * @return DatasetConfig JDOM Document defined by given displayName and dataset
-   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
   public static Document getDatasetConfigDocumentByDatasetInternalName(
     DetailedDataSource dsource,
@@ -939,10 +939,10 @@ public class DatabaseDatasetConfigUtils {
    * given dataset and displayName
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param dataset -- dataset for which DatsetConfig is requested
-   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
+   * @param user -- Specific User to look for meta_configuration_[user] table, if null, or non-existent, uses meta_configuration
    * @param displayName -- String displayName for requested DatasetConfig
    * @return DatasetConfig with given displayName and dataset
-   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
   public static DatasetConfig getDatasetConfigByDatasetDisplayName(
     DetailedDataSource dsource,
@@ -1100,7 +1100,7 @@ public class DatabaseDatasetConfigUtils {
   /**
    * Get a message digest for a given DatasetConfig, given by dataset and internalName
    * @param dsource -- connection to mart database
-   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
+   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
    * @param dataset -- dataset for which digest is requested
    * @param internalName -- internalName for DatasetConfig digest desired.
    * @return byte[] digest for given dataset and displayName
@@ -1146,7 +1146,7 @@ public class DatabaseDatasetConfigUtils {
   /**
    * Get the displayName for a given dataset and internalName.
    * @param dsource -- connection to mart database
-   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
+   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
    * @param dataset -- dataset for which displayName is requested
    * @param internalName -- internalName for DatasetConfig internalName desired.
    * @return String displayName for given dataset and internalName
@@ -1191,7 +1191,7 @@ public class DatabaseDatasetConfigUtils {
   /**
    * Get a message digest for a given DatasetConfig, given by dataset and displayName
    * @param dsource -- connection to mart database
-   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
+   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
    * @param dataset -- dataset for which digest is requested
    * @param displayName -- displayName for DatasetConfig digest desired.
    * @return byte[] digest for given displayName and dataset
@@ -1236,7 +1236,7 @@ public class DatabaseDatasetConfigUtils {
   /**
    * Get the internalName for a given dataset and displayName.
    * @param dsource -- connection to mart database
-   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
+   * @param user -- user for meta_configuration_[user] table, if null, meta_configuration is attempted
    * @param dataset -- dataset for which internalName is requested
    * @param displayName -- displayName for DatasetConfig internalName desired.
    * @return String internalName for given displayName and dataset
@@ -1320,7 +1320,7 @@ public class DatabaseDatasetConfigUtils {
    * Removes all records in a given metatable for the given dataset, internalName and displayName.  
    * Throws an error if the rows deleted do not equal the number of rows obtained using DatabaseDatasetConfigAdaptor.getDSConfigEntryCountFor(). 
    * @param dsrc - DetailedDataSource for Mart Database
-   * @param metatable - meta_DatasetView table to use to delete entries
+   * @param metatable - meta_configuration table to use to delete entries
    * @param dataset - dataset for DatasetConfig entries to delete from metatable
    * @param internalName - internalName of DatasetConfig entries to delete from metatable
    * @param displayName - displayName of DatasetConfig entries to delete from metatable
@@ -1403,10 +1403,10 @@ public class DatabaseDatasetConfigUtils {
    * Get the correct DatasetConfig table for a given user in the Mart Database
    * stored in the given DetailedDataSource.
    * @param ds -- DetailedDataSource for Mart Database.
-   * @param user -- user to retrieve a DatasetConfig table.  If user is null, or if meta_DatasetView_[user] does not exist
+   * @param user -- user to retrieve a DatasetConfig table.  If user is null, or if meta_configuration_[user] does not exist
    *                returns DatabaseDatasetConfigUtils.BASEMETATABLE.
    * @return String meta table name
-   * @throws ConfigurationException if both meta_DatasetView_[user] and DatabaseDatasetConfigUtils.BASEMETATABLE are absent, and for all underlying exceptions.
+   * @throws ConfigurationException if both meta_configuration_[user] and DatabaseDatasetConfigUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
   public static String getDSConfigTableFor(DetailedDataSource ds, String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
