@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -36,32 +37,29 @@ import java.util.StringTokenizer;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSBandFilterHandler implements DSFilterHandler {
+public class BandFilterHandler implements UnprocessedFilterHandler {
 
-	private String startPattern = "^.*\\:start$";
-	private String endPattern = "^.*\\:end$";
-	private String posstart = "start";
-	private String posend = "end";
-	private String chrname = "chr_name";
+	private final String START_FIELD = "band_start";
+	private final String END_FIELD= "band_end";
+	private final String CHRNAME = "chr_name";
 	
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.explorer.DSFilterHandler#ModifyQuery(java.sql.Connection, java.lang.String, org.ensembl.mart.explorer.Query)
+	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Connection conn, String parameter, Query query) throws InvalidQueryException {
-		if (! ( ( parameter.matches( startPattern ) ) || ( parameter.matches( endPattern ) ) ) )
-			throw new InvalidQueryException("Supplied parameter does not match the required format for DSBandFilterHandler: recieved "+parameter+" expected String matching either Regex "+startPattern+" or Regex "+endPattern);
-		  
-		String sql, filterName, filterCondition, filterValue;
-		PreparedStatement ps;
-		Filter chrFilter;
-		
-		StringTokenizer paramtokens = new StringTokenizer(parameter, ":");
-		String markerID = paramtokens.nextToken();
-		String pos = paramtokens.nextToken();
+	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
+		Connection conn;
+		try {
+			conn = engine.getConnection();
+		} catch (SQLException e1) {
+			throw new InvalidQueryException("Recieved SQLException "+e1.getMessage(), e1);
+		}
 		
 		Query newQuery = new Query(query);
 
-		// must get species, focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
+		String sql, filterName, filterCondition, filterValue;
+		PreparedStatement ps;
+		Filter chrFilter;
+		// must get species focus, and chromosome.  If a chromosome filter has not been set, then throw an exception
 		String species, focus, chrvalue, lookupTable;
 		
 		// species can be parsed from the beginning of the first starBase
@@ -81,36 +79,44 @@ public class DSBandFilterHandler implements DSFilterHandler {
 			throw new InvalidQueryException("Species is required for a Marker Filter, check the MartConfiguration for the correct starBases for this Dataset.");
 		lookupTable = species+"_karyotype_lookup";
 		  
-		chrFilter = newQuery.getFilterByName(chrname);
+		chrFilter = newQuery.getFilterByName(CHRNAME);
 		if (chrFilter == null)
 			throw new InvalidQueryException("Marker Filters require a Chromosome Filter to have already been added to the Query.");
 		  
 		chrvalue = chrFilter.getValue();
-		
-		if (pos.equals(posstart)) {
-			sql = "SELECT chr_start FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
-			filterCondition = ">=";
-		} 
-		else {
-			sql = "SELECT chr_end FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
-			filterCondition = "<=";
-		}
-		
-		try {
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, chrvalue);
-			ps.setString(2, markerID);
+				
+		for (int i = 0, n = filters.size(); i < n; i++) {
+			Filter element = (Filter) filters.get(i);
+			newQuery.removeFilter(element);
 			
-			ResultSet rs = ps.executeQuery();
-			rs.next(); // will only be one result
-			filterValue = rs.getString(1);
-		} catch (SQLException e) {
-			throw new InvalidQueryException("Recieved SQLException "+e.getMessage());
-		}
+			String field = element.getField();
+			String band_value = element.getValue();		
+			if (field.equals(START_FIELD)) {
+				sql = "SELECT chr_start FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
+				filterCondition = ">=";
+			} 
+			else if (field.equals(END_FIELD)){
+				sql = "SELECT chr_end FROM "+lookupTable+" WHERE  chr_name = ? AND band = ?";
+				filterCondition = "<=";
+			} else
+			  throw new InvalidQueryException("Recieved invalid field for BandFilterHandler " + field + "\n");
 		
-		Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
-		newQuery.addFilter(posFilter);		
+			try {
+				ps = conn.prepareStatement(sql);
+				ps.setString(1, chrvalue);
+				ps.setString(2, band_value);
+			
+				ResultSet rs = ps.executeQuery();
+				rs.next(); // will only be one result
+				filterValue = rs.getString(1);
+			} catch (SQLException e) {
+				throw new InvalidQueryException("Recieved SQLException "+e.getMessage(), e);
+			}
+		
+			Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
+			newQuery.addFilter(posFilter);		
+		}
+	  		
 		return newQuery;
 	}
-
 }

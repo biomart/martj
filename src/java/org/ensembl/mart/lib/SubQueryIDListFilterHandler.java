@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 /**
- * IDListFilterHandler implementing object designed to process SUBQUERY
+ * UnprocessedFilterHandler implementing object designed to process SUBQUERY
  * type IDListFilter objects into STRING type IDListFilter objects.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -34,50 +34,52 @@ import java.util.StringTokenizer;
 public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)
+	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, IDListFilter idfilter, Query query) throws InvalidQueryException {
+	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Query newQuery = new Query(query);
 		
-		Query subq = idfilter.getSubQuery();
-
-    ByteArrayOutputStream idstream = new ByteArrayOutputStream();
-    String results = null;
+		for (int i = 0, n = filters.size(); i < n; i++) {
+			IDListFilter idfilter = (IDListFilter) filters.get(i);
+			newQuery.removeFilter(idfilter);
+			
+			Query subq = idfilter.getSubQuery();
+			ByteArrayOutputStream idstream = new ByteArrayOutputStream();
+			String results = null;
     
-    try {
-    	engine.execute(subq, FormatSpec.TABSEPARATEDFORMAT, idstream);
+			try {
+				engine.execute(subq, FormatSpec.TABSEPARATEDFORMAT, idstream);
 
-      results = idstream.toString();
-      idstream.close();
-		} catch (Exception e) {
-			throw new InvalidQueryException("Could not execute subquery: "+ e.getMessage());
-		}
+				results = idstream.toString();
+				idstream.close();
+			} catch (Exception e) {
+				throw new InvalidQueryException("Could not execute subquery: "+ e.getMessage());
+			}
     
-		StringTokenizer lines = new StringTokenizer(results, "\n");
-		List idlist = new ArrayList();
+			StringTokenizer lines = new StringTokenizer(results, "\n");
+			List idlist = new ArrayList();
 
-		while (lines.hasMoreTokens()) {
-		  String id = lines.nextToken();
-			if (! idlist.contains(id))
-		    idlist.add(id);
-		}
+			while (lines.hasMoreTokens()) {
+				String id = lines.nextToken();
+				if (! idlist.contains(id))
+					idlist.add(id);
+			}
 
-		String[] ids = new String[idlist.size()];
-		idlist.toArray(ids);
+			String[] ids = new String[idlist.size()];
+			idlist.toArray(ids);
 		
-		String[] unversionedIds = null;
+			String[] unversionedIds = null;
     
-    try {
-      unversionedIds = ModifyVersionedIDs(engine.getConnection(), query, ids);
-    } catch (SQLException e) {
-      throw new InvalidQueryException( "Problem with db connection: ",e );
-    }
+			try {
+				unversionedIds = ModifyVersionedIDs(engine.getConnection(), query, ids);
+			} catch (SQLException e) {
+				throw new InvalidQueryException( "Problem with db connection: ",e );
+			}
 		
-		if (unversionedIds.length > 0) {
-		  Filter newFilter = new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds);
-		  newQuery.addFilter(newFilter);
+			if (unversionedIds.length > 0)
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds));
 		}
-				
+						
 		return newQuery;
 	}
 

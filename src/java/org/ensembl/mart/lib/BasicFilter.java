@@ -26,7 +26,7 @@ package org.ensembl.mart.lib;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class BasicFilter implements Filter {
-	
+
 	/**
 	 * constructs a BasicFilter object, which can be added to a Query
 	 * 
@@ -35,9 +35,8 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String condition, String value) {
-		this(field, null, condition,value);
+		this(field, null, condition, value);
 	}
-
 
 	/**
 	 * constructs a BasicFilter object with a tableConstraint, which can be added to a Query
@@ -48,17 +47,34 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String tableConstraint, String condition, String value) {
+		this(field, tableConstraint, condition, value, null);
+	}
+
+	/**
+	 * constructs a BasicFilter object with a tableConstraint and handler, 
+	 * which can be added to a Query
+	 * 
+	 * @param field -- String type.  The type of filter being applied
+	 * @param tableConstraint -- String hint for table or tables where field is found
+	 * @param condition -- String condition of the clause, eg. =<>
+	 * @param value -- parameter of the condition, applicable to the type.
+	 * @param handler -- name of UnprocessedFilterHandler implimenting class to load to handle this Filter, or null if
+	 *                                  no processing is required.
+	 */
+	public BasicFilter(String field, String tableConstraint, String condition, String value, String handler) {
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.condition = condition;
 		this.value = value;
-    
-    hashcode = (this.field == null) ? 0 : this.field.hashCode();
-    hashcode = (31 * hashcode) + ( (this.condition == null) ? 0 : this.condition.hashCode() );
-    hashcode = (31 * hashcode) + ( (this.value == null) ? 0 : this.value.hashCode() );
-    hashcode = (31 * hashcode) + ( (this.tableConstraint == null) ? 0 : this.tableConstraint.hashCode() );
+		this.handler = handler;
+
+		hashcode = (this.field == null) ? 0 : this.field.hashCode();
+		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
+		hashcode = (this.value != null) ? (31 * hashcode) + ((this.value == null) ? 0 : this.value.hashCode()) : hashcode;
+		hashcode = (this.tableConstraint != null) ? (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
+		hashcode = (this.handler != null) ? (31 * hashcode) + this.handler.hashCode() : hashcode; 
 	}
-  
+
 	/**
 	 * returns the condition for the filter
 	 * @return String condition =<>
@@ -85,9 +101,15 @@ public class BasicFilter implements Filter {
 		return field;
 	}
 
-	
 	public String getTableConstraint() {
 		return tableConstraint;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.Filter#getHandler()
+	 */
+	public String getHandler() {
+		return handler;
 	}
 
 	/**
@@ -103,11 +125,12 @@ public class BasicFilter implements Filter {
 		buf.append(" ,condition=").append(condition);
 		buf.append(" ,value=").append(value);
 		buf.append(", tableConstraint=").append(tableConstraint);
+		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
 	}
-	
+
 	/**
 	 * returns a where clause with the type, condition, and a bind parameter 
 	 * for the value, suitable for inclusion in a SQL PreparedStatement
@@ -135,17 +158,21 @@ public class BasicFilter implements Filter {
 		return value;
 	}
 
-  /**
+	/**
 	 * Allows Equality Comparisons manipulation of BasicFilter objects
 	 */
 	public boolean equals(Object o) {
 		return o instanceof BasicFilter && hashCode() == ((BasicFilter) o).hashCode();
 	}
-	
-  public int hashCode() {
+
+	public int hashCode() {
 		return hashcode;
-  }
-  
-	private final String field, condition, value, tableConstraint;
-  private int hashcode = 0; //hashcode for immutable object
+	}
+
+	private final String field;
+	private final String condition;
+	private final String value;
+	private final String tableConstraint;
+	private final String handler;
+	private int hashcode = 0; //hashcode for immutable object
 }

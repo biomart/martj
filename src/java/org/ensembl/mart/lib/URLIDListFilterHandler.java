@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
 
 /*
     Copyright (C) 2003 EBI, GRL
@@ -23,7 +24,7 @@ import java.sql.SQLException;
  */
 
 /**
- * IDListFilterHandler implementing object designed to process
+ * UnprocessedFilterHandler implementing object designed to process
  * URL type IDListFilter objects into STRING type IDListFilter objects.
  * Currently only supports file: URLs with one or more ids, one per line.
  * 
@@ -33,30 +34,32 @@ import java.sql.SQLException;
 public class URLIDListFilterHandler extends IDListFilterHandlerBase {
 
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)
+	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, IDListFilter idfilter, Query query) throws InvalidQueryException {
+	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Query newQuery = new Query(query);
+		for (int i = 0, n = filters.size(); i < n; i++) {
+			IDListFilter idfilter = (IDListFilter) filters.get(i);
+			newQuery.removeFilter(idfilter);
+			
+			URL idURL = idfilter.getUrl();
+			String[] unversionedIds = null;
 		
-		URL idURL = idfilter.getUrl();
-		String[] unversionedIds = null;
+			if (idURL.getProtocol().equals("file")) {
+				try {
+					unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader( idURL.openStream() ) );
+				} catch (SQLException e) {
+					throw new InvalidQueryException("Could not parse URL IDListFilter: " + e.getMessage(), e);
+				} catch (IOException e) {
+					throw new InvalidQueryException( "Problem reading from file", e );
+				}
+			}
+			else 
+			//impliment HTML parser here
+			throw new InvalidQueryException("Non File URLs are not currently supported\n"); 
 		
-		if (idURL.getProtocol().equals("file")) {
-		  try {
-			  unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader( idURL.openStream() ) );
-		  } catch (SQLException e) {
-			  throw new InvalidQueryException("Could not parse URL IDListFilter: " + e.getMessage(), e);
-      } catch (IOException e) {
-        throw new InvalidQueryException( "Problem reading from file", e );
-      }
-		}
-		else 
-		//impliment HTML parser here
-		throw new InvalidQueryException("Non File URLs are not currently supported\n"); 
-		
-		if (unversionedIds.length > 0) {
-			Filter newFilter = new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds);
-			newQuery.addFilter(newFilter);
+			if (unversionedIds.length > 0)
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds));
 		}
 		return newQuery;
 	}

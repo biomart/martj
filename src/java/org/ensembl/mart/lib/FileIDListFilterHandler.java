@@ -2,6 +2,7 @@ package org.ensembl.mart.lib;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.List;
 
 /*
     Copyright (C) 2003 EBI, GRL
@@ -22,7 +23,7 @@ import java.io.InputStreamReader;
  */
 
 /**
- * IDListFilterHandler implementing object designed to process File type
+ * UnprocessedFilterHandler implementing object designed to process File type
  * IDListFilter objects into STRING type IDListFilter objects. Expects that 
  * files contain one or more ids, one per line.
  * 
@@ -32,24 +33,29 @@ import java.io.InputStreamReader;
 public class FileIDListFilterHandler extends IDListFilterHandlerBase {
 
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)
+	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)
 	 */
-	public Query ModifyQuery(Engine engine, IDListFilter idfilter, Query query) throws InvalidQueryException {
+	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Query newQuery = new Query(query);
-		
-		File idFile = idfilter.getFile();
-		String[] unversionedIds = null;
-		
-		try {
-			unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader(new FileInputStream(idFile)));
-		} catch (Exception e) {
-      throw new InvalidQueryException("Could not parse File IDListFilter: " + e.getMessage(), e);
-		} 
-		
-		if (unversionedIds.length > 0) {
-			Filter newFilter = new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds);
-			newQuery.addFilter(newFilter);
+
+		for (int i = 0, n = filters.size(); i < n; i++) {
+			IDListFilter idfilter = (IDListFilter) filters.get(i);
+			newQuery.removeFilter(idfilter);
+
+			File idFile = idfilter.getFile();
+			String[] unversionedIds = null;
+
+			try {
+				unversionedIds =
+					HarvestStream(engine.getConnection(), query, new InputStreamReader(new FileInputStream(idFile)));
+			} catch (Exception e) {
+				throw new InvalidQueryException("Could not parse File IDListFilter: " + e.getMessage(), e);
+			}
+
+			if (unversionedIds.length > 0)
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds));
 		}
+
 		return newQuery;
 	}
 

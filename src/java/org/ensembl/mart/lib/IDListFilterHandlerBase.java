@@ -30,20 +30,20 @@ import org.apache.log4j.Logger;
  */
 
 /**
- * Base IDListFilterHandler implementing object that provides a private method
+ * Base UnprocessedFilterHandler implementing object that provides a private method
  * to handle versioned ids in a manner appropriate to the dataset.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public abstract class IDListFilterHandlerBase implements IDListFilterHandler {
+public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandler {
 
-  private String sql = "select versioned_ids from _meta_release_info where mart_species = ?";
+  private final String SQL = "select versioned_ids from _meta_versioned_ids where constellation_name = ?";
   
 	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.IDListFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, org.ensembl.mart.lib.IDListFilter, org.ensembl.mart.lib.Query)
+	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
 	 */
-	public abstract Query ModifyQuery(Engine engine, IDListFilter idfilter, Query query) throws InvalidQueryException;
+	public abstract Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException;
 	
 	/**
 	 * If the dataset being querried with an IDListFilter object contains versioned ids that are output to the user, these versions must be
@@ -58,14 +58,16 @@ public abstract class IDListFilterHandlerBase implements IDListFilterHandler {
 	 * @throws InvalidQueryException for all underlying exceptions
 	 */
 	protected String[] ModifyVersionedIDs(Connection conn, Query query_with_starbases, String[] input) throws InvalidQueryException {
-		String mart_species = query_with_starbases.getStarBases()[0]; // starBases contain mart_species as the first portion, before the first underscore
-		mart_species = mart_species.substring(0, mart_species.indexOf("_"));
-				
+		if (query_with_starbases.getStarBases().length < 1)
+			throw new InvalidQueryException("Recieved Query with missing starbase\n");
+			
+		String constellation_name = query_with_starbases.getStarBases()[0]; // get the first starBase, should be valid
+		  		
 		boolean versioned_ids = true;
 		
 		try {
-			PreparedStatement ps = conn.prepareStatement(sql);
-		  ps.setString(1, mart_species);
+			PreparedStatement ps = conn.prepareStatement(SQL);
+		  ps.setString(1, constellation_name);
 		  ResultSet rs = ps.executeQuery();
 		  rs.next(); // only one result
 		  versioned_ids = (rs.getInt(1) == 1) ? true : false;		  

@@ -7,7 +7,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.ensembl.mart.lib.BasicFilter;
-import org.ensembl.mart.lib.MapFilter;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.FormatSpec;
@@ -108,7 +107,7 @@ public class CompiledSQLQueryTest extends Base {
 		executeQuery(q);
 	}
 
-	public void testDSFilterHandlers() throws Exception {
+	public void testUnprocessedFilterHandlers() throws Exception {
 		Filter chrFilter = new BasicFilter("chr_name", "gene_main", "=", "1");
 
 		//Marker
@@ -116,10 +115,11 @@ public class CompiledSQLQueryTest extends Base {
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(chrFilter);
 
-		MapFilter start = new MapFilter("Marker", "AFMA272XC9:start");
-		MapFilter end = new MapFilter("Marker", "RH10794:end");
-		q.addDomainSpecificFilter(start);
-		q.addDomainSpecificFilter(end);
+		Filter start = new BasicFilter("marker_start", null, "=", "AFMA272XC9", "org.ensembl.mart.lib.MarkerFilterHandler");
+	  Filter end = new BasicFilter("marker_end", null, "=", "RH10794", "org.ensembl.mart.lib.MarkerFilterHandler");
+		
+		q.addFilter(start);
+		q.addFilter(end);
 
 		executeQuery(q);
 
@@ -127,11 +127,12 @@ public class CompiledSQLQueryTest extends Base {
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(chrFilter);
-		start = new MapFilter("Band", "p36.33:start");
-		end = new MapFilter("Band", "p36.33:end");
+		
+		start = new BasicFilter("band_start", null, "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
+		end = new BasicFilter("band_end", null, "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
 
-		q.addDomainSpecificFilter(start);
-		q.addDomainSpecificFilter(end);
+		q.addFilter(start);
+		q.addFilter(end);
 		executeQuery(q);
 
 		//Encode
@@ -139,27 +140,29 @@ public class CompiledSQLQueryTest extends Base {
 
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		MapFilter test = new MapFilter("Encode", "13:29450016:29950015");
+		Filter test = new BasicFilter("encode", null, "=", "13:29450016:29950015", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
 
-		q.addDomainSpecificFilter(test);
+		q.addFilter(test);
 		executeQuery(q);
 
 		//Qtl
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		test = new MapFilter("Qtl", "4:82189556:83189556");
+		test = new BasicFilter("qtl", null, "=", "4:82189556:83189556", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
 
-		q.addDomainSpecificFilter(test);
+		q.addFilter(test);
 		executeQuery(q);
 
 		//Expression
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		test = new MapFilter("Expression", "est:anatomical_site=ovary,development_stage=adult");
-
-		q.addDomainSpecificFilter(test);
+		Filter anatomical_filter = new BasicFilter("est.anatomical_site", null, "=", "ovary", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		Filter development_filter = new BasicFilter("est.development_stage", null, "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		
+		q.addFilter(anatomical_filter);
+		q.addFilter(development_filter);
 		executeQuery(q);
 	}
 

@@ -21,6 +21,10 @@ package org.ensembl.mart.lib;
 import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -90,7 +94,8 @@ public class Engine {
 	 * @param password - password (can be null)
 	 * @throws SQLException if problem connecting to database.
 	 */
-	public Engine(String databaseType, String host, String port, String databaseName, String user, String password) throws SQLException {
+	public Engine(String databaseType, String host, String port, String databaseName, String user, String password)
+		throws SQLException {
 
 		connection = DatabaseUtil.getConnection(databaseType, host, port, databaseName, user, password);
 
@@ -125,7 +130,8 @@ public class Engine {
 	 * @see DSFilterHandler
 	 * @see DSFilterHandlerFactory
 	 */
-	public void execute(Query query, FormatSpec formatspec, OutputStream os) throws SequenceException, FormatException, InvalidQueryException, SQLException {
+	public void execute(Query query, FormatSpec formatspec, OutputStream os)
+		throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
 		if (query.hasLimit())
 			execute(query, formatspec, os, query.getLimit());
@@ -159,27 +165,33 @@ public class Engine {
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit)
 		throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
-		Connection conn = getConnection();
-		if (query.hasDomainSpecificFilters()) {
-			MapFilter[] dsfilters = query.getDomainSpecificFilters();
-			for (int i = 0, n = dsfilters.length; i < n; i++) {
-				MapFilter dsf = dsfilters[i];
-				DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getHandler());
-				query = dsfh.ModifyQuery(conn, dsf.getCludgyParameter(), query);
+		//process any unprocessed filters
+		Hashtable needsHandler = new Hashtable();
+
+		Filter[] filters = query.getFilters();
+		for (int i = 0, n = filters.length; i < n; i++) {
+			Filter filter = filters[i];
+			if (filter.getHandler() != null) {
+				String handler = filter.getHandler();
+				if (!needsHandler.containsKey(handler))
+					needsHandler.put(handler, new ArrayList());
+
+				List unhandledFilters = (ArrayList) needsHandler.get(handler);
+				if (!unhandledFilters.contains(filter))
+					unhandledFilters.add(filter);
+				needsHandler.put(handler, unhandledFilters);
 			}
 		}
 
-		if (query.hasUnprocessedListFilters()) {
-			IDListFilter[] unprocessedFilters = query.getUnprocessedListFilters();
-			for (int i = 0, n = unprocessedFilters.length; i < n; i++) {
-				IDListFilter filter = unprocessedFilters[i];
-				IDListFilterHandler idhandler = IDListFilterHandlerFactory.getInstance(filter.getType());
-				query = idhandler.ModifyQuery(this, filter, query);
-			}  
+		for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+			String handler = (String) iter.next();
+			List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+			UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+			query = idhandler.ModifyQuery(this, unprocessedFilters, query);
 		}
-      
+
 		logger.info(query);
-		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
+		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, getConnection(), os);
 		qr.execute(limit);
 	}
 

@@ -97,6 +97,20 @@ public class BooleanFilter implements Filter {
 		return tableConstraint;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.Filter#getCondition()
+	 */
+	public String getCondition() {
+		 return condition;
+	}
+
+	/**
+	 * Not applicable to this type of filter, returns null
+	 */
+	public String getHandler() {
+		return null;
+	}
+	
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -113,7 +127,7 @@ public class BooleanFilter implements Filter {
 	 * Allows Equality Comparisons manipulation of BooleanFilter objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof BooleanFilter && hashCode() == ((BooleanFilter) o).hashCode();
+		return o instanceof BooleanFilter && hashCode() == o.hashCode();
 	}
 	
 	/* (non-Javadoc)

@@ -66,22 +66,6 @@ public class Query {
       System.arraycopy(ofilts,0,nfilts,0,ofilts.length);
       setFilters(nfilts);
     }
-  	
-  	if (oq.hasUnprocessedListFilters) {
-      IDListFilter[] ofilts = oq.getUnprocessedListFilters();
-      Filter[] nfilts = new Filter[ofilts.length];
-      for (int i = 0, n = ofilts.length; i < n; i++)
-        nfilts[i] = (Filter) ofilts[i];
-      
-      setFilters(nfilts);
-  	}
-  	
-  	if (oq.hasDomainSpecificFilters) {
-      MapFilter[] odsfilts = oq.getDomainSpecificFilters();
-      MapFilter[] ndsfilts = new MapFilter[odsfilts.length];
-      System.arraycopy(odsfilts, 0, ndsfilts,0,odsfilts.length);
-  		setDomainSpecificFilters(ndsfilts);
-    }
     
     if (oq.querytype == Query.SEQUENCE)
       setSequenceDescription(new SequenceDescription(oq.getSequenceDescription()));
@@ -195,11 +179,6 @@ public class Query {
 			if (element.getField().equals(name))
 			  return element;
 		}
-		for (int i = 0, n = unprocessedfilters.size(); i < n; i++) {
-			Filter element = (Filter) unprocessedfilters.get(i);
-			if (element.getField().equals(name))
-			  return element;
-		}
 		return null;
   }
   
@@ -207,7 +186,7 @@ public class Query {
 	 * set an entire list of Filter objects.  Subsequent calls to setFilters will add to 
 	 * what was added with previous addFilter/setFilters calls.  This method handles the 
 	 * logic for collecting any non STRING type IDListFilter objects for later processing 
-	 * by IDListFilterHandler objects, and sets the hasUnprocessedListFilters flag to true 
+	 * by UnprocessedFilterHandler objects, and sets the hasUnprocessedListFilters flag to true 
 	 * when they are encountered
 	 * 
 	 * @param Filter[] filters
@@ -220,20 +199,12 @@ public class Query {
 	}
 
 	/**
-	 * add a single Filter object.  This method handles the logic for collecting any
-	 * non STRING type IDListFilter objects for later processing by IDListFilterHandler objects,
-	 * and sets the hasUnprocessedListFilters flag to true when they are encountered.
+	 * add a single Filter object.
 	 * 
 	 * @param Filter filter
 	 */
 	public void addFilter(Filter filter) {
-    if (filter instanceof IDListFilter && ( (IDListFilter) filter).getType() != IDListFilter.STRING ) {
-		  unprocessedfilters.add((IDListFilter) filter);
-		  hasUnprocessedListFilters = true;
-		}
-		else
-		  filters.add(filter);
-      
+		 filters.add(filter);    
 
     changeSupport.firePropertyChange("filter", null, filter );
 	}
@@ -250,66 +221,7 @@ public class Query {
       changeSupport.firePropertyChange("attribute", attribute, null);
     }
   }
-
-  /**
-   * get all MapFilter objects as a MapFilter[] Array
-   * 
-   * @return MapFilter[] dsfilters
-   */
-  public MapFilter[] getDomainSpecificFilters() {
-  	MapFilter[] dsf = new MapFilter[dsfilters.size()];
-  	dsfilters.toArray(dsf);
-  	return dsf;
-  }
-  
-  /**
-   * set an entire list of MapFilter objects
-   * subsequent calls to setDomainSpecificFilter will add to what was added before
-   * 
-   * @param MapFilter[] dsfilters
-   */
-  public void setDomainSpecificFilters(MapFilter[] dsfilters) {
-    Object old = getDomainSpecificFilters();
-  	hasDomainSpecificFilters = true;
-  	this.dsfilters.addAll(Arrays.asList(dsfilters));
-
-    changeSupport.firePropertyChange("domain_specific_filters", old, getDomainSpecificFilters() );
-  }
-  
-  /**
-   * add a single MapFilter object
-   * 
-   * @param MapFilter dsfilter
-   */
-  public void addDomainSpecificFilter(MapFilter dsfilter) {
     
-    hasDomainSpecificFilters = true;
-   	dsfilters.add(dsfilter);
-    changeSupport.firePropertyChange("domain_specific_filter", null, dsfilter );  
-  }
-  
-  /**
-   * Determine if the Query contains Domain Specific Filters to process
-   * @return true if it contains Domain Specific Filters, false if not
-   */
-  public boolean hasDomainSpecificFilters() {
-  	return hasDomainSpecificFilters;
-  }
-  
-  /**
-   * Determine if the Query contains unprocessed IDListFilter objects.
-   * @return true if it contains unprocessed IDListFilter objects, false if not
-   */
-  public boolean hasUnprocessedListFilters() {
-  	return hasUnprocessedListFilters;
-  }
-  
-  public IDListFilter[] getUnprocessedListFilters() {
-  	IDListFilter[] ret = new IDListFilter[unprocessedfilters.size()];
-  	unprocessedfilters.toArray(ret);
-  	return ret;
-  }
-  
 	/**
 	 * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
 	* @param s A SequenceDescription object.
@@ -396,8 +308,9 @@ public class Query {
    * @return int count of all filters added
    */
   public int getTotalFilterCount() {
-  	return filters.size() + dsfilters.size() + unprocessedfilters.size();	
+  	return filters.size();	
   }
+  
 	/**
 	 * returns a description of the Query for logging purposes
 	 * 
@@ -413,12 +326,6 @@ public class Query {
 		buf.append(", attributes=").append(attributes);
 		buf.append(", filters=").append(filters);
 		
-		if (hasUnprocessedListFilters)
-		  buf.append(", unprocessedfilters=").append(unprocessedfilters);
-		  
-		if(hasDomainSpecificFilters)
-			buf.append(", dsfilters=").append(dsfilters);
-
 		if (seqd != null)
 			buf.append(", sequencedescription=").append(seqd);
 
@@ -437,11 +344,7 @@ public class Query {
 	}
 	
 	public int hashCode() {
-		int tmp = hasDomainSpecificFilters ? 1 : 0;
-		tmp = (31 * tmp);
-		tmp += hasUnprocessedListFilters ? 1 : 0;
-		tmp = (31 * tmp) + limit;
-		
+		int tmp = 0;
 		if (querytype == Query.SEQUENCE) {
 		  tmp = (31 * tmp) + seqd.hashCode();
 			tmp = (31 * tmp) + querytype; 
@@ -458,40 +361,15 @@ public class Query {
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		
-		for (int i = 0, n = filters.size(); i < n; i++) {
-			Object element = filters.get(i);
-			if (element instanceof BasicFilter)
-			  tmp = (31 * tmp) + ( (BasicFilter) element).hashCode();
-			else if (element instanceof IDListFilter)
-			  tmp = (31 * tmp) + ( (IDListFilter) element).hashCode();
-			else
-			  tmp = (31 * tmp) + ( (BooleanFilter) element).hashCode();
-		}
-		
-		if (hasUnprocessedListFilters) {
-			for (int i = 0, n = unprocessedfilters.size(); i < n; i++) {
-				IDListFilter element = (IDListFilter) unprocessedfilters.get(i);
-				tmp = (31 * tmp) + element.hashCode();
-			}
-		}
-		
-		if (hasDomainSpecificFilters) {
-			for (int i = 0, n = dsfilters.size(); i < n; i++) {
-				MapFilter element = (MapFilter) dsfilters.get(i);
-				tmp = (31 * tmp) + element.hashCode();
-      }
-		}
+		for (int i = 0, n = filters.size(); i < n; i++)
+		  tmp = (31 * tmp) + filters.get(i).hashCode();
 		
 		return tmp;
 	}
 	
 	private List attributes = new Vector();
 	private List filters = new Vector();
-  private List dsfilters = new Vector(); // will hold MapFilter objects
-  private List unprocessedfilters = new Vector(); // will hold non STRING type IDListFilter objects
 
-  private boolean hasDomainSpecificFilters = false; // will be set to true if a DomainSpecificFilterObject is added
-  private boolean hasUnprocessedListFilters = false; // will be set to true if a non STRING type IDListFilter Object is added
 	private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
 	private SequenceDescription seqd;
 	private String[] primaryKeys;

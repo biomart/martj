@@ -15,10 +15,10 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib;
 
-import java.sql.Connection;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -33,41 +33,48 @@ import java.util.StringTokenizer;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSEncodeQtlFilterHandler implements DSFilterHandler {
-  private String validPattern = "^.*:.*:.*";
+public class EncodeQtlFilterHandler implements UnprocessedFilterHandler {
+	private String validPattern = "^.*:.*:.*";
 	private String chrname = "chr_name";
-	private String chrcoord = "_chrom_start";  // append focus to this to get filter name for coordinate filters
-	   
+	private String chrcoord = "_chrom_start"; // append focus to this to get filter name for coordinate filters
+
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.DSFilterHandler#ModifyQuery(java.sql.Connection, java.lang.String, org.ensembl.mart.explorer.Query)
 	 */
-	public Query ModifyQuery(Connection conn, String parameter, Query query) throws InvalidQueryException {
-		if (! parameter.matches( validPattern ) )
-					throw new InvalidQueryException("Supplied parameter does not match the required format for DSEncodeQtlFilterHandler: recieved "+parameter+" expected String matching Regex "+validPattern);
-					
-		StringTokenizer paramTokens = new StringTokenizer(parameter, ":");
-		String chr = paramTokens.nextToken();
-		Filter chrFilter = new BasicFilter(chrname, "=", chr);
-		
-		String bpstart = paramTokens.nextToken();
-		String bpend = paramTokens.nextToken();
-									
+	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Query newQuery = new Query(query);
-		newQuery.addFilter(chrFilter);
+		for (int i = 0, n = filters.size(); i < n; i++) {
+			Filter element = (Filter) filters.get(i);
+		  newQuery.removeFilter(element);
+		  
+		  String parameter = element.getValue();
+		  if (!parameter.matches(validPattern))
+		    throw new InvalidQueryException("Recieved invalid value for Encode/Qtl Filter " + parameter + "\n");
+		    
+			StringTokenizer paramTokens = new StringTokenizer(parameter, ":");
+			String chr = paramTokens.nextToken();
+			Filter chrFilter = new BasicFilter(chrname, "=", chr);
+
+			String bpstart = paramTokens.nextToken();
+			String bpend = paramTokens.nextToken();
+
+			newQuery.addFilter(chrFilter);
+
+			// must get focus for coordinate filter names
+			String focus = null;
+			String starBase = newQuery.getStarBases()[0];
+			if (starBase.endsWith("snp"))
+				focus = "snp";
+			else
+				focus = "gene";
+
+			Filter startFilter = new BasicFilter(focus + chrcoord, ">=", bpstart);
+			Filter endFilter = new BasicFilter(focus + chrcoord, "<=", bpend);
+
+			newQuery.addFilter(startFilter);
+			newQuery.addFilter(endFilter);	
+		}
 		
-		// must get focus for coordinate filter names
-		String focus = null;
-		String starBase = newQuery.getStarBases()[0];
-		if (starBase.endsWith("snp"))
-			focus = "snp";
-		else
-			focus = "gene";
-		
-		Filter startFilter = new BasicFilter(focus+chrcoord, ">=", bpstart);
-		Filter endFilter = new BasicFilter(focus+chrcoord, "<=", bpend);
-		
-		newQuery.addFilter(startFilter);
-		newQuery.addFilter(endFilter);
 		return newQuery;
 	}
 

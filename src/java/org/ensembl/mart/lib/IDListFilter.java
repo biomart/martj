@@ -30,24 +30,24 @@ import java.util.*;
  * you should just use a BasicFilter object instead, this one is more
  * useful for the MartExplorerTool to add multiple ids in succession),
  * a String[] of ids, a File of ids, a URL of ids, or
- * an InputStream of ids.  For each type of IDListFilter Object other
- * than STRING, there should be a corresponding IDListFilterHandler object
- * or objects to resolve the underlying data Object into a STRING type
- * IDListFilter Object.
+ * an InputStream of ids.  For each type of IDListFilter Object,
+ *  there should be a corresponding UnprocessedFilterHandler object
+ * to resolve the underlying data Object into a IDListFilter Object
+ * with a list of Strings to apply in a SQL where x in (list) clause.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
- * @see IDListFilterHandler
+ * @see UnprocessedFilterHandler
  */
 public class IDListFilter implements Filter {
 
 	/**
-	 * enums over IDListFilter type
+	 * enums over UnprocessedFilterHandler implimenting class names
 	 */
-	public static final int STRING = 1;
-	public static final int FILE = 2;
-	public static final int URL = 3;
-	public static final int SUBQUERY = 4;
+	private final String STRING = "org.ensembl.mart.lib.StringIDListFilterHandler";
+	private final String FILE = "org.ensembl.mart.lib.FileIDListFilterHandler";
+	private final String URL = "org.ensembl.mart.lib.URLIDListFilterHandler";
+	private final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
 
 	/**
 	 * Construct an STRING type IDListFilter object of a given field name on a String[] List of 
@@ -61,7 +61,7 @@ public class IDListFilter implements Filter {
 	}
 
 	/**
-	 * Construct an STRING type IDListFilter object of a given field name and tableConstraint, on a String[] List of 
+	 * Construct an IDListFilter object of a given field name and tableConstraint, on a String[] List of 
 	 * identifiers.
 	 * 
 	 * @param String name - field name
@@ -75,7 +75,7 @@ public class IDListFilter implements Filter {
     this.file = null;
     this.url = null;
     this.subQuery = null;
-		type = STRING;
+		handler = STRING;
     setHashCode();
 	}
 
@@ -104,7 +104,7 @@ public class IDListFilter implements Filter {
 		this.file = file;
     this.url = null;
     this.subQuery = null;
-		type = FILE;
+		handler = FILE;
     setHashCode();
 	}
 
@@ -133,7 +133,7 @@ public class IDListFilter implements Filter {
 		this.url = url;
     this.file = null;
     this.subQuery = null;
-		type = URL;
+		handler = URL;
     setHashCode();
 	}
 
@@ -163,34 +163,26 @@ public class IDListFilter implements Filter {
 		this.subQuery = subQuery;
     this.file = null;
     this.url = null;
-		type = SUBQUERY;
+		handler = SUBQUERY;
     setHashCode();
 	}
 
   private void setHashCode() {
     hashcode = (field == null) ? 0 : field.hashCode();
-    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
-
-    switch (type) {
-      case STRING :
-        for (int i = 0, n = identifiers.size(); i < n; i++) {
-          String element = (String) identifiers.get(i);
-          hashcode = (31 * hashcode) + element.hashCode();
-        }
-        break;
-
-      case FILE :
-        hashcode = (31 * hashcode) + ( (file == null) ? 0 : file.hashCode() );
-        break;
-
-      case URL :
-        hashcode = (31 * hashcode) + ( (url == null) ? 0 : url.hashCode() );
-        break;
-
-      case SUBQUERY :
-        hashcode = (31 * hashcode) + ( (subQuery == null) ? 0 : subQuery.hashCode() );
-        break;
-    }
+    hashcode = (tableConstraint != null) ? (31 * hashcode) + tableConstraint.hashCode() : hashcode;
+    hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
+    
+    if (handler == null || STRING.equals(handler))
+			for (int i = 0, n = identifiers.size(); i < n; i++) {
+				String element = (String) identifiers.get(i);
+				hashcode = (31 * hashcode) + element.hashCode();
+			}
+    else if (FILE.equals(handler))
+		  hashcode = (31 * hashcode) + file.hashCode();
+    else if (URL.equals(handler))
+		  hashcode = (31 * hashcode) + url.hashCode();
+    else
+		  hashcode = (31 * hashcode) + subQuery.hashCode();
   }
   
 	/**
@@ -280,14 +272,6 @@ public class IDListFilter implements Filter {
 	}
 
 	/**
-	 * Returns the type of the IDListFilter Object
-	 * @return int type
-	 */
-	public int getType() {
-		return type;
-	}
-
-	/**
 	 * Returns the underlying URL Object underlying a URL type IDListFilter Object
 	 * @return URL url
 	 */
@@ -295,6 +279,19 @@ public class IDListFilter implements Filter {
 		return url;
 	}
 
+	/**
+	 * Not applicable to this type of Filter. Returns null
+	 */
+	public String getCondition() {
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.Filter#getHandler()
+	 */
+	public String getHandler() {
+		return handler;
+	}
 
 	/**
 	 * returns a description of the object useful for logging systems.
@@ -308,24 +305,15 @@ public class IDListFilter implements Filter {
 		buf.append(" field=").append(field);
 		buf.append(", tableConstraint=").append(tableConstraint);
 
-		switch (type) {
-			case STRING :
+	 if (handler == null || STRING.equals(handler))
 				buf.append(", identifiers=").append(identifiers);
-				break;
-
-			case FILE :
+   else if (FILE.equals(handler))
 				buf.append(", File=").append(file);
-				break;
-
-			case URL :
+   else if (URL.equals(handler))
 				buf.append(", URL=").append(url);
-				break;
-
-			case SUBQUERY :
+	 else
 				buf.append(", Query=").append(subQuery);
-				break;
-		}
-
+	
 		buf.append("]");
 
 		return buf.toString();
@@ -335,7 +323,7 @@ public class IDListFilter implements Filter {
 	 * Allows Equality Comparisons manipulation of IDListFilter objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof IDListFilter && hashCode() == ((IDListFilter) o).hashCode();
+		return o instanceof IDListFilter && hashCode() == o.hashCode();
 	}
 
 	/* (non-Javadoc)
@@ -345,8 +333,9 @@ public class IDListFilter implements Filter {
 		return hashcode;
 	}
 
-	private final String field, tableConstraint;
-	private final int type;
+	private final String field;
+  private final String tableConstraint;
+  private final String handler;
   
 	private final Query subQuery; // for Query based Filter
 	private final File file;
