@@ -18,6 +18,10 @@
  
 package org.ensembl.mart.explorer;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Object to facilitate the resolution of Domain Specific Filters made available
  * by a specific instance of a Mart Database.  Domain Specific Filters require
@@ -34,6 +38,13 @@ package org.ensembl.mart.explorer;
  * @see DomainSpecificFilterHandler
  */
 public class DomainSpecificFilter {
+	
+	public static String MARKER = "Marker";
+	public static String BAND = "Band";
+	public static String ENCODE = "Encode";
+	public static String EXPRESSION = "Expression";
+	
+	public static final List SUPPORTED_DSFILTERS = Collections.unmodifiableList(Arrays.asList( new String[] {"Marker", "Band", "Encode", "Expression" } ) );
 	
 	/**
 	 * Constructor for a DomainSpecificFilter object
