@@ -13,13 +13,13 @@
         </FilterCollection>
         <FilterCollection displayName="From" internalName="Start" type="select">
           <UIFilterDescription description="Choose this to disable any bp, marker, or band starts that you have chosen" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;=" type="range"/>
           <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_start" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Band" internalName="band_start" objectCode="Band" type="range"/>
         </FilterCollection>
         <FilterCollection displayName="To" internalName="End" type="select">
           <UIFilterDescription description="Choose this to disable any bp_end, marker_end, or band_end filters" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;=" type="range"/>
           <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_end" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="Band" internalName="band_end" objectCode="Band" type="range"/>
         </FilterCollection>
@@ -65,7 +65,7 @@
           <UIFilterDescription description="filter to include genes with supplied list of SWISSPROT ID(s)" displayName="SWISSPROT ID(s):" fieldName="display_id" internalName="FG_SWISSPROT_ID" qualifier="in" tableConstraint="gene_xref_SWISSPROT_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of Sanger-Hver1-2-1 ID(s)" displayName="Sanger-Hver1-2-1 ID(s):" fieldName="display_id" internalName="FG_Sanger-Hver1-2-1_ID" qualifier="in" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of UMCU Hsapiens 19Kv1 ID(s):" displayName="UMCU Hsapiens 19Kv1 ID(s):" fieldName="display_id" internalName="FG_UMCU_Hsapiens_19Kv1_ID" qualifier="in" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1" type="list"/>
-          <UIFilterDescription description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" fieldName="gene_stable_id" internalName="FG_ens_gene_ID" qualifier="in"  type="list"/>
+          <UIFilterDescription description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" fieldName="gene_stable_id" internalName="FG_ens_gene_ID" qualifier="in" type="list"/>
           <UIFilterDescription description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" displayName="Ensembl transcript ID(s)" fieldName="transcript_stable_id" internalName="FG_ens_transcript_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" fieldName="translation_stable_id" internalName="FG_ens_translation_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
         </FilterCollection>
@@ -139,16 +139,16 @@
     <AttributePage description="General Gene Features" displayName="Features" internalName="FeaturePage">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="Chromsome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="Chromsome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -249,16 +249,16 @@
     <AttributePage description="Details on Gene - SNP Associations" displayName="SNPs" internalName="snp">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" internalName="ensgeneid">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription displayName="Ensembl CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -306,16 +306,16 @@
     <AttributePage description="Details on Genomic Structures" displayName="Structures" internalName="structure">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" internalName="ensgeneid">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription displayName="Ensembl CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -340,16 +340,16 @@
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" internalName="ensgeneid">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription displayName="Ensembl CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -405,17 +405,17 @@
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection internalName="chromosomeFilter" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chr" qualifier="in"  type="list"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chr" qualifier="in" type="list"/>
         </FilterCollection>
         <FilterCollection displayName="From" internalName="Start" type="select">
           <UIFilterDescription description="Choose this to disable any bp, marker, or band starts that you have chosen" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;=" type="range"/>
           <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_start" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Band" internalName="band_start" objectCode="Band" type="range"/>
         </FilterCollection>
         <FilterCollection displayName="To" internalName="End" type="select">
           <UIFilterDescription description="Choose this to disable any bp_end, marker_end, or band_end filters" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;=" type="range"/>
           <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_end" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="Band" internalName="band_end" objectCode="Band" type="range"/>
         </FilterCollection>
@@ -444,7 +444,7 @@
           <UIFilterDescription description="filter to include genes with supplied list of MIM ID(s)" displayName="MIM ID(s):" fieldName="display_id" internalName="FG_MIM_ID" qualifier="in" tableConstraint="gene_xref_MIM_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of RefSeq ID(s)" displayName="RefSeq ID(s):" fieldName="display_id" internalName="FG_RefSeq_ID" qualifier="in" tableConstraint="gene_xref_RefSeq_dm" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of SWISSPROT ID(s)" displayName="SWISSPROT ID(s):" fieldName="display_id" internalName="FG_SWISSPROT_ID" qualifier="in" tableConstraint="gene_xref_SWISSPROT_dm" type="list"/>
-          <UIFilterDescription description="filter to include genes with supplied list of Vega Gene IDs" displayName="Vega gene ID(s)" fieldName="gene_stable_id" internalName="FG_ens_gene_ID" qualifier="in"  type="list"/>
+          <UIFilterDescription description="filter to include genes with supplied list of Vega Gene IDs" displayName="Vega gene ID(s)" fieldName="gene_stable_id" internalName="FG_ens_gene_ID" qualifier="in" type="list"/>
           <UIFilterDescription description="filter for genes with supplied list of Vega Transcript Stable ID(s)" displayName="Vega transcript ID(s)" fieldName="transcript_stable_id" internalName="FG_ens_transcript_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
           <UIFilterDescription description="filter to include genes with supplied list of Vega translation ID(s)" displayName="Vega translation ID(s):" fieldName="translation_stable_id" internalName="FG_ens_translation_ID" qualifier="in" tableConstraint="transcript_main" type="list"/>
         </FilterCollection>
@@ -478,16 +478,16 @@
     <AttributePage description="General Gene Features" displayName="Features" internalName="FeaturePage">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="Chromsome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="Chromsome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Vega Stable ID, with version, of the Transcript" displayName="Vega Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Vega Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -517,18 +517,18 @@
     <AttributePage description="Details on Gene - SNP Associations" displayName="SNPs" internalName="snp">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" internalName="ensgeneid">
-          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription description="Vega Stable ID, with version, of the Transcript" displayName="Vega Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
-          <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" />
+          <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Vega CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Vega Peptide Length" fieldName="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
@@ -574,16 +574,16 @@
     <AttributePage description="Details on Genomic Structures" displayName="Structures" internalName="structure">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" internalName="ensgeneid">
-          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" />
+          <UIAttributeDescription description="Vega Stable ID, with version, of the Gene" displayName="Vega Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL"/>
           <UIAttributeDescription description="Vega Stable ID, with version, of the Transcript" displayName="Vega Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="17" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="10" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription displayName="Vega CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -608,11 +608,11 @@
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
@@ -813,17 +813,17 @@
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection internalName="chromosomeFilter" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chr" qualifier="in"  type="list"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chr" qualifier="in" type="list"/>
         </FilterCollection>
         <FilterCollection displayName="From" internalName="Start" type="select">
           <UIFilterDescription description="Choose this to disable any bp, marker, or band starts that you have chosen" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Base Pair" fieldName="gene_chrom_start" internalName="bp_start" qualifier="&gt;=" type="range"/>
           <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_start" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Band" internalName="band_start" objectCode="Band" type="range"/>
         </FilterCollection>
         <FilterCollection displayName="To" internalName="End" type="select">
           <UIFilterDescription description="Choose this to disable any bp_end, marker_end, or band_end filters" displayName="Chromosome" fieldName="chr_name" internalName="chromosome" type="value"/>
-          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;="  type="range"/>
+          <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="Base Pair" fieldName="gene_chrom_end" internalName="bp_end" qualifier="&lt;=" type="range"/>
           <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="Marker" internalName="marker_end" objectCode="Marker" type="range"/>
           <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="Band" internalName="band_end" objectCode="Band" type="range"/>
         </FilterCollection>
@@ -919,16 +919,16 @@
     <AttributePage description="General Gene Features" displayName="Features" internalName="FeaturePage">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="2" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="4" />
+          <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="2"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="4"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -1017,16 +1017,16 @@
     <AttributePage description="Details on Gene - SNP Associations" displayName="SNPs" internalName="snp">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -1073,15 +1073,15 @@
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
           <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
@@ -1105,21 +1105,21 @@
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromsome Attributes:" internalName="chromsomeatts">
-          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12" />
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9" />
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9" />
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2" />
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7" />
+          <UIAttributeDescription description="&quot;Chromsome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
         <AttributeCollection description="Ensembl Annotated Attributes and Features" displayName="Ensembl Attributes:" internalName="ensAtts">
-          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" />
+          <UIAttributeDescription description="Ensembl Stable ID, with version, of the Gene" displayName="Ensembl Gene ID" fieldName="gene_stable_id_v" homepageURL="http://www.ensembl.org" internalName="ensgeneid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Description" fieldName="description" homepageURL="http://www.ensembl.org" internalName="gene_description" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="536" source="EnsEMBL" tableConstraint="main"/>
           <UIAttributeDescription description="Ensembl Stable ID, with version, of the Transcript" displayName="Ensembl Transcript ID" fieldName="transcript_stable_id_v" homepageURL="http://www.ensembl.org" internalName="enstranid" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide ID" fieldName="translation_stable_id_v" homepageURL="http://www.ensembl.org" internalName="translation" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="20" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="External Gene ID" fieldName="display_id" homepageURL="http://www.ensembl.org" internalName="external_id" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="18" source="EnsEMBL" tableConstraint="main"/>
-          <UIAttributeDescription displayName="External Gene DB" fieldName="db_name" homepageURL="http://www.ensembl.org" internalName="external_db" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="12" source="EnsEMBL" />
+          <UIAttributeDescription displayName="External Gene DB" fieldName="db_name" homepageURL="http://www.ensembl.org" internalName="external_db" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="12" source="EnsEMBL"/>
           <UIAttributeDescription displayName="Ensembl CDS Length" fieldName="cds_length" homepageURL="http://www.ensembl.org" internalName="cds_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl cDNA Length" fieldName="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
           <UIAttributeDescription displayName="Ensembl Peptide Length" fieldName="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="4" source="EnsEMBL" tableConstraint="transcript_main"/>
