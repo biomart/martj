@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -31,9 +32,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Filter;
@@ -59,7 +62,8 @@ public class IDListFilterWidget
   private JTextArea idString = new JTextArea(10, 10);
   private JTextField file = new JTextField(20);
   private JTextField url = new JTextField(20);
-  private JButton browseForFile = new JButton("Browse");
+  private JButton chooseFileButton = new JButton("Choose");
+  private JFileChooser fileChooser = new JFileChooser();
 
   private JRadioButton idStringRadioButton =
     new JRadioButton("IDs (type or paste)");
@@ -83,6 +87,8 @@ public class IDListFilterWidget
     QueryTreeView tree) {
     super(filterGroupWidget, query, filterDescription, tree);
 
+    file.setEditable(false);
+
     ButtonGroup bg = new ButtonGroup();
     bg.add(idStringRadioButton);
     bg.add(fileRadioButton);
@@ -102,22 +108,39 @@ public class IDListFilterWidget
     //  TODO add key and focus listener to file: change -> remove filter + new filter
 
     Box b = Box.createVerticalBox();
+    b.setBorder(new LineBorder(Color.BLACK));
 
     b.add(
       createRow(createLabel(), (JComponent) Box.createHorizontalGlue(), null));
     b.add(list);
 
+    b.add(Box.createVerticalStrut(Constants.GAP_BETWEEN_COMPONENTS_IN_WIDGET));
     b.add(createRow(idStringRadioButton, idString, null));
 
-    b.add(createRow(fileRadioButton, file, browseForFile));
+    b.add(Box.createVerticalStrut(Constants.GAP_BETWEEN_COMPONENTS_IN_WIDGET));
+    b.add(createRow(fileRadioButton, chooseFileButton, file));
 
+    b.add(Box.createVerticalStrut(Constants.GAP_BETWEEN_COMPONENTS_IN_WIDGET));
     b.add(createRow(urlRadioButton, url, null));
 
+    b.add(Box.createVerticalStrut(Constants.GAP_BETWEEN_COMPONENTS_IN_WIDGET));
     b.add(createRow(noneButton, (JComponent) Box.createHorizontalGlue(), null));
 
     setOptions(filterDescription.getOptions());
 
     add(b);
+
+    final IDListFilterWidget parent = this;
+    chooseFileButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        if (fileChooser.showOpenDialog(parent)
+          == JFileChooser.APPROVE_OPTION) {
+          file.setText(fileChooser.getSelectedFile().getName());
+          fileRadioButton.doClick();
+        }
+      }
+
+    });
   }
 
   private JComponent createRow(JComponent a, JComponent b, JComponent c) {
@@ -128,6 +151,7 @@ public class IDListFilterWidget
       p.add(b);
     if (c != null)
       p.add(c);
+
     return p;
   }
 
@@ -162,9 +186,7 @@ public class IDListFilterWidget
 
     if (filter == null) {
 
-      noneButton.removeActionListener(this);
       noneButton.setSelected(true);
-      noneButton.addActionListener(this);
 
     } else {
 
@@ -176,31 +198,24 @@ public class IDListFilterWidget
 
       if ((ids = f.getIdentifiers()) != null && ids.length != 0) {
 
-        idStringRadioButton.removeActionListener(this);
         idStringRadioButton.setSelected(true);
-        idStringRadioButton.addActionListener(this);
 
         StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < ids.length; i++) 
+        for (int i = 0; i < ids.length; i++)
           buf.append(ids[i]).append('\n');
-        
+
         idString.setText(buf.toString());
-        
+
       } else if ((u = f.getUrl()) != null) {
 
-        urlRadioButton.removeActionListener(this);
         urlRadioButton.setSelected(true);
-        urlRadioButton.addActionListener(this);
-
         url.setText(u.toExternalForm());
 
       } else if ((fl = f.getFile()) != null) {
 
-        fileRadioButton.removeActionListener(this);
         fileRadioButton.setSelected(true);
-        fileRadioButton.addActionListener(this);
-
-        file.setText(fl.toString());
+        file.setText(fl.getName());
+        fileChooser.setSelectedFile(fl);
 
       }
 
@@ -336,10 +351,10 @@ public class IDListFilterWidget
    * @return -1 if filter not relat
    */
   private int indexOfListItemMatchingFilter(Filter filter) {
-    
+
     int index = -1;
     final int n = list.getItemCount();
-    for (int i = 0; index==-1 && i < n; i++) {
+    for (int i = 0; index == -1 && i < n; i++) {
 
       OptionToStringWrapper op = (OptionToStringWrapper) list.getItemAt(i);
       Option o = op.option;
@@ -355,8 +370,8 @@ public class IDListFilterWidget
         && !"".equals(k)
         && f.equals(o.getFieldFromContext())
         && tc.equals(o.getTableConstraintFromContext())
-        && k.equals(o.getKeyFromContext())) 
-          index = i;
+        && k.equals(o.getKeyFromContext()))
+        index = i;
     }
 
     return index;
