@@ -1,0 +1,42 @@
+UNIT TEST FRAMEWORK
+--------------------------------------------------------------------------------
+
+Unit tests for this system have been developed using the Junit framework.
+Running ant test will give immediate indication of success or failure, and 
+produce a 'reports' directory in the mart-explorer directory.
+Within this directory can be found html, text, and xml based output
+detailing the results of the individual tests.  The quickest way to 
+view the results is to open the reports/tests/html/index.html page in your
+browser.
+
+
+DEPENDENCIES
+--------------------------------------------------------------------------------
+
+The java environment for the tests will be set up correctly by the ant build.xml 
+file.  However, there are a few configuration files which, depending upon the 
+environment you are running within, may need modification.  These are located in 
+the data directory.
+
+data/testconnection.conf - contains parameters for connection to the mysql database
+    which houses the mart that you want to test against.  The test system is designed
+    to run with its own default settings, even in the complete absence of this file.
+    These default values are reflected in the file.  If you are running behind a firewall,
+    and cannot see kaka.sanger.ac.uk on the net, or if you want to test this system
+    against a locally installed mart running on a different host, and/or having a different
+    database name than that specified in this configuration file, you should change the
+    values in this file.
+
+data/gene_stable_id.test - contains a list of ensembl gene names.  This is designed
+    to test the file upload functionality of the system.  The gene names in this list
+    will most likely be coordinated with an older mart running on kaka.sanger.ac.uk.
+    If you are testing against a local installation, you may need to update the names 
+    in this file with a list of genes that you know is present.
+
+
+TESTS
+--------------------------------------------------------------------------------
+
+CompiledSQLQueryTest - tests all of the functionality of backend library to mart explorer.
+    These are the classes associated with the collection of attributes and filters from the
+    client, the generation and execution of the SQL, and the formatting of the output.
