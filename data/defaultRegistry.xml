@@ -15,12 +15,4 @@
     jdbcDriverClassName="com.mysql.jdbc.Driver"
     host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_3" user="anonymous"/>
 
- <DatabaseLocation name="Oracle" databaseType="oracle:thin"
-     jdbcDriverClassName="oracle.jdbc.driver.OracleDriver"
-     host="bourbon.ebi.ac.uk" port="1531" instanceName="DEV92"
-     user="biomart" password="stand" />
-
-
-
-
 </MartRegistry>
