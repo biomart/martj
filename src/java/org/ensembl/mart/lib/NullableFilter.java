@@ -29,10 +29,10 @@ package org.ensembl.mart.lib;
  */
 public class NullableFilter implements Filter {
 
-	public static final String isNULL = "is null";
-	public static final String isNotNULL = "is not null";
-	public static final String isNULL_NUM = "!= 1";
-	public static final String isNotNULL_NUM = "= 1";
+	public static final String isNULL = " is null";
+	public static final String isNotNULL = " is not null";
+	public static final String isNULL_NUM = " != 1";
+	public static final String isNotNULL_NUM = " = 1";
 
 /**
  * Constructor for a basic NullableFilter, with field and condition set.
@@ -76,7 +76,7 @@ public class NullableFilter implements Filter {
 	 * returns the where clause for the SQL as field is null
 	 */
 	public String getWhereClause() {
-		return field + " " + condition;
+		return field + condition;
 	}
 
 	/**
