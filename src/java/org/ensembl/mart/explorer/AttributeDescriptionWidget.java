@@ -106,6 +106,7 @@ public class AttributeDescriptionWidget
 		setField(attribute);
 
 		button = new JCheckBox(attributeDescription.getDisplayName());
+		button.setToolTipText(attributeDescription.getDisplayName());
 		button.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent event) {
