@@ -1413,10 +1413,10 @@ public class MartShell {
 
     updateCompleter();
   }
-
+    
   private void unsetRequest(String command) throws InvalidQueryException {
     StringTokenizer toks = new StringTokenizer(command, " ");
-    toks.nextToken(); // skip set
+    toks.nextToken(); // skip unset
 
     if (toks.hasMoreTokens()) {
       String request = toks.nextToken();
@@ -1432,14 +1432,16 @@ public class MartShell {
         unsetOutputSettings(toks);
       else if (request.equalsIgnoreCase(VERBOSEREQ))
         unsetVerbose();
-      else if (request.equalsIgnoreCase(DATASETREQ))
+      else if (request.equalsIgnoreCase(DATASETREQ)) {
         try {
           msl.setEnvDataset(null);
         } catch (InvalidQueryException e) {
           throw new InvalidQueryException(e.getMessage() + "\n" + Help(UNSETC) + "\n");
         }
+    } else if (request.equalsIgnoreCase(ADVANCEDREQ))
+      msl.setAdvancedFeatures(false); 
     } else
-      throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
+      throw new InvalidQueryException("Recieved invalid unset command " + command + "\n" + Help(SETC));
 
     updateCompleter();
   }
@@ -1519,7 +1521,8 @@ public class MartShell {
         } catch (InvalidQueryException e) {
           throw new InvalidQueryException(e.getMessage() + "\n" + Help(SETC) + "\n");
         }
-      }
+      } else if (request.equalsIgnoreCase(ADVANCEDREQ))
+        msl.setAdvancedFeatures(true);
     } else
       throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
 
@@ -2224,7 +2227,6 @@ public class MartShell {
           mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
       } else {
         boolean countFocus = false;
-        boolean countRows = false;
 
         Query query = null;
         if (command.startsWith(COUNTFOCUSC)) {
@@ -2251,17 +2253,6 @@ public class MartShell {
           countFocus = true;
         }
 
-        if (command.startsWith(COUNTROWSC)) {
-          command = command.substring(COUNTROWSC.length()).trim();
-
-          if (command.split("\\s+").length == 1) {
-            //must be a stored procedure
-            command = getMQLForStoredProcedure(normalizeCommand(command));
-          }
-
-          countRows = true;
-        }
-
         //will only be not null if it is a count_x_from dataset_request command
         if (query == null)
           query = msl.MQLtoQuery(command);
@@ -2286,11 +2277,16 @@ public class MartShell {
         //no hardLimit for -e/-E
         int hardLimit = 0;
         
-        if (interactiveMode)
-          hardLimit = INTERACTIVE_MAX_ROWS;
+        if (interactiveMode) {
+          if (query.getLimit() > 0)
+            hardLimit = Math.min(INTERACTIVE_MAX_ROWS, query.getLimit()); //user may have supplied a limit
+          else
+            hardLimit = INTERACTIVE_MAX_ROWS;            
+        }
+          
           
         if (sessionOutputFileName != null) {
-          hardLimit = 0; //no hardLimit for file output, even in interactive mode
+          hardLimit = Math.max(0, query.getLimit()); //no hardLimit for file output, even in interactive mode, unless user specifies
           sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
         }
 
@@ -2298,8 +2294,6 @@ public class MartShell {
 
         if (countFocus)
           engine.countFocus(sessionOutput, query);
-        else if (countRows)
-          engine.countRows(sessionOutput, query);
         else
           engine.execute(query, fspec, sessionOutput, hardLimit);
 
@@ -2390,7 +2384,6 @@ public class MartShell {
   private final String HISTORYC = "history";
   private final String LISTC = "list";
   private final String COUNTFOCUSC = "count_focus_from";
-  private final String COUNTROWSC = "count_rows_from";
   private final String SCRIPTREQ = "Script";
   private final String MARTREQ = "Mart";
   private final String MARTSREQ = "Marts";
@@ -2407,6 +2400,7 @@ public class MartShell {
   private final String PROMPTREQ = "prompt";
   private final String OUTPUTREQ = "output";
   private final String VERBOSEREQ = "verbose";
+  private final String ADVANCEDREQ = "advancedFeatures";
 
   //lists to set for completion of add, remove, list, set, update, describe, environment, execute
   private final List addRequests =
@@ -2423,7 +2417,7 @@ public class MartShell {
 
   private final List setRequests =
     Collections.unmodifiableList(
-      new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETREQ, PROMPTREQ, OUTPUTREQ, VERBOSEREQ })));
+      new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETREQ, PROMPTREQ, OUTPUTREQ, VERBOSEREQ, ADVANCEDREQ })));
 
   private final List updateRequests =
     Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASETSREQ, DATASETREQ })));

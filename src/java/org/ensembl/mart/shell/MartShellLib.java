@@ -160,7 +160,8 @@ public class MartShellLib {
     if (confURL == null)
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
-    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, false); //see notes to adaptorManager for boolean settings
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, false);
+    //see notes to adaptorManager for boolean settings
     harvestAdaptorsFrom(adaptor);
   }
 
@@ -310,13 +311,13 @@ public class MartShellLib {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
     String filterCondition = filter.getQualifier();
-    
+
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+    FilterDescription fdesc =
+      datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
     String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition);
-
 
     mqlbuf.append(filterName);
 
@@ -332,12 +333,13 @@ public class MartShellLib {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
     String filterCondition = filter.getQualifier();
-    
+
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
     boolean success = true;
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+    FilterDescription fdesc =
+      datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
     String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition);
 
     mqlbuf.append(filterName).append(" in ");
@@ -381,7 +383,8 @@ public class MartShellLib {
     if (!datasetconfig.supportsFilterDescription(field, tableConstraint, filterCondition))
       return false;
 
-    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
+    FilterDescription fdesc =
+      datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint, filterCondition);
     mqlbuf
       .append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint, filterCondition))
       .append(" ")
@@ -910,7 +913,7 @@ public class MartShellLib {
     String martDriver,
     String sourceKey)
     throws InvalidQueryException {
-    
+
     DetailedDataSource ds =
       new DetailedDataSource(
         martDatabaseType,
@@ -936,7 +939,8 @@ public class MartShellLib {
 
   public void addMart(DetailedDataSource ds) throws InvalidQueryException {
     try {
-      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser(), false, false, false); //see notes for adaptorManager for boolean settings
+      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser(), false, false, false);
+      //see notes for adaptorManager for boolean settings
       adaptor.setName(ds.getName());
       adaptorManager.add(adaptor);
     } catch (ConfigurationException e) {
@@ -955,7 +959,8 @@ public class MartShellLib {
 
       try {
         URL regURL = InputSourceUtil.getURLForString(source);
-        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL, false, false, false); // see notes for adaptorManager for boolean settings
+        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL, false, false, false);
+        // see notes for adaptorManager for boolean settings
 
         harvestAdaptorsFrom(regadaptor);
       } catch (MalformedURLException e) {
@@ -986,16 +991,16 @@ public class MartShellLib {
   private void addLeafAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
     if (adaptor instanceof DatabaseDSConfigAdaptor) {
       //test the connection
-        try {
-          ( ( DSConfigAdaptor ) adaptor).getDataSource().getConnection();
-          adaptorManager.add(adaptor);
-        } catch (SQLException e) {
-          //ignore this one, it cant connect to its underlying database
-        }
+      try {
+        ((DSConfigAdaptor) adaptor).getDataSource().getConnection();
+        adaptorManager.add(adaptor);
+      } catch (SQLException e) {
+        //ignore this one, it cant connect to its underlying database
+      }
     } else
       adaptorManager.add(adaptor);
   }
-  
+
   public void addDatasetConfig(StringTokenizer toks) throws InvalidQueryException {
     if (toks.hasMoreTokens()) {
       String source = toks.nextToken();
@@ -1008,7 +1013,8 @@ public class MartShellLib {
 
       try {
         URL dsvURL = InputSourceUtil.getURLForString(source);
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false, false); // see notes for adaptorManager for boolean settings
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false, false);
+        // see notes for adaptorManager for boolean settings
 
         if (userName == null) {
           CompositeDSConfigAdaptor fileAdaptor = null;
@@ -1266,13 +1272,16 @@ public class MartShellLib {
   public DatasetConfig getDatasetConfigFor(String name) throws InvalidQueryException {
     DatasetConfig ret = null;
     DatasetRequest dsetreq = new DatasetRequest(name, this);
-    
+
     try {
-      ret = adaptorManager.getAdaptorByName(dsetreq.mart).getDatasetConfigByDatasetInternalName(dsetreq.dataset, dsetreq.datasetconfig);
+      ret =
+        adaptorManager.getAdaptorByName(dsetreq.mart).getDatasetConfigByDatasetInternalName(
+          dsetreq.dataset,
+          dsetreq.datasetconfig);
     } catch (ConfigurationException e) {
       throw new InvalidQueryException("Could not parse " + name + " for DatasetConfig : " + e.getMessage() + "\n");
     }
-    
+
     if (ret == null)
       throw new InvalidQueryException("Could not manipulate DatasetConfig " + name + "\n");
 
@@ -1286,8 +1295,8 @@ public class MartShellLib {
    */
   protected void setLocalDatasetFor(String name) throws InvalidQueryException {
     DatasetConfig dset = getDatasetConfigFor(name);
-       if (localDataset == null || !localDataset.equals(dset))
-        localDataset = dset;
+    if (localDataset == null || !localDataset.equals(dset))
+      localDataset = dset;
   }
 
   public void setEnvMart(String name) throws InvalidQueryException {
@@ -1321,11 +1330,11 @@ public class MartShellLib {
 
       try {
         envDataset = adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
-        
+
         if (envMart == null || !(envMart.getName().equals(dsrq.mart)))
           envMart = adaptorManager.getAdaptorByName(dsrq.mart).getDataSource();
       } catch (ConfigurationException e) {
-         throw new InvalidQueryException("Could not parse set Dataset command " + command + ": " + e.getMessage() +"\n");
+        throw new InvalidQueryException("Could not parse set Dataset command " + command + ": " + e.getMessage() + "\n");
       }
     }
   }
@@ -1375,13 +1384,14 @@ public class MartShellLib {
       //reset MartCompleter induced state, if any. Also reduces the number of DatasetConfig objects held in memory
       usingLocalDataset = false;
       localDataset = null;
-      
+
       boolean start = true;
       boolean getClause = false;
       boolean usingClause = false;
       boolean domainSpecificClause = false;
       boolean whereClause = false;
       boolean limitClause = false;
+      boolean sortClause = false;
       boolean inList = false;
       boolean inBind = false;
       boolean inQuotedValue = false;
@@ -1437,6 +1447,9 @@ public class MartShellLib {
           else if (thisToken.equalsIgnoreCase(QLIMIT))
             throw new InvalidQueryException(
               "Invalid Query Recieved, limit clause before " + GETQSTART + " clause: " + newquery + "\n");
+          else if (thisToken.equalsIgnoreCase(QSORT))
+            throw new InvalidQueryException(
+              "Invalid Query Recieved, sortBy clause before " + GETQSTART + " clause: " + newquery + "\n");
           else if (thisToken.equalsIgnoreCase(GETQSTART)) {
             usingClause = false;
             getClause = true;
@@ -1450,8 +1463,9 @@ public class MartShellLib {
               try {
                 if (envMart == null || !(envMart.getName().equals(dsrq.mart)))
                   query.setDataSource(adaptorManager.getAdaptorByName(dsrq.mart).getDataSource());
-                
-                thisDatasetConfig = adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+
+                thisDatasetConfig =
+                  adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
                 query.setDataset(thisDatasetConfig.getDataset());
               } catch (ConfigurationException e1) {
                 throw new InvalidQueryException("Could not set parse using request " + thisToken + "\n");
@@ -1508,6 +1522,16 @@ public class MartShellLib {
             validQuery = false;
             getClause = false;
             limitClause = true;
+          } else if (thisToken.equalsIgnoreCase(QSORT)) {
+            if (!validQuery)
+              throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling comma\n");
+
+            if (!advancedFeaturesOn)
+              throw new InvalidQueryException("sortBy request not allowed unless advancedFeatures set\n");
+                          
+            validQuery = false;
+            getClause = false;
+            sortClause = true;
           } else if (domainSpecificHandlerAvailable(thisToken)) {
             validQuery = false;
             domainSpecificKeyword = thisToken;
@@ -1553,6 +1577,16 @@ public class MartShellLib {
             validQuery = false;
             domainSpecificClause = false;
             limitClause = true;
+          } else if (thisToken.equalsIgnoreCase(QSORT)) {
+            if (!validQuery)
+              throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling comma\n");
+
+            if (!advancedFeaturesOn)
+              throw new InvalidQueryException("sortBy request not allowed unless advancedFeatures set\n");
+              
+            validQuery = false;
+            getClause = false;
+            sortClause = true;
           } else if (thisToken.equalsIgnoreCase(QWHERE)) {
             if (!validQuery)
               throw new InvalidQueryException(
@@ -1579,6 +1613,21 @@ public class MartShellLib {
             validQuery = false;
             whereClause = false;
             limitClause = true;
+          } else if (thisToken.equalsIgnoreCase(QSORT)) {
+            if (!validQuery)
+              throw new InvalidQueryException(
+                "Recieved invalid Query "
+                  + newquery
+                  + "\ncheck for a dangling filter delimiter "
+                  + FILTERDELIMITER
+                  + "\n");
+
+            if (!advancedFeaturesOn)
+              throw new InvalidQueryException("sortBy request not allowed unless advancedFeatures set\n");
+              
+            validQuery = false;
+            whereClause = false;
+            sortClause = true;
           } else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
             throw new InvalidQueryException(
               "Invalid Query Recieved, " + GETQSTART + " clause after where clause: " + newquery + "\n");
@@ -1643,8 +1692,9 @@ public class MartShellLib {
               filterCondition = m.group(1);
 
               if (!ALLQUALIFIERS.contains(filterCondition))
-                throw new InvalidQueryException("Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
-              
+                throw new InvalidQueryException(
+                  "Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
+
               String thisFilterValue = m.group(2);
 
               query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, thisFilterValue);
@@ -1659,8 +1709,9 @@ public class MartShellLib {
             } else {
               filterCondition = thisToken;
               if (!ALLQUALIFIERS.contains(filterCondition))
-                throw new InvalidQueryException("Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
-                
+                throw new InvalidQueryException(
+                  "Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
+
               whereFilterCond = false;
               whereFilterVal = true;
             }
@@ -1842,6 +1893,40 @@ public class MartShellLib {
           } else
             throw new InvalidQueryException(
               "Invalid Query Recieved, invalid filter statement in where clause: " + newquery + "\n");
+        } else if (sortClause) {
+          if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
+            throw new InvalidQueryException(
+              "Invalid Query Recieved, " + GETQSTART + " clause in limit clause: " + newquery + "\n");
+          else if (domainSpecificHandlerAvailable(thisToken))
+            throw new InvalidQueryException(
+              "Invalid Query Recieved, domain specific clause in limit clause: " + newquery + "\n");
+          else if (thisToken.equalsIgnoreCase(QWHERE))
+            throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
+          else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+            if (!validQuery)
+              throw new InvalidQueryException(
+                "Recieved invalid Query " + newquery + "\ncheck for an incomplete Domain Specific Request\n");
+
+            validQuery = false;
+            sortClause = false;
+            limitClause = true;
+          } else {
+            if (thisToken.endsWith(",")) {
+              if (logger.isLoggable(Level.INFO))
+                logger.info(thisToken + " Comma, setting validQuery to false\n");
+
+              thisToken = thisToken.substring(0, thisToken.length() - 1);
+              validQuery = false;
+            } else {
+              if (logger.isLoggable(Level.INFO))
+                logger.info(thisToken + " Not comma, setting validQuery to true\n");
+              validQuery = true;
+            }
+
+            StringTokenizer attToks = new StringTokenizer(thisToken, ",");
+            while (attToks.hasMoreTokens())
+              query = addSortAttribute(query, thisDatasetConfig, attToks.nextToken().trim());
+          }
         } else if (limitClause) {
           if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
             throw new InvalidQueryException(
@@ -1851,6 +1936,8 @@ public class MartShellLib {
               "Invalid Query Recieved, domain specific clause in limit clause: " + newquery + "\n");
           else if (thisToken.equalsIgnoreCase(QWHERE))
             throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
+          else if (thisToken.equalsIgnoreCase(QSORT))
+            throw new InvalidQueryException("Invalid Query Recieved, sortBy clause in limit clause: " + newquery + "\n");
           else {
             if (query.getLimit() > 0)
               throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + newquery + "\n");
@@ -1874,9 +1961,9 @@ public class MartShellLib {
       if (query.getAttributes().length == 0 && query.getSequenceDescription() == null)
         throw new InvalidQueryException(
           "Invalid Query Recieved, no attributes or sequence description found " + newquery + "\n");
-      
+
       //GenericHandler requires the query to have a DatasetConfig 
-	  query.setDatasetConfig(thisDatasetConfig);
+      query.setDatasetConfig(thisDatasetConfig);
       return query;
     } catch (NumberFormatException e) {
       throw new InvalidQueryException("Recieved NumberFormatException parsing MQL " + e.getMessage(), e);
@@ -2045,6 +2132,17 @@ public class MartShellLib {
     return newQuery;
   }
 
+  private Query addSortAttribute(Query inquery, DatasetConfig dset, String attname) throws InvalidQueryException {
+    checkAttributeValidity(dset, attname);
+
+    Query newQuery = new Query(inquery);
+    AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
+    Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
+    newQuery.addSortByAttribute(attr);
+
+    return newQuery;
+  }
+  
   private void checkAttributeValidity(DatasetConfig dset, String attname) throws InvalidQueryException {
     if (!dset.containsAttributeDescription(attname))
       throw new InvalidQueryException(
@@ -2296,12 +2394,18 @@ public class MartShellLib {
     filtNames.add(filterName);
   }
 
+  public void setAdvancedFeatures(boolean toggle) {
+    advancedFeaturesOn = toggle;
+  }
+
+  private boolean advancedFeaturesOn = false;
   private int maxcharcount = 0;
 
   private String MQLError = null;
 
   //these allow the MartShellLib to act as controller to the MartShell and MartCompleter
-  protected RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor(false, false, false); //dont ignore cache, dont validate, and dont include hidden Members (these are for MartEditor only)
+  protected RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor(false, false, false);
+  //dont ignore cache, dont validate, and dont include hidden Members (these are for MartEditor only)
   protected DatasetConfig envDataset = null;
   protected DetailedDataSource envMart = null;
   protected DatasetConfig localDataset = null;
@@ -2322,6 +2426,7 @@ public class MartShellLib {
   public static final String QSEQUENCE = "sequence";
   public static final String QWHERE = "where";
   public static final String QLIMIT = "limit";
+  public static final String QSORT = "sortBy";
   public static final char LISTSTARTCHR = '(';
   private final String LSTART = String.valueOf(LISTSTARTCHR);
   private final String QUOTE = "'";
