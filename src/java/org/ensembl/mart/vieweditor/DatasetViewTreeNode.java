@@ -163,7 +163,14 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                                 }
                             }
                         }
+                        else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
+							DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
+							String grName = atGroup.getInternalName();
+							DatasetViewTreeNode grNode = new DatasetViewTreeNode("DSAttributeGroup:" + grName);
+							grNode.setUserObject(atGroup);
+						}
                     }
+                        
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterPage")) {
@@ -255,7 +262,16 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         }
                     }
                 }
-            }
+                else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
+					DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
+					String grName = atGroup.getInternalName();
+					DatasetViewTreeNode grNode = new DatasetViewTreeNode("DSAttributeGroup:" + grName);
+					grNode.setUserObject(atGroup);
+					this.add(grNode);
+                }
+            }        
+            
+            
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterGroup")) {
             setName("FilterGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             FilterGroup fiGroup = (FilterGroup) obj;
@@ -327,7 +343,11 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                     //colNode.add(desNode);
                 }
             }
-        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection")) {
+        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
+		setName("DSAttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+		DSAttributeGroup atGroup = (DSAttributeGroup) obj;
+		
+		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection")) {
             setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             FilterCollection fiCollection = (FilterCollection) obj;
             List descriptions = fiCollection.getFilterDescriptions();

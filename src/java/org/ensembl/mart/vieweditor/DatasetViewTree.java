@@ -226,6 +226,8 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     insert(new FilterGroup("new"), "FilterGroup:");
                 else if (e.getActionCommand().equals("insert attribute group"))
                     insert(new AttributeGroup("new"), "AttributeGroup:");
+				else if (e.getActionCommand().equals("insert DSAttribute group"))
+					insert(new DSAttributeGroup("new"), "DSAttributeGroup:");    
                 else if (e.getActionCommand().equals("insert filter collection"))
                     insert(new FilterCollection("new"), "FilterCollection:");
                 else if (e.getActionCommand().equals("insert attribute collection"))
@@ -475,7 +477,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute group", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute group", "insert DSAttribute group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter collection", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))

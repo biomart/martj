@@ -78,7 +78,7 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 view = (DatasetView) parentNode.getUserObject();
                 view.addAttributePage((AttributePage) editingNode.getUserObject());
 
-            }
+            } 
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
                 FilterPage fp = (FilterPage) parentNode.getUserObject();
@@ -122,6 +122,10 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
                 ap.addAttributeGroup((AttributeGroup) editingNode.getUserObject());
             }
+			else if (childClassName.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
+				AttributePage ap = (AttributePage) parentNode.getUserObject();
+				ap.addDSAttributeGroup((DSAttributeGroup) editingNode.getUserObject());
+			}
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
                 AttributeGroup ag = (AttributeGroup) parentNode.getUserObject();
@@ -234,7 +238,12 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
                 ap.insertAttributeGroup(index, (AttributeGroup) editingNode.getUserObject());
-            } else {
+            }
+			else if (child instanceof org.ensembl.mart.lib.config.DSAttributeGroup) {
+				AttributePage ap = (AttributePage) parentNode.getUserObject();
+				ap.insertDSAttributeGroup(index, (DSAttributeGroup) editingNode.getUserObject());
+			}            
+            else {
                 String error_string = "Error: " + childName + " cannot be inserted in an AttributePage.";
                 return error_string;
             }
@@ -318,6 +327,10 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
             }
+			else if (child instanceof org.ensembl.mart.lib.config.DSAttributeGroup) {
+				AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+				ap.removeDSAttributeGroup((DSAttributeGroup) node.getUserObject());
+			}            
         } else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
             if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
                 AttributeGroup ag = (AttributeGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
