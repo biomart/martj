@@ -476,20 +476,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
         qe.setName(nextQueryBuilderTabLabel());
         addQueryEditor(qe);
         tabs.setSelectedComponent(qe);
-        
-        // "Open" the menu of dataset views. We wait before opening it to give
-        // the panel containing the menu time to come to the front. This is a little
-        // hacky but works.
-        new Thread() {
-         public void run() {
-          try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) {
-						// do nothing
-					}
-          qe.openDatasetViewMenu();  
-         }
-        }.start();
+        qe.openDatasetViewMenu();  
         
       }
     } catch (ConfigurationException e) {
