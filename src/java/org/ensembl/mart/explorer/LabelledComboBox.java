@@ -21,6 +21,7 @@ package org.ensembl.mart.explorer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -47,6 +48,7 @@ public class LabelledComboBox extends Box implements ActionListener {
 	private ChangeEvent changeEvent = null;
 	private JRadioButton radioButton = null;
 	private JComboBox combo = null;
+	private String preferenceKey = null;
 	
 	public LabelledComboBox(String label) {
 		this( label, null, null);	
@@ -198,20 +200,11 @@ public class LabelledComboBox extends Box implements ActionListener {
 	
 	/**
 	 * Combo box option list represented as a string.
-	 * @see #toPreferenceString(int)
-	 * @return string representation of all combo box items.
-	 */
-	public String toPreferenceString() {
-		return toPreferenceString( Integer.MAX_VALUE );
-	}
-	
-	/**
-	 * Combo box option list represented as a string.
 	 * Format of String is strings separated by commas e.g. "item1,item2,item3"
 	 * @param limit maximum number of items to include in string.
 	 * @return string representation of first items in combo box.
 	 */
-	public String toPreferenceString(int limit) {
+	private String toPreferenceString(int limit) {
 		StringBuffer buf = new StringBuffer();
 		
 		// add the currently selected item
@@ -227,7 +220,42 @@ public class LabelledComboBox extends Box implements ActionListener {
 		}
 		return buf.toString();
 	}
-	
-	
 
+	public void setPreferenceKey(String preferencesKey) {
+		this.preferenceKey = preferencesKey;
+	}
+
+	public String getPreferenceKey() {
+		return preferenceKey;
+	}
+
+	/**
+	 * Stores the item list in preferences.
+	 * @param preferences place to store items.
+	 * @param limit maximum number of items from list to store.
+	 * @throws RuntimeException if preferenceKey is not set.
+	 */
+	public void store(Preferences preferences, int limit) {
+		if ( preferenceKey==null ) {
+			throw new RuntimeException("PreferenceKey must be set first.");
+		}
+		
+		System.out.println( "storing " + preferenceKey + ": " + toPreferenceString(limit) );
+		preferences.put(preferenceKey, toPreferenceString(limit) );
+			 
+	}
+	
+	
+	/**
+	 * Loads the item list from preferences.
+	 * @param preferences object to retrieve list from.
+	 * @throws RuntimeException if preferenceKey is not set.
+	 */
+	public void load(Preferences preferences) {
+		if ( preferenceKey==null ) {
+				throw new RuntimeException("PreferenceKey must be set first.");
+			}
+	
+		parsePreferenceString( preferences.get( preferenceKey, "" ));		
+	}
 }

@@ -22,9 +22,10 @@ import java.awt.Component;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.swing.Box;
 
 /**
  * @author craig
@@ -32,25 +33,51 @@ import javax.swing.JPanel;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class DatabaseSettingsDialog extends JPanel {
+public class DatabaseSettingsDialog extends Box {
 
-	private LabelledComboBox host = null;
 	private Preferences preferences = null;
+	
+	private LabelledComboBox host = null;
+	private LabelledComboBox port = null;
+	private LabelledComboBox database = null;
+	private LabelledComboBox user = null;
+	private LabelledComboBox password = null;
+	
 	
 	public DatabaseSettingsDialog() {
 		this( null );
 	}
 
 	public DatabaseSettingsDialog(Preferences preferences) {
+		
+		super( BoxLayout.Y_AXIS );
+		
 		host = new LabelledComboBox("Host");
+		host.setPreferenceKey("host");
 		add( host );
 		
+		port = new LabelledComboBox("Port");
+		port.setPreferenceKey( "port" );
+		add( port );
+		
+		database = new LabelledComboBox("Database");
+		database.setPreferenceKey("database");
+		add( database );
+		
+		user = new LabelledComboBox("User");
+		user.setPreferenceKey("user");
+		add( user );	
+		
+		password = new LabelledComboBox("Password");
+		password.setPreferenceKey("password");
+		add( password );
 		
 		if ( preferences!=null ) setPrefs(preferences);
 		
 	}
 
 	public boolean showDialog(Component parent) {
+
 		int option =
 			JOptionPane.showOptionDialog(
 				parent,
@@ -61,21 +88,28 @@ public class DatabaseSettingsDialog extends JPanel {
 				null,
 				null,
 				null);
-				
-		if ( option==JOptionPane.OK_OPTION ) {
-			// persist state for next time program runs
-			preferences.put("history.host", host.toPreferenceString(3) );
-			
-			try {
-				preferences.flush();
-			} catch (BackingStoreException e) {
-				e.printStackTrace();
-			}
-			
-			return true;
-		} else {
+
+		if (option != JOptionPane.OK_OPTION)
 			return false;
+
+		// persist state for next time program runs
+		host.store(preferences, 10);
+		port.store(preferences, 10);
+		database.store(preferences, 10);
+		user.store(preferences, 10);
+		password.store(preferences, 10);
+
+		try {
+
+			// write preferences to persistent storage
+			preferences.flush();
+
+		} catch (BackingStoreException e) {
+			e.printStackTrace();
 		}
+
+		return true;
+
 	}
 
 	public static void main(String[] args) {
@@ -83,8 +117,11 @@ public class DatabaseSettingsDialog extends JPanel {
 		DatabaseSettingsDialog d = new DatabaseSettingsDialog( );
 		d.setPrefs( Preferences.userNodeForPackage( d.getClass() ) );
 		JFrame f = new JFrame();
-		f.getContentPane().add( d );
-		System.exit(0);
+		f.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		f.pack();
+		f.setVisible( true );
+		d.showDialog( f );
+		
 	}
 
 	
@@ -94,8 +131,15 @@ public class DatabaseSettingsDialog extends JPanel {
 	}
 
 	public void setPrefs(Preferences prefs) {
+		
 		this.preferences = prefs;
-		host.parsePreferenceString( prefs.get("history.host", "") );
+		
+		host.load( prefs );
+		port.load( prefs );
+		database.load( prefs );
+		user.load( prefs );
+		password.load( prefs );
+	
 	}
 
 	public Preferences getPrefs() {
