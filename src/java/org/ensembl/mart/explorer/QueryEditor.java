@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -558,8 +559,15 @@ public class QueryEditor extends JPanel {
       int oldLimit = query.getLimit();
       if ( limit>0 ) query.setLimit( limit );
 
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+     
       engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
       os.close();
+
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      
+      if ( tmpFile.toURL().openConnection().getContentLength()<1 )
+        feedback.warning("Empty result set.");
       
       if ( limit>0 ) query.setLimit( oldLimit );
 
