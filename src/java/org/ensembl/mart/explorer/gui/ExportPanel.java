@@ -34,12 +34,12 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
         exportFormatPanel.add(formatLabel);
         exportFormatPanel.add(tsvFormatButton);
         tsvFormatButton.setText("jRadioButton1");
-        tsvFormatButton.setLabel("Text, tab separated");
+        tsvFormatButton.setText("Text, tab separated");
         tsvFormatButton.setSelected(true);
         formatLabel.setText("Format");
         exportToFileButton.setText("Export to File");
         noCompressionButton.setText("jRadioButton1");
-        noCompressionButton.setLabel("None");
+        noCompressionButton.setText("None");
         noCompressionButton.setSelected(true);
         compressionPanel.setBorder(null);
         compressionPanel.add(compressionLabel);
@@ -56,7 +56,7 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
         add(windowExportPanel);
         add(fileExportPanel);
         exportToWindowButton.setText("jRadioButton1");
-        exportToWindowButton.setLabel("Export to window");
+        exportToWindowButton.setText("Export to window");
         windowExportPanel.setLayout(new javax.swing.BoxLayout(windowExportPanel, javax.swing.BoxLayout.X_AXIS));
         windowExportPanel.add(exportToWindowButton);
         windowExportPanel.add(windowName);

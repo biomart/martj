@@ -30,12 +30,12 @@ public class MartExplorerGUI extends JFrame {
   /** This method is called from within the constructor to initialize the form. */
   private void initGUI() {
     clearToolBarButton.setText("Clear");
-    clearToolBarButton.setLabel("Clear");
+    clearToolBarButton.setText("Clear");
     clearToolBarButton.setActionCommand("Clear");
     toolBar.add(clearToolBarButton);
     toolBar.add(exportToolBarButton);
     exportToolBarButton.setText("jButton1");
-    exportToolBarButton.setLabel("Export");
+    exportToolBarButton.setText("Export");
     exportToolBarButton.setActionCommand("export");
     addWindowListener(
                       new java.awt.event.WindowAdapter() {
@@ -60,7 +60,7 @@ public class MartExplorerGUI extends JFrame {
     menuBar.add(helpMenu);
     exitMenuItem.setText("jMenuItem1");
     exitMenuItem.setActionCommand("exitMenuItem");
-    exitMenuItem.setLabel("Exit");
+    exitMenuItem.setText("Exit");
     exitMenuItem.setToolTipText("Exits Application");
     exitMenuItem.addActionListener(
                                    new ActionListener() {
@@ -87,7 +87,7 @@ public class MartExplorerGUI extends JFrame {
     executeMenuItem.setText("Execute");
     clearMenuItem.setText("New");
     clearMenuItem.setActionCommand("Clear");
-    clearMenuItem.setLabel("Clear");
+    clearMenuItem.setText("Clear");
     clearMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newMenuItemActionPerformed(e);}});
     executeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){executeMenuItemActionPerformed(e);}});
     kakaMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){kakaMenuItemActionPerformed(e);}});

@@ -75,11 +75,11 @@ public class FilterPanel extends JPanel
     jPanel4.add(stableIDStringButton);
     jPanel4.add(new JScrollPane( stableIDs ));
     stableIDStringButton.setText("jRadioButton1");
-    stableIDStringButton.setLabel("IDs");
+    stableIDStringButton.setText("IDs");
     stableIDURLButton.setText("jRadioButton1");
-    stableIDURLButton.setLabel("URL");
+    stableIDURLButton.setText("URL");
     stableIDFileButton.setText("jRadioButton1");
-    stableIDFileButton.setLabel("File");
+    stableIDFileButton.setText("File");
 
     stableIDGroup.add( stableIDFileButton );
     stableIDGroup.add( stableIDURLButton );

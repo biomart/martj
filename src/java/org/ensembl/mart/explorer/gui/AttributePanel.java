@@ -17,7 +17,7 @@ public class AttributePanel extends JPanel implements org.ensembl.mart.explorer.
     private void initGUI() {
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
         add(ensemblGeneIDCheckBox);
-        ensemblGeneIDCheckBox.setLabel("Ensembl Gene ID");
+        ensemblGeneIDCheckBox.setText("Ensembl Gene ID");
     }
 
     public void updateQuery(Query query)  throws InvalidQueryException {

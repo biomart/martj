@@ -37,6 +37,7 @@
   <property name="version" value="0.01" />
   <property name="build.name" value="${name}-${version}" />
   <property name="build.compiler" value="modern" />
+  <property name="build.deprecation" value="false" />
 
   <!-- Save the current system classpath to pass to forked VMs -->
   <property name="env.classpath" value="${java.class.path}" />
@@ -122,7 +123,7 @@
     <javac
       srcdir="${src.dir}"
       destdir="${build.classes}"
-      deprecation="false"
+      deprecation="${build.deprecation}"
       depend="no"
       debug="true"
     >

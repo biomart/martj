@@ -64,7 +64,7 @@ public class DatabaseConfigPage extends JPanel implements org.ensembl.mart.explo
         query.setHost( Tool.selected ( host ) );
         query.setPort( Tool.selected ( port ) );
         query.setUser( Tool.selected ( user ) );
-        query.setPassword( password.getText() );
+        query.setPassword( new String(password.getPassword()) );
         query.setDatabase( Tool.selected ( database ) );
     }
 
