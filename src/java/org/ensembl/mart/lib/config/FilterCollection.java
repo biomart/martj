@@ -121,25 +121,36 @@ public class FilterCollection extends BaseConfigurationObject {
 
 			if (contains)
 				lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(internalName));
-			else if (internalName.indexOf(".") > 0) {
+			else if ( ( internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
 				String[] testNames = internalName.split("\\.");
 				String testRefName = testNames[0]; // x in x.y
 				String testIname = testNames[1]; // y in x.y
 
-        if (testIname == null)
-          contains = false;
-				else if (uiFilterNameMap.containsKey(testIname)) {					
+        if (uiFilterNameMap.containsKey(testIname)) {
+        	// y is an actual filter, with its values stored in a PushOptions in another Filter					
 					lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(testIname));
 					contains = true;
 				} else {
+					// y may be a Filter stored in a PushOptions within another Filter
 					for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 						FilterDescription element = (FilterDescription) iter.next();
 
 						if (element.containsOption(testRefName)) {
-							lastFilt = element;
-							contains = true;
-							break;
+							Option superOption = element.getOptionByName(testRefName);
+							
+							PushOptions[] pos = superOption.getPushOptions();
+							for (int i = 0, n = pos.length; i < n; i++) {
+								PushOptions po = pos[i];
+								if (po.containsOption(testIname)) {
+									lastFilt = element;
+									contains = true;
+									break;
+								}
+							}
 						}
+						
+						if (contains)
+						  break;
 					}
 				}
 			} else {
@@ -154,6 +165,10 @@ public class FilterCollection extends BaseConfigurationObject {
 			}
 		} else {
 			if (lastFilt.getInternalName().equals(internalName))
+				contains = true;
+			else if (lastFilt.containsOption(internalName))
+				contains = true;
+			else if ( (internalName.indexOf(".") > 0) &&  !(internalName.endsWith(".")) && lastFilt.getInternalName().equals( internalName.split("\\.")[1] ) )
 				contains = true;
 			else {
 				lastFilt = null;

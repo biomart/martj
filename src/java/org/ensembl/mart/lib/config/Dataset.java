@@ -450,7 +450,7 @@ public class Dataset extends BaseConfigurationObject {
 		boolean contains = false;
 
 		if (lastFilt == null) {
-			if (internalName.indexOf(".") > 0) {
+			if ( ( internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
 				String[] refs = internalName.split("\\.");
 				
 				if (refs.length > 1 && containsFilterDescription(refs[1]))
@@ -472,7 +472,7 @@ public class Dataset extends BaseConfigurationObject {
 				contains = true;
 			else if (lastFilt.containsOption(internalName))
 				contains = true;
-			else if ( ( internalName.indexOf(".") > 0 ) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
+			else if ( ( internalName.indexOf(".") > 0 ) && !(internalName.endsWith(".")) && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
 				contains = true;
 			else {
 				lastFilt = null;
