@@ -17,9 +17,8 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/mysql-connector-java-3.0.7-stable
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/log4j-1.2.6.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/java-getopt-1.0.9.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ensj-util.jar
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jdom.jar
 
-java -classpath ${TMP_CLASSPATH} org.ensembl.mart.explorer.MartExplorerTool $@
-
-
+java -Xmx200m -classpath ${TMP_CLASSPATH} org.ensembl.mart.explorer.MartExplorerTool $@
 
 
