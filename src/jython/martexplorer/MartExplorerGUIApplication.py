@@ -30,12 +30,19 @@ from java.io import *
 from java.net import *
 from javax.swing.event import *
 from java.awt import *
+from java.awt.event import *
 from javax.swing import *
 from javax.swing.tree import *
+from javax.swing.border import *
 from jarray import *
 from org.apache.log4j import *
+from java.beans import *
 
-class Dummy(QueryInputPage, JPanel):
+HORIZONTAL_GAP = 10
+VERTICAL_GAP = 5
+GAP = 5
+
+class DummyInputPage(QueryInputPage, JPanel):
     def __init__(self, message):
         self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
 
@@ -48,33 +55,114 @@ class Dummy(QueryInputPage, JPanel):
     def clear(self):
         pass
 
+    def addChangeListener( self, listener ):
+        pass
 
-class SpeciesInputPage(QueryInputPage, JPanel):
+
+class LabelledComboBox(QueryInputPage, Box, ActionListener):
+
+    """ Abstract "label + combo box" component. Issues ChangeEvents to
+    ChangeListeners if contents of combobox changes. Loads value from
+    and into query through methods implemented in derived classes. """
+
+    def __init__(self, label, changeListener=None):
+
+        Box.__init__(self, BoxLayout.X_AXIS)
+
+        self.add( JLabel( label ) ) 
+        self.add( Box.createHorizontalStrut( HORIZONTAL_GAP ))
+        self.box = JComboBox()
+        self.box.editable = 1
+        self.add( self.box )
+        
+        d = Dimension(500, 35 )
+        self.preferredSize = d
+        self.maximumSize = d
+        self.border = EmptyBorder(GAP, GAP, GAP, GAP)
+        
+        self.box.addActionListener( self )
+        self.changeEvent = ChangeEvent( self )
+        self.changeListeners = []
+
+        if changeListener:
+            self.addChangeListener( changeListener )
+
+
+    def clear(self):
+        Tool.clear( self.box )
+
+    def toString(self):
+        item = self.box.selectedItem
+        if item: return item
+        else: return "UNSET"
+
+    def actionPerformed( self, event=None ):
+        for l in self.changeListeners:
+            l.stateChanged( self.changeEvent )
+
+    def addChangeListener( self, listener ):
+        self.changeListeners.append( listener )
+        
+    # todo add set options methods
+
+
+
+
+class SpeciesInputPage(LabelledComboBox):
 
     def __init__(self):
-        self.species = JComboBox()
-        self.species.editable = 1 
-        self.species.minimumSize = Dimension(250,21) 
-        self.species.preferredSize = self.species.minimumSize
-        self.add( JLabel("Species") )
-        self.add( self.species )
-        
+        LabelledComboBox.__init__(self, "Species")
+
     def updateQuery(self, query):
-        item = self.species.selectedItem
+        item = self.box.selectedItem
         if item: query.species = item
         else: raise InvalidQueryException("Species must be set")
 
     def updatePage(self, query):
-        Tool.prepend( query.species, self.species )
+        Tool.prepend( query.species, self.box )
+        
+
+
+class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
+
+    def __init__(self):
+        Box.__init__(self, BoxLayout.Y_AXIS)
+
+        self.host = LabelledComboBox("Database", self)
+        self.port = LabelledComboBox("Port", self)
+        self.database = LabelledComboBox("Database", self)
+        self.user = LabelledComboBox("User", self)
+        self.password = LabelledComboBox("Password", self)
+
+        self.add( self.host )
+        self.add( self.port )
+        self.add( self.database )
+        self.add( self.user )
+        self.add( self.password )
+        self.add( Box.createVerticalGlue() )
+
+        
+
+    def updateQuery(self, query):
+        # todo
+        pass
+
+    def updatePage(self, query):
+        # todo
+        pass
 
     def clear(self):
-        Tool.clear( self.species )
+        # todo
+        pass
 
-    def toString(self):
-        item = self.species.selectedItem
-        if item: return item
-        else: return "UNSET"
+    def stateChanged(self, event=None):
+        # todo
+        print "db page changed"
 
+    def addChangeListener(self, listener):
+        # todo
+        pass
+    
 
 class CardContainer(JPanel):
     """A JPanel with a CardLayout plus show() method for showing a particular card."""
@@ -88,12 +176,15 @@ class CardContainer(JPanel):
 
 
 
-class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener): 
+class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListener): 
 
     """Represents a TreeNode which: (1) causes the corresponding
     self.targetComponent to be displayed when it is selected, (2)
-    generates custom text for display in tree via toString()
-    method. """
+    generates custom text for display in tree via toString() method,
+    (3) Listens to changes in targetComponent and cause the tree to be
+    redrawn when changes detected. """
+
+
 
     def __init__(self, tree, parent, position, cardContainer, targetComponent, targetCardName):
         
@@ -105,15 +196,25 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener):
 	self.cardContainer = cardContainer
 	self.targetComponent = targetComponent
         if targetComponent==None:
-            self.targetComponent = Dummy( targetCardName )
+            self.targetComponent = DummyInputPage( targetCardName )
 	self.targetCardName = targetCardName
-        tree.addTreeSelectionListener( self )
-        tree.model.insertNodeInto( self, parent, position)
+        self.tree = tree
+        self.tree.addTreeSelectionListener( self )
+        self.tree.model.insertNodeInto( self, parent, position)
         cardContainer.add( self.targetComponent, self.targetCardName)
+        self.targetComponent.addChangeListener( self )
         
 
     def toString(self):
-	return "<html><b>"+self.targetCardName+"</b>"+self.targetComponent.toString()+"</html>"
+
+        # The first time the node is rendered the length of the text
+        # area to be rendered is set to the length of the string
+        # returned.  Any future node string longer than this will be
+        # cropped. Adding blank space "makes room" for long
+        # descriptions later.
+        SPACE="&nbsp;"
+        
+        return "<html><b>"+self.targetCardName+"</b>"+SPACE+self.targetComponent.toString()+SPACE*100+"</html>"
 
 
     def valueChanged(self, event):
@@ -122,7 +223,11 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener):
 	cardContainer if this was the node selected in the tree"""
 	if self == event.newLeadSelectionPath.lastPathComponent:
 	    self.cardContainer.show( self.targetCardName )
+            #revalidate()
 
+    def stateChanged(self, event=None):
+        # redraw tree
+        self.tree.repaint()
 
 
 class TreeNavigationPanel(QueryPanel):
@@ -134,7 +239,7 @@ class TreeNavigationPanel(QueryPanel):
         tree = JTree( treeModel )
         configPanel = CardContainer()
         
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, DatabaseConfigPage(), "DATABASE" )
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, DatabaseInputPage(), "DATABASE" )
         speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
         focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel, None,"focus" )
         filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel, None,"filter" )
@@ -163,12 +268,15 @@ class TreeNavigationPanel(QueryPanel):
         print "updating query"
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
-                print "TODO load the dat from the node into query",node.toString(), "is a QTN, "
-            else:
-                print node, "is unkown type"
+                node.updateQuery( query )
+
                 
     def updatePage(self, query):
-        pass
+        print "updating pages"
+        for node in self.rootNode.depthFirstEnumeration():
+            if isinstance( node, QueryTreeNode ):
+                node.targetComponent.updatePage( query )
+
 
     def clear(self):
         pass
@@ -178,7 +286,7 @@ class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(800,500))
-        self.queryPanel = TreeNavigationPanel()
+        self.queryPages = TreeNavigationPanel()
         self.buildGUI()
         self.visible=1
 
@@ -189,7 +297,7 @@ class MartGUIApplication(JFrame):
         panel = JPanel()
         panel.layout = BoxLayout( panel, BoxLayout.Y_AXIS )
         panel.add( self.createToolBar() )
-        panel.add( self.queryPanel )
+        panel.add( self.queryPages )
         self.contentPane.add( panel )
 
 
@@ -228,6 +336,7 @@ class MartGUIApplication(JFrame):
         toolBar = JToolBar()
         toolBar.add( JButton("Clear", actionPerformed=self.doClear) )
         toolBar.add( JButton("Execute", actionPerformed=self.doExecute) )
+        toolBar.add( JButton("Test Query", actionPerformed=self.doInsertKakaQuery) )
         return toolBar
 
     def doExit(self, event=None):
@@ -252,8 +361,7 @@ class MartGUIApplication(JFrame):
         #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
         #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") ) 
         q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
-        print q
-        self.queryPanel.updatePage( q )
+        self.queryPages.updatePage( q )
 
 
 
@@ -264,7 +372,7 @@ class MartGUIApplication(JFrame):
     def doExecute(self, event=None):
         q = Query()
         try:
-            self.queryPanel.updateQuery( q )
+            self.queryPages.updateQuery( q )
             import threading
             threading.Thread(target=self.executeQuery(q)).start()
 
@@ -282,7 +390,7 @@ class MartGUIApplication(JFrame):
 
 
     def doClear(self, event=None):
-        self.queryPanel.clear()
+        self.queryPages.clear()
 
 
 if __name__=="__main__":
@@ -292,7 +400,6 @@ if __name__=="__main__":
         parameter = sys.argv[1]
 
         if parameter=="-v":
-            print "verbose"
             BasicConfigurator.configure()
             Logger.getRoot().setLevel(Level.INFO)
 

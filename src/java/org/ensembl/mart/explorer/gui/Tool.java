@@ -9,7 +9,7 @@ public class Tool {
      * Prepends value to the front of the list of items in the combo box.
      * Does nothing if value is null.
      */
-	static final void prepend( String value, JComboBox combo ) {
+  public static final void prepend( String value, JComboBox combo ) {
     Object selected = combo.getSelectedItem();
 
     if ( value!=null ) {
@@ -43,8 +43,7 @@ public class Tool {
    * Makes the empty string "" the first item in the list.
    * The previous item is pushed down to the second position.
    */
-  static final void clear( JComboBox combo ) {
-		prepend( "", combo );
-
-	}
+  public static final void clear( JComboBox combo ) {
+    prepend( "", combo );
+  }
 }

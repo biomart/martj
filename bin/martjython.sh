@@ -27,7 +27,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/junit.jar
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-CMD="java -classpath ${TMP_CLASSPATH} -Dpython.cachedir=${CACHE_DIR} -Dpython.path=${TMP_JYTHON_LIB} org.python.util.jython $1"
+CMD="java -classpath ${TMP_CLASSPATH} -Dpython.cachedir=${CACHE_DIR} -Dpython.path=${TMP_JYTHON_LIB} org.python.util.jython $@"
 
-echo $CMD
+#echo $CMD
 $CMD

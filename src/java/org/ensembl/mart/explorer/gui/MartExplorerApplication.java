@@ -186,7 +186,7 @@ public class MartExplorerApplication extends JFrame {
     }
 
     // execute the query on a separate thread so we don't
-    // slow down the main AWT thread if it takes a while to run.
+    // slow down the mainAWT thread if it takes a while to run.
     new Thread() {
       public void run() {
         try {
@@ -297,7 +297,8 @@ public class MartExplorerApplication extends JFrame {
 
   private Map resultWindows = new TreeMap();
   private static final Logger logger = Logger.getLogger(MartExplorerApplication.class.getName());
-  private QueryPanel queryPanel = new QueryPanel();
+  //private QueryPanel queryPanel = new QueryPanel();
+  private QueryPanel queryPanel = new org.ensembl.mart.explorer.gui.tree_prototype();
   private JMenuBar menuBar = new JMenuBar();
   private JMenu fileMenu = new JMenu();
   private JMenuItem exitMenuItem = new JMenuItem();
