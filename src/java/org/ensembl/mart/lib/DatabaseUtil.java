@@ -7,6 +7,7 @@
 package org.ensembl.mart.lib;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -85,6 +86,7 @@ public class DatabaseUtil {
 		public String host;
 		public String port;
 		public String databaseName;
+    public String jdbcDriverClassName;
 	};
 
 	/**
@@ -94,12 +96,22 @@ public class DatabaseUtil {
 	 * <code>jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1</code>
 	 * </p > 
 	 * @param URL database connection string. 
-	 * @throws IllegalArgumentException if databaseURL has the wrong format.
+	 * @throws IllegalArgumentException if the DriverManager cannot use the URL to get the hdbcDriverClassName, or databaseURL has the wrong format.
 	 */
 	public static final DatabaseURLElements decompose(String databaseURL)
 		throws IllegalArgumentException {
 
-		DatabaseURLElements elements = new DatabaseURLElements();
+    DatabaseURLElements elements = new DatabaseURLElements();
+      
+		try {
+			//long winded way of finding the JDBC Driver class name from the databaseURL
+			Driver jdbcDriver = DriverManager.getDriver(databaseURL); // gets a driver for this DB URL
+			elements.jdbcDriverClassName = jdbcDriver.getClass().getName(); // get the classname from the driver class
+			
+		} catch (SQLException e) {
+			 throw new IllegalArgumentException("Invalid database URL: " + databaseURL);
+		}    
+    
 		elements.databaseURL = databaseURL;
 		Pattern p =
 			Pattern.compile("^(\\w+:(\\w+)://([^:/]+)(:(\\d+))?)(/([^?]*))?$");
