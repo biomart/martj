@@ -92,8 +92,8 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
 				JOptionPane.showConfirmDialog(
 					this,
 					new JLabel(
-						"Changing this page will cause all currently selected"
-							+ "attributes to be removed from the query. Continue?"),
+						"All currently attributes will be removed from the query "
+							+ "\nif you change this page. Continue?"),
 					"Change Attributes",
 					JOptionPane.YES_NO_OPTION);
 
