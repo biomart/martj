@@ -188,9 +188,9 @@ public final class AttributeQueryRunner implements QueryRunner {
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setMaxRows(maxRows);
 
-        if (logger.isLoggable(Level.INFO)) {
-          logger.info("QUERY : " + curQuery);
-          logger.info("SQL : " + sql);
+        if (logger.isLoggable(Level.FINE)) {
+          logger.fine("QUERY : " + curQuery);
+          logger.fine("SQL : " + sql);
         }
 
         //System.out.println("MAX ROWS\t" + maxRows); 
@@ -199,7 +199,7 @@ public final class AttributeQueryRunner implements QueryRunner {
           Filter f = curQuery.getFilters()[i];
           String value = f.getValue();
           if (value != null) {
-            logger.info("SQL (prepared statement value) : " + p + " = " + value);
+            logger.fine("SQL (prepared statement value) : " + p + " = " + value);
             ps.setString(p++, value);
           }
         }
@@ -263,8 +263,8 @@ public final class AttributeQueryRunner implements QueryRunner {
 
         sql += " LIMIT " + totalRowsThisExecute + "," + maxRows; //;(maxRows - lastIDRowsProcessed);    	
 
-        if (logger.isLoggable(Level.INFO))
-          logger.info("SQL : " + sql);
+        if (logger.isLoggable(Level.FINE))
+          logger.fine("SQL : " + sql);
 
         PreparedStatement ps = conn.prepareStatement(sql);
 
@@ -273,7 +273,7 @@ public final class AttributeQueryRunner implements QueryRunner {
           Filter f = curQuery.getFilters()[i];
           String value = f.getValue();
           if (value != null) {
-            logger.info("SQL (prepared statement value) : " + p + " = " + value);
+            logger.fine("SQL (prepared statement value) : " + p + " = " + value);
             ps.setString(p++, value);
           }
         }

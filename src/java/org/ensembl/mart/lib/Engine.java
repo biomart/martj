@@ -130,7 +130,7 @@ public class Engine {
         Filter f = query.getFilters()[i];
         String value = f.getValue();
         if (value != null) {
-          logger.info("SQL (prepared statement value) : " + p + " = " + value);
+          logger.fine("SQL (prepared statement value) : " + p + " = " + value);
           ps.setString(p++, value);
         }
       }
@@ -260,7 +260,7 @@ public class Engine {
       query = idhandler.ModifyQuery(this, unprocessedFilters, query);
     }
 
-    logger.info(query.toString());
+    logger.fine(query.toString());
     QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, os);
     qr.execute(limit, isSubQuery);
   }

@@ -119,8 +119,8 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 		try {
 			 return Integer.parseInt( getAttribute(maxSelectKey) );
 		} catch (NumberFormatException e) {
-			if (logger.isLoggable(Level.INFO))
-			  logger.info("maxSelect value " + getAttribute(maxSelectKey) + " could not be parsed into an int: " + e.getMessage());
+			if (logger.isLoggable(Level.FINE))
+			  logger.fine("maxSelect value " + getAttribute(maxSelectKey) + " could not be parsed into an int: " + e.getMessage());
 			return DEFAULTMAXSELECT;
 		}
 	}

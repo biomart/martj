@@ -173,11 +173,11 @@ public class QueryCompiler {
     pkbuf.insert(sql.indexOf(FROM), ", " + qualifiedLowestLevelKey);
     pksql = pkbuf.toString();
 
-    if (logger.isLoggable(Level.INFO)) {
-      logger.info("SQL: " + sql + "\n");
-      logger.info("PKSQL: " + pksql + "\n");
-      logger.info("MainTable: " + mainTable + "\n");
-      logger.info("LowestLevelKey: " + lowestLevelKey + "\n");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("SQL: " + sql + "\n");
+      logger.fine("PKSQL: " + pksql + "\n");
+      logger.fine("MainTable: " + mainTable + "\n");
+      logger.fine("LowestLevelKey: " + lowestLevelKey + "\n");
     }
   }
 
@@ -212,8 +212,8 @@ public class QueryCompiler {
       fcountSQL = sbuf.toString();
     }
 
-    if (logger.isLoggable(Level.INFO))
-      logger.info("fcountSQL: " + fcountSQL + "\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("fcountSQL: " + fcountSQL + "\n");
   }
 
   /**
