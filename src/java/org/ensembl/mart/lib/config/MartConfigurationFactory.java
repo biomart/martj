@@ -85,7 +85,8 @@ public class MartConfigurationFactory {
 	private final String FILTERSETREQ = "filterSetReq";
 	private final String HANDLER = "handler";
 	private final String ISSELECTABLE = "isSelectable";
-	private final String VALUE = "value";
+  private final String VALUE = "value";
+  private final String REF = "ref";
 
 	public MartConfiguration getInstance(Connection conn)
 		throws ConfigurationException {
@@ -384,8 +385,10 @@ public class MartConfigurationFactory {
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
     String field = thisElement.getAttributeValue(FIELDNAME, "");
     String tableConstraint = thisElement.getAttributeValue(TABLECONSTRAINT, "");
+    String value = thisElement.getAttributeValue(VALUE, "");
+    String ref = thisElement.getAttributeValue(REF, "");
 
-		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint );
+		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref );
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();

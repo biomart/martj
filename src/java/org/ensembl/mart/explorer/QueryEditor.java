@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -50,11 +51,11 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
+import org.ensembl.mart.lib.config.Option;
 
 // TODO Support attribute order rearrangment via DnD
 // TODO Support attribute / filter removal by DELETE key
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
-
 
 /**
  * Provides a panel in which a user can create and edit
@@ -68,9 +69,8 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
 public class QueryEditor
 	extends JPanel
 	implements PropertyChangeListener, TreeSelectionListener {
-    
- 
-  private JSplitPane topAndBottom;
+
+	private JSplitPane topAndBottom;
 
 	private JSplitPane top;
 
@@ -83,7 +83,7 @@ public class QueryEditor
 	/** default percentage of total height allocated to the tree constituent component. */
 	private double TREE_HEIGHT = 0.7d;
 
-  private Dimension MINIMUM_SIZE = new Dimension(50, 50);
+	private Dimension MINIMUM_SIZE = new Dimension(50, 50);
 
 	/** Configuration defining the "query space" this editor encompasses. */
 	private MartConfiguration martConfiguration;
@@ -98,33 +98,34 @@ public class QueryEditor
 	private JPanel inputPanel;
 	private JPanel outputPanel;
 
-	private DatasetSelectionPage datasetSelectionPage;
-	private Dataset currentDataset;
+	private TreeFilterWidget datasetSelectionPage;
+	private String currentDatasetName;
 	private OutputSettingsPage outputSettingsPage;
 
 	private AttributePageSetWidget attributesPage;
-  private FilterPageSetWidget filtersPage;
-  
-  /** Maps attributes to the tree node they are represented by. */
-  private Map attributeToWidget;
+	private FilterPageSetWidget filtersPage;
 
+	private Option lastDatasetOption;
+
+	/** Maps attributes to the tree node they are represented by. */
+	private Map attributeToWidget;
 
 	public QueryEditor(MartConfiguration config) {
-		
-    // don't use default FlowLayout manager because it won't resize components if
-    // QueryEditor is resized.
-    setLayout( new BorderLayout() );
-   
-    addComponentListener(new ComponentAdapter() {
-      public void componentResized(ComponentEvent e) {
-        resizeSplits();
-      }
-    });
-    
-    this.martConfiguration = config;
+
+		// don't use default FlowLayout manager because it won't resize components if
+		// QueryEditor is resized.
+		setLayout(new BorderLayout());
+
+		addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				resizeSplits();
+			}
+		});
+
+		this.martConfiguration = config;
 		this.query = new Query();
-    this.attributeToWidget = new HashMap();
-    
+		this.attributeToWidget = new HashMap();
+
 		query.addPropertyChangeListener(this);
 
 		initTree();
@@ -136,20 +137,18 @@ public class QueryEditor
 		addDatasetSelectionPage();
 	}
 
-  
-  /**
-   * Repositions the dividers after the component has been resized to maintain
-   * the relative size of the panes.
-   */
-  private void resizeSplits() {
-    Dimension parentSize = getParent().getSize();
-    top.setDividerLocation( TREE_WIDTH );
-    topAndBottom.setDividerLocation(  1-TREE_WIDTH );
-    // this doesn't actually set the size to the minumum but
-    // cause it to resize correctly. 
-    inputPanel.setPreferredSize( MINIMUM_SIZE );
-  }
-  
+	/**
+	 * Repositions the dividers after the component has been resized to maintain
+	 * the relative size of the panes.
+	 */
+	private void resizeSplits() {
+		Dimension parentSize = getParent().getSize();
+		top.setDividerLocation(TREE_WIDTH);
+		topAndBottom.setDividerLocation(1 - TREE_WIDTH);
+		// this doesn't actually set the size to the minumum but
+		// cause it to resize correctly. 
+		inputPanel.setPreferredSize(MINIMUM_SIZE);
+	}
 
 	private void showInputPage(InputPage page) {
 		((CardLayout) (inputPanel.getLayout())).show(inputPanel, page.getName());
@@ -181,8 +180,16 @@ public class QueryEditor
 	 */
 	private void addDatasetSelectionPage() {
 
-		datasetSelectionPage = new DatasetSelectionPage(query, martConfiguration);
-		currentDataset = null;
+		datasetSelectionPage =
+			new TreeFilterWidget(query, martConfiguration.getLayout());
+
+		lastDatasetOption = datasetSelectionPage.getOption();
+
+		// this is the perperty name that will be included in 
+		// the propertyChange evetn emitted when the widget changes.
+		datasetSelectionPage.setPropertyName("dataset");
+		datasetSelectionPage.addPropertyChangeListener(this);
+
 		addPage(datasetSelectionPage);
 	}
 
@@ -196,9 +203,9 @@ public class QueryEditor
 	 */
 	private void layoutPanes() {
 
-    treeView.setMinimumSize( MINIMUM_SIZE );
-		inputPanel.setMinimumSize( MINIMUM_SIZE );
-		outputPanel.setMinimumSize( MINIMUM_SIZE );
+		treeView.setMinimumSize(MINIMUM_SIZE);
+		inputPanel.setMinimumSize(MINIMUM_SIZE);
+		outputPanel.setMinimumSize(MINIMUM_SIZE);
 
 		top =
 			new JSplitPane(
@@ -206,21 +213,18 @@ public class QueryEditor
 				new JScrollPane(treeView),
 				new JScrollPane(inputPanel));
 		top.setOneTouchExpandable(true);
-		
-    topAndBottom =
+
+		topAndBottom =
 			new JSplitPane(
 				JSplitPane.VERTICAL_SPLIT,
 				top,
 				new JScrollPane(outputPanel));
 		topAndBottom.setOneTouchExpandable(true);
-		
-    add(topAndBottom);
+
+		add(topAndBottom);
 
 	}
 
-
-
-  
 	/**
 	 * 
 	 */
@@ -259,7 +263,7 @@ public class QueryEditor
 		f.getContentPane().add(editor);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//f.pack();
-    f.setSize( 950, 750 );
+		f.setSize(950, 750);
 		f.setVisible(true);
 	}
 
@@ -269,40 +273,67 @@ public class QueryEditor
 	 */
 	public void propertyChange(PropertyChangeEvent evt) {
 
+		String propertyName = evt.getPropertyName();
+		Object newValue = evt.getNewValue();
+		Object oldValue = evt.getOldValue();
+
+		if (evt.getSource() == datasetSelectionPage
+			&& datasetSelectionPage.getPropertyName().equals(propertyName)
+			&& !newValue.equals(oldValue)) {
+
+			if (oldValue != null) {
+
+        // Confirm user really wants to change dataset
+				int option =
+					JOptionPane.showConfirmDialog(
+						this,
+						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+						"Change Attributes",
+						JOptionPane.YES_NO_OPTION);
+
+				if (option != JOptionPane.OK_OPTION) {
+
+					datasetSelectionPage.removePropertyChangeListener(this);
+					datasetSelectionPage.setOption(lastDatasetOption);
+					datasetSelectionPage.addPropertyChangeListener(this);
+
+					return;
+				}
+			}
+      
+			lastDatasetOption = (Option)newValue;
+
+			datasetChanged(  martConfiguration.getDatasetByName( lastDatasetOption.getRef() ) );
+
+		}
+
 		if (evt.getSource() == query) {
 
-			
-			// update pages if dataset changed.
-			if (currentDataset != datasetSelectionPage.getSelectedDataset())
-				updateModelAndViewAfterDatasetChanged();
+			if ("attribute".equals(propertyName)) {
 
-      String propertyName = evt.getPropertyName();
-      Object newValue = evt.getNewValue();
-      Object oldValue = evt.getOldValue();
-       
-      if ("attribute".equals(propertyName)) {
+				if (newValue != null && oldValue == null)
+					insertNode(
+						attributesPage.getNode(),
+						((InputPageAware) newValue).getInputPage().getNode());
 
-        if (newValue != null && oldValue == null)
-        insertNode( attributesPage.getNode(), 
-            ((InputPageAware)newValue).getInputPage().getNode() );
-          
-        else if (newValue == null && oldValue != null)
-          treeModel.removeNodeFromParent( ((InputPageAware)oldValue).getInputPage().getNode() );
-          
+				else if (newValue == null && oldValue != null)
+					treeModel.removeNodeFromParent(
+						((InputPageAware) oldValue).getInputPage().getNode());
 
-      } else if ("filter".equals(propertyName)) {
+			} else if ("filter".equals(propertyName)) {
 
-        if (newValue != null && oldValue == null)
-        insertNode( filtersPage.getNode(), ((InputPageAware)newValue).getInputPage().getNode() );
-          
-          
-        else if (newValue == null && oldValue != null)
-        treeModel.removeNodeFromParent( ((InputPageAware)oldValue).getInputPage().getNode() );
-          
-      } else {
-        logger.warning("Unrecognised propertyChange: " + propertyName);
-      }
-      
+				if (newValue != null && oldValue == null)
+					insertNode(
+						filtersPage.getNode(),
+						((InputPageAware) newValue).getInputPage().getNode());
+
+				else if (newValue == null && oldValue != null)
+					treeModel.removeNodeFromParent(
+						((InputPageAware) oldValue).getInputPage().getNode());
+
+			} else {
+				logger.warning("Unrecognised propertyChange: " + propertyName);
+			}
 
 			Enumeration enum = rootNode.breadthFirstEnumeration();
 			while (enum.hasMoreElements())
@@ -317,26 +348,26 @@ public class QueryEditor
 
 	}
 
-  /**
-   * Inserts child node under parent in tree and select it.
-   * @param parent
-   * @param child
-   */
-  private void insertNode(MutableTreeNode parent, MutableTreeNode child) {
-    
-    treeModel.insertNodeInto(child, parent, parent.getChildCount());
+	/**
+	 * Inserts child node under parent in tree and select it.
+	 * @param parent
+	 * @param child
+	 */
+	private void insertNode(MutableTreeNode parent, MutableTreeNode child) {
 
-    // make node selected in tree
-    treeView.setSelectionPath(
-      new TreePath(rootNode).pathByAddingChild(parent).pathByAddingChild(
-        child));
-    
-  }
+		treeModel.insertNodeInto(child, parent, parent.getChildCount());
 
-  /**
+		// make node selected in tree
+		treeView.setSelectionPath(
+			new TreePath(rootNode).pathByAddingChild(parent).pathByAddingChild(
+				child));
+
+	}
+
+	/**
 	 * Update the model (query) and the view (tree and inputPanels).
 	 */
-	private void updateModelAndViewAfterDatasetChanged() {
+	private void datasetChanged(Dataset dataset) {
 
 		// Basically we remove most things from the model and views before adding those things that should
 		// be present back in.
@@ -361,58 +392,61 @@ public class QueryEditor
 		addPage(datasetSelectionPage);
 		treeModel.reload();
 
-		currentDataset = datasetSelectionPage.getSelectedDataset();
+		addAttributePages( dataset );
+		addFilterPages( dataset );
+		addOutputPage();
 
-		addAttributePages();
-		addFilterPages();
-    addOutputPage();
-	
-    // select the attributes page
-    treeView.setSelectionPath( new TreePath( rootNode ).pathByAddingChild( attributesPage.getNode() ) );
+		// select the attributes page
+		treeView.setSelectionPath(
+			new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
 
 	}
 
 	/**
-   * Adds output page to tree and InputPanel.
-   */
-  private void addOutputPage() {
-    outputSettingsPage = new OutputSettingsPage();
-        outputSettingsPage.addPropertyChangeListener(this);
-        addPage(outputSettingsPage);
-  }
+	 * Adds output page to tree and InputPanel.
+	 */
+	private void addOutputPage() {
+		outputSettingsPage = new OutputSettingsPage();
+		outputSettingsPage.addPropertyChangeListener(this);
+		addPage(outputSettingsPage);
+	}
 
-  /**
-   * 
-   */
-  private void addFilterPages() {
-    filtersPage = new FilterPageSetWidget( query, currentDataset );
-    // TODO :2 create maps like for attributes
-    addPage( filtersPage );  
-  }
+	/**
+	 * 
+	 */
+	private void addFilterPages(Dataset dataset) {
+		filtersPage =
+			new FilterPageSetWidget(
+				query,
+				dataset);
+		// TODO :2 create maps like for attributes
+		addPage(filtersPage);
+	}
 
-  /**
-   * Creates the attribute pages and various maps that are useful 
-   * for relating nodes, pages and attributes.
-   */
-  private void addAttributePages() {
-    
-    
-    attributesPage = new AttributePageSetWidget(query, currentDataset);
-//    List list = attributesPage.getLeafWidgets();
-//    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
-//    for (int i = 0; i < attributePages.length; i++) {
-//      AttributeDescriptionWidget w = attributePages[i];
-//      Attribute a = w.getAttribute();
-//      attributeFieldNameToPage.put( a.getField(), w );
-//      attributeToWidget.put( a, w );
-//    }
-    
-    
-    addPage(attributesPage);
-       
-  }
+	/**
+	 * Creates the attribute pages and various maps that are useful 
+	 * for relating nodes, pages and attributes.
+	 */
+	private void addAttributePages(Dataset dataset) {
 
-  /**
+		attributesPage =
+			new AttributePageSetWidget(
+				query,
+				dataset);
+		//    List list = attributesPage.getLeafWidgets();
+		//    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
+		//    for (int i = 0; i < attributePages.length; i++) {
+		//      AttributeDescriptionWidget w = attributePages[i];
+		//      Attribute a = w.getAttribute();
+		//      attributeFieldNameToPage.put( a.getField(), w );
+		//      attributeToWidget.put( a, w );
+		//    }
+
+		addPage(attributesPage);
+
+	}
+
+	/**
 	 * Show input page corresponding to selected tree node. 
 	 */
 	public void valueChanged(TreeSelectionEvent e) {
@@ -423,13 +457,13 @@ public class QueryEditor
 				(DefaultMutableTreeNode) e
 					.getNewLeadSelectionPath()
 					.getLastPathComponent();
-      
-      if ( node.getUserObject() instanceof InputPage ) {
-      
-			 InputPage page = (InputPage) node.getUserObject();
-			 showInputPage(page);
-       
-      }
+
+			if (node.getUserObject() instanceof InputPage) {
+
+				InputPage page = (InputPage) node.getUserObject();
+				showInputPage(page);
+
+			}
 		}
 	}
 

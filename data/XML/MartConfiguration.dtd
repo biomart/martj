@@ -93,7 +93,7 @@
                  value         CDATA #IMPLIED
 		      ref           CDATA #IMPLIED
                  field         CDATA #IMPLIED
-                 tableConstraint CDTATA #IMPLIED>
+                 tableConstraint CDATA #IMPLIED>
 
 <!ELEMENT OptionPush (Option)+>
 <!ATTLIST OptionPush

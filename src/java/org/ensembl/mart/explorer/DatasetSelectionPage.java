@@ -96,12 +96,12 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
 
 		if (query.getAttributes().length > 0 || query.getFilters().length > 0) {
 
-			int option =
-				JOptionPane.showConfirmDialog(
-					this,
-					new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-					"Change Attributes",
-					JOptionPane.YES_NO_OPTION);
+      int option =
+        JOptionPane.showConfirmDialog(
+          this,
+          new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+          "Change Attributes",
+          JOptionPane.YES_NO_OPTION);
 
 			if (option != JOptionPane.OK_OPTION) {
 				update = false;

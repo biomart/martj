@@ -28,16 +28,20 @@ import java.util.TreeMap;
  */
 public class Option extends BaseConfigurationObject {
   
+  
+  
   private String field;
   private String tableConstraint;
+  private String value;
+  private String ref;
   
 	public Option() throws ConfigurationException {
-		this("", false, "", "", "", "");
+		this("", false, "", "", "", "", "", "");
 	}
 
 	public Option(String internalName, boolean isSelectable)
 		throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "");
+		this(internalName, isSelectable, "", "", "", "", "", "");
 	}
 
 	public Option(
@@ -46,7 +50,9 @@ public class Option extends BaseConfigurationObject {
 		String displayName,
 		String description,
     String field,
-    String tableConstraint)
+    String tableConstraint,
+    String value,
+    String ref)
 		throws ConfigurationException {
 
 		super(internalName, displayName, description);
@@ -54,6 +60,9 @@ public class Option extends BaseConfigurationObject {
 		this.isSelectable = isSelectable;
     this.field = field;
     this.tableConstraint = tableConstraint;
+  
+    this.value = value;
+    this.ref = ref;
 
 	}
 
@@ -204,5 +213,19 @@ public class Option extends BaseConfigurationObject {
 	private TreeMap uiOptions = new TreeMap();
 	private Hashtable uiOptionNameMap = new Hashtable();
 	
+
+	/**
+	 * @return
+	 */
+	public String getRef() {
+		return ref;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getValue() {
+		return value;
+	}
 
 }
