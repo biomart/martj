@@ -202,8 +202,20 @@ public class MartShell {
 				if (!argtable.containsKey(key)) {
 					StringBuffer buf = new StringBuffer();
 
-					if (value != null)
+					if (value != null) {
+            //strip leading and trailing quotes
+            if (value.startsWith("'"))
+              value = value.substring(1);
+            if (value.startsWith("\""))
+              value = value.substring(1);
+            
+            if (value.endsWith("'"))
+              value = value.substring(0, value.lastIndexOf("'"));
+            if (value.endsWith("\""))
+              value = value.substring(0, value.lastIndexOf("\""));
+                
 						buf.append(value);
+          }
 
 					argtable.put(key, buf);
 				}
@@ -213,6 +225,18 @@ public class MartShell {
 				StringBuffer value = (StringBuffer) argtable.get(key);
 				if (value.length() > 0)
 					value.append(" ");
+          
+        //strip leading and trailing quotes
+        if (arg.startsWith("'"))
+          arg = arg.substring(1);
+        if (arg.startsWith("\""))
+          arg = arg.substring(1);
+            
+        if (arg.endsWith("'"))
+          arg = arg.substring(0, arg.lastIndexOf("'"));
+        if (arg.endsWith("\""))
+          arg = arg.substring(0, arg.lastIndexOf("\""));
+             
 				value.append(arg);
 				argtable.put(key, value);
 			}
