@@ -11,7 +11,7 @@
     host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_1"
     user="anonymous"/>
 
-    <DatabaseLocation name="ensembl" databaseType="mysql"
+    <DatabaseLocation name="Ensembl" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
     host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_3" user="anonymous"/>
 
