@@ -55,7 +55,7 @@ public class InputPageContainer
     add(new DatasourceWidget(query), TreeNodeData.DATASOURCE.getLabel());
     add(new AttributesWidget(query, datasetViewAdaptor), TreeNodeData.ATTRIBUTES.getLabel());
     add(new FiltersWidget(query, datasetViewAdaptor), TreeNodeData.FILTERS.getLabel());
-    add(new OutputSettingsPage(), TreeNodeData.FORMAT.getLabel());
+    add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }
 
   public void setDatasetView(DatasetView datasetView) {

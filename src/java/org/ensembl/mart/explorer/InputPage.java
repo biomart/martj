@@ -47,6 +47,8 @@ public class InputPage extends JPanel implements QueryChangeListener {
      
     //  use border layout so that a single item added to InputPage fills all available space in panel
     setLayout(new BorderLayout());   
+    query.addQueryChangeListener(this);  
+
   }
 
 
@@ -56,7 +58,6 @@ public class InputPage extends JPanel implements QueryChangeListener {
    */
   public InputPage(Query query) {
       this(query, null); 
-      query.addQueryChangeListener(this);  
     }
   public MutableTreeNode getNode() {
     return node;

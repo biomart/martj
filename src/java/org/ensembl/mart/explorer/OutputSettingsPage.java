@@ -28,6 +28,8 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 
+import org.ensembl.mart.lib.Query;
+
 /**
  * Input panel where user can set the result's format and destination.
  */
@@ -43,8 +45,8 @@ public class OutputSettingsPage extends InputPage implements ActionListener {
 	/**
 	 *
 	 */
-	public OutputSettingsPage() {
-		super(null, "Output");
+	public OutputSettingsPage(Query query) {
+		super(query, "Output");
 
 		ButtonGroup group = new ButtonGroup();
 		tabulated = new JRadioButton("Tabulated Format");
