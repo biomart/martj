@@ -94,6 +94,9 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     tmp = (databaseName != null) ? (31 * tmp) + databaseName.hashCode() : tmp;
     tmp = (31 * tmp) + ds.getJdbcDriverClassName().hashCode();
     hashcode = tmp;
+    
+    adaptorName = user + "@" + host + ":" + port + "/" + databaseName;
+    
     update();
   }
 
@@ -530,7 +533,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     return (String[]) names.toArray(new String[names.size()]);
   }
 
-  /* (non-Javadoc)
+  /**
+   * return name, defaults to "user@host:port/databaseName"
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
    */
   public String getName() {
