@@ -26,7 +26,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 	public String toSQL (){
 		
 		String sql = "CREATE TABLE "+ temp_end_name+" SELECT DISTINCT("+ ref_table.key+") " +
-		"FROM "+ ref_table.getName()+" WHERE "+ ref_table.central_extension;
+		"FROM "+ ref_table.getName()+" WHERE "+ ref_table.central_extension+";";
 		return sql;
 		
 	}
@@ -35,42 +35,13 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public void transform (Table temp_start, String temp_end_name){
 		
-		
 		Table new_ref=convertTable(ref_table);
 		Table temp_end = copyTable(new_ref);
 		temp_end.final_table=false;
 		this.setTemp_end(temp_end);
 		
 	}
-	
-	private static void assignAliases(Table temp_start, Table new_ref, String temp){
-		
-		for (int j=0; j<temp_start.getColumns().length;j++){
-			for (int m=0; m<new_ref.getColumns().length;m++){
-				
-				if (temp_start.getColumns()[j].getName().equals(new_ref.getColumns()[m].getName())){
-					new_ref.getColumns()[m].setAlias(new_ref.getColumns()[m].getName()+"_"+temp);
-				}
-			}
-		}		
-	}
-	
-	
-	private static void setNamesToAliases(Table temp_end){
-		
-		
-		for (int m=0; m<temp_end.getColumns().length;m++){
-			
-			if (temp_end.getColumns()[m].hasAlias()){
-				temp_end.getColumns()[m].setName(temp_end.getColumns()[m].getAlias());
-				temp_end.getColumns()[m].setAlias("");
-				
-			}
-		}			
-	}
-	
-	
-	
+
 	private Table convertTable(Table ref_table){
 		
 		Table new_ref = new Table();
@@ -82,6 +53,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 			if (columns[i].getName().equals(ref_table.key)){
 				
 				newcol[0]=columns[i];
+				newcol[0].setAlias(newcol[0].original_table+"__bool");
+				newcol[0].bool=true;
 				break;
 			}	
 		}

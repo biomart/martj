@@ -46,6 +46,7 @@ public class Transformation {
 			TransformationUnitDouble dunit = new TransformationUnitDouble(ref_tables[i]);
 			dunit.cardinality=ref_tables[i].cardinality;
 			dunit.column_operations=column_operations; 
+			dunit.final_table_name=final_table_name;
 			units.add(dunit);
 		}
 	}
@@ -84,16 +85,20 @@ public class Transformation {
 		ArrayList unwanted = new ArrayList();
         Table converted_ref = null;
 		boolean single = false;
+		String temp_end_name="TEMP";
 		
 		for (int i=0; i<getUnits().length; i++){
 			
 			TransformationUnit unit = getUnits()[i];
 			Table temp_start = new Table();
-			String temp_end_name;
+			//String temp_end_name;
 			
+			
+			// figure out which table to use from previous trans
+	
 			if(unit.single){
 				single=true;
-				temp_end_name ="TEMP"+i;
+				temp_end_name ="C"+temp_end_name+i;
 				unit.transform(temp_start,temp_end_name);
 				converted_ref=unit.temp_end;
 				unit.temp_end.setName(temp_end_name);
@@ -103,25 +108,25 @@ public class Transformation {
 			
 			
 			if (i == 0){
-				temp_start = start_table;	
+				temp_start = start_table;
 			} else  {temp_start=temp_end;}
 			
 			
 			boolean final_table = false;
-			temp_end_name ="TEMP"+i;
-			
-			
-			
+			temp_end_name =temp_end_name+i;
+					
 			if (single == true){
-				temp_start = start_table;
-				unit.ref_table=converted_ref;
 				unit.cardinality="n1";
-				single=false;
+				if (i==1){
+					temp_start = start_table;
+					unit.ref_table=converted_ref;
+					System.out.println("and now alis "+unit.ref_table.getColumns()[0].hasAlias());
+				}
 			}
 			
+			// set names/keys for final tables
 			
-			
-			//unit.temp_start.key=unit.ref_table.key;
+			temp_start.key=unit.ref_table.key;
 			unit.transform(temp_start, temp_end_name);
 			
 			

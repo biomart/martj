@@ -21,6 +21,7 @@ public abstract class TransformationUnit {
 	String extension_key;
 	String column_operations;
 	String cardinality;
+	String final_table_name;
 	boolean is_extension=false;
 	boolean has_extension=false;
 	boolean useFK=false;

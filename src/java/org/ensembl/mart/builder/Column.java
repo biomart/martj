@@ -21,6 +21,7 @@ public class Column implements Cloneable {
 	String original_name;
 	String final_table_name;
 	boolean deleted;
+	boolean bool=false;
 	
 	public Object clone  ()
 	throws CloneNotSupportedException

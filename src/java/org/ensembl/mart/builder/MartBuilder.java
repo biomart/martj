@@ -119,8 +119,6 @@ public class MartBuilder {
 		// Dump to SQL
 		for (int i=0;i<final_transformations.length;i++){
 			
-			System.out.println("trans type "+ final_transformations[i].type);
-			
 			TransformationUnit [] units = final_transformations[i].getUnits();
 			
 			System.out.println("");
