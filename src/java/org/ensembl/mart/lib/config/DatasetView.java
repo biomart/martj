@@ -29,19 +29,22 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 /**
- * Provides a view of a mart dataset.A dataset is one or more main tables plus zero 
+ * Provides a view of a mart dataset where a dataset is one or more main tables plus zero 
  * or more dimension tables.
  * 
- * A DatasetView contains information about the
- * main (or star) table(s) that it provides, the primary key(s) for these table(s),
- * and a List of AttributePages and FilterPages containing all of the attributes 
- * and filters that it provides. DatasetView Objects support a lazy load optimization strategy.
+ * <p>A DatasetView specifies the dataset and a description of the attributes 
+ * and filters it contains. These attributes and filters are grouped hierarchically:
+ * <b>Page -> Group -> Collection -> Description</b>. It also currently contains 
+ * information about the
+ * the primary key(s) used in joining. This will be removed in future versions.</p> 
+ * 
+ * <p>DatasetView Objects support a lazy load optimization strategy.
  * They can be instantiated with a miniumum of information (internalName), and lazy loaded when
  * the rest of the information is needed.  Any call to a get method will cause the object to attempt
  * to lazy load.  Lazy loading is only attempted when there are no FilterPage or AttributePage objects
  * loaded into the DatasetView.  A failed attempt to lazy load throws a RuntimeException.
  * Note that any call to toString, equals, and hashCode will cause lazy loading to occur, 
- * which can lead to some issues (see the documentation for each of these methods below).
+ * which can lead to some issues (see the documentation for each of these methods below).</p>
  *   
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
