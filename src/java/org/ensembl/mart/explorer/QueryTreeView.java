@@ -256,19 +256,19 @@ public class QueryTreeView extends JTree implements QueryListener {
 	private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
 	private DefaultMutableTreeNode dataSourceNode =
-		new DefaultMutableTreeNode(TreeNodeData.DATASOURCE);
+		new DefaultMutableTreeNode(TreeNodeData.createDataSourceNode());
 
 	private DefaultMutableTreeNode datasetNode =
-		new DefaultMutableTreeNode(TreeNodeData.DATASET);
+		new DefaultMutableTreeNode(TreeNodeData.createDatasetNode());
 
 	private DefaultMutableTreeNode attributesNode =
-		new DefaultMutableTreeNode(TreeNodeData.ATTRIBUTES);
+		new DefaultMutableTreeNode(TreeNodeData.createAttributesNode());
 
 	private DefaultMutableTreeNode filtersNode =
-		new DefaultMutableTreeNode(TreeNodeData.FILTERS);
+		new DefaultMutableTreeNode(TreeNodeData.createFilterNode());
 
 	private DefaultMutableTreeNode formatNode =
-		new DefaultMutableTreeNode(TreeNodeData.FORMAT);
+		new DefaultMutableTreeNode(TreeNodeData.createFormatNode());
 
 	private DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
 
@@ -509,7 +509,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 		String nodeLabel =
 			(ad != null) ? ad.getDisplayName() : attribute.getField();
 		TreeNodeData userObject =
-			new TreeNodeData(null, null, nodeLabel, attribute);
+			new TreeNodeData(new TreeNodeData.Type(nodeLabel), null, null, attribute);
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		attributesNode.insert(treeNode, index);
 		treeModel.reload(attributesNode);

@@ -107,14 +107,17 @@ public class InputPageContainer
 
         TreeNodeData tnd = (TreeNodeData) node.getUserObject();
 
+        
         if (tnd.getAttribute() != null)
           toFront(TreeNodeData.ATTRIBUTES);
         else if (tnd.getFilter() != null)
           toFront(TreeNodeData.FILTERS);
-        else if (!advanced && tnd==TreeNodeData.DATASOURCE); 
-        else if (!advanced && tnd==TreeNodeData.DATASET); 
+        // disable this the ability to select the dataset and 
+        // datasource unless advanced is selected
+        else if (!advanced && tnd.getType()==TreeNodeData.DATASOURCE); 
+        else if (!advanced && tnd.getType()==TreeNodeData.DATASET); 
         else
-          toFront(tnd);
+          toFront(tnd.getType());
       }
     }
   }
@@ -124,7 +127,7 @@ public class InputPageContainer
    * if no such page exists.
    * @param tnd tree node is a key for an input page.
    */
-  void toFront(TreeNodeData tnd) {
+  void toFront(TreeNodeData.Type tnd) {
     cardLayout.show(this, tnd.getLabel());
   }
 

@@ -476,6 +476,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
         qe = new QueryEditor(this, adaptorManager);
         qe.setName(nextQueryBuilderTabLabel());
         addQueryEditor(qe);
+        // Quick hack to stop dataset and datasource
+        // being "carried" across from previous to
+        // new query. Not sure why it was happening.
+        //qe.getQuery().clear();
         tabs.setSelectedComponent(qe);
       }
     } catch (ConfigurationException e) {
