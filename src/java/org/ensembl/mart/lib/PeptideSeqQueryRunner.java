@@ -96,16 +96,16 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 		displayIDs.add("gene_stable_id_v");
 		displayIDs.add("translation_stable_id_v");
 
-		query.addAttribute(new FieldAttribute(queryID, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(RANK, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(coordStart, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(coordEnd, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(CHR, "_structure_dm"));
-		query.addAttribute(new FieldAttribute(STRANDCOLUMN, "_structure_dm"));
+		query.addAttribute(new FieldAttribute(queryID, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(RANK, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(coordStart, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(coordEnd, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(CHR, "_structure_dm","transcript_id_key"));
+		query.addAttribute(new FieldAttribute(STRANDCOLUMN, "_structure_dm","transcript_id_key"));
 
 		for (int i = 0; i < displayIDs.size(); i++) {
-			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm"));
+			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm","transcript_id_key"));
 		}
 	}
  
