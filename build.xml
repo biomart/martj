@@ -425,11 +425,6 @@
           <patternset refid="dist.files"/>
         </zipfileset>
 
-        <!-- shell files with correct unix file mode -->
-        <zipfileset dir="${dist.dir}" filemode="755" prefix="${build.name}">
-            <include name="**/bin/*.sh"/>
-        </zipfileset>
-
         <!-- bin/martshell.bat -->
         <zipfileset dir="${dist.dir}"
           prefix="${build.name}">
