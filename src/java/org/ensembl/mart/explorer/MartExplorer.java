@@ -152,15 +152,6 @@ public class MartExplorer
   };
   
   
-  private Action countRowsAction =
-    new AbstractAction("Count Rows", createImageIcon("count_rows.gif")) {
-    public void actionPerformed(ActionEvent event) {
-      if (isQueryEditorSelected())
-        getSelectedQueryEditor().doCountRows();
-    }
-  };
-
-  
   private Action countFocusAction =
     new AbstractAction("Count Focus", createImageIcon("count_focus.gif")) {
     public void actionPerformed(ActionEvent event) {

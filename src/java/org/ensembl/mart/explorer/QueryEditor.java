@@ -77,8 +77,6 @@ public class QueryEditor extends JPanel {
 
   /** run engine.execute(...) */
   private static final int EXECUTE = 0;
-  /** run engine.countRows(...) */
-  private static final int COUNT_ROWS = 1;
   /** run engine.countFocus(...) */
   private static final int COUNT_FOCUS = 2;
 
@@ -467,16 +465,6 @@ public class QueryEditor extends JPanel {
   }
 
   /**
-     * Counts the rows that would be returned if the
-     * query were executed and prints the value in the
-     * preview window.
-     *
-     */
-  public void doCountRows() {
-    runQuery(COUNT_ROWS, false, false, 0);
-  }
-
-  /**
    * Stops running query. Does nothing if query not running.
    *
    */
@@ -600,10 +588,6 @@ public class QueryEditor extends JPanel {
             query,
             inputPanelContainer.getOutputSettingsPage().getFormat(),
             os);
-          break;
-
-        case COUNT_ROWS :
-          engine.countRows(os, query);
           break;
 
         case COUNT_FOCUS :
