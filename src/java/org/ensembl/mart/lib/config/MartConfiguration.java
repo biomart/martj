@@ -69,13 +69,11 @@ import java.util.TreeMap;
  */
 public class MartConfiguration extends BaseConfigurationObject {
 
-	/*
-	* MartConfigurations must have a internalName, so dont allow parameterless construction
-	*/
-	private MartConfiguration() throws ConfigurationException {
-		this("", "", ""); // will never get here
-	}
-
+	private FilterDescription layout = null;
+	private int thisRank = 0;
+	private TreeMap datasets = new TreeMap();
+	private Hashtable datasetNameMap = new Hashtable();
+	
 	/**
 	 * Constructs a MartConfiguration for a particular mart database,
 	 * named by internalName.
@@ -99,8 +97,7 @@ public class MartConfiguration extends BaseConfigurationObject {
 	public MartConfiguration(String internalName, String displayName, String description) throws ConfigurationException {
 
     super( internalName, displayName, description );
-    
-		
+    		
 	}
 
 	/**
@@ -167,6 +164,22 @@ public class MartConfiguration extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Get the layout FilterDescription Object, which instructs the UI on how to display the available datasets to the user.
+	 * @return FilterDescription layout
+	 */
+	public FilterDescription getLayout() {
+		return layout;
+	}
+
+	/**
+	 * Set the Layout, which instructs the UI on how to display the available datasets to the user.
+	 * @param FilterDescription description
+	 */
+	public void setLayout(FilterDescription description) {
+		layout = description;
+	}
+
+	/**
 	 * String representation of a MartConfiguration useful in debugging output.
 	 */
 	public String toString() {
@@ -185,7 +198,7 @@ public class MartConfiguration extends BaseConfigurationObject {
 	 * Allows equality comparisons of MartConfiguration objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof MartConfiguration && hashCode() == ((MartConfiguration) o).hashCode();
+		return o instanceof MartConfiguration && hashCode() == o.hashCode();
 	}
 
 	public int hashCode() {
@@ -201,27 +214,5 @@ public class MartConfiguration extends BaseConfigurationObject {
     if ( layout!=null ) tmp = (31 * tmp) + layout.hashCode();
     
 		return tmp;
-	}
-
-
-  private FilterDescription layout = null;
-	private int thisRank = 0;
-	private TreeMap datasets = new TreeMap();
-	private Hashtable datasetNameMap = new Hashtable();
-  
-  
-	/**
-	 * @return
-	 */
-	public FilterDescription getLayout() {
-		return layout;
-	}
-
-	/**
-	 * @param description
-	 */
-	public void setLayout(FilterDescription description) {
-		layout = description;
-	}
-
+	}  
 }

@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -58,8 +57,8 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public FilterPage(String internalName, String displayName, String description) throws ConfigurationException {
-    super( internalName, displayName, description);
-    
+		super(internalName, displayName, description);
+
 	}
 
 	/**
@@ -158,7 +157,7 @@ public class FilterPage extends BaseConfigurationObject {
 		* @param internalName name of the requested FilterDescription
 		* @return FilterDescription object, or null.
 		*/
-	public Object getFilterDescriptionByInternalName(String internalName) {
+	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
 		if (containsFilterDescription(internalName))
 			return lastFilt;
 		else
@@ -187,15 +186,7 @@ public class FilterPage extends BaseConfigurationObject {
 				}
 			}
 		} else {
-			String lastIntName;
-			if (lastFilt instanceof FilterDescription)
-				lastIntName = ((FilterDescription) lastFilt).getInternalName();
-			else if (lastFilt instanceof MapFilterDescription)
-				lastIntName = ((MapFilterDescription) lastFilt).getInternalName();
-			else
-				lastIntName = ""; // should not get here
-
-			if (lastIntName.equals(internalName))
+			if (lastFilt.getInternalName().equals(internalName))
 				found = true;
 			else {
 				lastFilt = null;
@@ -211,13 +202,13 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @param field -- String field of a mart database table
 	 * @param tableConstraint -- String tableConstraint of a mart database
 	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
-	 */  
+	 */
 	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
 		if (supports(field, tableConstraint))
 			return lastSupportingFilter;
 		else
 			return null;
-	}  
+	}
 
 	/**
 	 * Determine if this FilterPage contains a FilterDescription that supports a given field and tableConstraint.
@@ -229,15 +220,20 @@ public class FilterPage extends BaseConfigurationObject {
 	 */
 	public boolean supports(String field, String tableConstraint) {
 		boolean supports = false;
-  	
+
 		if (lastSupportingFilter == null) {
 			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
-				 FilterGroup element = (FilterGroup) iter.next();
-				 if (element.supports(field, tableConstraint)) {
-					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
-					supports = true;
-					break;
-				 }
+				Object element = iter.next();
+		
+				if (element instanceof FilterGroup) {
+					FilterGroup fgroup = (FilterGroup) element;
+		
+					if (fgroup.supports(field, tableConstraint)) {
+						lastSupportingFilter = fgroup.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+						supports = true;
+						break;
+					}
+				}
 			}
 		} else {
 			if (lastSupportingFilter.supports(field, tableConstraint))
@@ -249,12 +245,12 @@ public class FilterPage extends BaseConfigurationObject {
 		}
 		return supports;
 	}
-  
+
 	/**
-	 * Convenience Method to get all FilterDescription/MapFilterDescription objects 
+	 * Convenience Method to get all FilterDescription objects 
 	 * in all Groups/Collections within a FilterPage.
 	 * 
-	 * @return List of FilterDescription/MapFilterDescription objects
+	 * @return List of FilterDescription objects
 	 */
 	public List getAllFilterDescriptions() {
 		List filts = new ArrayList();
@@ -266,65 +262,6 @@ public class FilterPage extends BaseConfigurationObject {
 		}
 
 		return filts;
-	}
-
-	/**
-	 * Convenience method for non graphical UI to check if a FilterPage contains a specific
-	 * FilterSetDescription.
-	 * 
-	 * @param internalName - String name that internally represents the requested FilterSetDescription
-	 * @return boolean, true if found within one of the filterSet objects contained in one of the filterGroups, false if not found
-	 */
-	public boolean containsFilterSetDescription(String internalName) {
-		boolean found = false;
-
-		if (lastFSetDescription == null) {
-			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
-				Object group = filterGroups.get((Integer) iter.next());
-				if (group instanceof FilterGroup) {
-					if (((FilterGroup) group).containsFilterSetDescription(internalName)) {
-						lastFSetDescription = ((FilterGroup) group).getFilterSetDescriptionByName(internalName);
-						found = true;
-						break;
-					}
-				}
-			}
-		} else {
-			if (lastFSetDescription.getInternalName().equals(internalName))
-				found = true;
-			else {
-				lastFSetDescription = null;
-				found = containsFilterSetDescription(internalName);
-			}
-		}
-		return found;
-	}
-
-	/**
-	 * Convenience method for non graphical UI to get a specific FilterSetDescription by name.
-	 * 
-	 * @param internalName - String name that internally represents the requested FilterSetDescription
-	 * @return FilterSetDescription object requested, or null if not contained within this FilterPage
-	 */
-	public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
-		if (containsFilterSetDescription(internalName))
-			return lastFSetDescription;
-		else
-			return null;
-	}
-
-	public FilterSetDescription[] getAllFilterSetDescriptions() {
-		List fsds = new ArrayList();
-
-		for (Iterator iter = (Iterator) filterGroups.values().iterator(); iter.hasNext();) {
-			Object group = iter.next();
-			if (group instanceof FilterGroup) {
-				fsds.addAll(Arrays.asList(((FilterGroup) group).getAllFilterSetDescriptions()));
-			}
-		}
-		FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
-		fsds.toArray(f);
-		return f;
 	}
 
 	/**
@@ -390,7 +327,7 @@ public class FilterPage extends BaseConfigurationObject {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append( super.toString() );
+		buf.append(super.toString());
 		buf.append(", FilterGroups=").append(filterGroups);
 		buf.append("]");
 		return buf.toString();
@@ -400,7 +337,7 @@ public class FilterPage extends BaseConfigurationObject {
 	 * Allows Equality Comparisons manipulation of FilterPage objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof FilterPage && hashCode() == ((FilterPage) o).hashCode();
+		return o instanceof FilterPage && hashCode() == o.hashCode();
 	}
 
 	public int hashCode() {
@@ -417,24 +354,19 @@ public class FilterPage extends BaseConfigurationObject {
 		return tmp;
 	}
 
- 
-
 	private int fcRank = 0;
 	private TreeMap filterGroups = new TreeMap();
 	private Hashtable filterGroupNameMap = new Hashtable();
 
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private Object lastFilt = null;
-
-	//cache one FilterSetDescription for call to containsFilterSetDescription or getFilterSetDescrioptionByNae
-	private FilterSetDescription lastFSetDescription = null;
+	private FilterDescription lastFilt = null;
 
 	//cache one FilterGroup for call to getGroupForFilter
 	private FilterGroup lastGroup = null;
 
 	//cache one FilterCollection for call to getCollectionForFilter
 	private FilterCollection lastColl = null;
-	
+
 	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
 	private FilterDescription lastSupportingFilter = null;
 }

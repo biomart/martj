@@ -28,25 +28,25 @@ import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DSFilterGroup;
 import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DefaultFilter;
+import org.ensembl.mart.lib.config.Disable;
+import org.ensembl.mart.lib.config.Enable;
 import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.FilterSet;
-import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.MartDTDEntityResolver;
 import org.ensembl.mart.lib.config.MartXMLutils;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.MapFilterDescription;
-import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.DefaultFilter;
+import org.ensembl.mart.lib.config.PushOptions;
 import org.ensembl.mart.lib.test.Base;
 import org.jdom.Document;
 import org.jdom.input.SAXBuilder;
@@ -120,7 +120,7 @@ public class ConfigurationTest extends Base {
 		String newxml = out.toString();
 		out.close();
 
-		assertEquals("Warning, initial xml does not match final xml after a roundtrip.\n", initxml, newxml);
+		assertEquals("initial xml does not match final xml after a roundtrip.\n", initxml, newxml);
 	}
 
 	public void testMartConfiguration() throws Exception {
@@ -133,16 +133,51 @@ public class ConfigurationTest extends Base {
 		String DName = martconf.getDisplayName();
 		String Desc = martconf.getDescription();
 
-		assertEquals("Warning, MartName not correctly set for MartConfiguration\n", testIName, IName);
+		assertEquals("MartName not correctly set for MartConfiguration\n", testIName, IName);
 		assertEquals("Warning Mart Display Name not correctly set for MartConfiguration\n", testDName, DName);
 		assertEquals("Warning Mart Description not correctly set for MartConfiguration\n", TESTDESC, Desc);
 
+    //layout test
+    layoutTest( martconf.getLayout() );
+    
 		// Dataset Data Correct
 		Dataset[] ds = martconf.getDatasets();
-		assertEquals("Warning, should only be one dataset, got " + ds.length + "\n", 1, ds.length);
+		assertEquals("should only be one dataset, got " + ds.length + "\n", 1, ds.length);
 		datasetTest(martconf, ds[0]);
 	}
 
+  private void layoutTest( FilterDescription d ) throws Exception {
+  	String testIName = "testConfFilterDescription";
+  	String IName = d.getInternalName();
+  	String testDName = "A Test MartConfiguration FilterDescription";
+  	String DName = d.getDisplayName();
+  	String Desc = d.getDescription();
+		String Type = d.getType();
+    
+		assertEquals("Internal Name not correctly set for Layout\n", testIName, IName);
+		assertEquals("Display Name not correctly set for Layout\n", testDName, DName);
+		assertEquals("Description not correctly set for Layout\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for Layout\n", TESTTYPE, Type);
+		assertTrue("Layout should have options\n", d.hasOptions());
+		
+		Option[] os = d.getOptions();
+		assertEquals("Layout should have one option, has" + os.length + "\n", 1, os.length);
+		layoutOptionTest(os[0]);		
+  }
+  
+  private void layoutOptionTest(Option o) throws  Exception {
+  	String testIName = "testOption";
+  	String IName = o.getInternalName();
+  	String testDName = "A Test Option";
+  	String DName = o.getDisplayName();
+  	String Desc = o.getDescription();
+  	
+		assertEquals("InternalName not correctly set for Layout Option\n", testIName, IName);
+		assertEquals("DisplayName not correctly set for Layout Option\n", testDName, DName);
+		assertEquals("Description not correctly set for Layout Option\n", TESTDESC, Desc);
+		assertTrue("isSelectable should be true for Layout Option\n", o.isSelectable());
+  }
+  
 	private void datasetTest(MartConfiguration martconf, Dataset d) throws Exception {
 		String testIName = "test_dataset";
 		String IName = d.getInternalName();
@@ -150,52 +185,52 @@ public class ConfigurationTest extends Base {
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for Dataset\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for Dataset\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for Dataset\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for Dataset\n", testIName, IName);
+		assertEquals("Display Name not correctly set for Dataset\n", testDName, DName);
+		assertEquals("Description not correctly set for Dataset\n", TESTDESC, Desc);
 
 		//contains/get for MartConfiguration-Dataset
 		boolean containsTest = martconf.containsDataset(testIName);
 		String testGetByName = null;
 
-		assertTrue("Warning, MartConfiguration should contain " + testIName + ", but doesnt\n", containsTest);
+		assertTrue("MartConfiguration should contain " + testIName + ", but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = martconf.getDatasetByName(testIName).getInternalName();
-			assertEquals("Warning, getDatasetByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getDatasetByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		String[] sbs = d.getStarBases();
-		assertEquals("Warning, should only get one starbase\n", 1, sbs.length);
-		assertEquals("Warning, didnt get the expected starbase\n", "test_starbase", sbs[0]);
+		assertEquals("should only get one starbase\n", 1, sbs.length);
+		assertEquals("didnt get the expected starbase\n", "test_starbase", sbs[0]);
 
 		String[] pks = d.getPrimaryKeys();
-		assertEquals("Warning, should only get one primary key\n", 1, pks.length);
-		assertEquals("Warning, didnt get the expected primary key\n", "test_primaryKey", pks[0]);
+		assertEquals("should only get one primary key\n", 1, pks.length);
+		assertEquals("didnt get the expected primary key\n", "test_primaryKey", pks[0]);
 
     //Option data correct
-    assertTrue("Warning, Dataset should have Options.\n", d.hasOptions());
+    assertTrue("Dataset should have Options.\n", d.hasOptions());
     Option[] ops = d.getOptions();
-    assertEquals("Warning, Dataset should have 1 Option.\n", 1, ops.length);
+    assertEquals("Dataset should have 1 Option.\n", 1, ops.length);
     
     datasetOptionTest(ops[0]);
   
   
     //defaultFilter data correct
-    assertTrue("Warning, Dataset should have DefaultFilters\n", d.hasDefaultFilters());
+    assertTrue("Dataset should have DefaultFilters\n", d.hasDefaultFilters());
     DefaultFilter[] dfs = d.getDefaultFilters();
-    assertEquals("Warning, Dataset should have one Default Filter\n", 1, dfs.length);
+    assertEquals("Dataset should have one Default Filter\n", 1, dfs.length);
     
     datasetDefaultFilterTest(dfs[0]);
       
 		//FilterPage data correct
 		FilterPage[] fps = d.getFilterPages();
-		assertEquals("Warning, should only get one filter page\n", 1, fps.length);
+		assertEquals("should only get one filter page\n", 1, fps.length);
 
 		filterPageTest(d, fps[0]);
 
 		// AttributePage data correct
 		AttributePage[] aps = d.getAttributePages();
-		assertEquals("Warning, should only get one filter page\n", 1, aps.length);
+		assertEquals("should only get one filter page\n", 1, aps.length);
 
 		attributePageTest(d, aps[0]);
 	}
@@ -208,26 +243,19 @@ public class ConfigurationTest extends Base {
     String DName = option.getDisplayName();
     String Desc = option.getDescription();
     
-    assertEquals("Warning, InternalName not correctly set for Dataset Option\n", testIName, IName);
-    assertEquals("Warning, DisplayName not correctly set for Dataset Option\n", testDName, DName);
-    assertEquals("Warning, Description not correctly set for Dataset Option\n", TESTDESC, Desc);
-    assertTrue("Warning, isSelectable should be true for Dataset Option\n", option.isSelectable());
+    assertEquals("InternalName not correctly set for Dataset Option\n", testIName, IName);
+    assertEquals("DisplayName not correctly set for Dataset Option\n", testDName, DName);
+    assertEquals("Description not correctly set for Dataset Option\n", TESTDESC, Desc);
+    assertTrue("isSelectable should be true for Dataset Option\n", option.isSelectable());
   }
   
   private void datasetDefaultFilterTest(DefaultFilter df) throws Exception {
     String testValue = "1";
     String Value = df.getValue();
-    FilterDescription testFDesc = new FilterDescription("testDefaultFilterDescription", 
-                                                            "test_id", 
-                                                            TESTTYPE, 
-                                                            TESTQUALIFIER, 
-                                                            "A TEST ID, DOESNT EXIST", 
-                                                            "gene_main", 
-                                                            "", 
-                                                            TESTDESC);
+    FilterDescription testFDesc = new FilterDescription("testDefaultFilterDescription", "test_id", TESTTYPE, TESTQUALIFIERS,  "A TEST ID, DOESNT EXIST", "gene_main", null, TESTDESC);
                                                             
-    assertEquals("Warning, value not correctly set for Dataset DefaultFilter\n", testValue, Value);
-    assertEquals("Warning, FilterDescription not correct for Dataset DefaultFilter\n", testFDesc, df.getUIFilterDescription());
+    assertEquals("value not correctly set for Dataset DefaultFilter\n", testValue, Value);
+    assertEquals("FilterDescription not correct for Dataset DefaultFilter\n", testFDesc, df.getUIFilterDescription());
   }
   
 	private void filterPageTest(Dataset d, FilterPage fp) throws Exception {
@@ -237,23 +265,23 @@ public class ConfigurationTest extends Base {
 		String DName = fp.getDisplayName();
 		String Desc = fp.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterPage\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterPage\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterPage\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for FilterPage\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterPage\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterPage\n", TESTDESC, Desc);
 
 		// contains/get for Dataset-FilterPage
 		boolean containsTest = d.containsFilterPage(testIName);
-		assertTrue("Warning, Dataset should contain testFilterPage, but doesnt\n", containsTest);
+		assertTrue("Dataset should contain testFilterPage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = d.getFilterPageByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterPageByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getFilterPageByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterGroup data correct
 		List fgs = fp.getFilterGroups();
-		assertEquals("Warning, should get two filterGroups in FilterPage\n", 2, fgs.size());
+		assertEquals("should get two filterGroups in FilterPage\n", 2, fgs.size());
 
 		firstFilterGroupTest(fp, fgs.get(0));
 		secondFilterGroupTest(d, fp, fgs.get(1));
@@ -266,23 +294,23 @@ public class ConfigurationTest extends Base {
 		String DName = ap.getDisplayName();
 		String Desc = ap.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributePage\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributePage\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributePage\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for AttributePage\n", testIName, IName);
+		assertEquals("Display Name not correctly set for AttributePage\n", testDName, DName);
+		assertEquals("Description not correctly set for AttributePage\n", TESTDESC, Desc);
 
 		// contains/get for Dataset-AttributePage
 		boolean containsTest = d.containsAttributePage(testIName);
-		assertTrue("Warning, Dataset should contain testAttributePage, but doesnt\n", containsTest);
+		assertTrue("Dataset should contain testAttributePage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = d.getAttributePageByInternalName(testIName).getInternalName();
-			assertEquals("Warning, getAttributePageByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getAttributePageByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//AttributeGroup data correct
 		List ags = ap.getAttributeGroups();
-		assertEquals("Warning, should get two AttributeGroup\n", 2, ags.size());
+		assertEquals("should get two AttributeGroup\n", 2, ags.size());
 
 		firstAttributeGroupTest(ap, ags.get(0));
 		secondAttributeGroupTest(d, ap, ags.get(1));
@@ -300,25 +328,25 @@ public class ConfigurationTest extends Base {
 		String Desc = dsfg.getDescription();
 		String Handler = dsfg.getHandler();
 
-		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
-		assertEquals("Warning, Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
+		assertEquals("Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
+		assertEquals("Display Name not correctly set for DSFilterGroup\n", testDName, DName);
+		assertEquals("Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
+		assertEquals("Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 
 		// contains/get for FilterPage-FilterGroup
 		boolean containsTest = fp.containsFilterGroup(testIName);
-		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
+		assertTrue("FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = ((DSFilterGroup) fp.getFilterGroupByName(testIName)).getInternalName();
-			assertEquals("Warning, getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 	}
 
 	private void firstAttributeGroupTest(AttributePage ap, Object group) {
 		//first AttributeGroup in the AttributePage is a DSAttributeGroup
-		assertTrue("Warning, First AttributeGroup in the AttributePage should be a DSAttributeGroup", group instanceof DSAttributeGroup);
+		assertTrue("First AttributeGroup in the AttributePage should be a DSAttributeGroup", group instanceof DSAttributeGroup);
 
 		DSAttributeGroup dsag = (DSAttributeGroup) group;
 		String testIName = "testDSAttributeGroup";
@@ -328,10 +356,10 @@ public class ConfigurationTest extends Base {
 		String Desc = dsag.getDescription();
 		String Handler = dsag.getHandler();
 
-		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
-		assertEquals("Warning, Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
+		assertEquals("Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
+		assertEquals("Display Name not correctly set for DSFilterGroup\n", testDName, DName);
+		assertEquals("Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
+		assertEquals("Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 	}
 
 	private void secondFilterGroupTest(Dataset d, FilterPage fp, Object group) throws Exception {
@@ -345,39 +373,31 @@ public class ConfigurationTest extends Base {
 		String DName = fg.getDisplayName();
 		String Desc = fg.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterGroup\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterGroup\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterGroup\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for FilterGroup\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterGroup\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterGroup\n", TESTDESC, Desc);
 
 		// contains/get for FilterPage-FilterGroup
 		boolean containsTest = fp.containsFilterGroup(testIName);
-		assertTrue("Warning, FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
+		assertTrue("FilterPage should contain testFilterGroup, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = ((FilterGroup) fp.getFilterGroupByName(testIName)).getInternalName();
-			assertEquals("Warning, getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getFilterGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
-
-		//FilterSet data correct
-		assertTrue("Warning, FilterGroup should contain a FilterSet\n", fg.hasFilterSets());
-		FilterSet[] fsets = fg.getFilterSets();
-		assertEquals("Warning, should only get one FilterSet\n", 1, fsets.length);
-
-		filterSetTest(fg, fsets[0]);
 
 		//FilterCollection data correct
 		FilterCollection[] fcs = fg.getFilterCollections();
-		assertEquals("Warning, should get three filter collections\n", 3, fcs.length);
-
+		assertEquals("should get two filter collections\n", 2, fcs.length);
+		
 		firstFilterCollectionTest(d, fp, fg, fcs[0]);
 		secondFilterCollectionTest(d, fp, fg, fcs[1]);
-		thirdFilterCollectionTest(d, fp, fg, fcs[2]);
 	}
 
 	private void secondAttributeGroupTest(Dataset d, AttributePage ap, Object group) throws Exception {
 		//second AttributeGroup in the AttributePage is an AttributeGroup, with everything in it
-		assertTrue("Warning, Second AttributeGroup in the AttributePage should be an AttributeGroup", group instanceof AttributeGroup);
+		assertTrue("Second AttributeGroup in the AttributePage should be an AttributeGroup", group instanceof AttributeGroup);
 
 		AttributeGroup ag = (AttributeGroup) group;
 		String testIName = "testAttributeGroup";
@@ -386,183 +406,90 @@ public class ConfigurationTest extends Base {
 		String DName = ag.getDisplayName();
 		String Desc = ag.getDescription();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributeGroup\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributeGroup\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributeGroup\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for AttributeGroup\n", testIName, IName);
+		assertEquals("Display Name not correctly set for AttributeGroup\n", testDName, DName);
+		assertEquals("Description not correctly set for AttributeGroup\n", TESTDESC, Desc);
 
 		// contains/get for AttributePage-AttributeGroup
 		boolean containsTest = ap.containsAttributeGroup(testIName);
-		assertTrue("Warning, AttributePage should contain testAttributeGroup, but doesnt\n", containsTest);
+		assertTrue("AttributePage should contain testAttributeGroup, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = ((AttributeGroup) ap.getAttributeGroupByName(testIName)).getInternalName();
-			assertEquals("Warning, getAttributeGroupByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getAttributeGroupByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//AttributeCollection data correct
 		AttributeCollection[] acs = ag.getAttributeCollections();
-		assertEquals("Warning, should only get one attribute collection\n", 1, acs.length);
+		assertEquals("should only get one attribute collection\n", 1, acs.length);
 
 		attributeCollectionTest(d, ap, ag, acs[0]);
 	}
 
-	private void filterSetTest(FilterGroup fg, FilterSet fset) throws Exception {
-		String testIName = "testFilterSet";
-		String IName = fset.getInternalName();
-		String fsetName = IName; // use during test of FilterSet Functionality
-		String testDName = "Test of a Filter Set";
-		String DName = fset.getDisplayName();
-		String Desc = fset.getDescription();
-		String Type = fset.getType();
-
-		assertEquals("Warning, Internal Name not correctly set for FilterSet\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterSet\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterSet\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not correctly set for FilterSet\n", TESTTYPE, Type);
-
-		//  contains/get for FilterGroup-FilterSet
-		boolean containsTest = fg.containsFilterSet(testIName);
-		assertTrue("Warning, FilterGroup should contain testFilterSet, but doesnt\n", containsTest);
-
-		String testGetByName = null;
-		if (containsTest) {
-			testGetByName = fg.getFilterSetByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterSetByName InternalName incorrect\n", testIName, testGetByName);
-		}
-
-		//FilterSetDescription data correct
-		FilterSetDescription[] fsds = fset.getFilterSetDescriptions();
-		assertEquals("Warning, FilterSet should contain only one FilterSetDescription\n", 1, fsds.length);
-
-		FilterSetDescription fsd = fsds[0];
-		testIName = "testFilterSetDescription";
-		IName = fsd.getInternalName();
-		testDName = "Test of a FilterSetDescription";
-		DName = fsd.getDisplayName();
-		String testTableConstraintModifier = "ensemblgene";
-		Desc = fsd.getDescription();
-		String TableConstraintModifier = fsd.getTableConstraintModifier();
-		String testFieldNameModifier = "ensembl";
-		String FieldNameModifier = fsd.getFieldNameModifier();
-
-		assertEquals("Warning, Internal Name not correctly set for FilterSetDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterSetDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterSetDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, tableConstraintModifier not set correctly for FilterSetDescription\n", testTableConstraintModifier, TableConstraintModifier);
-		assertEquals("Warning, fieldNameModifier not set correctly for FilterSetDescription\n", testFieldNameModifier, FieldNameModifier);
-
-		//contains/get for FIlterSet-FilterSetDescription
-		containsTest = fset.containsFilterSetDescription(testIName);
-		assertTrue("Warning, FilterSet should contain testFilterSetDescription, but doesnt\n", containsTest);
-		if (containsTest) {
-			testGetByName = fset.getFilterSetDescriptionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterSetDescriptionByName internalName incorrect\n", testIName, testGetByName);
-		}
-	}
-
 	private void firstFilterCollectionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
-		// first FilterCollection is not in a FilterSet
+		// first FilterCollection Does Not Contain Any Options
 		String testIName = "testFilterCollection";
 		String IName = fc.getInternalName();
 		String testDName = "Test of a FilterCollection";
 		String DName = fc.getDisplayName();
 		String Desc = fc.getDescription();
-		String Type = fc.getType();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterCollection\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not correctly set for FilterCollection\n", TESTTYPE, Type);
-		assertTrue("First FilterCollection should not be in a FilterSet\n", !fc.inFilterSet());
+		assertEquals("Internal Name not correctly set for FilterCollection\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterCollection\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterCollection\n", TESTDESC, Desc);
 
 		//  contains/get for FilterGroup-FilterCollection
 		boolean containsTest = fg.containsFilterCollection(testIName);
-		assertTrue("Warning, FilterGroup should contain testFilterCollection, but doesnt\n", containsTest);
+		assertTrue("FilterGroup should contain testFilterCollection, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//FilterDescription data correct
 		List fs = fc.getFilterDescriptions();
-		assertEquals("Warning, should get two filter descriptions with first FilterCollection\n", 2, fs.size());
+		assertEquals("should get four filter descriptions with first FilterCollection\n", 4, fs.size());
 
-		firstFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
-		firstFColSecFdescTest(d, fp, fg, fc, fs.get(1));
+		firstFColFirstFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(0));
+		firstFColSecFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(1));
+		firstFColThirdFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(2));
+		firstFColFourthFdescTest(d,fp,fg,fc,(FilterDescription) fs.get(3));
 	}
 
 	private void secondFilterCollectionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
 		//second FilterCollection is a member of the FilterSet
-		String testIName = "testFilterSetCollection";
-		String IName = fc.getInternalName();
-		String testDName = "A TEST OF FILTER SETS";
-		String DName = fc.getDisplayName();
-		String Desc = fc.getDescription();
-		String Type = fc.getType();
-		String testFilterSetName = "testFilterSet";
-		String FilterSetName = fc.getFilterSetName();
-
-		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterCollection\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not correctly set for FilterCollection\n", TESTTYPE, Type);
-		assertEquals("Warning, FilterSetName not correctly set for FilterCollection\n", testFilterSetName, FilterSetName);
-		assertTrue("Second FilterCollection should be in a FilterSet\n", fc.inFilterSet());
-
-		//  contains/get for FilterGroup-FilterCollection
-		boolean containsTest = fg.containsFilterCollection(testIName);
-		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt\n", containsTest);
-
-		String testGetByName = null;
-		if (containsTest) {
-			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
-		}
-
-		//FilterDescription data correct
-		List fs = fc.getFilterDescriptions();
-		assertEquals("Warning, should get three filter descriptions\n", 3, fs.size());
-
-		secondFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
-		secondFColSecFdescTest(d, fp, fg, fc, fs.get(1));
-		secondFColThirdFdescTest(d, fp, fg, fc, fs.get(2));
-	}
-
-	private void thirdFilterCollectionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
-		// third FilterCollection has Options
-		String testIName = "testOptionCollection";
+		String testIName = "testOptionsCollection";
 		String IName = fc.getInternalName();
 		String testDName = "A TEST OF Options";
 		String DName = fc.getDisplayName();
 		String Desc = fc.getDescription();
-		String Type = fc.getType();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterCollection\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not correctly set for FilterCollection\n", TESTTYPE, Type);
-		
+		assertEquals("Internal Name not correctly set for FilterCollection\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterCollection\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterCollection\n", TESTDESC, Desc);
+
 		//  contains/get for FilterGroup-FilterCollection
 		boolean containsTest = fg.containsFilterCollection(testIName);
-		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt\n", containsTest);
+		assertTrue("FilterGroup should contain testOptionsCollection, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
-		
-		
 		//FilterDescription data correct
 		List fs = fc.getFilterDescriptions();
-		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
+		assertEquals("should get five filter descriptions\n", 5, fs.size());
 
-		thirdFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
-		thirdFColSecFdescTest(d, fp, fg, fc, fs.get(1));
+		secondFColFirstFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(0));
+		secondFColSecFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(1));
+		secondFColThirdFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(2));
+		secondFColFourthFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(3));
+		secondFColFifthFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(4));
 	}
 
 	private void attributeCollectionTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac) throws Exception {
@@ -574,352 +501,942 @@ public class ConfigurationTest extends Base {
 		int testMaxSelect = 1;
 		int MaxSelect = ac.getMaxSelect();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributeCollection\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributeCollection\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributeCollection\n", TESTDESC, Desc);
-		assertEquals("Warning, Max Select not correctly set for AttributeCollection\n", testMaxSelect, MaxSelect);
+		assertEquals("Internal Name not correctly set for AttributeCollection\n", testIName, IName);
+		assertEquals("Display Name not correctly set for AttributeCollection\n", testDName, DName);
+		assertEquals("Description not correctly set for AttributeCollection\n", TESTDESC, Desc);
+		assertEquals("Max Select not correctly set for AttributeCollection\n", testMaxSelect, MaxSelect);
 
 		//  contains/get for AttributeGroup-AttributeCollection
 		boolean containsTest = ag.containsAttributeCollection(testIName);
-		assertTrue("Warning, AttributeGroup should contain testAttributeCollection, but doesnt\n", containsTest);
+		assertTrue("AttributeGroup should contain testAttributeCollection, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
 			testGetByName = ag.getAttributeCollectionByName(testIName).getInternalName();
-			assertEquals("Warning, getAttributeCollectionByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getAttributeCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//AttributeDescription data correct
 		List as = ac.getAttributeDescriptions();
-		assertEquals("Warning, should get one attribute description\n", 1, as.size());
+		assertEquals("should get one attribute description\n", 1, as.size());
 
-		attributeCollectionFdescTest(d, ap, ag, ac, as.get(0));
+		attributeCollectionAdescTest(d, ap, ag, ac, (AttributeDescription) as.get(0));
 	}
-
-	private void firstFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) {
-		assertTrue("Warning, First FilterDescription of First FilterCollection should be an instance of FilterDescription.\n", ob instanceof FilterDescription);
-
-		FilterDescription f = (FilterDescription) ob;
-		String testIName = "testUIFilterDescription";
+	
+	private void firstFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
 		String IName = f.getInternalName();
 		String testDName = "A TEST ID, DOESNT EXIST";
 		String DName = f.getDisplayName();
 		String Desc = f.getDescription();
 		String Type = f.getType();
-		String testFieldName = "test_id";
-		String FieldName = f.getField();
-		String Qualifier = f.getQualifier();
+		String testField = "test_id";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
 
-		assertEquals("Warning, Internal Name not correctly set for FilterDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not set correctly for FilterDescription\n", TESTTYPE, Type);
-		assertEquals("Warning, FieldName not set correctly for FilterDescription\n", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
-		assertTrue("Warning, first FilterCollections FilterDescription should not be in a FilterSet\n", !f.inFilterSet());
+		assertEquals("Internal Name not correctly set for FilterDescription\n", REFINAME, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
 		//  contains/get for FilterCollection-FilterDescription
-		boolean containsTest = fc.containsFilterDescription(testIName);
-		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
+		boolean containsTest = fc.containsFilterDescription(REFINAME);
+		assertTrue("FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
-			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(REFINAME)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", REFINAME, testGetByName);
 		}
 
 		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
-		containsTest = fp.containsFilterDescription(testIName);
-		assertTrue("Warning, FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		containsTest = fp.containsFilterDescription(REFINAME);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(REFINAME)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", REFINAME, testGetByName);
 
 			//test getPageFor functionality as well
-			assertEquals("Warning, Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(testIName).getInternalName());
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(REFINAME).getInternalName());
 		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+REFINAME+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+REFINAME+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+REFINAME+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+REFINAME+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+REFINAME+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private void firstFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-		//  second FilterDescription is a MapFilterDescription object
-		assertTrue(
-			"Warning, Second FilterDescription of First FilterCollection should be an instance of MapFilterDescription.\n",
-			ob instanceof MapFilterDescription);
-
-		MapFilterDescription dsf = (MapFilterDescription) ob;
-		String testIName = "testUIDSFilterDescription";
-		String IName = dsf.getInternalName();
-		String testDName = "A TEST ID, DOESNT EXIST";
-		String DName = dsf.getDisplayName();
-		String Desc = dsf.getDescription();
-		String Type = dsf.getType();
-		String testFieldName = "test_id";
-		String Handler = dsf.getHandler();
-
-		assertEquals("Warning, Internal Name not correctly set for MapFilterDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for MapFilterDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for MapFilterDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not set correctly for MapFilterDescription\n", TESTTYPE, Type);
-		assertEquals("Warning, Handler not set correctly for MapFilterDescription\n", TESTHANDLER, Handler);
-
-		//  contains/get for FilterCollection-FilterDescription
-		boolean containsTest = fc.containsFilterDescription(testIName);
-		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
-
-		String testGetByName = null;
-		if (containsTest) {
-			testGetByName = ((MapFilterDescription) fc.getFilterDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
-		}
-
-		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
-		containsTest = fp.containsFilterDescription(testIName);
-		assertTrue("Warning, FilterPage should contain testUIDSFilterDescription, but doesnt\n", containsTest);
-		if (containsTest) {
-			testGetByName = ((MapFilterDescription) fp.getFilterDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
-
-			//test getPageFor functionality as well
-			assertEquals("Warning, Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(testIName).getInternalName());
-		}
-	}
-
-	private void secondFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-		// first FilterDescription of this FilterCollection is a FilterDescription, is part of the FilterSet, and requires a tableConstraintModifier
-		assertTrue("Warning, First FilterDescription in FilterSetFilterCollection should be a FilterDescription", ob instanceof FilterDescription);
-		FilterDescription fField = (FilterDescription) ob;
-		String testIName = "filterSetUIFilterDescriptionField";
-		String IName = fField.getInternalName();
-		String testDName = "A TEST FIELD MODIFIER";
-		String DName = fField.getDisplayName();
-		String Desc = fField.getDescription();
-		String Type = fField.getType();
-		String testFieldName = "syn_exclusive";
-		String FieldName = fField.getField();
-		String Qualifier = fField.getQualifier();
+	private void firstFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+    //second FilterDescription from First FilterCollection contains an Enables Object
+    String testIName = "enableFilter";
+		String IName = f.getInternalName();
+		String testDName = "Filter With Enable";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		String testField = "enable_test_id";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
 		String testTableConstraint = "gene_main";
-		String TableConstraint = fField.getTableConstraint();
-		String testFilterSetReq = "field";
-		String FilterSetReq = fField.getFilterSetReq();
-		String testModifiedName = "ensemblsyn_exclusive";
-		String ModifiedName = null;
+		String TableConstraint = f.getTableConstraint();
 
-		String testFilterSetDIName = "testFilterSetDescription";
-		if (FilterSetReq.equals(FilterSetDescription.MODFIELDNAME))
-			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fField.getField();
-		else
-			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getTableConstraintModifier()
-					+ fField.getTableConstraint();
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
 
-		assertEquals("Warning, Internal Name not correctly set for UIFilterDescriptionField\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIFilterDescriptionField\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIFilterDescriptionField\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not set correctly for UIFilterDescriptionField\n", TESTTYPE, Type);
-		assertEquals("Warning, FieldName not set correctly for UIFilterDescriptionField\n", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescriptionField\n", TESTQUALIFIER, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescriptionField\n", testTableConstraint, TableConstraint);
-		assertEquals("Warning, filterSetReq not set correctly for UIFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
-		assertEquals("Warning, modified Field Name not correct\n", testModifiedName, ModifiedName);
-		assertTrue("Warning, second FilterCollections UIFilterDescriptionField should be in a FilterSet\n", fField.inFilterSet());
-	}
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
 
-	private void secondFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-		//  second FilterDescription of this FilterCollection is a FilterDescription, is part of the FilterSet, and requires a tableConstraintModifier
-		assertTrue("Warning, Second FilterDescription in FilterSetFilterCollection should be a FilterDescription", ob instanceof FilterDescription);
-		FilterDescription fTable = (FilterDescription) ob;
-		String testIName = "filterSetUIFilterDescriptionTable";
-		String IName = fTable.getInternalName();
-		String testDName = "A TEST TABLE MODIFIER";
-		String DName = fTable.getDisplayName();
-		String Desc = fTable.getDescription();
-		String Type = fTable.getType();
-		String testFieldName = "gene_stable_id_v";
-		String FieldName = fTable.getField();
-		String Qualifier = fTable.getQualifier();
-		String testFilterSetReq = "table";
-		String FilterSetReq = fTable.getFilterSetReq();
-		String testTableConstraint = "_dm";
-		String TableConstraint = fTable.getTableConstraint();
-		String testModifiedName = "ensemblgene_dm";
-		String ModifiedName = null;
-
-		String testFilterSetDIName = "testFilterSetDescription";
-		if (FilterSetReq.equals(FilterSetDescription.MODFIELDNAME))
-			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fTable.getField();
-		else
-			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getTableConstraintModifier()
-					+ fTable.getTableConstraint();
-
-		assertEquals("Warning, Internal Name not correctly set for FilterDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for FilterDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for FilterDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not set correctly for FilterDescription\n", TESTTYPE, Type);
-		assertEquals("Warning, FieldName not set correctly for FilterDescription\n", testFieldName, FieldName);
-		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, Qualifier);
-		assertEquals("Warning, TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
-		assertEquals("Warning, filterSetReq not set correctly for UIFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
-		assertEquals("Warning, Modified TableConstraint not correct\n", testModifiedName, ModifiedName);
-		assertTrue("Warning, second FilterCollection second FilterDescription should be in a FilterSet\n", fTable.inFilterSet());
-	}
-
-	private void secondFColThirdFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-		//third FilterDescription is a MapFilterDescription, is part of a FilterSet, and requires a tableConstraintModifier
-		assertTrue("Warning, third FilterDescription in FilterSetFilterCollection should be a MapFilterDescription\n", ob instanceof MapFilterDescription);
-		MapFilterDescription dsfTable = (MapFilterDescription) ob;
-		String testIName = "filterSetUIDSFilterDescription";
-		String IName = dsfTable.getInternalName();
-		String testDName = "A TEST ID, DOESNT EXIST";
-		String DName = dsfTable.getDisplayName();
-		String Desc = dsfTable.getDescription();
-		String Type = dsfTable.getType();
-		String testFilterSetReq = "table";
-		String FilterSetReq = dsfTable.getFilterSetReq();
-		String Handler = dsfTable.getHandler();
-
-		assertEquals("Warning, Internal Name not correctly set for MapFilterDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for MapFilterDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for MapFilterDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, Type not set correctly for MapFilterDescription\n", TESTTYPE, Type);
-		assertEquals("Warning, filterSetReq not set correctly for UIDSFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
-		assertEquals("Warning, Handler not set correctly for MapFilterDescription\n", TESTHANDLER, Handler);
-		assertTrue("Warning, third MapFilterDescription should be in a FilterSet\n", dsfTable.inFilterSet());
-	}
-
-	private void thirdFColFirstOptiontest(FilterCollection fc, Option option) throws Exception {
-		// first option does not contain options, and isSelectable is true
-		String testIName = "testOption";
-		String IName = option.getInternalName();
-		String testDName = "A Test Option";
-		String DName = option.getDisplayName();
-		String Desc = option.getDescription();
-	
-		assertEquals("Warning, Internal Name not correctly set for Option\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for Option\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for Option\n", TESTDESC, Desc);
-		assertTrue("First Option " + option + " should be selectable\n", option.isSelectable());
-		assertTrue("First Option " + option + "should not have Options\n", !option.hasOptions());
-	
-//  TODO move these tests to filter tests. 
-//		//contains/get for FilterCollection-Option
-//		boolean containsTest = fc.containsOption(testIName);
-//		assertTrue("Warning, Third FilterCollection should contain testOption, but doesnt\n", containsTest);
-//	
-//		String testGetByName = null;
-//		if (containsTest) {
-//			testGetByName = fc.getOptionByName(testIName).getInternalName();
-//			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);
-//		}
-	}
-
-	private void thirdFColSecOptionTest(FilterCollection fc, Option option) throws Exception {
-		// Second option contains one option, and isSelectable is false   
-		String testIName = "testOptionWithOption";
-		String IName = option.getInternalName();
-		String testDName = "A Test Option With an Option";
-		String DName = option.getDisplayName();
-		String Desc = option.getDescription();
-	
-		assertEquals("Warning, Internal Name not correctly set for Option\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for Option\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for Option\n", TESTDESC, Desc);
-		assertTrue("Second Option" + option + " should not be selectable\n", !option.isSelectable());
-		assertTrue("Second Option" + option + " should have Options\n", option.hasOptions());
-	
-
-		Option[] subOptions = option.getOptions();
-		assertEquals("Warning, second option should only contain one Option\n", 1, subOptions.length);
-	
-		thirdFColSecOptionSubOptionTest(option, subOptions[0]);
-	}
-
-	private void thirdFColSecOptionSubOptionTest(Option option, Option suboption) throws Exception {
-		// sub option does not contain options, and isSelectable is true
-		String testIName = "testOptionInOption";
-		String IName = suboption.getInternalName();
-		String testDName = "A Test Option In an Option";
-		String DName = suboption.getDisplayName();
-		String Desc = suboption.getDescription();
-	
-		assertEquals("Warning, Internal Name not correctly set for Sub Option\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for Sub Option\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for Sub Option\n", TESTDESC, Desc);
-		assertTrue("Sub Option should be selectable\n", suboption.isSelectable());
-		assertTrue("Sub Option should not have Options\n", !suboption.hasOptions());
-	
-		//contains/get for Option-Option
-		boolean containsTest = option.containsOption(testIName);
-		assertTrue("Warning, Second Option should contain testOptionInOption, but doesnt\n", containsTest);
-	
 		String testGetByName = null;
 		if (containsTest) {
-			testGetByName = option.getOptionByName(testIName).getInternalName();
-			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
 		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		Enable[] e = f.getEnables();
+		assertEquals("enableFilter should have one Enable Object\n", 1, e.length);
+		EnableTest(e[0]);
 	}
-  
-  private void thirdFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-    // first FilterDescription of this FilterCollection is a FilterDescription, and has Options in first Option
-    assertTrue("Warning, First FilterDescription in OptionFilterCollection should be a FilterDescription", ob instanceof FilterDescription);
-    FilterDescription fField = (FilterDescription) ob;
-    String testIName = "OptionFilterDescription";
-    String IName = fField.getInternalName();
-    String testDName = "A FilterDescription With An Option";
-    String DName = fField.getDisplayName();
-    String Desc = fField.getDescription();
-    String Type = fField.getType();
-    String testFieldName = "test_id";
-    String FieldName = fField.getField();
-    String Qualifier = fField.getQualifier();
-    String testOptionName = "testOption";
 
-    assertEquals("Warning, Internal Name not correctly set for FilterDescription\n", testIName, IName);
-    assertEquals("Warning, Display Name not correctly set for FilterDescription\n", testDName, DName);
-    assertEquals("Warning, Description not correctly set for FilterDescription\n", TESTDESC, Desc);
-    assertEquals("Warning, Type not set correctly for FilterDescription\n", TESTTYPE, Type);
-    assertEquals("Warning, FieldName not set correctly for FilterDescription\n", testFieldName, FieldName);
-    assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, Qualifier);
+	private void firstFColThirdFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		//second FilterDescription from First FilterCollection contains an Enables Object
+		String testIName = "disableFilter";
+		String IName = f.getInternalName();
+		String testDName = "Filter With Disable";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		String testField = "disable_test_id";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
+		String testTableConstraint = "gene_main";
+		String TableConstraint = f.getTableConstraint();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		Disable[] disables = f.getDisables();
+		assertEquals("disableFilter should have one Disable Object\n", 1, disables.length);
+		DisableTest(disables[0]);
+	}
+	
+	private void firstFColFourthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		String testIName = "testHandlerFilterDescription";
+		String IName = f.getInternalName();
+		String testDName = "A TEST ID, DOESNT EXIST";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		String testField = "handlerField";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
+		String handler = f.getHandler();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("Handler not set correctly for FilterDescription\n", TESTHANDLER, handler);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain testHandlerFilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		String TableConstraint = f.getTableConstraint();
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);		
+	}
+	
+	private void secondFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		String testIName = "filterDescriptionValueOption";
+		String IName = f.getInternalName();
+		String testDName = "A TEST Value Option";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		String testField = "value_option_id";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
+		String testTableConstraint = "gene_main";
+		String TableConstraint = f.getTableConstraint();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain testOptionsFilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		//test valueOption
+		Option[] o = f.getOptions();
+		assertEquals("testOptionsFilter Should contain one Option\n", 1, o.length);
+		ValueOptionTest(o[0]);    
+	}
+
+	private void secondFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		String testIName = "filterDescriptionTreeValueOption";
+		String IName = f.getInternalName();
+		String testDName = "A TEST Tree Value Option";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		String testField = "test_id";
+		String Field = f.getField();
+		String qualifiers = f.getQualifiers();
+		String testTableConstraint = "tree_value_dm";
+		String TableConstraint = f.getTableConstraint();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for FilterDescription\n", testField, Field);
+		assertEquals("Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for FilterDescription\n", testTableConstraint, TableConstraint);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain filterDescriptionTreeValueOption, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		//test treeValueOption
+		Option[] o = f.getOptions();
+		assertEquals("testOptionsFilter Should contain one Option\n", 1, o.length);
+		TreeValueOptionTest(o[0]);
+	}
+
+	private void secondFColThirdFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		String testIName = "FilterDescriptionOptionFilters";
+		String IName = f.getInternalName();
+		String testDName = "A TEST Option Filters";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain filterDescriptionTreeValueOption, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+    Option[] o = f.getOptions();
+    assertEquals("FilterDescriptionOptionFilters should have two options\n", 2, o.length);
     
+    OptionFilterOneTest(d, fp, fg, fc, f, o[0]);
+		OptionFilterTwoTest(d, fp, fg, fc, f, o[1]);
+	}
+
+	private void secondFColFourthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
+		String testIName = "FilterDescriptionOptionPushOptions";
+		String IName = f.getInternalName();
+		String testDName = "A TEST OF OPTION WITH PUSHOPTIONS";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain FilterDescriptionOptionPushOptions, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getUIFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain FilterDescriptionOptionPushOptions, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for the FilterDescription\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		Option[] o = f.getOptions();
+		assertEquals("FilterDescriptionOptionPushOptions Should contain one Option\n", 1, o.length);
+  	pushOptionOptionTest(d, fp, fg, fc, f, o[0]);
+  }
+
+	private void secondFColFifthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+		String testIName = "testPushOptionOptionFilter";
+		String IName = f.getInternalName();
+		String testDName = "A TEST OF A PUSHOPTION FILTER OPTION";
+		String DName = f.getDisplayName();
+		String Desc = f.getDescription();
+		String Type = f.getType();
+		
+		assertEquals("Internal Name not correctly set for FilterDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for FilterDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for FilterDescription\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for FilterDescription\n", TESTTYPE, Type);
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain testOptionsPushOptionOptionFilter, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain testOptionsPushOptionOptionFilter, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByName InternalName incorrect\n", IName, testGetByName);
+
+			//test getPageFor functionality as well
+			assertEquals("Did not get the correct Page for testOptionsPushOptionOptionFilter\n", "testFilterPage", d.getPageForFilter(IName).getInternalName());
+		}
+		
+		Option[] o = f.getOptions();
+		assertEquals("pushOptionFilter Should contain one Option\n", 1, o.length);
+		PushOptionFilterOptionTest(d, fp, fg, fc, f, o[0]);
+	}
+
+	private void EnableTest(Enable e) throws Exception {
+  	String testRef = "testFilterDescription";
+  	String Ref = e.getRef();
+  	String testValueCondition = "1";
+  	String ValueCondition = e.getValueCondition();
+  	
+  	assertEquals("Enable Ref incorrect\n", testRef, Ref);
+  	assertEquals("Enable ValueCondition incorrect\n", testValueCondition, ValueCondition);
   }
   
-  private void thirdFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
-    //second FilterDescription is a MapFilterDescription, and has Options in Second Option
-    assertTrue("Warning, second FilterDescription in optionFilterCollection should be a MapFilterDescription\n", ob instanceof MapFilterDescription);
-    MapFilterDescription dsf = (MapFilterDescription) ob;
-    String testIName = "optionUIDSFilterDescription";
-    String IName = dsf.getInternalName();
-    String testDName = "A TEST ID, DOESNT EXIST";
-    String DName = dsf.getDisplayName();
-    String Desc = dsf.getDescription();
-    String Type = dsf.getType();
-    String Handler = dsf.getHandler();
-    String testOptionName = "testOptionWithOption";
+	private void DisableTest(Disable d) throws Exception {
+		String testRef = "testFilterDescription";
+		String Ref = d.getRef();
+		String testValueCondition = "1";
+		String ValueCondition = d.getValueCondition();
+  	
+		assertEquals("Disable Ref incorrect\n", testRef, Ref);
+		assertEquals("Disable ValueCondition incorrect\n", testValueCondition, ValueCondition);
+	}
+	
+	private void ValueOptionTest(Option option) {
+    String testIName = "valueOption";
+    String IName = option.getInternalName();
+    String testValue = "1";
+    String Value = option.getValue();
     
-    assertEquals("Warning, Internal Name not correctly set for MapFilterDescription\n", testIName, IName);
-    assertEquals("Warning, Display Name not correctly set for MapFilterDescription\n", testDName, DName);
-    assertEquals("Warning, Description not correctly set for MapFilterDescription\n", TESTDESC, Desc);
-    assertEquals("Warning, Type not set correctly for MapFilterDescription\n", TESTTYPE, Type);
-    assertEquals("Warning, Handler not set correctly for MapFilterDescription\n", TESTHANDLER, Handler);
-  }
+    assertTrue("ValueOption should be Selectable\n", option.isSelectable());
+    assertEquals("ValueOption internalName incorrect\n", testIName, IName);
+    assertEquals("ValueOption value incorrect\n", testValue, Value);
+	}
+	
+	private void TreeValueOptionTest(Option option) {
+		String testIName = "treeValueOption";
+		String IName = option.getInternalName();
+		
+		assertTrue("TreeValueOption should not be Selectable\n", !option.isSelectable());
+		assertEquals("TreeValueOption internalName incorrect\n", testIName, IName);
+		
+		Option[] options = option.getOptions();
+		assertEquals("TreeValueOption should have one Option\n", 1, options.length);
+		ValueOptionTest(options[0]);		
+	}
+	
+	 private void OptionFilterOneTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+		String testIName = "filterOptionOne";
+		String IName = option.getInternalName();
+		String testDName = "A Test Option Filter";
+		String DName = option.getDisplayName();
+		String Desc = option.getDescription();
+		String Type = option.getType();
+		String testField = "test_id";
+		String Field = option.getField();
+		String qualifiers = option.getQualifiers();
+		String testTableConstraint = "filterOne_dm";
+		String TableConstraint = option.getTableConstraint();
 
-	private void attributeCollectionFdescTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, Object ob) throws Exception {
-		// first AttributeDescription is a AttributeDescription
-		assertTrue("First AttributeDescription should be a AttributeDescription", ob instanceof AttributeDescription);
+		assertEquals("Internal Name not correctly set for Option\n", testIName, IName);
+		assertEquals("Display Name not correctly set for Option\n", testDName, DName);
+		assertEquals("Description not correctly set for Option\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for Option\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for Option\n", testField, Field);
+		assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for Option\n", testTableConstraint, TableConstraint);
+		assertTrue("filterOptionOne should be Selectable\n", option.isSelectable());
 
-		AttributeDescription a = (AttributeDescription) ob;
-		String testIName = "testUIAttributeDescription";
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain filterOptionOne FilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain filterOptionOne FilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", datasetSupports);
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+	 }
+
+	private void OptionFilterTwoTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+		String testIName = "filterOptionTwo";
+		String IName = option.getInternalName();
+		String testDName = "A Test Option Filter";
+		String DName = option.getDisplayName();
+		String Desc = option.getDescription();
+		String Type = option.getType();
+		String testField = "test_id";
+		String Field = option.getField();
+		String qualifiers = option.getQualifiers();
+		String testTableConstraint = "filterTwo_dm";
+		String TableConstraint = option.getTableConstraint();
+
+		assertEquals("Internal Name not correctly set for Option\n", testIName, IName);
+		assertEquals("Display Name not correctly set for Option\n", testDName, DName);
+		assertEquals("Description not correctly set for Option\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for Option\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for Option\n", testField, Field);
+		assertEquals("Qualifier not set correctly for Option\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for Option\n", testTableConstraint, TableConstraint);
+		assertTrue("filterOptionTwo should be Selectable\n", option.isSelectable());
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain filterOptionTwo FilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain filterOptionTwo FilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);	 		
+	 }
+	 
+	private void pushOptionOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+		String testIName = "pushOptionOption";
+		String IName = option.getInternalName();
+		String testDName = "A TEST OPTION WITH PUSHOPTIONS";
+		String DName = option.getDisplayName();
+		String Desc = option.getDescription();
+		String Type = option.getType();
+		String testField = "pushOptionOption_id";
+		String Field = option.getField();
+		String qualifiers = option.getQualifiers();
+		String testTableConstraint = "gene_main";
+		String TableConstraint = option.getTableConstraint();
+
+		assertEquals("Internal Name not correctly set for pushOptionOption\n", testIName, IName);
+		assertEquals("Display Name not correctly set for pushOptionOption\n", testDName, DName);
+		assertEquals("Description not correctly set for pushOptionOption\n", TESTDESC, Desc);
+		assertEquals("Type not set correctly for pushOptionOption\n", TESTTYPE, Type);
+		assertEquals("FieldName not set correctly for pushOptionOption\n", testField, Field);
+		assertEquals("Qualifier not set correctly for pushOptionOption\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("TableConstraint not set correctly for pushOptionOption\n", testTableConstraint, TableConstraint);
+		assertTrue("pushOptionOption should be Selectable\n", option.isSelectable());
+
+		//  contains/get for FilterCollection-FilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain pushOptionOption FilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain pushOptionOption FilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		PushOptions[] pos = option.getPushOptions();
+		assertEquals("pushOptionOption should have one PushOptions\n", 1, pos.length);
+		PushOptionValueTest(d, option, pos[0]);	 		
+	}
+	
+	private void PushOptionValueTest(Dataset d, Option superoption, PushOptions p) {
+		String testIName = "TestValuePushOptions";
+		String IName = p.getInternalName();
+		String testDName = "A TEST PUSHOPTIONS";
+		String DName = p.getDisplayName();
+		String Desc = p.getDescription();
+		String testRef = "testFilterDescription";
+		String Ref = p.getRef();
+		
+		assertEquals("PushOption internalName incorrect\n", testIName, IName);
+		assertEquals("PushOption displayName incorrect\n", testDName, DName);
+		assertEquals("PushOption Description incorrect\n", TESTDESC, Desc);
+		assertEquals("PushOption Ref incorrect\n", testRef, Ref);
+		
+		String testINameGetByName = superoption.getInternalName()+"."+Ref;
+		assertTrue("Dataset should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		FilterDescription testFilter = d.getFilterDescriptionByInternalName(Ref);
+		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
+		
+		assertEquals("Dataset returned the wrong FilterDescription for " + testINameGetByName + "\n", testFilter, Filter);
+		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", testFilter.getField(), Filter.getField(testINameGetByName));
+		
+		Option[] options = p.getOptions();
+		assertEquals("PushOptionValue should have one Option\n", 1, options.length);
+		PushOptionValueOptionTest(options[0]);
+	}
+	
+	private void PushOptionValueOptionTest(Option option) {
+		String testIName = "testPushOptionOption";
+		String IName = option.getInternalName();
+		String testDName = "A TEST PUSHOPTIONS OPTION";
+		String DName = option.getDisplayName();
+		String Desc = option.getDescription();
+		String testValue = "1";
+		String Value = option.getValue();
+		
+		assertTrue("testPushOptionOption should be Selectable\n", option.isSelectable());
+		assertEquals("testPushOptionOption internalName incorrect\n", testIName, IName);
+		assertEquals("testPushOptionOption displayName incorrect\n", testDName, DName);
+		assertEquals("testPushOptionOption Description incorrect\n", TESTDESC, Desc);
+		assertEquals("testPushOptionOption Value incorrect\n", testValue, Value);
+	}
+
+	private void PushOptionFilterOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) throws Exception {
+		String testIName = "PushOptionFilterOption";
+		String IName = option.getInternalName();
+		String testDName = "A TEST OPTION WITH PUSHOPTION FILTER OPTION";
+		String DName = option.getDisplayName();
+		String Desc = option.getDescription();
+		
+		assertTrue("PushOptionFilterOption should be Selectable\n", option.isSelectable());
+		assertEquals("PushOptionFilterOption internalName incorrect\n", testIName, IName);
+		assertEquals("PushOptionFilterOption displayName incorrect\n", testDName, DName);
+		assertEquals("PushOptionFilterOption Description incorrect\n", TESTDESC, Desc);
+		
+		PushOptions[] pos = option.getPushOptions();
+		assertEquals("PushOptionFilterOption should have one PushOptions\n", 1, pos.length);
+		PushOptionFilterOptionPushOptionTest(d, fp, fg, fc, f, option, pos[0]);
+	}
+	
+	private void PushOptionFilterOptionPushOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option o, PushOptions p) throws Exception {
+		String testIName = "OptionFilterPushOption";
+		String IName = p.getInternalName();
+		String testDName = "A TEST PUSHOPTIONS WITH OPTION FILTER";
+		String DName = p.getDisplayName();
+		String Desc = p.getDescription();
+		String testRef = "testFilterDescription";
+		String Ref = p.getRef();
+		
+		assertEquals("OptionFilterPushOption internalName incorrect\n", testIName, IName);
+		assertEquals("OptionFilterPushOption displayName incorrect\n", testDName, DName);
+		assertEquals("OptionFilterPushOption Description incorrect\n", TESTDESC, Desc);
+		assertEquals("OptionFilterPushOption Ref incorrect\n", testRef, Ref);
+		
+		Option[] options = p.getOptions();
+		assertEquals("OptionFilterPushOption should have one Option\n", 1, options.length);
+		OptionFilterPushOptionOptionTest(d,fp,fg,fc,f,o,options[0]);
+	}
+	
+	private void OptionFilterPushOptionOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option superoption, Option o) throws Exception {
+		String testIName = "PushOptionFilterOption";
+		String IName = o.getInternalName();
+		String testDName = "A TEST FILTER OPTION IN A PUSHOPTION";
+		String DName = o.getDisplayName();
+		String Desc = o.getDescription();
+		String Type = o.getType();
+		String testField = "pushOptionFilterOption_id";
+		String Field = o.getField();
+		String qualifiers = o.getQualifiers();
+		String testTableConstraint = "gene_main";
+		String TableConstraint = o.getTableConstraint();
+		
+		assertTrue("PushOptionFilterOption should be selectable\n", o.isSelectable());
+		assertEquals("PushOptionFilterOption internalName incorrect\n", testIName, IName);
+		assertEquals("PushOptionFilterOption displayName incorrect\n", testDName, DName);
+		assertEquals("PushOptionFilterOption description incorrect\n", TESTDESC, Desc);
+		assertEquals("PushOptionFilterOption type incorrect\n", TESTTYPE, Type);
+		assertEquals("PushOptionFilterOption field incorrect\n", testField, Field);
+		assertEquals("PushOptionFilterOption qualifiers incorrect\n", TESTQUALIFIERS, qualifiers);
+		assertEquals("PushOptionFilterOption tableConstraint incorrect\n", testTableConstraint, TableConstraint);
+		
+		//  contains/get for FilterCollection-OptionFilterDescription
+		boolean containsTest = fc.containsFilterDescription(IName);
+		assertTrue("FilterCollection should contain PushOptionFilterOption FilterDescription, but doesnt\n", containsTest);
+
+		String testGetByName = null;
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+
+		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
+		containsTest = fp.containsFilterDescription(IName);
+		assertTrue("FilterPage should contain PushOptionFilterOption FilterDescription, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(IName)).getInternalName();
+			assertEquals("getFilterDescriptionByInternalName InternalName incorrect\n", f.getInternalName(), testGetByName);
+		}
+		
+		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
+		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
+		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", datasetSupports);
+		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
+		FilterDescription h = fp.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterGroup should support field and tableConstraint for "+IName+"\n", fg.supports(Field, TableConstraint));
+		FilterDescription i = fg.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterCollection should support field and tableConstraint for "+IName+"\n", fc.supports(Field, TableConstraint));
+		FilterDescription j = fc.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
+		
+		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
+		
+		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
+		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
+		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
+		
+		String testINameGetByName = superoption.getInternalName()+"."+IName;
+		
+		assertTrue("Dataset should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
+		
+		assertEquals("Dataset returned the wrong FilterDescription for " + testINameGetByName + "\n", f, Filter);
+		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", f.getField(testINameGetByName), Filter.getField(testINameGetByName));
+		
+		String FieldByIName = f.getField(testINameGetByName);
+		String TableConstraintByIName = f.getTableConstraint(testINameGetByName);
+		String QualifiersByIName = f.getQualifiers(testINameGetByName);
+		String TypeByIName = f.getType(testINameGetByName);
+		
+		assertEquals("PushOptionFilterOption getField By InternalName incorrect\n", testField, FieldByIName);
+		assertEquals("PushOptionFilterOption getTable By InternalName incorrect\n", testTableConstraint, TableConstraintByIName);
+		assertEquals("PushOptionFilterOption getQualifiers By InternalName incorrect\n", TESTQUALIFIERS, QualifiersByIName);
+		assertEquals("PushOptionFilterOption getType By InternalName incorrect\n", TESTTYPE, TypeByIName);
+	}
+	
+	private void attributeCollectionAdescTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, AttributeDescription a) throws Exception {
+		String testIName = "testAttributeDescription";
 		String IName = a.getInternalName();
 		String testDName = "Test of a AttributeDescription";
 		String DName = a.getDisplayName();
 		String Desc = a.getDescription();
-		String testFieldName = "test_id";
-		String FieldName = a.getField();
+		String testField = "test_id";
+		String Field = a.getField();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = a.getTableConstraint();
 		int testMaxLength = 1;
@@ -931,39 +1448,42 @@ public class ConfigurationTest extends Base {
 		String testLPage = "http://test.org?test";
 		String LPage = a.getLinkoutURL();
 
-		assertEquals("Warning, Internal Name not correctly set for AttributeDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for AttributeDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for AttributeDescription\n", TESTDESC, Desc);
-		assertEquals("Warning, FieldName not correctly set for AttributeDescription\n", testFieldName, FieldName);
-		assertEquals("Warning, TableConstraint not correctly set for AttributeDescription\n", testTableConstraint, TableConstraint);
-		assertEquals("Warning, MaxLength not correctly set for AttributeDescription\n", testMaxLength, MaxLength);
-		assertEquals("Warning, Source not correctly set for AttributeDescription\n", testSource, Source);
-		assertEquals("Warning, HomepageURL not correctly set for AttributeDescription\n", testHPage, HPage);
-		assertEquals("Warning, LinkoutURL not correctly set for AttributeDescription\n", testLPage, LPage);
+		assertEquals("Internal Name not correctly set for AttributeDescription\n", testIName, IName);
+		assertEquals("Display Name not correctly set for AttributeDescription\n", testDName, DName);
+		assertEquals("Description not correctly set for AttributeDescription\n", TESTDESC, Desc);
+		assertEquals("FieldName not correctly set for AttributeDescription\n", testField, Field);
+		assertEquals("TableConstraint not correctly set for AttributeDescription\n", testTableConstraint, TableConstraint);
+		assertEquals("MaxLength not correctly set for AttributeDescription\n", testMaxLength, MaxLength);
+		assertEquals("Source not correctly set for AttributeDescription\n", testSource, Source);
+		assertEquals("HomepageURL not correctly set for AttributeDescription\n", testHPage, HPage);
+		assertEquals("LinkoutURL not correctly set for AttributeDescription\n", testLPage, LPage);
 
 		//  contains/get for AttributeCollection-AttributeDescription
 		boolean containsTest = ac.containsAttributeDescription(testIName);
-		assertTrue("Warning, AttributeCollection should contain testUIAttributeDescription, but doesnt\n", containsTest);
+		assertTrue("AttributeCollection should contain testUIAttributeDescription, but doesnt\n", containsTest);
     
     String testGetByName = null;
 		if (containsTest) {
 			testGetByName = ((AttributeDescription) ac.getAttributeDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//  contains/get for AttributePage-AttributeDescription (Tests all lower groups getByName as well
 		containsTest = ap.containsAttributeDescription(testIName);
-		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
+		assertTrue("AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ((AttributeDescription) ap.getAttributeDescriptionByInternalName(testIName)).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
+			assertEquals("getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well
 			assertEquals(
-				"Warning, Did not get the correct Page for the AttributeDescription\n",
+				"Did not get the correct Page for the AttributeDescription\n",
 				"testAttributePage",
 				d.getPageForAttribute(testIName).getInternalName());
 		}
+		
+		assertTrue("testAttributeDescription should be supported by AttributePage\n", d.supportsAttributeDescription(Field, TableConstraint));
+		assertEquals("AttributePage should return testAttributeDescription for Field TableConstraint\n", a, d.getAttributeDescriptionByFieldNameTableConstraint(Field, TableConstraint));
 	}
 
 	public void testConfFile() throws Exception {
@@ -980,5 +1500,6 @@ public class ConfigurationTest extends Base {
 	private final String TESTDESC = "For Testing Purposes Only";
 	private final String TESTHANDLER = "testHandler";
 	private final String TESTTYPE = "list";
-	private final String TESTQUALIFIER = "in";
+	private final String TESTQUALIFIERS = "in,=";
+	private final	String REFINAME = "testFilterDescription";
 }

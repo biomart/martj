@@ -18,8 +18,10 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -32,31 +34,30 @@ import java.util.TreeMap;
 public class FilterDescription extends BaseConfigurationObject {
 
 	/**
-	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and qualifier.
-	 * 
-	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
-	 * @param field String name of the field to reference in the mart. Must not be null or empty.
-	 * @param type String type of filter.  Must not be null or empty.
-	 * @param qualifier String qualifier to use in a SQL where clause.
-	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
-	 */
-	public FilterDescription(String internalName, String field, String type, String qualifier)
-		throws ConfigurationException {
-		this(internalName, field, type, qualifier, "", "", "", "");
-	}
-
-	/**
-	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and qualifier.
+	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and qualifiers.
 	 * 
 	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param field String name of the field to reference in the mart.
 	 * @param type String type of filter.  Must not be null or empty.
-	 * @param qualifier String qualifier to use in a SQL where clause.
+	 * @param qualifiers String, comma-separated list of qualifiers to use in a MartShell MQL
+	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
+	 */
+	public FilterDescription(String internalName, String field, String type, String qualifiers)
+		throws ConfigurationException {
+		this(internalName, field, type, qualifiers, "", "", null, "");
+	}
+
+	/**
+	 * Constructor for a fully defined FilterDescription
+	 * 
+	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
+	 * @param field String name of the field to reference in the mart.
+	 * @param type String type of filter.  Must not be null or empty.
+	 * @param qualifiers String, comma-separated list of qualifiers to use in a MartShell MQL
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL field
-	 * @param filterSetReq String, which of the modifications specified by a FilterSetDescription are required by this FilterDescription
+	 * @param handler String, specifying the handler to use for a FilterDescription
 	 * @param description String description of the Filter
-	 * @param optionName String name represention an Option that holds Options for this FilterDescription
 	 * 
 	 * @throws ConfigurationException when required values are null or empty
 	 * @see FilterSet
@@ -66,10 +67,10 @@ public class FilterDescription extends BaseConfigurationObject {
 		String internalName,
 		String field,
 		String type,
-		String qualifier,
+		String qualifiers,
 		String displayName,
 		String tableConstraint,
-		String filterSetReq,
+		String handler,
 		String description)
 		throws ConfigurationException {
 
@@ -80,12 +81,9 @@ public class FilterDescription extends BaseConfigurationObject {
 
 		this.field = field;
 		this.type = type;
-		this.qualifier = qualifier;
+		this.qualifiers = qualifiers;
+		this.handler = handler;
 		this.tableConstraint = tableConstraint;
-		this.filterSetReq = filterSetReq;
-
-		if (!(filterSetReq == null || filterSetReq.equals("")))
-			inFilterSet = true;
 	}
 
 	/**
@@ -107,8 +105,20 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getField();
-			else
-				return null;
+			else if (internalName.indexOf(".") > 0) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return field;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getField(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
 		}
 	}
 
@@ -122,34 +132,33 @@ public class FilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the qualifier to use SQL where clause.
-	 * 
-	 * @return String qualifier
+	 * Returns the type, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
+	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
+	 * @return String type
 	 */
-	public String getQualifier() {
-		return qualifier;
+	public String getType(String internalName) {
+		if (this.internalName.equals(internalName))
+			return type;
+		else {
+			if (uiOptionNameMap.containsKey(internalName))
+				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getType();
+			else if (internalName.indexOf(".") > 0) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return type;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getType(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
+		}
 	}
 
-  public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
-  	String ret = null;
-  	
-  	if (supports(field, tableConstraint)) {
-  		if (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint))
-  		  ret = internalName;
-  		else {
-  			  for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
-						Option element = (Option) iter.next();
-						if (element.supports(field, tableConstraint)) {
-							ret = element.getInternalName();
-							break;
-						}
-					}
-  		}
-  	}
-
-  	  return ret;
-  }
-  
 	/**
 		 * Returns the tableConstraint for the field.
 		 * 
@@ -170,75 +179,118 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getTableConstraint();
-			else
-				return null;
+			else if (internalName.indexOf(".") > 0) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return tableConstraint;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getTableConstraint(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
 		}
 	}
 
 	/**
-	 * Returns a value to determine which FilterDescription SQL specifier (tableConstraint or field) to modify
-	 * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
-	 * 
-	 * @return String filterSetReq
-	 * @see FilterSetDescription
+	 * Get the Handler for this FilterDescription, if any
+	 * @return String handler, or null.
 	 */
-	public String getFilterSetReq() {
-		return filterSetReq;
+	public String getHandler() {
+		return handler;
 	}
 
 	/**
-	 * Returns the same as getFilterSetReq, but using an internalName that may, in some cases, map to an Option
-	 * contained in this FilterDescription, instead of this FilterDescription itself.
+	 * Returns the handler, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
-	 * @return String filterSetReq
-	 * @see FilterSetDescription
+	 * @return String handler
 	 */
-	public String getFilterSetReq(String internalName) {
+	public String getHandler(String internalName) {
 		if (this.internalName.equals(internalName))
-			return filterSetReq;
+			return handler;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getFilterSetReq();
-			else
-				return null;
+				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getHandler();
+			else if (internalName.indexOf(".") > 0) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (this.internalName.equals(refIname))
+					return handler;
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getHandler(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
 		}
 	}
 
 	/**
-	 * Check to see if this FilterDescription is in a FilterSet
+	 * Returns the qualifiers to use in MartShell.
 	 * 
-	 * @return true if it is in a FilterSet, false if not
+	 * @return String qualifiers
 	 */
-	public boolean inFilterSet() {
-		return inFilterSet;
+	public String getQualifiers() {
+		return qualifiers;
 	}
 
-	/**
-	 * Returns the same as inFilterSet, but with an internalName which may, in some cases, map to an Option contained
-	 * in this FilterDescription, rather than this FilterDescription itself.
-	 * 
-	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
-	 * @return boolean, If the internalName matches the internalName of this FilterDescription object, returns true if this object
-	 * is in a FilterSet, false otherwise.  If the internalName does not match that of this FilterDescription, then, if it maps to an Option
-	 * contained within the FilterDescription, returns true if that Option is in a FilterSet, false if not.  If the internalName does not map
-	 * to an Option, returns true if this FilterDescription is in a filterset, false otherwise.
-	 */
-	public boolean inFilterSet(String internalName) {
+	public String getQualifiers(String internalName) {
 		if (this.internalName.equals(internalName))
-			return inFilterSet;
+			return qualifiers;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).inFilterSet();
-			else
-				return inFilterSet;
+				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getQualifiers();
+			else if (internalName.indexOf(".") > 0) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getQualifiers(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
 		}
+	}
+
+	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+		String ret = null;
+
+		if (supports(field, tableConstraint)) {
+			if (this.field != null
+				&& this.field.equals(field)
+				&& this.tableConstraint != null
+				&& this.tableConstraint.equals(tableConstraint))
+				ret = internalName;
+			else {
+				for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+					Option element = (Option) iter.next();
+					if (element.supports(field, tableConstraint)) {
+						ret = element.getInternalName();
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	public boolean supports(String field, String tableConstraint) {
-		boolean supports = (this.field != null
-		&& this.field.equals(field)
-		&& this.tableConstraint != null
-		&& this.tableConstraint.equals(tableConstraint));
+		boolean supports =
+			(this.field != null
+				&& this.field.equals(field)
+				&& this.tableConstraint != null
+				&& this.tableConstraint.equals(tableConstraint));
 
 		if (!supports) {
 			if (lastSupportingOption == null) {
@@ -253,10 +305,10 @@ public class FilterDescription extends BaseConfigurationObject {
 			} else {
 				if (lastSupportingOption.supports(field, tableConstraint))
 					supports = true;
-        else {
-        	lastSupportingOption = null;
-        	return supports(field, tableConstraint);
-        }
+				else {
+					lastSupportingOption = null;
+					return supports(field, tableConstraint);
+				}
 			}
 		}
 
@@ -273,11 +325,8 @@ public class FilterDescription extends BaseConfigurationObject {
 		buf.append(super.toString());
 		buf.append(", field=").append(field);
 		buf.append(", type=").append(type);
-		buf.append(", qualifier=").append(qualifier);
+		buf.append(", qualifiers=").append(qualifiers);
 		buf.append(", tableConstraint=").append(tableConstraint);
-
-		if (inFilterSet)
-			buf.append(", filterSetReq=").append(filterSetReq);
 
 		if (hasOptions)
 			buf.append(", Options=").append(uiOptions);
@@ -296,16 +345,13 @@ public class FilterDescription extends BaseConfigurationObject {
 	public int hashCode() {
 
 		if (hshcode == -1) {
-
-			hshcode = inFilterSet ? 1 : 0;
-			hshcode = (31 * hshcode) + internalName.hashCode();
-			hshcode = (31 * hshcode) + displayName.hashCode();
+			hshcode = super.hashCode();
 			hshcode = (31 * hshcode) + field.hashCode();
 			hshcode = (31 * hshcode) + type.hashCode();
-			hshcode = (31 * hshcode) + qualifier.hashCode();
+			hshcode = (31 * hshcode) + qualifiers.hashCode();
 			hshcode = (31 * hshcode) + tableConstraint.hashCode();
-			hshcode = (31 * hshcode) + filterSetReq.hashCode();
 			hshcode = (31 * hshcode) + description.hashCode();
+
 			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
 				Option option = (Option) iter.next();
 				hshcode = (31 * hshcode) + option.hashCode();
@@ -388,17 +434,74 @@ public class FilterDescription extends BaseConfigurationObject {
 		return hasOptions;
 	}
 
+	/**
+	 * Add an Enable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
+	 * @param e, Enable Object to add.
+	 */
+	public void addEnable(Enable e) {
+		Enables.add(e);
+	}
+
+	/**
+	 * Set an array of Enable objects in one call, adds to what was added via previous calls to addEnable/setEnables methods.
+	 * @param e - Array of Enable Objects
+	 */
+	public void setEnables(Enable[] e) {
+		for (int i = 0, n = e.length; i < n; i++) {
+			Enables.add(e[i]);
+		}
+	}
+
+	/**
+	 * Get all Enable Objects for this FilterDescription in an Array.
+	 * @return Array of Enable Objects
+	 */
+	public Enable[] getEnables() {
+		Enable[] ret = new Enable[Enables.size()];
+		Enables.toArray(ret);
+		return ret;
+	}
+
+	/**
+	 * Add an Disable object to this FilterDescription, allowing it to Disable another FilterDescription in the GUI.
+	 * @param e, Disable Object to add.
+	 */
+	public void addDisable(Disable e) {
+		Disables.add(e);
+	}
+
+	/**
+	 * Set an array of Disable objects in one call, adds to what was added via previous calls to addDisable/setDisables methods.
+	 * @param e - Array of Disable Objects
+	 */
+	public void setDisables(Disable[] e) {
+		for (int i = 0, n = e.length; i < n; i++) {
+			Disables.add(e[i]);
+		}
+	}
+
+	/**
+	 * Get all Disable Objects for this FilterDescription in an Array.
+	 * @return Array of Disable Objects
+	 */
+	public Disable[] getDisables() {
+		Disable[] ret = new Disable[Disables.size()];
+		Disables.toArray(ret);
+		return ret;
+	}
+
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private TreeMap uiOptions = new TreeMap();
 	private boolean hasOptions = false;
 	private int oRank = 0;
+	private List Enables = new ArrayList();
+	private List Disables = new ArrayList();
 
+	private String handler;
 	private String field;
 	private String type;
-	private String qualifier;
-	private String filterSetReq;
+	private String qualifiers;
 	private String tableConstraint;
-	private boolean inFilterSet = false;
 	private int hshcode = -1;
 
 	//cache one supporting Option for call to supports

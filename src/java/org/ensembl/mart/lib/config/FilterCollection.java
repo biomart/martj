@@ -32,58 +32,31 @@ import java.util.TreeMap;
  */
 public class FilterCollection extends BaseConfigurationObject {
 
-	/*
-	 * FilterCollection must have a internalName, and type.  So disable parameterless constructor
-	 */
-	private FilterCollection() throws ConfigurationException {
-		this("", "", "", "", "");
-	}
-
 	/**
 	 * Constructor for a FilterCollection named by intenalName, with a displayName, type.
 	 * 
 	 * @param internalName String name to internally represent the FilterCollection.  Must not be null.
-	 * @param type String type of the FilterCollection. Must not be null.
 	 * @throws ConfigurationException when paremeter requirements are not met
 	 */
-	public FilterCollection(String internalName, String type) throws ConfigurationException {
-		this(internalName, type, "", "", "");
+	public FilterCollection(String internalName) throws ConfigurationException {
+		this(internalName, "", "");
 	}
 
 	/**
 	 * Constructor for a FilterCollection named by intenalName, with a displayName, type, and optional description.
 	 * 
 	 * @param internalName String name to internally represent the FilterCollection.  Must not be null or empty.
-	 * @param type String type of the FilterCollection. Must not be null or empty.
-	 * @param displayName String name to represent the FilterCollection.
-	 * @param filterSetName String internalName of the FilterSet this FilterCollection to which this FilterCollection is a member.  May be null. 
+	 * @param displayName String name to represent the FilterCollection. 
 	 * @param description String description of the FilterCollection.
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
 	public FilterCollection(
 		String internalName,
-		String type,
 		String displayName,
-		String filterSetName,
 		String description)
 		throws ConfigurationException {
 
 		super(internalName, displayName, description);
-
-		if (!(filterSetName == null || filterSetName.equals("")))
-			inFilterSet = true;
-
-		this.filterSetName = filterSetName;
-		this.type = type;
-	}
-
-	/**
-	 * Returns the type of the FilterCollection.
-	 * 
-	 * @return String type
-	 */
-	public String getType() {
-		return type;
 	}
 
 	/**
@@ -91,7 +64,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * 
 	 * @param f a FilterDescription object
 	 */
-	public void addUIFilter(FilterDescription f) {
+	public void addFilterDescription(FilterDescription f) {
 		Integer fRankInt = new Integer(fRank);
 		uiFilters.put(fRankInt, f);
 		uiFilterNameMap.put(f.getInternalName(), fRankInt);
@@ -105,7 +78,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * 
 	 * @param f an array of FilterDescription objects.
 	 */
-	public void setUIFilters(FilterDescription[] f) {
+	public void setFilterDescriptions(FilterDescription[] f) {
 		for (int i = 0, n = f.length; i < n; i++) {
 			Integer fRankInt = new Integer(fRank);
 			uiFilters.put(fRankInt, f[i]);
@@ -115,55 +88,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * add a MapFilterDescription object to this FilterCollection. Both UIFIlterDescriptions
-	 * and UIDSFIlterDescriptions are stored in the same List, in the order they are
-	 * added.  Subsequent calls to add or set methods for both types of filters
-	 * will add to all filters added previously. 
-	 * @param f a MapFilterDescription object
-	 */
-	public void addUIDSFilterDescription(MapFilterDescription f) {
-		Integer fRankInt = new Integer(fRank);
-		uiFilters.put(fRankInt, f);
-		uiFilterNameMap.put(f.getInternalName(), fRankInt);
-		fRank++;
-	}
-
-	/**
-	 * set a group of MapFilterDescription objects to this FilterCollection in one call. 
-	 * Both UIFIlterDescriptions and UIDSFIlterDescriptions are stored in the same List, 
-	 * in the order they are added.  Subsequent calls to add or set methods for both types of 
-	 * filters will add to all filters added previously.
-	 * @param f an array of MapFilterDescription objects
-	 */
-	public void setUIDSFilterDescriptions(MapFilterDescription[] f) {
-		for (int i = 0, n = f.length; i < n; i++) {
-			Integer fRankInt = new Integer(fRank);
-			uiFilters.put(fRankInt, f[i]);
-			uiFilterNameMap.put(f[i].getInternalName(), fRankInt);
-			fRank++;
-		}
-	}
-
-	/**
-	 * Returns the internalName of the FilterSet this Collection belongs within.
-	 * 
-	 * @return String filterSetName
-	 */
-	public String getFilterSetName() {
-		return filterSetName;
-	}
-
-	/**
-	 * Check if this FilterCollection is a member of a FilterSet.
-	 * 
-	 * @return boolean true if member of a FilterSet, false if not
-	 */
-	public boolean inFilterSet() {
-		return inFilterSet;
-	}
-
-	/**
-	 * Returns a List of FilterDescription/MapFilterDescription objects, 
+	 * Returns a List of FilterDescription objects, 
 	 * in the order they were added.
 	 * 
 	 * @return List of FilterDescription objects
@@ -173,13 +98,13 @@ public class FilterCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns a specific FilterDescription/MapFilterDescription, named by internalName, or
+	 * Returns a specific FilterDescription, named by internalName, or
 	 * containing an Option named by internalName.
 	 * 
 	 * @param internalName String name of the requested FilterDescription
-	 * @return Object requested, or null.
+	 * @return FilterDescription requested, or null.
 	 */
-	public Object getFilterDescriptionByInternalName(String internalName) {
+	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
 		if (containsFilterDescription(internalName))
 		  return lastFilt;
 		else
@@ -187,7 +112,7 @@ public class FilterCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Check if this FilterCollection contains a specific FilterDescription/MapFilterDescription object.
+	 * Check if this FilterCollection contains a specific FilterDescription object.
 	 * 
 	 * @param internalName String name of the requested FilterDescription
 	 * @return boolean, true if FilterCollection contains the FilterDescription, false if not.
@@ -198,22 +123,39 @@ public class FilterCollection extends BaseConfigurationObject {
 		if (lastFilt == null) {
 			contains = uiFilterNameMap.containsKey(internalName);
 
-			if (!contains) {
+			if (contains)
+			  lastFilt = (FilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(internalName) );
+			else if ( internalName.indexOf(".") > 0) {
+				String[] testNames = internalName.split("\\.");
+				String testRefName = testNames[0]; // x in x.y
+				String testIname = testNames[1]; // y in x.y
+				
+				if ( uiFilterNameMap.containsKey(testIname) ) {
+				  lastFilt =  (FilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(testIname) );
+				  contains = true;
+				} else {
+					for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+				    FilterDescription element = (FilterDescription) iter.next();
+				    
+				    if (element.containsOption(testRefName)) {
+				    	lastFilt = element;
+				    	contains = true;
+				    	break;
+				    }
+					}
+				}
+		  } else {
 				for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-					Object element = iter.next();
-					if (element instanceof FilterDescription) {
-						if (((FilterDescription) element).containsOption(internalName)) {
+					FilterDescription element = (FilterDescription) iter.next();
+					if ( element.containsOption(internalName) ) {
 							lastFilt = element;
 							contains = true;
 							break;
 						}
 					}
 				}
-			}
-		} else {
-			if (lastFilt instanceof FilterDescription && ( (FilterDescription) lastFilt).getInternalName().equals(internalName))
-			  contains = true;
-			else if (lastFilt instanceof MapFilterDescription && ( (MapFilterDescription) lastFilt).getInternalName().equals(internalName))
+			} else {
+			if (lastFilt.getInternalName().equals(internalName))
 				contains = true;
 			else {
 				lastFilt = null;
@@ -274,11 +216,6 @@ public class FilterCollection extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-		buf.append(", type=").append(type);
-
-		if (inFilterSet)
-			buf.append(", filterSetName=").append(filterSetName);
-
 		buf.append(", UIFilterDescriptions=").append(uiFilters);
 		buf.append("]");
 
@@ -293,31 +230,23 @@ public class FilterCollection extends BaseConfigurationObject {
 	}
 
 	public int hashCode() {
-		int hashcode = inFilterSet ? 1 : 0;
-		hashcode = super.hashCode();
-		hashcode = (31 * hashcode) + filterSetName.hashCode();
+		int hashcode = super.hashCode();
 
 		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
-			if (element instanceof FilterDescription)
-				hashcode = (31 * hashcode) + ((FilterDescription) element).hashCode();
-			else
-				hashcode = (31 * hashcode) + ((MapFilterDescription) element).hashCode();
+			hashcode = (31 * hashcode) + element.hashCode();
 		}
 
 		return hashcode;
 	}
 
-	private String filterSetName;
-	private String type;
-	private boolean inFilterSet = false;
 	// uiFilters
 	private int fRank = 0;
 	private TreeMap uiFilters = new TreeMap();
 	private Hashtable uiFilterNameMap = new Hashtable();
 
-	//cache one FilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private Object lastFilt = null;
+	//cache one FilterDescription for call to containsFilterDescription or getFiterDescriptionByInternalName
+	private FilterDescription lastFilt = null;
 
 	//cache one FilterDescription for call to supports
 	private FilterDescription lastSupportFilt = null;

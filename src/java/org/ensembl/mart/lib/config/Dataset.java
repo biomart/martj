@@ -349,7 +349,7 @@ public class Dataset extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription
 		* @return AttributeDescription
 		*/
-	public Object getAttributeDescriptionByInternalName(String internalName) {
+	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
 		if (containsAttributeDescription(internalName))
 			return lastAtt;
 		else
@@ -389,14 +389,13 @@ public class Dataset extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular 
-		* FilterDescription/MapFilterDescription Object. Note, it is best to first call 
-		* containsFilterDescription, as there is a caching system to cache a FilterDescription Object 
-		* during a call to containsFilterDescription.
+		* FilterDescription Object. Note, it is best to first call containsFilterDescription, as there is a 
+		* caching system to cache a FilterDescription Object during a call to containsFilterDescription.
 		* 
 		* @param displayName name of the requested FilterDescription
-		* @return Object (either instanceof FilterDescription or MapFilterDescription)
+		* @return FilterDescription found, or null
 		*/
-	public Object getFilterDescriptionByInternalName(String internalName) {
+	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
 		if (containsFilterDescription(internalName))
 			return lastFilt;
 		else
@@ -460,15 +459,7 @@ public class Dataset extends BaseConfigurationObject {
 				}
 			}
 		} else {
-			String lastIntName;
-			if (lastFilt instanceof FilterDescription)
-				lastIntName = ((FilterDescription) lastFilt).getInternalName();
-			else if (lastFilt instanceof MapFilterDescription)
-				lastIntName = ((MapFilterDescription) lastFilt).getInternalName();
-			else
-				lastIntName = ""; // should not get here
-
-			if (lastIntName.equals(internalName))
+			if (lastFilt.getInternalName().equals(internalName))
 				found = true;
 			else {
 				lastFilt = null;
@@ -788,7 +779,7 @@ public class Dataset extends BaseConfigurationObject {
 	private AttributeDescription lastSupportingAttribute = null;
 	
 	//cache one FilterDescription Object for call to containsFilterDescription or getFiterDescriptionByInternalName
-	private Object lastFilt = null;
+	private FilterDescription lastFilt = null;
 
 	//cache one FilterGroup for call to getGroupForFilter
 	private FilterGroup lastFiltGroup = null;

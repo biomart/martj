@@ -30,14 +30,13 @@ import java.util.TreeMap;
  */
 public class Option extends BaseConfigurationObject {
 
-  private String field;
-  private String tableConstraint;
-  private String value;
-  private String ref;
-  private String qualifier;
-  private String type;
-  private String filterSetReq;
-  private boolean inFilterSet = false;
+	private String field;
+	private String tableConstraint;
+	private String value;
+	private String ref;
+	private String qualifiers;
+	private String type;
+	private String handler;
 	private int hashcode = -1;
 
 	private final boolean isSelectable;
@@ -48,176 +47,244 @@ public class Option extends BaseConfigurationObject {
 	private TreeMap uiOptions = new TreeMap();
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private List uiOptionPushes = new ArrayList();
+	private Option lastSupportingOption = null;
+	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
 
-  public Option(String internalName, boolean isSelectable) throws ConfigurationException {
-    this(internalName, isSelectable, "", "", "", "", "", "", "", "", "");
-  }
+	public Option(String internalName, boolean isSelectable) throws ConfigurationException {
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", null);
+	}
 
-  public Option(String internalName, boolean isSelectable, String displayName, String description, String field, String tableConstraint, String value, String ref, String type, String filterSetReq, String qualifier) throws ConfigurationException {
+	public Option(
+		String internalName,
+		boolean isSelectable,
+		String displayName,
+		String description,
+		String field,
+		String tableConstraint,
+		String value,
+		String ref,
+		String type,
+		String qualifiers,
+		String handler)
+		throws ConfigurationException {
 
-    super(internalName, displayName, description);
+		super(internalName, displayName, description);
 
-    this.isSelectable = isSelectable;
-    this.field = field;
-    this.tableConstraint = tableConstraint;
-    this.qualifier = qualifier;
-    this.type = type;
-    this.filterSetReq = filterSetReq;
-    
-		if (!(filterSetReq == null || filterSetReq.equals("")))
-			inFilterSet = true;
-			
-    this.value = value;
-    this.ref = ref;
-  }
+		this.isSelectable = isSelectable;
+		this.field = field;
+		this.tableConstraint = tableConstraint;
+		this.qualifiers = qualifiers;
+		this.type = type;
 
-  /**
-   * adda Option object to this Option.  Options are stored in the order that they are added.
-   * @param o - an Option object
-   */
-  public void addOption(Option o) {
-    Integer oRankInt = new Integer(oRank);
-    uiOptions.put(oRankInt, o);
-    uiOptionNameMap.put(o.getInternalName(), oRankInt);
-    oRank++;
-    hasOptions = true;
-    hashcode = -1;
-  }
-
-  /**
-   * Set a group of Option objects in one call.  Subsequent calls to
-   * addOption or setOptions will add to what was added before, in the order that they are added.
-   * @param o - an array of Option objects
-   */
-  public void setOptions(Option[] o) {
-    for (int i = 0, n = o.length; i < n; i++) {
-      Integer oRankInt = new Integer(oRank);
-      uiOptions.put(oRankInt, o[i]);
-      uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
-      oRank++;
-    }
-    hasOptions = true;
-    hashcode = -1;
-  }
-
-  /**
-   * Get all Option objects available as an array.  Options are returned in the order they were added.
-   * @return Option[]
-   */
-  public Option[] getOptions() {
-    Option[] ret = new Option[uiOptions.size()];
-    uiOptions.values().toArray(ret);
-    return ret;
-  }
-
-  /**
-   * Determine if this Option contains an Option.  This only determines if the specified internalName
-   * maps to a specific Option in the Option during a shallow search.  It does not do a deep search
-   * within the Options.
-   * 
-   * @param internalName - String name of the requested Option
-   * @return boolean, true if found, false if not found.
-   */
-  public boolean containsOption(String internalName) {
-    return uiOptionNameMap.containsKey(internalName);
-  }
-
-  /**
-   * Get a specific Option named by internalName.  This does not do a deep search within Options.
-   * 
-   * @param internalName - String name of the requested Option.
-   * @return Option object named by internalName
-   */
-  public Option getOptionByName(String internalName) {
-    if (uiOptionNameMap.containsKey(internalName))
-      return (Option) uiOptions.get(
-        (Integer) uiOptionNameMap.get(internalName));
-    else
-      return null;
-  }
-
-  /**
-   * Determine if this Option is Selectable in the UI.
-   * @return boolean, true if selectable, false otherwise
-   */
-  public boolean isSelectable() {
-    return isSelectable;
-  }
-
- /**
-  * Determine if this Option is in a FilterSet.
-  * @return boolean, true if in filterset, false otherwise
-  */
-  public boolean inFilterSet() {
-  	return inFilterSet;
-  }
-  
-  /**
-   * Determine if this Option has underlying Options.
-   * @return boolean, true if this Option has underlying options, false if not.
-   */
-  public boolean hasOptions() {
-    return hasOptions;
-  }
-
-   /**
-     * @return
-     */
-  public String getField() {
-    return field;
-  }
-
-  /**
-   * @return
-   */
-  public String getTableConstraint() {
-    return tableConstraint;
-  }
-  
-  /**
-   * @return
-   */
-  public String getRef() {
-    return ref;
-  }
-
-  /**
-   * @return
-   */
-  public String getValue() {
-    return value;
-  }
-
-
-  /**
-   * Get all PushOptions objects available as an array.  OptionPushes are returned in the order they were added.
-   * @return PushOptions[]
-   */
-  public PushOptions[] getOptionPushes() {
-    return (PushOptions[]) uiOptionPushes.toArray(
-      new PushOptions[uiOptionPushes.size()]);
-  }
-
-  /**
-   * @param object
-   */
-  public void addOptionPush(PushOptions optionPush) {
-    uiOptionPushes.add(optionPush);
-    hashcode = -1;
-  }
+		this.value = value;
+		this.ref = ref;
+		this.handler = handler;
+	}
 
 	/**
-	 * @return
+	 * add an Option object to this Option.  Options are stored in the order that they are added.
+	 * @param o - an Option object
 	 */
-	public String getFilterSetReq() {
-		return filterSetReq;
+	public void addOption(Option o) {
+		Integer oRankInt = new Integer(oRank);
+		uiOptions.put(oRankInt, o);
+		uiOptionNameMap.put(o.getInternalName(), oRankInt);
+		oRank++;
+		hasOptions = true;
+		hashcode = -1;
+	}
+
+	/**
+	 * Set a group of Option objects in one call.  Subsequent calls to
+	 * addOption or setOptions will add to what was added before, in the order that they are added.
+	 * @param o - an array of Option objects
+	 */
+	public void setOptions(Option[] o) {
+		for (int i = 0, n = o.length; i < n; i++) {
+			Integer oRankInt = new Integer(oRank);
+			uiOptions.put(oRankInt, o[i]);
+			uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
+			oRank++;
+		}
+		hasOptions = true;
+		hashcode = -1;
+	}
+
+	/**
+	 * Get all Option objects available as an array.  Options are returned in the order they were added.
+	 * @return Option[]
+	 */
+	public Option[] getOptions() {
+		Option[] ret = new Option[uiOptions.size()];
+		uiOptions.values().toArray(ret);
+		return ret;
+	}
+
+	/**
+	 * Determine if this Option contains an Option.  This only determines if the specified internalName
+	 * maps to a specific Option in the Option during a shallow search.  It does not do a deep search
+	 * within the Options.
+	 * 
+	 * @param internalName - String name of the requested Option
+	 * @return boolean, true if found, false if not found.
+	 */
+	public boolean containsOption(String internalName) {
+		return uiOptionNameMap.containsKey(internalName);
+	}
+
+	/**
+	 * Get a specific Option named by internalName.  This does not do a deep search within Options.
+	 * 
+	 * @param internalName - String name of the requested Option.
+	 * @return Option object named by internalName
+	 */
+	public Option getOptionByInternalName(String internalName) {
+		if (uiOptionNameMap.containsKey(internalName))
+			return (Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName));
+		else
+			return null;
+	}
+
+	/**
+	 * Determine if this Option is Selectable in the UI.
+	 * @return boolean, true if selectable, false otherwise
+	 */
+	public boolean isSelectable() {
+		return isSelectable;
+	}
+
+	/**
+	 * Determine if this Option has underlying Options.
+	 * @return boolean, true if this Option has underlying options, false if not.
+	 */
+	public boolean hasOptions() {
+		return hasOptions;
+	}
+
+	/**
+	  * @return
+	  */
+	public String getField() {
+		return field;
+	}
+
+	public String getField(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getField(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getField();
+				}
+				return null; // nothing found
+			}
+		}
 	}
 
 	/**
 	 * @return
 	 */
-	public String getQualifier() {
-		return qualifier;
+	public String getTableConstraint() {
+		return tableConstraint;
+	}
+
+	public String getTableConstraint(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getTableConstraint(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getTableConstraint();
+				}
+				return null; // nothing found
+			}
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	public String getHandler() {
+		return handler;
+	}
+
+	public String getHandler(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getHandler(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getHandler();
+				}
+				return null; // nothing found
+			}
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	public String getRef() {
+		return ref;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getValue() {
+		return value;
+	}
+
+	/**
+	 * Get all PushOptions objects available as an array.  OptionPushes are returned in the order they were added.
+	 * @return PushOptions[]
+	 */
+	public PushOptions[] getPushOptions() {
+		return (PushOptions[]) uiOptionPushes.toArray(new PushOptions[uiOptionPushes.size()]);
+	}
+
+	/**
+	 * @param object
+	 */
+	public void addPushOption(PushOptions optionPush) {
+		uiOptionPushes.add(optionPush);
+		hashcode = -1;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getQualifiers() {
+		return qualifiers;
+	}
+
+	public String getQualifiers(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getQualifiers(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getQualifiers();
+				}
+				return null; // nothing found
+			}
+		}
 	}
 
 	/**
@@ -227,76 +294,137 @@ public class Option extends BaseConfigurationObject {
 		return type;
 	}
 
-  /**
-   * Determine if an Option supports a given field and tableConstraint.
-   * 
-   * @param field -- String mart database field
-   * @param tableConstraint -- String mart database table
-   * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
-   */
-  public boolean supports(String field, String tableConstraint) {
-  	return (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint));
-  }
-  
+	public String getType(String refIname) {
+		if (uiOptionNameMap.containsKey(refIname))
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getType(refIname);
+		else {
+			if (uiOptionPushes.size() < 1)
+				return null;
+			else {
+				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					if (element.containsOption(refIname))
+						return element.getOptionByInternalName(refIname).getType();
+				}
+				return null; // nothing found
+			}
+		}
+	}
+
+	/**
+	 * Determine if an Option supports a given field and tableConstraint.
+	 * 
+	 * @param field -- String mart database field
+	 * @param tableConstraint -- String mart database table
+	 * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
+	 */
+	public boolean supports(String field, String tableConstraint) {
+		boolean supports =
+			(this.field != null
+				&& this.field.equals(field)
+				&& this.tableConstraint != null
+				&& this.tableConstraint.equals(tableConstraint));
+
+		if (!supports) {
+			if (lastSupportingOption == null) {
+				for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+					Option element = (Option) iter.next();
+					if (element.supports(field, tableConstraint)) {
+						lastSupportingOption = element;
+						supports = true;
+						break;
+					}
+				}
+
+				if (!supports) {
+					for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
+						PushOptions element = (PushOptions) uiOptionPushes.get(i);
+						if (element.supports(field, tableConstraint)) {
+							lastSupportingOption = element.getOptionByFieldNameTableConstraint(field, tableConstraint);
+							supports = true;
+							break;
+						}
+					}
+				}
+			} else {
+				if (lastSupportingOption.supports(field, tableConstraint))
+					supports = true;
+				else {
+					lastSupportingOption = null;
+					supports = supports(field, tableConstraint);
+				}
+			}
+		}
+		return supports;
+	}
+
+	public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supports(field, tableConstraint))
+			return lastSupportingOption;
+		else
+			return null;
+	}
+
 	/**
 		* Debug output
 		*/
-	 public String toString() {
-		 StringBuffer buf = new StringBuffer();
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
 
-		 buf.append("[");
-		 buf.append(super.toString());
-		 buf.append(", isSelectable=").append(isSelectable);
-		 buf.append(", field=").append(field);
-		 buf.append(", tableConstraint=").append(tableConstraint);
-		 buf.append(", value=").append(value);
-		 buf.append(", ref=").append(ref);
-		 buf.append(", qualifier=").append(qualifier);
-		 buf.append(", type=").append(type);
+		buf.append("[");
+		buf.append(super.toString());
+		buf.append(", isSelectable=").append(isSelectable);
+		buf.append(", field=").append(field);
+		buf.append(", tableConstraint=").append(tableConstraint);
+		buf.append(", value=").append(value);
+		buf.append(", ref=").append(ref);
+		buf.append(", qualifiers=").append(qualifiers);
+		buf.append(", type=").append(type);
+		buf.append(", handler=");
+		if (handler != null)
+			buf.append(handler);
+		else
+			buf.append("null");
 
-		 if (inFilterSet)
-			 buf.append(", filterSetReq=").append(filterSetReq);
-		
-		 if (hasOptions)
-			 buf.append(", options=").append(uiOptions);
-		 buf.append("]");
+		if (hasOptions)
+			buf.append(", options=").append(uiOptions);
+		buf.append("]");
 
-		 return buf.toString();
-	 }
-	 /**
+		return buf.toString();
+	}
+	/**
 		* Allows Equality Comparisons manipulation of Option objects
 		*/
-	 public boolean equals(Object o) {
-		 return o instanceof Option && hashCode() == ((Option) o).hashCode();
-	 }
+	public boolean equals(Object o) {
+		return o instanceof Option && hashCode() == o.hashCode();
+	}
 
-	 /* (non-Javadoc)
+	/* (non-Javadoc)
 		* @see java.lang.Object#hashCode()
 		*/
-	 public int hashCode() {
+	public int hashCode() {
 
-		 if (hashcode == -1) {
+		if (hashcode == -1) {
 
-			 hashcode = super.hashCode();
+			hashcode = super.hashCode();
 
-			 hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
-			 hashcode = (inFilterSet) ? (31 * hashcode) + 1 : hashcode;
-			 hashcode = (31 * hashcode) + field.hashCode();
-			 hashcode = (31 * hashcode) + tableConstraint.hashCode();
-			 hashcode = (31 * hashcode) + value.hashCode();
-			 hashcode = (31 * hashcode) + ref.hashCode();
-			 hashcode = (31 * hashcode) + qualifier.hashCode();
-			 hashcode = (31 * hashcode) + type.hashCode();
-			 hashcode = (31 * hashcode) + filterSetReq.hashCode();
-			
-			 for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
-				 hashcode = (31 * hashcode) + iter.next().hashCode();
-			 }
-      
-			 for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
-				 hashcode = (31 * hashcode) + iter.next().hashCode();
-			 }
-		 }
-		 return hashcode;
-	 }
+			hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
+			hashcode = (31 * hashcode) + field.hashCode();
+			hashcode = (31 * hashcode) + tableConstraint.hashCode();
+			hashcode = (31 * hashcode) + value.hashCode();
+			hashcode = (31 * hashcode) + ref.hashCode();
+			hashcode = (31 * hashcode) + qualifiers.hashCode();
+			hashcode = (31 * hashcode) + type.hashCode();
+			hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
+
+			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+				hashcode = (31 * hashcode) + iter.next().hashCode();
+			}
+
+			for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
+				hashcode = (31 * hashcode) + iter.next().hashCode();
+			}
+		}
+		return hashcode;
+	}
 }

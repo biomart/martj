@@ -59,8 +59,8 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public AttributePage(String internalName, String displayName, String description) throws ConfigurationException {
-    super( internalName, displayName, description);
-    
+		super(internalName, displayName, description);
+
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class AttributePage extends BaseConfigurationObject {
 			agroupRank++;
 		}
 	}
-	
+
 	/**
 	 * Returns a List of AttributeGroup/DSAttributeGroup objects contained in the AttributePage, in the order they were added.
 	 * 
@@ -158,7 +158,7 @@ public class AttributePage extends BaseConfigurationObject {
 		* @return AttributeDescription requested, or null
 		*/
 	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
-		if ( containsAttributeDescription(internalName) )
+		if (containsAttributeDescription(internalName))
 			return lastAtt;
 		else
 			return null;
@@ -172,25 +172,24 @@ public class AttributePage extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsAttributeDescription(String internalName){
+	public boolean containsAttributeDescription(String internalName) {
 		boolean found = false;
 
 		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
 				Object group = attributeGroups.get((Integer) iter.next());
-				if (group instanceof AttributeGroup && ( (AttributeGroup) group).containsAttributeDescription(internalName)) {
-					lastAtt = ( (AttributeGroup) group).getAttributeDescriptionByInternalName(internalName);
+				if (group instanceof AttributeGroup && ((AttributeGroup) group).containsAttributeDescription(internalName)) {
+					lastAtt = ((AttributeGroup) group).getAttributeDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
-			} 
-		}
-		else {
+			}
+		} else {
 			if (lastAtt.getInternalName().equals(internalName))
-			  found = true;
+				found = true;
 			else {
 				lastAtt = null;
-				found = containsAttributeDescription(internalName);			
+				found = containsAttributeDescription(internalName);
 			}
 		}
 		return found;
@@ -208,7 +207,7 @@ public class AttributePage extends BaseConfigurationObject {
 		else
 			return null;
 	}
-  
+
 	/**
 	 * Determine if this AttributePage supports a given field and tableConstraint.  Caches the first supporting AttributeDescription
 	 * that it finds, for subsequent call to getAttributeDescriptionByFieldNameTableConstraint.
@@ -218,19 +217,22 @@ public class AttributePage extends BaseConfigurationObject {
 	 */
 	public boolean supports(String field, String tableConstraint) {
 		boolean supports = false;
-  	
+
 		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
-			AttributeGroup element = (AttributeGroup) iter.next();
-			
-			if (element.supports(field, tableConstraint)) {
-				lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
-				supports = true;
-				break;
+			Object element = iter.next();
+			if (element instanceof AttributeGroup) {
+				AttributeGroup attgroup = (AttributeGroup) element;
+
+				if (attgroup.supports(field, tableConstraint)) {
+					lastSupportingAttribute = attgroup.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
+					supports = true;
+					break;
+				}
 			}
 		}
 		return supports;
 	}
-  
+
 	/**
 	 * Convenience method. Returns all of the AttributeDescriptions contained in all of the AttributeGroups.
 	 * 
@@ -238,14 +240,14 @@ public class AttributePage extends BaseConfigurationObject {
 	 */
 	public List getAllAttributeDescriptions() {
 		List atts = new ArrayList();
-  	
+
 		for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
 			Object ag = attributeGroups.get((Integer) iter.next());
-  		
-  		if (ag instanceof AttributeGroup)
-			  atts.addAll(( (AttributeGroup) ag ).getAllAttributeDescriptions());
+
+			if (ag instanceof AttributeGroup)
+				atts.addAll(((AttributeGroup) ag).getAllAttributeDescriptions());
 		}
-		
+
 		return atts;
 	}
 
@@ -257,35 +259,34 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @return AttributeGroup containing Attribute Description with given internalName, or null.
 	 */
 	public AttributeGroup getGroupForAttributeDescription(String internalName) {
-		if (! containsAttributeDescription(internalName))
+		if (!containsAttributeDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
 			for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
 
-        Object groupo = iter.next();
-        
-        if (groupo instanceof AttributeGroup) {
-          
-				  AttributeGroup group = (AttributeGroup) groupo;
-				
-				  if (group.containsAttributeDescription(internalName)) {
-					  lastGroup = group;
-					  break;
-				  }
-        }
+				Object groupo = iter.next();
+
+				if (groupo instanceof AttributeGroup) {
+
+					AttributeGroup group = (AttributeGroup) groupo;
+
+					if (group.containsAttributeDescription(internalName)) {
+						lastGroup = group;
+						break;
+					}
+				}
 			}
 			return lastGroup;
-		}
-		else {
+		} else {
 			if (lastGroup.getInternalName().equals(internalName))
 				return lastGroup;
 			else {
 				lastGroup = null;
 				return getGroupForAttributeDescription(internalName);
 			}
-		}  	
+		}
 	}
-  
+
 	/**
 	 * Returns a AttributeCollection for a particular Attribute Description (AttributeDescription or UIDSAttributeDescription)
 	 * based on its internalName.
@@ -294,11 +295,11 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @return AttributeCollection object containing Attribute Description with given internalName, or null.
 	 */
 	public AttributeCollection getCollectionForAttributeDescription(String internalName) {
-		if (! containsAttributeDescription(internalName))
-					return null;
-		else if (lastColl == null) { 
-		  lastColl = getGroupForAttributeDescription(internalName).getCollectionForAttributeDescription(internalName);
-		  return lastColl;
+		if (!containsAttributeDescription(internalName))
+			return null;
+		else if (lastColl == null) {
+			lastColl = getGroupForAttributeDescription(internalName).getCollectionForAttributeDescription(internalName);
+			return lastColl;
 		} else {
 			if (lastColl.getInternalName().equals(internalName))
 				return lastColl;
@@ -308,7 +309,7 @@ public class AttributePage extends BaseConfigurationObject {
 			}
 		}
 	}
-	
+
 	/**
 	 * debug output
 	 */
@@ -316,47 +317,47 @@ public class AttributePage extends BaseConfigurationObject {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-    buf.append( super.toString() );
-    buf.append(", AttributeGroups=").append(attributeGroups);
+		buf.append(super.toString());
+		buf.append(", AttributeGroups=").append(attributeGroups);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
-  /**
+	/**
 	 * Allows Equality Comparisons manipulation of AttributePage objects
 	 */
 	public boolean equals(Object o) {
 		return o instanceof AttributePage && hashCode() == ((AttributePage) o).hashCode();
 	}
-	
-  public int hashCode() {
-  	int tmp = super.hashCode();
-		
+
+	public int hashCode() {
+		int tmp = super.hashCode();
+
 		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
 			Object element = (AttributeGroup) iter.next();
 			if (element instanceof AttributeGroup)
-			  tmp = (31 * tmp) + ( (AttributeGroup) element ).hashCode();
+				tmp = (31 * tmp) + ((AttributeGroup) element).hashCode();
 			else
-			  tmp = (31 * tmp) + ( (DSAttributeGroup) element ).hashCode();
+				tmp = (31 * tmp) + ((DSAttributeGroup) element).hashCode();
 		}
-		
-  	return tmp;
-  }
-  
-private int agroupRank = 0;
+
+		return tmp;
+	}
+
+	private int agroupRank = 0;
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 
 	//cache one AttributeDescription object for call to containsAttributeDescription or getAttributeDescriptionByName
 	private AttributeDescription lastAtt = null;
-	
+
 	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
 	private AttributeDescription lastSupportingAttribute = null;
-	
+
 	//cache one AttributeGroup for call to getGroupForAttribute
 	private AttributeGroup lastGroup = null;
-	
+
 	//cache one AttributeCollection for call to getCollectionForAttribute
 	private AttributeCollection lastColl = null;
 }

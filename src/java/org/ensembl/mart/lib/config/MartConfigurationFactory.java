@@ -50,14 +50,13 @@ public class MartConfigurationFactory {
 	private final String DATASET = "Dataset";
 	private final String STARBASE = "StarBase";
 	private final String PRIMARYKEY = "PrimaryKey";
-	private final String FILTERSET = "FilterSet";
-	private final String FILTERSETDESCRIPTION = "FilterSetDescription";
+	private final String ENABLE = "Enable";
+	private final String DISABLE = "Disable";
 	private final String FILTERPAGE = "FilterPage";
 	private final String FILTERGROUP = "FilterGroup";
 	private final String DSFILTERGROUP = "DSFilterGroup";
 	private final String FILTERCOLLECTION = "FilterCollection";
 	private final String FILTERDESCRIPTION = "FilterDescription";
-	private final String DSFILTERDESCRIPTION = "MapFilterDescription";
 	private final String ATTRIBUTEPAGE = "AttributePage";
 	private final String ATTRIBUTEGROUP = "AttributeGroup";
 	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
@@ -72,22 +71,19 @@ public class MartConfigurationFactory {
 	private final String DISPLAYNAME = "displayName";
 	private final String DESCRIPTION = "description";
 	private final String TYPE = "type";
-	private final String FIELDNAME = "fieldName";
-	private final String QUALIFIER = "qualifier";
+	private final String FIELD = "field";
+	private final String QUALIFIERS = "qualifiers";
 	private final String TABLECONSTRAINT = "tableConstraint";
 	private final String MAXSELECT = "maxSelect";
 	private final String MAXLENGTH = "maxLength";
 	private final String SOURCE = "source";
 	private final String HOMEPAGEURL = "homepageURL";
 	private final String LINKOUTURL = "linkoutURL";
-	private final String TABLECONSTRAINTMODIFIER = "tableConstraintModifier";
-	private final String FIELDNAMEMODIFIER = "fieldNameModifier";
-	private final String FILTERSETNAME = "filterSetName";
-	private final String FILTERSETREQ = "filterSetReq";
 	private final String HANDLER = "handler";
 	private final String ISSELECTABLE = "isSelectable";
   private final String VALUE = "value";
   private final String REF = "ref";
+  private final String VALUECONDITION = "valueCondition";
 
 	public MartConfiguration getInstance(Connection conn)
 		throws ConfigurationException {
@@ -180,7 +176,7 @@ public class MartConfigurationFactory {
     Iterator iter = martconfElement.getDescendants( new MartElementFilter( FILTERDESCRIPTION ) );
     if ( !iter.hasNext() ) throw new ConfigurationException("Layout is missing from configuration file.");
     Element layoutElement = (Element) iter.next();
-    martconf.setLayout( getUIFilterDescription( layoutElement ) );
+    martconf.setLayout( getFilterDescription( layoutElement ) );
 
 		return martconf;
 	}
@@ -247,7 +243,7 @@ public class MartConfigurationFactory {
 	private DefaultFilter getDefaultFilter(Element thisElement)
 		throws ConfigurationException {
 		FilterDescription desc =
-			getUIFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
+			getFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
 		String value = thisElement.getAttributeValue(VALUE);
 		return new DefaultFilter(desc, value);
 	}
@@ -282,14 +278,6 @@ public class MartConfigurationFactory {
 		FilterGroup fg = new FilterGroup(intName, dispname, desc);
 
 		for (Iterator iter =
-			thisElement.getDescendants(new MartElementFilter(FILTERSET));
-			iter.hasNext();
-			) {
-			Element element = (Element) iter.next();
-			fg.addFilterSet(getFilterSet(element));
-		}
-
-		for (Iterator iter =
 			thisElement.getDescendants(new MartElementFilter(FILTERCOLLECTION));
 			iter.hasNext();
 			) {
@@ -305,72 +293,25 @@ public class MartConfigurationFactory {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String objCode = thisElement.getAttributeValue(HANDLER, "");
+		String handler = thisElement.getAttributeValue(HANDLER, "");
 
-		DSFilterGroup fg = new DSFilterGroup(intName, dispname, desc, objCode);
+		DSFilterGroup fg = new DSFilterGroup(intName, dispname, desc, handler);
 
 		return fg;
-	}
-
-	private FilterSet getFilterSet(Element thisElement)
-		throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
-		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-
-		FilterSet fs = new FilterSet(intName, typeval, dispname, desc);
-		for (Iterator iter =
-			thisElement.getDescendants(new MartElementFilter(FILTERSETDESCRIPTION));
-			iter.hasNext();
-			) {
-			Element element = (Element) iter.next();
-			fs.addFilterSetDescription(getFilterSetDescription(element));
-		}
-		return fs;
-	}
-
-	private FilterSetDescription getFilterSetDescription(Element thisElement)
-		throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
-		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String tableConstraintModifier =
-			thisElement.getAttributeValue(TABLECONSTRAINTMODIFIER, "");
-		String fieldNameModifier =
-			thisElement.getAttributeValue(FIELDNAMEMODIFIER, "");
-
-		FilterSetDescription fsd =
-			new FilterSetDescription(
-				intName,
-				tableConstraintModifier,
-				fieldNameModifier,
-				dispname,
-				desc);
-
-		return fsd;
 	}
 
 	private FilterCollection getFilterCollection(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-		String filterSetName = thisElement.getAttributeValue(FILTERSETNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String typeval = thisElement.getAttributeValue(TYPE, "");
 
 		FilterCollection fc =
-			new FilterCollection(intName, typeval, dispname, filterSetName, desc);
-		for (Iterator iter =
-			thisElement.getDescendants(new MartFilterDescriptionFilter());
-			iter.hasNext();
-			) {
+			new FilterCollection(intName, dispname, desc);
+			
+		for (Iterator iter = thisElement.getDescendants(new MartFilterDescriptionFilter()); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			if (element.getName().equals(FILTERDESCRIPTION))
-				fc.addUIFilter(getUIFilterDescription(element));
-			else if (element.getName().equals(DSFILTERDESCRIPTION))
-				fc.addUIDSFilterDescription(getUIDSFilterDescription(element));
+			fc.addFilterDescription(getFilterDescription(element));
 		}
 
 		return fc;
@@ -384,15 +325,15 @@ public class MartConfigurationFactory {
 		boolean isSelectable = Boolean.valueOf(isSelectableString).booleanValue();
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-    String field = thisElement.getAttributeValue(FIELDNAME, "");
+    String field = thisElement.getAttributeValue(FIELD, "");
     String tableConstraint = thisElement.getAttributeValue(TABLECONSTRAINT, "");
     String type = thisElement.getAttributeValue(TYPE, "");
-		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
-		String qual = thisElement.getAttributeValue(QUALIFIER, "");
+		String qual = thisElement.getAttributeValue(QUALIFIERS, "");
     String value = thisElement.getAttributeValue(VALUE, "");
     String ref = thisElement.getAttributeValue(REF, "");
-
-		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref, type, filterSetReq, qual );
+		String handler = thisElement.getAttributeValue(HANDLER);
+		
+		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref, type, qual, handler);
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();
@@ -404,15 +345,12 @@ public class MartConfigurationFactory {
     for (Iterator iter = thisElement.getChildElements(PUSHOPTIONS).iterator();
           iter.hasNext();
           ) {
-          o.addOptionPush( getPushOptions( (Element) iter.next() ) );
+          o.addPushOption( getPushOptions( (Element) iter.next() ) );
         }
 
 		return o;
 	}
-
-	/**
-   * @param suboption
-   */
+ 
   private PushOptions getPushOptions(Element thisElement)  throws ConfigurationException {
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
@@ -430,44 +368,17 @@ public class MartConfigurationFactory {
     return op;
   }
 
-  private MapFilterDescription getUIDSFilterDescription(Element thisElement)
-		throws ConfigurationException {
-      
-		String internalName = thisElement.getAttributeValue(INTERNALNAME, "");
-    String fieldName = thisElement.getAttributeValue(FIELDNAME, "");
-		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String handler = thisElement.getAttributeValue(HANDLER, "");
-		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
-
-		MapFilterDescription f =
-			new MapFilterDescription(
-				internalName,
-        fieldName,
-				typeval,
-        "", // TODO support qualifier
-				dispname,
-        "", // TODO support table constraint
-        filterSetReq,
-        desc,
-        handler);
-
-		return f;
-	}
-
-	private FilterDescription getUIFilterDescription(Element thisElement)
+	private FilterDescription getFilterDescription(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
+		String fieldnm = thisElement.getAttributeValue(FIELD, "");
 		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
+		String handler = thisElement.getAttributeValue(HANDLER);
 
-		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
-
-		String qual = thisElement.getAttributeValue(QUALIFIER, "");
+		String qual = thisElement.getAttributeValue(QUALIFIERS, "");
 
 		FilterDescription f =
 			new FilterDescription(
@@ -477,7 +388,7 @@ public class MartConfigurationFactory {
 				qual,
 				dispname,
 				tableconst,
-				filterSetReq,
+				handler,
 				desc);
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
@@ -487,9 +398,29 @@ public class MartConfigurationFactory {
 			f.addOption(getOption(option));
 		}
 
+    for(Iterator iter = thisElement.getChildElements(ENABLE).iterator(); iter.hasNext();) {
+    	  f.addEnable(getEnable((Element) iter.next()));
+    }
+    
+		for(Iterator iter = thisElement.getChildElements(DISABLE).iterator(); iter.hasNext();) {
+				f.addDisable(getDisable((Element) iter.next()));
+		}
+		
 		return f;
 	}
 
+  private Enable getEnable(Element thisElement) throws ConfigurationException {
+		String ref = thisElement.getAttributeValue(REF, "");
+		String valueCondition = thisElement.getAttributeValue(VALUECONDITION, "");
+		return new Enable(ref, valueCondition);
+  }
+
+	private Disable getDisable(Element thisElement) throws ConfigurationException {
+		String ref = thisElement.getAttributeValue(REF, "");
+		String valueCondition = thisElement.getAttributeValue(VALUECONDITION, "");
+		return new Disable(ref, valueCondition);
+	}
+   
 	private AttributePage getAttributePage(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
@@ -574,7 +505,7 @@ public class MartConfigurationFactory {
 		if (!thisElement.getAttributeValue(MAXLENGTH, "").equals(""))
 			maxl = Integer.parseInt(thisElement.getAttributeValue(MAXLENGTH));
 
-		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
+		String fieldnm = thisElement.getAttributeValue(FIELD, "");
 		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
 		String src = thisElement.getAttributeValue(SOURCE, "");
 		String hpage = thisElement.getAttributeValue(HOMEPAGEURL, "");

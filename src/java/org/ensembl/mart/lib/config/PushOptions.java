@@ -32,6 +32,8 @@ public class PushOptions extends BaseConfigurationObject {
 
   private String ref;
   private List options = new ArrayList();
+  private Option lastOption = null; // cache one Option for call to containsOption/getOptionByInternalName
+  private Option lastSupportingOption = null; // cache one Option for call to supports/getOptionByFieldNameTableConstraint
   private int hashcode = -1;
 
   /**
@@ -103,7 +105,82 @@ public class PushOptions extends BaseConfigurationObject {
     return (Option[]) options.toArray(new Option[options.size()]);
   }
 
+  /**
+   * Determine if this PushOptions contains a specific Option named by internalName.
+   * Caches the Option with this internalName if found, for subsequent call to getOptionByInternalName.
+   * @param internalName - String name mapping to an Option contained within this PushOptions.
+   * @return true if this PushOptions contains an Option named by internalName, false otherwise.
+   */
+  public boolean containsOption(String internalName) {
+  	boolean ret = false;
+  	
+  	if (lastOption == null) {
+  	  for (int i = 0, n = options.size(); i < n; i++) {
+			  Option element = (Option) options.get(i);
+			  if (element.getInternalName().equals(internalName)) {
+				  ret = true;
+				  lastOption = element;
+			 	  break;
+			  }
+		  }
+  	} else {
+  		if (lastOption.getInternalName().equals(internalName))
+  		  ret = true;
+  		else {
+  			lastOption = null;
+  			return containsOption(internalName);
+  		}
+  	}
+  	return ret;
+  }
 
+  /**
+   * Get an Option with a specific internalName, contained within this PushOptions.
+   * @param internalName - name mapping to an Option contained within this PushOptions.
+   * @return Option named by internalName, or null
+   */
+  public Option getOptionByInternalName(String internalName) {
+  	if (containsOption(internalName))
+  	  return lastOption;
+  	else
+  	  return null;
+  }
+  
+  /**
+   * Determine if this PushOptions contains an Option supporting a specific field and TableConstraint.
+   * Also caches the first supporting Option it finds, for subsequent call to getOptionByFieldNameTableConstraint.
+   * @param field - String field name in a mart database table
+   * @param tableConstraint - String tableConstraint mapping to a mart database
+   * @return true if supporting Option found, false if not
+   */
+  public boolean supports(String field, String tableConstraint) {
+  	boolean supports = false;
+  	for (int i = 0, n = options.size(); i < n; i++) {
+			Option element = (Option) options.get(i);
+			if (element.supports(field, tableConstraint)) {
+				lastSupportingOption = element;
+				supports = true;
+				break;
+			}
+		}
+  	return supports;  	
+  }
+  
+  /**
+   * Get an Option supporting a specific field, tableConstraint, contained within this PushOptions.
+   * Calling supports first caches the last supporting Option, if found, making subsequent calls to
+   * getOptionByFieldNameTableConstraint faster.
+   * @param field - String field name in a mart database table
+   * @param tableConstraint - String tableConstraint mapping to a mart database
+   * @return Option supporting this field, tableConstraint combination, or null.
+   */
+  public Option getOptionByFieldNameTableConstraint(String field, String tableConstraint) {
+  	if (supports(field, tableConstraint))
+  	  return lastSupportingOption;
+  	else
+  	  return null;
+  }
+  
   public String toString() {
     StringBuffer buf = new StringBuffer();
 

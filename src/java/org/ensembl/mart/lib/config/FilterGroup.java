@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -82,34 +81,6 @@ public class FilterGroup extends BaseConfigurationObject {
 			cRank++;
 		}
 	}
-
-  /**
-   * Add a FilterSet to the FilterGroup.
-   * 
-   * @param f a FilterSet object
-   */
-  public void addFilterSet(FilterSet f) {
-  	if (! hasFilterSets )
-  	  hasFilterSets = true;
-  	  
-  	filterSets.put(f.getInternalName(), f);
-  }
-  
-  /**
-   * Set a group of FilterSet objects in one call. Note, subsequent calls to addFilterSet, setFilterSets
-   * will add to what was added before.
-   * 
-   * @param f an array of FilterSet objects
-   */
-  public void setFilterSets(FilterSet[] f) {
-		if (! hasFilterSets )
-			hasFilterSets = true;
-			  	
-  	for (int i = 0, n = f.length; i < n; i++) {
-			FilterSet set = f[i];
-			filterSets.put(set.getInternalName(), set);
-		}
-  }
   
 	/**
 	 * Returns an array of FilterCollection objects, in the order they were added
@@ -145,59 +116,16 @@ public class FilterGroup extends BaseConfigurationObject {
 	public boolean containsFilterCollection(String internalName) {
 		return filterCollectionNameMap.containsKey(internalName);
 	}
-
-  /**
-   * Returns all FilterSets contained by this FilterGroup.
-   * 
-   * @return an array of FilterSet objects.
-   */
-  public FilterSet[] getFilterSets() {
-  	FilterSet[] f = new FilterSet[ filterSets.size() ];
-  	filterSets.values().toArray(f);
-  	return f;
-  }
-  
-  /**
-   * Returns a specific FilterSet, named by internalName.
-   * 
-   * @param internalName - String internal name of the requested FilterSet.
-   * @return FilterSet named by internalName, or null.
-   */
-  public FilterSet getFilterSetByName(String internalName) {
-  	if (filterSets.containsKey(internalName))
-  	  return (FilterSet) filterSets.get(internalName);
-  	else
-  	  return null;
-  }
-  
-  /**
-   * Check if a FilterGroup contains a specific FilterSet, named by internalName.
-   * 
-   * @param internalName - String internal name of the FilterSet.
-   * @return boolean, true if found, false if not.
-   */
-  public boolean containsFilterSet(String internalName) {
-  	return filterSets.containsKey(internalName);
-  }
-  
-  /**
-   * Method for UI to determine if a FilterGroup has FilterSets to render.
-   *  
-   * @return boolean, true if FilterSets have been added to this FilterGroup, false if not.
-   */
-  public boolean hasFilterSets() {
-  	return hasFilterSets;
-  }
   
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular FilterDescription/MapFilterDescription object.
+		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular FilterDescription object.
 		* Note, it is best to first call containsFilterDescription, as there is a caching system to cache a FilterDescription during a call 
 		* to containsFilterDescription.
 		* 
 		* @param internalName name of the requested FilterDescription
-		* @return requested Object (either instanceof FilterDescription or MapFilterDescription), or null.
+		* @return requested FilterDescription, or null.
 		*/
-	public Object getFilterDescriptionByInternalName(String internalName) {
+	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
 		if ( containsFilterDescription(internalName) )
 			return lastFilt;
 		else
@@ -205,7 +133,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific FilterDescription/MapFilterDescription object.
+		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific FilterDescription object.
 		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
 		*  found, this method caches the FilterDescription it has found.
 		* 
@@ -226,15 +154,7 @@ public class FilterGroup extends BaseConfigurationObject {
 			}
 		}
 		else {
-			String lastIntName;
-			if (lastFilt instanceof FilterDescription)
-			  lastIntName = ( (FilterDescription) lastFilt).getInternalName();
-			else if (lastFilt instanceof MapFilterDescription)
-			  lastIntName = ( (MapFilterDescription) lastFilt).getInternalName();
-			else
-			  lastIntName = ""; // should not get here
-			  
-			if ( lastIntName.equals(internalName) )
+			if ( lastFilt.getInternalName().equals(internalName) )
 			  found = true;
 			else {
 				lastFilt = null;
@@ -245,7 +165,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	}
 
   /**
-   * Convenience method to get all FilterDescription/MapFilterDescription objects 
+   * Convenience method to get all FilterDescription objects 
    * contained in all FilterCollections in this FilterGroup.
    * 
    * @return List of FilterDescription objects.
@@ -261,70 +181,9 @@ public class FilterGroup extends BaseConfigurationObject {
 		
 		return filts;
   }
-  
-  /**
-   * Convenience method for non graphical UI to check if a FilterGroup contains a specific
-   * FilterSetDescription.
-   * 
-   * @param internalName - String name that internally represents the requested FilterSetDescription
-   * @return boolean, true if found within one of the filterSet objects contained in the filterGroup, false if not found
-   */
-  public boolean containsFilterSetDescription(String internalName) {
-  	if (! hasFilterSets)
-  	  return false;
-  	  
-  	boolean found = false;
-  	
-  	if (lastFSetDescription == null) {
-  		for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
-				FilterSet fset = (FilterSet) iter.next();
-				if (fset.containsFilterSetDescription(internalName)) {
-					lastFSetDescription = fset.getFilterSetDescriptionByName(internalName);
-					found = true;
-					break;
-				}
-			}
-  	}
-  	else {
-  		if (lastFSetDescription.getInternalName().equals(internalName))
-  		  found = true;
-  		else {
-  			lastFSetDescription = null;
-  			found = containsFilterSetDescription(internalName);
-  		}
-  	}
-  	return found;
-  }
-  
-  /**
-   * Convenience method for non graphical UI to get a specific FilterSetDescription by name.
-   * 
-   * @param internalName - String name that internally represents the requested FilterSetDescription
-   * @return FilterSetDescription object requested, or null if not contained within this FilterGroup
-   */
-  public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
-  	if (! hasFilterSets)
-  	  return null;
-  	else if (containsFilterSetDescription(internalName))
-  	  return lastFSetDescription;
-  	else
-  	  return null;
-  }
-  
-  public FilterSetDescription[] getAllFilterSetDescriptions() {
-  	List fsds = new ArrayList();
-  	
-  	for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
-			FilterSet fset = (FilterSet) iter.next();
-			fsds.addAll( Arrays.asList( fset.getFilterSetDescriptions() ) );			
-		}
-  	FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
-  	fsds.toArray(f);
-  	return f;
-  }
-  
+
 	/**
-	 * Returns the FilterCollection for a particular Filter (FilterDescription or MapFilterDescription)
+	 * Returns the FilterCollection for a particular FilterDescription
 	 * based on its internalName.
 	 * 
 	 * @param internalName - String internalName of the Filter Description for which the collection is being requested.
@@ -408,8 +267,6 @@ public class FilterGroup extends BaseConfigurationObject {
 		buf.append("[");
 		buf.append( super.toString() );
 		buf.append(", filterCollections=").append(filterCollections);
-		if (hasFilterSets)
-			buf.append(", filterSets=").append(filterSets);
 		buf.append("]");
 
 		return buf.toString();
@@ -419,7 +276,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	 * Allows Equality Comparisons manipulation of FilterGroup objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof FilterGroup && hashCode() == ((FilterGroup) o).hashCode();
+		return o instanceof FilterGroup && hashCode() == o.hashCode();
 	}
 
   public int hashCode() {
@@ -430,28 +287,16 @@ public class FilterGroup extends BaseConfigurationObject {
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		
-		if (hasFilterSets) {
-			for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
-				FilterSet element = (FilterSet) iter.next();
-				tmp = (31 * tmp) + element.hashCode();
-			}
-		}
-		
 		return tmp;
   }
   
-private int cRank = 0; //keep track of collection order
-	private boolean hasFilterSets = false;
-	
+  private int cRank = 0; //keep track of collection order
+		
 	private TreeMap filterCollections = new TreeMap();
 	private Hashtable filterCollectionNameMap = new Hashtable();
-  private Hashtable filterSets = new Hashtable(); // do not need to presever order of filterSets
-  
+    
 	//cache one FilterDescription for call to containsFilterDescription or getUIFiterDescriptionByName
-	private Object lastFilt = null;
-	
-	//cache one FilterSetDescription for a call to containsFilterSetDescription or getFilterSetDescriptionByName
-	private FilterSetDescription lastFSetDescription = null;
+	private FilterDescription lastFilt = null;
 	
 	//cache one FilterCollection for call to getCollectionForFilter
 	private FilterCollection lastColl = null;
