@@ -202,7 +202,8 @@ public class DetailedDataSource implements DataSource {
       user,
       password,
       DEFAULTPOOLSIZE,
-      DEFAULTDRIVER);
+      DEFAULTDRIVER,
+      null);
   }
 
   /**
@@ -227,6 +228,33 @@ public class DetailedDataSource implements DataSource {
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
+      this(databaseType, host, port, database, user, password, maxPoolSize, jdbcDriverClassName, defaultName(host, port, database, user));
+    }
+    
+  /**
+   * Datasource constructed by specific parameters. The connection is automatically
+   * derived from the host, port and databaseType.
+   * 
+   * @param databaseType database type e.g. mysql.
+   * @param host host name e.g. ensembldb.ensembl.org
+   * @param port port number. e.g. 3306.
+   * @param database name of database on database server  
+   * @param user username
+   * @param password password, can be null
+   * @param maxPoolSize maximum poolsize.
+   * @param jdbcDriverClassName name of jdbc driver to back the datasource.
+   * @param displayName name to give to DetailedDataSource
+   */
+  public DetailedDataSource(
+    String databaseType,
+    String host,
+    String port,
+    String database,
+    String user,
+    String password,
+    int maxPoolSize,
+    String jdbcDriverClassName,
+    String displayName) {
 
     this(
       databaseType,
@@ -237,7 +265,8 @@ public class DetailedDataSource implements DataSource {
       user,
       password,
       maxPoolSize,
-      jdbcDriverClassName);
+      jdbcDriverClassName, 
+      displayName);
 
   }
 
