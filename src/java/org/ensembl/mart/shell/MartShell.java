@@ -722,13 +722,13 @@ public class MartShell {
 		if (martHost == null || martHost.length() < 5) {
 			validQuery = false;
 			setBatchError("Must set Host");
-		} else if (martUser.length() < 1) {
+		} else if (martUser == null || martUser.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a User");
-		} else if (martPass.length() < 1) {
+		} else if (martPass == null || martPass.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a Password");
-		} else if (martDatabase.length() < 5) {
+		} else if (martDatabase == null || martDatabase.length() < 5) {
 			validQuery = false;
 			setBatchError("Must set a Mart Database");
 		} else {
