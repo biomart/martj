@@ -40,7 +40,7 @@ public class UIFilterDescription {
  * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
  * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
  * @param type String type of filter.  Must not be null or empty.
- * @param qualifier String qualifier to use in a SQL where clause. Must not be null or empty.
+ * @param qualifier String qualifier to use in a SQL where clause.
  * @throws ConfigurationException when required values are null or empty.
  */
   public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier) throws ConfigurationException {
@@ -53,7 +53,7 @@ public class UIFilterDescription {
 	 * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
 	 * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
 	 * @param type String type of filter.  Must not be null or empty.
-	 * @param qualifier String qualifier to use in a SQL where clause. Must not be null displayName.
+	 * @param qualifier String qualifier to use in a SQL where clause.
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL fieldName
 	 * @param description String description of the Filter
@@ -62,8 +62,7 @@ public class UIFilterDescription {
 	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	String description) throws ConfigurationException {
 		if (internalName == null || internalName.equals("") 
 		  || fieldName == null || fieldName.equals("")
-			|| type == null || type.equals("")
-			|| qualifier == null || qualifier.equals("")) 
+			|| type == null || type.equals("")) 
 			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
 
     this.internalName = internalName;
