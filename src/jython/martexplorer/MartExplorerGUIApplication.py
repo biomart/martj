@@ -1678,10 +1678,6 @@ class MartGUIApplication(JFrame):
 
 
 def main(args, quitOnExit):
-    # default logging level, needed by engine
-    BasicConfigurator.configure()
-    Logger.getRoot().setLevel(Level.WARN)
-    
     usage = "Usage: MartExplorerGUIApplication [ [-h] [-v] [-l LOGGING_FILE_URL] ]"
     if len(args)>1:
         parameter = args[1]
@@ -1703,6 +1699,7 @@ def main(args, quitOnExit):
                 print usage
                 System.exit(0)
         else:
+            BasicConfigurator.configure()
             Logger.getRoot().setLevel(Level.WARN)
 
     if quitOnExit:
