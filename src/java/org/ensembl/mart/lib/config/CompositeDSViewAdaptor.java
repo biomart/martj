@@ -27,12 +27,12 @@ import java.util.List;
  * A composite DSViewAdaptor that combines the datasets from all contained 
  * DSViewAdaptors.
  */
-public class CompositeDSViewAdaptor implements DSViewAdaptor {
+public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 
-	private List adaptors = new ArrayList();
+	protected List adaptors = new ArrayList();
 
 	/**
-	 * Creates instance of DSViewManager.
+	 * Creates instance of CompositeDSViewAdaptor.
 	 */
 	public CompositeDSViewAdaptor() {
 	}
@@ -52,9 +52,6 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	 * @return true if adaptor was removed, otherwise false.
 	 */
 	public boolean remove(DSViewAdaptor adaptor) {
-		System.out.println(adaptor);
-		System.out.println(adaptors.indexOf(adaptor));
-		System.out.println(adaptors);
 		return adaptors.remove(adaptor);
 	}
 
@@ -183,4 +180,44 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 			}				
     }
 	}
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MultiDSViewAdaptor#removeDatasetView(org.ensembl.mart.lib.config.DatasetView)
+   */
+  public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException {
+    boolean removed = false;
+    
+    for (int i = 0, n = adaptors.size(); i < n; i++) {
+      DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
+      
+      if (adaptor.supportsInternalName(dsv.getInternalName())) {
+        if (adaptor instanceof MultiDSViewAdaptor) {
+          ( (MultiDSViewAdaptor) adaptor).removeDatasetView(dsv);
+          removed = true;
+        } else
+          removed = adaptors.remove(adaptor);
+        break;  
+      }
+    }
+    
+    return removed;
+  }
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
+	 */
+	public MartLocation[] getMartLocations() throws ConfigurationException {
+    List locations = new ArrayList();
+    
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+			DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
+			
+      locations.addAll( Arrays.asList( adaptor.getMartLocations() ) );
+		}
+    
+    MartLocation[] retlocs = new MartLocation[locations.size()];
+    locations.toArray(retlocs);
+    return retlocs;
+	}
+
 }
