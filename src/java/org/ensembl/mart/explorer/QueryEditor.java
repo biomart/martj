@@ -36,10 +36,13 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -227,11 +230,21 @@ public class QueryEditor
 
 		if (evt.getSource() == query) {
 
-			String propertyName = evt.getPropertyName();
-
+			
 			// update pages if dataset changed.
 			if (currentDataset != datasetSelectionPage.getSelectedDataset())
 				updateModelAndViewAfterDatasetChanged();
+
+      String propertyName = evt.getPropertyName();
+      Object newValue = evt.getNewValue();
+      Object oldValue = evt.getOldValue();
+       
+      if ( "attribute".equals( propertyName ) ) {
+        if ( newValue!=null && oldValue==null ) 
+          updateAddedAttribute( (Attribute)newValue );
+        else if ( newValue==null && oldValue!=null )
+          updateRemovedAttribute( (Attribute)oldValue );
+      }
 
 			Enumeration enum = rootNode.breadthFirstEnumeration();
 			while (enum.hasMoreElements())
@@ -245,6 +258,37 @@ public class QueryEditor
 		}
 
 	}
+
+	/**
+   * Remove the tree node representing the attribute
+	 * @param attribute that has been removed from Query.
+	 */
+	private void updateRemovedAttribute(Attribute attribute) {
+		// TODO
+		
+	}
+
+
+	/**
+	 * @param attribute that has been added to the Query.
+	 */
+	private void updateAddedAttribute(Attribute attribute) {
+		MutableTreeNode parent = attributesPage.getNode();
+    String displayName = attribute.getField();
+
+    // Use a "fake" input page so that cliking this node cause the
+    // attribute page to be selected in the input panel.
+    // TODO support selction off correct tab pane?
+    InputPage page = new InputPage( attributesPage.getName(), null );
+    page.setNodeLabel(null, displayName );
+    
+    MutableTreeNode child = new DefaultMutableTreeNode( page );
+    parent.insert( child, parent.getChildCount() );
+    // show node
+    treeView.setSelectionPath( new TreePath(rootNode).pathByAddingChild( parent ).pathByAddingChild( child ) );
+	}
+
+
 
 	/**
 	 * Update the model (query) and the view (tree and inputPanels).
@@ -300,8 +344,13 @@ public class QueryEditor
 				(DefaultMutableTreeNode) e
 					.getNewLeadSelectionPath()
 					.getLastPathComponent();
-			InputPage page = (InputPage) node.getUserObject();
-			showInputPage(page);
+      
+      if ( node.getUserObject() instanceof InputPage ) {
+      
+			 InputPage page = (InputPage) node.getUserObject();
+			 showInputPage(page);
+       
+      }
 		}
 	}
 
