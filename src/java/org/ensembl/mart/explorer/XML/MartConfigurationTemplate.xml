@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
+
+<MartConfiguration internalName="ensembl_mart_14_1"
+                   displayName="Ensembl Mart version 14.1"
+                   description="">
+
+  <Dataset  internalName="hsapiens_ensemblgene"
+  	               displayName="Homo sapiens Ensembl Genes"
+  	               description="">
+ 
+       <StarBase>hsapiens_ensemblgene</StarBase>
+       <StarBase>hsapiens_ensembltranscript</StarBase>
+       
+       <PrimaryKey>gene_id</PrimaryKey>
+       <PrimaryKey>transcript_id</PrimaryKey>
+       
+       <FilterPage internalName="DefaultPage"
+       	                   displayName="Filter"
+       	                   description="">
+       	                   
+       	   <FilterGroup internalName="MultiSpecies"
+       	   	                     displayName="MULTI SPECIES COMPARISONS:"
+       	   	                      description="Filter on multi species comparison relationships">
+       	    
+       	       <FilterCollection internalName="Homologs"
+       	       	                           displayName="Homologous genes"
+       	       	                           type="checkbox"
+       	       	                           description="Filter on Homologous Gene Relationships">
+       	       	
+       	       	    <UIFilterDescription internalName="mouseHomolog"
+       	       	    	                              fieldName=""
+       	       	    	                              qualifier=""
+       	       	    	                              type="only/excluded"
+       	       	    	                              tableConstraint="_homologs_mmusculus_dm"
+       	       	    	                              displayName="Entries associated with homologous mouse genes"
+       	       	    	                              description="Filter for Genes having mouse homologous Genes"
+       	       	    	                               />
+       	       	</FilterCollection>
+       	   </FilterGroup>
+       </FilterPage>
+       
+       <AttributePage internalName="FeaturePage"
+       	                        displayName="Features"
+       	                        description="General Gene Features">
+       	
+       	    <AttributeGroup internalName="GENE"
+       	    	                       displayName="GENE:"
+       	    	                       description="Features of Genes">
+       	    
+       	        <AttributeCollection internalName="Xrefs"
+       	        	                             displayName="External Reference Attributes (max 3)"
+       	        	                             maxSelect="3"
+       	        	                             type="checkbox list">
+       	        
+       	            <UIAttributeDescription internalName="Swissprot"
+       	            	                                   displayName="SWISSPROT ID"
+       	            	                                   fieldName="display_id"
+       	            	                                   tableConstraint="_xref_SWISSPROT_dm"
+       	            	                                   maxLength=10
+       	            	                                   source="Swiss-Prot Group"
+       	            	                                   description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases"
+       	            	                                   homepageURL="http://us.expasy.org/sprot/"
+       	            	                                   linkoutURL=""/>	                             
+       	        
+       	        </AttributeCollection>
+       	        	                       
+       	     </AttributeGroup>
+       	
+       	</AttributePage>
+        	               
+   </Dataset>
+   
+</MartConfiguration>

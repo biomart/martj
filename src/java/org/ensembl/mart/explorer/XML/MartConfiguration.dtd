@@ -1,29 +1,35 @@
-<!-- Entity defs start here.
-     These are just shortcuts
-     to save cut-and-paste -->
-
-<!ENTITY % desc_data
-  "internalName CDATA #REQUIRED
-   displayName CDATA #IMPLIED
-   description CDATA #IMPLIED">
-
-<!-- Top-level Objects -->
-
+<!ENTITY % desc_data 
+                  "internalName CDATA #REQUIRED  
+                   displayName CDATA #IMPLIED    
+                   description CDATA #IMPLIED"
+>
+                   
+<!-- Top-level Objects --> 
 <!ELEMENT MartConfiguration (Dataset+)>
-<!ATTLIST MartConfiguration  %desc_data>
+<!ATTLIST MartConfiguration  
+>
                    
 <!ELEMENT Dataset (StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
-<!ATTLIST Dataset  %desc_data>
+<!ATTLIST Dataset  
+                    internalName CDATA #REQUIRED  
+                    displayName CDATA #IMPLIED    
+                    description CDATA #IMPLIED>
 
 <!ELEMENT StarBase (#PCDATA)>
 
 <!ELEMENT PrimaryKey (#PCDATA)>
 
 <!ELEMENT FilterPage (FilterGroup+)>
-<!ATTLIST FilterPage %desc_data>
+<!ATTLIST FilterPage 
+                    internalName CDATA #REQUIRED  
+                    displayName CDATA #IMPLIED    
+                    description CDATA #IMPLIED>
 
 <!ELEMENT FilterGroup (FilterCollection+)>
-<!ATTLIST FilterGroup %desc_data>
+<!ATTLIST FilterGroup 
+                    internalName CDATA #REQUIRED  
+                    displayName CDATA #IMPLIED    
+                    description CDATA #IMPLIED>
 
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
@@ -35,27 +41,31 @@
                    %desc_data
                    type                   CDATA #REQUIRED
                    fieldName          CDATA #REQUIRED
-                   qualifier              CDATA #REQUIRED
+                   qualifier              CDATA #IMPLIED
                    tableConstraint  CDATA #IMPLIED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
-<!ATTLIST AttributePage %desc_data>
+<!ATTLIST AttributePage 
+%desc_data>
 
 <!ELEMENT AttributeGroup (AttributeCollection+)>
-<!ATTLIST AttributeGroup %desc_data>
+<!ATTLIST AttributeGroup 
+                    internalName CDATA #REQUIRED  
+                    displayName CDATA #IMPLIED    
+                    description CDATA #IMPLIED>
 
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection
-                   %desc_data
+                  %desc_data
                    type              CDATA #REQUIRED
-                   maxSelect    CDATA #REQUIRED>
+                   maxSelect    NMTOKEN #REQUIRED>
 
 <!ELEMENT UIAttributeDescription EMPTY>
 <!ATTLIST UIAttributeDescription
-                   %desc_data
+                    %desc_data
                     fieldName          CDATA #REQUIRED
                     tableConstraint  CDATA #IMPLIED
-                    maxLength         CDATA #IMPLIED
+                    maxLength         NMTOKEN #IMPLIED
                     source                CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>

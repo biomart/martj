@@ -49,7 +49,7 @@
 
                                     <xsd:attribute
                                     name="qualifier"
-                                    type="xsd:string" use="required"/>
+                                    type="xsd:string" use="optional"/>
 
                                     <xsd:attribute
                                     name="type"
