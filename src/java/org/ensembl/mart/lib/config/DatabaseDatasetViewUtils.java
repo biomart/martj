@@ -140,8 +140,7 @@ public class DatabaseDatasetViewUtils {
       }
 
       if (tcheck == null) {
-        if (logger.isLoggable(Level.WARNING))
-          logger.warning("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
+          logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
         return false;
       }
 
