@@ -37,12 +37,14 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 	 */
 	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Query newQuery = new Query(query);
-		
+		query = null;
+    
 		for (int i = 0, n = filters.size(); i < n; i++) {
 			IDListFilter idfilter = (IDListFilter) filters.get(i);
 			newQuery.removeFilter(idfilter);
 			
 			Query subq = idfilter.getSubQuery();
+      
 			ByteArrayOutputStream idstream = new ByteArrayOutputStream();
 			String results = null;
     
@@ -56,20 +58,20 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			}
 		
       String[] ids = results.split("\n+");
-			String[] unversionedIds = null;
     
       Connection conn = null;
 			try {
-        conn = query.getDataSource().getConnection();
-				unversionedIds = ModifyVersionedIDs(conn, query, ids);
+        conn = newQuery.getDataSource().getConnection();
+        
+				ids = ModifyVersionedIDs(conn, newQuery, ids);
 			} catch (SQLException e) {
 				throw new InvalidQueryException( "Problem with db connection: ",e );
 			} finally {
         DetailedDataSource.close( conn );
 			}
-		       
-			if (unversionedIds.length > 0)
-				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), unversionedIds));
+		      
+			if (ids.length > 0)
+				newQuery.addFilter(new IDListFilter(idfilter.getField(), idfilter.getTableConstraint(), ids));
 		}
 						
 		return newQuery;
