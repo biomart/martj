@@ -60,7 +60,6 @@ public class SimpleLibraryUsageExample {
 
 		// Create a Query object.
 		Query query = new Query();
-		query.setDatasetInternalName("hsapiens");
 		DataSource ds =
 			DatabaseUtil.createDataSource(
 				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_17_1",
