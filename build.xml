@@ -264,6 +264,7 @@
         <exclude name="*~" />
         <exclude name="**/CVS/**" />
         <exclude name="**/*Test*" />
+        <exclude name="data/examples/**" />
       </fileset>
     </jar>
 
