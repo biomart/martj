@@ -23,14 +23,14 @@ import java.util.logging.Logger;
 import org.ensembl.mart.lib.config.PushOptions;
 
 /**
- * Active wrapper for an PushOptions. It is able to fetch the 
+ * Active wrapper for a PushOptions instance. It is able to fetch the 
  * named target from the group and push / remove options from it. 
  * Targets are retrieved when needed because they might not exist when 
  * the component is created.
  */
-public class PushOptionHandler {
+public class PushOptionsHandler {
 
-  private Logger logger = Logger.getLogger(PushOptionHandler.class.getName());
+  private Logger logger = Logger.getLogger(PushOptionsHandler.class.getName());
 
 	private FilterGroupWidget group;
 
@@ -46,7 +46,7 @@ public class PushOptionHandler {
    * and the options to be pushed onto it or removed from it.
 	 * @param group filter group from which the target filter can be retrieved.
 	 */
-	public PushOptionHandler(PushOptions optionPush, FilterGroupWidget group) {
+	public PushOptionsHandler(PushOptions optionPush, FilterGroupWidget group) {
 		this.optionPush = optionPush;
     this.group = group;
 	}

@@ -27,6 +27,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -46,9 +47,11 @@ import org.ensembl.mart.lib.config.FilterDescription;
  */
 public class TreeFilterWidget extends FilterWidget {
 
+  private Logger logger = Logger.getLogger(TreeFilterWidget.class.getName());
+
 	private JMenuBar menu = null;
 	private JLabel label = null;
-	private JTextField selected = new JTextField(30);
+	private JTextField currentSelectedText = new JTextField(30);
 	private JButton button = new JButton("change");
 	private String propertyName;
   private Map optionToName = new HashMap();
@@ -67,8 +70,8 @@ public class TreeFilterWidget extends FilterWidget {
     this.propertyName = filterDescription.getInternalName();
 
 		label = new JLabel(filterDescription.getDisplayName());
-		selected.setEditable(false);
-		selected.setMaximumSize(new Dimension(400, 27));
+		currentSelectedText.setEditable(false);
+		currentSelectedText.setMaximumSize(new Dimension(400, 27));
 		initMenu(filterDescription);
 
 		Box box = Box.createHorizontalBox();
@@ -76,7 +79,7 @@ public class TreeFilterWidget extends FilterWidget {
 		box.add(label);
     box.add(Box.createHorizontalStrut(5));
     box.add(button);		box.add(Box.createHorizontalStrut(5));
-		box.add(selected);
+		box.add(currentSelectedText);
 
 
 		setLayout(new BorderLayout());
@@ -132,6 +135,7 @@ public class TreeFilterWidget extends FilterWidget {
 			
 			if (option.getOptions().length == 0) {
 				
+        // add menu item
         JMenuItem item = new JMenuItem(option.getDisplayName());
 				menu.add(item);
 				item.addActionListener( new ActionListener() {
@@ -142,6 +146,8 @@ public class TreeFilterWidget extends FilterWidget {
         optionToName.put( option, baseName+" "+ option.getDisplayName() );
         
 			} else {
+        
+        // Add sub menu
 				String name = option.getDisplayName(); 
         JMenu subMenu = new JMenu( name );
 				menu.add(subMenu);
@@ -155,11 +161,19 @@ public class TreeFilterWidget extends FilterWidget {
   private void selectOption( Option option ) {
     
     String name = (String)optionToName.get( option );
-    selected.setText( name );
+    currentSelectedText.setText( name );
     setNodeLabel( null, name );
     Option old = this.option;
     this.option = option;
     changeSupport.firePropertyChange( getPropertyName(), old, option);
+
+    // TODO remove any push options
+    
+    // TODO remove filter if set
+    
+    // TODO push options if a real option selected.
+    
+    // TODO add new filter if a real option selected
 
   }
 
@@ -186,7 +200,7 @@ public class TreeFilterWidget extends FilterWidget {
 	 */
 	public void setOption(Option option) {
 		this.option = option;
-    selected.setText( (String)optionToName.get( option ) );
+    currentSelectedText.setText( (String)optionToName.get( option ) );
     System.out.println( "setting option " + option );
 	}
 
@@ -227,7 +241,7 @@ public class TreeFilterWidget extends FilterWidget {
    */
   public void setOptions(Option[] options) {
     // TODO Auto-generated method stub
-
+    logger.warning("TODO");
   }
 
 }

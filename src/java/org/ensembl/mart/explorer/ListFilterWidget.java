@@ -80,7 +80,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
   private Map filterValueToItem;
 
-  private PushOptionHandler[] optionPushers;
+  private PushOptionsHandler[] pushOptionHandlers;
 
   private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -211,7 +211,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         query.removeFilter(filter);
       }
       
-      removePushOptions(optionPushers);
+      removePushOptions(pushOptionHandlers);
     }
 
     lastSelectedItem = selectedItem;
@@ -252,7 +252,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
   /**
    * Removes all options from the push targets.
    */
-  private void removePushOptions(PushOptionHandler[] optionPushers) {
+  private void removePushOptions(PushOptionsHandler[] optionPushers) {
 
     int n = (optionPushers == null) ? 0 : optionPushers.length;
     for (int i = 0; i < n; i++)
@@ -265,12 +265,12 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
    */
   private void pushOptions(PushOptions[] optionPushes) {
 
-    optionPushers = new PushOptionHandler[optionPushes.length];
+    pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
 
     for (int i = 0; i < optionPushes.length; i++) {
-      optionPushers[i] =
-        new PushOptionHandler(optionPushes[i], filterGroupWidget);
-      optionPushers[i].push();
+      pushOptionHandlers[i] =
+        new PushOptionsHandler(optionPushes[i], filterGroupWidget);
+      pushOptionHandlers[i].push();
     }
   }
 
@@ -340,7 +340,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
    */
   public void setOptions(Option[] options) {
 
-    removePushOptions(optionPushers);
+    removePushOptions(pushOptionHandlers);
 
     removeFilter();
 
