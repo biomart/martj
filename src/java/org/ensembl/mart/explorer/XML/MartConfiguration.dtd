@@ -30,8 +30,8 @@
 
 <!ELEMENT FilterSetDescription EMPTY>
 <!ATTLIST FilterSetDescription %desc_data;
-                       tableConstraintModifier CDATA #REQUIRED
-                       fieldNameModifier CDATA #REQUIRED> 
+                       tableConstraintModifier CDATA #IMPLIED
+                       fieldNameModifier CDATA #IMPLIED> 
 
 <!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
 <!ATTLIST FilterCollection

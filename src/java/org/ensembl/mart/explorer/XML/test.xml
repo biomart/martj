@@ -1,82 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd" >
-
-<MartConfiguration internalName="ensembl_mart_14_1"
-                   displayName="Ensembl Mart version 14.1"
-                   description="First Mart Created from version 14 Ensembl Datasources">
-
-  <Dataset  internalName="test_dataset"
-  	        displayName="Test of a Dataset"
-            description="For Testing Purposes Only">
- 
-       <StarBase>test_starbase</StarBase>
-       
-       <PrimaryKey>test_primaryKey</PrimaryKey>
-       
-       <FilterPage internalName="testFilterPage"
-       	           displayName="Test A Filter Page"
-       	           description="For Testing Purposes Only">
-
-	       <FilterGroup internalName="testFilterGroup" 
-                        displayName="Test A FilterGroup:" 
-                        description="For Testing Purposes Only">
-
-  	             <FilterSet internalName="testFilterSet" displayName="Test of a Filter Set" description="For Testing Purposes Only" type="radio">
-
-	               <FilterSetDescription internalName="testFilterSetDescription" displayName="Test of a FilterSetDescription" description="For Testing Purposes Only" tableConstraintModifier="ensemblgene" fieldNameModifier="ensembl"/>
-
-	             </FilterSet>
-
-		     <FilterCollection internalName="testFilterCollection" displayName="Test of a FilterCollection" description="For Testing Purposes Only" type="list">
-
-		       <UIFilterDescription internalName="testUIFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" fieldName="test_id" qualifier="in" tableConstraint="gene_main"/>
-
-		       <UIDSFilterDescription internalName="testUIDSFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" objectCode="testObjectCode"/>
-
-		     </FilterCollection>
-
-	             <FilterCollection internalName="testFilterSetCollection" displayName="A TEST OF FILTER SETS" description="For Testing Purposes Only" filterSetName="testFilterSet" type="list">
-
-	               <UIFilterDescription internalName="filterSetUIFilterDescriptionField" displayName="A TEST FIELD MODIFIER" description="For Testing Purposes Only" type="list" fieldName="syn_exclusive" qualifier="in" filterSetReq="1" tableConstraint="gene_main"/>
-
- 	               <UIFilterDescription internalName="filterSetUIFilterDescriptionTable" displayName="A TEST TABLE MODIFIER" description="For Testing Purposes Only" type="list" fieldName="gene_stable_id_v" qualifier="in" filterSetReq="2" tableConstraint="_dm"/>
-
-	            </FilterCollection>
-
-	       </FilterGroup>
-
-       </FilterPage>
-       
-       <AttributePage internalName="testAttributePage"
-       	              displayName="Test of an Attribute Page"
-       	              description="For Testing Purposes Only">
-
-	        <AttributeGroup internalName="testAttributeGroup" 
-                            displayName="test of an Attribute Group:" 
-                            description="For Testing Purposes Only">
-
-		      <AttributeCollection internalName="testAttributeCollection" 
-                                   displayName="Test of an AttributeCollection:" 
-                                   description="For Testing Purposes Only"
-                                   maxSelect="1">
-
-		         <UIAttributeDescription internalName="testUIAttributeDescription"
-                                         displayName="Test of a UIAttributeDescription" 
-                                         description="For Testing Purposes Only"
-                                         fieldName="test_id" 
-                                         tableConstraint="gene_main" 
-                                         maxLength="1"
-                                         source="test source"
-                                         homepageURL="http://test.org"
-                                         linkoutURL="http://test.org?test"/>
-
-		      </AttributeCollection>
-
-            </AttributeGroup>
-       	    
-       	</AttributePage>
-
-   </Dataset>
-
+<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
+<MartConfiguration description="First Mart Created from version 14 Ensembl Datasources" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
+  <Dataset description="For Testing Purposes Only" displayName="Test of a Dataset" internalName="test_dataset">
+    <StarBase>test_starbase</StarBase>
+    <PrimaryKey>test_primaryKey</PrimaryKey>
+    <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
+      <FilterGroup description="For Testing Purposes Only" displayName="Test A FilterGroup:" internalName="testFilterGroup">
+        <FilterSet description="For Testing Purposes Only" displayName="Test of a Filter Set" internalName="testFilterSet" type="radio">
+          <FilterSetDescription description="For Testing Purposes Only" displayName="Test of a FilterSetDescription" fieldNameModifier="ensembl" internalName="testFilterSetDescription" tableConstraintModifier="ensemblgene"/>
+        </FilterSet>
+        <FilterCollection description="For Testing Purposes Only" displayName="Test of a FilterCollection" internalName="testFilterCollection" type="list">
+          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" fieldName="test_id" internalName="testUIFilterDescription" qualifier="in" tableConstraint="gene_main" type="list"/>
+          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" internalName="testUIDSFilterDescription" objectCode="testObjectCode" type="list"/>
+        </FilterCollection>
+        <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF FILTER SETS" filterSetName="testFilterSet" internalName="testFilterSetCollection" type="list">
+          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST FIELD MODIFIER" fieldName="syn_exclusive" filterSetReq="field" internalName="filterSetUIFilterDescriptionField" qualifier="in" tableConstraint="gene_main" type="list"/>
+          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST TABLE MODIFIER" fieldName="gene_stable_id_v" filterSetReq="table" internalName="filterSetUIFilterDescriptionTable" qualifier="in" tableConstraint="_dm" type="list"/>
+        </FilterCollection>
+      </FilterGroup>
+    </FilterPage>
+    <AttributePage description="For Testing Purposes Only" displayName="Test of an Attribute Page" internalName="testAttributePage">
+      <AttributeGroup description="For Testing Purposes Only" displayName="test of an Attribute Group:" internalName="testAttributeGroup">
+        <AttributeCollection description="For Testing Purposes Only" displayName="Test of an AttributeCollection:" internalName="testAttributeCollection" maxSelect="1">
+          <UIAttributeDescription description="For Testing Purposes Only" displayName="Test of a UIAttributeDescription" fieldName="test_id" homepageURL="http://test.org" internalName="testUIAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>
+        </AttributeCollection>
+      </AttributeGroup>
+    </AttributePage>
+  </Dataset>
 </MartConfiguration>

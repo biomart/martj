@@ -31,7 +31,7 @@ public class UIFilterDescription {
 	 * This will throw a ConfigurationException.
 	 */
 	public UIFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "", "", 0, "");
+		this("", "", "", "", "", "", "", "");
 	}
 
 /**
@@ -44,7 +44,7 @@ public class UIFilterDescription {
  * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
  */
   public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier) throws ConfigurationException {
-  	this(internalName, fieldName, type, qualifier, "", "", 0, "");
+  	this(internalName, fieldName, type, qualifier, "", "", "", "");
   }
   
 	/**
@@ -56,13 +56,13 @@ public class UIFilterDescription {
 	 * @param qualifier String qualifier to use in a SQL where clause.
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL fieldName
-	 * @param filterSetReq int, which of the modifications specified by a FilterSetDescription are required by this UIFilterDescription
+	 * @param filterSetReq String, which of the modifications specified by a FilterSetDescription are required by this UIFilterDescription
 	 * @param description String description of the Filter
 	 * 
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 * @see FilterSet, FilterDescription
 	 */
-	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	int filterSetReq, String description) throws ConfigurationException {
+	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	String filterSetReq, String description) throws ConfigurationException {
 		if (internalName == null || internalName.equals("") 
 		  || fieldName == null || fieldName.equals("")
 			|| type == null || type.equals("")) 
@@ -76,7 +76,7 @@ public class UIFilterDescription {
 		this.tableConstraint = tableConstraint;
 		this.filterSetReq = filterSetReq;
 		
-		if (filterSetReq > 0)
+		if (! ( filterSetReq == null || filterSetReq.equals("") ) )
 		  inFilterSet = true;
 		  
 		this.description = description;
@@ -87,7 +87,7 @@ public class UIFilterDescription {
 		hshcode = (31 * hshcode) + type.hashCode();
 		hshcode = (31 * hshcode) + qualifier.hashCode();
 		hshcode = (31 * hshcode) + tableConstraint.hashCode();
-		hshcode = (31 * hshcode) + filterSetReq;
+		hshcode = (31 * hshcode) + filterSetReq.hashCode();
         hshcode = (31 * hshcode) + description.hashCode();
 	}
 
@@ -148,10 +148,10 @@ public class UIFilterDescription {
    * Returns a value to determine which UIFilterDescription SQL specifier (tableConstraint or fieldName) to modify
    * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
    * 
-   * @return int filterSetReq
+   * @return String filterSetReq
    * @see FilterSetDescription
    */
-  public int getFilterSetReq() {
+  public String getFilterSetReq() {
   	return filterSetReq;
   }
   
@@ -217,7 +217,7 @@ public class UIFilterDescription {
 		if (! ( tableConstraint.equals(otype.getTableConstraint() ) ) )
 					return false;
 		
-		if (! ( filterSetReq == otype.getFilterSetReq() ) )
+		if (! ( filterSetReq.equals( otype.getFilterSetReq() ) ) )
 		  return false;
 		  									  
 		if (! (description.equals(otype.getDescription()) ) )
@@ -236,8 +236,7 @@ public class UIFilterDescription {
      return hshcode;
 	}
 	
-	private final String internalName, displayName,	fieldName,	type,	qualifier,	tableConstraint, description;
-	private final int filterSetReq;
+	private final String internalName, displayName,	fieldName,	type,	qualifier, filterSetReq, tableConstraint, description;
 	private boolean inFilterSet = false;
 	private int hshcode = 0;
 }
