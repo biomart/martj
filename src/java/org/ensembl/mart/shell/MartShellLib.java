@@ -1652,16 +1652,42 @@ public class MartShellLib {
               StringTokenizer filtToks = new StringTokenizer(thisToken, filterCondition);
 
               if (filtToks.countTokens() == 2) {
-                query =
-                  addBasicFilter(query, thisDatasetConfig, filtToks.nextToken(), filterCondition, filtToks.nextToken());
-                validQuery = true;
-
-                filterValue = new StringBuffer();
-                filterName = null;
-                filterCondition = null;
+                filterName = filtToks.nextToken();
                 whereFilterName = false;
-                whereFilterCond = false;
-                whereFilterVal = false;
+                
+                String valTok = filtToks.nextToken();
+                whereFilterVal = true;
+                
+                if (valTok.startsWith(QUOTE)) {
+                  valTok = valTok.substring(1);
+                  inQuotedValue = true;
+                  
+                  if (valTok.endsWith(QUOTE)) {
+                    valTok = valTok.substring(0, valTok.length() - 1);
+                    query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
+                    validQuery = true;
+                    
+                    inQuotedValue = false;
+                    filterValue = new StringBuffer();
+                    filterName = null;
+                    filterCondition = null;
+                    whereFilterName = false;
+                    whereFilterCond = false;
+                    whereFilterVal = false;
+                  } else
+                    filterValue.append(valTok);
+                } else {
+                  query =
+                    addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
+                  validQuery = true;
+
+                  filterValue = new StringBuffer();
+                  filterName = null;
+                  filterCondition = null;
+                  whereFilterName = false;
+                  whereFilterCond = false;
+                  whereFilterVal = false;
+                }
               } else {
                 filterName = filtToks.nextToken();
                 whereFilterName = false;
@@ -1690,22 +1716,44 @@ public class MartShellLib {
               Matcher m = p.matcher(thisToken);
               m.find();
               filterCondition = m.group(1);
-
+              whereFilterCond = false;
+              
               if (!ALLQUALIFIERS.contains(filterCondition))
                 throw new InvalidQueryException(
                   "Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
 
-              String thisFilterValue = m.group(2);
+              String valTok = m.group(2);            
+              whereFilterVal = true;
+                
+              if (valTok.startsWith(QUOTE)) {
+                valTok = valTok.substring(1);
+                inQuotedValue = true;
+                  
+                if (valTok.endsWith(QUOTE)) {
+                  valTok = valTok.substring(0, valTok.length() - 1);
+                  query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
+                  validQuery = true;
+                    
+                  inQuotedValue = false;
+                  filterValue = new StringBuffer();
+                  filterName = null;
+                  filterCondition = null;
+                  whereFilterName = false;
+                  whereFilterCond = false;
+                  whereFilterVal = false;
+                } else
+                  filterValue.append(valTok);
+              } else {
+                query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
+                validQuery = true;
 
-              query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, thisFilterValue);
-              validQuery = true;
-
-              filterValue = new StringBuffer();
-              filterName = null;
-              filterCondition = null;
-              whereFilterName = false;
-              whereFilterCond = false;
-              whereFilterVal = false;
+                filterValue = new StringBuffer();
+                filterName = null;
+                filterCondition = null;
+                whereFilterName = false;
+                whereFilterCond = false;
+                whereFilterVal = false;
+              }
             } else {
               filterCondition = thisToken;
               if (!ALLQUALIFIERS.contains(filterCondition))
@@ -1724,7 +1772,8 @@ public class MartShellLib {
               if (thisToken.endsWith(QUOTE)) {
                 tok = tok.substring(0, tok.length() - 1);
                 query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, tok);
-
+                validQuery = true;
+                
                 inQuotedValue = false;
                 filterValue = new StringBuffer();
                 filterName = null;
@@ -1926,6 +1975,7 @@ public class MartShellLib {
             StringTokenizer attToks = new StringTokenizer(thisToken, ",");
             while (attToks.hasMoreTokens())
               query = addSortAttribute(query, thisDatasetConfig, attToks.nextToken().trim());
+            validQuery = true;
           }
         } else if (limitClause) {
           if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
