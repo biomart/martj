@@ -1866,9 +1866,6 @@ public class MartShellLib {
               whereFilterVal = false;
             }
           } else if (whereFilterCond) {
-            if (!ALLQUALIFIERS.contains(thisToken))
-              throw new InvalidQueryException("Recieved invalid FilterCondition " + thisToken + " in " + newquery + "\n");
-
             if (BOOLEANQUALIFIERS.contains(thisToken)) {
               query = addBooleanFilter(query, thisDatasetConfig, filterName, thisToken);
               validQuery = true;
@@ -1884,6 +1881,10 @@ public class MartShellLib {
               Matcher m = p.matcher(thisToken);
               m.find();
               filterCondition = m.group(1);
+
+              if (!ALLQUALIFIERS.contains(filterCondition))
+                throw new InvalidQueryException("Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
+              
               String thisFilterValue = m.group(2);
 
               query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, thisFilterValue);
@@ -1897,6 +1898,9 @@ public class MartShellLib {
               whereFilterVal = false;
             } else {
               filterCondition = thisToken;
+              if (!ALLQUALIFIERS.contains(filterCondition))
+                throw new InvalidQueryException("Recieved invalid FilterCondition " + filterCondition + " in " + newquery + "\n");
+                
               whereFilterCond = false;
               whereFilterVal = true;
             }
