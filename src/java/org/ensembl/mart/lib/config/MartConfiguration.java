@@ -175,6 +175,7 @@ public class MartConfiguration extends BaseConfigurationObject {
 		buf.append("[");
 		buf.append( super.toString() );
 		buf.append(", datasets=").append(datasets);
+    buf.append(", layout=").append( layout );
 		buf.append("]");
 
 		return buf.toString();
@@ -196,10 +197,31 @@ public class MartConfiguration extends BaseConfigurationObject {
 			Dataset d = (Dataset) iter.next();
 			tmp = (31 * tmp) + d.hashCode();
 		}
+    
+    if ( layout!=null ) tmp = (31 * tmp) + layout.hashCode();
+    
 		return tmp;
 	}
 
+
+  private UIFilterDescription layout = null;
 	private int thisRank = 0;
 	private TreeMap datasets = new TreeMap();
 	private Hashtable datasetNameMap = new Hashtable();
+  
+  
+	/**
+	 * @return
+	 */
+	public UIFilterDescription getLayout() {
+		return layout;
+	}
+
+	/**
+	 * @param description
+	 */
+	public void setLayout(UIFilterDescription description) {
+		layout = description;
+	}
+
 }
