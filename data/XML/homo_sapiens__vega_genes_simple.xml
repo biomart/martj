@@ -1900,73 +1900,73 @@
       <FilterCollection displayName="Limit to Encode Region" internalName="encode">
         <FilterDescription internalName="encode_type" type="list">
           <Enable ref="encode_region"/>
-<Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
-  <PushAction internalName="push_to_encode_region" ref="encode_region">
-    <Option displayName="Chr11: 1707725-2313772bp" internalName="Chr11_1707725_2313772" isSelectable="true" value="11:1707725:2313772"/>
-    <Option displayName="Chr11: 4738729-5740320bp" internalName="Chr11_4738729_5740320" isSelectable="true" value="11:4738729:5740320"/>
-    <Option displayName="Chr11: 115994758-116494757bp" internalName="Chr11_115994758_116494757" isSelectable="true" value="11:115994758:116494757"/>
-    <Option displayName="Chr11: 130637240-131137239bp" internalName="Chr11_130637240_131137239" isSelectable="true" value="11:130637240:131137239"/>
-    <Option displayName="Chr16: 1-500000bp" internalName="Chr16_1_500000" isSelectable="true" value="16:1:500000"/>
-    <Option displayName="Chr19: 59023585-60024460bp" internalName="Chr19_59023585_60024460" isSelectable="true" value="19:59023585:60024460"/>
-    <Option displayName="Chr21: 32666763-34362747bp" internalName="Chr21_32666763_34362747" isSelectable="true" value="21:32666763:34362747"/>
-    <Option displayName="Chr22: 30128508-31828507bp" internalName="Chr22_30128508_31828507" isSelectable="true" value="22:30128508:31828507"/>
-    <Option displayName="Chr5: 131332631-132332630bp" internalName="Chr5_131332631_132332630" isSelectable="true" value="5:131332631:132332630"/>
-    <Option displayName="Chr7: 26699793-27199792bp" internalName="Chr7_26699793_27199792" isSelectable="true" value="7:26699793:27199792"/>
-    <Option displayName="Chr7: 113487636-114487635bp" internalName="Chr7_113487636_114487635" isSelectable="true" value="7:113487636:114487635"/>
-    <Option displayName="Chr7: 115365024-117242449bp" internalName="Chr7_115365024_117242449" isSelectable="true" value="7:115365024:117242449"/>
-    <Option displayName="ChrX: 151582202-152832201bp" internalName="ChrX_151582202_152832201" isSelectable="true" value="X:151582202:152832201"/>
-  </PushAction>
-</Option>
-<Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
-  <PushAction internalName="push_to_encode_region" ref="encode_region">
-    <Option displayName="Chr1: 148374643-148874642bp" internalName="Chr1_148374643_148874642" isSelectable="true" value="1:148374643:148874642"/>
-    <Option displayName="Chr10: 54828416-55328415bp" internalName="Chr10_54828416_55328415" isSelectable="true" value="10:54828416:55328415"/>
-    <Option displayName="Chr11: 63959673-64459672bp" internalName="Chr11_63959673_64459672" isSelectable="true" value="11:63959673:64459672"/>
-    <Option displayName="Chr12: 38626477-39126476bp" internalName="Chr12_38626477_39126476" isSelectable="true" value="12:38626477:39126476"/>
-    <Option displayName="Chr13: 28318016-28818015bp" internalName="Chr13_28318016_28818015" isSelectable="true" value="13:28318016:28818015"/>
-    <Option displayName="Chr13: 111238065-111738064bp" internalName="Chr13_111238065_111738064" isSelectable="true" value="13:111238065:111738064"/>
-    <Option displayName="Chr14: 51867364-52367363bp" internalName="Chr14_51867364_52367363" isSelectable="true" value="14:51867364:52367363"/>
-    <Option displayName="Chr14: 97378512-97878511bp" internalName="Chr14_97378512_97878511" isSelectable="true" value="14:97378512:97878511"/>
-    <Option displayName="Chr15: 41448853-41947852bp" internalName="Chr15_41448853_41947852" isSelectable="true" value="15:41448853:41947852"/>
-    <Option displayName="Chr16: 25839478-26339477bp" internalName="Chr16_25839478_26339477" isSelectable="true" value="16:25839478:26339477"/>
-    <Option displayName="Chr16: 62051662-62551661bp" internalName="Chr16_62051662_62551661" isSelectable="true" value="16:62051662:62551661"/>
-    <Option displayName="Chr17: 33775531-34275530bp" internalName="Chr17_33775531_34275530" isSelectable="true" value="17:33775531:34275530"/>
-    <Option displayName="Chr18: 23717221-24217220bp" internalName="Chr18_23717221_24217220" isSelectable="true" value="18:23717221:24217220"/>
-    <Option displayName="Chr18: 59410290-59910289bp" internalName="Chr18_59410290_59910289" isSelectable="true" value="18:59410290:59910289"/>
-    <Option displayName="Chr2: 51633239-52133238bp" internalName="Chr2_51633239_52133238" isSelectable="true" value="2:51633239:52133238"/>
-    <Option displayName="Chr2: 118389719-118889718bp" internalName="Chr2_118389719_118889718" isSelectable="true" value="2:118389719:118889718"/>
-    <Option displayName="Chr2: 198703930-199203929bp" internalName="Chr2_198703930_199203929" isSelectable="true" value="2:198703930:199203929"/>
-    <Option displayName="Chr2: 220479885-220979884bp" internalName="Chr2_220479885_220979884" isSelectable="true" value="2:220479885:220979884"/>
-    <Option displayName="Chr2: 234778639-235278638bp" internalName="Chr2_234778639_235278638" isSelectable="true" value="2:234778639:235278638"/>
-    <Option displayName="Chr20: 34556944-35056943bp" internalName="Chr20_34556944_35056943" isSelectable="true" value="20:34556944:35056943"/>
-    <Option displayName="Chr21: 39242993-39742992bp" internalName="Chr21_39242993_39742992" isSelectable="true" value="21:39242993:39742992"/>
-    <Option displayName="Chr4: 47639061-48139060bp" internalName="Chr4_47639061_48139060" isSelectable="true" value="4:47639061:48139060"/>
-    <Option displayName="Chr4: 53794311-54294310bp" internalName="Chr4_53794311_54294310" isSelectable="true" value="4:53794311:54294310"/>
-    <Option displayName="Chr4: 118705475-119205474bp" internalName="Chr4_118705475_119205474" isSelectable="true" value="4:118705475:119205474"/>
-    <Option displayName="Chr4: 124345964-124845963bp" internalName="Chr4_124345964_124845963" isSelectable="true" value="4:124345964:124845963"/>
-    <Option displayName="Chr5: 15962554-16462553bp" internalName="Chr5_15962554_16462553" isSelectable="true" value="5:15962554:16462553"/>
-    <Option displayName="Chr5: 55851135-56351134bp" internalName="Chr5_55851135_56351134" isSelectable="true" value="5:55851135:56351134"/>
-    <Option displayName="Chr5: 141928468-142428467bp" internalName="Chr5_141928468_142428467" isSelectable="true" value="5:141928468:142428467"/>
-    <Option displayName="Chr6: 41344772-41844771bp" internalName="Chr6_41344772_41844771" isSelectable="true" value="6:41344772:41844771"/>
-    <Option displayName="Chr6: 73728830-74228829bp" internalName="Chr6_73728830_74228829" isSelectable="true" value="6:73728830:74228829"/>
-    <Option displayName="Chr6: 108310274-108810273bp" internalName="Chr6_108310274_108810273" isSelectable="true" value="6:108310274:108810273"/>
-    <Option displayName="Chr6: 132157417-132657416bp" internalName="Chr6_132157417_132657416" isSelectable="true" value="6:132157417:132657416"/>
-    <Option displayName="Chr8: 118769628-119269627bp" internalName="Chr8_118769628_119269627" isSelectable="true" value="8:118769628:119269627"/>
-    <Option displayName="Chr9: 127061347-127561346bp" internalName="Chr9_127061347_127561346" isSelectable="true" value="9:127061347:127561346"/>
-    <Option displayName="Chr9: 128561347-129061346bp" internalName="Chr9_128561347_129061346" isSelectable="true" value="9:128561347:129061346"/>
-    <Option displayName="ChrX: 42934523-43434522bp" internalName="ChrX_42934523_43434522" isSelectable="true" value="X:42934523:43434522"/>
-    <Option displayName="ChrX: 121480070-121980069bp" internalName="ChrX_121480070_121980069" isSelectable="true" value="X:121480070:121980069"/>
-  </PushAction>
-</Option>
-<Option displayName="Semi-Manual Picks" internalName="semi-manual_picks" isSelectable="true">
-  <PushAction internalName="push_to_encode_region" ref="encode_region">
-    <Option displayName="Chr7: 89395718-90510141bp" internalName="Chr7_89395718_90510141" isSelectable="true" value="7:89395718:90510141"/>
-    <Option displayName="Chr7: 92665828-93636236bp" internalName="Chr7_92665828_93636236" isSelectable="true" value="7:92665828:93636236"/>
-    <Option displayName="Chr7: 94727320-95945434bp" internalName="Chr7_94727320_95945434" isSelectable="true" value="7:94727320:95945434"/>
-    <Option displayName="Chr7: 125633145-126796333bp" internalName="Chr7_125633145_126796333" isSelectable="true" value="7:125633145:126796333"/>
-    <Option displayName="Chr7: 127504401-128407355bp" internalName="Chr7_127504401_128407355" isSelectable="true" value="7:127504401:128407355"/>
-  </PushAction>
-</Option>
+          <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
+            <PushAction internalName="push_to_encode_region" ref="encode_region">
+              <Option displayName="Chr11: 1707725-2313772bp" internalName="Chr11_1707725_2313772" isSelectable="true" value="11:1707725:2313772"/>
+              <Option displayName="Chr11: 4738729-5740320bp" internalName="Chr11_4738729_5740320" isSelectable="true" value="11:4738729:5740320"/>
+              <Option displayName="Chr11: 115994758-116494757bp" internalName="Chr11_115994758_116494757" isSelectable="true" value="11:115994758:116494757"/>
+              <Option displayName="Chr11: 130637240-131137239bp" internalName="Chr11_130637240_131137239" isSelectable="true" value="11:130637240:131137239"/>
+              <Option displayName="Chr16: 1-500000bp" internalName="Chr16_1_500000" isSelectable="true" value="16:1:500000"/>
+              <Option displayName="Chr19: 59023585-60024460bp" internalName="Chr19_59023585_60024460" isSelectable="true" value="19:59023585:60024460"/>
+              <Option displayName="Chr21: 32666763-34362747bp" internalName="Chr21_32666763_34362747" isSelectable="true" value="21:32666763:34362747"/>
+              <Option displayName="Chr22: 30128508-31828507bp" internalName="Chr22_30128508_31828507" isSelectable="true" value="22:30128508:31828507"/>
+              <Option displayName="Chr5: 131332631-132332630bp" internalName="Chr5_131332631_132332630" isSelectable="true" value="5:131332631:132332630"/>
+              <Option displayName="Chr7: 26699793-27199792bp" internalName="Chr7_26699793_27199792" isSelectable="true" value="7:26699793:27199792"/>
+              <Option displayName="Chr7: 113487636-114487635bp" internalName="Chr7_113487636_114487635" isSelectable="true" value="7:113487636:114487635"/>
+              <Option displayName="Chr7: 115365024-117242449bp" internalName="Chr7_115365024_117242449" isSelectable="true" value="7:115365024:117242449"/>
+              <Option displayName="ChrX: 151582202-152832201bp" internalName="ChrX_151582202_152832201" isSelectable="true" value="X:151582202:152832201"/>
+            </PushAction>
+          </Option>
+          <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
+            <PushAction internalName="push_to_encode_region" ref="encode_region">
+              <Option displayName="Chr1: 148374643-148874642bp" internalName="Chr1_148374643_148874642" isSelectable="true" value="1:148374643:148874642"/>
+              <Option displayName="Chr10: 54828416-55328415bp" internalName="Chr10_54828416_55328415" isSelectable="true" value="10:54828416:55328415"/>
+              <Option displayName="Chr11: 63959673-64459672bp" internalName="Chr11_63959673_64459672" isSelectable="true" value="11:63959673:64459672"/>
+              <Option displayName="Chr12: 38626477-39126476bp" internalName="Chr12_38626477_39126476" isSelectable="true" value="12:38626477:39126476"/>
+              <Option displayName="Chr13: 28318016-28818015bp" internalName="Chr13_28318016_28818015" isSelectable="true" value="13:28318016:28818015"/>
+              <Option displayName="Chr13: 111238065-111738064bp" internalName="Chr13_111238065_111738064" isSelectable="true" value="13:111238065:111738064"/>
+              <Option displayName="Chr14: 51867364-52367363bp" internalName="Chr14_51867364_52367363" isSelectable="true" value="14:51867364:52367363"/>
+              <Option displayName="Chr14: 97378512-97878511bp" internalName="Chr14_97378512_97878511" isSelectable="true" value="14:97378512:97878511"/>
+              <Option displayName="Chr15: 41448853-41947852bp" internalName="Chr15_41448853_41947852" isSelectable="true" value="15:41448853:41947852"/>
+              <Option displayName="Chr16: 25839478-26339477bp" internalName="Chr16_25839478_26339477" isSelectable="true" value="16:25839478:26339477"/>
+              <Option displayName="Chr16: 62051662-62551661bp" internalName="Chr16_62051662_62551661" isSelectable="true" value="16:62051662:62551661"/>
+              <Option displayName="Chr17: 33775531-34275530bp" internalName="Chr17_33775531_34275530" isSelectable="true" value="17:33775531:34275530"/>
+              <Option displayName="Chr18: 23717221-24217220bp" internalName="Chr18_23717221_24217220" isSelectable="true" value="18:23717221:24217220"/>
+              <Option displayName="Chr18: 59410290-59910289bp" internalName="Chr18_59410290_59910289" isSelectable="true" value="18:59410290:59910289"/>
+              <Option displayName="Chr2: 51633239-52133238bp" internalName="Chr2_51633239_52133238" isSelectable="true" value="2:51633239:52133238"/>
+              <Option displayName="Chr2: 118389719-118889718bp" internalName="Chr2_118389719_118889718" isSelectable="true" value="2:118389719:118889718"/>
+              <Option displayName="Chr2: 198703930-199203929bp" internalName="Chr2_198703930_199203929" isSelectable="true" value="2:198703930:199203929"/>
+              <Option displayName="Chr2: 220479885-220979884bp" internalName="Chr2_220479885_220979884" isSelectable="true" value="2:220479885:220979884"/>
+              <Option displayName="Chr2: 234778639-235278638bp" internalName="Chr2_234778639_235278638" isSelectable="true" value="2:234778639:235278638"/>
+              <Option displayName="Chr20: 34556944-35056943bp" internalName="Chr20_34556944_35056943" isSelectable="true" value="20:34556944:35056943"/>
+              <Option displayName="Chr21: 39242993-39742992bp" internalName="Chr21_39242993_39742992" isSelectable="true" value="21:39242993:39742992"/>
+              <Option displayName="Chr4: 47639061-48139060bp" internalName="Chr4_47639061_48139060" isSelectable="true" value="4:47639061:48139060"/>
+              <Option displayName="Chr4: 53794311-54294310bp" internalName="Chr4_53794311_54294310" isSelectable="true" value="4:53794311:54294310"/>
+              <Option displayName="Chr4: 118705475-119205474bp" internalName="Chr4_118705475_119205474" isSelectable="true" value="4:118705475:119205474"/>
+              <Option displayName="Chr4: 124345964-124845963bp" internalName="Chr4_124345964_124845963" isSelectable="true" value="4:124345964:124845963"/>
+              <Option displayName="Chr5: 15962554-16462553bp" internalName="Chr5_15962554_16462553" isSelectable="true" value="5:15962554:16462553"/>
+              <Option displayName="Chr5: 55851135-56351134bp" internalName="Chr5_55851135_56351134" isSelectable="true" value="5:55851135:56351134"/>
+              <Option displayName="Chr5: 141928468-142428467bp" internalName="Chr5_141928468_142428467" isSelectable="true" value="5:141928468:142428467"/>
+              <Option displayName="Chr6: 41344772-41844771bp" internalName="Chr6_41344772_41844771" isSelectable="true" value="6:41344772:41844771"/>
+              <Option displayName="Chr6: 73728830-74228829bp" internalName="Chr6_73728830_74228829" isSelectable="true" value="6:73728830:74228829"/>
+              <Option displayName="Chr6: 108310274-108810273bp" internalName="Chr6_108310274_108810273" isSelectable="true" value="6:108310274:108810273"/>
+              <Option displayName="Chr6: 132157417-132657416bp" internalName="Chr6_132157417_132657416" isSelectable="true" value="6:132157417:132657416"/>
+              <Option displayName="Chr8: 118769628-119269627bp" internalName="Chr8_118769628_119269627" isSelectable="true" value="8:118769628:119269627"/>
+              <Option displayName="Chr9: 127061347-127561346bp" internalName="Chr9_127061347_127561346" isSelectable="true" value="9:127061347:127561346"/>
+              <Option displayName="Chr9: 128561347-129061346bp" internalName="Chr9_128561347_129061346" isSelectable="true" value="9:128561347:129061346"/>
+              <Option displayName="ChrX: 42934523-43434522bp" internalName="ChrX_42934523_43434522" isSelectable="true" value="X:42934523:43434522"/>
+              <Option displayName="ChrX: 121480070-121980069bp" internalName="ChrX_121480070_121980069" isSelectable="true" value="X:121480070:121980069"/>
+            </PushAction>
+          </Option>
+          <Option displayName="Semi-Manual Picks" internalName="semi-manual_picks" isSelectable="true">
+            <PushAction internalName="push_to_encode_region" ref="encode_region">
+              <Option displayName="Chr7: 89395718-90510141bp" internalName="Chr7_89395718_90510141" isSelectable="true" value="7:89395718:90510141"/>
+              <Option displayName="Chr7: 92665828-93636236bp" internalName="Chr7_92665828_93636236" isSelectable="true" value="7:92665828:93636236"/>
+              <Option displayName="Chr7: 94727320-95945434bp" internalName="Chr7_94727320_95945434" isSelectable="true" value="7:94727320:95945434"/>
+              <Option displayName="Chr7: 125633145-126796333bp" internalName="Chr7_125633145_126796333" isSelectable="true" value="7:125633145:126796333"/>
+              <Option displayName="Chr7: 127504401-128407355bp" internalName="Chr7_127504401_128407355" isSelectable="true" value="7:127504401:128407355"/>
+            </PushAction>
+          </Option>
         </FilterDescription>
         <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" legal_qualifiers="=" qualifier="=" type="text"/>
       </FilterCollection>
@@ -2000,7 +2000,7 @@
         </FilterDescription>
       </FilterCollection>
       <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
-        <FilterDescription field="display_id" internalName="id_list_limit_filters" type="list">
+        <FilterDescription internalName="id_list_limit_filters" type="list">
           <Option description="filter to include genes with supplied list of AFFY-HG-U133-PLUS-2 ID(s)" displayName="AFFY-HG-U133-PLUS-2 ID(s):" field="display_id" internalName="affy_hg_u133_plus2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="xref_AFFY_HG_U133_PLUS_2_dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_all_dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133A-2 ID(s)" displayName="AFFY-HG-U133A-2 ID(s):" field="display_id" internalName="affy_hg_u133a2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_2_dm" type="list"/>
