@@ -37,16 +37,15 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import java.util.logging.Logger;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
@@ -56,18 +55,15 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.Dataset;
-import org.ensembl.mart.lib.config.FilterCollection;
-import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
@@ -166,8 +162,8 @@ public class MartShell {
 			if (tmp != null && tmp.length() > 1 && mainHost == null)
 				mainHost = tmp.trim();
 
-		 tmp = p.getProperty("port");
-			if (tmp != null && tmp.length() > 1  && mainPort == null)
+			tmp = p.getProperty("port");
+			if (tmp != null && tmp.length() > 1 && mainPort == null)
 				mainPort = tmp.trim();
 
 			tmp = p.getProperty("databaseName");
@@ -561,63 +557,8 @@ public class MartShell {
 				mcl.AddAvailableCommandsTo(MartShellLib.QSEQUENCE, SequenceDescription.SEQS);
 
 				// add describe
-				HashMap describeCommands = new HashMap();
-
-				//      set up FilterPage keys
-				HashMap FilterMap = new HashMap();
-				FilterMap.put(FILTERKEY, new HashMap());
-
-				describeCommands.put(FILTERKEY, FilterMap);
-
-				HashMap FpageMap = new HashMap();
-				FpageMap.put(FILTERKEY, FilterMap);
-
-				HashMap FgroupMap = new HashMap();
-				FgroupMap.put(FILTERKEY, FilterMap);
-
-				HashMap FColMap = new HashMap();
-				FColMap.put(FILTERKEY, FilterMap);
-
-				HashMap FDescMap = new HashMap();
-				FDescMap.put(FILTERKEY, FilterMap);
-
-				HashMap FsetMap = new HashMap();
-				FsetMap.put(FILTERSETDESCRIPTIONKEY, new HashMap());
-
-				FColMap.put(FILTERSETKEY, FsetMap);
-				FColMap.put(FILTERKEY, FDescMap);
-
-				FgroupMap.put(FILTERCOLLECTIONKEY, FColMap);
-
-				FpageMap.put(FILTERGROUPKEY, FgroupMap);
-
-				describeCommands.put(FILTERPAGEKEY, FpageMap);
-
-				// set up AttributePage Keys
-				HashMap AttMap = new HashMap();
-				AttMap.put(ATTRIBUTEKEY, new HashMap());
-				describeCommands.put(ATTRIBUTEKEY, AttMap);
-
-				HashMap ApageMap = new HashMap();
-				ApageMap.put(ATTRIBUTEKEY, AttMap);
-
-				HashMap AgroupMap = new HashMap();
-				AgroupMap.put(ATTRIBUTEKEY, AttMap);
-
-				HashMap AColMap = new HashMap();
-				AColMap.put(ATTRIBUTEKEY, AttMap);
-
-				HashMap AdescMap = new HashMap();
-				AdescMap.put(ATTRIBUTEKEY, AttMap);
-
-				AColMap.put(ATTRIBUTEKEY, AdescMap);
-				AgroupMap.put(ATTRIBUTECOLLECTIONKEY, AColMap);
-				ApageMap.put(ATTRIBUTEGROUPKEY, AgroupMap);
-
-				describeCommands.put(FILTERPAGEKEY, FpageMap);
-				describeCommands.put(ATTRIBUTEPAGEKEY, ApageMap);
-
-				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
+				//TODO: completer describe
+				//mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
 				if (helpLoaded)
 					mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
@@ -1114,936 +1055,145 @@ public class MartShell {
 	}
 
 	private void DescribeRequest(String command) throws InvalidQueryException {
-		System.out.println("Sorry, describe not supported yet");
-		//		StringTokenizer toks = new StringTokenizer(command, " ");
-		//		int tokCount = toks.countTokens();
-		//		toks.nextToken(); // skip describe
-		//
-		//		System.out.println();
-		//
-		//		if (tokCount == 1) {
-		//			String output = "This mart contains the following datasets:\n";
-		//			Dataset[] dsets = martconf.getDatasets();
-		//			for (int i = 0, n = dsets.length; i < n; i++) {
-		//				Dataset dset = dsets[i];
-		//				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
-		//			}
-		//			System.out.println(output);
-		//		} else if (tokCount == 2) {
-		//			String dsetName = toks.nextToken();
-		//
-		//			if (!martconf.containsDataset(dsetName))
-		//				throw new InvalidQueryException(
-		//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-		//
-		//			DescribeDataset(martconf.getDatasetByName(dsetName));
-		//		} else if (tokCount > 2) {
-		//
-		//			int mod = tokCount % 2; // must be even number of elements
-		//			if (mod > 0)
-		//				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
-		//
-		//			List args = new ArrayList();
-		//
-		//			String dsetName = toks.nextToken();
-		//			if (!martconf.containsDataset(dsetName))
-		//				throw new InvalidQueryException(
-		//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-		//
-		//			while (toks.hasMoreTokens()) {
-		//				args.add(new String[] { toks.nextToken(), toks.nextToken()});
-		//			}
-		//
-		//			DescribeDataset(martconf.getDatasetByName(dsetName), args);
-		//		}
-	}
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		int tokCount = toks.countTokens();
+		toks.nextToken(); // skip describe
 
-	private void DescribeDataset(Dataset dset) throws InvalidQueryException {
-		System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n");
-
-		String[] dlines = ColumnIze(dset.getDescription());
-		for (int i = 0, n = dlines.length; i < n; i++)
-			System.out.println(dlines[i]);
-
-		System.out.println("\nFilterPages:");
-		System.out.println(DASHES);
-
-		FilterPage[] fpages = dset.getFilterPages();
-		for (int i = 0, n = fpages.length; i < n; i++) {
-			if (i > 0)
-				System.out.println(DASHES);
-
-			FilterPage page = fpages[i];
-
-			String filtPageDesc = page.getInternalName() + " - " + page.getDisplayName();
-			if (!page.getDescription().equals(""))
-				filtPageDesc += ": " + page.getDescription();
-
-			String[] lines = ColumnIze(filtPageDesc);
-			for (int j = 0, k = lines.length; j < k; j++)
-				System.out.print("\t" + lines[j] + "\n");
-		}
-
-		System.out.println(DASHES);
-		System.out.println(DASHES);
 		System.out.println();
 
-		System.out.print("AttributePages:\n");
-		System.out.println(DASHES);
+		if (tokCount < 3)
+			throw new InvalidQueryException("Invalid Describe request " + command + "\n");
+		else {
+			String request = toks.nextToken();
+			String name = toks.nextToken();
 
+			if (request.equalsIgnoreCase(DATASETKEY)) {
+				String[] lines = DescribeDataset(name);
+
+				int linesout = 0;
+				for (int i = 0, n = lines.length; i < n; i++) {
+					if (linesout > MAXLINECOUNT) {
+						linesout = 0;
+						try {
+							String quit =
+								Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
+							if (quit.equals("q")) {
+								System.out.println();
+								break;
+							}
+							
+						 System.out.println("\n");
+						} catch (Exception e) {
+							// do nothing
+						}
+					}
+					String line = lines[i];
+					System.out.print(line);
+					linesout++;
+				}
+			} else if (request.equalsIgnoreCase(FILTERKEY)) {
+				if (envDataset == null)
+					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
+
+				Dataset dset = martconf.getDatasetByName(envDataset);
+				if (!(dset.containsFilterDescription(name)))
+					throw new InvalidQueryException("Filter " + name + " is not supported by dataset " + envDataset + "\n");
+
+				List quals = dset.getFilterCompleterQualifiersByInternalName(name);
+				StringBuffer qual = new StringBuffer();
+				for (int k = 0, l = quals.size(); k < l; k++) {
+					if (k > 0)
+						qual.append(", ");
+					String element = (String) quals.get(k);
+					qual.append(element);
+				}
+
+				String tmp = DescribeFilter(name, dset.getFilterDescriptionByInternalName(name), qual.toString());
+				System.out.println(tmp + "\n");
+			} else if (request.equalsIgnoreCase(ATTRIBUTEKEY)) {
+				if (envDataset == null)
+					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
+
+				Dataset dset = martconf.getDatasetByName(envDataset);
+				if (!dset.containsAttributeDescription(name))
+					throw new InvalidQueryException("Attribute " + name + " is not supported by dataset " + envDataset + "\n");
+
+				String tmp = DescribeAttribute(dset.getAttributeDescriptionByInternalName(name));
+				System.out.println(tmp + "\n");
+			} else
+				throw new InvalidQueryException(
+					"Invalid Request key in describe command, see help describe. " + command + "\n");
+		}
+	}
+
+	private String[] DescribeDataset(String dsetname) throws InvalidQueryException {
+		if (!martconf.containsDataset(dsetname))
+			throw new InvalidQueryException("This mart does not support dataset " + dsetname + "\n");
+
+		List lines = new ArrayList();
+
+		Dataset dset = martconf.getDatasetByName(dsetname);
+		//filters first
+		FilterPage[] fpages = dset.getFilterPages();
+		for (int i = 0, n = fpages.length; i < n; i++) {
+			FilterPage page = fpages[i];
+			lines.add("The following filters can be applied in the same query\n");
+			lines.add("\n");
+
+			List names = page.getCompleterNames();
+			for (int j = 0, m = names.size(); j < m; j++) {
+				String name = (String) names.get(j);
+
+				List quals = page.getFilterCompleterQualifiersByInternalName(name);
+				StringBuffer qual = new StringBuffer();
+				for (int k = 0, l = quals.size(); k < l; k++) {
+					if (k > 0)
+						qual.append(", ");
+					String element = (String) quals.get(k);
+					qual.append(element);
+				}
+
+				lines.add(DescribeFilter(name, page.getFilterDescriptionByInternalName(name), qual.toString()));
+				lines.add("\n");
+			}
+		}
+
+		//attributes
 		AttributePage[] apages = dset.getAttributePages();
 		for (int i = 0, n = apages.length; i < n; i++) {
-			if (i > 0)
-				System.out.println(DASHES);
-
 			AttributePage page = apages[i];
+			lines.add("\n");
+			lines.add("\n");
+			lines.add("The following Attributes can be querried together\n");
+			lines.add("numbers in perentheses denote groups of attributes that have limits on the number that can be queried together\n");
+			lines.add("\n");
 
-			String atPageDesc = page.getInternalName() + " - " + page.getDisplayName();
-			if (!page.getDescription().equals(""))
-				atPageDesc += ": " + page.getDescription();
+			List groups = page.getAttributeGroups();
+			for (Iterator iter = groups.iterator(); iter.hasNext();) {
+				Object obj = iter.next();
 
-			String[] alines = ColumnIze(atPageDesc);
-			for (int j = 0, k = alines.length; j < k; j++)
-				System.out.print("\t" + alines[j] + "\n");
-		}
-		System.out.println(DASHES);
-	}
+				if (obj instanceof AttributeGroup) {
+					AttributeGroup group = (AttributeGroup) obj;
+					AttributeCollection[] cols = group.getAttributeCollections();
 
-	private void DescribeDataset(Dataset dset, List args) throws InvalidQueryException {
-		int argCount = args.size();
-		String[] arg1 = null;
-		String arg1key = null;
-		String arg1value = null;
+					for (int j = 0, m = cols.length; j < m; j++) {
+						AttributeCollection collection = cols[j];
 
-		switch (argCount) {
-			case 1 :
-				arg1 = (String[]) args.get(0);
-				arg1key = arg1[0];
-				arg1value = arg1[1];
+						List atts = collection.getAttributeDescriptions();
+						int maxSelect = collection.getMaxSelect();
+						for (Iterator iterator = atts.iterator(); iterator.hasNext();) {
+							Object element = iterator.next();
+							String tmp = DescribeAttribute(element);
 
-				if (arg1key.equals(FILTERPAGEKEY)) {
-					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
-
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nFilterPage: ");
-
-					DescribeFilterPage(dset.getFilterPageByName(arg1value));
-				} else if (arg1key.equals(FILTERKEY)) {
-					if (!dset.containsFilterDescription(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain Filter " + arg1value + "\n");
-
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
-
-					String[] lines = DescribeFilter(dset.getFilterDescriptionByInternalName(arg1value));
-					for (int i = 0, n = lines.length; i < n; i++)
-						System.out.println(lines[i]);
-
-					System.out.println();
-				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
-					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
-
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nAttributePage: ");
-					DescribeAttributePage(dset.getAttributePageByInternalName(arg1value));
-
-				} else if (arg1key.equals(ATTRIBUTEKEY)) {
-					if (!dset.containsAttributeDescription(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain Attribute " + arg1value + "\n");
-
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
-					String[] lines = DescribeAttribute(dset.getAttributeDescriptionByInternalName(arg1value));
-					for (int i = 0, n = lines.length; i < n; i++)
-						System.out.println(lines[i]);
-
-					System.out.println();
-				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
-				}
-				break;
-
-			case 2 :
-				arg1 = (String[]) args.get(0);
-				arg1key = arg1[0];
-				arg1value = arg1[1];
-
-				String[] arg2 = null;
-				if (arg1key.equals(FILTERPAGEKEY)) {
-					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					FilterPage fpage = dset.getFilterPageByName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(FILTERGROUPKEY)) {
-						if (!fpage.containsFilterGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " FilterPage "
-									+ fpage.getInternalName()
-									+ " does not contain FilterGroup "
-									+ arg2value
-									+ "\n");
-
-						System.out.print(
-							"Dataset "
-								+ dset.getInternalName()
-								+ " - "
-								+ dset.getDisplayName()
-								+ "\nFilterPage: "
-								+ fpage.getInternalName()
-								+ " - "
-								+ fpage.getDisplayName()
-								+ "\n\n");
-
-						String[] lines = DescribeFilterGroup(fpage.getFilterGroupByName(arg2value));
-						for (int i = 0, n = lines.length; i < n; i++)
-							System.out.println("\t\t" + lines[i]);
-
-						System.out.println();
-
-					} else if (arg2key.equals(FILTERKEY)) {
-						if (!fpage.containsFilterDescription(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " FilterPage "
-									+ fpage.getInternalName()
-									+ " does not contain Filter "
-									+ arg2value
-									+ "\n");
-
-						System.out.print(
-							"Dataset "
-								+ dset.getInternalName()
-								+ " - "
-								+ dset.getDisplayName()
-								+ "\nFilterPage: "
-								+ fpage.getInternalName()
-								+ " - "
-								+ fpage.getDisplayName()
-								+ "\n");
-
-						System.out.println();
-						String[] lines = DescribeFilter(fpage.getFilterDescriptionByInternalName(arg2value));
-						for (int i = 0, n = lines.length; i < n; i++)
-							System.out.println("\t\t" + lines[i]);
-
-						System.out.println();
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request: "
-								+ arg2key
-								+ "\n");
+							if (maxSelect > 0)
+								lines.add(tmp + " (" + maxSelect + ")");
+							else
+								lines.add(tmp);
+							lines.add("\n");
+						}
 					}
-
-				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
-					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
-						if (!apage.containsAttributeGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " AttributePage: "
-									+ apage.getInternalName()
-									+ " does not contain AttributeGroup "
-									+ arg2value
-									+ "\n");
-
-						System.out.print(
-							"Dataset "
-								+ dset.getInternalName()
-								+ " - "
-								+ dset.getDisplayName()
-								+ "\nAttributePage: "
-								+ apage.getInternalName()
-								+ " - "
-								+ apage.getDisplayName()
-								+ "\n\n");
-
-						String[] lines = DescribeAttributeGroup(apage.getAttributeGroupByName(arg2value));
-						for (int i = 0, n = lines.length; i < n; i++)
-							System.out.println("\t\t" + lines[i]);
-
-					} else if (arg2key.equals(ATTRIBUTEKEY)) {
-						if (!apage.containsAttributeDescription(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " AttributePage: "
-									+ apage.getInternalName()
-									+ " does not contain Attribute "
-									+ arg2value
-									+ "\n");
-
-						System.out.print(
-							"Dataset "
-								+ dset.getInternalName()
-								+ " - "
-								+ dset.getDisplayName()
-								+ "\nAttributePage: "
-								+ apage.getInternalName()
-								+ " - "
-								+ apage.getDisplayName()
-								+ "\n");
-
-						System.out.println();
-						String[] lines = DescribeAttribute(apage.getAttributeDescriptionByInternalName(arg2value));
-						for (int i = 0, n = lines.length; i < n; i++)
-							System.out.println("\t\t" + lines[i]);
-
-						System.out.println();
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request: "
-								+ arg2key
-								+ "\n");
-					}
-
-				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
-				}
-				break;
-
-			case 3 :
-				arg1 = (String[]) args.get(0);
-				arg1key = arg1[0];
-				arg1value = arg1[1];
-
-				arg2 = null;
-				String[] arg3 = null;
-				if (arg1key.equals(FILTERPAGEKEY)) {
-					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					FilterPage fpage = dset.getFilterPageByName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(FILTERGROUPKEY)) {
-						if (!fpage.containsFilterGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " FilterPage "
-									+ fpage.getInternalName()
-									+ " does not contain FilterGroup "
-									+ arg2value
-									+ "\n");
-
-						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
-							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
-
-							arg3 = (String[]) args.get(2);
-							String arg3key = arg3[0];
-							String arg3value = arg3[1];
-
-							if (arg3key.equals(FILTERCOLLECTIONKEY)) {
-								if (!group.containsFilterCollection(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " FilterPage "
-											+ fpage.getInternalName()
-											+ " FilterGroup "
-											+ group.getInternalName()
-											+ " does not contain FilterCollection "
-											+ arg3value
-											+ "\n");
-
-								System.out.print(
-									"Dataset "
-										+ dset.getInternalName()
-										+ " - "
-										+ dset.getDisplayName()
-										+ "\nFilterPage: "
-										+ fpage.getInternalName()
-										+ " - "
-										+ fpage.getDisplayName()
-										+ "\n\tFilterGroup: "
-										+ group.getInternalName()
-										+ " - "
-										+ group.getDisplayName()
-										+ "\n\n");
-
-								String[] lines = DescribeFilterCollection(group.getFilterCollectionByName(arg3value));
-								for (int i = 0, n = lines.length; i < n; i++)
-									System.out.println("\t\t" + lines[i]);
-
-								System.out.println();
-
-							} else if (arg3key.equals(FILTERKEY)) {
-								if (!group.containsFilterDescription(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " FilterPage "
-											+ fpage.getInternalName()
-											+ " FilterGroup "
-											+ group.getInternalName()
-											+ " does not contain Filter "
-											+ arg3value
-											+ "\n");
-
-								System.out.print(
-									"Dataset "
-										+ dset.getInternalName()
-										+ " - "
-										+ dset.getDisplayName()
-										+ "\nFilterPage: "
-										+ fpage.getInternalName()
-										+ " - "
-										+ fpage.getDisplayName()
-										+ "\n\tFilterGroup: "
-										+ group.getInternalName()
-										+ " - "
-										+ group.getDisplayName()
-										+ "\n\n");
-
-								String[] lines = DescribeFilter(group.getFilterDescriptionByInternalName(arg3value));
-								for (int i = 0, n = lines.length; i < n; i++)
-									System.out.println("\t\t" + lines[i]);
-
-								System.out.println();
-
-							} else {
-								throw new InvalidQueryException(
-									"Recieved describe command with request key: "
-										+ arg1key
-										+ " and second request key: "
-										+ arg2key
-										+ " with invalid third request key: "
-										+ arg3key
-										+ "\n");
-							}
-
-						} //else
-						// DSFilterGroup code goes here, if needed
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request key: "
-								+ arg2key
-								+ "\n");
-					}
-
-				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
-					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
-						if (!apage.containsAttributeGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " AttributePage "
-									+ apage.getInternalName()
-									+ " does not contain AttributeGroup "
-									+ arg2value
-									+ "\n");
-
-						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
-							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
-							arg3 = (String[]) args.get(2);
-							String arg3key = arg3[0];
-							String arg3value = arg3[1];
-
-							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
-								if (!group.containsAttributeCollection(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " AttributePage "
-											+ apage.getInternalName()
-											+ " AttributeGroup "
-											+ group.getInternalName()
-											+ " does not contain AttributeCollection "
-											+ arg3value
-											+ "\n");
-
-								System.out.print(
-									"Dataset "
-										+ dset.getInternalName()
-										+ " - "
-										+ dset.getDisplayName()
-										+ "\nAttributePage: "
-										+ apage.getInternalName()
-										+ " - "
-										+ apage.getDisplayName()
-										+ "\n\tAttributeGroup: "
-										+ group.getInternalName()
-										+ " - "
-										+ group.getDisplayName()
-										+ "\n\n");
-
-								String[] lines = DescribeAttributeCollection(group.getAttributeCollectionByName(arg3value));
-								for (int i = 0, n = lines.length; i < n; i++)
-									System.out.println("\t\t" + lines[i]);
-
-								System.out.println();
-
-							} else if (arg3key.equals(ATTRIBUTEKEY)) {
-								if (!group.containsAttributeDescription(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " AttributePage "
-											+ apage.getInternalName()
-											+ " AttributeGroup "
-											+ group.getInternalName()
-											+ " does not contain Attribute "
-											+ arg2value
-											+ "\n");
-
-								System.out.print(
-									"Dataset "
-										+ dset.getInternalName()
-										+ " - "
-										+ dset.getDisplayName()
-										+ "\nAttributePage: "
-										+ apage.getInternalName()
-										+ " - "
-										+ apage.getDisplayName()
-										+ "\n\tAttributeGroup: "
-										+ group.getInternalName()
-										+ " - "
-										+ group.getDisplayName()
-										+ "\n\n");
-
-								String[] lines = DescribeAttribute(group.getAttributeDescriptionByInternalName(arg3value));
-								for (int i = 0, n = lines.length; i < n; i++)
-									System.out.println("\t\t" + lines[i]);
-
-								System.out.println();
-							} else {
-								throw new InvalidQueryException(
-									"Recieved describe command with request key: "
-										+ arg1key
-										+ " and second request key: "
-										+ arg2key
-										+ " with invalid third request key: "
-										+ arg3key
-										+ "\n");
-							}
-						} //else
-						// describe individual sequences or other DSAttributeGroup things?
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request: "
-								+ arg2key
-								+ "\n");
-					}
-
-				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
-				}
-				break;
-
-			case 4 :
-				arg1 = (String[]) args.get(0);
-				arg1key = arg1[0];
-				arg1value = arg1[1];
-
-				arg2 = null;
-				arg3 = null;
-				String[] arg4 = null;
-				if (arg1key.equals(FILTERPAGEKEY)) {
-					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					FilterPage fpage = dset.getFilterPageByName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(FILTERGROUPKEY)) {
-						if (!fpage.containsFilterGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " FilterPage "
-									+ fpage.getInternalName()
-									+ " does not contain FilterGroup "
-									+ arg2value
-									+ "\n");
-
-						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
-							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
-
-							arg3 = (String[]) args.get(2);
-							String arg3key = arg3[0];
-							String arg3value = arg3[1];
-
-							if (arg3key.equals(FILTERCOLLECTIONKEY)) {
-								if (!group.containsFilterCollection(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " FilterPage "
-											+ fpage.getInternalName()
-											+ " FilterGroup "
-											+ group.getInternalName()
-											+ " does not contain FilterCollection "
-											+ arg3value
-											+ "\n");
-
-								arg4 = (String[]) args.get(3);
-								FilterCollection collection = group.getFilterCollectionByName(arg3value);
-								String arg4key = arg4[0];
-								String arg4value = arg4[1];
-
-								if (arg4key.equals(FILTERKEY)) {
-									if (!collection.containsFilterDescription(arg4value))
-										throw new InvalidQueryException(
-											"Dataset "
-												+ dset.getInternalName()
-												+ " FilterPage "
-												+ fpage.getInternalName()
-												+ " FilterGroup "
-												+ group.getInternalName()
-												+ " FilterCollection "
-												+ collection.getInternalName()
-												+ " does not contain Filter "
-												+ arg4value
-												+ "\n");
-
-									System.out.print(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " - "
-											+ dset.getDisplayName()
-											+ "\nFilterPage: "
-											+ fpage.getInternalName()
-											+ " - "
-											+ fpage.getDisplayName()
-											+ "\n\tFilterGroup: "
-											+ group.getInternalName()
-											+ " - "
-											+ group.getDisplayName()
-											+ "\n\t\tFilterCollection: "
-											+ collection.getInternalName()
-											+ " - "
-											+ collection.getDisplayName());
-
-									System.out.print("\n\n");
-
-									String[] lines = DescribeFilter(collection.getFilterDescriptionByInternalName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
-										System.out.println("\t\t\t" + lines[i]);
-
-									System.out.println();
-
-								} else {
-									throw new InvalidQueryException(
-										"Recieved describe command with request key: "
-											+ arg1key
-											+ " and second request key: "
-											+ arg2key
-											+ " with third request key: "
-											+ arg3key
-											+ " and invalid fourth request key: "
-											+ arg4key
-											+ "\n");
-								}
-
-							} else {
-								throw new InvalidQueryException(
-									"Recieved describe command with request key: "
-										+ arg1key
-										+ " and second request key: "
-										+ arg2key
-										+ " with invalid third request key: "
-										+ arg3key
-										+ "\n");
-							}
-						} //else
-						// DSFilterGroup code goes here, if needed
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request: "
-								+ arg2key
-								+ "\n");
-					}
-
-				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
-					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException(
-							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
-
-					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
-					String arg2key = arg2[0];
-					String arg2value = arg2[1];
-
-					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
-						if (!apage.containsAttributeGroup(arg2value))
-							throw new InvalidQueryException(
-								"Dataset "
-									+ dset.getInternalName()
-									+ " AttributePage "
-									+ apage.getInternalName()
-									+ " does not contain AttributeGroup "
-									+ arg2value
-									+ "\n");
-
-						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
-							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
-							arg3 = (String[]) args.get(2);
-							String arg3key = arg3[0];
-							String arg3value = arg3[1];
-
-							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
-								if (!group.containsAttributeCollection(arg3value))
-									throw new InvalidQueryException(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " AttributePage "
-											+ apage.getInternalName()
-											+ " AttributeGroup "
-											+ group.getInternalName()
-											+ " does not contain AttributeCollection "
-											+ arg2value
-											+ "\n");
-
-								arg4 = (String[]) args.get(3);
-								AttributeCollection collection = group.getAttributeCollectionByName(arg3value);
-								String arg4key = arg4[0];
-								String arg4value = arg4[1];
-
-								if (arg4key.equals(ATTRIBUTEKEY)) {
-									if (!collection.containsAttributeDescription(arg4value))
-										throw new InvalidQueryException(
-											"Dataset "
-												+ dset.getInternalName()
-												+ " AttributePage "
-												+ apage.getInternalName()
-												+ " AttributeGroup "
-												+ group.getInternalName()
-												+ " AttributeCollection "
-												+ collection.getInternalName()
-												+ " does not contain Attribute "
-												+ arg4value
-												+ "\n");
-
-									System.out.print(
-										"Dataset "
-											+ dset.getInternalName()
-											+ " - "
-											+ dset.getDisplayName()
-											+ "\nAttributePage: "
-											+ apage.getInternalName()
-											+ " - "
-											+ apage.getDisplayName()
-											+ "\n\tAttributeGroup: "
-											+ group.getInternalName()
-											+ " - "
-											+ group.getDisplayName()
-											+ "\n\t\tAttributeCollection: "
-											+ collection.getInternalName()
-											+ " - "
-											+ collection.getDisplayName()
-											+ "\n\n");
-
-									String[] lines = DescribeAttribute(collection.getAttributeDescriptionByInternalName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
-										System.out.println("\t\t\t\t" + lines[i]);
-
-									System.out.println();
-
-								} else {
-									throw new InvalidQueryException(
-										"Recieved describe command with request key: "
-											+ arg1key
-											+ " and second request key: "
-											+ arg2key
-											+ " with third request key: "
-											+ arg3key
-											+ " and invalid fourth request key: "
-											+ arg4key
-											+ "\n");
-								}
-
-							} else {
-								throw new InvalidQueryException(
-									"Recieved describe command with request key: "
-										+ arg1key
-										+ " and second request key: "
-										+ arg2key
-										+ " with invalid third request key: "
-										+ arg3key
-										+ "\n");
-							}
-						} //else
-						//DSAttributeGroup Code goes here
-
-					} else {
-						throw new InvalidQueryException(
-							"Recieved describe command with request key: "
-								+ arg1key
-								+ " and invalid second request: "
-								+ arg2key
-								+ "\n");
-					}
-
-				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
-				}
-				break;
-
-			default :
-				throw new InvalidQueryException("Recieved invalid describe command: wrong number of arguments after dateset\n");
-		}
-	}
-
-	private void DescribeFilterPage(FilterPage page) throws InvalidQueryException {
-		System.out.print(page.getInternalName() + " contains the following FilterGroups:\n\n");
-
-		List groups = page.getFilterGroups();
-		for (int i = 0, n = groups.size(); i < n; i++) {
-			if (i > 0) {
-				try {
-					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
-					if (quit.equals("q"))
-						break;
-
-				} catch (Exception e) {
-					// do nothing
-				}
-				System.out.println();
-			}
-
-			Object group = groups.get(i);
-			String[] lines = DescribeFilterGroup(group);
-			for (int j = 0, n2 = lines.length; j < n2; j++) {
-				String string = lines[j];
-				System.out.print("\t" + string + "\n");
-			}
-		}
-	}
-
-	private void DescribeAttributePage(AttributePage page) throws InvalidQueryException {
-		System.out.print(page.getInternalName() + " contains the following AttributeGroups:\n\n");
-
-		List groups = page.getAttributeGroups();
-		for (int i = 0, n = groups.size(); i < n; i++) {
-			if (i > 0) {
-				try {
-					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
-					if (quit.equals("q"))
-						break;
-
-				} catch (Exception e) {
-					// do nothing
-				}
-				System.out.println();
-			}
-
-			Object groupo = groups.get(i);
-			String[] lines = DescribeAttributeGroup(groupo);
-			for (int j = 0, n2 = lines.length; j < n2; j++) {
-				String string = lines[j];
-				System.out.print("\t" + string + "\n");
-			}
-		}
-	}
-
-	private String[] DescribeFilterGroup(Object groupo) throws InvalidQueryException {
-		List lines = new ArrayList();
-
-		if (groupo instanceof FilterGroup) {
-			FilterGroup group = (FilterGroup) groupo;
-			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
-			lines.add(DASHES);
-
-			FilterCollection[] fcs = group.getFilterCollections();
-
-			for (int i = 0, n = fcs.length; i < n; i++) {
-				if (i > 0)
-					lines.add(DASHES);
-
-				lines.addAll(Arrays.asList(DescribeFilterCollection(fcs[i])));
-			}
-			lines.add(DASHES);
-		} else {
-			//DSFilterGroup group = (DSFilterGroup) groupo;
-			//do nothing, but add hooks for DSFilterGroups here
-		}
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
-	}
-
-	private String[] DescribeAttributeGroup(Object groupo) {
-		List lines = new ArrayList();
-
-		if (groupo instanceof DSAttributeGroup) {
-			DSAttributeGroup group = (DSAttributeGroup) groupo;
-
-			if (group.getInternalName().equals("sequences")) {
-				lines.add("\t" + group.getInternalName() + " - " + group.getDisplayName());
-				lines.add("");
-
-				for (int i = 0, n = SequenceDescription.SEQS.size(); i < n; i++) {
-					String seqname = (String) SequenceDescription.SEQS.get(i);
-					String seqdesc = (String) SequenceDescription.SEQDESCRIPTIONS.get(i);
-					lines.add("\t\t" + seqname + " - " + seqdesc);
 				}
 			}
-			// add new DSAttributeGroup hooks here, with else if
-			else {
-				//do nothing
-			}
-		} else {
-			AttributeGroup group = (AttributeGroup) groupo;
-			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
-			lines.add(DASHES);
-
-			AttributeCollection[] attcs = group.getAttributeCollections();
-			for (int i = 0, n = attcs.length; i < n; i++) {
-				if (i > 0)
-					lines.add(DASHES);
-
-				lines.addAll(Arrays.asList(DescribeAttributeCollection(attcs[i])));
-			}
-			lines.add(DASHES);
 		}
 
 		String[] ret = new String[lines.size()];
@@ -2051,76 +1201,22 @@ public class MartShell {
 		return ret;
 	}
 
-	private String[] DescribeFilterCollection(FilterCollection collection) {
-		List lines = new ArrayList();
+	private String DescribeFilter(String iname, FilterDescription desc, String qualifiers) throws InvalidQueryException {
+		String displayName = desc.getDisplayname(iname);
 
-		String colheader = "\tCollection: " + collection.getInternalName();
-		if (!collection.getDisplayName().equals(""))
-			colheader += " - " + collection.getDisplayName();
-
-		lines.add(colheader);
-
-		List fdescs = collection.getFilterDescriptions();
-		for (int j = 0, n2 = fdescs.size(); j < n2; j++)
-			lines.addAll(Arrays.asList(DescribeFilter((FilterDescription) fdescs.get(j))));
-
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
+		return iname + " - " + displayName + " (" + qualifiers + ")";
 	}
 
-	private String[] DescribeAttributeCollection(AttributeCollection collection) {
-		List lines = new ArrayList();
-
-		String colheader = "\tCollection: " + collection.getInternalName();
-		if (!collection.getDisplayName().equals(""))
-			colheader += " - " + collection.getDisplayName();
-
-		lines.add(colheader);
-
-		if (collection.getMaxSelect() > 0) {
-			String[] clines =
-				ColumnIze(
-					"(Note: Only "
-						+ collection.getMaxSelect()
-						+ " of the following attributes can be selected in the same query)");
-			for (int j = 0, k = clines.length; j < k; j++)
-				lines.add("\t" + clines[j]);
-			lines.add("");
-		}
-
-		List adescs = collection.getAttributeDescriptions();
-		for (int i = 0, n = adescs.size(); i < n; i++)
-			lines.addAll(Arrays.asList(DescribeAttribute(adescs.get(i))));
-
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
-	}
-
-	private String[] DescribeFilter(FilterDescription desc) {
-		List lines = new ArrayList();
-
-		lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
-
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
-	}
-
-	private String[] DescribeAttribute(Object attributeo) {
-		List lines = new ArrayList();
-
+	private String DescribeAttribute(Object attributeo) {
 		if (attributeo instanceof AttributeDescription) {
 			AttributeDescription desc = (AttributeDescription) attributeo;
-			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName());
-		} else {
-			// for now, do nothing.  If we add UIDSAttributeDescriptions to the config, add hooks here
-		}
 
-		String[] ret = new String[lines.size()];
-		lines.toArray(ret);
-		return ret;
+			String iname = desc.getInternalName();
+			String displayName = desc.getDisplayName();
+			return iname + " - " + displayName;
+		} else
+			//dsattributedescription, if ever implimented
+			return null;
 	}
 
 	private void setPrompt(String command) throws InvalidQueryException {
@@ -2867,15 +1963,8 @@ public class MartShell {
 					MartShellLib.USINGQSTART }));
 
 	// describe instructions
-	private final String FILTERPAGEKEY = "FilterPage";
-	private final String FILTERGROUPKEY = "FilterGroup";
-	private final String FILTERCOLLECTIONKEY = "FilterCollection";
-	private final String FILTERSETKEY = "FilterSet";
-	private final String FILTERSETDESCRIPTIONKEY = "FilterSetDescription";
+	private final String DATASETKEY = "Dataset";
 	private final String FILTERKEY = "Filter";
-	private final String ATTRIBUTEPAGEKEY = "AttributePage";
-	private final String ATTRIBUTEGROUPKEY = "AttributeGroup";
-	private final String ATTRIBUTECOLLECTIONKEY = "AttributeCollection";
 	private final String ATTRIBUTEKEY = "Attribute";
 
 	// strings used to show/set output format settings

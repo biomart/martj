@@ -33,16 +33,9 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.ensembl.mart.lib.config.AttributeCollection;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.DSAttributeGroup;
-import org.ensembl.mart.lib.config.DSFilterGroup;
 import org.ensembl.mart.lib.config.Dataset;
-import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.gnu.readline.Readline;
@@ -100,19 +93,11 @@ public class MartCompleter implements ReadlineCompleter {
 		Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
 
 	//describe Mode variables
-	private Pattern describeStart = Pattern.compile("^describe\\s\\w*$");
-	private Pattern describePageStart = Pattern.compile("^describe\\s(\\w+)\\s\\w*$");
-	private Pattern describePage = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeGroupStart = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeGroup = Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeCollectionStart =
-		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeCollection =
-		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeDescriptionStart =
-		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
-	private Pattern describeDescription =
-		Pattern.compile("^describe\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s(\\w+)\\s\\w*$");
+	private final List BASEDESCRIBEREQUESTS =
+		Collections.unmodifiableList(Arrays.asList(new String[] { "dataset", "filter", "attribute" }));
+	private final String DATASET = "dataset";
+	private final String FILTER = "filter";
+	private final String ATTRIBUTE = "attribute";
 
 	//Query Mode Patterns
 	private Pattern qModeStartPattern = Pattern.compile("^using\\s$");
@@ -199,9 +184,24 @@ public class MartCompleter implements ReadlineCompleter {
 
 	public void SetModeForLine(String currentCommand) {
 		if (lastLine == null || !(lastLine.equals(currentCommand))) {
-			if (currentCommand.startsWith(DESCRIBE))
-				SetDescribeMode();
-			else if (currentCommand.startsWith(HELP))
+			if (currentCommand.startsWith(DESCRIBE)) {
+				String[] toks = currentCommand.split("\\s+");
+
+				if (toks.length == 1)
+					SetBaseDescribeMode();
+				else {
+					String request = toks[1];
+
+					if (request.equalsIgnoreCase(DATASET))
+						SetDatasetMode();
+					else if (request.equalsIgnoreCase(FILTER))
+						SetDescribeFilterMode();
+					else if (request.equalsIgnoreCase(ATTRIBUTE))
+						SetDescribeAttributeMode();
+					else
+						SetEmptyMode();
+				}
+			} else if (currentCommand.startsWith(HELP))
 				SetHelpMode();
 			else if (currentCommand.startsWith(USE))
 				SetDatasetMode();
@@ -445,337 +445,6 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Sets the MartCompleter into Describe Mode, sensitive to where in the describe command the user has requested completion.
-	 *
-	 */
-	public void SetDescribeMode() {
-		if (setMapper.containsKey(DESCRIBE)) {
-			String currentCommand = Readline.getLineBuffer();
-			Map keyMap = (Map) setMapper.get(DESCRIBE);
-
-			//find out where in the command the user has requested completion
-			Matcher StartMatcher = describeStart.matcher(currentCommand);
-			Matcher PageStartMatcher = describePageStart.matcher(currentCommand);
-			Matcher PageMatcher = describePage.matcher(currentCommand);
-			Matcher GroupStartMatcher = describeGroupStart.matcher(currentCommand);
-			Matcher GroupMatcher = describeGroup.matcher(currentCommand);
-			Matcher CollectionStartMatcher = describeCollectionStart.matcher(currentCommand);
-			Matcher CollectionMatcher = describeCollection.matcher(currentCommand);
-			Matcher DescriptionStartMatcher = describeDescriptionStart.matcher(currentCommand);
-			Matcher Descriptionmatcher = describeDescription.matcher(currentCommand);
-
-			if (StartMatcher.matches()) {
-				// same as fromMode, note, describeMode is set to true at end
-				SetDatasetMode();
-			} else if (PageStartMatcher.matches()) {
-				// wants the potential page keys
-				currentSet = new TreeSet();
-				currentSet.addAll(keyMap.keySet());
-			} else if (PageMatcher.matches()) {
-				//wants the potential values for the given page key
-				String dataset = PageMatcher.group(1);
-				String pageKey = PageMatcher.group(2);
-
-				if (martconf.containsDataset(dataset)) {
-					currentSet = new TreeSet();
-
-					if (pageKey.equals("FilterPage")) {
-						FilterPage[] fpages = martconf.getDatasetByName(dataset).getFilterPages();
-						for (int i = 0, n = fpages.length; i < n; i++) {
-							FilterPage page = fpages[i];
-							currentSet.add(page.getInternalName());
-						}
-					} else if (pageKey.equals("Filter")) {
-						List fdesc = martconf.getDatasetByName(dataset).getAllFilterDescriptions();
-						for (int i = 0, n = fdesc.size(); i < n; i++) {
-							FilterDescription desc = (FilterDescription) fdesc.get(i);
-							currentSet.add(desc.getInternalName());
-						}
-					} else if (pageKey.equals("AttributePage")) {
-
-						AttributePage[] apages = martconf.getDatasetByName(dataset).getAttributePages();
-						for (int i = 0, n = apages.length; i < n; i++) {
-							AttributePage page = apages[i];
-							currentSet.add(page.getInternalName());
-						}
-					} else {
-						// must be Attribute
-						List adesc = martconf.getDatasetByName(dataset).getAllAttributeDescriptions();
-						for (int i = 0, n = adesc.size(); i < n; i++) {
-							Object desc = adesc.get(i);
-
-							if (desc instanceof AttributeDescription) {
-								currentSet.add(((AttributeDescription) desc).getInternalName());
-							} // else if we add UIDSAttributeDescriptions, add code here
-						}
-					}
-				}
-
-			} else if (GroupStartMatcher.matches()) {
-				//wants the potential group keys
-				String pageKey = GroupStartMatcher.group(2);
-
-				if (keyMap.containsKey(pageKey)) {
-					currentSet = new TreeSet();
-
-					Map groupKeyMap = (Map) keyMap.get(pageKey);
-					currentSet.addAll(groupKeyMap.keySet());
-				}
-
-			} else if (GroupMatcher.matches()) {
-				// wants the potential values for given group key
-				String datasetName = GroupMatcher.group(1);
-				String pageKey = GroupMatcher.group(2);
-				String pageName = GroupMatcher.group(3);
-				String groupKey = GroupMatcher.group(4);
-
-				if (pageKey.equals("FilterPage")) {
-					if (groupKey.equals("FilterGroup")) {
-
-						if (martconf.containsDataset(datasetName)) {
-							if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-								currentSet = new TreeSet();
-
-								List groups = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroups();
-								for (int i = 0, n = groups.size(); i < n; i++) {
-									Object group = groups.get(i);
-
-									if (group instanceof FilterGroup)
-										currentSet.add(((FilterGroup) group).getInternalName());
-									else
-										currentSet.add(((DSFilterGroup) group).getInternalName());
-								}
-							}
-
-						}
-
-					} else {
-						// must be Filter
-						if (martconf.containsDataset(datasetName)) {
-							if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-								currentSet = new TreeSet();
-
-								List descs =
-									martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllFilterDescriptions();
-								for (int i = 0, n = descs.size(); i < n; i++) {
-									FilterDescription desc = (FilterDescription) descs.get(i);
-									currentSet.add(desc.getInternalName());
-								}
-							}
-						}
-					}
-
-				} else {
-					// must be AttributePage
-					if (groupKey.equals("AttributeGroup")) {
-						if (martconf.containsDataset(datasetName)) {
-							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-								currentSet = new TreeSet();
-
-								List groups =
-									martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroups();
-								for (int i = 0, n = groups.size(); i < n; i++) {
-									Object group = groups.get(i);
-
-									if (group instanceof AttributeGroup)
-										currentSet.add(((AttributeGroup) group).getInternalName());
-									else
-										currentSet.add(((DSAttributeGroup) group).getInternalName());
-								}
-							}
-						}
-					}
-				}
-			} else if (CollectionStartMatcher.matches()) { //wants the potential collection keys
-				String pageKey = CollectionStartMatcher.group(2);
-
-				if (keyMap.containsKey(pageKey)) {
-					Map groupKeyMap = (Map) keyMap.get(pageKey);
-					String groupKey = CollectionStartMatcher.group(4);
-
-					if (groupKeyMap.containsKey(groupKey)) {
-						currentSet = new TreeSet();
-						Map collectionKeyMap = (Map) groupKeyMap.get(groupKey);
-						currentSet.addAll(collectionKeyMap.keySet());
-					}
-				}
-
-			} else if (CollectionMatcher.matches()) { //wants the values for the given collection key
-				String datasetName = CollectionMatcher.group(1);
-				String pageKey = CollectionMatcher.group(2);
-				String pageName = CollectionMatcher.group(3);
-				String groupName = CollectionMatcher.group(5);
-				String collectionKey = CollectionMatcher.group(6);
-
-				if (martconf.containsDataset(datasetName)) {
-					if (pageKey.equals("FilterPage")) {
-
-						if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-							if (martconf
-								.getDatasetByName(datasetName)
-								.getFilterPageByName(pageName)
-								.containsFilterGroup(groupName)) {
-								Object group =
-									martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName);
-
-								if (group instanceof FilterGroup) {
-
-									if (collectionKey.equals("FilterCollection")) {
-										currentSet = new TreeSet();
-
-										FilterCollection[] cols = ((FilterGroup) group).getFilterCollections();
-										for (int i = 0, n = cols.length; i < n; i++) {
-											FilterCollection collection = cols[i];
-											currentSet.add(collection.getInternalName());
-										}
-									} else { // must be filter
-										currentSet = new TreeSet();
-
-										List descs = ((FilterGroup) group).getAllFilterDescriptions();
-										for (int i = 0, n = descs.size(); i < n; i++) {
-											FilterDescription desc = (FilterDescription) descs.get(i);
-											currentSet.add(desc.getInternalName());
-										}
-									}
-								}
-							}
-						}
-
-					} else { // must be AttributePage
-
-						if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-							if (martconf
-								.getDatasetByName(datasetName)
-								.getAttributePageByInternalName(pageName)
-								.containsAttributeGroup(groupName)) {
-								Object group =
-									martconf.getDatasetByName(datasetName).getAttributePageByInternalName(
-										pageName).getAttributeGroupByName(
-										groupName);
-
-								if (group instanceof AttributeGroup) {
-
-									if (collectionKey.equals("AttributeCollection")) {
-										currentSet = new TreeSet();
-
-										AttributeCollection[] colls = ((AttributeGroup) group).getAttributeCollections();
-										for (int i = 0, n = colls.length; i < n; i++) {
-											AttributeCollection collection = colls[i];
-											currentSet.add(collection.getInternalName());
-										}
-									} else { // must be attribute
-										currentSet = new TreeSet();
-
-										List descs = ((AttributeGroup) group).getAllAttributeDescriptions();
-										for (int i = 0, n = descs.size(); i < n; i++) {
-											Object desc = descs.get(i);
-
-											if (desc instanceof AttributeDescription) {
-												currentSet.add(((AttributeDescription) desc).getInternalName());
-											} // else, if we add UIDSAttributeDescriptions, add code here
-
-										}
-									}
-
-								}
-							}
-						}
-
-					}
-				}
-
-			} else if (DescriptionStartMatcher.matches()) { //wants the potential description keys
-				String pageKey = DescriptionStartMatcher.group(2);
-
-				if (keyMap.containsKey(pageKey)) {
-					Map groupKeyMap = (Map) keyMap.get(pageKey);
-					String groupKey = DescriptionStartMatcher.group(4);
-
-					if (groupKeyMap.containsKey(groupKey)) {
-						Map collectionKeyMap = (Map) groupKeyMap.get(groupKey);
-						String collectionKey = DescriptionStartMatcher.group(6);
-
-						if (collectionKeyMap.containsKey(collectionKey)) {
-							currentSet = new TreeSet();
-							Map descriptionKeyMap = (Map) collectionKeyMap.get(collectionKey);
-							currentSet.addAll(descriptionKeyMap.keySet());
-						}
-					}
-				}
-
-			} else if (Descriptionmatcher.matches()) {
-				//wants the values for the given description key
-				String datasetName = Descriptionmatcher.group(1);
-				String pageKey = Descriptionmatcher.group(2);
-				String pageName = Descriptionmatcher.group(3);
-				String groupName = Descriptionmatcher.group(5);
-				String collectionKey = Descriptionmatcher.group(6);
-				String collectionName = Descriptionmatcher.group(7);
-
-				if (martconf.containsDataset(datasetName)) {
-					if (pageKey.equals("FilterPage")) {
-						if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
-							if ((martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).containsFilterGroup(groupName))
-								&& (martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getFilterGroupByName(groupName)
-									instanceof FilterGroup)) {
-								FilterGroup group =
-									(FilterGroup) martconf.getDatasetByName(datasetName).getFilterPageByName(
-										pageName).getFilterGroupByName(
-										groupName);
-
-								if (group.containsFilterCollection(collectionName)) {
-									currentSet = new TreeSet();
-
-									List descs = group.getFilterCollectionByName(collectionName).getFilterDescriptions();
-									for (int i = 0, n = descs.size(); i < n; i++) {
-										FilterDescription desc = (FilterDescription) descs.get(i);
-										currentSet.add(desc.getInternalName());
-									}
-								}
-							}
-						}
-					} else {
-						//must be AttributePage
-						if (martconf.containsDataset(datasetName)) {
-							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-								if ((martconf
-									.getDatasetByName(datasetName)
-									.getAttributePageByInternalName(pageName)
-									.containsAttributeGroup(groupName))
-									&& (martconf
-										.getDatasetByName(datasetName)
-										.getAttributePageByInternalName(pageName)
-										.getAttributeGroupByName(groupName)
-										instanceof AttributeGroup)) {
-									AttributeGroup group =
-										(AttributeGroup) martconf
-											.getDatasetByName(datasetName)
-											.getAttributePageByInternalName(pageName)
-											.getAttributeGroupByName(groupName);
-
-									if (group.containsAttributeCollection(collectionName)) {
-										currentSet = new TreeSet();
-
-										List descs = group.getAttributeCollectionByName(collectionName).getAttributeDescriptions();
-										for (int i = 0, n = descs.size(); i < n; i++) {
-											Object desc = descs.get(i);
-											if (desc instanceof AttributeDescription)
-												currentSet.add(((AttributeDescription) desc).getInternalName());
-											// else, if we add UIDSAttributeDescriptions, put them here
-
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-			} // else ?
-		}
-	}
-
-	/**
 	 * Sets the MartCompleter into Help Mode.
 	 *
 	 */
@@ -812,6 +481,38 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void SetEmptyMode() {
 		currentSet = new TreeSet();
+	}
+
+	/**
+	 * Sets the completer system to the basic describe requests avaiable
+	 */
+	public void SetBaseDescribeMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(BASEDESCRIBEREQUESTS);
+	}
+
+	/**
+	 * Sets the completer system to the filters available for the environmental dataset, empty list if this is not set
+	 */
+	public void SetDescribeFilterMode() {
+		if (envDataset == null)
+			SetNoDatasetMode();
+		else {
+			currentSet = new TreeSet();
+			currentSet.addAll(envDataset.getFilterCompleterNames());
+		}
+	}
+
+	/**
+	 * Sets the completer system to the attributes available for the environmental dataset, empty list if this is not set
+	 */
+	public void SetDescribeAttributeMode() {
+		if (envDataset == null)
+			SetNoDatasetMode();
+		else {
+			currentSet = new TreeSet();
+			currentSet.addAll(envDataset.getAttributeCompleterNames());
+		}
 	}
 
 	/**
