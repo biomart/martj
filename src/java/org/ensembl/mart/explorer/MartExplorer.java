@@ -72,6 +72,14 @@ public class MartExplorer extends JFrame {
 	// TODO adout dialog
 	// TODO selecting tree node -> corresponding page to front
 
+  // TODO support boolean_list filter type
+
+	// TODO list datasources
+	// TODO delete datasource
+
+	// TODO list datasetviews
+ 	// TODO delete datasetviews
+
 	// TODO load query
 	// TODO save query
 
@@ -90,6 +98,8 @@ public class MartExplorer extends JFrame {
 
 	// TODO clone query
 	// TODO load registry file
+	
+	
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 

@@ -48,21 +48,19 @@ import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.lib.*;
+import org.ensembl.util.ExtensionFileFilter;
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
@@ -96,7 +94,7 @@ public class QueryEditor
   extends JPanel
   implements PropertyChangeListener, TreeSelectionListener {
 
-  private DSViewAdaptor dsViewAdaptor;
+	private DSViewAdaptor dsViewAdaptor;
 
   private JSplitPane topAndBottom;
 
@@ -169,17 +167,7 @@ public class QueryEditor
 
     layoutPanes();
 
-    FileFilter xmlFilter = new FileFilter() {
-      public boolean accept(File f) {
-        return f != null
-          && (f.isDirectory() || f.getName().toLowerCase().endsWith(".mql"));
-      }
-      public String getDescription() {
-        return "MQL Files";
-      }
-    };
-
-    mqlFileChooser.addChoosableFileFilter(xmlFilter);
+    mqlFileChooser.addChoosableFileFilter(new ExtensionFileFilter("mql", "MQL Files"));
 
   }
 
