@@ -20,6 +20,7 @@
 package org.ensembl.mart.explorer;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Maps column names to the table they come from and also maps them to
@@ -35,45 +36,55 @@ public class FieldMapper {
 	
 
   /** column -> table */
-  private Properties map = new Properties();
+  private Properties nameToTable = new Properties();
+  
+  /** All legal table.columns derived from input Table[]. */
+  private String[] tableAndColumns = null;
 
   /**
    * Provides column mappings for the specified tables. The order of the
    * tables in the array is important; an ambiguous column name is resolved
-   * to the first table in it occurs.
+   * to the first table it occurs in.
    * 
-   *@param tables list of tables to create mappings for. 
-   *
+   * @param tables list of tables to create mappings for. 
+ 	 * @param primaryKey primary key that can be used for joins
    */
   public FieldMapper (Table[] tables, String primaryKey){
 
 		this.primaryKey = primaryKey;
-
+		List tableAndColumnsTmp = new ArrayList();
+    
     for(int i=0; i<tables.length; ++i) {
 
       Table table = tables[i];
       for(int j=0; j<table.columns.length; ++j){
-        
+		    
         // this is how we resolve name ambiguity; first encountered mappings
         // are remembered and later ones are ignored.
         String col = table.columns[j];
-        if ( !map.containsKey( col ) ) 
-          map.put(col, table.name);
+        if ( !nameToTable.containsKey( col ) ) 
+          nameToTable.put(col, table.name);
         
         // add fully qualified name
         col = table.name + "." + col;
-        if ( !map.containsKey( col ) ) 
-          map.put(col, table.name);
+        if ( !nameToTable.containsKey( col ) ) 
+          nameToTable.put(col, table.name);
+          
+        tableAndColumnsTmp.add( col );
 
         // add shortcut name
+        // TODO remove all refences to table.shortcut because unused?
         col = table.shortcut + "." + col;
-        if ( !map.containsKey( col ) ) 
-          map.put(col, table.name);
+        if ( !nameToTable.containsKey( col ) ) 
+          nameToTable.put(col, table.name);
 
         
 
       }
     }
+    
+    tableAndColumns = new String[ tableAndColumnsTmp.size() ];
+		tableAndColumnsTmp.toArray( tableAndColumns );	  
   }
 
 
@@ -84,11 +95,28 @@ public class FieldMapper {
    */
   public String qualifiedName(Field field) {
 
-    String table = map.getProperty( field.getName() );
-
-    if ( table==null ) return null;
-    else return table + "." + strippedColumn( field.getName() );
+		// TODO possible optimisation: cache field->qName
+		String qName = null;
+		String name = field.getName();
+		String constraint = field.getTableConstraint();
+		 
+		if ( constraint==null ) {
+			String table = nameToTable.getProperty( name );
+    	if ( table!=null ) 
+    	 	qName = table + "." + strippedColumn( name );
+		}
+		else {
+			Pattern p = Pattern.compile(".*" + constraint + ".*\\." + name);
+			for (int i = 0; 
+						i < tableAndColumns.length && qName==null; 
+						i++) {
+				// todo
+				String s = tableAndColumns[i];
+				if ( p.matcher( s ).matches() ) qName=s;
+			}
+		}
     
+    return qName;
   }
 
 
@@ -107,7 +135,12 @@ public class FieldMapper {
    * @return table name if mapping is available, otherwise null.
    */
   public String tableName(Field field) {
-    return map.getProperty( field.getName() );
+  	String table = null;
+  	String qName = qualifiedName( field );
+  	if ( qName!=null ) 
+  		// extract table from "table.column"
+  		table = qName.split("\\.",2)[0];	
+  	return table;
   }
   
 
@@ -115,7 +148,7 @@ public class FieldMapper {
    * @return true if the column is mapped to a table.
    */
   public boolean canMap(Field field) {
-    return map.containsKey( field.getName() );
+    return qualifiedName( field ) != null;
   }
   
   /**
@@ -133,7 +166,7 @@ public class FieldMapper {
       StringBuffer buf = new StringBuffer();
 
       buf.append("[");
-      buf.append(" #map=").append(map.size());
+      buf.append(" #map=").append(nameToTable.size());
       buf.append("]");
 
       return buf.toString();
