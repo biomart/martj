@@ -383,6 +383,21 @@ public class FilterPage extends BaseConfigurationObject {
 	}
 
 	/**
+	 * Allows MartShell to get all qualifiers associated with a given internalName (which may be of form x.y).
+	 * Behaves differently than getFilterDescriptionByInternalName when internalName is x.y and y is the name of
+	 * an actual filterDescription.
+	 * @param internalName
+	 * @return List of qualifiers to complete
+	 */
+	public List getFilterCompleterQualifiersByInternalName(String internalName) {
+		if (internalName.indexOf(".") > 0 && !(internalName.endsWith(".")) && containsFilterDescription( internalName.split("\\.")[1] ) ) {
+			String refname = internalName.split("\\.")[1];
+			return getFilterDescriptionByInternalName(refname).getCompleterQualifiers(refname);
+		} else
+			return getFilterDescriptionByInternalName(internalName).getCompleterQualifiers(internalName);
+	}
+	
+	/**
 	 * debug output
 	 */
 	public String toString() {

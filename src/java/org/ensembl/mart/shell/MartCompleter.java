@@ -916,11 +916,16 @@ public class MartCompleter implements ReadlineCompleter {
 		if (currentDataset != null) {
 			if (currentDataset.containsFilterDescription(lastFilterName))
 				currentSet.addAll(
-					currentDataset.getFilterDescriptionByInternalName(lastFilterName).getCompleterQualifiers(lastFilterName));
+					currentDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
 		} else if (!usingLocalDataset && envDataset != null) {
-			if (envDataset.containsFilterDescription(lastFilterName))
+			logger.info("getting qualifiers for filter " + lastFilterName + "\n");
+			
+			if (envDataset.containsFilterDescription(lastFilterName)) {
+				logger.info("Its a filter, getting from dataset\n");
+				
 				currentSet.addAll(
-					envDataset.getFilterDescriptionByInternalName(lastFilterName).getCompleterQualifiers(lastFilterName));
+					envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
+			}
 		} else
 			SetNoDatasetMode();
 	}

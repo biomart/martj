@@ -106,7 +106,7 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getField();
-			else if ( ( internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -143,7 +143,7 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getType();
-			else if ( (internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -180,7 +180,7 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getTableConstraint();
-			else if ( (internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -216,7 +216,7 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getHandler();
-			else if ( (internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -248,7 +248,7 @@ public class FilterDescription extends BaseConfigurationObject {
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
 				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getQualifiers();
-			else if ( (internalName.indexOf(".") > 0 ) && !( internalName.endsWith(".") ) ) {
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -493,16 +493,16 @@ public class FilterDescription extends BaseConfigurationObject {
 
 	public List getCompleterNames() {
 		List names = new ArrayList();
-      
+
 		if (field != null && field.length() > 0 && type != null && type.length() > 0) {
 			//add internalName, and any PushOptions names that are found
 			if (!names.contains(internalName))
 				names.add(internalName);
-			
+
 			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
 				Option element = (Option) iter.next();
 				names.addAll(element.getCompleterNames());
-			}	
+			}
 		} else {
 			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
 				Option element = (Option) iter.next();
@@ -523,16 +523,59 @@ public class FilterDescription extends BaseConfigurationObject {
 
 	public List getCompleterQualifiers(String internalName) {
 		List quals = new ArrayList();
-		String pquals = getQualifiers(internalName);
-		if (pquals != null && pquals.length() > 0)
-			quals.addAll(Arrays.asList(pquals.split(",")));
+
+		if (this.internalName.equals(internalName)) {
+			//filterDescription has qualifiers
+			if (this.qualifiers != null && this.qualifiers.length() > 0)
+				quals.addAll(Arrays.asList(qualifiers.split(",")));
+		} else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+			//PushOption Filter Option has qualifiers 
+			String[] iname_info = internalName.split("\\.");
+			String supername = iname_info[0];
+			String refname = iname_info[1];
+      
+			Option superOption = getOptionByName(supername);
+			PushOptions[] pos = superOption.getPushOptions();
+      
+			for (int i = 0, n = pos.length; i < n; i++) {
+				PushOptions po = pos[i];
+
+				if (po.containsOption(refname)) {
+					Option[] os = po.getOptionByInternalName(refname).getOptions();
+
+					for (int j = 0, l = os.length; j < l; j++) {
+						Option option = os[j];
+						String opquals = option.getQualifiers();
+
+						if (opquals != null && opquals.length() > 0) {
+							List theseQs = Arrays.asList(opquals.split(","));
+							for (int k = 0, m = theseQs.size(); k < m; j++) {
+								String qual = (String) theseQs.get(j);
+								if (!quals.contains(qual))
+									quals.add(qual);
+							}
+						}
+					}
+				}
+			}
+		} else {
+			//subOption has qualifiers
+			if (containsOption(internalName)) {
+				Option option = getOptionByName(internalName);
+				String opquals = option.getQualifiers();
+
+				if (opquals != null && opquals.length() > 0) {
+					quals.addAll( Arrays.asList( opquals.split(",") ) );
+				}
+			}
+		}
 
 		return quals;
 	}
 
-	public List getCompleterValues(String internalName) {		
+	public List getCompleterValues(String internalName) {
 		List vals = new ArrayList();
-    
+
 		if (this.internalName.equals(internalName)) {
 			Option[] myops = getOptions();
 
@@ -545,13 +588,13 @@ public class FilterDescription extends BaseConfigurationObject {
 						vals.add(opvalue);
 				}
 			}
-		} else if ( ( internalName.indexOf(".") > 0 ) && !(internalName.endsWith(".") ) ) {
+		} else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 			//PushOption Option either Filter Option with Value Options, or Value Options
 			String[] iname_info = internalName.split("\\.");
 			String supername = iname_info[0];
 			String refname = iname_info[1];
-      
-			Option superOption = getOptionByName(supername);			
+
+			Option superOption = getOptionByName(supername);
 			PushOptions[] pos = superOption.getPushOptions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
@@ -568,20 +611,18 @@ public class FilterDescription extends BaseConfigurationObject {
 								vals.add(opvalue);
 						}
 					}
-				} else {					
+				} else {
 					//Option Filter with Value Options
 					if (po.containsOption(refname)) {
 						Option[] os = po.getOptionByInternalName(refname).getOptions();
 
-						if (os.length > 0) {
-							for (int j = 0, l = os.length; j < l; j++) {
-								Option option = os[j];
-								String opvalue = option.getValue();
+						for (int j = 0, l = os.length; j < l; j++) {
+							Option option = os[j];
+							String opvalue = option.getValue();
 
-								if (opvalue != null && opvalue.length() > 0) {
-									if (!vals.contains(opvalue))
-										vals.add(opvalue);
-								}
+							if (opvalue != null && opvalue.length() > 0) {
+								if (!vals.contains(opvalue))
+									vals.add(opvalue);
 							}
 						}
 					}
