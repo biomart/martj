@@ -33,11 +33,12 @@ public interface QueryRunner {
 	 * execute a Query using a specified mySQL database Connection, and output
 	 * the results to a specified OutputStream
 	 * 
-	 * @param conn
-	 * @param os
+	 * @param conn A JDBC Connection
+	 * @param os An OutputStream
+	 * @param limit An integer limit on the query (adds a limit by clause to the query)
 	 * @throws SQLException
 	 * @throws IOException
 	 * @throws InvalidQueryException
 	 */
-	public void execute(Connection conn, OutputStream os) throws SQLException, IOException, InvalidQueryException;
+	public void execute(Connection conn, OutputStream os, int limit) throws SQLException, IOException, InvalidQueryException;
 }

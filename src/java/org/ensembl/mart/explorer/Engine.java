@@ -122,8 +122,36 @@ public class Engine {
     
           Connection conn = getDatabaseConnection();
 	      QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec);
-          qr.execute(conn, os);
+          qr.execute(conn, os, 0);
     }
+    
+	/**
+	 * Constructs a QueryRunner object for the given Query, and format using 
+	 * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
+	 * with the mySQL connection of this Engine, and write the results to 
+	 * a specified OutputStream.
+	 * 
+	 * @param query A Query Object
+	 * @param formatspec A FormatSpec Object
+	 * @param os An OutputStream
+	 * @param limit limits the number of records returned by the query
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws FormatException
+	 * @throws InvalidQueryException
+	 * @see Query
+	 * @see FormatSpec
+	 * @see QueryRunnerFactory
+	 * @see QueryRunner
+	 * @see TabulatedQueryRunner
+	 */
+	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
+		throws SQLException, IOException, FormatException, InvalidQueryException {
+    
+		  Connection conn = getDatabaseConnection();
+		  QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec);
+		  qr.execute(conn, os, limit);
+	}
 
     public int countRows(Query query) {
         throw new RuntimeException();

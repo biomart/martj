@@ -53,7 +53,7 @@ public class TabulatedSeqQueryRunner implements QueryRunner {
 	 * of a ResultSet is separated by the separator defined in the FormatSpec 
 	 * object in the output.
 	 */
-	public void execute(Connection conn, OutputStream os) throws SQLException, IOException, InvalidQueryException {
+	public void execute(Connection conn, OutputStream os, int limit) throws SQLException, IOException, InvalidQueryException {
 		OutputStreamWriter osr =  new OutputStreamWriter(os);
 		SequenceDescription seqd = query.getSequenceDescription();
 		SequenceAdaptor seqa = SequenceAdaptorFactory.createSequenceAdaptor( seqd.getSeqCode(), query.getSpecies(), query.getFocus(), conn );
@@ -62,6 +62,8 @@ public class TabulatedSeqQueryRunner implements QueryRunner {
 
 		CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 		String sql = csql.toSQL();
+		if (limit > 0)
+		    sql = sql+" limit "+limit;
 
 		logger.info( "QUERY : " + query );
 		logger.info( "SQL : " +sql );

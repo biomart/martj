@@ -41,11 +41,13 @@ public class TabulatedQueryRunner implements QueryRunner {
      * via a OutputStreamWriter.  Each field of a ResultSet is separated by
      * the separator defined in the FormatSpec object in the output.
      */
-    public void execute(Connection conn, OutputStream os) throws SQLException, IOException, InvalidQueryException {
+    public void execute(Connection conn, OutputStream os, int limit) throws SQLException, IOException, InvalidQueryException {
         OutputStreamWriter osr =  new OutputStreamWriter(os);
 
         CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
         String sql = csql.toSQL();
+        if (limit > 0)
+            sql = sql+" limit "+limit;
 
         logger.debug( "QUERY : " + query );
         logger.debug( "SQL : " +sql );

@@ -40,7 +40,7 @@ public class FastaSeqQueryRunner implements QueryRunner {
 	 * to the OutputStream.  All OutputStream writes are mediated
 	 * by an OutputStreamWriter object.
 	 */
-	public void execute(Connection conn, OutputStream os) throws SQLException, IOException, InvalidQueryException {
+	public void execute(Connection conn, OutputStream os, int limit) throws SQLException, IOException, InvalidQueryException {
 		OutputStreamWriter osr =  new OutputStreamWriter(os);
 		SequenceDescription seqd = query.getSequenceDescription();
 		SequenceAdaptor seqa = SequenceAdaptorFactory.createSequenceAdaptor( seqd.getSeqCode(), query.getSpecies(), query.getFocus(), conn );
@@ -49,6 +49,8 @@ public class FastaSeqQueryRunner implements QueryRunner {
 
 		CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 		String sql = csql.toSQL();
+		if (limit > 0)
+		   sql = sql+" limit "+limit;
 
 		logger.info( "QUERY : " + query );
 		logger.info( "SQL : " +sql );
