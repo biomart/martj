@@ -69,8 +69,8 @@ public class DNAAdaptor {
 
 		while (rs.next()) {
 			String species = rs.getString(1);
-			String sqlFull = "select sequence from " + species + "_dna_chunks_support where chr_start = ? and chr_name = ?";
-			String sqlSub = "select substring(sequence, ?, ?) from " + species + "_dna_chunks_support where chr_start = ? and chr_name = ?";
+			String sqlFull = "select sequence from " + species + "__dna_chunks__supp where chr_start = ? and chr_name = ?";
+			String sqlSub = "select substring(sequence, ?, ?) from " + species + "__dna_chunks__supp where chr_start = ? and chr_name = ?";
 
 			specSQLFull.put(species, conn.prepareStatement(sqlFull));
 			specSQLSub.put(species, conn.prepareStatement(sqlSub));

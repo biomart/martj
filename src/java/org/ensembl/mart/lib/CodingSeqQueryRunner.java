@@ -78,14 +78,18 @@ public final class CodingSeqQueryRunner extends BaseSeqQueryRunner {
 
     //resolve dataset, species, and focus
     String[] mainTables = query.getStarBases();
+    
 
     for (int i = 0; i < mainTables.length; i++) {
-      if (Pattern.matches(".*gene", mainTables[i]))
+      if (Pattern.matches(".*gene__main", mainTables[i]))
         dataset = mainTables[i];
     }
 
     StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
     species = tokens.nextToken();
+    focus = tokens.nextToken();
+    dset = species + "_" + focus;
+    structureTable = dset + "__structure__dm";
   }
 
   protected void updateQuery() {
@@ -94,17 +98,17 @@ public final class CodingSeqQueryRunner extends BaseSeqQueryRunner {
     coordEnd = "coding_end";
     displayIDs.add("transcript_stable_id_v");
     displayIDs.add("gene_stable_id_v");
-
-    query.addAttribute(new FieldAttribute(queryID, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(RANK, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(coordStart, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(coordEnd, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(CHR, "_structure_dm", "transcript_id_key"));
-    query.addAttribute(new FieldAttribute(STRANDCOLUMN, "_structure_dm", "transcript_id_key"));
+    
+    query.addAttribute(new FieldAttribute(queryID, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(RANK, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(coordStart, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(coordEnd, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(CHR, structureTable, "transcript_id_key"));
+    query.addAttribute(new FieldAttribute(STRANDCOLUMN, structureTable, "transcript_id_key"));
 
     for (int i = 0; i < displayIDs.size(); i++) {
-      query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm", "transcript_id_key"));
+      query.addAttribute(new FieldAttribute((String) displayIDs.get(i), structureTable, "transcript_id_key"));
     }
   }
 
@@ -398,4 +402,5 @@ public final class CodingSeqQueryRunner extends BaseSeqQueryRunner {
       }
     }
   };
+  
 }
