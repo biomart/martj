@@ -1,12 +1,11 @@
 package org.ensembl.mart.lib.test;
 
+import junit.framework.TestCase;
+
 import org.ensembl.mart.lib.BasicFilter;
-import org.ensembl.mart.lib.Field;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.FieldMapper;
 import org.ensembl.mart.lib.Table;
-
-import junit.framework.TestCase;
 
 /**
  * @author craig
