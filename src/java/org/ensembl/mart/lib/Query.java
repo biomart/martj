@@ -76,7 +76,7 @@ public class Query {
    * 
    * @param oq
    */
-  public void initialise(Query oq) {
+  public synchronized void initialise(Query oq) {
 
     setDataset(oq.getDataset());
     setDataSource(oq.getDataSource());
@@ -151,7 +151,7 @@ public class Query {
    * @throws IllegalArgumentException if attribute is 
    * null or already added.
    */
-  public void addAttribute(Attribute attribute) {
+  public synchronized void addAttribute(Attribute attribute) {
     addAttribute(attributes.size(), attribute);
   }
 
@@ -160,7 +160,7 @@ public class Query {
    * 
    * @param Filter filter
    */
-  public void removeFilter(Filter filter) {
+  public synchronized void removeFilter(Filter filter) {
     int index = filters.indexOf(filter);
     if (index > -1) {
       filters.remove(index);
@@ -218,7 +218,7 @@ public class Query {
    * @throws IllegalArgumentException if filter is 
    * null or already added.
    */
-  public void addFilter(Filter filter) {
+  public synchronized void addFilter(Filter filter) {
     addFilter(filters.size(), filter);
   }
 
@@ -230,7 +230,7 @@ public class Query {
    * @throws IllegalArgumentException if attribute is 
    * null or already added.
    */
-  public void addFilter(int index, Filter filter) {
+  public synchronized void addFilter(int index, Filter filter) {
 
     if (filter == null)
       throw new IllegalArgumentException("Can not add a null filter");
@@ -248,7 +248,7 @@ public class Query {
    * 
    * @param Attribute attribute to be removed.
    */
-  public void removeAttribute(Attribute attribute) {
+  public synchronized void removeAttribute(Attribute attribute) {
     int index = attributes.indexOf(attribute);
     if (index > -1) {
       attributes.remove(index);
@@ -265,7 +265,7 @@ public class Query {
    * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
   * @param s A SequenceDescription object.
   */
-  public void setSequenceDescription(SequenceDescription s) {
+  public synchronized void setSequenceDescription(SequenceDescription s) {
     SequenceDescription oldSequenceDescription = this.sequenceDescription;
     this.sequenceDescription = s;
     this.querytype = Query.SEQUENCE;
@@ -300,7 +300,7 @@ public class Query {
    * set the primaryKeys for the Query
    * @param String primaryKeys
    */
-  public void setPrimaryKeys(String[] primaryKeys) {
+  public synchronized void setPrimaryKeys(String[] primaryKeys) {
     String[] old = this.primaryKeys;
     this.primaryKeys = primaryKeys;
     log();
@@ -323,7 +323,7 @@ public class Query {
    * set the starBases for the Query
    * @param String starBases
    */
-  public void setStarBases(String[] starBases) {
+  public synchronized void setStarBases(String[] starBases) {
     String[] old = this.starBases;
     this.starBases = starBases;
 
@@ -340,7 +340,7 @@ public class Query {
    * Set a limit for the Query.
    * @param inlimit - int limit to add to the Query
    */
-  public void setLimit(int inlimit) {
+  public synchronized void setLimit(int inlimit) {
     if (inlimit > 0) {
       int old = this.limit;
       this.limit = inlimit;
@@ -463,7 +463,7 @@ public class Query {
    */
   private String dataset;
 
-  public synchronized QueryChangeListener[] getQueryChangeListeners() {
+  public QueryChangeListener[] getQueryChangeListeners() {
     return (QueryChangeListener[]) listeners.toArray(
       new QueryChangeListener[listeners.size()]);
   }
@@ -475,7 +475,7 @@ public class Query {
   /**
    * Convenience method that removes all attributes from the query. Notifies listeners.
    */
-  public void removeAllAttributes() {
+  public synchronized void removeAllAttributes() {
 
     Attribute[] attributes = getAttributes();
 
@@ -489,7 +489,7 @@ public class Query {
    * Removes all Filters from the query. Each removed Filter will
    * generate a separate property change event.
    */
-  public void removeAllFilters() {
+  public synchronized void removeAllFilters() {
 
     Filter[] filters = getFilters();
 
@@ -503,7 +503,7 @@ public class Query {
    * Removes all QueryChangeListeners. Note: does not notify
    * listeners that they have been removed.
    */
-  public void removeAllQueryChangeListeners() {
+  public synchronized void removeAllQueryChangeListeners() {
     listeners.clear();
   }
 
@@ -514,7 +514,7 @@ public class Query {
    * @throws RuntimeException if oldFilter is not currently in the query.
    * TODO remove replaceFilter() + listener method.
    */
-  public void replaceFilter(Filter oldFilter, Filter newFilter) {
+  public synchronized void replaceFilter(Filter oldFilter, Filter newFilter) {
 
     int index = filters.indexOf(oldFilter);
     if (index == -1)
@@ -540,7 +540,7 @@ public class Query {
    * Sets the value and notifies listeners.
    * @param dataSource new dataSource.
    */
-  public void setDataSource(DataSource dataSource) {
+  public synchronized void setDataSource(DataSource dataSource) {
     DataSource oldDatasource = this.dataSource;
     this.dataSource = dataSource;
     log();
@@ -561,7 +561,7 @@ public class Query {
    * if the parameter is equal to the current dataset.
    * @param dataset new dataset.
    */
-  public void setDataset(String datasetName) {
+  public synchronized void setDataset(String datasetName) {
 
     if (this.dataset == datasetName
       || datasetName != null
@@ -591,7 +591,7 @@ public class Query {
   /**
    * @param string -- String name to apply to this Query.
    */
-  public void setQueryName(String queryName) {
+  public synchronized void setQueryName(String queryName) {
 
     if (this.queryName!=null && this.queryName.equals(queryName))
       return;
@@ -611,7 +611,7 @@ public class Query {
   /**
    * @param listener
    */
-  public void addQueryChangeListener(QueryChangeListener listener) {
+  public synchronized void addQueryChangeListener(QueryChangeListener listener) {
     listeners.add(listener);
   }
 
@@ -622,7 +622,7 @@ public class Query {
    * @throws IllegalArgumentException if attribute is 
    * null or already added.
    */
-  public void addAttribute(int index, Attribute attribute) {
+  public synchronized void addAttribute(int index, Attribute attribute) {
 
     if (attribute == null)
       throw new IllegalArgumentException("Can not add a null attribute");
@@ -654,7 +654,7 @@ public class Query {
   /**
    * Unsets all property values.
    */
-  public void clear() {
+  public synchronized void clear() {
 
     setDataSource(null);
     setDataset(null);
@@ -673,7 +673,7 @@ public class Query {
     return datasetView;
   }
 
-  public void setDatasetView(DatasetView datasetView) {
+  public synchronized void setDatasetView(DatasetView datasetView) {
     DatasetView old = this.datasetView;
     this.datasetView = datasetView;
     log();
