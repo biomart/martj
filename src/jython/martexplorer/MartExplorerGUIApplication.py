@@ -33,6 +33,7 @@ from java.awt import *
 from javax.swing import *
 from javax.swing.tree import *
 from jarray import *
+from org.apache.log4j import *
 
 class Dummy(QueryInputPage, JPanel):
     def __init__(self, message):
@@ -120,36 +121,33 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener):
 	""" Brings the targetComponent to the front of the
 	cardContainer if this was the node selected in the tree"""
 	if self == event.newLeadSelectionPath.lastPathComponent:
-            print "showing",self.targetCardName
 	    self.cardContainer.show( self.targetCardName )
 
 
 
-class tree_prototype(QueryPanel):
+class TreeNavigationPanel(QueryPanel):
 
 
     def __init__(self):
-        print "te init s2"
-
-        rootNode = DefaultMutableTreeNode( "Query" )
-        treeModel = DefaultTreeModel( rootNode )
+        self.rootNode = DefaultMutableTreeNode( "Query" )
+        treeModel = DefaultTreeModel( self.rootNode )
         tree = JTree( treeModel )
         configPanel = CardContainer()
         
-        dbNode = QueryTreeNode( tree, rootNode, 0, configPanel, DatabaseConfigPage(), "DATABASE" )
-        speciesNode = QueryTreeNode( tree, rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
-        focusNode = QueryTreeNode( tree, rootNode, 2, configPanel, None,"focus" )
-        filtersNode = QueryTreeNode( tree, rootNode, 3, configPanel, None,"filter" )
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, DatabaseConfigPage(), "DATABASE" )
+        speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
+        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel, None,"focus" )
+        filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel, None,"filter" )
         regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel, None,"region" )
-        outputNode = QueryTreeNode( tree, rootNode, 4, configPanel, None,"output" )
+        outputNode = QueryTreeNode( tree, self.rootNode, 4, configPanel, None,"output" )
         attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel, None,"attribute" )
         formatNode = QueryTreeNode( tree, outputNode, 1, configPanel, None,"format" )
         destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel, None,"destination" )
         
         # expand branches in tree
-	path = TreePath(rootNode).pathByAddingChild( filtersNode )
+	path = TreePath(self.rootNode).pathByAddingChild( filtersNode )
 	tree.expandPath( path )
-        path = TreePath(rootNode).pathByAddingChild( outputNode )
+        path = TreePath(self.rootNode).pathByAddingChild( outputNode )
 	tree.expandPath( path )
         path = path.pathByAddingChild( attributesNode )
 	tree.expandPath( path )
@@ -162,8 +160,13 @@ class tree_prototype(QueryPanel):
 
 
     def updateQuery(self, query):
-        pass
-
+        print "updating query"
+        for node in self.rootNode.depthFirstEnumeration():
+            if isinstance( node, QueryTreeNode ):
+                print "TODO load the dat from the node into query",node.toString(), "is a QTN, "
+            else:
+                print node, "is unkown type"
+                
     def updatePage(self, query):
         pass
 
@@ -175,14 +178,19 @@ class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(800,500))
+        self.queryPanel = TreeNavigationPanel()
         self.buildGUI()
         self.visible=1
 
 
     def buildGUI(self):
         self.JMenuBar = self.createMenuBar()
-        self.queryPanel = tree_prototype()
-        self.contentPane.add( self.queryPanel )
+
+        panel = JPanel()
+        panel.layout = BoxLayout( panel, BoxLayout.Y_AXIS )
+        panel.add( self.createToolBar() )
+        panel.add( self.queryPanel )
+        self.contentPane.add( panel )
 
 
     def createMenuBar(self):
@@ -214,6 +222,13 @@ class MartGUIApplication(JFrame):
         menuBar.add( helpMenu )
 
         return menuBar
+
+
+    def createToolBar(self):
+        toolBar = JToolBar()
+        toolBar.add( JButton("Clear", actionPerformed=self.doClear) )
+        toolBar.add( JButton("Execute", actionPerformed=self.doExecute) )
+        return toolBar
 
     def doExit(self, event=None):
         System.exit(0)
@@ -252,6 +267,7 @@ class MartGUIApplication(JFrame):
             self.queryPanel.updateQuery( q )
             import threading
             threading.Thread(target=self.executeQuery(q)).start()
+
         except (Exception,RuntimeException), e:
             JOptionPane.showMessageDialog( self,
                                            "Failed to execute query: " + e.getMessage(),
@@ -270,6 +286,30 @@ class MartGUIApplication(JFrame):
 
 
 if __name__=="__main__":
+    import sys
+    usage = "Usage: MartExplorerGUIApplication [ [-v] [-l LOGGING_FILE_URL] ]"
+    if len(sys.argv)>1:
+        parameter = sys.argv[1]
+
+        if parameter=="-v":
+            print "verbose"
+            BasicConfigurator.configure()
+            Logger.getRoot().setLevel(Level.INFO)
+
+        elif parameter=="-h":
+            print usage
+
+        elif parameter=="-l":
+            if len(sys.argv)>2:
+                print "using logging file : ", sys.argv[2]
+                PropertyConfigurator.configure( sys.argv[2] )
+            else:
+                print "ERROR: No logging file URL specified."
+                print usage
+                System.exit(0)
+        else:
+            Logger.getRoot().setLevel(Level.WARN)
+        
     # 1=don't exit JVM, fast for development purposes
     if 1: MartGUIApplication(JFrame.DISPOSE_ON_CLOSE).visible=1
     else: MartGUIApplication(JFrame.EXIT_ON_CLOSE).visible=1
