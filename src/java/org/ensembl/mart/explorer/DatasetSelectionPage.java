@@ -89,42 +89,40 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
    */
 	public void stateChanged(ChangeEvent e) {
 
-		String selection = combo.getText();
-		if (selection != "") {
+		if ( combo.getSelectedItem() == currentSeletion )
+			return;
 
-			boolean update = true;
+		boolean update = true;
 
-			if ( currentSeletion!=null 
-            && combo.getSelectedItem() != currentSeletion
-				    && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
+		if (query.getAttributes().length > 0 || query.getFilters().length > 0) {
 
-				int option =
-					JOptionPane.showConfirmDialog(
-						this,
-						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-						"Change Attributes",
-						JOptionPane.YES_NO_OPTION);
+			int option =
+				JOptionPane.showConfirmDialog(
+					this,
+					new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+					"Change Attributes",
+					JOptionPane.YES_NO_OPTION);
 
-			 if (option != JOptionPane.OK_OPTION) {
-         update = false;
-         combo.removeChangeListener( this );
-         combo.setSelectedItem( currentSeletion );
-         combo.addChangeListener( this );
-			 }
-			}
-
-			if (update) {
-				// update the nodes label      
-				setNodeLabel(getName(), selection);
-
-				// set new value on query
-				Dataset dataset = getSelectedDataset();
-				query.setStarBases(dataset.getStarBases());
-				query.setPrimaryKeys(dataset.getPrimaryKeys());
+			if (option != JOptionPane.OK_OPTION) {
+				update = false;
+				combo.removeChangeListener(this);
+				combo.setSelectedItem(currentSeletion);
+				combo.addChangeListener(this);
 			}
 		}
 
+		if (update) {
+			// update the nodes label      
+			setNodeLabel(getName(), combo.getText());
+
+			// set new value on query
+			Dataset dataset = getSelectedDataset();
+			query.setStarBases(dataset.getStarBases());
+			query.setPrimaryKeys(dataset.getPrimaryKeys());
+		}
+
 		currentSeletion = combo.getSelectedItem();
+
 	}
 
   
