@@ -409,7 +409,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, Description not correctly set for FilterCollection\n", testDesc, Desc);
 		assertEquals("Warning, Type not correctly set for FilterCollection\n", testType, Type);
 		assertEquals("Warning, FilterSetName not correctly set for FilterCollection\n", testFilterSetName, FilterSetName);
-		assertTrue("First FilterCollection should not be in a FilterSet\n", !fc.inFilterSet());
+		assertTrue("Second FilterCollection should be in a FilterSet\n", fc.inFilterSet());
 
 		//	contains/get for FilterGroup-FilterCollection
 		containsTest = fg.containsFilterCollection(testIName);
@@ -437,20 +437,15 @@ public class ConfigurationTest extends Base {
 		Qualifier = fField.getQualifier();
 		testTableConstraint = "gene_main";
 		TableConstraint = fField.getTableConstraint();
-		int testFilterSetReq = 1;
-		int FilterSetReq = fField.getFilterSetReq();
+		String testFilterSetReq = "field";
+	  String FilterSetReq = fField.getFilterSetReq();
 		String testModifiedName = "ensemblsyn_exclusive";
 		String ModifiedName = null;
 
-		switch (fField.getFilterSetReq()) {
-			case FilterSetDescription.MODFIELDNAME :
-				ModifiedName = fsd.getFieldNameModifier() + fField.getFieldName();
-				break;
-
-			case FilterSetDescription.MODTABLECONSTRAINT :
-				ModifiedName = fsd.getTableConstraintModifier() + fField.getTableConstraint();
-				break;
-		}
+    if ( FilterSetReq.equals( FilterSetDescription.MODFIELDNAME ) )
+		  ModifiedName = fsd.getFieldNameModifier() + fField.getFieldName();
+		else
+			ModifiedName = fsd.getTableConstraintModifier() + fField.getTableConstraint();
 
 		assertEquals("Warning, Internal Name not correctly set for UIFilterDescriptionField\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIFilterDescriptionField\n", testDName, DName);
@@ -474,21 +469,16 @@ public class ConfigurationTest extends Base {
 		testFieldName = "gene_stable_id_v";
 		FieldName = fTable.getFieldName();
 		Qualifier = fTable.getQualifier();
-		testFilterSetReq = 2;
+		testFilterSetReq = "table";
 		FilterSetReq = fTable.getFilterSetReq();
 		testTableConstraint = "_dm";
 		TableConstraint = fTable.getTableConstraint();
 		testModifiedName = "ensemblgene_dm";
 
-		switch (fTable.getFilterSetReq()) {
-			case FilterSetDescription.MODFIELDNAME :
-				ModifiedName = fsd.getFieldNameModifier() + fTable.getFieldName();
-				break;
-
-			case FilterSetDescription.MODTABLECONSTRAINT :
-				ModifiedName = fsd.getTableConstraintModifier() + fTable.getTableConstraint();
-				break;
-		}
+		if ( FilterSetReq.equals( FilterSetDescription.MODFIELDNAME ) )
+			ModifiedName = fsd.getFieldNameModifier() + fTable.getFieldName();
+		else
+			ModifiedName = fsd.getTableConstraintModifier() + fTable.getTableConstraint();
 
 		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIFilterDescription\n", testDName, DName);
@@ -497,6 +487,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, FieldName not set correctly for UIFilterDescription\n", testFieldName, FieldName);
 		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", testQualifier, Qualifier);
 		assertEquals("Warning, TableConstraint not set correctly for UIFilterDescription\n", testTableConstraint, TableConstraint);
+		assertEquals("Warning, filterSetReq not set correctly for UIFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
 		assertEquals("Warning, Modified TableConstraint not correct\n", testModifiedName, ModifiedName);
 		assertTrue("Warning, second FilterCollection second UIFilterDescription should be in a FilterSet\n", fTable.inFilterSet());
 
