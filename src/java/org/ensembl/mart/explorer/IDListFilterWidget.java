@@ -20,6 +20,9 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,6 +37,7 @@ import javax.swing.JTextField;
 
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Filter;
+import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
@@ -64,7 +68,7 @@ public class IDListFilterWidget
   private JRadioButton urlRadioButton = new JRadioButton("URL containing IDs");
   private JRadioButton noneButton = new JRadioButton("None");
 
-  private Object lastRadioButton = null;
+  private Feedback feedback = new Feedback(this);
 
   /**
    * @param filterGroupWidget
@@ -89,9 +93,10 @@ public class IDListFilterWidget
     idStringRadioButton.addActionListener(this);
     fileRadioButton.addActionListener(this);
     urlRadioButton.addActionListener(this);
+    noneButton.addActionListener(this);
 
     //  TODO add key and focus listener to idString: change -> remove filter + new filter
-    
+
     //  TODO add key and focus listener to url: change -> remove filter + new filter
 
     //  TODO add key and focus listener to file: change -> remove filter + new filter
@@ -152,61 +157,72 @@ public class IDListFilterWidget
 
   }
 
+  /**
+   * Updates query in response to a user action. Removes old filter if necessary, adds new one if necessary
+   * , or replaces old with new if necessary.
+   */
   public void actionPerformed(ActionEvent e) {
-   
-   Object c = e.getSource();
 
-    if (c == lastRadioButton)
-      return;
+    Filter newFilter = createFilter();
 
-    else {
-      System.out.println(c);
-
-      if (c == idStringRadioButton) {
-        
-        lastRadioButton = c;
-        removeFilter();
-        // only allow if string set.
-        if (idString.getText().length() != 0) {
-          System.out.println(
-            "TODO remove existing filter, if any and set new IDs one");
-        } 
-
-      } else if (c == fileRadioButton) {
-        
-        lastRadioButton = c;
-        removeFilter();
-        // only allow if string set.
-        if (file.getText().length() != 0) {
-          System.out.println(
-            "TODO remove existing filter, if any and set new FILE one");
-        } 
-
-      } else if (c == urlRadioButton) {
-        
-        lastRadioButton = c;
-        removeFilter();
-        // only allow if string set.
-        if (url.getText().length() != 0) {
-          System.out.println(
-            "TODO remove existing filter, if any and set new URL one");
-        } 
-
+    if (newFilter == null) {
+      
+      if (filter != null) {
+      
+        query.removeFilter(filter);
+        System.out.println("Deleting filter: " + filter);
+      } else {
+        System.out.println("No filter to Deleting filter ");
       }
+      
+    } else {
+
+      if (filter != null){
+        query.replaceFilter(filter, newFilter);
+        System.out.println("Replacing " +filter + " -> " +newFilter);
+      }
+        
+      else {
+        query.addFilter(newFilter);
+        System.out.println("Adding "+ newFilter);
+      }
+        
+
     }
+
+    filter = newFilter;
 
   }
 
-
   /**
-   * If filter exists is set it is removed from the query.
-   *
+   * Creates a filter based on the current state of the widget. If "none" is selected or
+   * the field associated with the radio button is empty/invalid then no filter is returned.
+   * @return filter if current state relates to one, otherwise null.
    */
-  private void removeFilter() {
-    System.out.println("TODO Remove existing filter");
-  
-    if (filter!=null) query.removeFilter(filter);
-    
+  private Filter createFilter() {
+
+    Option o = ((OptionToStringWrapper) list.getSelectedItem()).option;
+    String f = o.getFieldFromContext();
+    String tc = o.getTableConstraintFromContext();
+    String k = o.getKeyFromContext();
+
+    if (idStringRadioButton.isSelected() && idString.getText().length() != 0)
+      return new IDListFilter(
+        f,
+        tc,
+        k,
+        idString.getText().split("(\\s+|\\s*,\\s*)"));
+
+    else if (urlRadioButton.isSelected() && url.getText().length() != 0)
+      try {
+        return new IDListFilter(f, tc, k, new URL(url.getText()));
+      } catch (MalformedURLException e) {
+        feedback.warning("There is a problem with the URL: " + url.getText());
+
+      } else if (fileRadioButton.isSelected() && file.getText().length() != 0)
+      return new IDListFilter(f, tc, k, new File(file.getText()));
+
+    return null;
   }
 
   /**
