@@ -132,6 +132,9 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 
 	public void addDatasetView(DatasetView dsv) {
 		if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
+      dsv.setDatasource(dsvsource);
+      dsv.setDSViewAdaptor(this);
+
 			inameMap.put(dsv.getInternalName(), dsv);
 			dnameMap.put(dsv.getDisplayName(), dsv);
 			dsv.setDSViewAdaptor(this);
@@ -147,8 +150,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 		if (inameMap.containsKey(dsv.getInternalName())) {
 			inameMap.remove(dsv.getInternalName());
 			dnameMap.remove(dsv.getDisplayName());
-			dsv.setDSViewAdaptor(null);
 			dsviews.remove(dsv);
+      dsv.setDSViewAdaptor(null);
       return true;
 		} else
 			return false;

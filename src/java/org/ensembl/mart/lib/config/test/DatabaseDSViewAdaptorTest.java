@@ -115,6 +115,16 @@ public class DatabaseDSViewAdaptorTest extends Base {
     byte[] newestDigest = newestDSV.getMessageDigest();
     assertTrue("DatasetView in DatabaseDatasetViewAdatpro after mod, store, and update should not equal Reference DatasetView based on message digest\n", !(MessageDigest.isEqual( refDigest, newestDigest )));
     
+    assertTrue("Could not removeDatasetView\n", refdbdsva.removeDatasetView(newestDSV) );
+    assertTrue("Adaptor should be empty after removeDatasetView\n", refdbdsva.getDatasetInternalNames().length == 0);
+    assertTrue("Adaptor should be empty after removeDatasetView\n", refdbdsva.getDatasetDisplayNames().length == 0);
+    assertTrue("Adaptor should be empty after removeDatasetView\n", refdbdsva.getDatasetViews().length == 0);
+    
+    refdbdsva.update();
+    
+    assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView after removeDatasetView and update\n", refdbdsva.getDatasetViews().length == 1);
+    assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView internalName after removeDatasetView and update\n", refdbdsva.getDatasetInternalNames().length == 1);
+    assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView displayName after removeDatasetView and update\n", refdbdsva.getDatasetDisplayNames().length == 1);
     
     MartLocation[] martlocs = refdbdsva.getMartLocations();
     assertTrue("getMartLocations didnt return anything\n", martlocs.length > 0);
