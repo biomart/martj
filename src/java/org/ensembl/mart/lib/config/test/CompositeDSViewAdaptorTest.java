@@ -66,7 +66,7 @@ public class CompositeDSViewAdaptorTest extends Base {
     //assertTrue( "adaptor should be empty after clear after removeDatasetView\n", adaptor.getDatasetDisplayNames().length==0 );
     assertTrue( "adaptor should be empty after clear after removeDatasetView\n", adaptor.getDatasetViews().length==0 );
     
-    // this falls over if _meta_DatasetView_DatabaseDSViewAdaptorTest.USER doesnt exist
+    // this falls over if meta_DatasetView_DatabaseDSViewAdaptorTest.USER doesnt exist
     DatabaseDSViewAdaptor dbAdaptor = DatabaseDSViewAdaptorTest.getSampleDatasetViewAdaptor(martJDataSource);
     
     // make sure testDataset.xml is stored in the table, then update it
@@ -81,7 +81,7 @@ public class CompositeDSViewAdaptorTest extends Base {
     assertNotNull( "DatasetView returned by getDatasetViews is null\n", view );
     assertTrue( "DatasetView should have filter descriptions but doesnt\n", view.getAllFilterDescriptions().size()>0 );
     
-    //clean up the _meta_DatasetView table
+    //clean up the meta_DatasetView table
     String metatable = DatabaseDatasetViewUtils.getDSViewTableFor(martJDataSource, DatabaseDSViewAdaptorTest.USER);
     DatabaseDatasetViewUtils.DeleteOldDSViewEntriesFor(martJDataSource, metatable, view.getDataset(), view.getInternalName(), view.getDisplayName());
     

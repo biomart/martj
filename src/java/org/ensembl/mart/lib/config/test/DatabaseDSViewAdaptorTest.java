@@ -44,15 +44,15 @@ public class DatabaseDSViewAdaptorTest extends Base {
 
 	/**
 	 * Returns an instance of a DatabaseDSViewAdaptor from the given DataSource, for
-	 * the user DatabaseDSViewAdaptorTest.USER.  If the _meta_DatasetView_[user] table
+	 * the user DatabaseDSViewAdaptorTest.USER.  If the meta_DatasetView_[user] table
 	 * does not exist, an exception is thrown.
 	 * @param dsource -- DataSource for Mart Database to be tested against.
 	 * @return DatabaseDSViewAdaptor
-	 * @throws Exception when _meta_DatasetView_[user] doesnt exist, and for all underlying exceptions
+	 * @throws Exception when meta_DatasetView_[user] doesnt exist, and for all underlying exceptions
 	 */
 	public static DatabaseDSViewAdaptor getSampleDatasetViewAdaptor(DetailedDataSource dsource) throws Exception {
 		if (!DatabaseDatasetViewUtils.DSViewUserTableExists(dsource, USER))
-			throw new Exception("_meta_DatasetView_" + USER + " must exist in the Mart Database\n");
+			throw new Exception("meta_DatasetView_" + USER + " must exist in the Mart Database\n");
 
 		DatabaseDSViewAdaptor ret = new DatabaseDSViewAdaptor(dsource, USER);
 
@@ -68,11 +68,11 @@ public class DatabaseDSViewAdaptorTest extends Base {
 
 	public void testDatabaseDSViewAdaptor() throws Exception {
     //TODO: major refactor
-		assertTrue("_meta_DatasetView_test does not exist, must exist for test to run\n", DatabaseDatasetViewUtils.DSViewUserTableExists(martJDataSource, USER));
+		assertTrue("meta_DatasetView_test does not exist, must exist for test to run\n", DatabaseDatasetViewUtils.DSViewUserTableExists(martJDataSource, USER));
 
 		DatabaseDSViewAdaptor refdbdsva = getSampleDatasetViewAdaptor(martJDataSource);
 
-		assertTrue("_meta_DatasetView_test must be empty for test to run\n", refdbdsva.getDatasetViews().length == 0);
+		assertTrue("meta_DatasetView_test must be empty for test to run\n", refdbdsva.getDatasetViews().length == 0);
 
 		DatasetView refdsv = DatasetViewXMLUtilsTest.TestDatasetViewInstance(false);
 		byte[] refDigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(refdsv);

@@ -76,7 +76,7 @@ public class RegistryDSViewAdaptorTest extends Base {
 //    RegistryDSViewAdaptor filebak = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYFILE)); // to test dup
     
     //testMartRegistryDB
-    assertTrue("_meta_DatasetView_ensro does not exist, must exist for test to run\n", DatabaseDatasetViewUtils.DSViewUserTableExists(martJDataSource, USER));
+    assertTrue("meta_DatasetView_ensro does not exist, must exist for test to run\n", DatabaseDatasetViewUtils.DSViewUserTableExists(martJDataSource, USER));
     
     regadaptor = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYDB));
     //assertEquals("DB RegistryDSViewAdaptor should be empty before store and update\n", 0, regadaptor.getDatasetInternalNames().length);
