@@ -113,7 +113,9 @@ public class SequenceGroupWidget
     private JRadioButton includeExonsPlus5And3Flanks =
       new JRadioButton("Exons plus 5' and 3' flanks");
 
-  private JRadioButton includePeptide = new JRadioButton("Peptide");
+    private JRadioButton includePeptide = new JRadioButton("Peptide");
+    
+    private JRadioButton includeNone = new JRadioButton();
 
   private JRadioButton[] typeButtons =
     new JRadioButton[] { clearButton, transcript, gene };
@@ -199,6 +201,8 @@ public class SequenceGroupWidget
     super(name, query, tree);
     this.attributeGroup = attributeGroup;
 
+    clearButton.setSelected(true);
+
     loadSchematicSequenceImages();
 
     Box b = Box.createVerticalBox();
@@ -222,6 +226,7 @@ public class SequenceGroupWidget
       includeButtons[i].addActionListener(this);
 
     }
+    bg.add(includeNone);
 
     Box f5 = Box.createHorizontalBox();
     f5.add(new JLabel("5' Flank (bp)"));
@@ -346,7 +351,7 @@ public class SequenceGroupWidget
     Object src = e.getSource();
 
     if (clearButton.isSelected() && src == clearButton) {
-
+      includeNone.setSelected(true);
       disableButtons();
 
       // remove filter if necessary
@@ -355,6 +360,7 @@ public class SequenceGroupWidget
     } else if (transcript.isSelected()) {
 
       if (src == transcript) {
+        includeNone.setSelected(true);
         disableButtons();
         enableTranscriptButtons();
       } else if (includeDownStreamUTROnly.isSelected()) {
@@ -366,6 +372,7 @@ public class SequenceGroupWidget
     } else if (gene.isSelected()) {
 
       if (src == gene) {
+        includeNone.setSelected(true);
         disableButtons();
         enableGeneButtons();
       }
