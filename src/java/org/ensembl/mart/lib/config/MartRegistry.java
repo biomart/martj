@@ -36,4 +36,21 @@ public class MartRegistry {
   public MartLocation[] getMartLocations() {
     return (MartLocation[]) martLocations.toArray(new MartLocation[martLocations.size()]);
   }
+  
+  public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+    
+    for (int i = 0, n = martLocations.size(); i < n; i++) {
+      if ( i>0 ) buf.append(", ");
+      buf.append( martLocations.get(i).toString() );
+    }
+    		
+		buf.append("]");
+
+		return buf.toString();
+	}
+  
+
 }

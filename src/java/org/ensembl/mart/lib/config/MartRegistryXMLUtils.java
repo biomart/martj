@@ -17,6 +17,8 @@
  */
 package org.ensembl.mart.lib.config;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -110,7 +112,12 @@ public class MartRegistryXMLUtils {
 
 		return martreg;
 	}
-
+  
+  public static MartRegistry ByteArrayToMartRegistry(byte[] b) throws ConfigurationException {
+    ByteArrayInputStream bin = new ByteArrayInputStream(b);
+    return XMLStreamToMartRegistry(bin);
+  }
+  
 	// private static ElementToObject methods 
 	private static MartLocation getURLLocation(Element urlloc) throws ConfigurationException {
 		String urlstring = urlloc.getAttributeValue(URL);
@@ -207,6 +214,16 @@ public class MartRegistryXMLUtils {
     } catch (IOException e) {
        throw new ConfigurationException("Caught IOException writing XML to OutputStream " + e.getMessage(), e);
     }
+  }
+  
+  public static byte[] DocumentToByteArray(Document doc) throws ConfigurationException {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    DocumentToOutputStream(doc, bout);
+    return bout.toByteArray(); 
+  }
+  
+  public static byte[] MartRegistryToByteArray(MartRegistry martreg) throws ConfigurationException {
+    return DocumentToByteArray(MartRegistryToDocument(martreg));
   }
   
 	public static Document MartRegistryToDocument(MartRegistry martreg) throws ConfigurationException {
