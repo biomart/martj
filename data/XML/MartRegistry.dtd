@@ -1,0 +1,19 @@
+<!ELEMENT MartRegistry (URLLocation|DatabaseLocation|RegistryLocation)+>
+
+<!ELEMENT URLLocation EMPTY>
+<!ATTLIST URLLocation url CDATA #REQUIRED
+                      name CDATA #IMPLIED>
+
+<!ELEMENT DatabaseLocation EMPTY>
+<!ATTLIST DatabaseLocation host CDATA #REQUIRED
+                           port CDATA #IMPLIED
+                           databaseType CDATA #IMPLIED
+                           instanceName CDATA #REQUIRED
+                           user CDATA #REQUIRED
+                           password CDATA #IMPLIED
+                           jdbcDriverClassName CDATA #IMPLIED
+                           name CDATA #IMPLIED>
+
+<!ELEMENT RegistryLocation EMPTY>
+<!ATTLIST RegistryLocation url CDATA #REQUIRED
+                           name CDATA #IMPLIED>
