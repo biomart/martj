@@ -111,9 +111,16 @@ public class FieldMapper {
 		String constraint = field.getTableConstraint();
 		 
 		if ( constraint==null ) {
-			String table = nameToTable.getProperty( name );
-    	if ( table!=null ) 
+			String table = nameToTable.getProperty( name.toLowerCase() );
+    	if ( table==null ) {
+        //try uppercase
+        table =  nameToTable.getProperty( name.toUpperCase() );
+        
+        if (table != null)
+          qName = table + "." + strippedColumn( name.toUpperCase() );
+      } else {
     	 	qName = table + "." + strippedColumn( name );
+      }
 		}
 		else {
 			Pattern p = Pattern.compile(".*" + constraint.toLowerCase() + ".*\\." + name.toLowerCase());
