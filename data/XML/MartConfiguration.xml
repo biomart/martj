@@ -95,8 +95,16 @@
           <FilterDescription internalName="id_limit_filters" type="list">
             <Option description="Filter to include/exclude Genes based on whether they do or don't have particualr names" displayName="Available Gene Names" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133 IDs" displayName="with AFFY-HG-U133 ID(s)" field="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95 IDs" displayName="with AFFY-HG-U95 ID(s)" field="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133-all IDs" displayName="with AFFY-HG-U133-all ID(s)" field="AFFY_HG_U133_all" internalName="affy_hg_u133_all_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133A IDs" displayName="with AFFY-HG-U133A ID(s)" field="AFFY_HG_U133A" internalName="affy_hg_u133a_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133B IDs" displayName="with AFFY-HG-U133B ID(s)" field="AFFY_HG_U133B" internalName="affy_hg_u133b_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95-all IDs" displayName="with AFFY-HG-U95-all ID(s)" field="AFFY_HG_U95_all" internalName="affy_hg_u95_all_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95A IDs" displayName="with AFFY-HG-U95A ID(s)" field="AFFY_HG_U95A" internalName="affy_hg_u95a_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95Av2 IDs" displayName="with AFFY-HG-U95Av2 ID(s)" field="AFFY_HG_U95Av2" internalName="affy_hg_u95av2_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95B IDs" displayName="with AFFY-HG-U95B ID(s)" field="AFFY_HG_U95B" internalName="affy_hg_u95b_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95C IDs" displayName="with AFFY-HG-U95C ID(s)" field="AFFY_HG_U95C" internalName="affy_hg_u95c_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95D IDs" displayName="with AFFY-HG-U95D ID(s)" field="AFFY_HG_U95D" internalName="affy_hg_u95d_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95E IDs" displayName="with AFFY-HG-U95E ID(s)" field="AFFY_HG_U95E" internalName="affy_hg_u95e_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude genes mapping to EMBL IDs" displayName="with EMBL ID(s)" field="EMBL" internalName="embl_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude genes mapping to GKB IDs" displayName="with GKB ID(s)" field="GKB" internalName="gkb_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude genes mapping to GO IDs" displayName="with GO IDs" field="GO" internalName="go_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
@@ -115,8 +123,16 @@
         </FilterCollection>
         <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
           <FilterDescription field="" internalName="id_list_limit_filters" type="list">
-            <Option description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" field="display_id" internalName="affy_hg_u133_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
-            <Option description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" field="display_id" internalName="affy_hg_u95_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133A ID(s)" displayName="AFFY-HG-U133A ID(s):" field="display_id" internalName="affy_hg_u133a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133B ID(s)" displayName="AFFY-HG-U133B ID(s):" field="display_id" internalName="affy_hg_u133b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95-all ID(s)" displayName="AFFY-HG-U95-all ID(s):" field="display_id" internalName="affy_hg_u95_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95A ID(s)" displayName="AFFY-HG-U95A ID(s):" field="display_id" internalName="affy_hg_u95a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95Av2 ID(s)" displayName="AFFY-HG-U95Av2 ID(s):" field="display_id" internalName="affy_hg_u95av2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95B ID(s)" displayName="AFFY-HG-U95B ID(s):" field="display_id" internalName="affy_hg_u95b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95C ID(s)" displayName="AFFY-HG-U95C ID(s):" field="display_id" internalName="affy_hg_u95c_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95C_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95D ID(s)" displayName="AFFY-HG-U95D ID(s):" field="display_id" internalName="affy_hg_u95d_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95D_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95E ID(s)" displayName="AFFY-HG-U95E ID(s):" field="display_id" internalName="affy_hg_u95e_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95E_dm" type="list"/>
             <Option description="filter to include genes with supplied list of EMBL ID(s)" displayName="EMBL ID(s):" field="display_id" internalName="embl_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_EMBL_dm" type="list"/>
             <Option description="filter to include genes with supplied list of GKB ID(s)" displayName="GKB ID(s):" field="display_id" internalName="gkb_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_GKB_dm" type="list"/>
             <Option description="filter to include genes with supplied list of GO ID(s)" displayName="GO ID(s):" field="display_id" internalName="go_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_GO_dm" type="list"/>
@@ -132,8 +148,8 @@
             <Option description="filter to include genes with supplied list of Sanger-Hver1-2-1 ID(s)" displayName="Sanger-Hver1-2-1 ID(s):" field="display_id" internalName="sanger_hver1_2_1_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm" type="list"/>
             <Option description="filter to include genes with supplied list of UMCU Hsapiens 19Kv1 ID(s):" displayName="UMCU Hsapiens 19Kv1 ID(s):" field="display_id" internalName="umcu_hsapiens_19kv1_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1" type="list"/>
             <Option description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" field="gene_stable_id" internalName="ensembl_gene_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" type="list"/>
+            <Option description="filter to include genes with supplied list of Ensembl peptide ID(s)" displayName="Ensembl peptide ID(s):" field="translation_stable_id" internalName="ensembl_peptide_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
             <Option description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" displayName="Ensembl transcript ID(s)" field="transcript_stable_id" internalName="ensembl_transcript_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
-            <Option description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" field="translation_stable_id" internalName="ensembl_translation_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
           </FilterDescription>
         </FilterCollection>
       </FilterGroup>
@@ -1838,8 +1854,16 @@
           <AttributeDescription description="Genome Knowledge Base Accessions" displayName="GKB ID" field="display_id" homepageURL="" internalName="xref_gkb_id" linkoutURL="" maxLength="15" source="" tableConstraint="gene_xref_GKB_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
+          <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+          <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+          <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+          <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+          <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+          <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
           <AttributeDescription displayName="Sanger HVER 1 2 1" field="display_id" internalName="sanger_hver1_2_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm"/>
           <AttributeDescription displayName="UMCU 19Kv1" field="display_id" internalName="umcu_hsapiens_19kv1_id" maxLength="10" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1_dm"/>
         </AttributeCollection>
@@ -1995,30 +2019,6 @@
           <AttributeDescription displayName="Ensembl cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
           <AttributeDescription displayName="Ensembl Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         </AttributeCollection>
-        <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="xrefs" maxSelect="3">
-          <AttributeDescription description="" displayName="Protien ID" field="display_id" homepageURL="" internalName="xref_protein_id" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_protein_id_dm"/>
-          <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xref_hugo_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
-          <AttributeDescription description="Gene Ontology accession" displayName="GO ID" field="display_id" homepageURL="" internalName="xref_go_id" linkoutURL="" maxLength="10" source="" tableConstraint="gene_xref_GO_dm"/>
-          <AttributeDescription description="GO Descriptions" displayName="GO Description" field="description" homepageURL="" internalName="xref_go_description" linkoutURL="" maxLength="184" source="" tableConstraint="gene_xref_GO_dm"/>
-          <AttributeDescription description="SPTrEMBL IDs" displayName="SPTrEMBL ID" field="display_id" homepageURL="" internalName="xref_sptrembl_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_SPTREMBL_dm"/>
-          <AttributeDescription description="EMBL Accessions" displayName="EMBL ID" field="display_id" homepageURL="" internalName="xref_embl_id" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_EMBL_dm"/>
-          <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-          <AttributeDescription description="Protein Database Accessions" displayName="PDB ID" field="display_id" homepageURL="" internalName="xref_pdb_id" linkoutURL="" maxLength="4" source="" tableConstraint="gene_xref_PDB_dm"/>
-          <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-          <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_RefSeq_dm"/>
-          <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
-          <AttributeDescription description="Genome Knowledge Base Accessions" displayName="GKB ID" field="display_id" homepageURL="" internalName="xref_gkb_id" linkoutURL="" maxLength="15" source="" tableConstraint="gene_xref_GKB_dm"/>
-        </AttributeCollection>
-        <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
-          <AttributeDescription displayName="Sanger HVER 1 2 1" field="display_id" internalName="sanger_hver1_2_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm"/>
-          <AttributeDescription displayName="UMCU 19Kv1" field="display_id" internalName="umcu_hsapiens_19kv1_id" maxLength="10" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1_dm"/>
-        </AttributeCollection>
-        <AttributeCollection displayName="Disease Attributes" internalName="disease_attributes">
-          <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
-          <AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="gene_disease_dm"/>
-        </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data on individual Exons of Genes" displayName="EXON:" internalName="exon">
         <AttributeCollection displayName="Exon Attributes:" internalName="exonatts">
@@ -2068,8 +2068,16 @@
           <AttributeDescription description="Genome Knowledge Base Accessions" displayName="GKB ID" field="display_id" homepageURL="" internalName="xref_gkb_id" linkoutURL="" maxLength="15" source="" tableConstraint="gene_xref_GKB_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
+          <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+          <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+          <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+          <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+          <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+          <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
           <AttributeDescription displayName="Sanger HVER 1 2 1" field="display_id" internalName="sanger_hver1_2_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm"/>
           <AttributeDescription displayName="UMCU 19Kv1" field="display_id" internalName="umcu_hsapiens_19kv1_id" maxLength="10" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1_dm"/>
         </AttributeCollection>
@@ -2179,8 +2187,16 @@
           <FilterDescription internalName="id_limit_filters" type="boolean">
             <Option description="Filter to include/exclude Known Genes" displayName="Known Genes" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="Filter to include/exclude Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-HG-U133 ID(s)" displayName="with AFFY-HG-U133 ID(s)" field="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-HG-U95 ID(s)" displayName="with AFFY-HG-U95 ID(s)" field="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133-all IDs" displayName="with AFFY-HG-U133-all ID(s)" field="AFFY_HG_U133_all" internalName="affy_hg_u133_all_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133A IDs" displayName="with AFFY-HG-U133A ID(s)" field="AFFY_HG_U133A" internalName="affy_hg_u133a_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U133B IDs" displayName="with AFFY-HG-U133B ID(s)" field="AFFY_HG_U133B" internalName="affy_hg_u133b_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95-all IDs" displayName="with AFFY-HG-U95-all ID(s)" field="AFFY_HG_U95_all" internalName="affy_hg_u95_all_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95A IDs" displayName="with AFFY-HG-U95A ID(s)" field="AFFY_HG_U95A" internalName="affy_hg_u95a_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95Av2 IDs" displayName="with AFFY-HG-U95Av2 ID(s)" field="AFFY_HG_U95Av2" internalName="affy_hg_u95av2_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95B IDs" displayName="with AFFY-HG-U95B ID(s)" field="AFFY_HG_U95B" internalName="affy_hg_u95b_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95C IDs" displayName="with AFFY-HG-U95C ID(s)" field="AFFY_HG_U95C" internalName="affy_hg_u95c_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95D IDs" displayName="with AFFY-HG-U95D ID(s)" field="AFFY_HG_U95D" internalName="affy_hg_u95d_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes mapping to AFFY-HG-U95E IDs" displayName="with AFFY-HG-U95E ID(s)" field="AFFY_HG_U95E" internalName="affy_hg_u95e_id_xrefs" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude HUGO ID(s)" displayName="with HUGO ID(s)" field="HUGO" internalName="hugo_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
@@ -2190,8 +2206,16 @@
         </FilterCollection>
         <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
           <FilterDescription internalName="id_list_limit_filters" type="list">
-            <Option description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" field="display_id" internalName="affy_hg_u133_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
-            <Option description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" field="display_id" internalName="affy_hg_u95_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133A ID(s)" displayName="AFFY-HG-U133A ID(s):" field="display_id" internalName="affy_hg_u133a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U133B ID(s)" displayName="AFFY-HG-U133B ID(s):" field="display_id" internalName="affy_hg_u133b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95-all ID(s)" displayName="AFFY-HG-U95-all ID(s):" field="display_id" internalName="affy_hg_u95_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95A ID(s)" displayName="AFFY-HG-U95A ID(s):" field="display_id" internalName="affy_hg_u95a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95Av2 ID(s)" displayName="AFFY-HG-U95Av2 ID(s):" field="display_id" internalName="affy_hg_u95av2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95B ID(s)" displayName="AFFY-HG-U95B ID(s):" field="display_id" internalName="affy_hg_u95b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95C ID(s)" displayName="AFFY-HG-U95C ID(s):" field="display_id" internalName="affy_hg_u95c_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95C_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95D ID(s)" displayName="AFFY-HG-U95D ID(s):" field="display_id" internalName="affy_hg_u95d_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95D_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-HG-U95E ID(s)" displayName="AFFY-HG-U95E ID(s):" field="display_id" internalName="affy_hg_u95e_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U95E_dm" type="list"/>
             <Option description="filter to include genes with supplied list of HUGO ID(s)" displayName="HUGO ID(s):" field="display_id" internalName="hugo_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_HUGO_dm" type="list"/>
             <Option description="filter to include genes with supplied list of HUGO accession(s)" displayName="HUGO accession(s):" field="dbprimary_id" internalName="hugo_accession" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_HUGO_dm" type="list"/>
             <Option description="filter to include genes with supplied list of LocusLink ID(s)" displayName="LocusLink ID(s):" field="display_id" internalName="locus_link" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_LocusLink_dm" type="list"/>
@@ -2199,8 +2223,8 @@
             <Option description="filter to include genes with supplied list of RefSeq ID(s)" displayName="RefSeq ID(s):" field="display_id" internalName="refseq_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_RefSeq_dm" type="list"/>
             <Option description="filter to include genes with supplied list of SWISSPROT ID(s)" displayName="SWISSPROT ID(s):" field="display_id" internalName="swissprot_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_SWISSPROT_dm" type="list"/>
             <Option description="filter to include genes with supplied list of Vega Gene IDs" displayName="Vega gene ID(s)" field="gene_stable_id" internalName="vega_gene_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" type="list"/>
+            <Option description="filter to include genes with supplied list of Vega peptide ID(s)" displayName="Vega peptide ID(s):" field="translation_stable_id" internalName="vega_peptide_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
             <Option description="filter for genes with supplied list of Vega Transcript Stable ID(s)" displayName="Vega transcript ID(s)" field="transcript_stable_id" internalName="vega_transcript_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
-            <Option description="filter to include genes with supplied list of Vega translation ID(s)" displayName="Vega translation ID(s):" field="translation_stable_id" internalName="vega_translation_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
           </FilterDescription>
         </FilterCollection>
       </FilterGroup>
@@ -2287,8 +2311,18 @@
           <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_dis" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
+          <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+          <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+          <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+          <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+          <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+          <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
+          <AttributeDescription displayName="Sanger HVER 1 2 1" field="display_id" internalName="sanger_hver1_2_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm"/>
+          <AttributeDescription displayName="UMCU 19Kv1" field="display_id" internalName="umcu_hsapiens_19kv1_id" maxLength="10" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1_dm"/>
         </AttributeCollection>
         <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
           <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
@@ -2330,20 +2364,11 @@
           <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
           <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         </AttributeCollection>
-        <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
-          <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xref_hugo_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
-          <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-          <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-          <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_RefSeq_dm"/>
-          <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
-        </AttributeCollection>
-        <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_dis" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
-        </AttributeCollection>
-        <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
-          <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
-          <AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="gene_disease_dm"/>
+        <AttributeCollection description="Descriptions of Gene SNP data" displayName="Gene SNP Attributes" internalName="genesnpatts">
+          <AttributeDescription description="Count of the Synonymous snps on a gene" displayName="Synonymous SNP count" field="synsnpcount" internalName="synonymous_snp_count" maxLength="2" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Count of the Non-synonymous snps on a gene" displayName="Non-synonymous SNP count" field="nonsynsnpcount" internalName="nonsynonyomous_snp_count" maxLength="2" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Ka_Ks ratios are calculated directly as the ratio of the proportion of changed non synonymous sites to the proportion of changed synonymous sites, without adjustments for nucleotide substitution rates or more complex codon models." displayName="Ratio non-syn:syn" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" maxLength="9" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Count of the Stop snps on a gene" displayName="Stop SNP count" field="stopsnpcount" internalName="stop_snp_count" maxLength="1" tableConstraint="transcript_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data for SNPs associated with Genes" displayName="GENE ASSOCIATED SNPS:" internalName="genesnp">
@@ -2401,21 +2426,6 @@
           <AttributeDescription displayName="Vega cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
           <AttributeDescription displayName="Vega Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         </AttributeCollection>
-        <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
-          <AttributeDescription description="HUGO Accessions" displayName="HUGO ID" field="display_id" homepageURL="" internalName="xref_hugo_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_HUGO_dm"/>
-          <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-          <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-          <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_RefSeq_dm"/>
-          <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
-        </AttributeCollection>
-        <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_dis" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
-        </AttributeCollection>
-        <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
-          <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
-          <AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="gene_disease_dm"/>
-        </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data on individual Exons of Genes" displayName="EXON:" internalName="exon">
         <AttributeCollection displayName="Exon Attributes:" internalName="exonatts">
@@ -2458,8 +2468,18 @@
           <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY HG U95" field="display_id" internalName="affy_hg_u95_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_dm"/>
-          <AttributeDescription displayName="AFFY HG U133" field="display_id" internalName="affy_hg_u133_dis" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_dm"/>
+          <AttributeDescription displayName="AFFY HG U133 all" field="display_id" internalName="affy_hg_u133_all_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U133A" field="display_id" internalName="affy_hg_u133a_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133A_dm"/>
+          <AttributeDescription displayName="AFFY HG U133B" field="display_id" internalName="affy_hg_u133b_id" maxLength="36" tableConstraint="gene_xref_AFFY_HG_U133B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95 all" field="display_id" internalName="affy_hg_u95_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95_all_dm"/>
+          <AttributeDescription displayName="AFFY HG U95A" field="display_id" internalName="affy_hg_u95a_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95A_dm"/>
+          <AttributeDescription displayName="AFFY HG U95Av2" field="display_id" internalName="affy_hg_u95av2_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95Av2_dm"/>
+          <AttributeDescription displayName="AFFY HG U95B" field="display_id" internalName="affy_hg_u95b_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95B_dm"/>
+          <AttributeDescription displayName="AFFY HG U95C" field="display_id" internalName="affy_hg_u95c_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95C_dm"/>
+          <AttributeDescription displayName="AFFY HG U95D" field="display_id" internalName="affy_hg_u95d_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95D_dm"/>
+          <AttributeDescription displayName="AFFY HG U95E" field="display_id" internalName="affy_hg_u95e_id" maxLength="37" tableConstraint="gene_xref_AFFY_HG_U95E_dm"/>
+          <AttributeDescription displayName="Sanger HVER 1 2 1" field="display_id" internalName="sanger_hver1_2_1_id" maxLength="9" tableConstraint="gene_xref_Sanger_Hver1_2_1_dm"/>
+          <AttributeDescription displayName="UMCU 19Kv1" field="display_id" internalName="umcu_hsapiens_19kv1_id" maxLength="10" tableConstraint="gene_xref_UMCU_Hsapiens_19Kv1_dm"/>
         </AttributeCollection>
         <AttributeCollection displayName="Disease Attributes" internalName="diseaseatts">
           <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease_dm"/>
@@ -2806,14 +2826,24 @@
         <FilterCollection internalName="idLimit">
           <FilterDescription internalName="id_limit_filters" type="list">
             <Option description="Filter to include/exclude Known Genes" displayName="Known Genes" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-MG-U74 ID(s)" displayName="with AFFY-MG-U74 ID(s)" field="AFFY_MG_U74" internalName="affy_mg_u74_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-MG-U74v2 ID(s)" displayName="with AFFY-MG-U74v2 ID(s)" field="AFFY_MG_U74v2" internalName="affy_mg_u74v2_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-MOE430 ID(s)" displayName="with AFFY-MOE_430 ID(s)" field="AFFY_MOE_430" internalName="affy_moe_430_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-Mu11Ksub ID(s)" displayName="with AFFY-Mu11Ksub ID(s)" field="AFFY_Mu11Ksub" internalName="affy_mu11ksub_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74-all ID(s)" displayName="with AFFY-MG-U74-all ID(s)" field="AFFY_MG_U74_all" internalName="affy_mg_u74_all_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74A ID(s)" displayName="with AFFY-MG-U74A ID(s)" field="AFFY_MG_U74A" internalName="affy_mg_u74a_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74Av2 ID(s)" displayName="with AFFY-MG-U74Av2 ID(s)" field="AFFY_MG_U74Av2" internalName="affy_mg_u74av2_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74B ID(s)" displayName="with AFFY-MG-U74B ID(s)" field="AFFY_MG_U74B" internalName="affy_mg_u74b_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74Bv2 ID(s)" displayName="with AFFY-MG-U74Bv2 ID(s)" field="AFFY_MG_U74Bv2" internalName="affy_mg_u74bv2_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74C ID(s)" displayName="with AFFY-MG-U74C ID(s)" field="AFFY_MG_U74C" internalName="affy_mg_u74c_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MG-U74Cv2 ID(s)" displayName="with AFFY-MG-U74Cv2 ID(s)" field="AFFY_MG_U74Cv2" internalName="affy_mg_u74cv2_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MOE430-all ID(s)" displayName="with AFFY-MOE_430-all ID(s)" field="AFFY_MOE_430_all" internalName="affy_moe_430_all_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MOE430A ID(s)" displayName="with AFFY-MOE_430A ID(s)" field="AFFY_MOE_430A" internalName="affy_moe_430a_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-MOE430B ID(s)" displayName="with AFFY-MOE_430B ID(s)" field="AFFY_MOE_430B" internalName="affy_moe_430b_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-Mu11Ksub-all ID(s)" displayName="with AFFY-Mu11Ksub-all ID(s)" field="AFFY_Mu11Ksub_all" internalName="affy_mu11ksub_all_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-Mu11KsubA ID(s)" displayName="with AFFY-Mu11KsubA ID(s)" field="AFFY_Mu11KsubA" internalName="affy_mu11ksuba_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-Mu11KsubB ID(s)" displayName="with AFFY-Mu11KsubB ID(s)" field="AFFY_Mu11KsubB" internalName="affy_mu11ksubb_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude EMBL ID(s)" displayName="with EMBL ID(s)" field="EMBL" internalName="embl_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude InterPro ID(s)" displayName="with InterPro ID(s)" field="interpro" internalName="interpro_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="limit to genes having MarKerSymbol identifier(s)" displayName="with MarkerSymbol(2)" field="MarkerSymbol" internalName="marker_symbol" isSelectable="trie" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude PDB ID(s)" displayName="with PDB ID(s)" field="PDB" internalName="pdb_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude Protein ID(s) " displayName="with Protein ID(s)" field="protein_id" internalName="protein_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
             <Option description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" field="RefSeq" internalName="refseq_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
@@ -2824,10 +2854,18 @@
         </FilterCollection>
         <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit">
           <FilterDescription internalName="id_list_filters" type="list">
-            <Option description="filter to include genes with supplied list of AFFY-MG-U74 ID(s)" displayName="FG_AFFY-MG-U74 ID(s)" field="display_id" internalName="affy_mg_u74_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG-U74_dm" type="list"/>
-            <Option description="filter to include genes with supplied list of AFFY-MG-U74v2 ID(s)" displayName="FG_AFFY-MG-U74v2 ID(s)" field="display_id" internalName="affy_mg_u74v2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG-U74v2_dm" type="list"/>
-            <Option description="filter to include genes with supplied list of AFFY-MOE430 ID(s)" displayName="FG_AFFY-MOE430 ID(s)" field="display_id" internalName="affy_moe_430_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MOE_430_dm" type="list"/>
-            <Option description="filter to include genes with supplied list of AFFY-Mu11Ksub ID(s)" displayName="FG_AFFY-Mu11Ksub ID(s)" field="display_id" internalName="affy_mu11ksub_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_Mu11Ksub_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74A ID(s)" displayName="FG_AFFY-MG-U74A ID(s)" field="display_id" internalName="affy_mg_u74a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74Av2 ID(s)" displayName="FG_AFFY-MG-U74Av2 ID(s)" field="display_id" internalName="affy_mg_u74av2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74Av2_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74B ID(s)" displayName="FG_AFFY-MG-U74B ID(s)" field="display_id" internalName="affy_mg_u74b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74Bv2 ID(s)" displayName="FG_AFFY-MG-U74Bv2 ID(s)" field="display_id" internalName="affy_mg_u74bv2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74Bv2_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74C ID(s)" displayName="FG_AFFY-MG-U74C ID(s)" field="display_id" internalName="affy_mg_u74c_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74C_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MG-U74Cv2 ID(s)" displayName="FG_AFFY-MG-U74Cv2 ID(s)" field="display_id" internalName="affy_mg_u74cv2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MG_U74Cv2_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MOE430-all ID(s)" displayName="FG_AFFY-MOE430-all ID(s)" field="display_id" internalName="affy_moe_430_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MOE_430_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MOE430A ID(s)" displayName="FG_AFFY-MOE430A ID(s)" field="display_id" internalName="affy_moe_430a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MOE_430A_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-MOE430B ID(s)" displayName="FG_AFFY-MOE430B ID(s)" field="display_id" internalName="affy_moe_430b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_MOE_430B_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-Mu11Ksub-all ID(s)" displayName="FG_AFFY-Mu11Ksub-all ID(s)" field="display_id" internalName="affy_mu11ksub_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_Mu11Ksub_all_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-Mu11KsubA ID(s)" displayName="FG_AFFY-Mu11KsubA ID(s)" field="display_id" internalName="affy_mu11ksuba_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_Mu11KsubA_dm" type="list"/>
+            <Option description="filter to include genes with supplied list of AFFY-Mu11KsubB ID(s)" displayName="FG_AFFY-Mu11KsubB ID(s)" field="display_id" internalName="affy_mu11ksubb_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_Mu11KsubB_dm" type="list"/>
             <Option description="filter to include genes with supplied list of EMBL ID(s)" displayName="EMBL ID(s):" field="display_id" internalName="embl_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_EMBL_dm" type="list"/>
             <Option description="filter to include genes with supplied list of LocusLink ID(s)" displayName="LocusLink ID(s):" field="display_id" internalName="locuslink_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_LocusLink_dm" type="list"/>
             <Option description="filter to include genes with supplied list of MIM ID(s)" displayName="MIM ID(s):" field="display_id" internalName="mim_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_MIM_dm" type="list"/>
@@ -2839,8 +2877,8 @@
             <Option description="filter to include genes with supplied list of SWISSPROT ID(s)" displayName="SWISSPROT ID(s):" field="display_id" internalName="swissprot_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_SWISSPROT_dm" type="list"/>
             <Option description="filter to include genes with supplied list of Sanger Mver1-1-1 ID(s):" displayName="Sanger-Mver1-1-1 ID(s):" field="display_id" internalName="sanger_mver1_1_1_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_Sanger-Mver1-1-1" type="list"/>
             <Option description="filter to include genes with supplied list of Ensembl Gene IDs" displayName="Ensembl gene ID(s)" field="gene_stable_id" internalName="ensembl_gene_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="main" type="list"/>
+            <Option description="filter to include genes with supplied list of Ensembl peptide ID(s)" displayName="Ensembl peptide ID(s):" field="translation_stable_id" internalName="ensembl_peptide_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
             <Option description="filter for genes with supplied list of Ensembl Transcript Stable ID(s)" displayName="Ensembl transcript ID(s)" field="transcript_stable_id" internalName="ensembl_transcript_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
-            <Option description="filter to include genes with supplied list of Ensembl translation ID(s)" displayName="Ensembl translation ID(s):" field="translation_stable_id" internalName="ensembl_translation_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="transcript_main" type="list"/>
           </FilterDescription>
         </FilterCollection>
       </FilterGroup>
@@ -2934,11 +2972,21 @@
           <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY MG U74" field="display_id" internalName="affy_mg_u74_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_dm"/>
-          <AttributeDescription displayName="AFFY MG U74v2" field="display_id" internalName="affy_mg_u74v2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74v2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74 all" field="display_id" internalName="affy_mg_u74_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_all_dm"/>
+          <AttributeDescription displayName="AFFY MG U74A" field="display_id" internalName="affy_mg_u74a_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74A_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Av2" field="display_id" internalName="affy_mg_u74av2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Av2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74B" field="display_id" internalName="affy_mg_u74b_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74B_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Bv2" field="display_id" internalName="affy_mg_u74bv2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Bv2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74C" field="display_id" internalName="affy_mg_u74c_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74C_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Cv2" field="display_id" internalName="affy_mg_u74cv2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Cv2_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430 all" field="display_id" internalName="umcu_xaffy_moe_430_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_all_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430A" field="display_id" internalName="umcu_xaffy_moe_430a_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430A_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430B" field="display_id" internalName="umcu_xaffy_moe_430b_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430B_dm"/>
           <AttributeDescription displayName="AFFY Mu11Ksub" field="display_id" internalName="affy_mu11ksub_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_dm"/>
+          <AttributeDescription displayName="AFFY Mu11Ksub all" field="display_id" internalName="affy_mu11ksub_all_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_all_dm"/>
+          <AttributeDescription displayName="AFFY Mu11KsubA" field="display_id" internalName="affy_mu11ksuba_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11KsubA_dm"/>
+          <AttributeDescription displayName="AFFY Mu11KsubB" field="display_id" internalName="affy_mu11ksubb_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11KsubB_dm"/>
           <AttributeDescription displayName="Sanger MVER 1 1 1" field="display_id" internalName="sanger_mver1_1_1_id" maxLength="10" tableConstraint="gene_xref_Sanger_Mver1_1_1_dm"/>
-          <AttributeDescription displayName="AFFY MOE 430" field="display_id" internalName="umcu_xaffy_moe_430_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_dm"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data related to Inter Species Sequence Comparisons" displayName="MULTI SPECIES COMPARISONS" internalName="multispecies">
@@ -3020,23 +3068,11 @@
           <AttributeDescription displayName="Ensembl cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
           <AttributeDescription displayName="Ensembl Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         </AttributeCollection>
-        <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
-          <AttributeDescription description="" displayName="Protien ID" field="display_id" homepageURL="" internalName="xref_protein_ids" linkoutURL="" maxLength="10" source="" tableConstraint="gene_xref_protein_id_dm"/>
-          <AttributeDescription description="SPTrEMBL IDs" displayName="SPTrEMBL ID" field="display_id" homepageURL="" internalName="xref_sptrembl_ids" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_SPTREMBL_dm"/>
-          <AttributeDescription description="EMBL Accessions" displayName="EMBL ID" field="display_id" homepageURL="" internalName="xref_embl_id" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_EMBL_dm"/>
-          <AttributeDescription description="MarkerSymbols" displayName="MarkerSymbol" field="display_id" homepageURL="" internalName="xref_marker_symbol" linkoutURL="" maxLength="18" source="" tableConstraint="gene_xref_MarkerSymbol_dm"/>
-          <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-          <AttributeDescription description="Protein Database Accessions" displayName="PDB ID" field="display_id" homepageURL="" internalName="xref_pdb_id" linkoutURL="" maxLength="4" source="" tableConstraint="gene_xref_PDB_dm"/>
-          <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-          <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_RefSeq_dm"/>
-          <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
-        </AttributeCollection>
-        <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY MG U74" field="display_id" internalName="affy_mg_u74_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_dm"/>
-          <AttributeDescription displayName="AFFY MG U74v2" field="display_id" internalName="affy_mg_u74v2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74v2_dm"/>
-          <AttributeDescription displayName="AFFY Mu11Ksub" field="display_id" internalName="affy_mu11ksub_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_dm"/>
-          <AttributeDescription displayName="Sanger MVER 1 1 1" field="display_id" internalName="sanger_mver1_1_1_id" maxLength="10" tableConstraint="gene_xref_Sanger_Mver1_1_1_dm"/>
-          <AttributeDescription displayName="AFFY MOE 430" field="display_id" internalName="umcu_xaffy_moe_430_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_dm"/>
+        <AttributeCollection description="Descriptions of Gene SNP data" displayName="Gene SNP Attributes" internalName="genesnpatts">
+          <AttributeDescription description="Count of the Synonymous snps on a gene" displayName="Synonymous SNP count" field="synsnpcount" internalName="synonymous_snp_count" maxLength="2" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Count of the Non-synonymous snps on a gene" displayName="Non-synonymous SNP count" field="nonsynsnpcount" internalName="nonsynonyomous_snp_count" maxLength="2" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Ka_Ks ratios are calculated directly as the ratio of the proportion of changed non synonymous sites to the proportion of changed synonymous sites, without adjustments for nucleotide substitution rates or more complex codon models." displayName="Ratio non-syn:syn" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" maxLength="9" tableConstraint="transcript_main"/>
+          <AttributeDescription description="Count of the Stop snps on a gene" displayName="Stop SNP count" field="stopsnpcount" internalName="stop_snp_count" maxLength="1" tableConstraint="transcript_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data for SNPs associated with Genes" displayName="GENE ASSOCIATED SNPS:" internalName="genesnp">
@@ -3090,24 +3126,6 @@
           <AttributeDescription displayName="Ensembl cDNA Length" field="cdna_length" homepageURL="http://www.ensembl.org" internalName="cdna_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="6" source="EnsEMBL" tableConstraint="transcript_main"/>
           <AttributeDescription displayName="Ensembl Peptide Length" field="peptide_length" homepageURL="http://www.ensembl.org" internalName="peptide_length" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="5" source="EnsEMBL" tableConstraint="transcript_main"/>
         </AttributeCollection>
-        <AttributeCollection description="Information from external database sources." displayName="External Reference Attributes (max 3)" internalName="Xrefs" maxSelect="3">
-          <AttributeDescription description="" displayName="Protien ID" field="display_id" homepageURL="" internalName="xref_protein_ids" linkoutURL="" maxLength="10" source="" tableConstraint="gene_xref_protein_id_dm"/>
-          <AttributeDescription description="SPTrEMBL IDs" displayName="SPTrEMBL ID" field="display_id" homepageURL="" internalName="xref_sptrembl_ids" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_SPTREMBL_dm"/>
-          <AttributeDescription description="EMBL Accessions" displayName="EMBL ID" field="display_id" homepageURL="" internalName="xref_embl_id" linkoutURL="" maxLength="8" source="" tableConstraint="gene_xref_EMBL_dm"/>
-          <AttributeDescription description="MarkerSymbols" displayName="MarkerSymbol" field="display_id" homepageURL="" internalName="xref_marker_symbol" linkoutURL="" maxLength="18" source="" tableConstraint="gene_xref_MarkerSymbol_dm"/>
-          <AttributeDescription description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases" displayName="SWISSPROT ID" field="display_id" homepageURL="http://us.expasy.org/sprot/" internalName="xref_swissprot_id" linkoutURL="" maxLength="10" source="Swiss-Prot Group" tableConstraint="_xref_SWISSPROT_dm"/>
-          <AttributeDescription description="Protein Database Accessions" displayName="PDB ID" field="display_id" homepageURL="" internalName="xref_pdb_id" linkoutURL="" maxLength="4" source="" tableConstraint="gene_xref_PDB_dm"/>
-          <AttributeDescription description="MIM Accessions" displayName="MIM ID" field="display_id" homepageURL="" internalName="xref_mim_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_MIM_dm"/>
-          <AttributeDescription description="RefSeq Accessions" displayName="RefSeq ID" field="display_id" homepageURL="" internalName="xref_refseq_id" linkoutURL="" maxLength="9" source="" tableConstraint="gene_xref_RefSeq_dm"/>
-          <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
-        </AttributeCollection>
-        <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY MG U74" field="display_id" internalName="affy_mg_u74_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_dm"/>
-          <AttributeDescription displayName="AFFY MG U74v2" field="display_id" internalName="affy_mg_u74v2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74v2_dm"/>
-          <AttributeDescription displayName="AFFY Mu11Ksub" field="display_id" internalName="affy_mu11ksub_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_dm"/>
-          <AttributeDescription displayName="Sanger MVER 1 1 1" field="display_id" internalName="sanger_mver1_1_1_id" maxLength="10" tableConstraint="gene_xref_Sanger_Mver1_1_1_dm"/>
-          <AttributeDescription displayName="AFFY MOE 430" field="display_id" internalName="umcu_xaffy_moe_430_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_dm"/>
-        </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data on individual Exons of Genes" displayName="EXON:" internalName="exon">
         <AttributeCollection displayName="Exon Attributes:" internalName="exonatts">
@@ -3154,11 +3172,21 @@
           <AttributeDescription description="Locus Link Accessions" displayName="LocusLink ID" field="display_id" homepageURL="" internalName="xref_locuslink_id" linkoutURL="" maxLength="6" source="" tableConstraint="gene_xref_LocusLink_dm"/>
         </AttributeCollection>
         <AttributeCollection description="Microarray Attributes" displayName="Microarray Attributes" internalName="microarray" maxSelect="1">
-          <AttributeDescription displayName="AFFY MG U74" field="display_id" internalName="affy_mg_u74_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_dm"/>
-          <AttributeDescription displayName="AFFY MG U74v2" field="display_id" internalName="affy_mg_u74v2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74v2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74 all" field="display_id" internalName="affy_mg_u74_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74_all_dm"/>
+          <AttributeDescription displayName="AFFY MG U74A" field="display_id" internalName="affy_mg_u74a_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74A_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Av2" field="display_id" internalName="affy_mg_u74av2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Av2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74B" field="display_id" internalName="affy_mg_u74b_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74B_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Bv2" field="display_id" internalName="affy_mg_u74bv2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Bv2_dm"/>
+          <AttributeDescription displayName="AFFY MG U74C" field="display_id" internalName="affy_mg_u74c_id" maxLength="37" tableConstraint="gene_xref_AFFY_MG_U74C_dm"/>
+          <AttributeDescription displayName="AFFY MG U74Cv2" field="display_id" internalName="affy_mg_u74cv2_id" maxLength="39" tableConstraint="gene_xref_AFFY_MG_U74Cv2_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430 all" field="display_id" internalName="umcu_xaffy_moe_430_all_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_all_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430A" field="display_id" internalName="umcu_xaffy_moe_430a_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430A_dm"/>
+          <AttributeDescription displayName="AFFY MOE 430B" field="display_id" internalName="umcu_xaffy_moe_430b_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430B_dm"/>
           <AttributeDescription displayName="AFFY Mu11Ksub" field="display_id" internalName="affy_mu11ksub_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_dm"/>
+          <AttributeDescription displayName="AFFY Mu11Ksub all" field="display_id" internalName="affy_mu11ksub_all_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11Ksub_all_dm"/>
+          <AttributeDescription displayName="AFFY Mu11KsubA" field="display_id" internalName="affy_mu11ksuba_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11KsubA_dm"/>
+          <AttributeDescription displayName="AFFY Mu11KsubB" field="display_id" internalName="affy_mu11ksubb_id" maxLength="39" tableConstraint="gene_xref_AFFY_Mu11KsubB_dm"/>
           <AttributeDescription displayName="Sanger MVER 1 1 1" field="display_id" internalName="sanger_mver1_1_1_id" maxLength="10" tableConstraint="gene_xref_Sanger_Mver1_1_1_dm"/>
-          <AttributeDescription displayName="AFFY MOE 430" field="display_id" internalName="umcu_xaffy_moe_430_id" maxLength="37" tableConstraint="gene_xref_AFFY_MOE_430_dm"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Data for proteins associated with Genes." displayName="PROTEIN:" internalName="proteinatts">
