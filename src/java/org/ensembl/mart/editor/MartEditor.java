@@ -33,6 +33,10 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.prefs.Preferences;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Hashtable;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -49,6 +53,11 @@ import javax.swing.UIManager;
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
@@ -56,6 +65,8 @@ import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
+
+
 
 /**
  * Class MartEditor extends JFrame..
@@ -125,6 +136,48 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
 
     clipboardEditor = new Clipboard("editor_clipboard");
+
+	// autoconnect on startup
+	String defaultSourceName = databaseDialog.getConnectionName();
+
+			if (defaultSourceName == null || defaultSourceName.length() < 1)
+			  defaultSourceName =
+				defaultSourceName =
+				  DetailedDataSource.defaultName(
+					databaseDialog.getHost(),
+					databaseDialog.getPort(),
+					databaseDialog.getDatabase(),
+					databaseDialog.getUser());
+
+			ds =
+			  new DetailedDataSource(
+				databaseDialog.getDatabaseType(),
+				databaseDialog.getHost(),
+				databaseDialog.getPort(),
+				databaseDialog.getDatabase(),
+				databaseDialog.getUser(),
+				databaseDialog.getPassword(),
+				10,
+				databaseDialog.getDriver(),
+				defaultSourceName);
+			user = databaseDialog.getUser();
+			database = databaseDialog.getDatabase();
+
+			Connection conn = null;
+			try {
+			  conn = ds.getConnection();
+			  dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+			  //valid = true;
+			} catch (SQLException e) {
+			  System.out.println(e.toString()); 	
+			  //warning dialog then retry
+			  //Feedback f = new Feedback(this);
+			  //f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+			  //valid = false;
+			} finally {
+			  DetailedDataSource.close(conn);
+			}
+
 
   }
 
@@ -692,6 +745,88 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
       dsConfig.setInternalName(internalName);
       dsConfig.setDataset(dataset);
+
+	  // check uniqueness of internal names per page	  
+	  AttributePage[] apages = dsConfig.getAttributePages();
+	  AttributePage apage;
+	  String testInternalName;
+	  String duplicationString = "";
+	  
+	  for (int i = 0; i < apages.length; i++){
+	  		apage = apages[i];
+			Hashtable descriptionsMap = new Hashtable();
+			if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+				continue;
+			}
+		    
+		    List testAtts = new ArrayList();
+	  		testAtts = apage.getAllAttributeDescriptions();
+		    for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				Object testAtt = iter.next();
+				AttributeDescription testAD = (AttributeDescription) testAtt;
+				if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					continue;
+				}
+				
+				if (descriptionsMap.containsKey(testAD.getInternalName())){
+					//System.out.println("DUPLICATION " + testAD.getInternalName());	
+					duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
+					
+				}
+				descriptionsMap.put(testAD.getInternalName(),"1");
+		    }
+	  }
+	  // repeat for filter pages
+	  FilterPage[] fpages = dsConfig.getFilterPages();
+	  FilterPage fpage;
+	  for (int i = 0; i < fpages.length; i++){
+				  fpage = fpages[i];
+				  Hashtable descriptionsMap = new Hashtable();
+				  if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
+					  continue;
+				  }
+		    
+				  List testAtts = new ArrayList();
+				  testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
+				  
+				  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+					  Object testAtt = iter.next();
+					  FilterDescription testAD = (FilterDescription) testAtt;
+					  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+							continue;
+					  }
+					  if (descriptionsMap.containsKey(testAD.getInternalName())){
+						  //System.out.println("DUPLICATION " + testAD.getInternalName());
+						  duplicationString = duplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+						  
+						  continue;//to stop options also being assessed
+					  }
+					  descriptionsMap.put(testAD.getInternalName(),"1");
+					  
+					  // do options as well
+					  Option[] ops = testAD.getOptions();
+					  if (ops.length > 0 && ops[0].getType()!= null ){
+						for (int j = 0; j < ops.length; j++){
+							Option op = ops[j];
+							if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
+									continue;
+							}
+							if (descriptionsMap.containsKey(op.getInternalName())){
+								//System.out.println("DUPLICATION " + op.getInternalName());
+								duplicationString = duplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+								
+							}
+						    descriptionsMap.put(op.getInternalName(),"1");
+						}
+					  }
+				  }
+	  }
+	  
+	  if (duplicationString != ""){
+		JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
+							+ duplicationString, "ERROR", 0);
+	  	//return;//leave as a warning for now otherwise naive doesn't work
+	  }
 
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
