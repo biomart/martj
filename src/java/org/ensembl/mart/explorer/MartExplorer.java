@@ -90,8 +90,7 @@ public class MartExplorer extends JFrame {
 	// TODO clone query
 	// TODO load registry file
 
-  // use vector because thread safe
-	private List datasources = new Vector();
+	private MartManager martManager = new MartManager();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -414,7 +413,7 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(dsvAdaptor, datasources);
+			qe = new QueryEditor(dsvAdaptor, martManager);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -529,7 +528,7 @@ public class MartExplorer extends JFrame {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(dsvAdaptor, datasources);
+				qe = new QueryEditor(dsvAdaptor, martManager);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 

@@ -47,12 +47,12 @@ public class InputPageContainer
   private DatasetView datasetView;
   private CardLayout cardLayout = new CardLayout();
 
-  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree, List datasources) {
+  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree, MartManager martManager) {
     super();
     if (tree!=null) tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
     add(new DatasetViewWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
-    add(new DatasourceWidget(query, datasources), TreeNodeData.DATASOURCE.getLabel());
+    add(new DatasourceWidget(query, martManager), TreeNodeData.DATASOURCE.getLabel());
     add(new AttributesWidget(query, datasetViewAdaptor, tree), TreeNodeData.ATTRIBUTES.getLabel());
     add(new FiltersWidget(query, datasetViewAdaptor, tree), TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());

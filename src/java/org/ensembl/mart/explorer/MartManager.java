@@ -32,6 +32,8 @@ import javax.sql.DataSource;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.ensembl.mart.lib.config.DatasetView;
+
 /**
  * Widget for selecting, adding and removing Marts.
  * <p>Normal usage: martManager.showDialog(component), martManager.getSelected() 
@@ -138,7 +140,8 @@ public class MartManager extends JPanel {
    * select, add and remove Marts.
    * @param parent
    * @return
-   */public boolean showDialog(Component parent) {
+   */
+  public boolean showDialog(Component parent) {
 
     combo.removeAllItems();
     String[] keys = getAsStrings();
@@ -201,6 +204,17 @@ public class MartManager extends JPanel {
    */
   public DataSource getSelected() {
     return (selected == none) ? null : (DataSource) stringToMart.get(selected);
+  }
+
+  public void setSelected(DataSource selectedDatasource) {
+    if (selectedDatasource == null) {
+      selected = none;
+    } else {
+      if (!marts.contains(selectedDatasource))
+        add(selectedDatasource);
+      selected = selectedDatasource.toString();
+    }
+  
   }
 
 }
