@@ -162,12 +162,17 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
 			String sql = selectBuf.append(fromBuf).append(whereBuf).toString();
 
-			logger.info("Getting lib_ids with " + sql);
+            if (logger.isLoggable(Level.INFO))
+			  logger.info("Getting lib_ids with " + sql);
 
 			PreparedStatement lps = conn.prepareStatement(sql);
 
 			for (int i = 0, n = values.size(); i < n; i++) {
 				String element = (String) values.get(i);
+        
+                if (logger.isLoggable(Level.INFO))
+                  logger.info("bind " + i + " = " + element + "\n");
+
 				lps.setString(i + 1, element);
 			}
 			ResultSet lrs = lps.executeQuery();
