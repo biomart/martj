@@ -346,7 +346,7 @@ public class Dataset extends BaseConfigurationObject {
 		* Note, it is best to first call containsUIAttributeDescription,
 		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		* 
-		* @param displayName name of the requested UIAttributeDescription
+		* @param internalName name of the requested UIAttributeDescription
 		* @return UIAttributeDescription
 		*/
 	public Object getUIAttributeDescriptionByName(String internalName) {
@@ -361,7 +361,7 @@ public class Dataset extends BaseConfigurationObject {
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
 		*  found, this method caches the UIAttributeDescription it has found.
 		* 
-		* @param displayName name of the requested UIAttributeDescription
+		* @param internalName name of the requested UIAttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName) {
