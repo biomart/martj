@@ -3,8 +3,6 @@
 
 # copyright EBI, GRL 2003
 
-# TODO fix thread support (only use java classes)
-
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
 # stubs to InputPage
 
@@ -43,6 +41,7 @@ from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
 from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, BasicFilter
 from org.ensembl.mart.explorer import InvalidQueryException, Engine, FormatSpec
+from org.apache.log4j import Logger, Level
 
 GAP = 5
 SPACE=" &nbsp;"
