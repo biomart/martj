@@ -42,6 +42,8 @@ public class QuickFrame extends JFrame {
 
   /**
    * Create frame with specified title and add userComponent then set visible and pack.
+   * The "close window" icon cuases the window to be closed but does not stop
+   * the program, the quit program actually stops the JVM.
    * @param title frame title
    * @param userComponent component to add to frame.
    * @throws java.awt.HeadlessException
@@ -50,10 +52,10 @@ public class QuickFrame extends JFrame {
     throws HeadlessException {
     super(title);
 
-    JButton closeButton = new JButton("Close " + title + " frame.");
+    JButton closeButton = new JButton("Close");
     closeButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        System.exit(0);
+       dispose();
       }
     });
 
@@ -71,8 +73,9 @@ public class QuickFrame extends JFrame {
     p.add(b);
     p.setBorder(new EmptyBorder(20,20,20,20));
     
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     getContentPane().add(p);
+    
+    setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     setVisible(true);
     pack();
 
