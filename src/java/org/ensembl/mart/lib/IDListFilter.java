@@ -44,10 +44,10 @@ public class IDListFilter implements Filter {
 	/**
 	 * enums over UnprocessedFilterHandler implimenting class names
 	 */
-	private final String STRING = "org.ensembl.mart.lib.StringIDListFilterHandler";
-	private final String FILE = "org.ensembl.mart.lib.FileIDListFilterHandler";
-	private final String URL = "org.ensembl.mart.lib.URLIDListFilterHandler";
-	private final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
+	public static final String STRING = "org.ensembl.mart.lib.StringIDListFilterHandler";
+	public static final String FILE = "org.ensembl.mart.lib.FileIDListFilterHandler";
+	public static final String URL = "org.ensembl.mart.lib.URLIDListFilterHandler";
+	public static  final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
 
 	/**
 	 * Construct an STRING type IDListFilter object of a given field name on a String[] List of 
