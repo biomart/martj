@@ -24,7 +24,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/martj.jar
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
 echo "This is a partial DEMO of MartExplorer. It demonstrates part of the application, the query editor, rather than the full application."
-java -cp $TMP_CLASSPATH org.ensembl.mart.explorer.QueryEditor $@
+java -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
 
 
 
