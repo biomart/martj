@@ -235,6 +235,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param o - An option to remove.
    */
   public void removeOption(Option o) {
+	lazyLoad();
     uiOptionNameMap.remove(o.getInternalName());
     uiOptions.remove(o);
     if (uiOptions.size() < 1)
@@ -248,6 +249,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param o - Option to be inserted
    */
   public void insertOption(int position, Option o) {
+	lazyLoad();
     uiOptionNameMap.put(o.getInternalName(), o);
     uiOptions.add(position, o);
     hasOptions = true;
@@ -260,6 +262,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
    */
   public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
+	lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
 
@@ -273,6 +276,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
    */
   public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
+	lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
 
@@ -303,6 +307,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   public void removeDefaultFilter(DefaultFilter df) {
+	lazyLoad();
     defaultFilters.remove(df);
     if (defaultFilters.size() < 1)
       hasDefaultFilters = false;
@@ -332,6 +337,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   public void removeStarBase(String starname) {
+	lazyLoad();
     starBases.remove(starname);
   }
 
@@ -357,6 +363,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   public void removePrimaryKey(String primaryKey) {
+	lazyLoad();
     primaryKeys.remove(primaryKey);
   }
 
@@ -386,6 +393,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param a -- AttributePage to be removed.
    */
   public void removeAttributePage(AttributePage a) {
+	lazyLoad();
     attributePageNameMap.remove(a.getInternalName());
     attributePages.remove(a);
   }
@@ -398,6 +406,8 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param a -- AttributePage to be inserted.
    */
   public void insertAttributePage(int position, AttributePage a) {
+	lazyLoad();
+  	System.out.println("PAGES\t" + attributePages.size());
     attributePages.add(position, a);
     attributePageNameMap.put(a.getInternalName(), a);
   }
@@ -410,6 +420,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    */
   public void insertAttributePageBeforeAttributePage(String internalName, AttributePage a)
     throws ConfigurationException {
+    lazyLoad();
     if (!attributePageNameMap.containsKey(internalName))
       throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
 
@@ -423,6 +434,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetView does not contain an AttributePage named by the given internalName.
    */
   public void insertAttributePageAfterAttributePage(String internalName, AttributePage a) throws ConfigurationException {
+	lazyLoad();
     if (!attributePageNameMap.containsKey(internalName))
       throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
 
@@ -458,6 +470,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to be removed.
    */
   public void removeFilterPage(FilterPage f) {
+	lazyLoad();
     filterPageNameMap.remove(f.getInternalName());
     filterPages.remove(f);
   }
@@ -469,6 +482,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to insert.
    */
   public void insertFilterPage(int position, FilterPage f) {
+	lazyLoad();
     filterPages.add(position, f);
     filterPageNameMap.put(f.getInternalName(), f);
   }
@@ -480,6 +494,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageBeforeFilterPage(String internalName, FilterPage f) throws ConfigurationException {
+	lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)), f);
@@ -492,6 +507,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageAfterFilterPage(String internalName, FilterPage f) throws ConfigurationException {
+	lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)) + 1, f);
