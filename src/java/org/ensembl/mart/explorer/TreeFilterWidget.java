@@ -58,8 +58,9 @@ public class TreeFilterWidget extends FilterWidget {
   private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
 	/**
+   * 
 	 * @param query
-	 * @param name
+	 * @param filterDescription
 	 */
 	public TreeFilterWidget(Query query, UIFilterDescription filterDescription) {
 		super(query, filterDescription);
@@ -151,12 +152,13 @@ public class TreeFilterWidget extends FilterWidget {
 
   private void selectOption( Option option ) {
     
-    selected.setText( (String)optionToName.get( option ) );
+    String name = (String)optionToName.get( option );
+    selected.setText( name );
     
     Option old = this.option;
     this.option = option;
     changeSupport.firePropertyChange( getPropertyName(), old, option);
-  
+    setNodeLabel( name, null );
   }
 
 	/**
