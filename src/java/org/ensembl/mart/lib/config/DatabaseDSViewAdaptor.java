@@ -19,8 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import java.security.MessageDigest;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -119,7 +117,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 	 */
 	public String[] getDatasetInternalNames() throws ConfigurationException {
 		String[] ret = new String[inameMap.size()];
-		dnameMap.keySet().toArray(ret);
+		inameMap.keySet().toArray(ret);
 		return ret;
 	}
 

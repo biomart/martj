@@ -27,11 +27,14 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.BasicFilter;
@@ -71,10 +74,10 @@ import org.ensembl.mart.lib.config.FilterPage;
  * 
  * <p>Mart Query Language (MQL) is a derivative of the Structured Query Language (SQL)
  * used to query relational databases.  It follows the following format (items in angle brackets are optional):</p>
- * <p class="indent_big">select</p>
+ * <p class="indent_big">&lt; using datasetViewName &lt; dataSourceName &gt; &gt; </p>
+ * <p class="indent_big">get</p>
  * <p class="indent_big">&lt; attribute_list &gt;</p>
  * <p class="indent_big">&lt; sequence sequence_request &gt;</p>
- * <p class="indent_big">from dataset_name</p>
  * <p class="indent_big">&lt; where filter_list &gt;</p>
  * <p class="indent_big">&lt; limit integer &gt;</p>
  * <br>
@@ -107,7 +110,7 @@ import org.ensembl.mart.lib.config.FilterPage;
  *    If there is a one-many, many-many, or many-one relationship between the mart focus object, and the attribute being requested, then the number of records returned
  *    will reflect this.</p>
  * <br>
- * <p>Note, the minimal MQL request would be 'select attribute_name from dataset_name'.  The minimal sequence request would be 'select sequence sequence_name from dataset'.</p>
+ * <p>Note, the minimal MQL request would be 'get attribute_name'.  The minimal sequence request would be 'get sequence sequence_name'.</p>
  * <p>MQL differs from SQL in not requiring (or even allowing) multiple datasets, table ALLQUALIFIERS, or joins.  You just have to specify the attributes/sequence that you want, the dataset to query, and filters to apply.</p>
  * <p>This makes simple queries which are not that hard at the SQL level, even more simple.</p>
  * <p>Because the Mart-Explorer engine resolves some filters to complex sub querries, it makes more complex underlying querries just as simple.</p>
@@ -115,13 +118,9 @@ import org.ensembl.mart.lib.config.FilterPage;
  * <p>MQL statements can be written on one line, or separated with newlines and whitespace to make them easier to read</p>
  * <br>
  * <p>The default output settings are tab - separated, tabulated output
- * to System.out.  Client programs can over ride these settings in one of two ways:</p>
- * <ul>
- *    <li><p>using an into clause within the MQL query (takes highest priority, but only controls the output for a particular query)</p>
- *    <li><p>using the appropriate setter methods (these values are temporarily over ridden by an into clause,
+ * to System.out.  Client programs can over ride these settings using the appropriate setter methods
  *      but, once set, they remain in effect for the entire session, until another call to the
- *      settter(s) is(are) made).</p>
- * </ul>
+ *      setter(s) is(are) made).</p>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see org.ensembl.mart.lib.SequenceDescription
@@ -143,6 +142,26 @@ public class MartShellLib {
 		this.envDataset = dsetname;
 	}
 
+  /**
+   * Sets the environmental DataSource for the session.  This
+   * can only be over ridden with another call to setEnvDataSource,
+   * or, for a single query, in a using clause.
+   * @param ds - DataSource to use as default
+   */
+  public void setEnvDataSource(DataSource ds) {
+    envDataSource = ds;    
+  }
+  
+  /**
+   * Sets the map between DataSource names (strings) and
+   * their DataSource, so that using statements can resolve
+   * the DataSource for a query.
+   * @param dsmap -- Hashtable map between DataSource String name, and DataSource.
+   */
+  public void setDataSourceMap(Hashtable dsmap) {
+    dataSourceMap = dsmap;
+  }
+  
 	/**
 	 * Set or Reset the DSViewAdaptor object to use in parsing Queries and MQL
 	 * statements.
@@ -511,6 +530,34 @@ public class MartShellLib {
     }
   }
   
+  /**
+   * Returns the actual MQL statement stored for a particular key, or null if not stored
+   * @param key -- key for a stored MQL command
+   * @return String MQL command
+   */
+  public String describeStoredMQLCommand(String key) {
+      return storedCommands.getProperty(key);
+  }
+  
+  /**
+   * Returns a query object for a stored procedure.  This only works for
+   * queries without bind variables.
+   * @param key -- key for a MQL command
+   * @return Query parsed from stored MQL command
+   * @throws InvalidQueryException for any query parsing Exceptions
+   */
+  public Query StoredMQLCommandToQuery(String key) throws InvalidQueryException {
+    return MQLtoQuery(describeStoredMQLCommand(key));
+  }
+  
+  /**
+   * Get a Set containing all stored MQL Procedure keys.
+   * @return Set
+   */
+  public Set getStoredMQLCommandKeys() {
+    return storedCommands.keySet();
+  }
+  
 	/** 
 	 * Creates a Query object from a Mart Query Language command.
 	 * 
@@ -585,15 +632,39 @@ public class MartShellLib {
 						getClause = true;
 					} else {
 						if (dset != null) {
-							logger.info("Recieved " + thisToken + " as appearent dataset, after it had already been set\n");
+							logger.info("Recieved " + thisToken + " as appearent DatasetView, after it had already been set\n");
 							throw new InvalidQueryException(
-								"Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
+								"Invalid Query Recieved, DatasetView already set, attempted to set again: " + newquery + "\n");
 						} else {
-							if (!adaptor.supportsInternalName(thisToken))
-								throw new InvalidQueryException("DatasetView " + thisToken + " is not found in this mart\n");
+              String datasourcereq = null;
+              String datasetviewreq = null;
+              
+              if (thisToken.indexOf(">") > 0) {
+                String[] toks = thisToken.split("\\>");
+                datasetviewreq = toks[0];
+                datasourcereq = toks[1];                
+              } else {
+                datasourcereq = null;
+                datasetviewreq = thisToken;
+              }
+              
+							if (!adaptor.supportsInternalName(datasetviewreq))
+								throw new InvalidQueryException("DatasetView " + datasetviewreq + " has not been loaded\n");
 								
-							dset = adaptor.getDatasetViewByInternalName(thisToken);
-							logger.info("setting local dataset to " + dset.getInternalName() + "\n");
+							dset = adaptor.getDatasetViewByInternalName(datasetviewreq);
+              query.setDatasetInternalName(datasetviewreq);
+              
+              if (datasourcereq != null) {
+                if (!dataSourceMap.containsKey(datasourcereq))
+                  throw new InvalidQueryException("DataSource " + datasourcereq + " has not been loaded\n");
+                query.setDataSource((DataSource) dataSourceMap.get(datasourcereq));
+              }
+              
+              if(logger.isLoggable(Level.INFO)) {
+                logger.info("setting local dataset to " + datasetviewreq + "\n");
+                if (datasourcereq != null)
+                  logger.info("setting DataSource to " + datasourcereq + "\n" );
+              }
 						}
 			
 					}
@@ -604,13 +675,25 @@ public class MartShellLib {
 					// set dataset and update query with starbases, or throw an exception if dataset not set
 					if (dset == null) {
 						if (envDataset == null) {
-							throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
+							throw new InvalidQueryException("Invalid Query Recieved, did not set DatasetView: " + newquery + "\n");
 						} else {
 							if (!adaptor.supportsInternalName(envDataset))
 								throw new InvalidQueryException("DatasetView " + envDataset + " is not found in this mart\n");
 							dset = adaptor.getDatasetViewByInternalName(envDataset);
+              query.setDatasetInternalName(envDataset);
 						}
 					}
+          
+          if (query.getDataSource() == null) {
+            //favor the env DataSource over the DatasetView datasource
+            if (envDataSource != null)  
+              query.setDataSource(envDataSource);
+            else if (dset.getDatasource() != null)
+              query.setDataSource(dset.getDatasource());
+            else
+              throw new InvalidQueryException("Invalid Query Recieved, could not get a DataSource from the environment or the DatasetView: " + newquery + "\n");
+          }
+          
           query.setDatasetInternalName(dset.getInternalName());
 					query.setStarBases(dset.getStarBases());
 					query.setPrimaryKeys(dset.getPrimaryKeys());
@@ -962,7 +1045,7 @@ public class MartShellLib {
 
 		String nestedQuery = storedCommands.getProperty(storedCommandName);
 
-		if (!(bindValues == null) && (bindValues.length() > 0)) {
+		if ((bindValues != null) && (bindValues.length() > 0)) {
 			List bindVariables = new ArrayList();
 			StringTokenizer vtokens = new StringTokenizer(bindValues, ",");
 			while (vtokens.hasMoreTokens())
@@ -1332,6 +1415,7 @@ public class MartShellLib {
 	//MartShellLib instance variables
 	private DSViewAdaptor adaptor;
 	private String envDataset = null;
+  private DataSource envDataSource = null;
 	private AttributePage currentApage = null;
 	// keeps track of the AttributePage
 	private FilterPage currentFpage = null; // keeps track of the FilterPage
@@ -1376,4 +1460,5 @@ public class MartShellLib {
 
 	private Logger logger = Logger.getLogger(MartShellLib.class.getName());
 	private Properties storedCommands = new Properties();
+  private Hashtable dataSourceMap;
 }

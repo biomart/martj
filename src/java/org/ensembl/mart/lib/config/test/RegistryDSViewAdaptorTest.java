@@ -44,7 +44,7 @@ public class RegistryDSViewAdaptorTest extends Base {
   private final String TESTMARTREGISTRYDB = "data/XML/testMartRegistryDB.xml";
   private final String TESTMARTREGDBINAME = "test_datasetview_db";
   private final String TESTDBDSVIEW = "data/XML/testDatasetViewRegDB.xml";
-  private final String USER = "ensro";
+  private final String USER = "test";
   
   private final String TESTMARTREGISTRYREGISTRY = "data/XML/testMartRegistryRegistry.xml";
   private final String TESTMARTREGISTRYREGINAME = "test_dataset_registry";

@@ -88,13 +88,14 @@ public class DatabaseDatasetViewUtils {
 		else {
 			String table = BASEMETATABLE + "_" + user;
 			String tcheck = null;
-
+      
 			try {
 				Connection conn = dsource.getConnection();
 				String catalog = conn.getCatalog();
 
 				ResultSet vr = conn.getMetaData().getTables(catalog, null, table, null);
-				//expect at most one result, if no results, tcheck will remain null
+				
+        //expect at most one result, if no results, tcheck will remain null
 				if (vr.next())
 					tcheck = vr.getString(3);
 

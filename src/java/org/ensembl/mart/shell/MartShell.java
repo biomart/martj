@@ -41,11 +41,16 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.sql.DataSource;
+
+import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
@@ -54,28 +59,34 @@ import org.ensembl.mart.lib.LoggingUtils;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
+import org.ensembl.mart.lib.DatabaseUtil.DatabaseURLElements;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.MartConfigurationFactory;
+import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
+import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
 /**
- * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a description of the Mart Query Language).
- * The system can be used to run script files containing valid Mart Query Language commands, or individual queries from the commandline.
- * It has an interactive shell as well.  Script files can include comment lines beginning with #, which are ignored by the system.</p>  
+ * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a 
+ *  description of the Mart Query Language). The system can be used to run script files containing valid Mart Query Language commands, 
+ *  or individual queries from the commandline.
+ *  It has an interactive shell as well.  Script files can include comment lines beginning with #, which are ignored by the system.</p>  
  * 
  * <p>The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
  * to allow commandline editing, history, and tab completion for those users working on Linux/Unix operating systems.  Unfortunately, there is no way
  * to provide this functionality in a portable way across OS platforms.  For windows users, there is a Getline c library which is provided with the Java Readline source.
- * By following the instructions to build a windows version of this library, and you will get some (but not all) of this functionality.</p>
+ * By following the instructions to build a windows version of this library, you will get some (but not all) of this functionality.</p>
  * <p> One other side effect of the use of this library is that, because it uses GNU Readline, which is GPL, it makes MartShell GPL as well (despite the LPGL license that it and the rest
  * of Mart-Explorer are released under).  If you are serious about extending/using the MartShell class in your own code for distribution, and are worried about
  * the effects of the GPL, then you might consider rebuilding the Java Readline Library using the LGPL EditLine library, which is available on some Linux platforms.</p>
@@ -88,17 +99,16 @@ import org.gnu.readline.ReadlineLibrary;
 public class MartShell {
 
 	// main variables
+	private static final String DEFAULTREGISTRY = "defaultRegistry";
+	private static final String INITSCRIPT = "initScript";
+
 	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
-	private static String COMMAND_LINE_SWITCHES = "h:AC:M:H:T:P:U:p:D:d:vl:e:O:F:R:E:";
+	private static String COMMAND_LINE_SWITCHES = "h:AR:I:M:d:vl:e:O:F:S:E:";
 	private static String confinUse = null;
-	private static String mainConfiguration = null;
-	private static String mainHost = null;
-	private static String mainPort = null;
-	private static String mainDatabase = null;
-	private static String mainDatabaseType = null;
-	private static String mainUser = null;
-	private static String mainPassword = null;
-	private static String mainDataset = null;
+	private static String mainRegistry = null;
+	private static String mainInitScript = null;
+
+	private static String mainDefaultDataset = null;
 	private static boolean mainBatchMode = false; // if -e is passed, true
 	private static String mainBatchSQL = null;
 	private static String mainBatchScriptFile = null;
@@ -118,37 +128,34 @@ public class MartShell {
 			+ "\n"
 			+ "\n-h <command>                            - this screen, or, if a command is provided, help for that command"
 			+ "\n-A                                      - Turn off Commandline Completion (faster startup, less helpful)"
-			+ "\n-C MART_CONFIGURATION_FILE_URL         - URL to Alternate Mart XML Configuration File"
-			+ "\n-M CONNECTION_CONFIGURATION_FILE_URL   - URL to mysql connection configuration file"
-			+ "\n-H HOST                                 - database host"
-			+ "\n-T DATABASE_TYPE                        - type of Relational Database Management System holing the mart (default mysql)"
-			+ "\n-P PORT                                 - database port"
-			+ "\n-U USER                                 - database user name"
-			+ "\n-p PASSWORD                             - database password"
-			+ "\n-D DATABASE                             - database name"
-			+ "\n-d DATASET                              - dataset name"
+			+ "\n-R MARTREGISTRY_FILE_URL                - URL or path to MartRegistry (Bookmark) document"
+			+ "\n-M SHELL_CONFIGURATION_FILE_URL         - URL or path to shell configuration file"
+			+ "\n-I INITIALIZATION_SCRIPT                - URL or path to Shell initialization MQL script"
+			+ "\n-d DATASETVIEW                          - DatasetViewname"
 			+ "\n-v                                      - verbose logging output"
-			+ "\n-l LOGGING_CONFIGURATION_URL    - Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
+			+ "\n-l LOGGING_CONFIGURATION_URL            - URL to Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
 			+ "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
 			+ "\n\nThe following are used in combination with the -e flag:"
 			+ "\n-O OUTPUT_FILE                          - output file, default is standard out"
 			+ "\n-F OUTPUT_FORMAT                        - output format, either tabulated or fasta"
-			+ "\n-R OUTPUT_SEPARATOR                     - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
-			+ "\n\n-E QUERY_FILE_URL                     - URL to file with valid Mart Query Commands"
-			+ "\n\nThe application searches for a .martshell file in the user home directory for mysql connection configuration"
-			+ "\nif present, this file will be loaded. If the -g option is given, or any of the commandline connection"
-			+ "\nparameters are passed, these over-ride those values provided in the .martshell file"
-			+ "\nUsers specifying a mysql connection configuration file with -g,"
-			+ "\nor using a .martshell file, can use -H, -P, -p, -u, or -d to specify"
+			+ "\n-S OUTPUT_SEPARATOR                     - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
+			+ "\n\n-E QUERY_FILE_FILE_URL                - URL or path to file with valid Mart Query Commands"
+			+ "\n\nThe application searches for a .martshell file in the user home directory for shell configuration information."
+			+ "\nif present, this file will be loaded. If the -M, -R or -I options are given, these over-ride those values provided in the .martshell file"
+			+ "\nUsers specifying a shell configuration file with -M,"
+			+ "\nor using a .martshell file, can use -R, or -I to specify"
 			+ "\nparameters not specified in the configuration file, or over-ride those that are specified."
+			+ "\n\nAn Inititialization script can contain any MQL statements, but is best suited to statements concerning"
+			+ "\nDataSource management, such as initializing the DataSource to query for the session, or the various DatasetViews"
+			+ "\nbeing querried."
 			+ "\n";
 	}
 
 	/**
-	 * Parses java properties file to get mysql database connection parameters.
+	 * Parses java properties file to get mysql shell configuration parameters.
 	 * 
-	 * @param connfile -- String name of the configuration file containing mysql
-	 *  database configuration properties.
+	 * @param connfile -- String name of the configuration file containing shell
+	 * configuration properties.
 	 */
 	public static void getConnProperties(String connfile) {
 		URL confInfo;
@@ -158,33 +165,13 @@ public class MartShell {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			String tmp = p.getProperty("host");
-			if (tmp != null && tmp.length() > 1 && mainHost == null)
-				mainHost = tmp.trim();
+			String tmp = p.getProperty(INITSCRIPT);
+			if (tmp != null && tmp.length() > 1 && mainInitScript == null)
+				mainInitScript = tmp.trim();
 
-			tmp = p.getProperty("port");
-			if (tmp != null && tmp.length() > 1 && mainPort == null)
-				mainPort = tmp.trim();
-
-			tmp = p.getProperty("databaseName");
-			if (tmp != null && tmp.length() > 1 && mainDatabase == null)
-				mainDatabase = tmp.trim();
-
-			tmp = p.getProperty("user");
-			if (tmp != null && tmp.length() > 1 && mainUser == null)
-				mainUser = tmp.trim();
-
-			tmp = p.getProperty("password");
-			if (tmp != null && tmp.length() > 1 && mainPassword == null)
-				mainPassword = tmp.trim();
-
-			tmp = p.getProperty("databaseType");
-			if (tmp != null && tmp.length() > 1 && mainDatabaseType == null)
-				mainDatabaseType = tmp.trim();
-
-			tmp = p.getProperty("alternateConfigurationFile");
-			if (tmp != null && tmp.length() > 1 && mainConfiguration == null) {
-				mainConfiguration = tmp.trim();
+			tmp = p.getProperty(DEFAULTREGISTRY);
+			if (tmp != null && tmp.length() > 1 && mainRegistry == null) {
+				mainRegistry = tmp.trim();
 			}
 		} catch (java.net.MalformedURLException e) {
 			mainLogger.warning("Could not load connection file " + connfile + " MalformedURLException: " + e);
@@ -286,8 +273,12 @@ public class MartShell {
 						helpCommand = g.getOptarg();
 						break;
 
-					case 'C' :
-						mainConfiguration = g.getOptarg();
+					case 'R' :
+						mainRegistry = g.getOptarg();
+						break;
+
+					case 'I' :
+						mainInitScript = g.getOptarg();
 						break;
 
 					case 'A' :
@@ -299,32 +290,8 @@ public class MartShell {
 						getConnProperties(g.getOptarg());
 						break;
 
-					case 'H' :
-						mainHost = g.getOptarg();
-						break;
-
-					case 'T' :
-						mainDatabaseType = g.getOptarg();
-						break;
-
-					case 'P' :
-						mainPort = g.getOptarg();
-						break;
-
-					case 'U' :
-						mainUser = g.getOptarg();
-						break;
-
-					case 'p' :
-						mainPassword = g.getOptarg();
-						break;
-
-					case 'D' :
-						mainDatabase = g.getOptarg();
-						break;
-
 					case 'd' :
-						mainDataset = g.getOptarg();
+						mainDefaultDataset = g.getOptarg();
 						break;
 
 					case 'v' :
@@ -348,7 +315,7 @@ public class MartShell {
 						mainBatchFormat = g.getOptarg();
 						break;
 
-					case 'R' :
+					case 'S' :
 						mainBatchSeparator = g.getOptarg();
 						break;
 
@@ -405,29 +372,27 @@ public class MartShell {
 
 		MartShell ms = new MartShell();
 
-		if (mainHost != null)
-			ms.setDBHost(mainHost);
+		if (mainRegistry != null)
+			try {
+				ms.addMartRegistry(mainRegistry);
+			} catch (MalformedURLException e1) {
+				System.out.println("Could not set default Registry file " + e1.getMessage());
+				e1.printStackTrace();
+			} catch (ConfigurationException e1) {
+				System.out.println("Could not set default Registry file " + e1.getMessage());
+				e1.printStackTrace();
+			}
 
-		if (mainDatabaseType != null)
-			ms.setDBType(mainDatabaseType);
+		if (mainInitScript != null)
+			try {
+				ms.initializeWithScript(mainInitScript);
+			} catch (Exception e2) {
+				System.out.println("Could not initialize MartShell with initScript " + e2.getMessage());
+				e2.printStackTrace();
+			}
 
-		if (mainPort != null)
-			ms.setDBPort(mainPort);
-
-		if (mainUser != null)
-			ms.setDBUser(mainUser);
-
-		if (mainPassword != null)
-			ms.setDBPass(mainPassword);
-
-		if (mainDatabase != null)
-			ms.setDBDatabase(mainDatabase);
-
-		if (mainConfiguration != null)
-			ms.setAlternateMartConfiguration(mainConfiguration);
-
-		if (mainDataset != null)
-			ms.setDatasetName(mainDataset);
+		if (mainDefaultDataset != null)
+			ms.setDefaultDatasetName(mainDefaultDataset);
 
 		if (mainBatchMode) {
 			boolean validQuery = true;
@@ -487,6 +452,29 @@ public class MartShell {
 	 */
 	public void RunInteractive() {
 		try {
+			// load help file
+			LoadHelpFiles();
+
+			//display startup information
+			System.out.println();
+			System.out.println(supportHelp.getProperty(STARTUP));
+			System.out.println();
+		} catch (InvalidQueryException e2) {
+			System.out.println("Couldnt display startup information\n" + e2.getMessage());
+
+			StackTraceElement[] stacks = e2.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
+
+			for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+		}
+
+		try {
 			Readline.load(ReadlineLibrary.Getline);
 			//		Getline doesnt support completion, or history manipulation/files
 			completionOn = false;
@@ -496,17 +484,20 @@ public class MartShell {
 			try {
 				Readline.load(ReadlineLibrary.Editline);
 				historyOn = true;
+				completionOn = true;
 				readlineLoaded = true;
 			} catch (UnsatisfiedLinkError ignore_me2) {
 				try {
 					Readline.load(ReadlineLibrary.GnuReadline);
 					historyOn = true;
+					completionOn = true;
 					readlineLoaded = true;
 				} catch (UnsatisfiedLinkError ignore_me3) {
 					mainLogger.warning(
 						"Could not load Readline Library, commandline editing, completion will not be available"
 							+ "\nConsult MartShell documentation for methods to resolve this error.");
 					historyOn = false;
+					completionOn = false;
 					readlineLoaded = false;
 					Readline.load(ReadlineLibrary.PureJava);
 				}
@@ -522,54 +513,44 @@ public class MartShell {
 		});
 
 		try {
-			// load help file
-			LoadHelpFiles();
-
-			//display startup information
-			System.out.println(supportHelp.getProperty(STARTUP));
-			System.out.println("connected to " + martDatabase + " on " + martHost + ":" + martPort + "\n");
-		} catch (InvalidQueryException e2) {
-			System.out.println("Couldnt display startup information\n" + e2.getMessage());
-
-			StackTraceElement[] stacks = e2.getStackTrace();
-			StringBuffer stackout = new StringBuffer();
-
-			for (int i = 0, n = stacks.length; i < n; i++) {
-				StackTraceElement element = stacks[i];
-				stackout.append(element.toString()).append("\n");
-			}
-			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
-		}
-
-		try {
-			if (martHost == null || martHost.length() < 5)
-				setConnectionSettings(SETCONSETSC);
-			Initialize();
+			initializeMartShellLib();
 
 			if (completionOn) {
-				mcl = new MartCompleter(martconf);
+				mcl = new MartCompleter(adaptorManager);
 
 				// add commands
-				mcl.AddAvailableCommandsTo("commands", availableCommands);
-				mcl.AddAvailableCommandsTo("commands", msl.availableCommands);
+				List allCommands = new ArrayList();
+				allCommands.addAll(availableCommands);
+				allCommands.addAll(msl.availableCommands);
+				mcl.setBaseCommands(allCommands);
 
-        mcl.AddAvailableCommandsTo(LISTC, listRequests);
-        
+				mcl.setAddCommands(addRequests);
+				mcl.setRemoveBaseCommands(removeRequests);
+				mcl.setListCommands(listRequests);
+				mcl.setUpdateBaseCommands(updateRequests);
+				mcl.setSetBaseCommands(setRequests);
+				mcl.setDescribeBaseCommands(describeRequests);
+				mcl.setEnvironmentBaseCommands(envRequests);
+				mcl.setExecuteBaseCommands(executeRequests);
+
 				// add sequences
-				mcl.AddAvailableCommandsTo(MartShellLib.QSEQUENCE, SequenceDescription.SEQS);
+				mcl.setDomainSpecificCommands(SequenceDescription.SEQS); // will need to modify this if others are added
 
 				if (helpLoaded)
-					mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
+					mcl.setHelpCommands(commandHelp.keySet());
 
-				if (envDataset != null)
-					mcl.setEnvDataset(envDataset);
+				if (envDatasetIName != null)
+					mcl.setEnvDataset(envDatasetIName);
 
-				mcl.SetCommandMode();
+				mcl.setDataSourceNames(datasourceMap.keySet()); // sets to any initial DataSources from initialization
+
+				mcl.setCommandMode();
 
 				Readline.setCompleter(mcl);
 			}
 
-			mainLogger.info("Completer set\n");
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("Completer set\n");
 
 			if (readlineLoaded && historyOn) {
 				File histFile = new File(history_file);
@@ -589,7 +570,9 @@ public class MartShell {
 				StackTraceElement element = stacks[i];
 				stackout.append(element.toString()).append("\n");
 			}
-			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
 			System.exit(1);
 		}
@@ -615,7 +598,9 @@ public class MartShell {
 					StackTraceElement element = stacks[i];
 					stackout.append(element.toString()).append("\n");
 				}
-				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
+				if (mainLogger.isLoggable(Level.INFO))
+					mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
 				conline = new StringBuffer();
 				continueQuery = false;
@@ -634,7 +619,9 @@ public class MartShell {
 				StackTraceElement element = stacks[i];
 				stackout.append(element.toString()).append("\n");
 			}
-			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
 			System.exit(1);
 		}
@@ -656,7 +643,7 @@ public class MartShell {
 
 		boolean valid = true;
 		try {
-			Initialize();
+			initializeMartShellLib();
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(batchScriptFile)));
 
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
@@ -695,36 +682,28 @@ public class MartShell {
 
 		boolean validQuery = true;
 
-		if (martHost == null || martHost.length() < 5) {
-			validQuery = false;
-			setBatchError("Must set Host");
-		} else if (martUser == null || martUser.length() < 1) {
-			validQuery = false;
-			setBatchError("Must set a User");
-		} else if (martDatabase == null || martDatabase.length() < 5) {
-			validQuery = false;
-			setBatchError("Must set a Mart Database");
-		} else {
-			try {
-				Initialize();
-				if (!querystring.endsWith(LINEEND))
-					querystring = querystring + LINEEND;
+		try {
+			initializeMartShellLib();
+			if (!querystring.endsWith(LINEEND))
+				querystring = querystring + LINEEND;
 
-				parseForCommands(querystring);
-			} catch (Exception e) {
-				setBatchError(e.getMessage());
-				StackTraceElement[] stacks = e.getStackTrace();
-				StringBuffer stackout = new StringBuffer();
+			parseForCommands(querystring);
+		} catch (Exception e) {
+			setBatchError(e.getMessage());
+			StackTraceElement[] stacks = e.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
 
-				for (int i = 0, n = stacks.length; i < n; i++) {
-					StackTraceElement element = stacks[i];
-					stackout.append(element.toString()).append("\n");
-				}
+			for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+
+			if (mainLogger.isLoggable(Level.INFO))
 				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
-				validQuery = false;
-			}
+			validQuery = false;
 		}
+
 		return validQuery;
 	}
 
@@ -741,66 +720,57 @@ public class MartShell {
 	}
 
 	/**
-	 * Method allowing client scripts to specify an alternate MartConfiguration.xml
-	 * document to use in place of that provided by the Mart database.
+	 * Method allowing client scripts to specify a default MartRegistry.dtd compliant
+	 * document specifying the location of Mart DatasetViews.
 	 * 
-	 * @param confFile - String path to alternate MartConfiguration.xml file
+	 * @param confFile - String path or URL to MartRegistry file
+	 * 
 	 */
-	public void setAlternateMartConfiguration(String confFile) {
-		altConfigurationFile = confFile;
+	public void addMartRegistry(String confFile) throws ConfigurationException, MalformedURLException {
+		URL confURL = null;
+		if (confFile.indexOf(":") > 0) {
+			//URL
+			confURL = new URL(confFile);
+		} else {
+			//File
+			confURL = new File(confFile).toURL();
+		}
+
+		if (confURL == null)
+			throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
+
+		RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(confURL);
+		adaptorManager.add(adaptor);
 	}
 
 	/**
-	 * Set the Database Host name of the RDBMS.
-	 * 
-	 * @param dbhost - String host name of the RDBMS.
+	 * Takes a script with MQL commands (typically, add DataSource, set DataSource, add DatasetView(s), use DatasetView ,etc).
+	 * This will ignore lines commented with #.
+	 * @param initScript -- either path or URL to MQL initialization script.
 	 */
-	public void setDBHost(String dbhost) {
-		this.martHost = dbhost;
-	}
+	public void initializeWithScript(String initScript)
+		throws ConfigurationException, SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
 
-	/**
-	 * Set the Type of the RDBMS.  Defaults to mysql
-	 * @param dbtype - String type of rdbms, to pass in a Connection URL
-	 */
-	public void setDBType(String dbtype) {
-		this.martDatabaseType = dbtype;
-	}
+		initializeMartShellLib();
 
-	/**
-	 * Set the port for the RDBMS.
-	 * 
-	 * @param dbport - String Port that the RDBMS is running on
-	 */
-	public void setDBPort(String dbport) {
-		this.martPort = dbport;
-	}
+		URL scriptURL = null;
+		if (initScript.indexOf(":") > 0) {
+			//URL
+			scriptURL = new URL(initScript);
+		} else {
+			//File
+			scriptURL = new File(initScript).toURL();
+		}
 
-	/**
-	 * Set the username to use to connect to the specified RDBMS.
-	 * 
-	 * @param dbuser - String user name for RDBMS connection
-	 */
-	public void setDBUser(String dbuser) {
-		this.martUser = dbuser;
-	}
+		if (scriptURL == null)
+			throw new ConfigurationException("Could not parse " + initScript + " into a URL\n");
 
-	/**
-	 * Set the password to use to connect to the specified RDBMS.
-	 * 
-	 * @param dbpass - String password for RDBMS connection.
-	 */
-	public void setDBPass(String dbpass) {
-		martPass = dbpass;
-	}
+		reader = new BufferedReader(new InputStreamReader(scriptURL.openStream()));
 
-	/**
-	 * Set the name of the mart database to query.
-	 * 
-	 * @param db - String name of the mart database
-	 */
-	public void setDBDatabase(String db) {
-		martDatabase = db;
+		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+			if (!line.startsWith("#"))
+				parse(line);
+		}
 	}
 
 	/**
@@ -815,7 +785,7 @@ public class MartShell {
 			if (!batchFile.exists())
 				batchFile.createNewFile();
 
-			sessionOutputFile = new FileOutputStream(batchFile);
+			sessionOutput = new FileOutputStream(batchFile);
 		} catch (FileNotFoundException e) {
 			setBatchError("Could not open file " + batchFileName + "\n" + e.getMessage());
 			throw e;
@@ -845,8 +815,8 @@ public class MartShell {
 	 * sets the DatasetName to the provided String
 	 * @param datasetName - string internalName of the dataset
 	 */
-	public void setDatasetName(String datasetName) {
-		this.envDataset = datasetName;
+	public void setDefaultDatasetName(String datasetName) {
+		this.envDatasetIName = datasetName;
 	}
 
 	/**
@@ -863,26 +833,19 @@ public class MartShell {
 		batchErrorMessage = message;
 	}
 
-	private void Initialize() throws MalformedURLException, ConfigurationException, SQLException {
-		engine = new Engine("mysql", martHost, martPort, martDatabase, martUser, martPass);
-
-		if (altConfigurationFile != null)
-			martconf = new MartConfigurationFactory().getInstance(new URL(altConfigurationFile));
-		else
-			martconf = engine.getMartConfiguration();
-
+	private void initializeMartShellLib() {
 		if (msl == null)
-			msl = new MartShellLib(martconf);
+			msl = new MartShellLib(adaptorManager);
 		else
-			msl.setMartConfiguration(martconf);
+			msl.setDSViewAdaptor(adaptorManager);
 	}
 
 	private void ExitShell() throws IOException {
 		Readline.cleanup();
 
 		// close the sessionwide FileOutputStream, if it isnt null
-		if (sessionOutputFile != null)
-			sessionOutputFile.close();
+		if (sessionOutputFileName != null)
+			sessionOutput.close();
 
 		// if history and completion are on, save the history file
 		if (readlineLoaded && historyOn)
@@ -911,7 +874,7 @@ public class MartShell {
 			prompt = DEFAULTPROMPT + "> ";
 
 		if (completionOn)
-			mcl.SetCommandMode();
+			mcl.setCommandMode();
 
 		line = Readline.readline(prompt, historyOn);
 		return line;
@@ -948,10 +911,11 @@ public class MartShell {
 			}
 			return buf.toString();
 
-		} else {
+		} else if (command.startsWith(HELPC))
+			return Help(command.substring(command.indexOf(HELPC) + HELPC.length() + 1).trim());
+		else {
 			buf.append("\n");
 			StringTokenizer hToks = new StringTokenizer(command, " ");
-			hToks.nextToken(); // skip help
 			command = hToks.nextToken();
 
 			if (commandHelp.containsKey(command)) {
@@ -1075,7 +1039,7 @@ public class MartShell {
 		}
 	}
 
-	private void ListRequest(String command) throws InvalidQueryException {
+	private void ListRequest(String command) throws InvalidQueryException, ConfigurationException {
 		System.out.println();
 		String[] toks = command.split("\\s+");
 
@@ -1083,12 +1047,16 @@ public class MartShell {
 			String request = toks[1];
 			String[] lines = null;
 
-			if (request.equalsIgnoreCase("datasets"))
-				lines = ListDatasets();
-			else if (request.equalsIgnoreCase("filters"))
-				lines = ListFilters();
-			else if (request.equalsIgnoreCase("attributes"))
-				lines = ListAttributes();
+			if (request.equalsIgnoreCase(DATASETVIEWSREQ))
+				lines = listDatasetViews();
+			else if (request.equalsIgnoreCase(FILTERSREQ))
+				lines = listFilters();
+			else if (request.equalsIgnoreCase(ATTRIBUTESREQ))
+				lines = listAttributes();
+			else if (request.equalsIgnoreCase(PROCSREQ))
+				lines = listProcedures();
+			else if (request.equalsIgnoreCase(DATASOURCESREQ))
+				lines = listDataSources();
 			else
 				throw new InvalidQueryException("Invalid list command recieved: " + command + "\n");
 
@@ -1100,29 +1068,58 @@ public class MartShell {
 		System.out.println();
 	}
 
-	private String[] ListDatasets() {
-		DatasetView[] ds = martconf.getDatasets();
+	private String[] listDatasetViews() throws ConfigurationException {
+		if (adaptorManager.getDatasetViews().length == 0)
+			return new String[] { "No DatasetViews Loaded\n" };
+
+		DatasetView[] ds = adaptorManager.getDatasetViews();
+
 		String[] ret = new String[ds.length];
 
 		for (int i = 0, n = ds.length; i < n; i++)
 			ret[i] = ds[i].getInternalName() + "\n";
 
+		Arrays.sort(ret);
 		return ret;
 	}
 
-	private String[] ListFilters() throws InvalidQueryException {
-		if (envDataset != null) {
-			if (!martconf.containsDataset(envDataset))
-				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
+	private String[] listProcedures() {
+		if (msl.getStoredMQLCommandKeys().size() == 0)
+			return new String[] { "No Procedures Stored\n" };
+
+		Set names = msl.getStoredMQLCommandKeys();
+		String[] ret = new String[names.size()];
+		names.toArray(ret);
+		Arrays.sort(ret);
+		return ret;
+	}
+
+	private String[] listDataSources() {
+		if (datasourceMap.keySet().size() == 0)
+			return new String[] { "No DataSources have been loaded\n" };
+
+		Set names = datasourceMap.keySet();
+		String[] ret = new String[names.size()];
+		names.toArray(ret);
+		Arrays.sort(ret);
+		return ret;
+	}
+
+	private String[] listFilters() throws InvalidQueryException, ConfigurationException {
+		if (envDatasetIName != null) {
+			if (!adaptorManager.supportsInternalName(envDatasetIName))
+				throw new InvalidQueryException("This mart does not support DatasetView" + envDatasetIName + "\n");
 
 			int blen = 3; //3 filters/line
-			DatasetView dset = martconf.getDatasetByName(envDataset);
+			DatasetView dset = adaptorManager.getDatasetViewByInternalName(envDatasetIName);
 			List columns = new ArrayList();
 			String[] buffer = new String[blen];
 
 			int[] maxlengths = new int[] { 0, 0, 0 };
 
 			List names = dset.getFilterCompleterNames();
+			Collections.sort(names);
+
 			int pos = 0;
 			for (Iterator iter = names.iterator(); iter.hasNext();) {
 				String name = (String) iter.next();
@@ -1143,22 +1140,24 @@ public class MartShell {
 
 			return formatColumns(columns, maxlengths);
 		} else
-			throw new InvalidQueryException("Must set a dataset with the use command to list filters\n");
+			throw new InvalidQueryException("Must set a DatasetView with the use command to list filters\n");
 	}
 
-	private String[] ListAttributes() throws InvalidQueryException {
-		if (envDataset != null) {
-			if (!martconf.containsDataset(envDataset))
-				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
+	private String[] listAttributes() throws ConfigurationException, InvalidQueryException {
+		if (envDatasetIName != null) {
+			if (!adaptorManager.supportsInternalName(envDatasetIName))
+				throw new InvalidQueryException("This mart does not support DatasetView" + envDatasetIName + "\n");
 
 			int blen = 3; //3 atts/line
-			DatasetView dset = martconf.getDatasetByName(envDataset);
+			DatasetView dset = adaptorManager.getDatasetViewByInternalName(envDatasetIName);
 			List columns = new ArrayList();
 			String[] buffer = new String[blen];
 
 			int[] maxlengths = new int[] { 0, 0, 0 };
 
 			List names = dset.getAttributeCompleterNames();
+			Collections.sort(names);
+
 			int pos = 0;
 			for (Iterator iter = names.iterator(); iter.hasNext();) {
 				String name = (String) iter.next();
@@ -1180,7 +1179,7 @@ public class MartShell {
 
 			return formatColumns(columns, maxlengths);
 		} else
-			throw new InvalidQueryException("Must set a dataset with the use command to list attributes\n");
+			throw new InvalidQueryException("Must set a DatasetView with the use command to list attributes\n");
 	}
 
 	private String[] formatColumns(List columns, int[] maxlengths) {
@@ -1227,7 +1226,7 @@ public class MartShell {
 		return ret;
 	}
 
-	private void DescribeRequest(String command) throws InvalidQueryException {
+	private void DescribeRequest(String command) throws InvalidQueryException, ConfigurationException {
 		StringTokenizer toks = new StringTokenizer(command, " ");
 		int tokCount = toks.countTokens();
 		toks.nextToken(); // skip describe
@@ -1235,22 +1234,22 @@ public class MartShell {
 		System.out.println();
 
 		if (tokCount < 3)
-			throw new InvalidQueryException("Invalid Describe request " + command + "\n");
+			throw new InvalidQueryException("Invalid Describe request " + command + "\n" + Help(DESCC));
 		else {
 			String request = toks.nextToken();
 			String name = toks.nextToken();
 
-			if (request.equalsIgnoreCase(DATASETKEY)) {
+			if (request.equalsIgnoreCase(DATASETVIEWREQ)) {
 				String[] lines = DescribeDataset(name);
 
 				PageOutput(lines);
-			} else if (request.equalsIgnoreCase(FILTERKEY)) {
-				if (envDataset == null)
-					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
+			} else if (request.equalsIgnoreCase(FILTERREQ)) {
+				if (envDatasetIName == null)
+					throw new InvalidQueryException("Must set a DatasetView with a use command for describe filter to work\n");
 
-				DatasetView dset = martconf.getDatasetByName(envDataset);
+				DatasetView dset = adaptorManager.getDatasetViewByInternalName(envDatasetIName);
 				if (!(dset.containsFilterDescription(name)))
-					throw new InvalidQueryException("Filter " + name + " is not supported by dataset " + envDataset + "\n");
+					throw new InvalidQueryException("Filter " + name + " is not supported by DatasetView" + envDatasetIName + "\n");
 
 				List quals = dset.getFilterCompleterQualifiersByInternalName(name);
 				StringBuffer qual = new StringBuffer();
@@ -1263,29 +1262,46 @@ public class MartShell {
 
 				String tmp = DescribeFilter(name, dset.getFilterDescriptionByInternalName(name), qual.toString());
 				System.out.println(tmp + "\n");
-			} else if (request.equalsIgnoreCase(ATTRIBUTEKEY)) {
-				if (envDataset == null)
-					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
+			} else if (request.equalsIgnoreCase(ATTRIBUTEREQ)) {
+				if (envDatasetIName == null)
+					throw new InvalidQueryException("Must set a DatasetView with a use command for describe attribute to work\n");
 
-				DatasetView dset = martconf.getDatasetByName(envDataset);
+				DatasetView dset = adaptorManager.getDatasetViewByInternalName(envDatasetIName);
 				if (!dset.containsAttributeDescription(name))
-					throw new InvalidQueryException("Attribute " + name + " is not supported by dataset " + envDataset + "\n");
+					throw new InvalidQueryException("Attribute " + name + " is not supported by DatasetView" + envDatasetIName + "\n");
 
 				String tmp = DescribeAttribute(dset.getAttributeDescriptionByInternalName(name));
 				System.out.println(tmp + "\n");
+			} else if (request.equalsIgnoreCase(PROCREQ)) {
+				String out = msl.describeStoredMQLCommand(name);
+				if (out == null)
+					throw new InvalidQueryException("Procedure " + name + " has not been defined\n");
+				else
+					System.out.println(out);
 			} else
-				throw new InvalidQueryException(
-					"Invalid Request key in describe command, see help describe. " + command + "\n");
+				throw new InvalidQueryException("Invalid Request key in describe command, see help describe. " + command + "\n");
 		}
 	}
 
-	private String[] DescribeDataset(String dsetname) throws InvalidQueryException {
-		if (!martconf.containsDataset(dsetname))
-			throw new InvalidQueryException("This mart does not support dataset " + dsetname + "\n");
+	private String[] DescribeDataset(String dsetname) throws ConfigurationException, InvalidQueryException {
+		if (!adaptorManager.supportsInternalName(dsetname))
+			throw new InvalidQueryException("This mart does not support DatasetView" + dsetname + "\n");
 
 		List lines = new ArrayList();
 
-		DatasetView dset = martconf.getDatasetByName(dsetname);
+		DatasetView dset = adaptorManager.getDatasetViewByInternalName(dsetname);
+
+		if (dset.getDatasource() != null) {
+			try {
+				DatabaseURLElements els = DatabaseUtil.decompose(dset.getDatasource().getConnection().getMetaData().getURL());
+				lines.add("Currently connected to RDBMS " + els.host);
+				lines.add("\n");
+			} catch (Exception e) {
+				if (mainLogger.isLoggable(Level.INFO))
+					mainLogger.info("Could not parse DataSource for DatasetView into Connection info\n");
+			}
+		}
+
 		//filters first
 		FilterPage[] fpages = dset.getFilterPages();
 		for (int i = 0, n = fpages.length; i < n; i++) {
@@ -1318,8 +1334,7 @@ public class MartShell {
 			lines.add("\n");
 			lines.add("\n");
 			lines.add("The following Attributes can be querried together\n");
-			lines.add(
-				"numbers in perentheses denote groups of attributes that have limits on the number that can be queried together\n");
+			lines.add("numbers in perentheses denote groups of attributes that have limits on the number that can be queried together\n");
 			lines.add("\n");
 
 			List groups = page.getAttributeGroups();
@@ -1373,35 +1388,68 @@ public class MartShell {
 			return null;
 	}
 
-	private void setPrompt(String command) throws InvalidQueryException {
+	private void addRequest(String command) throws InvalidQueryException {
 		StringTokenizer toks = new StringTokenizer(command, " ");
-		if (toks.countTokens() < 2)
-			throw new InvalidQueryException("Invalid setPrompt Command Recieved: " + command + "\n" + Help(SETPROMPT));
-		toks.nextToken(); // skip command
-		String tmp = toks.nextToken();
+		toks.nextToken(); // skip add
 
-		if (tmp.equals("-"))
-			userPrompt = null;
-		else
-			userPrompt = tmp;
+		if (toks.hasMoreTokens()) {
+			String addreq = toks.nextToken();
+			if (addreq.equalsIgnoreCase(DATASOURCEREQ))
+				addDataSource(toks);
+			else if (addreq.equalsIgnoreCase(DATASETVIEWSREQ))
+				addDatasetViews(toks);
+			else if (addreq.equalsIgnoreCase(DATASETVIEWREQ))
+				addDatasetView(toks);
+			else
+				throw new InvalidQueryException("Invalid Add request recieved " + command + "\n");
+		} else
+			throw new InvalidQueryException("Invalid Add request recieved " + command + "\n");
+
+		if (completionOn) {
+			mcl.setDataSourceNames(datasourceMap.keySet());
+			mcl.setAdaptorLocations(adaptorMap.keySet());
+
+			try {
+				mcl.setDatasetViewInternalNames(Arrays.asList(adaptorManager.getDatasetInternalNames()));
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Could not get internalNames from adaptorManager " + e.getMessage(), e);
+			}
+		}
 	}
 
-	private void setConnectionSettings(String command) throws InvalidQueryException {
-		StringTokenizer ctokens = new StringTokenizer(command, " ");
-		if (ctokens.countTokens() > 1) {
-			// parse command
-			ctokens.nextToken(); // throw away
-			String connSettings = ctokens.nextToken();
+	private void addDataSource(StringTokenizer toks) throws InvalidQueryException {
+		String martHost = null;
+		String martDatabaseType = null;
+		String martPort = null;
+		String martUser = null;
+		String martPass = null;
+		String martDatabase = null;
+		String martDriver = null;
+		String sourceKey = null;
 
-			StringTokenizer sTokens = new StringTokenizer(connSettings, ",");
-			while (sTokens.hasMoreTokens()) {
-				StringTokenizer tokens = new StringTokenizer(sTokens.nextToken(), "=");
-				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException(
-						"Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+		if (toks.countTokens() > 0) {
 
-				String key = tokens.nextToken();
-				String value = tokens.nextToken();
+			String connSettings = toks.nextToken();
+
+			while (toks.hasMoreTokens())
+				connSettings += toks.nextToken();
+
+			if (connSettings.indexOf("as") > 0) {
+				String[] vals = connSettings.split("as");
+				connSettings = vals[0].trim();
+				sourceKey = vals[1].trim();
+			}
+
+			//pattern to find and parse all occurances of x=y, or x = y in a string
+			Pattern pat = Pattern.compile("(\\w+)\\s*\\=+\\s*([^\\,]+)\\,*\\s*");
+			Matcher mat = pat.matcher(connSettings);
+			boolean matchFound = false;
+
+			while (mat.find()) {
+				matchFound = true;
+
+				String key = mat.group(1);
+				String value = mat.group(2);
 
 				if (key.equals(DBHOST))
 					martHost = value;
@@ -1413,236 +1461,743 @@ public class MartShell {
 					martUser = value;
 				else if (key.equals(DBPASSWORD))
 					martPass = value;
-				else if (key.equals(DATABASENAME))
+				else if (key.equals(INSTANCENAME))
 					martDatabase = value;
-				else if (key.equals(ALTCONFFILE))
-					altConfigurationFile = value;
+				else if (key.equals(DBDRIVER))
+					martDriver = value;
 				else
-					throw new InvalidQueryException(
-						"Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+					throw new InvalidQueryException("Recieved invalid add DataSource command.\n" + Help(ADDC) + "\n");
 			}
+
+			if (!matchFound)
+				throw new InvalidQueryException("Invalid set Output request " + connSettings + "\n" + Help(ADDC));
+
 		} else {
 			if (mainBatchMode)
-				throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+				throw new InvalidQueryException("Recieved invalid add DataSource command.\n" + Help(ADDC) + "\n");
 
 			String thisLine = null;
 
 			try {
-
-				String myHost = (martHost == null) ? "" : martHost;
-				thisLine =
-					Readline.readline(
-						"\nPlease enter the host address of the mart database (press enter to leave as '" + myHost + "'): ",
-						false);
+				thisLine = Readline.readline("\nPlease enter the host address of the mart database: ", false);
 				if (thisLine != null)
 					martHost = thisLine;
 
-				String myDBType = (martDatabaseType == null) ? "" : martDatabaseType;
 				thisLine =
 					Readline.readline(
-						"\nPlease enter the type of RDBMS hosting the mart database (press enter to leave as '" + myDBType + "'): ",
+						"\nPlease enter the type of RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
+							+ DatabaseUtil.DEFAULTDATABASETYPE
+							+ " and "
+							+ DatabaseUtil.DEFAULTDRIVER
+							+ " respectively): ",
 						false);
 				if (thisLine != null)
 					martDatabaseType = thisLine;
 
-				String myPort = (martPort == null) ? "" : martPort;
 				thisLine =
 					Readline.readline(
-						"\nPlease enter the port on which the mart database is running (press enter to leave as '"
-							+ myPort
-							+ "'): ",
+						"\nPlease enter the Driver Class Name of the RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
+							+ DatabaseUtil.DEFAULTDATABASETYPE
+							+ " and "
+							+ DatabaseUtil.DEFAULTDRIVER
+							+ " respectively): ",
+						false);
+				if (thisLine != null)
+					martDriver = thisLine;
+
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the port on which the mart database is running (defaults to "
+							+ DatabaseUtil.DEFAULTPORT
+							+ " for "
+							+ DatabaseUtil.DEFAULTDATABASETYPE
+							+ " database systems): ",
 						false);
 				if (thisLine != null)
 					martPort = thisLine;
 
-				String myUser = (martUser == null) ? "" : martUser;
-				thisLine =
-					Readline.readline(
-						"\nPlease enter the user name used to connect to the mart database (press enter to leave as '"
-							+ myUser
-							+ "'): ",
-						false);
+				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database: ", false);
 				if (thisLine != null)
 					martUser = thisLine;
 
-				String myPass = "";
-				if (martPass != null) {
-					for (int i = 0, n = martPass.length(); i < n; i++)
-						myPass += "*";
-				}
-
-				thisLine =
-					Readline.readline(
-						"\nPlease enter the password used to connect to the mart database (press enter to leave as '"
-							+ myPass
-							+ "'): ",
-						false);
+				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database: ", false);
 				if (thisLine != null)
 					martPass = thisLine;
 
-				String myDb = (martDatabase == null) ? "" : martDatabase;
-				thisLine =
-					Readline.readline(
-						"\nPlease enter the name of the mart database you wish to query (press enter to leave as '" + myDb + "'): ",
-						false);
+				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query: ", false);
 				if (thisLine != null)
 					martDatabase = thisLine;
 
-				String myAltFile = (altConfigurationFile == null) ? "-" : altConfigurationFile;
 				thisLine =
-					Readline.readline(
-						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave as '"
-							+ myAltFile
-							+ "',\n enter '-' to use configuration provided by "
-							+ martDatabase
-							+ "):",
-						false);
-				if (thisLine != null) {
-					if (thisLine.equals("-"))
-						altConfigurationFile = null;
-					else
-						altConfigurationFile = thisLine;
-				}
+					Readline.readline("\nPlease enter a name to refer to this DataSource in Shell commands (defaults to " + martDatabase + "@" + martHost + "): ", false);
+				if (thisLine != null)
+					sourceKey = thisLine;
 
 			} catch (Exception e) {
 				throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
 			}
 		}
+
+		if (martDatabaseType == null && martDriver == null) {
+			martDatabaseType = DatabaseUtil.DEFAULTDATABASETYPE;
+			martDriver = DatabaseUtil.DEFAULTDRIVER;
+		}
+
+		if (martDatabaseType.equals(DatabaseUtil.DEFAULTDATABASETYPE) && martPort == null)
+			martPort = DatabaseUtil.DEFAULTPORT;
+
 		try {
-			Initialize();
-		} catch (Exception e) {
-			throw new InvalidQueryException("Could not initialize connection: " + e.getMessage());
+			DataSource ds =
+				DatabaseUtil.createDataSource(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, DatabaseUtil.DEFAULTPOOLSIZE, martDriver);
+
+			if (sourceKey != null)
+				datasourceMap.put(sourceKey, ds);
+			else
+				datasourceMap.put(martDatabase + "@" + martHost, ds); //TODO: May need to bind more inforamation to a particular datasource name
+
+			msl.setDataSourceMap(datasourceMap);
+		} catch (ConfigurationException e) {
+			throw new InvalidQueryException("Could not create DataSource with given connection parameters " + e.getMessage(), e);
 		}
 	}
 
-	private void showConnectionSettings() {
-		String conf = martDatabase;
-		if (altConfigurationFile != null)
-			conf = altConfigurationFile;
+	private void addDatasetViews(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.countTokens() == 2) {
+			toks.nextToken(); // ignore from
 
-		System.out.println(
-			"\nMart connections now:"
-				+ "\nHost "
-				+ martHost
-				+ "\nDatabaseType "
-				+ martDatabaseType
-				+ "\nPort "
-				+ martPort
-				+ "\nUser "
-				+ martUser
-				+ "\nDatabase "
-				+ martDatabase
-				+ "\nusing mart configuration from: "
-				+ conf
-				+ "\n");
+			String source = toks.nextToken();
+
+			if (datasourceMap.containsKey(source)) {
+				//add DatabaseDSViewAdaptor with DataSource
+				DataSource ds = (DataSource) datasourceMap.get(source);
+
+				try {
+					String user = ds.getConnection().getMetaData().getUserName();
+
+					//remove any @host if present
+					if (user.indexOf("@") >= 0)
+						user = user.substring(0, user.indexOf("@"));
+
+					DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(ds, user);
+					adaptorManager.add(adaptor);
+
+					if (mainLogger.isLoggable(Level.INFO))
+						mainLogger.info("Adaptor now has " + adaptorManager.getDatasetViews().length + " datasetViews\n");
+
+					adaptorMap.put(source, adaptor);
+				} catch (Exception e) {
+					throw new InvalidQueryException("Could not create DatabaseDSViewAdaptor with DataSource " + source + " " + e.getMessage() + "\n", e);
+				}
+			} else if (source.indexOf(":") > 1) {
+				//add RegistryDSViewAdaptor from URL
+				try {
+					URL regURL = new URL(source);
+					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(regURL);
+					adaptorManager.add(adaptor);
+					adaptorMap.put(source, adaptor);
+				} catch (MalformedURLException e) {
+					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
+				} catch (ConfigurationException e) {
+					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
+				}
+			} else {
+				//add RegistryDSViewAdaptor from File
+				try {
+					URL regURL = new File(source).toURL();
+					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(regURL);
+					adaptorManager.add(adaptor);
+					adaptorMap.put(source, adaptor);
+				} catch (MalformedURLException e) {
+					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
+				} catch (ConfigurationException e) {
+					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
+				}
+			}
+		} else
+			throw new InvalidQueryException("Recieved invalid add DatasetViews command. " + Help(ADDC) + "\n");
 	}
 
-	private void setVerbose(String command) throws InvalidQueryException {
+	private void addDatasetView(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String source = toks.nextToken();
+
+			if (source.indexOf(":") > 1) {
+				//add URLDSViewAdaptor from URL
+				try {
+					URL dsvURL = new URL(source);
+					URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
+					adaptorManager.add(adaptor);
+					adaptorMap.put(source, adaptor);
+				} catch (MalformedURLException e) {
+					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
+				} catch (ConfigurationException e) {
+					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
+				}
+			} else {
+				//add URLDSViewAdaptor from File
+				try {
+					URL dsvURL = new File(source).toURL();
+					URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
+					adaptorManager.add(adaptor);
+					adaptorMap.put(source, adaptor);
+				} catch (MalformedURLException e) {
+					throw new InvalidQueryException("Could not parse URL request for DatasetView using " + source + " " + e.getMessage() + "\n", e);
+				} catch (ConfigurationException e) {
+					throw new InvalidQueryException("Could not create URLDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
+				}
+			}
+		} else
+			throw new InvalidQueryException("Recieved invalid add DatasetView command. " + Help(ADDC) + "\n");
+	}
+
+	private void removeRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); // skip remove
+
+		if (toks.hasMoreTokens()) {
+			String removereq = toks.nextToken();
+			if (removereq.equalsIgnoreCase(DATASOURCEREQ))
+				removeDataSource(toks);
+			else if (removereq.equalsIgnoreCase(DATASETVIEWSREQ))
+				removeDatasetViews(toks);
+			else if (removereq.equalsIgnoreCase(DATASETVIEWREQ))
+				removeDatasetView(toks);
+			else if (removereq.equalsIgnoreCase(PROCREQ))
+				removeProcedure(toks);
+			else
+				throw new InvalidQueryException("Invalid remove request recieved " + command + "\n");
+		} else
+			throw new InvalidQueryException("Invalid remove request recieved " + command + "\n");
+
+		if (completionOn) {
+			mcl.setDataSourceNames(datasourceMap.keySet());
+			mcl.setAdaptorLocations(adaptorMap.keySet());
+
+			try {
+				mcl.setDatasetViewInternalNames(Arrays.asList(adaptorManager.getDatasetInternalNames()));
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Caught ConfigurationException updating DatasetView internalNames " + e.getMessage(), e);
+			}
+		}
+	}
+
+	private void removeProcedure(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String name = toks.nextToken();
+			msl.removeStoredMQLCommand(name);
+
+			if (completionOn)
+				mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
+		} else
+			throw new InvalidQueryException("Recieved invalid remove Procedure command. " + Help(REMOVEC) + "\n");
+	}
+
+	private void removeDataSource(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String name = toks.nextToken();
+
+			//If a DSViewAdaptor has been created with this DataSource, remove it
+			if (adaptorMap.containsKey(name)) {
+				adaptorManager.remove((DSViewAdaptor) adaptorMap.get(name));
+				adaptorMap.remove(name);
+			}
+
+			datasourceMap.remove(name);
+
+			msl.setDataSourceMap(datasourceMap);
+		} else
+			throw new InvalidQueryException("Recieved invalid remove DataSource command. " + Help(REMOVEC) + "\n");
+	}
+
+	private void removeDatasetViews(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.countTokens() == 2) {
+			toks.nextToken(); // skip from
+			String source = toks.nextToken();
+
+			if (adaptorMap.containsKey(source)) {
+				adaptorManager.remove((DSViewAdaptor) adaptorMap.get(source));
+				adaptorMap.remove(source);
+			}
+		} else if (toks.countTokens() == 1)
+			adaptorManager.clear();
+		else
+			throw new InvalidQueryException("Recieved invalid remove DatasetViews comand. " + Help(REMOVEC) + "\n");
+	}
+
+	private void removeDatasetView(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String dsvIname = toks.nextToken();
+
+			try {
+				if (adaptorManager.supportsInternalName(dsvIname))
+					adaptorManager.removeDatasetView(adaptorManager.getDatasetViewByInternalName(dsvIname));
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Could not remove DatasetView " + dsvIname + " " + e.getMessage(), e);
+			}
+		} else
+			throw new InvalidQueryException("Recieved invalid remove DatasetView command. " + Help(REMOVEC) + "\n");
+	}
+
+	private void updateRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); // skip update
+
+		if (toks.hasMoreTokens()) {
+			String updatereq = toks.nextToken();
+			if (updatereq.equalsIgnoreCase(DATASETVIEWSREQ))
+				updateDatasetViews(toks);
+			else if (updatereq.equalsIgnoreCase(DATASETVIEWREQ))
+				updateDatasetView(toks);
+			else
+				throw new InvalidQueryException("Invalid update request recieved " + command + "\n");
+		} else
+			throw new InvalidQueryException("Invalid update request recieved " + command + "\n");
+	}
+
+	private void updateDatasetViews(StringTokenizer toks) throws InvalidQueryException {
+		try {
+			if (!toks.hasMoreTokens())
+				adaptorManager.update();
+			else {
+				toks.nextToken(); // skip from
+				String source = toks.nextToken();
+
+				if (adaptorMap.containsKey(source))
+					 ((DSViewAdaptor) adaptorMap.get(source)).update();
+			}
+
+			if (completionOn)
+				mcl.setDatasetViewInternalNames(Arrays.asList(adaptorManager.getDatasetInternalNames()));
+
+		} catch (ConfigurationException e) {
+			throw new InvalidQueryException("Could not update DatasetViews, " + e.getMessage() + "\n", e);
+		}
+	}
+
+	private void updateDatasetView(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String dsIname = toks.nextToken();
+
+			try {
+				if (!adaptorManager.supportsInternalName(dsIname))
+					throw new ConfigurationException("DatasetView " + dsIname + " has not been loaded");
+
+				DSViewAdaptor[] adaptors = adaptorManager.getAdaptors();
+				for (int i = 0, n = adaptors.length; i < n; i++) {
+					DSViewAdaptor adaptor = adaptors[i];
+
+					if (adaptor.supportsInternalName(dsIname)) {
+						adaptor.update();
+						break;
+					}
+				}
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Could not update DatasetView " + dsIname + " " + e.getMessage(), e);
+			}
+		} else
+			throw new InvalidQueryException("Recieved invalid update DatasetView command. " + Help(REMOVEC) + "\n");
+	}
+
+	private void unsetRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); // skip set
+
+		if (toks.hasMoreTokens()) {
+			String request = toks.nextToken();
+
+			if (request.equalsIgnoreCase(PROMPTREQ))
+				unsetPrompt();
+			else if (request.equalsIgnoreCase(DATASOURCEREQ))
+				unsetDataSource(toks);
+			else if (request.equalsIgnoreCase(OUTPUTREQ))
+				unsetOutputSettings(toks);
+			else if (request.equalsIgnoreCase(VERBOSEREQ))
+				unsetVerbose();
+		} else
+			throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
+	}
+
+	private void unsetDataSource(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens()) {
+			EnvDSourceSetBySet = false;
+			envDataSource = null;
+		} else {
+			String dsIname = toks.nextToken();
+
+			try {
+				if (!adaptorManager.supportsInternalName(dsIname))
+					throw new InvalidQueryException("Recieved invalid DatasetView name " + dsIname + " in unset DataSource command\n" + Help(UNSETC));
+
+				adaptorManager.getDatasetViewByInternalName(dsIname).setDatasource(null);
+
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Recieved ConfigurationException unsetting DataSource for DatasetView name " + dsIname + e.getMessage(), e);
+			} catch (InvalidQueryException e) {
+				throw e;
+			}
+		}
+	}
+
+	private void unsetPrompt() throws InvalidQueryException {
+		userPrompt = null;
+	}
+
+	private void unsetVerbose() throws InvalidQueryException {
 		if (loggingConfURL == null) {
-			if (!command.matches("\\w+\\s(on|off)"))
-				throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
+			verbose = false;
 
-			String val = command.split("\\s")[1];
-			verbose = (val.equals("on")) ? true : false;
-
-			System.out.println("Logging now " + val + "\n");
 			LoggingUtils.setVerbose(verbose);
+
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("Logging now off\n");
 		} else
 			throw new InvalidQueryException("Cannot change logging properties when a logging configuration URL is supplied\n");
 	}
 
-	private void setOutputSettings(String command) throws InvalidQueryException {
-		try {
-			StringTokenizer ctokens = new StringTokenizer(command, " ");
-			ctokens.nextToken();
-			String fSettings = ctokens.nextToken();
+	private void unsetOutputSettings(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			try {
+				while (toks.hasMoreTokens()) {
+					String key = toks.nextToken(",").trim();
 
-			StringTokenizer fTokens = new StringTokenizer(fSettings, ",");
-			while (fTokens.hasMoreTokens()) {
-				StringTokenizer tokens = new StringTokenizer(fTokens.nextToken(), "=");
-				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException(
-						"Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
-
-				String key = tokens.nextToken();
-				String value = tokens.nextToken();
-
-				if (key.equals(FILE)) {
-					if (value.equals("-")) {
-						if (sessionOutputFile != null)
-							sessionOutputFile.close();
-						sessionOutputFile = null;
-					} else {
-						if (sessionOutputFile != null)
-							sessionOutputFile.close();
-						sessionOutputFile = new FileOutputStream(value);
-					}
-				} else if (key.equals(FORMAT))
-					sessionOutputFormat = value;
-				else if (key.equals(SEPARATOR))
-					if (key.equals("comma"))
-						sessionOutputSeparator = ",";
+					if (key.equals(FILE)) {
+						sessionOutput = DEFOUTPUT;
+						sessionOutputFileName = null;
+					} else if (key.equals(FORMAT))
+						sessionOutputFormat = DEFOUTPUTFORMAT;
+					else if (key.equals(SEPARATOR))
+						sessionOutputSeparator = DEFOUTPUTSEPARATOR;
 					else
-						sessionOutputSeparator = value;
-				else
-					throw new InvalidQueryException(
-						"Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
+						throw new InvalidQueryException("Recieved invalid unset Output request " + key + "\n" + Help(UNSETC));
+				}
+			} catch (Exception e) {
+				throw new InvalidQueryException("Could not unset output settings: " + e.getMessage() + "\n", e);
 			}
-		} catch (Exception e) {
-			throw new InvalidQueryException("Could not set output settings: " + e.getMessage() + "\n");
+		} else {
+			sessionOutput = DEFOUTPUT;
+			sessionOutputFileName = null;
+			sessionOutputFormat = DEFOUTPUTFORMAT;
+			sessionOutputSeparator = DEFOUTPUTSEPARATOR;
 		}
 	}
 
-	private void showOutputSettings() {
-		String thisFile = "stdout";
-		if (sessionOutputFile != null)
-			thisFile = sessionOutputFile.toString();
+	private void setRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); // skip set
+
+		if (toks.hasMoreTokens()) {
+			String request = toks.nextToken();
+
+			if (request.equalsIgnoreCase(PROMPTREQ))
+				setPrompt(toks);
+			else if (request.equalsIgnoreCase(DATASOURCEREQ))
+				setDataSource(toks);
+			else if (request.equalsIgnoreCase(OUTPUTREQ))
+				setOutputSettings(toks);
+			else if (request.equalsIgnoreCase(VERBOSEREQ))
+				setVerbose(toks);
+		} else
+			throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
+	}
+
+	private void setDataSource(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid set DataSource command\n" + Help(SETC));
+
+		String name = toks.nextToken();
+
+		if (!datasourceMap.containsKey(name))
+			throw new InvalidQueryException("Invalid DataSource name " + name + " recieved in set DataSource command\n" + Help(SETC));
+
+		if (toks.hasMoreTokens()) {
+			String dsIname = toks.nextToken();
+
+			try {
+				if (!adaptorManager.supportsInternalName(dsIname))
+					throw new InvalidQueryException("Recieved invalid DatasetView name " + dsIname + " in set DataSource command\n" + Help(SETC));
+
+				adaptorManager.getDatasetViewByInternalName(dsIname).setDatasource((DataSource) datasourceMap.get(name));
+
+			} catch (ConfigurationException e) {
+				throw new InvalidQueryException("Recieved ConfigurationException setting DataSource " + name + " for DatasetView name " + dsIname + e.getMessage(), e);
+			} catch (InvalidQueryException e) {
+				throw e;
+			}
+		} else {
+			EnvDSourceSetBySet = true;
+			envDataSource = (DataSource) datasourceMap.get(name);
+		}
+	}
+
+	private void setPrompt(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid set Prompt Command Recieved\n" + Help(SETC));
+
+		String prompt = toks.nextToken();
+
+		if (prompt.equals("-"))
+			userPrompt = null;
+		else
+			userPrompt = prompt + " >";
+	}
+
+	private void setVerbose(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid set Verbose Command Recieved\n" + Help(SETC));
+
+		String command = toks.nextToken();
+		if (loggingConfURL == null) {
+			if (command.equals("on"))
+				verbose = true;
+			else if (command.equals("off"))
+				verbose = false;
+			else
+				throw new InvalidQueryException("Invalid set Verbose command recieved: \n" + Help(SETC));
+
+			LoggingUtils.setVerbose(verbose);
+
+			if (mainLogger.isLoggable(Level.INFO))
+				mainLogger.info("Logging now " + command + "\n");
+		} else
+			throw new InvalidQueryException("Cannot change logging properties when a logging configuration URL is supplied\n");
+	}
+
+	private void setOutputSettings(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			try {
+				String fSettings = toks.nextToken();
+
+				//pattern to find all occurances of x='y' in a string
+				Pattern pat = Pattern.compile("(\\w+\\=\\'[^\\']+\\')");
+				Matcher mat = pat.matcher(fSettings);
+				boolean matchFound = false;
+
+				while (mat.find()) {
+					matchFound = true;
+					String setReq = mat.group();
+
+					String[] setkv = setReq.split("\\=");
+
+					String key = setkv[0];
+					String value = setkv[1];
+
+					value = value.substring(value.indexOf("'") + 1, value.lastIndexOf("'")); // strip off leading and trailing quotes
+
+					if (key.equals(FILE)) {
+						if (value.equals("-")) {
+							if (sessionOutputFileName != null)
+								sessionOutput.close();
+							sessionOutputFileName = null;
+							sessionOutput = DEFOUTPUT;
+						} else {
+							if (sessionOutputFileName != null)
+								sessionOutput.close();
+							sessionOutput = new FileOutputStream(value);
+							sessionOutputFileName = value;
+						}
+					} else if (key.equals(FORMAT))
+						sessionOutputFormat = value;
+					else if (key.equals(SEPARATOR))
+						sessionOutputSeparator = value;
+					else
+						throw new InvalidQueryException("Recieved invalid set Output request " + fSettings + "\n" + Help(SETC));
+				}
+
+				if (!matchFound)
+					throw new InvalidQueryException("Invalid set Output request " + fSettings + "\n" + Help(SETC));
+
+			} catch (Exception e) {
+				throw new InvalidQueryException("Could not set output settings: " + e.getMessage() + "\n", e);
+			}
+		} else {
+			//interactive
+			if (mainBatchMode)
+				throw new InvalidQueryException("Recieved invalid add DataSource command.\n" + Help(ADDC) + "\n");
+
+			String thisLine = null;
+
+			try {
+				String out = (sessionOutputFormat != null) ? sessionOutputFormat : DEFOUTPUTFORMAT;
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the format of the output (either 'tabulated' or 'fasta', enter '-' to use "
+							+ DEFOUTPUTFORMAT
+							+ ", hit enter to leave as "
+							+ out
+							+ "): ",
+						false);
+				if (thisLine != null) {
+					if (thisLine.equals("-"))
+						sessionOutputFormat = DEFOUTPUTFORMAT;
+					else
+						sessionOutputFormat = thisLine;
+				}
+
+				out = (sessionOutputFileName != null) ? sessionOutputFileName : DEFOUTPUTFILE;
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the File to output all MQL commands (use '-' for " + DEFOUTPUTFILE + ", hit enter to leave as " + out + "): ",
+						false);
+				if (thisLine != null) {
+					if (thisLine.equals("-")) {
+						if (sessionOutputFileName != null)
+							sessionOutput.close();
+						sessionOutput = DEFOUTPUT;
+						sessionOutputFileName = null;
+					} else {
+						if (sessionOutputFileName != null)
+							sessionOutput.close();
+						sessionOutput = new FileOutputStream(thisLine);
+						sessionOutputFileName = thisLine;
+					}
+				}
+
+				out = (sessionOutputSeparator != null) ? sessionOutputSeparator : DEFOUTPUTSEPARATOR;
+
+				thisLine =
+					Readline.readline("\nPlease enter the record separator to use (use '-' for " + DEFOUTPUTSEPARATOR + ", hit enter to leave as " + out + "): ", false);
+
+				if (thisLine != null) {
+					if (thisLine.equals("-"))
+						sessionOutputSeparator = DEFOUTPUTSEPARATOR;
+					else
+						sessionOutputSeparator = thisLine;
+				}
+
+			} catch (Exception e) {
+				throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage(), e);
+			}
+		}
+
+	}
+
+	private void envRequest(String command) throws InvalidQueryException {
+		System.out.println();
+
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); //skip environment
+
+		if (!toks.hasMoreTokens())
+			showAllEnvironment();
+		else {
+			String req = toks.nextToken();
+			if (req.equalsIgnoreCase(DATASOURCEREQ))
+				showEnvDataSource();
+			else if (req.equalsIgnoreCase(DATASETVIEWREQ))
+				showEnvDataSetView();
+			else if (req.equalsIgnoreCase(OUTPUTREQ))
+				showEnvOutput(toks);
+			else
+				throw new InvalidQueryException("Recieved invalid environment request " + command + "\n" + Help(ENVC));
+
+			System.out.println();
+		}
+	}
+
+	private void showAllEnvironment() throws InvalidQueryException {
+		showEnvDataSource();
+		showEnvDataSetView();
+		showAllOutputSettings();
+	}
+
+	private void showEnvDataSource() throws InvalidQueryException {
+		if (envDataSource == null)
+			System.out.println(" DataSource not set");
+		else {
+			try {
+				String user = envDataSource.getConnection().getMetaData().getUserName();
+				DatabaseURLElements els = DatabaseUtil.decompose(envDataSource.getConnection().getMetaData().getURL());
+				System.out.println(" DataSource HOST: " + els.host + " USER: " + user + " MART NAME: " + els.databaseName);
+			} catch (Exception e) {
+				throw new InvalidQueryException("Could not parse DataSource for Information " + e.getMessage(), e);
+			}
+		}
+
+		System.out.println();
+	}
+
+	private void showEnvDataSetView() {
+		if (envDatasetIName == null)
+			System.out.println(" DataSetView not set");
+		else
+			System.out.println(" DatasetView " + envDatasetIName);
+		System.out.println();
+	}
+
+	private void showEnvOutput(StringTokenizer toks) throws InvalidQueryException {
+		if (toks.hasMoreTokens()) {
+			String subreq = toks.nextToken();
+			if (subreq.equalsIgnoreCase(FORMAT)) {
+				String out = (sessionOutputFormat != null) ? sessionOutputFormat : DEFOUTPUTFORMAT;
+				System.out.println(" " + FORMAT + " = " + out);
+			} else if (subreq.equalsIgnoreCase(FILE)) {
+				String out = (sessionOutputFileName != null) ? sessionOutputFileName : DEFOUTPUTFILE;
+				System.out.println(" " + FILE + " = " + out);
+			} else if (subreq.equalsIgnoreCase(SEPARATOR)) {
+				String out = (sessionOutputSeparator != null) ? sessionOutputSeparator : DEFOUTPUTSEPARATOR;
+				System.out.println(" " + SEPARATOR + " = " + out);
+			} else
+				throw new InvalidQueryException("Recieved invalid Environment Output commmand " + subreq + "\n" + Help(ENVC));
+		} else
+			showAllOutputSettings();
+
+		System.out.println();
+	}
+
+	private void showAllOutputSettings() {
+		String thisFormat = (sessionOutputFormat != null) ? sessionOutputFormat : DEFOUTPUTFORMAT;
+		String thisFile = (sessionOutputFileName != null) ? sessionOutputFileName : DEFOUTPUTFILE;
+		String thisSeparator = (sessionOutputSeparator != null) ? sessionOutputSeparator : DEFOUTPUTSEPARATOR;
 
 		System.out.println(
-			"Output Format: "
-				+ FORMAT
-				+ " = "
-				+ sessionOutputFormat
-				+ ", "
-				+ SEPARATOR
-				+ " = "
-				+ "'"
-				+ sessionOutputSeparator
-				+ "'"
-				+ ", "
-				+ FILE
-				+ " = "
-				+ thisFile);
+			" Output Format: " + FORMAT + " = " + thisFormat + ", " + SEPARATOR + " = " + "'" + thisSeparator + "'" + ", " + FILE + " = " + thisFile);
+
+		System.out.println();
 	}
 
-	private void useCommand(String command) throws InvalidQueryException {
-		if (command.startsWith(USEC)) {
-			StringTokenizer tokens = new StringTokenizer(command, " ");
-			if (tokens.countTokens() == 2) {
-				tokens.nextToken();
-				useCommand(tokens.nextToken());
-			} else
-				throw new InvalidQueryException(
-					"invalid use command: does not contain a dataset to use: "
-						+ command
-						+ " has "
-						+ tokens.countTokens()
-						+ " tokens\n");
+	private void useRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); //skip use
+		String datasourcereq = null;
+		String datasetviewreq = null;
 
+		String dsourceDelimiter = ">";
+		if (command.indexOf(dsourceDelimiter) > 0) {
+			datasetviewreq = toks.nextToken(dsourceDelimiter).trim();
+			datasourcereq = toks.nextToken(dsourceDelimiter).trim();
 		} else {
-			if (martconf.containsDataset(command))
-				envDataset = command;
-			else
-				throw new InvalidQueryException("MartConfiguration does not contain dataset " + command + "\n");
+			datasourcereq = null;
+			datasetviewreq = toks.nextToken();
 		}
 
-		if (completionOn)
-			mcl.setEnvDataset(envDataset);
-	}
+		try {
 
-	private void showDataset() {
-		String dsetName = (envDataset != null) ? envDataset : "not set";
-		System.out.println("Current DatasetView " + dsetName);
+			if (mainLogger.isLoggable(Level.INFO)) {
+				mainLogger.info("Attempting to set Environment DatasetView to " + datasetviewreq + "\n");
+				if (datasourcereq != null)
+					mainLogger.info("Attempting to set Environment DataSource to " + datasourcereq + "\n");
+			}
+
+			if (!adaptorManager.supportsInternalName(datasetviewreq))
+				throw new InvalidQueryException("DatasetView '" + datasetviewreq + "' has not been loaded\n");
+		} catch (ConfigurationException e) {
+			throw new InvalidQueryException("Recieved ConfigurationException when determining support for " + datasetviewreq + " " + e.getMessage(), e);
+		} catch (InvalidQueryException e) {
+			throw e;
+		}
+
+		if (datasourcereq != null) {
+			if (!datasourceMap.containsKey(datasourcereq))
+				throw new InvalidQueryException("DataSource " + datasourcereq + " has not been loaded\n");
+			envDataSource = (DataSource) datasourceMap.get(datasourcereq);
+		} else if (!EnvDSourceSetBySet)
+			envDataSource = null;
+
+		envDatasetIName = datasetviewreq;
+
+		if (completionOn) {
+			mcl.setEnvDataset(envDatasetIName);
+		}
 	}
 
 	private void WriteHistory(String command) throws InvalidQueryException {
@@ -1754,32 +2309,87 @@ public class MartShell {
 		}
 	}
 
-	private void Execute(String command) throws InvalidQueryException {
+	private void executeRequest(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		toks.nextToken(); //skip execute
+
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid execute command recieved " + command + "\n" + Help(EXECC));
+
+		String request = toks.nextToken();
+		if (request.equalsIgnoreCase(HISTORYC))
+			executeHistory(toks);
+		else if (request.equalsIgnoreCase(PROCREQ))
+			executeProcedure(toks);
+		else
+			throw new InvalidQueryException("Invalid execute command recieved " + command + "\n" + Help(EXECC));
+	}
+
+	private void executeHistory(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid execute history command recieved\n" + Help(EXECC));
+
+		String req = null;
 		try {
-			StringTokenizer com = new StringTokenizer(command, " ");
-			int tokCount = com.countTokens();
+			req = toks.nextToken();
 
-			if (tokCount < 2)
-				throw new InvalidQueryException(Help(EXECC));
-			else {
-				com.nextToken(); // skip commmand start
-				String req = com.nextToken();
+			String[] lines = GetHistoryLines(req);
+			// will throw an exception if GetHistoryLines requirements are not satisfied
+			for (int i = 0, n = lines.length; i < n; i++) {
+				String thisline = lines[i];
 
-				String[] lines = GetHistoryLines(req);
-				// will throw an exception if GetHistoryLines requirements are not satisfied
-				for (int i = 0, n = lines.length; i < n; i++) {
-					String thisline = lines[i];
+				if (historyOn)
+					Readline.addToHistory(thisline);
 
-					if (historyOn)
-						Readline.addToHistory(thisline);
-
-					while (thisline != null)
-						thisline = parseForCommands(thisline);
-				}
+				while (thisline != null)
+					thisline = parseForCommands(thisline);
 			}
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not execute command " + command + " " + e.getMessage());
+			throw new InvalidQueryException("Could not execute history " + req + " " + e.getMessage(), e);
 		}
+	}
+
+	private void executeProcedure(StringTokenizer toks) throws InvalidQueryException {
+		if (!toks.hasMoreTokens())
+			throw new InvalidQueryException("Invalid execute procedure command recieved\n" + Help(EXECC));
+
+		String storedCommandName = toks.nextToken();
+
+		String bindValues = null;
+		if (storedCommandName.indexOf(MartShellLib.LISTSTARTCHR) > 0) {
+			bindValues = storedCommandName.substring(storedCommandName.indexOf(MartShellLib.LISTSTARTCHR) + 1, storedCommandName.indexOf(MartShellLib.LISTENDCHR));
+			storedCommandName = storedCommandName.substring(0, storedCommandName.indexOf(MartShellLib.LISTSTARTCHR));
+		}
+
+		String nestedQuery = msl.describeStoredMQLCommand(storedCommandName);
+
+		if (nestedQuery != null) {
+			try {
+				if ((bindValues != null) && (bindValues.length() > 0)) {
+					List bindVariables = new ArrayList();
+					StringTokenizer vtokens = new StringTokenizer(bindValues, ",");
+					while (vtokens.hasMoreTokens())
+						bindVariables.add(vtokens.nextToken().trim());
+
+					Pattern bindp = Pattern.compile("\\?");
+					Matcher bindm = bindp.matcher(nestedQuery);
+
+					StringBuffer qbuf = new StringBuffer();
+					int bindIter = 0;
+					while (bindm.find()) {
+						bindm.appendReplacement(qbuf, (String) bindVariables.get(bindIter));
+						bindIter++;
+					}
+					bindm.appendTail(qbuf);
+					nestedQuery = qbuf.toString();
+				}
+
+				executeCommand(nestedQuery);
+			} catch (Exception e) {
+				throw new InvalidQueryException("Recieved Exception executing Stored Procedure " + e.getMessage() + "\n", e);
+			}
+		} else
+			throw new InvalidQueryException("Procedure for " + storedCommandName + " has not been defined\n");
 	}
 
 	private void History(String command) throws InvalidQueryException {
@@ -1879,8 +2489,22 @@ public class MartShell {
 		return ret;
 	}
 
-	private void parse(String line)
-		throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
+	/**
+	 * Takes a String MQL line, and parses it for commands to execute.  If any
+	 * complete commands are found, they are executed.
+	 * If any incomplete commands are encountered (either after a complete command, separated by semicolon, 
+	 * or in the middle of a single command), the line is cached for later addition by subsequent
+	 * calls to parse. If the current line completes a command built up over successive previous 
+	 * calls to parse, this command is executed.
+	 * @param line -- String line to parse
+	 * @throws SequenceException
+	 * @throws FormatException
+	 * @throws IOException
+	 * @throws SQLException
+	 * @throws InvalidQueryException
+	 * @throws ConfigurationException
+	 */
+	public void parse(String line) throws SequenceException, FormatException, IOException, SQLException, InvalidQueryException, ConfigurationException {
 		if (line.indexOf(LINEEND) >= 0) {
 			String residual = parseForCommands(conline.append(" ").append(line).toString().trim());
 			if (residual != null) {
@@ -1888,7 +2512,7 @@ public class MartShell {
 				conline = new StringBuffer(residual);
 
 				if (completionOn)
-					mcl.SetModeForLine(residual);
+					mcl.setModeForLine(residual);
 			} else {
 				continueQuery = false;
 				conline = new StringBuffer();
@@ -1899,12 +2523,12 @@ public class MartShell {
 
 			//MartCompleter Mode
 			if (completionOn)
-				mcl.SetModeForLine(line);
+				mcl.setModeForLine(line);
 		}
 	}
 
 	private String parseForCommands(String line)
-		throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
+		throws SequenceException, FormatException, IOException, SQLException, InvalidQueryException, ConfigurationException {
 		StringBuffer residual = new StringBuffer();
 
 		StringTokenizer commandtokens = new StringTokenizer(line, LINEEND, true);
@@ -1913,7 +2537,7 @@ public class MartShell {
 			String thisCommand = commandtokens.nextToken().trim();
 			if (thisCommand.equals(LINEEND)) {
 				if (residual.length() > 1) {
-					parseCommand(residual.toString());
+					executeCommand(residual.toString());
 					residual = new StringBuffer();
 				}
 			} else
@@ -1926,8 +2550,18 @@ public class MartShell {
 			return null;
 	}
 
-	private void parseCommand(String command)
-		throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
+	/**
+	 * Takes a complete MQL command, and executes it.
+	 * @param command -- MQL to execute
+	 * @throws SequenceException
+	 * @throws FormatException
+	 * @throws IOException
+	 * @throws SQLException
+	 * @throws InvalidQueryException
+	 * @throws ConfigurationException
+	 */
+	public void executeCommand(String command)
+		throws SequenceException, FormatException, IOException, SQLException, InvalidQueryException, ConfigurationException {
 		int cLen = command.length();
 
 		command = command.replaceAll("\\s;$", ";");
@@ -1936,31 +2570,29 @@ public class MartShell {
 		if (cLen == 0)
 			return;
 		else if (command.startsWith(USEC))
-			useCommand(NormalizeCommand(command));
-		else if (command.startsWith(SHOWDATASETC))
-			showDataset();
+			useRequest(NormalizeCommand(command));
+		else if (command.startsWith(ENVC))
+			envRequest(NormalizeCommand(command));
 		else if (command.startsWith(HELPC))
 			System.out.print(Help(NormalizeCommand(command)));
 		else if (command.startsWith(DESCC))
 			DescribeRequest(NormalizeCommand(command));
 		else if (command.startsWith(LISTC))
 			ListRequest(NormalizeCommand(command));
-		else if (command.startsWith(SETCONSETSC))
-			setConnectionSettings(NormalizeCommand(command));
-		else if (command.startsWith(SHOWCONSETSC))
-			showConnectionSettings();
-		else if (command.startsWith(SETPROMPT))
-			setPrompt(NormalizeCommand(command));
-		else if (command.startsWith(SETOUTSETSC))
-			setOutputSettings(NormalizeCommand(command));
-		else if (command.startsWith(SHOWOUTSETSC))
-			showOutputSettings();
-		else if (command.startsWith(SETVERBOSEC))
-			setVerbose(NormalizeCommand(command));
+		else if (command.startsWith(ADDC))
+			addRequest(NormalizeCommand(command));
+		else if (command.startsWith(REMOVEC))
+			removeRequest(NormalizeCommand(command));
+		else if (command.startsWith(SETC))
+			setRequest(NormalizeCommand(command));
+		else if (command.startsWith(UNSETC))
+			unsetRequest(NormalizeCommand(command));
+		else if (command.startsWith(UPDATEC))
+			updateRequest(NormalizeCommand(command));
 		else if (command.startsWith(HISTORYC))
 			History(NormalizeCommand(command));
 		else if (command.startsWith(EXECC))
-			Execute(NormalizeCommand(command));
+			executeRequest(NormalizeCommand(command));
 		else if (command.startsWith(LOADSCRIPTC))
 			LoadScript(NormalizeCommand(command));
 		else if (command.startsWith(RUNSCRIPTC))
@@ -1970,8 +2602,9 @@ public class MartShell {
 		else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
 			ExitShell();
 		else if (command.startsWith(MartShellLib.GETQSTART) || command.startsWith(MartShellLib.USINGQSTART)) {
-			if (envDataset != null)
-				msl.setDataset(envDataset);
+			msl.setDataset(envDatasetIName);
+			msl.setEnvDataSource(envDataSource);
+			//above might set these to null
 
 			//is it a store command
 			Matcher storeMatcher = MartShellLib.STOREPAT.matcher(command);
@@ -1988,14 +2621,11 @@ public class MartShell {
 					key = key.substring(0, key.indexOf(LINEEND));
 
 				msl.addStoredMQLCommand(key, storedCommand.toString());
+
+				if (completionOn)
+					mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
 			} else {
 				Query query = msl.MQLtoQuery(command);
-
-				OutputStream os = null;
-				if (sessionOutputFile != null)
-					os = sessionOutputFile;
-				else
-					os = System.out;
 
 				FormatSpec fspec = null;
 
@@ -2014,16 +2644,28 @@ public class MartShell {
 				} else
 					fspec = FormatSpec.TABSEPARATEDFORMAT;
 
-				engine.execute(query, fspec, os);
+				Engine engine = new Engine();
+				engine.execute(query, fspec, sessionOutput);
 			}
 		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
 		}
 	}
 
+	/**
+	 * Special Method for MartShellTest, allows it to set the
+	 * session OutputStream to an OutputStream that it can
+	 * manipulate.  If out is null, defaults to System.out
+	 */
+	public void setTestOutput(OutputStream out) {
+		if (out != null)
+			sessionOutput = out;
+		else
+			sessionOutput = DEFOUTPUT;
+	}
+
 	// MartShell instance variables
-	private Engine engine;
-	private MartConfiguration martconf;
+	private CompositeDSViewAdaptor adaptorManager = new CompositeDSViewAdaptor();
 	private MartShellLib msl = null;
 	private BufferedReader reader;
 	private boolean verbose = false;
@@ -2031,32 +2673,29 @@ public class MartShell {
 
 	private final String history_file = System.getProperty("user.home") + "/.martshell_history";
 
-	private String martHost = null;
-	private String martPort = null;
-	private String martUser = null;
-	private String martPass = null;
-	private String martDatabase = null;
-	private String martDatabaseType = "mysql"; //default
 	private MartCompleter mcl;
 	// will hold the MartCompleter, if Readline is loaded and completion turned on
 	private boolean helpLoaded = false;
 	// first time Help function is called, loads the help properties file and sets this to true
 	private boolean historyOn = false; // commandline history, default to off
-	private boolean completionOn = true; // command completion, default to on
+	private boolean completionOn = false; // commannd completion, default to off
 	private boolean readlineLoaded = false;
 	// true only if functional Readline library was loaded, false if PureJava
 	private String userPrompt = null;
 	private final String DEFAULTPROMPT = "MartShell";
 
-	private String altConfigurationFile = null;
-	private FileOutputStream sessionOutputFile = null;
-	// this is set using the setOutputSettings command.
-	private final String DEFOUTPUTFORMAT = "tabulated";
-	// default to tabulated output
+	//these are set using the set Output command.
+	private final OutputStream DEFOUTPUT = System.out;
+	private OutputStream sessionOutput = DEFOUTPUT; // defaults to System.out, can be chaged
+	private String sessionOutputFileName = null;
 	private String sessionOutputFormat = null;
-	// this is set using the setOutputSettings command.
-	private final String DEFOUTPUTSEPARATOR = "\t"; // default to tab separated
 	private String sessionOutputSeparator = null;
+
+	//defaults for output settings tabulated, tab separated, STDOUT
+	private final String DEFOUTPUTFORMAT = "tabulated";
+	private final String DEFOUTPUTSEPARATOR = "\t";
+	private final String DEFOUTPUTFILE = "STDOUT";
+
 	// this is set using the setOutputSettings command.
 
 	private String batchErrorMessage = null;
@@ -2079,47 +2718,67 @@ public class MartShell {
 	private final String HELPC = "help";
 	private final String DESCC = "describe";
 	private final String USEC = "use";
-	private final String SHOWDATASETC = "showDataset";
-	private final String SETOUTSETSC = "setOutputSettings";
-	private final String SHOWOUTSETSC = "showOutputSettings";
-	private final String SETCONSETSC = "setConnectionSettings";
-	private final String SHOWCONSETSC = "showConnectionSettings";
-	private final String SETPROMPT = "setPrompt";
-	private final String SETVERBOSEC = "setVerbose";
-	private final String SHOWVERBOSEC = "showVerbose";
-	private final String EXECC = "exec";
+	private final String SETC = "set";
+	private final String UNSETC = "unset";
+	private final String ENVC = "environment";
+	private final String ADDC = "add";
+	private final String REMOVEC = "remove";
+	private final String UPDATEC = "update";
+	private final String EXECC = "execute";
 	private final String RUNSCRIPTC = "runScript";
 	private final String LOADSCRIPTC = "loadScript";
 	private final String SAVETOSCRIPTC = "saveToScript";
 	private final String HISTORYC = "history";
 	private final String LISTC = "list";
-  
-  private final List listRequests = Collections.unmodifiableList( 
-                                                           new ArrayList( 
-                                                                 Arrays.asList ( 
-                                                                       new String[] { "datasets",
-                                                                       	                      "filters",
-                                                                       	                      "attributes"
-                                                                       } 
-  	)));
-  
-	protected List availableCommands = 
+	private final String DATASOURCEREQ = "DataSource";
+	private final String DATASOURCESREQ = "DataSources";
+	private final String DATASETVIEWSREQ = "DatasetViews";
+	private final String DATASETVIEWREQ = "DatasetView";
+	private final String FILTERSREQ = "filters";
+	private final String FILTERREQ = "Filter";
+	private final String ATTRIBUTESREQ = "attributes";
+	private final String ATTRIBUTEREQ = "Attribute";
+	private final String PROCREQ = "procedure";
+	private final String PROCSREQ = "procedures";
+	private final String PROMPTREQ = "prompt";
+	private final String OUTPUTREQ = "output";
+	private final String VERBOSEREQ = "verbose";
+
+	//lists to set for completion of add, remove, list, set, update, describe, environment, execute
+	private final List addRequests = Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASOURCEREQ, DATASETVIEWREQ, DATASETVIEWSREQ })));
+
+	private final List removeRequests =
+		Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASOURCEREQ, DATASETVIEWREQ, DATASETVIEWSREQ, PROCREQ })));
+
+	private final List listRequests =
+		Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASOURCESREQ, DATASETVIEWSREQ, FILTERSREQ, ATTRIBUTESREQ, PROCSREQ })));
+
+	private final List setRequests = Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASOURCEREQ, PROMPTREQ, OUTPUTREQ, VERBOSEREQ })));
+
+	private final List updateRequests = Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASETVIEWREQ, DATASETVIEWSREQ })));
+
+	private final List describeRequests =
+		Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASETVIEWREQ, FILTERREQ, ATTRIBUTEREQ, PROCREQ })));
+
+	private final List envRequests = Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { DATASETVIEWREQ, DATASOURCEREQ, OUTPUTREQ })));
+
+	private final List executeRequests = Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { PROCREQ, HISTORYC })));
+
+	protected List availableCommands =
 		new ArrayList(
 			Arrays.asList(
 				new String[] {
 					EXITC,
 					QUITC,
 					HELPC,
+					SETC,
+					UNSETC,
+					ENVC,
+					ADDC,
+					REMOVEC,
+					UPDATEC,
 					DESCC,
 					LISTC,
-					SETCONSETSC,
-					SETOUTSETSC,
-					SHOWOUTSETSC,
-					SHOWCONSETSC,
-					SHOWDATASETC,
-					SETVERBOSEC,
-					SHOWVERBOSEC,
-					SETPROMPT,
 					EXECC,
 					RUNSCRIPTC,
 					LOADSCRIPTC,
@@ -2129,27 +2788,33 @@ public class MartShell {
 					MartShellLib.GETQSTART,
 					MartShellLib.USINGQSTART }));
 
-	// describe instructions
-	private final String DATASETKEY = "DatasetView";
-	private final String FILTERKEY = "Filter";
-	private final String ATTRIBUTEKEY = "Attribute";
-
 	// strings used to show/set output format settings
 	private final String FILE = "file";
 	private final String FORMAT = "format";
 	private final String SEPARATOR = "separator";
 
 	//environment dataset
-	private String envDataset = null;
+	private String envDatasetIName = null;
+
+	//environment DataSource
+	private DataSource envDataSource = null;
+
+	private boolean EnvDSourceSetBySet = false;
+
+	// maps user keys to DataSource
+	private Hashtable datasourceMap = new Hashtable();
+
+	// maps source (url|path|DataSourceMap key to DSViewAdaptors
+	private Hashtable adaptorMap = new Hashtable();
 
 	// strings used to show/set mart connection settings
 	private final String DBHOST = "host";
 	private final String DBUSER = "user";
 	private final String DBPASSWORD = "password";
 	private final String DBPORT = "port";
-	private final String DATABASENAME = "databaseName";
+	private final String INSTANCENAME = "instanceName";
 	private final String DATABASETYPE = "databaseType";
-	private final String ALTCONFFILE = "alternateConfigurationFile";
+	private final String DBDRIVER = "jdbcDriver";
 
 	//startup message variables
 	private final String STARTUP = "startUp";

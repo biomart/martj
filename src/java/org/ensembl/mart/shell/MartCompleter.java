@@ -22,22 +22,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
+import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.MartConfiguration;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
 
@@ -75,41 +72,44 @@ public class MartCompleter implements ReadlineCompleter {
 	/* (non-Javadoc)
 	 * @see org.gnu.readline.ReadlineCompleter#completer(java.lang.String, int)
 	 */
+
 	private Iterator possibleValues; // iterator for subsequent calls.
 	private SortedSet currentSet = new TreeSet();
-	private MartConfiguration martconf = null;
+	private CompositeDSViewAdaptor adaptorManager = null;
 
 	private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
-	private Map setMapper = new HashMap(); // will hold special sets, with String keys
-
-	private SortedSet getSet = new TreeSet();
-	// will hold user supplied values to add to attribte names during completion
-	private SortedSet sequenceSet = new TreeSet(); // will hold sequences
-	private SortedSet datasetSet = new TreeSet(); // will hold datasets
-	private SortedSet whereSet = new TreeSet(); // will hold filters 
+	private SortedSet domainSpecificSet = new TreeSet(); // will hold sequences
 	private SortedSet helpSet = new TreeSet(); // will hold help keys available
+
+	private SortedSet addBaseSet = new TreeSet(); // will hold add completions
 	private SortedSet listSet = new TreeSet(); // will hold list request keys
+	private SortedSet procSet = new TreeSet(); // will hold stored procedure names for remove, describe, and execute
+	private SortedSet environmentSet = new TreeSet(); // will hold environment command completions
 
-	private final List NODATASETWARNING =
-		Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
+	private SortedSet removeBaseSet = new TreeSet(); // will hold remove base completions
+	private SortedSet updateBaseSet = new TreeSet(); // will hold update remove base completions
+	private SortedSet setBaseSet = new TreeSet(); // will hold set base completions
+	private SortedSet describeBaseSet = new TreeSet(); // will hold describe base completions
+	private SortedSet executeBaseSet = new TreeSet(); // will hold execute base completions
 
-	//describe Mode variables
-	private final List BASEDESCRIBEREQUESTS =
-		Collections.unmodifiableList(Arrays.asList(new String[] { "dataset", "filter", "attribute" }));
-	private final String DATASET = "dataset";
-	private final String FILTER = "filter";
-	private final String ATTRIBUTE = "attribute";
+	private SortedSet dataSourceSet = new TreeSet(); // will hold DataSource String names for remove, and set 
+	private SortedSet adaptorLocationSet = new TreeSet(); // will hold adaptor names for update and remove
+	private SortedSet datasetViewSet = new TreeSet(); // will hold DatasetView names for use, set, remove, and describe 
 
-	//Query Mode Patterns
-	private Pattern qModeStartPattern = Pattern.compile("^using\\s$");
-	public Pattern qModePattern = Pattern.compile("^using\\s(\\w+).*");
+	private final List NODATASETWARNING = Collections.unmodifiableList(Arrays.asList(new String[] { "No DatasetViews loaded", "!" }));
+	private final List ERRORMODE = Collections.unmodifiableList(Arrays.asList(new String[] { "ERROR ENCOUNTERED" }));
 
-	private final String COMMANDS = "commands";
-	private final String DESCRIBE = "describe";
-	private final String LIST = "list";
-	private final String HELP = "help";
-	private final String USE = "use";
-	private final String DATASETS = "datasets";
+	private final String ADDC = "add";
+	private final String REMOVEC = "remove";
+	private final String LISTC = "list";
+	private final String UPDATEC = "update";
+	private final String SETC = "set";
+	private final String UNSETC = "unset";
+	private final String DESCRIBEC = "describe";
+	private final String HELPC = "help";
+	private final String USEC = "use";
+	private final String ENVC = "environment";
+	private final String EXECC = "execute";
 
 	private DatasetView envDataset = null;
 	private DatasetView currentDataset = null;
@@ -135,26 +135,20 @@ public class MartCompleter implements ReadlineCompleter {
 	/**
 	 * Creates a MartCompleter Object.  The MartCompleter processes the MartConfiguration
 	 * object, and stores important internal_names into the completion sets that are applicable to the given MartConfiguration object.
-	 * @param martconf - a MartConfiguration Object
+	 * @param adaptorManager - a MartConfiguration Object
 	 */
-	public MartCompleter(MartConfiguration martconf) {
-		setMapper.put(COMMANDS, commandSet);
-		setMapper.put(HELP, helpSet);
-		setMapper.put(MartShellLib.GETQSTART, getSet);
-		setMapper.put(MartShellLib.QSEQUENCE, sequenceSet);
-		setMapper.put(DATASETS, datasetSet);
-		setMapper.put(MartShellLib.QWHERE, whereSet);
-		setMapper.put(LIST, listSet);
+	public MartCompleter(CompositeDSViewAdaptor adaptorManager) throws ConfigurationException {
+		this.adaptorManager = adaptorManager;
 
-		this.martconf = martconf;
-
-		DatasetView[] dsets = martconf.getDatasets();
-		for (int i = 0, n = dsets.length; i < n; i++) {
-			DatasetView dataset = dsets[i];
-			datasetSet.add(dataset.getInternalName());
+		if (adaptorManager.getDatasetInternalNames().length > 0) {
+			DatasetView[] dsets = adaptorManager.getDatasetViews();
+			for (int i = 0, n = dsets.length; i < n; i++) {
+				DatasetView dataset = dsets[i];
+				datasetViewSet.add(dataset.getInternalName());
+			}
 		}
 
-		SetCommandMode();
+		setCommandMode();
 	}
 
 	/**
@@ -172,7 +166,7 @@ public class MartCompleter implements ReadlineCompleter {
 		if (state == 0) {
 			// first call to completer(): initialize our choices-iterator
 			String currentCommand = Readline.getLineBuffer();
-			SetModeForLine(Readline.getLineBuffer());
+			setModeForLine(Readline.getLineBuffer());
 			possibleValues = currentSet.tailSet(text).iterator();
 		}
 
@@ -185,206 +179,136 @@ public class MartCompleter implements ReadlineCompleter {
 		return null; // we reached the last choice.
 	}
 
-	public void SetModeForLine(String currentCommand) {
+	public void setModeForLine(String currentCommand) {
 		if (lastLine == null || !(lastLine.equals(currentCommand))) {
-			if (currentCommand.startsWith(DESCRIBE)) {
-				String[] toks = currentCommand.split("\\s+");
-
-				if (toks.length == 1)
-					SetBaseDescribeMode();
-				else {
-					String request = toks[1];
-
-					if (request.equalsIgnoreCase(DATASET))
-						SetDatasetMode();
-					else if (request.equalsIgnoreCase(FILTER))
-						SetDescribeFilterMode();
-					else if (request.equalsIgnoreCase(ATTRIBUTE))
-						SetDescribeAttributeMode();
+			try {
+				if (currentCommand.startsWith(ADDC))
+					setAddMode(currentCommand);
+				else if (currentCommand.startsWith(REMOVEC))
+					setRemoveMode(currentCommand);
+				else if (currentCommand.startsWith(LISTC))
+					setListMode();
+				else if (currentCommand.startsWith(UPDATEC))
+					setUpdateMode(currentCommand);
+				else if (currentCommand.startsWith(SETC) || currentCommand.startsWith(UNSETC))
+					setSetUnsetMode(currentCommand);
+				else if (currentCommand.startsWith(DESCRIBEC))
+					setDescribeMode(currentCommand);
+				else if (currentCommand.startsWith(ENVC))
+					setEnvironmentMode();
+				else if (currentCommand.startsWith(EXECC))
+					setExecuteMode(currentCommand);
+				else if (currentCommand.startsWith(HELPC))
+					setHelpMode();
+				else if (currentCommand.startsWith(USEC)) {
+					if (currentCommand.endsWith(">"))
+						setDataSourceMode();
 					else
-						SetBaseDescribeMode();
-				}
-			} else if (currentCommand.startsWith(HELP))
-				SetHelpMode();
-		  else if (currentCommand.startsWith(LIST))
-		    SetListMode();
-			else if (currentCommand.startsWith(USE))
-				SetDatasetMode();
-			else {
-				int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
+						setDatasetViewMode();
+				} else {
+					int usingInd = currentCommand.lastIndexOf(MartShellLib.USINGQSTART);
 
-				if (usingInd >= 0) {
-					usingLocalDataset = true;
-					//set currentDataset
-					String testString = currentCommand.substring(usingInd);
+					if (usingInd >= 0) {
+						usingLocalDataset = true;
+						
+            String[] toks = currentCommand.split("\\s+");
+            
+            //unset all modes if user has erased back to using
+            if (toks.length < 3) {
+              attributeMode = false;
+              whereMode = false;
+            }
+            
+            if (toks.length >= 2) {
+              String datasetIName = toks[1];
+              
+              if (datasetIName.indexOf(">") > 0)
+                datasetIName = datasetIName.substring(0, datasetIName.indexOf(">"));
+                
+              if (adaptorManager.supportsInternalName(datasetIName))
+                currentDataset = adaptorManager.getDatasetViewByInternalName(datasetIName);
+              else
+                currentDataset = null;            
+            }
+					}
 
-					Matcher qModeMatcher = qModePattern.matcher(testString);
-					if (qModeMatcher.matches()) {
-						String datasetName = qModeMatcher.group(1);
+					String[] lineWords = currentCommand.split(" "); // split on single space
 
-						if (martconf.containsDataset(datasetName))
-							currentDataset = martconf.getDatasetByName(datasetName);
+					// determine which mode to be in during a query
+					int getInd = currentCommand.lastIndexOf(MartShellLib.GETQSTART);
+					int seqInd = currentCommand.lastIndexOf(MartShellLib.QSEQUENCE);
+					int whereInd = currentCommand.lastIndexOf(MartShellLib.QWHERE);
+					int limitInd = currentCommand.lastIndexOf(MartShellLib.QLIMIT);
+
+					if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd) && (usingInd > limitInd)) {
+						if (currentCommand.endsWith(">"))
+							setDataSourceMode();
 						else
-							currentDataset = null; // if not contained, no dataset should be set
+							setDatasetViewMode();
 					}
-				}
 
-				String[] lineWords = currentCommand.split(" "); // split on single space
+					if ((seqInd > usingInd) && (seqInd > getInd) && (seqInd > whereInd) && (seqInd > limitInd))
+						setDomainSpecificMode();
 
-				// determine which mode to be in during a query
-				int getInd = currentCommand.lastIndexOf(MartShellLib.GETQSTART);
-				int seqInd = currentCommand.lastIndexOf(MartShellLib.QSEQUENCE);
-				int whereInd = currentCommand.lastIndexOf(MartShellLib.QWHERE);
-				int limitInd = currentCommand.lastIndexOf(MartShellLib.QLIMIT);
+					if ((getInd > usingInd) && (getInd > seqInd) && (getInd > whereInd) && (getInd > limitInd))
+						attributeMode = true;
 
-				if ((usingInd > seqInd) && (usingInd > getInd) && (usingInd > whereInd) && (usingInd > limitInd))
-					SetDatasetMode();
+					if ((whereInd > usingInd) && (whereInd > seqInd) && (whereInd > getInd) && (whereInd > limitInd)) {
+						attributeMode = false;
+						whereMode = true;
+					}
 
-				if ((seqInd > usingInd) && (seqInd > getInd) && (seqInd > whereInd) && (seqInd > limitInd))
-					SetSequenceMode();
+					if ((limitInd > usingInd) && (limitInd > getInd) && (limitInd > seqInd) && (limitInd > whereInd)) {
+						attributeMode = false;
+						whereMode = false;
+						setEmptyMode();
+					}
 
-				if ((getInd > usingInd) && (getInd > seqInd) && (getInd > whereInd) && (getInd > limitInd))
-					attributeMode = true;
+					// if none of the key placeholders are present, may still need to further refine the mode
+					if (attributeMode) {
+						if (lineWords.length > 0) {
 
-				if ((whereInd > usingInd) && (whereInd > seqInd) && (whereInd > getInd) && (whereInd > limitInd)) {
-					attributeMode = false;
-					whereMode = true;
-				}
+							logger.info(" in attributeMode\n");
 
-				if ((limitInd > usingInd) && (limitInd > getInd) && (limitInd > seqInd) && (limitInd > whereInd)) {
-					attributeMode = false;
-					whereMode = false;
-					SetEmptyMode();
-				}
+							String lastWord = lineWords[lineWords.length - 1];
 
-				// if none of the key placeholders are present, may still need to further refine the mode
-				if (attributeMode) {
-					if (lineWords.length > 0) {
+							if (lastWord.equals(MartShellLib.GETQSTART)) {
 
-						logger.info(" in attributeMode\n");
+								logger.info("resetting lastAttributeName and currentApages\n");
 
-						String lastWord = lineWords[lineWords.length - 1];
-
-						if (lastWord.equals(MartShellLib.GETQSTART)) {
-
-							logger.info("resetting lastAttributeName and currentApages\n");
-
-							lastAttributeName = null;
-							currentApages = new ArrayList();
-						} else {
-							if (lastWord.endsWith(",")) {
-								lastAttributeName = lastWord.substring(0, lastWord.length() - 1);
-								pruneAttributePages();
+								lastAttributeName = null;
+								currentApages = new ArrayList();
+							} else {
+								if (lastWord.endsWith(",")) {
+									lastAttributeName = lastWord.substring(0, lastWord.length() - 1);
+									pruneAttributePages();
+								}
 							}
+
+							setAttributeNames();
 						}
-
-						SetAttributeNames();
-					}
-				}
-
-				if (whereMode) {
-					if (!(whereNamesMode || whereQualifiersMode || whereValuesMode)) {
-						//first time in
-						whereNamesMode = true;
-						whereQualifiersMode = false;
-						whereValuesMode = true;
-						currentFpages = new ArrayList();
-						SetWhereNames();
 					}
 
-					if (lineWords.length > 0) {
-						String lastWord = lineWords[lineWords.length - 1];
-
-						if (lastWord.equals(MartShellLib.QWHERE)) {
-							lastFilterName = null;
+					if (whereMode) {
+						if (!(whereNamesMode || whereQualifiersMode || whereValuesMode)) {
+							//first time in
 							whereNamesMode = true;
 							whereQualifiersMode = false;
 							whereValuesMode = true;
-							SetWhereNames();
-						} else if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
-							logger.info(lastWord + " appears to be a qualifier");
-
-							if (lineWords.length > 1) {
-								lastFilterName = lineWords[lineWords.length - 2];
-								pruneFilterPages();
-							}
-
-							if (MartShellLib.BOOLEANQUALIFIERS.contains(lastWord)) {
-
-								logger.info(" going to whereQualifiers Mode after boolean qualifier\n");
-
-								whereNamesMode = false;
-								whereQualifiersMode = true;
-								whereValuesMode = false;
-								SetEmptyMode();
-							} else {
-
-								logger.info(" going to whereValuesMode\n");
-
-								whereNamesMode = false;
-								whereQualifiersMode = false;
-								whereValuesMode = true;
-								SetWhereValues();
-							}
+							currentFpages = new ArrayList();
+							setWhereNames();
 						}
 
-						if (whereNamesMode) {
+						if (lineWords.length > 0) {
+							String lastWord = lineWords[lineWords.length - 1];
 
-							logger.info("Still in whereNamesMode\n");
-
-							if (currentDataset != null) {
-								if (currentDataset.containsFilterDescription(lastWord)) {
-									String thisField = currentDataset.getFilterDescriptionByInternalName(lastWord).getField(lastWord);
-
-									if (thisField != null && thisField.length() > 0) {
-										lastFilterName = lastWord;
-										pruneFilterPages();
-
-										logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
-
-										whereNamesMode = false;
-										whereQualifiersMode = true;
-										whereValuesMode = false;
-										SetWhereQualifiers();
-									}
-								}
-							} else if (!usingLocalDataset && envDataset != null) {
-								if (envDataset.containsFilterDescription(lastWord)) {
-
-									logger.info(lastWord + " is part of dataset, but is it a real filter?\n");
-
-									FilterDescription thisFilter = envDataset.getFilterDescriptionByInternalName(lastWord);
-									String thisField = thisFilter.getField(lastWord);
-
-									logger.info(
-										"Filter "
-											+ thisFilter.getInternalName()
-											+ " returned for "
-											+ lastWord
-											+ " has field "
-											+ thisField
-											+ "\n");
-
-									if (thisField != null && thisField.length() > 0) {
-										lastFilterName = lastWord;
-										pruneFilterPages();
-
-										logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
-
-										whereNamesMode = false;
-										whereQualifiersMode = true;
-										whereValuesMode = false;
-										SetWhereQualifiers();
-									}
-								}
-							} else
-								SetNoDatasetMode();
-						} else if (whereQualifiersMode) {
-
-							logger.info("Still in whereQualifiersMode\n");
-
-							if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
-
+							if (lastWord.equals(MartShellLib.QWHERE)) {
+								lastFilterName = null;
+								whereNamesMode = true;
+								whereQualifiersMode = false;
+								whereValuesMode = true;
+								setWhereNames();
+							} else if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
 								logger.info(lastWord + " appears to be a qualifier");
 
 								if (lineWords.length > 1) {
@@ -393,48 +317,126 @@ public class MartCompleter implements ReadlineCompleter {
 								}
 
 								if (MartShellLib.BOOLEANQUALIFIERS.contains(lastWord)) {
+									logger.info(" going to whereQualifiers Mode after boolean qualifier\n");
 
-									logger.info(" staying in whereQualifiers Mode after boolean qualifier\n");
-
-									SetEmptyMode();
+									whereNamesMode = false;
+									whereQualifiersMode = true;
+									whereValuesMode = false;
+									setEmptyMode();
 								} else {
 
 									logger.info(" going to whereValuesMode\n");
 
+									whereNamesMode = false;
 									whereQualifiersMode = false;
 									whereValuesMode = true;
-									SetWhereValues();
+									setWhereValues(lastWord);
 								}
-							} else if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
-								whereNamesMode = true;
-								whereQualifiersMode = false;
-								whereValuesMode = false;
-
-								logger.info("and encountered after boolean qualifier, going to whereNamesMode\n");
-
-								pruneFilterPages();
-								SetWhereNames();
 							}
-						} else if (whereValuesMode) {
 
-							logger.info("Still in whereValuesMode\n");
+							if (whereNamesMode) {
 
-							if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
-								whereNamesMode = true;
-								whereQualifiersMode = false;
-								whereValuesMode = false;
+								logger.info("Still in whereNamesMode\n");
 
-								logger.info("and encountered after value, going to whereNamesMode\n");
+								if (currentDataset != null) {
+									if (currentDataset.containsFilterDescription(lastWord)) {
+										String thisField = currentDataset.getFilterDescriptionByInternalName(lastWord).getField(lastWord);
 
-								pruneFilterPages();
-								SetWhereNames();
+										if (thisField != null && thisField.length() > 0) {
+											lastFilterName = lastWord;
+											pruneFilterPages();
+
+											logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
+
+											whereNamesMode = false;
+											whereQualifiersMode = true;
+											whereValuesMode = false;
+											setWhereQualifiers();
+										}
+									}
+								} else if (!usingLocalDataset && envDataset != null) {
+									if (envDataset.containsFilterDescription(lastWord)) {
+
+										logger.info(lastWord + " is part of dataset, but is it a real filter?\n");
+
+										FilterDescription thisFilter = envDataset.getFilterDescriptionByInternalName(lastWord);
+										String thisField = thisFilter.getField(lastWord);
+
+										logger.info("Filter " + thisFilter.getInternalName() + " returned for " + lastWord + " has field " + thisField + "\n");
+
+										if (thisField != null && thisField.length() > 0) {
+											lastFilterName = lastWord;
+											pruneFilterPages();
+
+											logger.info(lastWord + " appears to be a filter, going to whereQualifiersMode\n");
+
+											whereNamesMode = false;
+											whereQualifiersMode = true;
+											whereValuesMode = false;
+											setWhereQualifiers();
+										}
+									}
+								} else
+									setNoDatasetViewMode();
+							} else if (whereQualifiersMode) {
+
+								logger.info("Still in whereQualifiersMode\n");
+
+								if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
+
+									logger.info(lastWord + " appears to be a qualifier");
+
+									if (lineWords.length > 1) {
+										lastFilterName = lineWords[lineWords.length - 2];
+										pruneFilterPages();
+									}
+
+									if (MartShellLib.BOOLEANQUALIFIERS.contains(lastWord)) {
+
+										logger.info(" staying in whereQualifiers Mode after boolean qualifier\n");
+
+										setEmptyMode();
+									} else {
+
+										logger.info(" going to whereValuesMode\n");
+
+										whereQualifiersMode = false;
+										whereValuesMode = true;
+										setWhereValues(lastWord);
+									}
+								} else if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
+									whereNamesMode = true;
+									whereQualifiersMode = false;
+									whereValuesMode = false;
+
+									logger.info("and encountered after boolean qualifier, going to whereNamesMode\n");
+
+									pruneFilterPages();
+									setWhereNames();
+								}
+							} else if (whereValuesMode) {
+
+								logger.info("Still in whereValuesMode\n");
+
+								if (lastWord.equalsIgnoreCase(MartShellLib.FILTERDELIMITER)) {
+									whereNamesMode = true;
+									whereQualifiersMode = false;
+									whereValuesMode = false;
+
+									logger.info("and encountered after value, going to whereNamesMode\n");
+
+									pruneFilterPages();
+									setWhereNames();
+								}
 							}
 						}
 					}
 				}
-			}
 
-			lastLine = currentCommand;
+				lastLine = currentCommand;
+			} catch (ConfigurationException e) {
+				setErrorMode(e.getMessage());
+			}
 		}
 	}
 
@@ -445,33 +447,21 @@ public class MartCompleter implements ReadlineCompleter {
 	 * 
 	 * @param datasetName - String Name of the dataset
 	 */
-	public void setEnvDataset(String datasetName) {
-		envDataset = martconf.getDatasetByName(datasetName); // might return null, but that is ok
-	}
-
-  /**
-   * Sets the MartCompleter into List Mode
-   */
-  public void SetListMode() {
-  	currentSet = new TreeSet();
-  	currentSet.addAll( (SortedSet) setMapper.get(LIST));
-  }
-  
-	/**
-	 * Sets the MartCompleter into Help Mode.
-	 */
-	public void SetHelpMode() {
-		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(HELP));
+	public void setEnvDataset(String datasetIName) {
+		try {
+			envDataset = adaptorManager.getDatasetViewByInternalName(datasetIName);
+		} catch (ConfigurationException e) {
+			envDataset = null;
+		} // might return null, but that is ok
 	}
 
 	/**
 	 * Sets the MartCompleter into COMMAND mode
 	 *
 	 */
-	public void SetCommandMode() {
+	public void setCommandMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(COMMANDS));
+		currentSet.addAll(commandSet);
 
 		// reset state to pristine
 		currentDataset = null;
@@ -488,52 +478,188 @@ public class MartCompleter implements ReadlineCompleter {
 		lastLine = null;
 	}
 
-	/**
-	 * Sets the completer system to an empty List
-	 */
-	public void SetEmptyMode() {
+	private void setHelpMode() {
 		currentSet = new TreeSet();
+		currentSet.addAll(helpSet);
 	}
 
-	/**
-	 * Sets the completer system to the basic describe requests avaiable
-	 */
-	public void SetBaseDescribeMode() {
+	private void setListMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(BASEDESCRIBEREQUESTS);
+		currentSet.addAll(listSet);
 	}
 
-	/**
-	 * Sets the completer system to the filters available for the environmental dataset, empty list if this is not set
-	 */
-	public void SetDescribeFilterMode() {
+	private void setAddMode(String token) {
+		String[] toks = token.split("\\s+");
+
+		if (toks.length == 1)
+			setAddBaseMode();
+		else if (toks.length == 2) {
+			if (toks[1].equalsIgnoreCase("DatasetViews"))
+				setFromMode();
+			else {
+				if (toks[1].equalsIgnoreCase("DataSource") || toks[1].equalsIgnoreCase("DatasetView"))
+					setEmptyMode();
+			}
+		} else if (toks.length == 3 && toks[2].equalsIgnoreCase("from"))
+			setDataSourceMode();
+		else
+			setEmptyMode();
+	}
+
+	private void setAddBaseMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(addBaseSet);
+	}
+
+	private void setEnvironmentMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(environmentSet);
+	}
+
+	private void setRemoveMode(String token) {
+		String[] toks = token.split("\\s+");
+
+		if (toks.length == 1)
+			setRemoveBaseMode();
+		else if (toks.length == 2) {
+			String request = toks[1];
+
+			if (request.equalsIgnoreCase("DataSource"))
+				setDataSourceMode();
+			else if (request.equalsIgnoreCase("DatasetViews"))
+				setFromMode();
+			else if (request.equalsIgnoreCase("DatasetView"))
+				setDatasetViewMode();
+			else {
+				if (request.equalsIgnoreCase("Procedure"))
+					setProcedureNameMode();
+			}
+		} else {
+			if (toks.length == 3 && toks[2].equalsIgnoreCase("from"))
+				setAdaptorLocationMode();
+		}
+	}
+
+	private void setRemoveBaseMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(removeBaseSet);
+	}
+
+	private void setUpdateMode(String token) {
+		String[] toks = token.split("\\s+");
+
+		if (toks.length == 1)
+			setUpdateBaseMode();
+		else if (toks.length == 2) {
+			String request = toks[1];
+
+			if (request.equalsIgnoreCase("DatasetViews"))
+				setFromMode();
+			else {
+				if (request.equalsIgnoreCase("DatasetView"))
+					setDatasetViewMode();
+			}
+		} else {
+			if (toks.length == 3 && toks[2].equalsIgnoreCase("from"))
+				setAdaptorLocationMode();
+		}
+	}
+
+	private void setUpdateBaseMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(updateBaseSet);
+	}
+
+	private void setSetUnsetMode(String token) {
+		String[] toks = token.split("\\s+");
+
+		if (toks.length == 1)
+			setSetBaseMode();
+		else if (toks.length == 2 && toks[1].equalsIgnoreCase("DataSource")) {
+			if (toks[0].equals(SETC))
+				setDataSourceMode();
+			else
+				setDatasetViewMode();
+		} else {
+			if (toks[0].equals(SETC) && toks.length == 3) {
+				if (dataSourceSet.contains(toks[2]))
+					setDatasetViewMode();
+				else
+					setEmptyMode();
+			}
+		}
+	}
+
+	private void setSetBaseMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(setBaseSet);
+	}
+
+	private void setExecuteMode(String token) {
+		String[] toks = token.split("\\s+");
+
+		if (toks.length == 1)
+			setExecuteBaseMode();
+		else if (toks.length == 2 && toks[1].equalsIgnoreCase("Procedure"))
+			setProcedureNameMode();
+	}
+
+	private void setExecuteBaseMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(executeBaseSet);
+	}
+
+	private void setDescribeMode(String token) {
+		String[] toks = token.split("\\s+");
+		if (toks.length == 1)
+			setBaseDescribeMode();
+		else if (toks.length == 2) {
+			String request = toks[1];
+
+			if (request.equalsIgnoreCase("DatasetView"))
+				setDatasetViewMode();
+			else if (request.equalsIgnoreCase("Filter"))
+				setDescribeFilterMode();
+			else if (request.equalsIgnoreCase("Attribute"))
+				setDescribeAttributeMode();
+			else {
+        if (request.equalsIgnoreCase("Procedure"))
+          setDescribeProcedureMode();
+			}
+		}
+	}
+
+	private void setBaseDescribeMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(describeBaseSet);
+	}
+
+	private void setDescribeFilterMode() {
 		if (envDataset == null)
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 		else {
 			currentSet = new TreeSet();
 			currentSet.addAll(envDataset.getFilterCompleterNames());
 		}
 	}
 
-	/**
-	 * Sets the completer system to the attributes available for the environmental dataset, empty list if this is not set
-	 */
-	public void SetDescribeAttributeMode() {
+	private void setDescribeAttributeMode() {
 		if (envDataset == null)
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 		else {
 			currentSet = new TreeSet();
 			currentSet.addAll(envDataset.getAttributeCompleterNames());
 		}
 	}
 
-	/**
-	 * Sets the AttributeNames for all current Attribute Pages into the completer set
-	 */
-	public void SetAttributeNames() {
+	private void setDescribeProcedureMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(procSet);
+	}
+
+	private void setAttributeNames() {
 		if (currentDataset != null) {
 			currentSet = new TreeSet();
-			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
 			if (currentApages.size() == 0)
 				currentApages = Arrays.asList(currentDataset.getAttributePages());
@@ -550,7 +676,6 @@ public class MartCompleter implements ReadlineCompleter {
 			}
 		} else if (!(usingLocalDataset) && envDataset != null) {
 			currentSet = new TreeSet();
-			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
 			if (currentApages.size() == 0)
 				currentApages = Arrays.asList(envDataset.getAttributePages());
@@ -565,12 +690,27 @@ public class MartCompleter implements ReadlineCompleter {
 				}
 			}
 		} else
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 	}
 
-	private void SetNoDatasetMode() {
+	private void setFromMode() {
+		currentSet = new TreeSet();
+		currentSet.add("from");
+	}
+
+	private void setEmptyMode() {
+		currentSet = new TreeSet();
+	}
+
+	private void setNoDatasetViewMode() {
 		currentSet = new TreeSet();
 		currentSet.addAll(NODATASETWARNING);
+	}
+
+	private void setErrorMode(String error) {
+		currentSet = new TreeSet();
+		currentSet.addAll(ERRORMODE);
+		currentSet.add(error);
 	}
 
 	private void pruneAttributePages() {
@@ -586,34 +726,38 @@ public class MartCompleter implements ReadlineCompleter {
 			currentApages = new ArrayList(newPages);
 	}
 
-	/**
-	 * Sets the MartCompleter into Sequence Mode
-	 *
-	 */
-	public void SetSequenceMode() {
+	private void setDomainSpecificMode() {
 		attributeMode = false;
 		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QSEQUENCE));
+		currentSet.addAll(domainSpecificSet);
 	}
 
-	/**
-	 * Sets the MartCompleter into the DatasetView Mode 
-		*
-		*/
-	public void SetDatasetMode() {
+	private void setAdaptorLocationMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll((SortedSet) setMapper.get(DATASETS));
+		currentSet.addAll(adaptorLocationSet);
 	}
 
-	/**
-	 * Sets the MartCompleter into the Where Mode
-	 *
-	 */
-	public void SetWhereNames() {
+	private void setDataSourceMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(dataSourceSet);
+	}
 
+	private void setDatasetViewMode() {
+		if (datasetViewSet.size() > 0) {
+			currentSet = new TreeSet();
+			currentSet.addAll(datasetViewSet);
+		} else
+			setNoDatasetViewMode();
+	}
+
+	private void setProcedureNameMode() {
+		currentSet = new TreeSet();
+		currentSet.addAll(procSet);
+	}
+
+	private void setWhereNames() {
 		if (currentDataset != null) {
 			currentSet = new TreeSet();
-			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
 			if (currentFpages.size() == 0)
 				currentFpages = Arrays.asList(currentDataset.getFilterPages());
@@ -630,7 +774,6 @@ public class MartCompleter implements ReadlineCompleter {
 			}
 		} else if (!(usingLocalDataset) && envDataset != null) {
 			currentSet = new TreeSet();
-			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
 			if (currentFpages.size() == 0)
 				currentFpages = Arrays.asList(envDataset.getFilterPages());
@@ -646,39 +789,48 @@ public class MartCompleter implements ReadlineCompleter {
 				}
 			}
 		} else
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 	}
 
-	private void SetWhereQualifiers() {
+	private void setWhereQualifiers() {
 		currentSet = new TreeSet();
 
 		if (currentDataset != null) {
 			if (currentDataset.containsFilterDescription(lastFilterName))
 				currentSet.addAll(currentDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
 		} else if (!usingLocalDataset && envDataset != null) {
-			logger.info("getting qualifiers for filter " + lastFilterName + "\n");
+			if (logger.isLoggable(Level.INFO))
+				logger.info("getting qualifiers for filter " + lastFilterName + "\n");
 
 			if (envDataset.containsFilterDescription(lastFilterName)) {
-				logger.info("Its a filter, getting from dataset\n");
+				if (logger.isLoggable(Level.INFO))
+					logger.info("Its a filter, getting from dataset\n");
 
 				currentSet.addAll(envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
 			}
 		} else
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 	}
 
-	private void SetWhereValues() {
+	private void setWhereValues(String lastWord) {
 		currentSet = new TreeSet();
 
 		if (currentDataset != null) {
-			if (currentDataset.containsFilterDescription(lastFilterName))
+			if (currentDataset.containsFilterDescription(lastFilterName)) {
 				currentSet.addAll(currentDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+
+				if (lastWord.equalsIgnoreCase("in"))
+					currentSet.addAll(procSet);
+			}
 		} else if (!usingLocalDataset && envDataset != null) {
 			if (envDataset.containsFilterDescription(lastFilterName)) {
 				currentSet.addAll(envDataset.getFilterCompleterValuesByInternalName(lastFilterName));
+
+				if (lastWord.equalsIgnoreCase("in"))
+					currentSet.addAll(procSet);
 			}
 		} else
-			SetNoDatasetMode();
+			setNoDatasetViewMode();
 	}
 
 	private void pruneFilterPages() {
@@ -696,20 +848,134 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Adds a Collection of String names to a specific list specified by a keyword.
-	 * If the keyword is not available, a warning is sent to the logging system, and
-	 * the Collection is ignored.
-	 * @param key - one of the available keywords for a specific Mode.
-	 * @param commands - Collection of names to make available in that Mode.
+	 * Set the String names (path, url, DataSource name) used to refer
+	 * to locations from whence DSViewAdaptor objects were loaded.
+	 * @param names -- names of path, url, or DataSource names from whence DSViewAdaptor Objects were loaded 
 	 */
-	public void AddAvailableCommandsTo(String key, Object commands) {
-		if (setMapper.containsKey(key)) {
-			SortedSet set = (SortedSet) setMapper.get(key);
-			set.addAll((Collection) commands);
-			setMapper.put(key, set);
-		} else {
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("Key " + key + " is not a member of the command completion system\n");
-		}
+	public void setAdaptorLocations(Collection names) {
+		adaptorLocationSet = new TreeSet();
+		adaptorLocationSet.addAll(names);
+	}
+
+	public void setDatasetViewInternalNames(Collection names) {
+		datasetViewSet = new TreeSet();
+		datasetViewSet.addAll(names);
+	}
+
+	/**
+	 * Set the Names used to refer to DataSource Objects in the Shell.
+	 * @param names -- names used to refer to DataSource Objects in the Shell.
+	 */
+	public void setDataSourceNames(Collection names) {
+		dataSourceSet = new TreeSet();
+		dataSourceSet.addAll(names);
+	}
+
+	/**
+	 * Set the names of stored procedures
+	 * @param names -- names of stored procedures
+	 */
+	public void setProcedureNames(Collection names) {
+		procSet = new TreeSet();
+		procSet.addAll(names);
+	}
+
+	/**
+	 * Set the Base Shell Commands available
+	 * @param names -- base commands available to the Shell.
+	 */
+	public void setBaseCommands(Collection names) {
+		commandSet = new TreeSet();
+		commandSet.addAll(names);
+	}
+
+	/**
+	 * Set domain Specific Commands
+	 * @param names -- domain specific commands
+	 */
+	public void setDomainSpecificCommands(Collection names) {
+		domainSpecificSet = new TreeSet();
+		domainSpecificSet.addAll(names);
+	}
+
+	/**
+	 * set Help commands
+	 * @param names -- help commands
+	 */
+	public void setHelpCommands(Collection names) {
+		helpSet = new TreeSet();
+		helpSet.addAll(names);
+	}
+
+	/**
+	 * Set the add command sub tokens
+	 * @param addRequests -- add command sub tokens
+	 */
+	public void setAddCommands(Collection requests) {
+		addBaseSet = new TreeSet();
+		addBaseSet.addAll(requests);
+	}
+
+	/**
+	 * Set the Base Remove sub tokens
+	 * @param removeRequests -- base remove sub tokens
+	 */
+	public void setRemoveBaseCommands(Collection requests) {
+		removeBaseSet = new TreeSet();
+		removeBaseSet.addAll(requests);
+	}
+
+	/**
+	 * Set the List command sub tokens
+	 * @param listRequests -- list command sub tokens
+	 */
+	public void setListCommands(Collection requests) {
+		listSet = new TreeSet();
+		listSet.addAll(requests);
+	}
+
+	/**
+	 * Set the Update command base sub tokens
+	 * @param updateRequests -- update command base sub tokens
+	 */
+	public void setUpdateBaseCommands(Collection requests) {
+		updateBaseSet = new TreeSet();
+		updateBaseSet.addAll(requests);
+	}
+
+	/**
+	 * Set the Set command base sub tokens
+	 * @param requests -- Set command base sub tokens
+	 */
+	public void setSetBaseCommands(Collection requests) {
+		setBaseSet = new TreeSet();
+		setBaseSet.addAll(requests);
+	}
+
+	/**
+	 * Set the Describe command base sub tokens
+	 * @param describeRequests -- describe command base sub tokens
+	 */
+	public void setDescribeBaseCommands(Collection requests) {
+		describeBaseSet = new TreeSet();
+		describeBaseSet.addAll(requests);
+	}
+
+	/**
+	 * Set the Environment command base sub tokens
+	 * @param envRequests -- environment command base sub tokens
+	 */
+	public void setEnvironmentBaseCommands(Collection requests) {
+		environmentSet = new TreeSet();
+		environmentSet.addAll(requests);
+	}
+
+	/**
+	 * Sets the Execute command base sub tokens
+	 * @param executeRequests -- execute command base sub tokens
+	 */
+	public void setExecuteBaseCommands(Collection requests) {
+		executeBaseSet = new TreeSet();
+		executeBaseSet.addAll(requests);
 	}
 }
