@@ -415,6 +415,14 @@ public class MartShell {
 
 				Readline.setCompleter(mcl);
 			}
+			
+			if (readlineLoaded && historyOn) {
+				File histFile = new File( history_file );
+				if ( ! histFile.exists() )
+          histFile.createNewFile();
+        else
+          LoadScriptFromFile(history_file);          			   			
+			}
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 			e1.printStackTrace();
@@ -458,6 +466,10 @@ public class MartShell {
 	 * @return boolean true if all commands are executed successfully, false if not.
 	 */
 	public boolean RunBatchScript(String batchScriptFile) {
+		historyOn = false;
+		completionOn = false;
+		readlineLoaded = false;
+		
 		boolean valid = true;
 		try {
 			Initialize();
@@ -475,6 +487,10 @@ public class MartShell {
 	}
 
 	public boolean RunBatch(String querystring) {
+		historyOn = false;
+		completionOn = false;
+		readlineLoaded = false;
+		
 		boolean validQuery = true;
 
 		if (martHost == null || martHost.length() < 5) {
@@ -578,8 +594,15 @@ public class MartShell {
 
 	private void ExitShell() throws IOException {
 		Readline.cleanup();
+		
+		// close the sessionwide FileOutputStream, if it isnt null
 		if (sessionOutputFile != null)
 			sessionOutputFile.close();
+		
+		// if history and completion are on, save the history file
+		if (historyOn && completionOn)
+		  Readline.writeHistoryFile( history_file );
+
 		System.exit(0);
 	}
 
@@ -1280,31 +1303,35 @@ public class MartShell {
 			com.nextToken(); // skip commmand start
 
 			String req = null;
-			FileOutputStream fos = null;
+			
+			String outPutFileName = null;
+			File outPutFile = null;
 
 			if (tokCount < 2)
 				throw new InvalidQueryException("WriteHistory command must be provided a valid URL: " + command + "\n");
 			else if (tokCount == 2) {
-				//url
-				fos = new FileOutputStream(com.nextToken());
+				//file
+				outPutFileName = com.nextToken();
+				outPutFile = new File( outPutFileName );
 			} else if (tokCount == 3) {
 				req = com.nextToken();
-				fos = new FileOutputStream(com.nextToken());
+				outPutFileName = com.nextToken();
+				outPutFile = new File( outPutFileName );
 			} else
 				throw new InvalidQueryException("Recieved invalid WriteHistory request " + command + "\n");
 
-			WriteHistoryLinesToURL(req, fos);
+			WriteHistoryLinesToFile(req, outPutFile);
 
 		} catch (Exception e) {
 			throw new InvalidQueryException("Could not write history " + e.getMessage());
 		}
 	}
 
-	private void WriteHistoryLinesToURL(String req, FileOutputStream os) throws InvalidQueryException {
+	private void WriteHistoryLinesToFile(String req, File outPutFile) throws InvalidQueryException {
 		String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
 
 		try {
-			OutputStreamWriter hisout = new OutputStreamWriter(os);
+			OutputStreamWriter hisout = new OutputStreamWriter( new FileOutputStream( outPutFile ) );
 			for (int i = 0, n = lines.length; i < n; i++) {
 				String thisline = lines[i];
 				if (!thisline.startsWith(SAVETOSCRIPTC))
@@ -1322,18 +1349,21 @@ public class MartShell {
 			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
 
 		com.nextToken(); // skip command start
-		URL url = null;
+		
+		String scriptFileName = null;
+		File scriptFile = null;
 		try {
-			url = new URL(com.nextToken());
-			ExecScriptFromURL(url);
+			scriptFileName = com.nextToken();
+			scriptFile = new File( scriptFileName );
+			ExecScriptFromFile(scriptFile);
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not execute script: " + url.getFile() + " " + e.getMessage());
+			throw new InvalidQueryException("Could not execute script: " + scriptFileName + " " + e.getMessage());
 		}
 	}
 
-	private void ExecScriptFromURL(URL url) throws InvalidQueryException {
+	private void ExecScriptFromFile(File scriptFile) throws InvalidQueryException {
 		try {
-			reader = new BufferedReader(new InputStreamReader(url.openStream()));
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream( scriptFile ) ) );
 
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				if (historyOn)
@@ -1351,23 +1381,24 @@ public class MartShell {
 			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
 
 		com.nextToken(); // skip command start
-		URL url = null;
+		
+		String scriptFile = null;		
 		try {
-			url = new URL(com.nextToken());
-			LoadScriptFromURL(url);
+			scriptFile = com.nextToken();
+			LoadScriptFromFile(scriptFile);
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not load script: " + url.getFile() + " " + e.getMessage());
+			throw new InvalidQueryException("Could not load script: " + scriptFile + " " + e.getMessage());
 		}
 	}
 
-	private void LoadScriptFromURL(URL url) throws InvalidQueryException {
+	private void LoadScriptFromFile(String scriptFile) throws InvalidQueryException {
 		if (!readlineLoaded)
 			throw new InvalidQueryException("Sorry, histrory functions are not available on your terminal.\n");
 		if (!historyOn)
 			throw new InvalidQueryException("Sorry, histrory is not activated.\n");
 
 		try {
-			Readline.readHistoryFile(url.getFile());
+			Readline.readHistoryFile(scriptFile);
 		} catch (Exception e) {
 			throw new InvalidQueryException(e.getMessage());
 		}
@@ -1586,6 +1617,8 @@ public class MartShell {
 	private MartShellLib msl = null;
 	private BufferedReader reader;
 
+  private final String history_file = System.getProperty("user.home") + "/.martshell_history";
+  
 	private String martHost = null;
 	private String martPort = null;
 	private String martUser = null;
@@ -1594,7 +1627,7 @@ public class MartShell {
 	private MartCompleter mcl; // will hold the MartCompleter, if Readline is loaded and completion turned on
 	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
 	private boolean historyOn = false; // commandline history, default to off
-	private boolean completionOn = false; // command completion, default to off
+	private boolean completionOn = true; // command completion, default to on
 	private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
 	private String userPrompt = null;
 
