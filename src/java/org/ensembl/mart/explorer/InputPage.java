@@ -60,7 +60,6 @@ public class InputPage extends JPanel {
       if ( description!=null ) buf.append(":");
       buf.append("</b> ");
     } 
-    
     if ( description!=null ) buf.append(description);
     buf.append( "</html>" );
     nodeLabel =  buf.toString();

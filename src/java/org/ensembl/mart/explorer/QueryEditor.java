@@ -18,8 +18,11 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
@@ -67,23 +70,20 @@ public class QueryEditor
 	implements PropertyChangeListener, TreeSelectionListener {
     
  
+  private JSplitPane topAndBottom;
 
+	private JSplitPane top;
 
-
-  private static final Logger logger =
+	private static final Logger logger =
 		Logger.getLogger(QueryEditor.class.getName());
 
-	/** total height of the componment */
-	private int HEIGHT = 768;
-
-	/** total width of the component */
-	private int WIDTH = 1024;
-
 	/** default percentage of total width allocated to the tree constituent component. */
-	private double TREE_WIDTH = 0.4d;
+	private double TREE_WIDTH = 0.27d;
 
 	/** default percentage of total height allocated to the tree constituent component. */
 	private double TREE_HEIGHT = 0.7d;
+
+  private Dimension MINIMUM_SIZE = new Dimension(50, 50);
 
 	/** Configuration defining the "query space" this editor encompasses. */
 	private MartConfiguration martConfiguration;
@@ -111,6 +111,16 @@ public class QueryEditor
 
 	public QueryEditor(MartConfiguration config) {
 		
+    // don't use default FlowLayout manager because it won't resize components if
+    // QueryEditor is resized.
+    setLayout( new BorderLayout() );
+   
+    addComponentListener(new ComponentAdapter() {
+      public void componentResized(ComponentEvent e) {
+        resizeSplits();
+      }
+    });
+    
     this.martConfiguration = config;
 		this.query = new Query();
     this.attributeToWidget = new HashMap();
@@ -121,10 +131,25 @@ public class QueryEditor
 		initInputPanel();
 		initOutputPanel();
 
-		initialLayout();
+		layoutPanes();
 
 		addDatasetSelectionPage();
 	}
+
+  
+  /**
+   * Repositions the dividers after the component has been resized to maintain
+   * the relative size of the panes.
+   */
+  private void resizeSplits() {
+    Dimension parentSize = getParent().getSize();
+    top.setDividerLocation( TREE_WIDTH );
+    topAndBottom.setDividerLocation(  1-TREE_WIDTH );
+    // this doesn't actually set the size to the minumum but
+    // cause it to resize correctly. 
+    inputPanel.setPreferredSize( MINIMUM_SIZE );
+  }
+  
 
 	private void showInputPage(InputPage page) {
 		((CardLayout) (inputPanel.getLayout())).show(inputPanel, page.getName());
@@ -162,41 +187,40 @@ public class QueryEditor
 	}
 
 	/**
-	 * Sets the prefered sizes for constituent components and adds them
-	 * to this component.
-	 * All sizes are relative to the treeview dimensions. Layout is:
+	 * Sets the relative positions of the constituent components. Layout is:
 	 * <pre>
 	 * tree   |    input
 	 * -----------------
 	 *     output
 	 * </pre>
 	 */
-	private void initialLayout() {
+	private void layoutPanes() {
 
-		int topHeight = (int) (HEIGHT * TREE_HEIGHT);
-		int treeWidth = (int) (WIDTH * TREE_WIDTH);
-		int inputWidth = WIDTH - treeWidth;
-		int outputHeight = HEIGHT - topHeight;
+    treeView.setMinimumSize( MINIMUM_SIZE );
+		inputPanel.setMinimumSize( MINIMUM_SIZE );
+		outputPanel.setMinimumSize( MINIMUM_SIZE );
 
-		treeView.setPreferredSize(new Dimension(treeWidth, treeWidth));
-		inputPanel.setPreferredSize(new Dimension(inputWidth, topHeight));
-		outputPanel.setPreferredSize(new Dimension(WIDTH, outputHeight));
-
-		JSplitPane top =
+		top =
 			new JSplitPane(
 				JSplitPane.HORIZONTAL_SPLIT,
 				new JScrollPane(treeView),
 				new JScrollPane(inputPanel));
 		top.setOneTouchExpandable(true);
-		JSplitPane topAndBottom =
+		
+    topAndBottom =
 			new JSplitPane(
 				JSplitPane.VERTICAL_SPLIT,
 				top,
 				new JScrollPane(outputPanel));
 		topAndBottom.setOneTouchExpandable(true);
-		add(topAndBottom);
+		
+    add(topAndBottom);
+
 	}
 
+
+
+  
 	/**
 	 * 
 	 */
@@ -234,7 +258,8 @@ public class QueryEditor
 		JFrame f = new JFrame("Query Editor");
 		f.getContentPane().add(editor);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.pack();
+		//f.pack();
+    f.setSize( 950, 750 );
 		f.setVisible(true);
 	}
 
