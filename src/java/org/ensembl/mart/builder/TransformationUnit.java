@@ -20,6 +20,7 @@ public class TransformationUnit {
 	String extension;
 	String extension_key;
 	String column_operations;
+	String cardinality;
 	boolean is_extension=false;
 	boolean has_extension=false;
 	boolean useFK=false;
@@ -31,11 +32,18 @@ public class TransformationUnit {
 		
 	}
 	
-		
+	
 	
 	public String toSQL (){
 		
-		return simpleJoin(temp_start, ref_table, temp_end.getName());
+		String sql = null;
+		if (cardinality.equals("n1")){
+			sql = leftJoin(temp_start, ref_table, temp_end.getName());
+		} else {
+			sql = simpleJoin(temp_start, ref_table, temp_end.getName());	
+		}
+		
+		return sql;
 		
 	}
 	
@@ -61,7 +69,7 @@ public class TransformationUnit {
 	
 	
 	
-	private Column [] addOneColumns(Table temp_end, Table new_ref){
+	private Column [] addOneColumn(Table temp_end, Table new_ref){
 		
 		Column [] temp_col = new Column [temp_end.getColumns().length+new_ref.getColumns().length];	
 		System.arraycopy(temp_end.getColumns(),0,temp_col,0,temp_end.getColumns().length);
@@ -90,7 +98,7 @@ public class TransformationUnit {
 		} else if (column_operations.equals("append")){
 			columns = appendColumns(temp_end,new_ref);
 		} else if (column_operations.equals("addone")){
-			columns = addOneColumns(temp_end,new_ref);
+			columns = addOneColumn(temp_end,new_ref);
 		}
 		
 		temp_end.setColumns(columns);
@@ -146,6 +154,8 @@ public class TransformationUnit {
 		
 	}
 	
+	
+	
 	private static String simpleJoin(Table temp_start, Table ref_table, String temp){
 		
 		StringBuffer temp_start_col = new StringBuffer("");
@@ -182,6 +192,16 @@ public class TransformationUnit {
 		return tempsql.toString();				
 		
 	}
+	
+	
+	private static String leftJoin(Table temp_start, Table ref_table, String temp){
+		
+		String sql= "left join sql";
+		return sql;
+		
+	}
+	
+	
 	
 	
 	
@@ -236,11 +256,11 @@ public class TransformationUnit {
 	public void setTemp_start(Table temp_start) {
 		this.temp_start = temp_start;
 	}
-
-
 	
 	
 	
 	
-
+	
+	
+	
 }

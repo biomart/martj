@@ -16,7 +16,7 @@ package org.ensembl.mart.builder;
 public class Table  implements Cloneable {
 	
 	public String key=null;
-	public String cardinality = null;
+	public String cardinality = "";
 	public String extension;
 	public String status;
 	public String final_name;

@@ -26,12 +26,21 @@ public class Transformation {
 	private LinkedTables linked;
 	Table start_table;
 	boolean central = false;
+
 	
 	
-	public void create (Table [] referenced_tables){
+	public void create (Table [] ref_tables) {
 		
-			createTransUnits(referenced_tables);
-		
+		Table temp_end = new Table();
+		for (int i=0; i<ref_tables.length; i++){
+			
+			if (ref_tables[i].skip) continue;
+			TransformationUnit unit = new TransformationUnit(ref_tables[i]);
+			unit.cardinality=ref_tables[i].cardinality;
+			unit.column_operations=column_operations;
+			units.add(unit);
+			
+		}
 	}
 	
 	
@@ -48,18 +57,6 @@ public class Transformation {
 	
 	
 	
-	private void createTransUnits (Table [] ref_tables) {
-		
-		Table temp_end = new Table();
-		for (int i=0; i<ref_tables.length; i++){
-			
-			if (ref_tables[i].skip) continue;
-			TransformationUnit unit = new TransformationUnit(ref_tables[i]);
-			unit.column_operations=column_operations;
-			units.add(unit);
-		
-		}
-	}
 	
 	
 	

@@ -133,10 +133,7 @@ public class MartBuilder {
 	
 	private static  LinkedTables getLinked(String table_name){
 		
-		Table [] referenced_tables; 
-		
-		referenced_tables = source_schema.getReferencedTables(table_name);
-		
+		Table [] referenced_tables = source_schema.getReferencedTables(table_name);
 		ArrayList list = new ArrayList();
 		
 		String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";

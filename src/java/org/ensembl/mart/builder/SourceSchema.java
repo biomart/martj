@@ -62,7 +62,11 @@ public class SourceSchema {
 	}
 	
 	
-	
+	public Table getMainTable (String table_name){
+		
+		return resolver.getMainTable(table_name);
+		
+	}
 	
 	
 	
