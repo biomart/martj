@@ -202,11 +202,8 @@ public class MartShell {
     for (int i = 0, n = oargs.length; i < n; i++) {
 			String arg = oargs[i];
       
-      System.out.println("ARG"+ i + " " + arg + "\n");
-      
 			if (arg.startsWith("-")) {
         key = arg;
-        System.out.println("Starts with - \n");
         
         if (! argtable.containsKey(key))
           argtable.put(key, new StringBuffer());         
@@ -222,22 +219,24 @@ public class MartShell {
       }        
 		}
         
-    String[] ret = new String[argtable.size()];
+    String[] ret = new String[argtable.size() * 2]; // one slot for each key, and one slot for each non null or non empty value
     int argnum = 0;
     
     for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
 			String thiskey = (String) iter.next();
-      String thisvalue = (String) argtable.get(key);
+      String thisvalue = ((StringBuffer) argtable.get(thiskey)).toString();
+
 			ret[argnum] = thiskey;
       argnum++;
+      
+      // getOpt wants an empty string for switches
+      if (thisvalue.length() < 1)
+        thisvalue = "";
+        
       ret[argnum] = thisvalue;
       argnum++;
 		}    
-    System.out.println("args now:\n");
-    for (int i = 0, n = ret.length; i < n; i++) {
-			System.out.println("ARG" + i + " " + ret[i] + "\n");
-		}
-    
+
     return ret;
   }
   
