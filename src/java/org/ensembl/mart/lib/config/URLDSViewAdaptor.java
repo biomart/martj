@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 public class URLDSViewAdaptor implements DSViewAdaptor {
 	private final URL dsvurl;
 	private final boolean validate;
+  private final int hashcode;
 
 	private DatasetView dsv;
 	private String[] inames;
@@ -60,6 +61,8 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
 			throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
 		dsvurl = url;
 		this.validate = validate;
+    
+    hashcode = dsvurl.hashCode();
 		update();
 	}
 
@@ -162,17 +165,15 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
 		return o instanceof URLDSViewAdaptor && hashCode() == o.hashCode();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
+  /**
+   * Based solely on the underlying URL.
+   * Two URLDSViewAdaptors should return the same hashCode if they
+   * are based on the same underlying URL. If the underlying DatasetView
+   * has changed between instantiation of the two URLDSViewAdaptor objects,
+   * a call to update() should resolve this.
+   */
 	public int hashCode() {
-		int hshcode = 0;
-		if (dsvurl != null)
-			hshcode = (31 * hshcode) + dsvurl.hashCode();
-		hshcode = (31 * hshcode) + (validate ? 1 : 2);
-		if (dsv != null)
-			hshcode = (31 * hshcode) + dsv.hashCode();
-		return hshcode;
+		return hashcode;
 	}
 
 	/**

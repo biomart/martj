@@ -30,6 +30,7 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 	private final DatasetView dsv;
 	private final String[] inames;
 	private final String[] dnames;
+  private final int hashcode;
 
 	/**
 	 * Constructor for an immutable SimpleDSViewAdaptor object.
@@ -44,6 +45,7 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 		dsv = dset;
     
     dsv.setDSViewAdaptor(this);
+    hashcode = dsv.hashCode();
 	}
 
 	/* (non-Javadoc)
@@ -129,11 +131,11 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 		return o instanceof SimpleDSViewAdaptor && hashCode() == o.hashCode();
 	}
   
-  /* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
+  /**
+   * Calculated from the underlying DataSetView hashCode.
+   */
 	public int hashCode() {
-		return dsv.hashCode();
+		return hashcode;
 	}
 
 /**

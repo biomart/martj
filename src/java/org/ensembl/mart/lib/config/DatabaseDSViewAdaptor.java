@@ -50,7 +50,14 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 
 	private final DataSource dsvsource;
 	private final String user;
+  private final int hashcode;
 
+  /**
+   * Constructor for a DatabaseDSViewAdaptor
+   * @param ds -- DataSource for Mart RDBMS
+   * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
+   * @throws ConfigurationException if DataSource or user is null
+   */
 	public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
 		if (ds == null || user == null)
 			throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
@@ -58,6 +65,9 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 		this.user = user;
 		dsvsource = ds;
 
+    int tmp = user.hashCode();
+    tmp = (31 * tmp) + ds.hashCode();
+    hashcode = tmp;
 		update();
 	}
 
@@ -232,4 +242,21 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
       throw e;
 		}    
 	}
+  
+  /**
+	 * Allows Equality Comparisons manipulation of DatabaseDSViewAdaptor objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof DatabaseDSViewAdaptor && hashCode() == o.hashCode();
+	}
+  
+  /**
+   * Calculation is purely based on the DataSource and user hashCode.  Any
+   * DatabaseDSViewAdaptor based on these two inputs should represent the same
+   * collection of DatasetView objects.
+   */
+	public int hashCode() {
+    return hashcode;
+	}
+
 }

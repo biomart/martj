@@ -220,4 +220,24 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
     return retlocs;
 	}
 
+  /**
+	 * Allows Equality Comparisons manipulation of CompositeDSViewAdaptor objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof CompositeDSViewAdaptor && hashCode() == o.hashCode();
+	}
+  
+  /**
+   * Calculated from all included adaptor hashCodes.
+   */
+	public int hashCode() {
+    int hsh = 0;
+    
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+			hsh = (31 * hsh) + iter.next().hashCode();			
+		}
+    
+    return hsh;
+	}
+
 }
