@@ -25,7 +25,7 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class SimpleDSViewAdaptor implements DSViewAdaptor {
+public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
 
 	private final DatasetView dsv;
 	private final String[] inames;
@@ -138,6 +138,15 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 		return hashcode;
 	}
 
+  /**
+   * allows any DSViewAdaptor implimenting object to be compared to any other
+   * DSViewAdaptor implimenting object, based on their hashCode.
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  public int compareTo(Object o) {
+    return hashCode() - ( (DSViewAdaptor) o).hashCode();
+  }
+  
 /**
  * Currently doesnt do anything, as Simple DatasetView objects are fully loaded
  * at instantiation.  Could change in the future.

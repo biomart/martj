@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class URLDSViewAdaptor implements DSViewAdaptor {
+public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
 	private final URL dsvurl;
 	private final boolean validate;
   private final int hashcode;
@@ -155,11 +155,14 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
 		return buf.toString();
 	}
 
-	/**
-	 * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
-	 */
+  /**
+   * Allows Equality Comparisons manipulation of DSViewAdaptor objects.  Although
+   * any DSViewAdaptor object can be compared with any other DSViewAdaptor object, to provide
+   * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
+   * implimentations to equal.
+   */
 	public boolean equals(Object o) {
-		return o instanceof URLDSViewAdaptor && hashCode() == o.hashCode();
+		return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
 	}
 
   /**
@@ -173,6 +176,15 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
 		return hashcode;
 	}
 
+  /**
+   * allows any DSViewAdaptor implimenting object to be compared to any other
+   * DSViewAdaptor implimenting object, based on their hashCode.
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  public int compareTo(Object o) {
+    return hashCode() - ( (DSViewAdaptor) o).hashCode();
+  }
+  
 	/**
 	 * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
 	 */

@@ -16,20 +16,24 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+//TODO: IMPLIMENT COMPARABLE IN ALL ADAPTOR CLASSES
+
 package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A composite DSViewAdaptor that combines the datasets from all contained 
  * DSViewAdaptors.
  */
-public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
+public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
-	protected List adaptors = new ArrayList();
+	protected SortedSet adaptors = new TreeSet();
 
 	/**
 	 * Creates instance of CompositeDSViewAdaptor.
@@ -68,6 +72,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	 * if non available.
 	 */
 	public DSViewAdaptor[] getAdaptors() {
+    //TODO: return adaptors sorted by hashCode after implimenting comparable
 		return (DSViewAdaptor[]) adaptors.toArray(new DSViewAdaptor[adaptors.size()]);
 	}
 
@@ -77,8 +82,8 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	 */
 	public String[] getDatasetDisplayNames() throws ConfigurationException {
 		List names = new ArrayList();
-		for (int i = 0, n = adaptors.size(); i < n; i++) {
-			DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
 			names.addAll(Arrays.asList(adaptor.getDatasetDisplayNames()));
 		}
 		return (String[]) names.toArray(new String[names.size()]);
@@ -90,10 +95,11 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	 */
 	public String[] getDatasetInternalNames() throws ConfigurationException {
 		List names = new ArrayList();
-		for (int i = 0, n = adaptors.size(); i < n; i++) {
-			DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
-			names.addAll(Arrays.asList(adaptor.getDatasetInternalNames()));
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+			DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
+      names.addAll(Arrays.asList(adaptor.getDatasetInternalNames()));	
 		}
+
 		return (String[]) names.toArray(new String[names.size()]);
 	}
 
@@ -102,8 +108,8 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	 */
 	public DatasetView[] getDatasetViews() throws ConfigurationException {
 		List views = new ArrayList();
-		for (int i = 0, n = adaptors.size(); i < n; i++) {
-			DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
 			views.addAll(Arrays.asList(adaptor.getDatasetViews()));
 		}
 		return (DatasetView[]) views.toArray(new DatasetView[views.size()]);
@@ -162,8 +168,8 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
 	 */
 	public void update() throws ConfigurationException {
-		for (int i = 0, n = adaptors.size(); i < n; i++) {
-			DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
 			adaptor.update();
 		}
 	}
@@ -187,12 +193,16 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
   public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException {
     boolean removed = false;
     
-    for (int i = 0, n = adaptors.size(); i < n; i++) {
-      DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
       
       if (adaptor.supportsInternalName(dsv.getInternalName())) {
         if (adaptor instanceof MultiDSViewAdaptor) {
-          ( (MultiDSViewAdaptor) adaptor).removeDatasetView(dsv);
+          String[] inames = adaptor.getDatasetInternalNames();
+          if (inames.length == 1 && inames[0].equals(dsv.getInternalName()))
+            adaptors.remove(adaptor);
+          else
+            ( (MultiDSViewAdaptor) adaptor).removeDatasetView(dsv);
           removed = true;
         } else
           removed = adaptors.remove(adaptor);
@@ -221,10 +231,13 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
 	}
 
   /**
-	 * Allows Equality Comparisons manipulation of CompositeDSViewAdaptor objects
-	 */
+   * Allows Equality Comparisons manipulation of DSViewAdaptor objects.  Although
+   * any DSViewAdaptor object can be compared with any other DSViewAdaptor object, to provide
+   * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
+   * implimentations to equal.
+   */
 	public boolean equals(Object o) {
-		return o instanceof CompositeDSViewAdaptor && hashCode() == o.hashCode();
+		return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
 	}
   
   /**
@@ -234,10 +247,20 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor {
     int hsh = 0;
     
     for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
-			hsh = (31 * hsh) + iter.next().hashCode();			
+      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
+      int h = adaptor.hashCode();
+			hsh += h;			
 		}
     
     return hsh;
 	}
 
+  /**
+   * allows any DSViewAdaptor implimenting object to be compared to any other
+   * DSViewAdaptor implimenting object, based on their hashCode.
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+	public int compareTo(Object o) {
+		return hashCode() - ( (DSViewAdaptor) o).hashCode();
+	}
 }

@@ -19,6 +19,8 @@
 package org.ensembl.mart.lib.config;
 
 import java.security.MessageDigest;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,9 +40,9 @@ import org.ensembl.mart.lib.DatabaseUtil.DatabaseURLElements;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
+public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
-  private String dbpassword;
+	private String dbpassword;
 	private Logger logger = Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
 	private List dsviews = new ArrayList();
 	private int inameIndex = 0;
@@ -49,15 +51,19 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 	private HashMap dnameMap = new HashMap();
 
 	private final DataSource dsvsource;
-	private final String user;
-  private final int hashcode;
 
-  /**
-   * Constructor for a DatabaseDSViewAdaptor
-   * @param ds -- DataSource for Mart RDBMS
-   * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
-   * @throws ConfigurationException if DataSource or user is null
-   */
+	//Holds elements used in hashcode, and reconstruction of MartLocation element
+	private final DatabaseURLElements els;
+
+	private final String user;
+	private final int hashcode;
+
+	/**
+	 * Constructor for a DatabaseDSViewAdaptor
+	 * @param ds -- DataSource for Mart RDBMS
+	 * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
+	 * @throws ConfigurationException if DataSource or user is null
+	 */
 	public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
 		if (ds == null || user == null)
 			throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
@@ -65,26 +71,40 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 		this.user = user;
 		dsvsource = ds;
 
-    int tmp = user.hashCode();
-    tmp = (31 * tmp) + ds.hashCode();
-    hashcode = tmp;
+		try {
+			//get info for hashcode, and MartLocation reconstruction
+			String dbURL = dsvsource.getConnection().getMetaData().getURL(); // actual Database Server URL String
+			els = DatabaseUtil.decompose(dbURL);
+		} catch (IllegalArgumentException e) {
+			throw new ConfigurationException("Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(), e);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException during parse of Connection for Connection Parameters " + e.getMessage(), e);
+		}
+
+		int tmp = user.hashCode();
+    tmp = (31 * tmp) + els.host.hashCode();
+    tmp = (els.port != null) ? (31 * tmp) + els.port.hashCode() : tmp;
+    tmp = (els.databaseType != null) ? (31 * tmp) + els.databaseType.hashCode() : tmp;
+    tmp = (els.databaseName != null) ? (31 * tmp) + els.databaseName.hashCode() : tmp; 
+    tmp = (31 * tmp) + els.jdbcDriverClassName.hashCode();
+		hashcode = tmp;
 		update();
 	}
 
-  /**
-   * This method should ONLY be used if the user is not concerned with network password snooping, as it does
-   * not do anything to encrypt the password provided.  It is really a convenience method for users wishing to
-   * create MartRegistry files with their database password attribute filled in.
-   * @param password -- String password for underlying DataSource
-   * @throws ConfigurationException if setDatabasePassword has already been called.
-   * @see org.ensembl.mart.lib.config.DatabaseDSViewAdaptor#getMartLocations
-   */
-  public void setDatabasePassword(String password) throws ConfigurationException {
-    if (dbpassword != null)
-      throw new ConfigurationException("DatabasePassword already set\n");
-    dbpassword = password;
-  }
-  
+	/**
+	 * This method should ONLY be used if the user is not concerned with network password snooping, as it does
+	 * not do anything to encrypt the password provided.  It is really a convenience method for users wishing to
+	 * create MartRegistry files with their database password attribute filled in.
+	 * @param password -- String password for underlying DataSource
+	 * @throws ConfigurationException if setDatabasePassword has already been called.
+	 * @see org.ensembl.mart.lib.config.DatabaseDSViewAdaptor#getMartLocations
+	 */
+	public void setDatabasePassword(String password) throws ConfigurationException {
+		if (dbpassword != null)
+			throw new ConfigurationException("DatabasePassword already set\n");
+		dbpassword = password;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
 	 */
@@ -142,8 +162,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 
 	public void addDatasetView(DatasetView dsv) {
 		if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
-      dsv.setDatasource(dsvsource);
-      dsv.setDSViewAdaptor(this);
+			dsv.setDatasource(dsvsource);
+			dsv.setDSViewAdaptor(this);
 
 			inameMap.put(dsv.getInternalName(), dsv);
 			dnameMap.put(dsv.getDisplayName(), dsv);
@@ -161,8 +181,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 			inameMap.remove(dsv.getInternalName());
 			dnameMap.remove(dsv.getDisplayName());
 			dsviews.remove(dsv);
-      dsv.setDSViewAdaptor(null);
-      return true;
+			dsv.setDSViewAdaptor(null);
+			return true;
 		} else
 			return false;
 	}
@@ -218,45 +238,46 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor {
 	}
 
 	/**
-   * Note, this method will only include the DataSource password in the resulting MartLocation object
-   * if the user set the password using the setDatabasePassword method of this adaptor. Otherwise, 
-   * regardless of whether the underlying DataSource was created
-   * with a password, the resulting DatabaseLocation element will not have
-   * a password attribute.  Users may need to hand modify any MartRegistry documents
-   * that they create in these cases.  Users are encouraged to use
-   * passwordless, readonly access users.
+	 * Note, this method will only include the DataSource password in the resulting MartLocation object
+	 * if the user set the password using the setDatabasePassword method of this adaptor. Otherwise, 
+	 * regardless of whether the underlying DataSource was created
+	 * with a password, the resulting DatabaseLocation element will not have
+	 * a password attribute.  Users may need to hand modify any MartRegistry documents
+	 * that they create in these cases.  Users are encouraged to use
+	 * passwordless, readonly access users.
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
 	 */
 	public MartLocation[] getMartLocations() throws ConfigurationException {
-		try {
-			DatabaseURLElements els = DatabaseUtil.decompose(dsvsource.getConnection().getMetaData().getURL());
-			
-			MartLocation dbloc = new DatabaseLocation(els.host, els.port, els.databaseType, els.databaseName, user, dbpassword, dsvsource.getConnection().getMetaData().getDriverName());
-			
-			return new MartLocation[] { dbloc };
-		} catch (IllegalArgumentException e) {
-      throw new ConfigurationException("Caught IllegalArgumentException during creation of new DatabaseLocation object " + e.getMessage(), e);
-		} catch (SQLException e) {
-      throw new ConfigurationException("Caught SQLException during creation of new DatabaseLocation object " + e.getMessage(), e);
-		} catch (ConfigurationException e) {
-      throw e;
-		}    
+		MartLocation dbloc = new DatabaseLocation(els.host, els.port, els.databaseType, els.databaseName, user, dbpassword, els.jdbcDriverClassName);
+		return new MartLocation[] { dbloc };
 	}
-  
-  /**
-	 * Allows Equality Comparisons manipulation of DatabaseDSViewAdaptor objects
+
+	/**
+	 * Allows Equality Comparisons manipulation of DSViewAdaptor objects.  Although
+   * any DSViewAdaptor object can be compared with any other DSViewAdaptor object, to provide
+   * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
+   * implimentations to equal.
 	 */
 	public boolean equals(Object o) {
-		return o instanceof DatabaseDSViewAdaptor && hashCode() == o.hashCode();
+		return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
 	}
-  
-  /**
-   * Calculation is purely based on the DataSource and user hashCode.  Any
-   * DatabaseDSViewAdaptor based on these two inputs should represent the same
-   * collection of DatasetView objects.
-   */
+
+	/**
+	 * Calculation is purely based on the DataSource and user hashCode.  Any
+	 * DatabaseDSViewAdaptor based on these two inputs should represent the same
+	 * collection of DatasetView objects.
+	 */
 	public int hashCode() {
-    return hashcode;
+		return hashcode;
+	}
+
+	/**
+	 * allows any DSViewAdaptor implimenting object to be compared to any other
+	 * DSViewAdaptor implimenting object, based on their hashCode.
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	public int compareTo(Object o) {
+		return hashcode - ((DSViewAdaptor) o).hashCode();
 	}
 
 }

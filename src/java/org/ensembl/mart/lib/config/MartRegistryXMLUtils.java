@@ -117,7 +117,7 @@ public class MartRegistryXMLUtils {
 		try {
 			url = new URL(urlstring);
 		} catch (MalformedURLException e) {
-			throw new ConfigurationException("Could not create URL from URLLocation Element within MartRegistry " + e.getMessage(), e);
+			throw new ConfigurationException("Could not create URL for " + urlstring + " from URLLocation Element within MartRegistry " + e.getMessage(), e);
 		}
 
 		return new URLLocation(url);
