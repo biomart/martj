@@ -65,24 +65,30 @@
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="GENE:" internalName="gene">
         <FilterCollection internalName="id_limit">
-          <FilterDescription description="Filter to include/exclude Known Genes" displayName="Known Genes" fieldName="known_gene" internalName="known_genes" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="Filter to include/exclude Disease Genes" displayName="Disease Genes" fieldName="disease_gene" internalName="disease_genes" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes mapping to AFFY-HG-U133 IDs" displayName="with AFFY-HG-U133 ID(s)" fieldName="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes mapping to AFFY-HG-U95 IDs" displayName="with AFFY-HG-U95 ID(s)" fieldName="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes mapping to EMBL IDs" displayName="with EMBL ID(s)" fieldName="EMBL" internalName="embl_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes mapping to GKB IDs" displayName="with GKB ID(s)" fieldName="GKB" internalName="gkb_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes mapping to GO IDs" displayName="with GO IDs" fieldName="GO" internalName="go_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with HUGO IDs" displayName="with HUGO ID(s)" fieldName="HUGO" internalName="hugo_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with InterPro IDs" displayName="with InterPro ID(s)" fieldName="interpro" internalName="interpro_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with LocusLink IDs" displayName="with LocusLink ID(s)" fieldName="LocusLink" internalName="locuslink_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with MIM IDs" displayName="with MIM ID(s)" fieldName="MIM" internalName="mim_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes with PDB IDs" displayName="with PDB ID(s)" fieldName="PDB" internalName="pdb_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes with Protein IDs " displayName="with Protein ID(s)" fieldName="protein_id" internalName="protein_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes with RefSeq IDs" displayName="with RefSeq ID(s)" fieldName="RefSeq" internalName="refseq_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with SPTrEMBL IDs" displayName="with SPTrEMBL ID(s)" fieldName="SPTREMBL" internalName="sptrembl_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with SWISSPROT ids" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="swissprot_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with Sanger-Hver1-2-1 ID(s)" displayName="with Sanger-Hver1-2-1 ID(s)" fieldName="Sanger_Hver1_2_1" internalName="sanger_hver1_2_1_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with UMCU Hsapiens 19Kv1 ID(s)" displayName="with UMCU Hsapiens 19Kv1 ID(s)" fieldName="UMCU_Hsapiens_19Kv1" internalName="umcu_hsapiens_19kv1_id_xrefs" tableConstraint="main" type="boolean"/>
+		<FilterDescription description="Filter to include/exclude Genes based on whether they do or don't have particualr names" displayName="Available Gene Names" fieldName="known_gene" internalName="known_genes" tableConstraint="main" type="boolean">
+
+
+          <Option description="Known Genes" displayName="Known Genes" fieldName="known_gene" internalName="known_genes" tableConstraint="main" isSelectable="true"/>
+          <Option description="Disease Genes" displayName="Disease Genes" fieldName="disease_gene" internalName="disease_genes" tableConstraint="main"  isSelectable="true"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U133 IDs" displayName="with AFFY-HG-U133 ID(s)" fieldName="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" tableConstraint="main"  isSelectable="true"/>
+          <Option description="filter to include/exclude genes mapping to AFFY-HG-U95 IDs" displayName="with AFFY-HG-U95 ID(s)" fieldName="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" tableConstraint="main"  isSelectable="true"/>
+          <Option description="filter to include/exclude genes mapping to EMBL IDs" displayName="with EMBL ID(s)" fieldName="EMBL" internalName="embl_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes mapping to GKB IDs" displayName="with GKB ID(s)" fieldName="GKB" internalName="gkb_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes mapping to GO IDs" displayName="with GO IDs" fieldName="GO" internalName="go_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with HUGO IDs" displayName="with HUGO ID(s)" fieldName="HUGO" internalName="hugo_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with InterPro IDs" displayName="with InterPro ID(s)" fieldName="interpro" internalName="interpro_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with LocusLink IDs" displayName="with LocusLink ID(s)" fieldName="LocusLink" internalName="locuslink_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with MIM IDs" displayName="with MIM ID(s)" fieldName="MIM" internalName="mim_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes with PDB IDs" displayName="with PDB ID(s)" fieldName="PDB" internalName="pdb_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes with Protein IDs " displayName="with Protein ID(s)" fieldName="protein_id" internalName="protein_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes with RefSeq IDs" displayName="with RefSeq ID(s)" fieldName="RefSeq" internalName="refseq_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with SPTrEMBL IDs" displayName="with SPTrEMBL ID(s)" fieldName="SPTREMBL" internalName="sptrembl_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with SWISSPROT ids" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="swissprot_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with Sanger-Hver1-2-1 ID(s)" displayName="with Sanger-Hver1-2-1 ID(s)" fieldName="Sanger_Hver1_2_1" internalName="sanger_hver1_2_1_id_xrefs" tableConstraint="main"  isSelectable="true" />
+          <Option description="filter to include/exclude genes associated with UMCU Hsapiens 19Kv1 ID(s)" displayName="with UMCU Hsapiens 19Kv1 ID(s)" fieldName="UMCU_Hsapiens_19Kv1" internalName="umcu_hsapiens_19kv1_id_xrefs" tableConstraint="main"  isSelectable="true" />
+
+
+		</FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
           <FilterDescription description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" fieldName="display_id" internalName="affy_hg_u133_id" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
