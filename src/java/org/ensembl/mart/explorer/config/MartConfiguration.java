@@ -69,7 +69,7 @@ public class MartConfiguration {
 /*
  * MartConfigurations must have a martname, so dont allow parameterless construction
  */
- private MartConfiguration() {
+ private MartConfiguration() throws ConfigurationException {
  	this("", ""); // will never get here
  }
  
@@ -79,7 +79,7 @@ public class MartConfiguration {
 	 * 
 	 * @param martname String name of the mart database for this configuration
 	 */
-	public MartConfiguration(String martname) {
+	public MartConfiguration(String martname) throws ConfigurationException {
 		this(martname, "");
 	}
 	
@@ -90,9 +90,9 @@ public class MartConfiguration {
  * @param martname String name of the mart database for this configuration
  * @param description String description of the mart database for this configuration
  */
-public MartConfiguration(String martname, String description) {
+public MartConfiguration(String martname, String description) throws ConfigurationException {
 	if (martname == null)
-	  throw new RuntimeException("MartConfiguration must have a martname");
+	  throw new  ConfigurationException("MartConfiguration must have a martname");
 	  
 	this.martname = martname;
 	this.description = description;
