@@ -15,9 +15,10 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib.config;
 
+import java.io.File;
 import java.net.URL;
 import java.util.logging.Logger;
 
@@ -29,137 +30,173 @@ import java.util.logging.Logger;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class URLDSViewAdaptor implements DSViewAdaptor {
-  private final URL dsvurl;
-  private final boolean validate;
-  
-  private DatasetView dsv;
-  private String[] inames;
-  private String[] dnames;
-  private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
-  
-  public URLDSViewAdaptor(URL url, boolean validate) throws ConfigurationException {
-     if (url == null)
-       throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
-    dsvurl = url;
-    this.validate = validate;   
-    update();   
-  }
-  
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
-   */
-  public String[] getDatasetDisplayNames() throws ConfigurationException {
-    return dnames;
-  }
+	private final URL dsvurl;
+	private final boolean validate;
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
-   */
-  public String[] getDatasetInternalNames() throws ConfigurationException {
-    return inames;
-  }
+	private DatasetView dsv;
+	private String[] inames;
+	private String[] dnames;
+	private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
+  /**
+   * Construct a DSViewAdaptor from a url containing a DatasetView.dtd compliant XML Document.
+   * JDOM validation is set to false.
+   * @param url -- url containing a DatasetView.dtd compliant XML document
+   * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView[] getDatasetViews() throws ConfigurationException {
-    return new DatasetView[] { dsv };
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
-   */
-  public boolean supportsDisplayName(String name) {
-    if (dnames[0].equals(name))
-      return true;
-    else
-      return false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
-   */
-  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
-    if (!supportsDisplayName(name))
-      throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
-    return dsv;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
-   */
-  public boolean supportsInternalName(String name) {
-    if (inames[0].equals(name))
-      return true;
-    else
-      return false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
-   */
-  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
-    if (!supportsInternalName(name))
-      throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
-    return dsv;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
-   */
-  public void update() throws ConfigurationException {
-    try {
-       if (dsvurl.getProtocol().matches("file"))
-         dsv = DatasetViewXMLUtils.XMLStreamToDatasetView(dsvurl.openStream(), validate);
-       else
-         throw new ConfigurationException("Non-file URLS are not currently Supported: " + dsvurl + "\n");
-    } catch (Exception e) {
-       throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl + " " + e.getMessage(),e);  
-    }
-    
-    inames = new String[] { dsv.getInternalName()};
-    dnames = new String[] { dsv.getDisplayName()};
-    
-    dsv.setDSViewAdaptor(this); 
+  public URLDSViewAdaptor(URL url) throws ConfigurationException {
+    this(url, false);
   }
   
   /**
-   * Useful debug output
+   * Construct a DSViewAdaptor from a url containing a DatasetView.dtd compliant XML Document,
+   * with optional JDOM validation.
+   * @param url -- url containing a DatasetView.dtd compliant XML document
+   * @param validate -- if true, JDOM validates the Document against the DatasetView.dtd contained in the CLASSPATH
+   * @throws ConfigurationException for all underlying Exceptions.
    */
-  public String toString() {
-    StringBuffer buf = new StringBuffer();
+	public URLDSViewAdaptor(URL url, boolean validate) throws ConfigurationException {
+		if (url == null)
+			throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
+		dsvurl = url;
+		this.validate = validate;
+		update();
+	}
 
-    buf.append("[");
-    buf.append(" dataset DisplayName=").append(dsv.getDisplayName());
-    buf.append("]");
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
+	 */
+	public String[] getDatasetDisplayNames() throws ConfigurationException {
+		return dnames;
+	}
 
-    return buf.toString();
-  }
-  
-  /**
-   * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
-   */
-  public boolean equals(Object o) {
-    return o instanceof URLDSViewAdaptor && hashCode() == o.hashCode();
-  }
-  
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  public int hashCode() {
-    int hshcode = 0;
-    if ( dsvurl!=null ) hshcode = ( 31 * hshcode ) + dsvurl.hashCode();
-    hshcode = ( 31 * hshcode ) + ( validate ? 1 : 2 );
-    if ( dsv!=null ) hshcode = ( 31 * hshcode ) + dsv.hashCode();
-    return hshcode;
-  }
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
+	 */
+	public String[] getDatasetInternalNames() throws ConfigurationException {
+		return inames;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
+	 */
+	public DatasetView[] getDatasetViews() throws ConfigurationException {
+		return new DatasetView[] { dsv };
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
+	 */
+	public boolean supportsDisplayName(String name) {
+		if (dnames[0].equals(name))
+			return true;
+		else
+			return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
+	 */
+	public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
+		if (!supportsDisplayName(name))
+			throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
+		return dsv;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
+	 */
+	public boolean supportsInternalName(String name) {
+		if (inames[0].equals(name))
+			return true;
+		else
+			return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
+	 */
+	public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
+		if (!supportsInternalName(name))
+			throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
+		return dsv;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
+	 */
+	public void update() throws ConfigurationException {
+		try {
+			if (dsvurl.getProtocol().matches("file"))
+				dsv = DatasetViewXMLUtils.XMLStreamToDatasetView(dsvurl.openStream(), validate);
+			else
+				throw new ConfigurationException("Non-file URLS are not currently Supported: " + dsvurl + "\n");
+		} catch (Exception e) {
+			throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl + " " + e.getMessage(), e);
+		}
+
+		inames = new String[] { dsv.getInternalName()};
+		dnames = new String[] { dsv.getDisplayName()};
+
+		dsv.setDSViewAdaptor(this);
+	}
 
 	/**
-   * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
+	 * Useful debug output
+	 */
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+    buf.append(" url=").append(dsvurl.toString());
+		buf.append(", dataset DisplayName=").append(dsv.getDisplayName());
+		buf.append("]");
+
+		return buf.toString();
+	}
+
+	/**
+	 * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof URLDSViewAdaptor && hashCode() == o.hashCode();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+		int hshcode = 0;
+		if (dsvurl != null)
+			hshcode = (31 * hshcode) + dsvurl.hashCode();
+		hshcode = (31 * hshcode) + (validate ? 1 : 2);
+		if (dsv != null)
+			hshcode = (31 * hshcode) + dsv.hashCode();
+		return hshcode;
+	}
+
+	/**
+	 * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
 	 */
 	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
 		// Currently does not do anything, as URL DSViews are fully loaded at instantiation.  Could change in the future.
 
 	}
 
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
+	 */
+	public MartLocation[] getMartLocations() throws ConfigurationException {
+		return new MartLocation[] { new URLLocation(dsvurl)};
+	}
+  
+  /**
+   * Writes a DatasetView object as DatasetView.dtd compliant XML to a File.
+   * @param dsv -- DatasetView object to store to the file system
+   * @param file -- File to write XML
+   * @throws ConfigurationException for underlying Exceptions
+   */
+  public static void StoreDatasetView(DatasetView dsv, File file) throws ConfigurationException {
+    DatasetViewXMLUtils.DatasetViewToFile(dsv, file);
+  }
 }

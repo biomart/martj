@@ -102,5 +102,13 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public void lazyLoad(DatasetView dsv) throws ConfigurationException;
+  
+  /**
+   * All implimentations should be able to create MartLocation objects which can be added to 
+   * a MartRegistry object when RegistryDSViewAdaptor.getMartRegistry method is called.
+   * @return MartLocation[] array
+   * @throws ConfigurationException for any underlying Exceptions.
+   */
+  public MartLocation[] getMartLocations() throws ConfigurationException;
 
 }
