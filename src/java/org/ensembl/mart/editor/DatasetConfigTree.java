@@ -120,7 +120,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		rootNode = new DatasetConfigTreeNode(dsConfig.getDisplayName());
 		rootNode.setUserObject(dsConfig);
 		treemodel = new DatasetConfigTreeModel(rootNode, dsConfig);
-		setModel(treemodel);  
+		setModel(treemodel);
 		this.setSelectionInterval(0, 0);
 		DatasetConfigTreeDnDListener dndListener = new DatasetConfigTreeDnDListener(this);
 		//clipboard = new Clipboard("tree_clipboard");
@@ -234,7 +234,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					insert(new FilterGroup("new"), "FilterGroup:");
 				else if (e.getActionCommand().equals("insert attribute group"))
 					insert(new AttributeGroup("new"), "AttributeGroup:");
-		
+
 				else if (e.getActionCommand().equals("insert filter collection"))
 					insert(new FilterCollection("new"), "FilterCollection:");
 				else if (e.getActionCommand().equals("insert attribute collection"))
@@ -350,7 +350,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		public void dragOver(DropTargetDragEvent event) {
 		}
 
-		public void drop(DropTargetDropEvent event) {      
+		public void drop(DropTargetDropEvent event) {
 			try {
 				Transferable transferable = event.getTransferable();
 
@@ -375,7 +375,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		public void dropActionChanged(DropTargetDragEvent event) {
 		}
 
-		public void dragGestureRecognized(DragGestureEvent event) {      
+		public void dragGestureRecognized(DragGestureEvent event) {
 			selnode = null;
 			dropnode = null;
 			Object selected = getSelectionPath();
@@ -406,10 +406,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 							if (selnode.getUserObject() instanceof org.ensembl.mart.lib.config.FilterDescription) {
 								// can convert FD to Option and insert into another FD
-								result = treemodel.insertNodeInto(selnode, 
-                                                                  dropnode,
-                                                                  DatasetConfigTreeNode.getHeterogenousOffset(( (DatasetConfigTreeNode) dropnode).getUserObject(),
-                                                                                                              ( (DatasetConfigTreeNode) selnode).getUserObject()));
+								result =
+									treemodel.insertNodeInto(
+										selnode,
+										dropnode,
+										DatasetConfigTreeNode.getHeterogenousOffset(
+											((DatasetConfigTreeNode) dropnode).getUserObject(),
+											((DatasetConfigTreeNode) selnode).getUserObject()));
 							} else
 								result =
 									treemodel.insertNodeInto(
@@ -420,10 +423,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 							selnodeParent = (DatasetConfigTreeNode) selnode.getParent();
 							selnodeIndex = selnodeParent.getIndex(selnode);
 							treemodel.removeNodeFromParent(selnode);
-							result = treemodel.insertNodeInto(selnode, 
-                                                              dropnode, 
-                                                              DatasetConfigTreeNode.getHeterogenousOffset(( (DatasetConfigTreeNode) dropnode).getUserObject(),
-                                                                                                          ( (DatasetConfigTreeNode) selnode).getUserObject()));
+							result =
+								treemodel.insertNodeInto(
+									selnode,
+									dropnode,
+									DatasetConfigTreeNode.getHeterogenousOffset(
+										((DatasetConfigTreeNode) dropnode).getUserObject(),
+										((DatasetConfigTreeNode) selnode).getUserObject()));
 						}
 						if (result.startsWith("Error")) {
 							JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
@@ -457,9 +463,23 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					TableCellEditor attrTableEditor = attrTable.getCellEditor();
 					attrTableEditor.stopCellEditing();
 				}
+			//need to evaluate here as well as mouseReleased, for cross platform portability
+			if (e.isPopupTrigger()) {
+				//Create the popup menu.
+				loungePopupMenu(e);
+			}
 		}
 
 		public void mouseReleased(MouseEvent e) {
+			if (attrTable != null)
+				if (attrTable.getEditorComponent() != null) {
+					TableCellEditor attrTableEditor = attrTable.getCellEditor();
+					attrTableEditor.stopCellEditing();
+				}
+			if (e.isPopupTrigger()) {
+				//Create the popup menu.
+				loungePopupMenu(e);
+			}
 		}
 
 		public void mouseEntered(MouseEvent e) {
@@ -469,7 +489,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		}
 
 		public void mouseClicked(MouseEvent e) {
-			if (e.getButton() == 3) {
+			if (attrTable != null)
+				if (attrTable.getEditorComponent() != null) {
+					TableCellEditor attrTableEditor = attrTable.getCellEditor();
+					attrTableEditor.stopCellEditing();
+				}
+			if (e.isPopupTrigger()) {
 				//Create the popup menu.
 				loungePopupMenu(e);
 			}
@@ -498,14 +523,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter group" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-			menuItems =
-				new String[] {
-					"copy",
-					"cut",
-					"paste",
-					"delete",
-					"hide toggle",
-					"insert attribute group", };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert attribute group", };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter collection" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
@@ -533,7 +551,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle" };
-		
+
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
@@ -574,9 +592,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		//if (path==null) return;
 		//editingNode= ((DatasetConfigTreeNode)path.getLastPathComponent());     
 
-        if (!cut)
-		  editingNode = setEditingNode();
-      
+		if (!cut)
+			editingNode = setEditingNode();
+
 		if (editingNode == null)
 			return;
 		String editingNodeClass = editingNode.getUserObject().getClass().getName();
@@ -623,7 +641,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new PushAction((PushAction) editingNode.getUserObject()));
-		
+
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new Importable((Importable) editingNode.getUserObject()));
@@ -749,11 +767,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		String pushField = fd2.getField();
 		String pushInternalName = fd2.getInternalName();
 		String pushTableName = fd2.getTableConstraint();
-		
-		if (pushTableName.equals("main")){
+
+		if (pushTableName.equals("main")) {
 			String[] mains = dsConfig.getStarBases();
 			pushTableName = mains[0];
-		}	
+		}
 		// can add push actions to existing push actions so need to know the class of the node
 		String className = node.getUserObject().getClass().getName();
 		String field;
@@ -795,9 +813,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 						break;
 				}
 				DatasetConfigTreeNode newNode = new DatasetConfigTreeNode("PushAction:newNode", pa);
-				String result = treemodel.insertNodeInto(newNode, 
-                                                         childNode,
-                                                         DatasetConfigTreeNode.getHeterogenousOffset(childNode.getUserObject(), newNode.getUserObject()));
+				String result =
+					treemodel.insertNodeInto(
+						newNode,
+						childNode,
+						DatasetConfigTreeNode.getHeterogenousOffset(childNode.getUserObject(), newNode.getUserObject()));
 				if (result.startsWith("Error")) {
 					JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
 					return;
@@ -823,9 +843,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		fd1.setLegalQualifiers("=");
 
 		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig);
-		
+
 		for (int k = options.length - 1; k > -1; k--) {
-			
+
 			insert(options[k], "Option");
 		}
 	}
