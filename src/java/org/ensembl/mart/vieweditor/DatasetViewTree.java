@@ -475,8 +475,10 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
+					menuItems = new String[]{"copy", "cut", "paste", "add push action", "delete", "save","save as"};            
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
-			menuItems = new String[]{"copy", "cut", "paste", "insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
+			menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
 
@@ -582,17 +584,39 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 	    	
 		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
 		FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+        fd2.setType("drop_down_basic_filter");
         
         // set FilterDescription fd1 = to current node
 	    DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
-		FilterDescription fd1 = (FilterDescription) node.getUserObject();
-
-        String pushField = fd2.getField();
-        String pushInternalName = fd2.getInternalName();
-        String pushTableName = fd2.getTableConstraint();
-        String field = fd1.getField();
+		
+		String pushField = fd2.getField();
+		String pushInternalName = fd2.getInternalName();
+		String pushTableName = fd2.getTableConstraint();
+		
+		// can add push actions to existing push actions so need to know the class of the node
+		String className = node.getUserObject().getClass().getName();
+		String field;
+		Option[] options;
+				
+	    if (className.equals("org.ensembl.mart.lib.config.FilterDescription")){	
+		  FilterDescription fd1 = (FilterDescription) node.getUserObject();
+		  field = fd1.getField();
+		  if (!fd1.getTableConstraint().equals(pushTableName))
+			field = "l_" + field;
+		  options = fd1.getOptions();			
+		} else{
+          PushAction pa1 = (PushAction) node.getUserObject();
+          String intName = pa1.getInternalName();
+          field = intName.split("_push")[0];
+          if (field.startsWith("g_")){
+            field = field.replaceFirst("g_","");
+          }
+		  System.out.println(field);
+          options = pa1.getOptions();
+		}
         
-		Option[] options = fd1.getOptions();
+        
+		
 		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
 		
 	    for (int i = 0; i < options.length; i++ ){
