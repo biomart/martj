@@ -25,7 +25,7 @@ public class FilterPageWidget extends PageWidget {
    */
   public FilterPageWidget(Query query, String name, FilterPage filterPage) {
     super(name, query);
-    // TODO Auto-generated constructor stub
+    // TODO :1 create and filter group widgets. see AttributeFilterPage
   }
 
   

@@ -106,6 +106,7 @@ public class QueryEditor
 	private OutputSettingsPage outputSettingsPage;
 
 	private AttributePageSetWidget attributesPage;
+  private FilterPageSetWidget filtersPage;
   
   /** Maps attributes to the tree node they are represented by. */
   private Map attributeToWidget;
@@ -388,13 +389,14 @@ public class QueryEditor
    * 
    */
   private void addFilterPages() {
-    // TODO :1 NEXT
-        //filtersPage = new FilterPageSetWidget( query, currentDataset );  
+    filtersPage = new FilterPageSetWidget( query, currentDataset );
+    // TODO :2 create maps like for attributes
+    addPage( filtersPage );  
   }
 
   /**
-   * Creates the attribute pages, adds them to the GUI and creates
-   * useful maps that are used later.
+   * Creates the attribute pages and various maps that are useful 
+   * for relating nodes, pages and attributes.
    */
   private void addAttributePages() {
     
