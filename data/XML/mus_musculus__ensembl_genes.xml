@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
 
-  <DatasetView description="First Mart built from Mus musculus version 14" displayName="Ensembl Genes__Mus musculus (NCBIM 30)" internalName="ensembl_genes_mus_musculus" datasetPrefix="mus_musculus_ensembl_genes">
+  <DatasetView description="First Mart built from Mus musculus version 14" displayName="Ensembl Genes__Mus musculus (NCBIM 30)" internalName="ensembl_genes_mus_musculus" dataset="mus_musculus_ensembl_genes">
     <StarBase>mmusculus_ensemblgene</StarBase>
     <StarBase>mmusculus_ensembltranscript</StarBase>
     <PrimaryKey>gene_id</PrimaryKey>

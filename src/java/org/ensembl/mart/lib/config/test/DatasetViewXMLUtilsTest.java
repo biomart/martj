@@ -98,7 +98,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
     String testDatasetPrefix = "test";
-    String DatasetPrefix = d.getDatasetPrefix();
+    String DatasetPrefix = d.getDataset();
 
 		assertEquals("Internal Name not correctly set for DatasetView\n", testIName, IName);
 		assertEquals("Display Name not correctly set for DatasetView\n", testDName, DName);

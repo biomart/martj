@@ -7,7 +7,7 @@
                    
 <!ELEMENT DatasetView (Option*, DefaultFilter*, StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
 <!ATTLIST DatasetView %desc_data;
-                      datasetPrefix CDATA #REQUIRED>
+                      dataset CDATA #REQUIRED>
 
 <!ELEMENT StarBase (#PCDATA)>
 

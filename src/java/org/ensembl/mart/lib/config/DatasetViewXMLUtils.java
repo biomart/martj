@@ -68,7 +68,7 @@ public class DatasetViewXMLUtils {
 	private static final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names
-  private static final String DATASETPREFIX = "datasetPrefix";
+  private static final String DATASET = "dataset";
 	private static final String INTERNALNAME = "internalName";
 	private static final String DISPLAYNAME = "displayName";
 	private static final String DESCRIPTION = "description";
@@ -189,10 +189,10 @@ public class DatasetViewXMLUtils {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-    String datasetPrefix = thisElement.getAttributeValue(DATASETPREFIX, "");
+    String dataset = thisElement.getAttributeValue(DATASET, "");
     String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
-    DatasetView d = new DatasetView(intName, dispname, datasetPrefix, desc);
+    DatasetView d = new DatasetView(intName, dispname, dataset, desc);
 
     LoadDatasetViewWithDocument(d, doc);
 
@@ -505,7 +505,7 @@ public class DatasetViewXMLUtils {
     if (validString(dsview.getDisplayName()))
       root.setAttribute(DISPLAYNAME, dsview.getDisplayName());
     
-    root.setAttribute(DATASETPREFIX, dsview.getDatasetPrefix());
+    root.setAttribute(DATASET, dsview.getDataset());
       
     if (validString(dsview.getDescription()))
       root.setAttribute(DESCRIPTION, dsview.getDescription());

@@ -51,7 +51,7 @@ public class DatabaseDatasetViewUtils {
 
 	private static final String BASEMETATABLE = "_meta_DatasetView"; // append user if necessary
 
-  private static final String GETALLNAMESQL = "select internalname, displayName, datasetPrefix, description, MessageDigest from ";
+  private static final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest from ";
 	private static final String GETINTNAMESQL = "select internalName from ";	//append table after user test
   private static final String GETDNAMESQL = "select displayName from "; //append table after user test
   private static final String GETANYNAMESHEREDNAME = " where displayName = ?"; // append to GETINTNAMESQL when wanting internalName by displayName
@@ -68,9 +68,9 @@ public class DatabaseDatasetViewUtils {
 	private static final String DELETEOLDXML = "delete from "; //append table after user test
 	private static final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ?";
 	private static final String INSERTXMLSQLA = "insert into "; //append table after user test
-	private static final String INSERTXMLSQLB = " (internalName, displayName, datasetPrefix, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
+	private static final String INSERTXMLSQLB = " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
 	private static final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
-	private static final String INSERTCOMPRESSEDXMLB = " (internalName, displayName, datasetPrefix, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
+	private static final String INSERTCOMPRESSEDXMLB = " (internalName, displayName, dataset, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
 
 	private static Logger logger = Logger.getLogger(DatabaseDatasetViewUtils.class.getName());
 
@@ -166,27 +166,27 @@ public class DatabaseDatasetViewUtils {
 	 * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
 	 * @param internalName -- internalName of the DatasetViewXML being stored.
 	 * @param displayName -- displayName of the DatasetView XML being stored.
-   * @param datasetPrefix -- datasetPrefix of the DatasetView XML being stored
+   * @param dataset -- dataset of the DatasetView XML being stored
 	 * @param doc - JDOM Document object representing the XML for the DatasetView   
 	 * @param compress -- if true, the XML is compressed using GZIP.
 	 * @throws ConfigurationException when no _meta_DatasetView table exists, and for all underlying Exceptions
 	 */
-	public static void storeConfiguration(DataSource dsource, String user, String internalName, String displayName, String datasetPrefix, String description, Document doc, boolean compress)
+	public static void storeConfiguration(DataSource dsource, String user, String internalName, String displayName, String dataset, String description, Document doc, boolean compress)
 		throws ConfigurationException {
 
 		int rowsupdated = 0;
 
 		if (compress)
-			rowsupdated = storeCompressedXML(dsource, user, internalName, displayName, datasetPrefix, description, doc);
+			rowsupdated = storeCompressedXML(dsource, user, internalName, displayName, dataset, description, doc);
 		else
-			rowsupdated = storeUncompressedXML(dsource, user, internalName, displayName, datasetPrefix, description, doc);
+			rowsupdated = storeUncompressedXML(dsource, user, internalName, displayName, dataset, description, doc);
 
 		if (rowsupdated < 1)
 			if (logger.isLoggable(Level.WARNING))
 				logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
 	}
 
-	private static int storeUncompressedXML(DataSource dsource, String user, String internalName, String displayName, String datasetPrefix, String description, Document doc)
+	private static int storeUncompressedXML(DataSource dsource, String user, String internalName, String displayName, String dataset, String description, Document doc)
 		throws ConfigurationException {
 		try {
 			String metatable = getDSViewTableFor(dsource, user);
@@ -217,7 +217,7 @@ public class DatabaseDatasetViewUtils {
 			PreparedStatement ps = conn.prepareStatement(insertSQL);
 			ps.setString(1, internalName);
 			ps.setString(2, displayName);
-      ps.setString(3, datasetPrefix);
+      ps.setString(3, dataset);
       ps.setString(4, description);
 			ps.setBytes(5, xml);
 			ps.setBytes(6, md5);
@@ -236,7 +236,7 @@ public class DatabaseDatasetViewUtils {
 		}
 	}
 
-	private static int storeCompressedXML(DataSource dsource, String user, String internalName, String displayName, String datasetPrefix, String description, Document doc) throws ConfigurationException {
+	private static int storeCompressedXML(DataSource dsource, String user, String internalName, String displayName, String dataset, String description, Document doc) throws ConfigurationException {
 		try {
 			String metatable = getDSViewTableFor(dsource, user);
 			String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
@@ -270,7 +270,7 @@ public class DatabaseDatasetViewUtils {
 			PreparedStatement ps = conn.prepareStatement(insertSQL);
 			ps.setString(1, internalName);
 			ps.setString(2, displayName);
-      ps.setString(3, datasetPrefix);
+      ps.setString(3, dataset);
       ps.setString(4, description);
 			ps.setBytes(5, xml);
 			ps.setBytes(6, md5);

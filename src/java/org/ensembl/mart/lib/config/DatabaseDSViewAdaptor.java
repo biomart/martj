@@ -164,7 +164,7 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress) throws ConfigurationException {
-    DatabaseDatasetViewUtils.storeConfiguration(ds, user, dsv.getInternalName(), dsv.getDisplayName(), dsv.getDatasetPrefix(), dsv.getDescription(), DatasetViewXMLUtils.DatasetViewToDocument(dsv), compress);
+    DatabaseDatasetViewUtils.storeConfiguration(ds, user, dsv.getInternalName(), dsv.getDisplayName(), dsv.getDataset(), dsv.getDescription(), DatasetViewXMLUtils.DatasetViewToDocument(dsv), compress);
   }
   
 	/* (non-Javadoc)

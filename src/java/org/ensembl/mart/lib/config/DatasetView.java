@@ -47,7 +47,7 @@ import javax.sql.DataSource;
 public class DatasetView extends BaseConfigurationObject {
 
 	/*
-	 * Datasets must have an internalName, and datasetPrefix so dont allow parameterless construction
+	 * Datasets must have an internalName, and dataset so dont allow parameterless construction
 	 */
 	public DatasetView() throws ConfigurationException {
 		this("", "", "", "");
@@ -59,10 +59,10 @@ public class DatasetView extends BaseConfigurationObject {
 	 * 
 	 * @param internalName String name to represent this DatasetView
 	 * @param displayName String name to display.
-   * @param datasetPrefix String prefix for all tables in the Mart Database for this Dataset. Must not be null
+   * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
 	 */
-	public DatasetView(String internalName, String displayName, String datasetPrefix) throws ConfigurationException {
-		this(internalName, displayName, datasetPrefix, "");
+	public DatasetView(String internalName, String displayName, String dataset) throws ConfigurationException {
+		this(internalName, displayName, dataset, "");
 	}
 
 	/**
@@ -71,16 +71,16 @@ public class DatasetView extends BaseConfigurationObject {
 	 * 
 	 * @param internalName String name to represent this DatasetView. Must not be null
 	 * @param displayName String name to display in an UI.
-   * @param datasetPrefix String prefix for all tables in the Mart Database for this Dataset. Must not be null
+   * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
 	 * @param description String description of the DatasetView.
 	 * @throws ConfigurationException if required values are null.
 	 */
-	public DatasetView(String internalName, String displayName, String datasetPrefix, String description) throws ConfigurationException {
+	public DatasetView(String internalName, String displayName, String dataset, String description) throws ConfigurationException {
 		super(internalName, displayName, description);
     
-    if (datasetPrefix == null)
-      throw new ConfigurationException("DatasetView objects must contain a datasetPrefix\n");
-    this.datasetPrefix = datasetPrefix;
+    if (dataset == null)
+      throw new ConfigurationException("DatasetView objects must contain a dataset\n");
+    this.dataset = dataset;
 	}
 
 	/**
@@ -234,8 +234,8 @@ public class DatasetView extends BaseConfigurationObject {
   /**
    * @return the prefix for the mart database tables in this Dataset
    */
-  public String getDatasetPrefix() {
-    return datasetPrefix;
+  public String getDataset() {
+    return dataset;
   }
   
 	/**
@@ -955,7 +955,7 @@ public class DatasetView extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append(super.toString());
-    buf.append(", datasetPrefix=").append(datasetPrefix);
+    buf.append(", dataset=").append(dataset);
 		buf.append(", starnames=").append(starBases);
 		buf.append(", primarykeys=").append(primaryKeys);
 		buf.append(", filterPages=").append(filterPages);
@@ -987,7 +987,7 @@ public class DatasetView extends BaseConfigurationObject {
 	  lazyLoad();
 
 		int tmp = super.hashCode();
-    tmp = (31 * tmp) + datasetPrefix.hashCode();
+    tmp = (31 * tmp) + dataset.hashCode();
 
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);
@@ -1014,7 +1014,7 @@ public class DatasetView extends BaseConfigurationObject {
 
   private Logger logger = Logger.getLogger(DatasetView.class.getName()); // TODO: remove me after testing within UI to make sure no un intended lazy loading is occuring
   
-  private String datasetPrefix = null;
+  private String dataset = null;
 	private DSViewAdaptor adaptor = null;
 	private DataSource datasource = null;
 	private byte[] digest = null;
