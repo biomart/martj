@@ -18,8 +18,9 @@
 
 package org.ensembl.mart.explorer;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,10 +30,10 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-
-import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * Widget for selecting, adding and removing Marts.
@@ -40,10 +41,8 @@ import org.ensembl.mart.lib.config.DatasetView;
  * </p>
  * <p></p>
  * TODO support add button
- * TODO suport remove button
- * TODO integrate with MartExplorer et al.
  */
-public class MartManager extends JPanel {
+public class MartManager extends Box {
 
   private final static Logger logger =
     Logger.getLogger(MartManager.class.getName());
@@ -55,9 +54,50 @@ public class MartManager extends JPanel {
   private String selected = none;
 
   public MartManager() {
+
+    super(BoxLayout.Y_AXIS);
+
     combo = new LabelledComboBox("Mart");
     combo.setEditable(false);
-    add(combo, BorderLayout.NORTH);
+
+    JButton add = new JButton("Add");
+    add.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doAdd();
+      }
+    });
+    JButton delete = new JButton("Delete");
+    delete.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doDelete();
+      }
+    });
+
+    Box b = Box.createHorizontalBox();
+    b.add(Box.createHorizontalGlue());
+    b.add(add);
+    b.add(delete);
+
+    add(combo);
+    add(b);
+  }
+
+  /**
+   * 
+   */
+  public void doDelete() {
+    Object s = (String) combo.getSelectedItem();
+    if (s != none)
+      remove((DataSource) stringToMart.get(s));
+
+  }
+
+  /**
+   * 
+   */
+  public void doAdd() {
+    // TODO Auto-generated method stub
+
   }
 
   /**
@@ -125,10 +165,41 @@ public class MartManager extends JPanel {
   }
 
   public boolean remove(DataSource mart) {
-    boolean result = marts.remove(mart);
-    if (result && mart.toString().equals(selected))
-      selected = none;
-    return result;
+
+    int index = marts.indexOf(mart);
+
+    if (index == -1)
+      return false;
+
+    marts.remove(index);
+    stringToMart.remove(mart.toString());
+
+    // select the "next" item in the list
+    if (mart.toString().equals( combo.getSelectedItem())) {
+      if (index >= marts.size())
+        selected = none;
+      else
+        selected = marts.get(index).toString();
+    }
+
+    initialiseCombo();
+
+    return true;
+  }
+
+  /**
+   * 
+   */
+  private void initialiseCombo() {
+
+    logger.info("selected="+selected);
+    combo.removeAllItems();
+    String[] keys = getAsStrings();
+    combo.addItem(none);
+    for (int i = 0; i < keys.length; i++)
+      combo.addItem(keys[i]);
+    combo.setSelectedItem(selected);
+
   }
 
   public boolean contains(DataSource mart) {
@@ -143,12 +214,7 @@ public class MartManager extends JPanel {
    */
   public boolean showDialog(Component parent) {
 
-    combo.removeAllItems();
-    String[] keys = getAsStrings();
-    combo.addItem(none);
-    for (int i = 0; i < keys.length; i++)
-      combo.addItem(keys[i]);
-    combo.setSelectedItem(selected);
+    initialiseCombo();
 
     int option =
       JOptionPane.showOptionDialog(
@@ -156,7 +222,7 @@ public class MartManager extends JPanel {
         this,
         "Datasource Chooser",
         JOptionPane.OK_CANCEL_OPTION,
-        JOptionPane.INFORMATION_MESSAGE,
+        JOptionPane.DEFAULT_OPTION,
         null,
         null,
         null);
@@ -214,7 +280,7 @@ public class MartManager extends JPanel {
         add(selectedDatasource);
       selected = selectedDatasource.toString();
     }
-  
+
   }
 
 }
