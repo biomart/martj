@@ -40,7 +40,7 @@ public class DNAAdaptor {
 	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());
 	private Connection conn;
 
-	private final String SPECSQL = "select mart_species from _meta_release_info";
+	private final String SPECSQL = "select mart_species from meta_release_info";
 	private int chunkSize = 100000; // Size of dna chunks in sgp_chunks table
 
 	//some prepared statements for later use

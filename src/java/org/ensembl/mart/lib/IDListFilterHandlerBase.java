@@ -38,7 +38,7 @@ import java.util.logging.Logger;
  */
 public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandler {
 
-	private final String SQL = "select versioned_ids from _meta_versioned_ids where constellation_name = ?";
+	private final String SQL = "select versioned_ids from meta_versioned_ids where constellation_name = ?";
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
@@ -47,7 +47,7 @@ public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandle
 
 	/**
 	 * If the dataset being querried with an IDListFilter object contains versioned ids that are output to the user, these versions must be
-	 * stripped off the end of the id, if they are present, before they can be applied as a filter.  This method polls the mart _meta_release_info
+	 * stripped off the end of the id, if they are present, before they can be applied as a filter.  This method polls the mart meta_release_info
 	 * table to determine if the dataset contains versioned ids, and, if so, strips any versions off the ids before returning them.  If the dataset does
 	 * not contain versioned ids, then the input list is returned unchanged.
 	 * 
