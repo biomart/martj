@@ -121,7 +121,7 @@ public class TreeNodeData {
 
     // use rawfield as default for label
     String fieldName = filter.getField();
-
+    
     // Try to get a user friendly fieldName, 
     // otherwise use the raw one from filter
     if (query.getDatasetConfig() != null) {
@@ -134,15 +134,19 @@ public class TreeNodeData {
           filter.getTableConstraint(),
           filter.getQualifier());
 
+      String tmpName = null;
       if (fd != null)
-        fieldName =
+        tmpName =
           fd.getDisplayNameByFieldNameTableConstraint(
             filter.getField(),
             filter.getTableConstraint(),
             filter.getQualifier());
+            
+        if (tmpName != null)
+          fieldName = tmpName;
 
     }
-
+    
     // Try to make the qualifier prettier
     String qualifier = filter.getQualifier();
     if (filter instanceof BooleanFilter && qualifier != null) {
@@ -172,6 +176,7 @@ public class TreeNodeData {
       value = "";
 
     String tmp = fieldName + " " + qualifier + " " + value;
+
     // we need to make the special characters < and > safe for display in html
     this.rightText = tmp.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 

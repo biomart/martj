@@ -129,13 +129,16 @@ public abstract class FilterWidget
      */
   protected void assignPushOptions(PushAction[] optionPushes) {
 
-    pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
-
-    for (int i = 0; i < optionPushes.length; i++) {
-      pushOptionHandlers[i] =
-        new PushOptionsHandler(optionPushes[i], filterGroupWidget);
-      pushOptionHandlers[i].push();
-    }
+//  disabling pushactions for now
+    return;
+    
+//    pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
+//
+//    for (int i = 0; i < optionPushes.length; i++) {
+//      pushOptionHandlers[i] =
+//        new PushOptionsHandler(optionPushes[i], filterGroupWidget);
+//      pushOptionHandlers[i].push();
+//    }
   }
 
   /**

@@ -84,7 +84,7 @@ public class DatasetConfigXMLUtils {
 
   private boolean validate = false;
   private boolean loadFully = false;
-  private boolean includeHiddenMembers = false;
+  protected boolean includeHiddenMembers = false;
 
   public DatasetConfigXMLUtils(boolean validate, boolean includeHiddenMembers) {
     this.validate = validate;

@@ -77,6 +77,7 @@ public class DatabaseDatasetConfigUtils {
 
   private HashMap configInfo = new HashMap();
   
+  private final String VISIBLESQL = " where visible = 1";
   private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version from ";
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
@@ -595,6 +596,11 @@ public class DatabaseDatasetConfigUtils {
     try {
       String metatable = getDSConfigTableFor(user);
       String sql = GETALLNAMESQL + metatable;
+      
+      if (!dscutils.includeHiddenMembers) {
+        sql += VISIBLESQL;
+      }
+      
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using " + sql + " to get unloaded DatasetConfigs for user " + user + "\n");
