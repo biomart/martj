@@ -323,7 +323,7 @@ public class MartExplorer extends JPanel {
       warn("No datasets available. You need load one or more " +      "datasets before you can create a query.");
     }
     else {
-      QueryEditor qe = new QueryEditor(null);
+      QueryEditor qe = new QueryEditor();
       addQueryEditor( qe );
     }
 		

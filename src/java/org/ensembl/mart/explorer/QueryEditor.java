@@ -33,7 +33,6 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -50,8 +49,6 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
@@ -200,7 +197,6 @@ public class QueryEditor
     // the query
 		datasetSelectionPage =
 			new DatasetWidget( query );
-    datasetSelectionPage.setQueryEditor( this );
     datasetSelectionPage.setDatasetViews( datasetViews );
 
 		addPage(datasetSelectionPage);
