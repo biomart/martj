@@ -36,7 +36,8 @@
                    legal_qualifiers          CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED
                    key                CDATA #IMPLIED
-                   handler            CDATA #IMPLIED>
+                   handler            CDATA #IMPLIED
+                   hidden             CDATA #IMPLIED>
 
 <!ELEMENT Enable EMPTY>
 <!ATTLIST Enable ref CDATA #REQUIRED
@@ -70,7 +71,8 @@
                     maxLength         NMTOKEN #IMPLIED
                     source                CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
-                    linkoutURL          CDATA #IMPLIED>
+                    linkoutURL          CDATA #IMPLIED
+                    hidden             CDATA #IMPLIED>
 
 <!ELEMENT Option (Option|PushAction|PushAction|Option)*>
 <!ATTLIST Option 
@@ -84,7 +86,8 @@
                  legal_qualifiers     CDATA #IMPLIED
                  tableConstraint    CDATA #IMPLIED
                  key                CDATA #IMPLIED
-                 handler        CDATA #IMPLIED>
+                 handler        CDATA #IMPLIED
+                 hidden             CDATA #IMPLIED>
 
 <!ELEMENT PushAction (Option)+>
 <!ATTLIST PushAction
