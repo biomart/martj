@@ -22,9 +22,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +44,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.ensembl.mart.lib.DatabaseUtil;
-import org.ensembl.mart.lib.FormatException;
-import org.ensembl.mart.lib.InvalidQueryException;
-import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -132,6 +127,10 @@ public class MartExplorer extends JFrame {
 		return (DatasetView[]) datasetViews.toArray(
 			new DatasetView[datasetViews.size()]);
 	}
+
+	private Feedback feedback = new Feedback(this);
+	
+	
 
 	public static void main(String[] args) throws ConfigurationException {
 
@@ -364,15 +363,10 @@ public class MartExplorer extends JFrame {
 		if (index > -1) {
 			QueryEditor qe =
 				(QueryEditor) queryEditorTabbedPane.getComponentAt(index);
-			try {
-				qe.doExportMQL();
-			} catch (InvalidQueryException e) {
-				warn(e.getMessage());
-			} catch (IOException e) {
-				warn(e.getMessage());
-			}
+			qe.doExportMQL();
+			
 		} else {
-			warn("No Query to export to MQL.");
+			feedback.warn("No Query to export to MQL.");
 		}
 	}
 
@@ -416,7 +410,7 @@ public class MartExplorer extends JFrame {
 
 			} catch (ConfigurationException e) {
 				e.printStackTrace();
-				warn("Failed to connect to database: " + e.getMessage());
+				feedback.warn("Failed to connect to database: " + e.getMessage());
 			}
 		}
 	}
@@ -433,7 +427,7 @@ public class MartExplorer extends JFrame {
 
 		DatasetView[] views = adaptor.getDatasetViews();
 		if (views.length == 0) {
-			warn("No Views found in database: " + adaptor.toString());
+			feedback.warn("No Views found in database: " + adaptor.toString());
 		} else {
 			resolveAndAddDatasetVies(views);
 		}
@@ -456,7 +450,7 @@ public class MartExplorer extends JFrame {
 
 		if (queryEditorTabbedPane.getTabCount() < 1) {
 
-			warn("You must add or import a query to execute it.");
+			feedback.warn("You must add or import a query to execute it.");
 
 		} else {
 
@@ -464,30 +458,13 @@ public class MartExplorer extends JFrame {
 				(QueryEditor) queryEditorTabbedPane.getSelectedComponent();
 			if (qe == null) {
 
-				warn("Can not execute query because none selected. Select one of the queries. ");
+				feedback.warn("Can not execute query because none selected. Select one of the queries. ");
 
 			} else {
 
-				try {
+					qe.doExecute();
 
-					qe.execute();
-
-				} catch (SequenceException e) {
-					e.printStackTrace();
-					warn(e.getMessage());
-				} catch (FormatException e) {
-					e.printStackTrace();
-					warn(e.getMessage());
-				} catch (InvalidQueryException e) {
-					e.printStackTrace();
-					warn(e.getMessage());
-				} catch (SQLException e) {
-					e.printStackTrace();
-					warn(e.getMessage());
-				}
-
-			}
-
+		}
 		}
 	}
 
@@ -587,7 +564,7 @@ public class MartExplorer extends JFrame {
 
 		DatasetView[] views = getDatasetViews();
 		if (views.length == 0) {
-			warn(
+			feedback.warn(
 				"No datasets available. You need load one or more "
 					+ "datasets before you can create a query.");
 		} else {
@@ -603,11 +580,10 @@ public class MartExplorer extends JFrame {
 
 		DatasetView[] views = getDatasetViews();
 		if (views.length == 0) {
-			warn(
-				"No datasets available. You need load one or more "
+			feedback.warn("No datasets available. You need load one or more "
 					+ "datasets before you can create a query.");
 		} else if (queryEditorTabbedPane.getComponentCount() < 1) {
-			warn(
+			feedback.warn(
 				"No queries available. You need one or more "
 					+ "queriess before you can create a virtual query.");
 		} else {
@@ -629,16 +605,6 @@ public class MartExplorer extends JFrame {
 
 	}
 
-	public void warn(String message) {
-		JOptionPane.showMessageDialog(
-			this,
-			message,
-			"Warning",
-			JOptionPane.WARNING_MESSAGE);
-	}
-
-	public void warn(String message, Exception e) {
-		warn(message + ":" + e.getMessage());
-		e.printStackTrace();
-	}
+	
+	
 }
