@@ -199,7 +199,6 @@ public class Engine {
 	 * @throws ConfigurationException for all underlying Exceptions encountered during the attempt to process the request.
 	 */
 	public MartConfiguration getMartConfiguration(URL martConfURL) throws ConfigurationException {
-	    Connection conn = getDatabaseConnection();
 	    return new MartConfigurationFactory().getInstance(martConfURL);
 	}
 	
