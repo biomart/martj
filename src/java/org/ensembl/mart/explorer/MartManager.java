@@ -275,7 +275,7 @@ public class MartManager extends Box {
    * @param args
    * @throws Exception
    */
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Throwable {
 
     MartManager mm = new MartManager();
 
@@ -298,6 +298,7 @@ public class MartManager extends Box {
     logger.info("selected=" + mm.getSelected());
 
     logger.info("finished");
+    System.exit(0); // need to kill all threads
   }
   /**
    * @return selected datasource, null if none selected
