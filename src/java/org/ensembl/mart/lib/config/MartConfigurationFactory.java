@@ -112,7 +112,7 @@ public class MartConfigurationFactory {
 			SAXBuilder builder = new SAXBuilder();
 			builder.setValidation(true); // validate against the DTD
       // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
-      builder.setEntityResolver(new MartDTDEntityResolver(conn));
+      builder.setEntityResolver(new MartDTDEntityResolver());
 			
 			Document doc =
 				builder.build(MartXMLutils.getInputSourceFor(conn, systemID));
