@@ -6,6 +6,12 @@ import gnu.getopt.*;
 import java.io.*;
 import java.net.*;
 
+/**
+ * CommandLine Tool for extraction of data from a mart database.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ */
 public class MartExplorerTool {
 
   private static final String defaultConf = System.getProperty("user.home")+"/.martexplorer";
@@ -49,6 +55,10 @@ public class MartExplorerTool {
     }
   }
 
+/**
+ *  @return application usage instructions
+ * 
+ */
   public static String usage() {
     return 
       "MartExplorerTool <OPTIONS>"
@@ -245,6 +255,10 @@ public class MartExplorerTool {
     run();
   }
 
+/**
+ * Prints an Error message, and sets flag to stop procesing of the Query
+ * @param message -- String to print in Error: message
+ */
   public static void validationError( String message ) {
     System.err.println( "Error: " + message );
     validQuery = false;
@@ -281,6 +295,12 @@ public class MartExplorerTool {
     }
   }
 
+/**
+ * Parses java properties file to get mysql database connection parameters.
+ * 
+ * @param connfile -- String name of the configuration file containing mysql
+ *  database configuration properties.
+ */
   public static void getConnProperties( String connfile ) {
       URL confInfo;
       Properties p = new Properties();
@@ -304,10 +324,27 @@ public class MartExplorerTool {
       confinUse = connfile;
   }
 
+/**
+ * Adds an attribute to the Query
+ * 
+ * @param attribute -- String attribute name
+ * @see Query
+ * @see Attribute
+ */
   public static void addAttribute( String attribute ) {
     attributes.add( new FieldAttribute( attribute ) );
   }
 
+/**
+ * Adds a filter to the Query
+ * 
+ * @param filterCondition -- String filter condition. Consists of 
+ *  a filter type, the condition to include in the where clause (=<>), and the
+ *  filter value (example "chr_name=3" for chromosome equal to three).
+ *  Currently, only BasicFilters are supported.
+ * @see Query
+ * @see BasicFilter
+ */
   public static void addFilter( String filterCondition ) {
     
     // currently only support BasicFilters e.g. a=3
@@ -319,7 +356,13 @@ public class MartExplorerTool {
       filters.add( new BasicFilter( tokens.nextToken(), tokens.nextToken(), tokens.nextToken() ) );
   }
 
-  
+  /**
+   * Sets the Output to a user defined output file by
+   * creating a FileOutputStream from the file.
+   * If the File cannot be created, it defaults to STDOUT.
+   * 
+   * @param fileName -- String path to file for output
+   */
   public static void nameFile( String fileName ) {
     try {
         os = new FileOutputStream( fileName );
@@ -330,6 +373,12 @@ public class MartExplorerTool {
 	}
   }
 
+/**
+ * Sets the format for the output. Format can be "tabulated" or "fasta"
+ * 
+ * @param format -- String format
+ * @see FormatSpec
+ */
   public static void format( String format ) {
     if ( "tabulated".equals( format) ) 
 		formatspec.setFormat(FormatSpec.TABULATED);
@@ -341,12 +390,26 @@ public class MartExplorerTool {
       validationError("Unkown format: " + format + "\n must be tabulated or fasta");
   }
 
-
+/**
+ * Sets up an IDListFilter, which is later added to a Query to filter on
+ * certain types of known identifiers
+ * 
+ * @param identifier -- type of identifier
+ * @see Query
+ * @see IDListFilter
+ */
   public static void addIdFilter( String identifier ) {
     if ( idFilter==null ) idFilter = new IDListFilter();
     idFilter.addIdentifier( identifier );
   }
   
+  /**
+   * Gets identifiers from a URL, and creates an IDListFilter from them
+   * 
+   * @param url
+   * @see Query
+   * @see IDListFilter
+   */
   public static void addIdFilterURL( String url ) {
     
     try {
@@ -361,8 +424,13 @@ public class MartExplorerTool {
     }
   }
 
-  /* Currently, this will be used to read from STDIN, but could be used in other ways
-   */ 
+  /**
+   * Gets identifiers from STDIN, and creates an IDListFilter from them.
+   * 
+   * @param instream -- InputStream containing newline separated identifiers
+   * @see Query
+   * @see IDListFilter
+   */
   public static void addIdFilterStream( InputStream instream ) {
     
     try {
@@ -377,6 +445,13 @@ public class MartExplorerTool {
     }
   }
 
+/**
+ * Sets the filter type to use for IDFilters set by any of the addIdFilter methods.
+ * 
+ * @param type -- String name of identifier
+ * @see Query
+ * @see IDListFilter
+ */
   public static void identifierType(String type) {
     if ( idFilter==null )
       idFilter = new IDListFilter();

@@ -24,7 +24,7 @@ package org.ensembl.mart.explorer;
  * 
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
- * @version $Revision$
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 
 public class Table implements Comparable {

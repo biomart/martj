@@ -1,88 +1,184 @@
+/*
+    Copyright (C) 2003 EBI, GRL
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA 
+ */
+ 
 package org.ensembl.mart.explorer;
 
 import java.util.*;
 
+/**
+ * Object for storing the parameters to construct a query against a Mart
+ * database.  Parameters consist of at least one Attribute (a requested field
+ * from the database) implimenting object. Parameters can include Filter 
+ * implimenting objects to restrict the Query on user supplied conditions.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ * @see Attribute
+ * @see Filter
+ */
 public class Query {
 
-    /* enums over query types
+    /**
+     * enums over query types
      * clients can set type using the constant
-     * and test get results as well
+     * and test / get results as well
      */
-    public final int ATTRIBUTE = 1;
-    public final int SEQUENCE = 2;
+    public final static int ATTRIBUTE = 1;
+    public final static int SEQUENCE = 2;
 
     // TODO, when implement SEQUENCE, over ride this during the addSequenceDescription method call
     private int querytype = 1;
 
+    /**
+     * returns the query type (one of ATTRIBUTE or SEQUENCE)
+     * @return int querytype
+     */
     public int getType() {  return querytype; }
 
+    /**
+     * test to determine if a specified attribute object is 
+     * contained within the attribute list of the Query.
+     * 
+     * @param attribute
+     * @return boolean
+     */
 	public boolean hasAttribute( Attribute attribute ) {
 		return attributes.contains( attribute );
     }
 
+    /**
+     * add an Attribute object to the list of Attributes
+     * for the Query.
+     * 
+     * @param Attribute attribute
+     */
 	public void addAttribute( Attribute attribute ) {
 		if ( !attributes.contains( attribute ) )
 			attributes.add( attribute );
-  }
+    }
 
+     /**
+      * remove an Attribute object from the list of Attributes
+      * 
+      * @param Attribute attribute
+      */
+     public void removeAttribute(  Attribute attribute ) {
+	     if ( attributes.contains( attribute ) )
+		     attributes.remove( attribute );
+     }
 
-  public void removeAttribute(  Attribute attribute ) {
-		if ( attributes.contains( attribute ) )
-			attributes.remove( attribute );
-  }
+     /**
+      * get all Attributes as an Attribute :ist
+      * 
+      * @return Attribute[] attributes
+      */
+     public Attribute[] getAttributes() {
+         Attribute[] a = new Attribute[ attributes.size() ];
+         attributes.toArray( a );
+         return a;
+     }
 
-  public Attribute[] getAttributes() {
-    Attribute[] a = new Attribute[ attributes.size() ];
-    attributes.toArray( a );
-    return a;
-  }
-
-  public void setAttributes(List attributes) {
-    this.attributes = attributes;
-  }
+     /**
+      * set an entire list of Attribute objects
+      * @param List attributes
+      */
+     public void setAttributes(List attributes) {
+        this.attributes = attributes;
+     }
   
-  public Filter[] getFilters() {
-    Filter[] f = new Filter[ filters.size() ];
-    filters.toArray( f );
-    return f;
-  }
+     /**
+      * get all Filter objects as a Filter[] Array
+      * 
+      * @return Filters[] filters
+      */
+     public Filter[] getFilters() {
+         Filter[] f = new Filter[ filters.size() ];
+         filters.toArray( f );
+         return f;
+     }
 
-   public void setFilters(Filter[] filters) {
-		this.filters = Arrays.asList( filters );
-   }
+     /**
+      * set an entire list of Filter objects
+      * 
+      * @param Filter[] filters
+      */
+     public void setFilters(Filter[] filters) {
+	    this.filters = Arrays.asList( filters );
+     }
 
-    public void addFilter(Filter filter) {
-      // new filters with the same hashCode() override old ones
-      if ( filters.contains( filter ) )
-      	filters.remove( filter );
-      filters.add( filter );
+     /**
+      * add a single Filter object
+      * 
+      * @param Filter filter
+      */
+     public void addFilter(Filter filter) {
+         // new filters with the same hashCode() override old ones
+         if ( filters.contains( filter ) )
+      	     filters.remove( filter );
+             filters.add( filter );
+     }
+
+     /**
+      * returns a description of the Query for logging purposes
+      * 
+      * @return String description (species=species\nfocus=focus\nattributes=attributes\nfilters=filters)
+      */
+     public String toString() {
+         StringBuffer buf = new StringBuffer();
+
+		 buf.append("[");
+         buf.append(" ,species=").append(species);
+         buf.append(" ,focus=").append(focus);
+         buf.append(" ,attributes=").append(attributes);
+         buf.append(" ,filters=").append(filters);
+         buf.append("]");
+
+         return buf.toString();
     }
 
-    public String toString() {
-      StringBuffer buf = new StringBuffer();
-
-			buf.append("[");
-      buf.append(" ,species=").append(species);
-      buf.append(" ,focus=").append(focus);
-      buf.append(" ,attributes=").append(attributes);
-      buf.append(" ,filters=").append(filters);
-      buf.append("]");
-
-      return buf.toString();
-    }
-
+    /**
+     * get the species of the Query
+     * @return String species
+     */
     public String getSpecies(){
             return species;
 	}
 
+    /**
+     * set the species for the Query
+     * @param String species
+     */
     public void setSpecies(String species){
             this.species = species;
 	}
 
+    /**
+     * get the focus for the Query
+     * @return String focus
+     */
     public String getFocus(){
             return focus;
         }
 
+    /**
+     * set the focus for the Query
+     * @param String focus
+     */
     public void setFocus(String focus){
             this.focus = focus;
         }

@@ -25,13 +25,14 @@ import java.util.*;
  * Maps column names to the table they come from and also maps them to
  * their fully qualified names (table.column). Also supports partially
  * qualified column names e.g. column="xref_RefSeq.display_id".
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class ColumnMapper {
 
   /** column -> table */
   private Properties map = new Properties();
-
-
 
   /**
    * Provides column mappings for the specified tables. The order of the

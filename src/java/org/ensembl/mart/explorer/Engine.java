@@ -1,9 +1,34 @@
+/*
+    Copyright (C) 2003 EBI, GRL
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ */
+ 
 package org.ensembl.mart.explorer;
 
 import java.io.*;
 import java.sql.*;
 import org.apache.log4j.*;
 
+/**
+ * Class for interaction between UI and Mart Database.  Manages mySQL database
+ * connections, and executes Querys.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ */
 public class Engine {
     private Logger logger = Logger.getLogger(Engine.class.getName());
     private Connection databaseConnection = null;
@@ -16,6 +41,16 @@ public class Engine {
     private String database;
     private QueryRunnerFactory qrunnerfactory = new QueryRunnerFactory();
 
+    /**
+     * Creates an Engine object for a connection to a specific mart
+     * database running on a specific mySQL database instance.
+     * 
+     * @param host - the mySQL host
+     * @param port - the mySQL port
+     * @param user - the mySQL user
+     * @param password - the mySQL password (can be null)
+     * @param database - the name of the mart database
+     */
     public Engine (String host, String port, String user, String password, String database) {
         this.host = host;
         this.port = port;
@@ -33,15 +68,7 @@ public class Engine {
 		}
         return databaseConnection;
     }
-
- /*   private Connection getServerConnection() {
-        if (serverConnection == null)
-            serverConnection = createConnection( false );
-        return serverConnection;
-    }
-    removed by dml
-    */
-    
+   
     /**
      * Creates connection to database server. If getdb is true, resulting connection
      * is to the specific database on the server, otherwise it is to the server itself.
@@ -72,6 +99,25 @@ public class Engine {
         return conn;
     }
 
+    /**
+     * Constructs a QueryRunner object for the given Query, and format using 
+     * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
+     * with the mySQL connection of this Engine, and write the results to 
+     * a specified OutputStream.
+     * 
+     * @param query - A Query Object
+     * @param formatspec - A FormatSpec Object
+     * @param os - An OutputStream
+     * @throws SQLException
+     * @throws IOException
+     * @throws FormatException
+     * @throws InvalidQueryException
+     * @see Query
+     * @see FormatSpec
+     * @see QueryRunnerFactory
+     * @see QueryRunner
+     * @see TabulatedQueryRunner
+     */
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
         throws SQLException, IOException, FormatException, InvalidQueryException {
     

@@ -4,13 +4,37 @@ import java.io.*;
 import java.sql.*;
 import org.apache.log4j.*;
 
+/**
+ * Implimentation of the QueryRunner for executing a Query and 
+ * generating Tabulated output.
+ * Tabulated output is separated by a field separator specified by 
+ * a FormatSpec object.  Any Query can generate tabulated output.
+ * 
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @see Query
+ * @see FormatSpec
+ */
 public class TabulatedQueryRunner implements QueryRunner {
 
+    /**
+     * Constructs a TabulatedQueryRunner object to execute a Query
+     * and print tabulated output specified by the given FormatSpec
+     * 
+     * @param query - a Query Object
+     * @param format - a FormatSpec object
+     */
     public TabulatedQueryRunner(Query query, FormatSpec format) {
         this.query = query;
         this.format = format;
 	}
 
+    /**
+     * Impliments the execute method of the interface.  For tabulated queries,
+     * the SQL is executed, and the ResultSet is written to the OutputStream
+     * via a OutputStreamWriter.  Each field of a ResultSet is separated by
+     * the separator defined in the FormatSpec object in the output.
+     */
     public void execute(Connection conn, OutputStream os) throws SQLException, IOException, InvalidQueryException {
         OutputStreamWriter osr =  new OutputStreamWriter(os);
 

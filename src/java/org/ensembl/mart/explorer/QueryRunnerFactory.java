@@ -1,22 +1,56 @@
+/**
+    Copyright (C) 2003 EBI, GRL
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ */
 package org.ensembl.mart.explorer;
 
+/**
+ * Factory class for generating QueryRunner implimenting objects 
+ * based upon the specified Query and FormatSpec.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ */
 public class QueryRunnerFactory {
 
-    /* creates the right QueryRunner object based upon query and formatspec
-     *     Query.ATTRIBUTE + FormatSpec.TABULATED -> TabulatedQueryRunner
-     *  TODO, implement SEQUENCE switching
+    /**
+     *  Creates a QueryRunner implimenting object for a given Query and 
+     *  FormatSpec.
+     *  Query.ATTRIBUTE + FormatSpec.TABULATED -> TabulatedQueryRunner
+     *
+     *  @param Query q
+     *  @param FormatSpec f
+     *  @throws FormatException
+     *  @see Query
+     *  @see FormatSpec
      */
     public QueryRunner createQueryRunner(Query q, FormatSpec f) throws FormatException {
-		/*		switch (q.getType) {
+		/*
+		TODO, implement SEQUENCE switching
+		 
+		switch (q.getType) {
  
-		case q.ATTRIBUTE:
+		case Query.ATTRIBUTE:
             if (f.getFormat == FormatSpec.TABULATED)
 				return new TabulatedQueryRunner(q,f);
             else 
                throw new FormatException("Cannot create Fasta output on attributes");
             break;
 
-        case q.SEQUENCE:
+        case Query.SEQUENCE:
             if (f.getFormat == FormatSpec.TABULATED)
 				return new TabulatedSeqQueryRunner(q,f);
             else 
