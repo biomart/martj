@@ -1,7 +1,6 @@
+#!/usr/bin/env martjython.sh
 
-
-# Jython prototype of a "tree" based mart-explorer graphical user
-# interface.
+# MartExplorer Graphical User Interface.
 
 # copyright EBI, GRL 2003
 
@@ -21,29 +20,17 @@
 # TODO support removing filter and attribute items from
 # quesry. "Delete" and or right click/delete.
 
-# try this tip to get compilation / jars working
-
-from org.ensembl.mart.explorer.gui import *
-from org.ensembl.mart.explorer import *
-from java.lang import *
-from java.io import *
-from java.net import *
-from javax.swing.event import *
-from java.awt import *
-from java.awt.event import *
-from javax.swing import *
-from javax.swing.tree import *
-from javax.swing.border import *
-from jarray import *
-from org.apache.log4j import *
-from java.beans import *
+from java.awt import CardLayout, Dimension, BorderLayout
+from java.awt.event import ActionListener
+from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
+from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree
+from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
+from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
+from javax.swing.border import EmptyBorder
 
 GAP = 5
 
-class DummyInputPage(QueryInputPage, JPanel):
-    def __init__(self, message):
-        self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
-
+class QueryInputPage:
     def updateQuery(self, query):
         pass
 
@@ -52,6 +39,11 @@ class DummyInputPage(QueryInputPage, JPanel):
 
     def clear(self):
         pass
+
+
+class DummyInputPage(QueryInputPage, JPanel):
+    def __init__(self, message):
+        self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
 
     def addChangeListener( self, listener ):
         pass
@@ -228,7 +220,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
         self.tree.repaint()
 
 
-class TreeNavigationPanel(QueryPanel):
+class TreeNavigationPanel(JPanel, QueryInputPage):
 
 
     def __init__(self):
