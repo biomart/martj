@@ -45,23 +45,16 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
-import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSConfigAdaptor;
-import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.util.LoggingUtil;
-
-import sun.awt.font.AdvanceCache;
 
 /**
  * MartExplorer is a graphical application that enables a 
@@ -122,8 +115,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   private JTabbedPane tabs = new JTabbedPane();
 
-  private DatabaseSettingsDialog databaseDialog;
-
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs  = Preferences.userNodeForPackage(this.getClass());
 
@@ -138,7 +129,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     //    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
 
     if (!LoggingUtil.isLoggingConfigFileSet())
-      Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
+      Logger.getLogger("org.ensembl.mart").setLevel(Level.FINE);
     MartExplorer me = new MartExplorer();
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);

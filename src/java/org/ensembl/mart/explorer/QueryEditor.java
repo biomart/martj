@@ -338,7 +338,8 @@ public class QueryEditor extends JPanel {
     };
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
-      ((CompositeDSConfigAdaptor)adaptor).add(new URLDSConfigAdaptor(dvURL, true));
+      //dont ignore cache, dont validate, dont include hidden members (these are only for MartEditor)
+      ((CompositeDSConfigAdaptor)adaptor).add(new URLDSConfigAdaptor(dvURL,false, false, false));
     }
 
     return adaptor;
