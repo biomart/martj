@@ -10,17 +10,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
-
-import org.gnu.readline.Readline;
-import org.gnu.readline.ReadlineLibrary;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -38,15 +40,23 @@ import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.NullableFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.FilterSet;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.UIAttributeDescription;
 import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.gnu.readline.Readline;
+import org.gnu.readline.ReadlineLibrary;
 
 /**
  * Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (referred to below as the Mart Query Language).
@@ -183,10 +193,10 @@ public class MartShell {
 					mainConfiguration = g.getOptarg();
 					break;
 
-        case 'A' :
-          commandComp = false;
-          break;
-          
+				case 'A' :
+					commandComp = false;
+					break;
+
 					// get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
 				case 'M' :
 					getConnProperties(g.getOptarg());
@@ -284,7 +294,7 @@ public class MartShell {
 				System.out.println("Must supply either a Query command or a query script\n" + usage());
 				System.exit(0);
 			} else if (mainBatchScriptURL != null) {
-				validQuery = ms.runBatchScript(mainBatchScriptURL);
+				validQuery = ms.RunBatchScript(mainBatchScriptURL);
 			} else {
 				if (mainBatchFile != null)
 					ms.setBatchOutputFile(mainBatchFile);
@@ -295,56 +305,57 @@ public class MartShell {
 				else
 					ms.setBatchOutputSeparator(mainBatchSeparator);
 
-				validQuery = ms.runBatch(mainBatchSQL);
+				validQuery = ms.RunBatch(mainBatchSQL);
 			}
 			if (!validQuery) {
 				System.out.println("Invalid Batch c:" + ms.getBatchError() + "\n" + usage());
 				System.exit(0);
 			}
-		} else
-		  if (! commandComp)
-		    ms.UnsetCommandCompletion();
-			ms.runInteractive();
+		} else {
+			if (!commandComp)
+				ms.UnsetCommandCompletion();
+			ms.RunInteractive();
+		}
 	}
 
 	public MartShell() {
 	}
 
-	public void runInteractive() {
+	public void RunInteractive() {
 		try {
 			Readline.load(ReadlineLibrary.Getline);
-//		Getline doesnt support completion, or history manipulation/files
+			//		Getline doesnt support completion, or history manipulation/files
 			completionOn = false;
 			historyOn = false;
 			readlineLoaded = true;
-		}
-		catch (UnsatisfiedLinkError ignore_me) {
+		} catch (UnsatisfiedLinkError ignore_me) {
 			try {
 				Readline.load(ReadlineLibrary.GnuReadline);
 				historyOn = true;
 				readlineLoaded = true;
-			}
-			catch (UnsatisfiedLinkError ignore_me2) {
-				mainLogger.warn("Could not load Readline Library, commandline editing, completion will not be available"
-				+ "\nConsult MartShell documentation for methods to resolve this error.");
+			} catch (UnsatisfiedLinkError ignore_me2) {
+				mainLogger.warn(
+					"Could not load Readline Library, commandline editing, completion will not be available"
+						+ "\nConsult MartShell documentation for methods to resolve this error.");
+				historyOn = false;
 				readlineLoaded = false;
 				Readline.load(ReadlineLibrary.PureJava);
 			}
 		}
-		
+
 		Readline.initReadline("MartShell");
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
-				 public void run() {
-					 Readline.cleanup();
-				 }
-			 });
-			 		
+			public void run() {
+				Readline.cleanup();
+			}
+		});
+
 		String thisline = null;
 
 		try {
 			if (martHost == null || martHost.length() < 5)
-				setConnectionSettings(setConnectionSettings);
+				setConnectionSettings(SETCONSETSC);
 			initEngine();
 			if (completionOn)
 				Readline.setCompleter(new MartCompleter(martconf));
@@ -357,10 +368,10 @@ public class MartShell {
 		while (true) {
 			try {
 				thisline = Prompt();
-				if (thisline.equals(exit) || thisline.equals(quit))
-					break;
 
 				if (thisline != null) {
+					if (thisline.equals(EXITC) || thisline.equals(QUITC))
+						break;
 					parse(thisline);
 					thisline = null;
 				}
@@ -381,7 +392,7 @@ public class MartShell {
 		}
 	}
 
-	public boolean runBatchScript(String batchScriptURL) {
+	public boolean RunBatchScript(String batchScriptURL) {
 		boolean valid = true;
 		try {
 			initEngine();
@@ -396,7 +407,7 @@ public class MartShell {
 		return valid;
 	}
 
-	public boolean runBatch(String querystring) {
+	public boolean RunBatch(String querystring) {
 		boolean validQuery = true;
 
 		if (martHost == null || martHost.length() < 5) {
@@ -417,8 +428,8 @@ public class MartShell {
 		} else {
 			try {
 				initEngine();
-				if (!querystring.endsWith(lineEnd))
-					querystring = querystring + lineEnd;
+				if (!querystring.endsWith(LINEEND))
+					querystring = querystring + LINEEND;
 
 				parseCommand(querystring);
 			} catch (Exception e) {
@@ -429,14 +440,14 @@ public class MartShell {
 		return validQuery;
 	}
 
-  public void UnsetCommandCompletion() {
+	public void UnsetCommandCompletion() {
 		completionOn = false;
-  }
-  
+	}
+
 	public void setAlternateMartConfiguration(String confFile) {
 		altConfigurationFileURL = confFile;
 	}
-	
+
 	public void setDBHost(String dbhost) {
 		this.martHost = dbhost;
 	}
@@ -486,28 +497,6 @@ public class MartShell {
 			martconf = engine.getMartConfiguration();
 	}
 
-	private void parse(String line) throws IOException, InvalidQueryException {
-		if (line.equals(help)) {
-			if (continueQuery)
-				System.out.println("help not applicable in the middle of a query");
-			else
-				help(null);
-		} else if (line.equals(lineEnd)) {
-			String command = conline.append(line).toString().trim();
-			parseCommand(command);
-			continueQuery = false;
-			conline = new StringBuffer();
-		} else if (line.endsWith(lineEnd)) {
-			String command = conline.append(" " + line).toString().trim();
-			parseCommand(command);
-			continueQuery = false;
-			conline = new StringBuffer();
-		} else {
-			conline.append(" " + line);
-			continueQuery = true;
-		}
-	}
-
 	private void ExitShell() throws IOException {
 		Readline.cleanup();
 		System.exit(0);
@@ -519,14 +508,16 @@ public class MartShell {
 			line = subPrompt();
 		else
 			line = mainPrompt();
-	  return line;
+		return line;
 	}
 
 	private String mainPrompt() throws EOFException, UnsupportedEncodingException, IOException {
 		String prompt = null;
-    String line = null;
-    
-		if (martUser != null && martDatabase != null)
+		String line = null;
+
+		if (userPrompt != null)
+			prompt = userPrompt;
+		else if (martUser != null && martDatabase != null)
 			prompt = martUser + "@" + martHost + " : " + martDatabase + "> ";
 		else
 			prompt = "> ";
@@ -539,85 +530,561 @@ public class MartShell {
 		return Readline.readline("% ", historyOn);
 	}
 
-	private void help(String command) {
-		if (command != null)
-			System.out.println("Recieved help request: " + command);
+	private String NormalizeCommand(String command) {
+		String normalizedcommand = null;
+
+		if (command.endsWith(LINEEND))
+			normalizedcommand = command.substring(0, command.indexOf(LINEEND));
 		else
-			System.out.println("Recieved help request");
+			normalizedcommand = command;
+
+		return normalizedcommand;
 	}
 
-	private void listRequest(String command) {
-		if (command != null)
-			System.out.println("Recieved list request: " + command);
-		else
-			System.out.println("Recieved list request");
+	private Filter getIDFilterForSubQuery(String fieldName, String tableConstraint, String command) throws InvalidQueryException {
+		command = command.trim();
+
+		nestedLevel++;
+
+		mainLogger.info("Recieved nested query at nestedLevel " + nestedLevel + "\n");
+
+		if (nestedLevel > MAXNESTING)
+			throw new InvalidQueryException("Only " + MAXNESTING + " levels of nested Query are allowed\n");
+
+		//validate, then call parseQuery on the subcommand
+		String[] tokens = command.split("\\s");
+		if (!tokens[0].trim().equals(QSTART))
+			throw new InvalidQueryException("Invalid Nested Query Recieved: no select statement " + "recieved " + tokens[0].trim() + " in " + command + "\n");
+
+		for (int i = 1, n = tokens.length; i < n; i++) {
+			String tok = tokens[i];
+			if (tok.equals("with"))
+				throw new InvalidQueryException("Invalid Nested Query Recieved: with statement not allowed " + command + "\n");
+			else if (tok.equals("into"))
+				throw new InvalidQueryException("Invalid Nested Query Recieved: into statement not allowed " + command + "\n");
+			//else not needed
+		}
+
+		mainLogger.info("Recieved request for Nested Query\n:" + command + "\n");
+
+		subqueryOutput = new ByteArrayOutputStream();
+
+		FormatSpec thisFormatspec = new FormatSpec(FormatSpec.TABULATED);
+
+		thisFormatspec.setSeparator(",");
+		String results = null;
+
+		try {
+			parseQuery(command);
+			results = subqueryOutput.toString();
+			subqueryOutput.close();
+			subqueryOutput = null;
+		} catch (Exception e) {
+			try {
+				subqueryOutput.close();
+			} catch (Exception ex) {
+				subqueryOutput = null;
+				throw new InvalidQueryException("Could not execute Nested Query: " + ex.getMessage());
+			}
+			subqueryOutput = null;
+			throw new InvalidQueryException("Could not execute Nested Query: " + e.getMessage());
+		}
+
+		StringTokenizer lines = new StringTokenizer(results, "\n");
+		List idlist = new ArrayList();
+
+		while (lines.hasMoreTokens()) {
+			String id = lines.nextToken();
+
+			if (id.indexOf(".") >= 0)
+				id = id.substring(0, id.lastIndexOf("."));
+			if (!idlist.contains(id))
+				idlist.add(id);
+		}
+
+		String[] ids = new String[idlist.size()];
+		idlist.toArray(ids);
+		Filter f = new IDListFilter(fieldName, ids);
+		((IDListFilter) f).setTableConstraint(tableConstraint);
+
+		nestedLevel--;
+		return f;
 	}
 
-	private void setOutputFormat(String command) throws InvalidQueryException {
-		if (command.endsWith(lineEnd))
-			command = command.substring(0, command.length() - 1);
+	private String Help(String command) throws InvalidQueryException {
+		if (!helpLoaded)
+			LoadHelpFile();
 
-		StringTokenizer ctokens = new StringTokenizer(command, " ");
-		ctokens.nextToken();
-		String fSettings = ctokens.nextToken();
+		StringBuffer buf = new StringBuffer();
 
-		StringTokenizer fTokens = new StringTokenizer(fSettings, ",");
-		while (fTokens.hasMoreTokens()) {
-			StringTokenizer tokens = new StringTokenizer(fTokens.nextToken(), "=");
-			if (tokens.countTokens() < 2)
-				throw new InvalidQueryException(
-					"Recieved invalid setOutputFormat request: "
-						+ command
-						+ "\nmust be of format: setOutputFormat x=y(,x=y)* where x  can be one of : "
-						+ file
-						+ "(note, use '-' for stdout, specify a valid URL), "
-						+ format
-						+ " (note, use 'comma' for comma separated), "
-						+ separator
-						+ "\n");
+		if (command.equals(HELPC)) {
+			buf.append("\nAvailable items:\n");
 
-			String key = tokens.nextToken();
-			String value = tokens.nextToken();
+			for (Iterator iter = commandHelp.keySet().iterator(); iter.hasNext();) {
+				String element = (String) iter.next();
+				buf.append("\t\t" + element).append("\n");
+			}
+			buf.append("\n");
+		} else if (command.startsWith(HELPC)) {
+			buf.append("\n");
+			StringTokenizer hToks = new StringTokenizer(command, " ");
+			hToks.nextToken(); // skip help
+			String comm = hToks.nextToken();
 
-			if (key.equals(file)) {
-				if (value.equals("-"))
-					outputFile = null;
-				else
-					outputFile = value;
-			} else if (key.equals(format))
-				outputFormat = value;
-			else if (key.equals(separator))
-				if (key.equals("comma"))
-					outputSeparator = ",";
-				else
-					outputSeparator = value;
+			if (commandHelp.containsKey(comm)) {
+				// if this is a help call, make sure and check for domain specific bits in the help input to substitute
+				String output = commandHelp.getProperty(comm);
+				for (int i = 0, n = dsCommands.length; i < n; i++) {
+					Pattern pat = dsCommands[i];
+					Matcher m = pat.matcher(output);
+					if (m.matches())
+						buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
+					else
+						buf.append(output).append("\n");
+				}
+			} else
+				buf.append("Sorry, no help is available for item: ").append(comm).append("\n");
+		} else {
+			if (commandHelp.containsKey(command))
+				buf.append(commandHelp.getProperty(command));
 			else
-				throw new InvalidQueryException(
-					"Recieved invalid setOutputFormat request: "
-						+ command
-						+ "\nmust be of format: setOutputFormat x=y(,x=y)* where x  can be one of : "
-						+ file
-						+ " (note, use '-' for stdout, specify a valid URL), "
-						+ format
-						+ " (note, use 'comma' for comma separated), "
-						+ separator
-						+ "\n");
+				buf.append("Sorry, no information available for item: ").append(command).append("\n");
+		}
+		return buf.toString();
+	}
+
+	private void LoadHelpFile() throws InvalidQueryException {
+		URL help = ClassLoader.getSystemResource(HELPFILE);
+		URL dshelp = ClassLoader.getSystemResource(DSHELPFILE);
+		try {
+			commandHelp.load(help.openStream());
+			commandHelp.load(dshelp.openStream());
+		} catch (IOException e) {
+			helpLoaded = false;
+			throw new InvalidQueryException("Could not load Help File " + e.getMessage());
+		}
+		helpLoaded = true;
+	}
+
+	private String[] ColumnIze(String input) {
+		int chrCount = 0;
+
+		List lines = new ArrayList();
+		StringBuffer buf = new StringBuffer();
+
+		StringTokenizer words = new StringTokenizer(input, " ");
+		while (words.hasMoreTokens()) {
+			String thisWord = words.nextToken();
+
+			int cnt = chrCount + thisWord.length() + 1;
+			if (cnt >= MAXCHARCOUNT) {
+				lines.add(buf.toString());
+				buf = new StringBuffer(thisWord);
+				buf.append(" ");
+				chrCount = 0;
+			} else {
+				buf.append(thisWord).append(" ");
+				chrCount += thisWord.length();
+			}
+		}
+
+		if (buf.length() > 0)
+			lines.add(buf.toString()); // add the last bit of the buffer
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private void DescribeRequest(String command) throws InvalidQueryException {
+		String[] toks = command.split(" ");
+		String dataset = null, pagetype = null, pagename = null, groupname = null;
+		System.out.println();
+
+		if (toks.length == 1) {
+			String output = "This mart contains the following datasets:\n";
+			Dataset[] dsets = martconf.getDatasets();
+			for (int i = 0, n = dsets.length; i < n; i++) {
+				Dataset dset = dsets[i];
+				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
+			}
+			System.out.println(output);
+		} else if (toks.length == 2) {
+			dataset = toks[1].trim();
+			DescribeDataset(dataset);
+		} else if (toks.length == 4) {
+			//describe datasetname page pagename
+			dataset = toks[1].trim();
+			pagetype = toks[2].trim();
+			pagename = toks[3].trim();
+
+			if (pagetype.equals("FilterPage"))
+				DescribeFilterPage(dataset, pagename);
+			else if (pagetype.equals("AttributePage"))
+				DescribeAttributePage(dataset, pagename);
+			else
+				throw new InvalidQueryException("Invalid describe command " + command + "\n");
+		} else if (toks.length == 5) {
+			//describe datasetname page pagename group groupname
+			dataset = toks[1].trim();
+			if (!martconf.containsDataset(dataset))
+				throw new InvalidQueryException("Dataset " + dataset + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+
+			Dataset dset = martconf.getDatasetByName(dataset);
+
+			pagetype = toks[2].trim();
+			pagename = toks[3].trim();
+			groupname = toks[4].trim();
+
+			if (pagetype.equals("FilterPage")) {
+				if (!dset.containsFilterPage(pagename))
+					throw new InvalidQueryException("Dataset " + dataset + " does not contain FilterPage " + pagename + "\n");
+
+				FilterPage page = dset.getFilterPageByName(pagename);
+				if (!page.containsFilterGroup(groupname))
+					throw new InvalidQueryException("Dataset " + dataset + " FilterPage " + pagename + "does not contain FilterGroup " + groupname + "\n");
+
+				Object group = page.getFilterGroupByName(groupname);
+				String[] lines = DescribeFilterGroup(group);
+				for (int i = 0, n = lines.length; i < n; i++)
+					System.out.println("\t" + lines[i]);
+				System.out.println();
+			} else if (pagetype.equals("AttributePage")) {
+				if (!dset.containsAttributePage(pagename))
+					throw new InvalidQueryException("Dataset " + dataset + " does not contain AttributePage " + pagename + "\n");
+
+				AttributePage page = dset.getAttributePageByName(pagename);
+				if (!page.containsAttributeGroup(groupname))
+					throw new InvalidQueryException("Dataset " + dataset + " AttributePage " + pagename + "does not contain AttributeGroup " + groupname + "\n");
+
+				Object group = page.getAttributeGroupByName(groupname);
+				String[] lines = DescribeAttributeGroup(group);
+				for (int i = 0, n = lines.length; i < n; i++)
+					System.out.println("\t" + lines[i]);
+				System.out.println();
+			} else
+				throw new InvalidQueryException("Recieved Invalid describe command " + command + "\n");
+		} else
+			throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
+	}
+
+	private void DescribeDataset(String datasetName) throws InvalidQueryException {
+		if (!martconf.containsDataset(datasetName))
+			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+
+		Dataset dset = martconf.getDatasetByName(datasetName);
+		System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n");
+
+		String[] dlines = ColumnIze(dset.getDescription());
+		for (int i = 0, n = dlines.length; i < n; i++)
+			System.out.println(dlines[i]);
+
+		System.out.println("\nFilterPages:");
+		System.out.println(DASHES);
+
+		FilterPage[] fpages = dset.getFilterPages();
+		for (int i = 0, n = fpages.length; i < n; i++) {
+			if (i > 0)
+				System.out.println(DASHES);
+
+			FilterPage page = fpages[i];
+
+			String[] lines = ColumnIze(page.getInternalName() + " - " + page.getDisplayName());
+			for (int j = 0, k = lines.length; j < k; j++)
+				System.out.print("\t" + lines[j] + "\n");
+
+			System.out.print("\n\tFilterGroups:\n");
+
+			List groups = page.getFilterGroups();
+			for (int j = 0, k = groups.size(); j < k; j++) {
+				Object groupo = groups.get(j);
+				if (groupo instanceof FilterGroup) {
+					FilterGroup group = (FilterGroup) groupo;
+
+					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName());
+					for (int y = 0, g = glines.length; y < g; y++)
+						System.out.print("\t\t" + glines[y] + "\n");
+				} else {
+					// do nothing, but could do something special for DSFilterGroups.  add hooks here
+				}
+			}
+		}
+
+		System.out.println(DASHES);
+		System.out.println(DASHES);
+		System.out.println();
+
+		System.out.print("AttributePages:\n");
+		System.out.println(DASHES);
+
+		AttributePage[] apages = dset.getAttributePages();
+		for (int i = 0, n = apages.length; i < n; i++) {
+			if (i > 0)
+				System.out.println(DASHES);
+
+			AttributePage page = apages[i];
+
+			String[] alines = ColumnIze(page.getInternalName() + " - " + page.getDisplayName());
+			for (int j = 0, k = alines.length; j < k; j++)
+				System.out.print("\t" + alines[j] + "\n");
+
+			System.out.print("\n\tAttributeGroups:\n");
+
+			List agroups = page.getAttributeGroups();
+			for (int j = 0, k = agroups.size(); j < k; j++) {
+				if (j > 0)
+					System.out.println();
+
+				Object groupo = agroups.get(j);
+				if (groupo instanceof AttributeGroup) {
+					AttributeGroup group = (AttributeGroup) groupo;
+					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName() + " " + group.getDescription());
+					for (int l = 0, m = glines.length; l < m; l++)
+						System.out.print("\t\t" + glines[l] + "\n");
+				} else {
+					DSAttributeGroup group = (DSAttributeGroup) groupo;
+					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName() + " " + group.getDescription());
+					for (int l = 0, m = glines.length; l < m; l++)
+						System.out.print("\t\t" + glines[l] + "\n");
+				}
+			}
+		}
+		System.out.println(DASHES);
+	}
+
+	private void DescribeFilterPage(String datasetName, String pageName) throws InvalidQueryException {
+		if (!martconf.containsDataset(datasetName))
+			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+
+		Dataset dset = martconf.getDatasetByName(datasetName);
+		if (!dset.containsFilterPage(pageName))
+			throw new InvalidQueryException("Dataset " + datasetName + " does not contain FilterPage " + pageName + "\n");
+
+		FilterPage page = dset.getFilterPageByName(pageName);
+		System.out.print("Dataset: " + dset.getInternalName() + " - FilterPage: " + pageName + " contains the following FilterGroups\n");
+
+		List groups = page.getFilterGroups();
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			if (i > 0) {
+				try {
+					String quit = Readline.readline("\nHit Enter to continue with next group, q to return to prompt: ", false);
+					if (quit.equals("q"))
+						break;
+
+				} catch (Exception e) {
+					// do nothing
+				}
+			}
+
+			for (int j = 0; j < MAXCHARCOUNT; j++)
+				System.out.print("-");
+			System.out.println();
+
+			Object groupo = groups.get(i);
+			if (groupo instanceof FilterGroup) {
+				FilterGroup group = (FilterGroup) groupo;
+				String[] lines = DescribeFilterGroup(group);
+				for (int j = 0, n2 = lines.length; j < n2; j++) {
+					String string = lines[j];
+					System.out.print("\t" + string + "\n");
+				}
+			}
 		}
 	}
 
-	private void showOutputSettings() {
-		String thisFile = "stdout";
-		if (outputFile != null)
-			thisFile = outputFile;
+	private void DescribeAttributePage(String datasetName, String pageName) throws InvalidQueryException {
+		if (!martconf.containsDataset(datasetName))
+			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
 
-		System.out.println(
-			"Output Format: " + format + " = " + outputFormat + ", " + separator + " = " + "'" + outputSeparator + "'" + ", " + file + " = " + thisFile);
+		Dataset dset = martconf.getDatasetByName(datasetName);
+		if (!dset.containsAttributePage(pageName))
+			throw new InvalidQueryException("Dataset " + datasetName + " does not contain AttributePage " + pageName + "\n");
+
+		AttributePage page = dset.getAttributePageByName(pageName);
+		System.out.print("Dataset: " + dset.getInternalName() + " - AttributePage: " + pageName + " contains the following AttributeGroups\n");
+
+		List groups = page.getAttributeGroups();
+		for (int i = 0, n = groups.size(); i < n; i++) {
+			if (i > 0) {
+				try {
+					String quit = Readline.readline("\nHit Enter to continue with next group, q to return to prompt: ", false);
+					if (quit.equals("q"))
+						break;
+
+				} catch (Exception e) {
+					// do nothing
+				}
+			}
+
+			for (int j = 0; j < MAXCHARCOUNT; j++)
+				System.out.print("-");
+
+			System.out.println();
+
+			Object groupo = groups.get(i);
+			String[] lines = DescribeAttributeGroup(groupo);
+			for (int j = 0, n2 = lines.length; j < n2; j++) {
+				String string = lines[j];
+				System.out.print("\t" + string + "\n");
+			}
+		}
+	}
+
+	private String[] DescribeFilterGroup(Object groupo) throws InvalidQueryException {
+		List lines = new ArrayList();
+
+		if (groupo instanceof FilterGroup) {
+			FilterGroup group = (FilterGroup) groupo;
+			lines.add("FilterGroup: " + group.getInternalName() + " - " + group.getDisplayName());
+			lines.add(DASHES);
+
+			if (group.hasFilterSets()) {
+				lines.add("Contains FilterSets:");
+				FilterSet[] fsets = group.getFilterSets();
+				for (int i = 0, n = fsets.length; i < n; i++) {
+					if (i > 0)
+						lines.add("");
+
+					FilterSet set = fsets[i];
+					String thisSetInfo = "\tFilterSet: " + set.getInternalName();
+					if (set.getDisplayName().length() > 0)
+						thisSetInfo += " - " + set.getDisplayName();
+					lines.add(thisSetInfo);
+					lines.add("\tContains the following FilterSetDescriptions:");
+
+					FilterSetDescription[] fsds = set.getFilterSetDescriptions();
+					for (int j = 0, n2 = fsds.length; j < n2; j++) {
+						FilterSetDescription fsd = fsds[j];
+						lines.add("\t\t" + fsd.getInternalName() + " - " + fsd.getDisplayName());
+					}
+				}
+				lines.add("");
+			}
+
+			FilterCollection[] fcs = group.getFilterCollections();
+			lines.add(DASHES);
+
+			for (int i = 0, n = fcs.length; i < n; i++) {
+				if (i > 0)
+					lines.add(DASHES);
+
+				FilterCollection collection = fcs[i];
+				lines.add("\tCollection: " + collection.getDisplayName());
+				lines.add("");
+
+				if (collection.inFilterSet()) {
+					String[] clines =
+						ColumnIze(
+							"Filters from this collection must be qualified with the internalName of one of the FilterSetsDescriptions from FilterSet '"
+								+ collection.getFilterSetName()
+								+ "' above");
+					for (int j = 0, k = clines.length; j < k; j++)
+						lines.add("\t" + clines[j]);
+
+					lines.add("");
+				}
+
+				List fdescs = collection.getUIFilterDescriptions();
+				for (int j = 0, n2 = fdescs.size(); j < n2; j++) {
+					Object desco = fdescs.get(j);
+					if (desco instanceof UIFilterDescription) {
+						UIFilterDescription desc = (UIFilterDescription) desco;
+						lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
+					} else {
+						UIDSFilterDescription desc = (UIDSFilterDescription) desco;
+						String disp = "\t\t" + desc.getInternalName();
+						if (desc.getDisplayName().length() > 0)
+							disp += " - " + desc.getDisplayName();
+						disp += " (see 'help " + desc.getObjectCode() + "' for further information)";
+						lines.add(disp);
+					}
+				}
+			}
+			lines.add(DASHES);
+		} else {
+			//DSFilterGroup group = (DSFilterGroup) groupo;
+			//do nothing, but add hooks for DSFilterGroups here
+		}
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private String[] DescribeAttributeGroup(Object groupo) {
+		List lines = new ArrayList();
+
+		if (groupo instanceof DSAttributeGroup) {
+			DSAttributeGroup group = (DSAttributeGroup) groupo;
+			if (group.getInternalName().equals("sequences")) {
+				lines.add("AttributeGroup: " + group.getInternalName() + " - " + group.getDisplayName());
+				lines.add("");
+
+				for (int i = 0, n = SequenceDescription.SEQS.size(); i < n; i++) {
+					String seqname = (String) SequenceDescription.SEQS.get(i);
+					String seqdesc = (String) SequenceDescription.SEQDESCRIPTIONS.get(i);
+					lines.add("\t\t" + seqname + " - " + seqdesc);
+				}
+			}
+			// add new DSAttributeGroup hooks here, with else if
+			else {
+				//do nothing
+			}
+
+		} else {
+			AttributeGroup group = (AttributeGroup) groupo;
+			lines.add("AttributeGroup: " + group.getInternalName() + " - " + group.getDisplayName());
+
+			AttributeCollection[] attcs = group.getAttributeCollections();
+			for (int i = 0, n = attcs.length; i < n; i++) {
+				if (i > 0)
+					lines.add("");
+
+				AttributeCollection collection = attcs[i];
+				if (collection.getDisplayName() != null) {
+					lines.add("\t" + collection.getDisplayName());
+					lines.add("");
+				}
+
+				if (collection.getMaxSelect() > 0) {
+					lines.add("\tOnly " + collection.getMaxSelect() + " of the following attributes can be selected in the same query");
+					lines.add("");
+				}
+
+				List adescs = collection.getUIAttributeDescriptions();
+				for (int j = 0, k = adescs.size(); i < k; i++) {
+					if (j > 0)
+						lines.add("");
+
+					Object desco = adescs.get(i);
+					if (desco instanceof UIAttributeDescription) {
+						UIAttributeDescription desc = (UIAttributeDescription) desco;
+						lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName());
+					} else {
+						// for now, do nothing.  If we add UIDSAttributeDescriptions to the config, add hooks here
+					}
+				}
+			}
+		}
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private void setPrompt(String command) throws InvalidQueryException {
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		if (toks.countTokens() < 2)
+			throw new InvalidQueryException("Invalid setPrompt Command Recieved: " + command + "\n" + Help(SETPROMPT));
+		toks.nextToken(); // skip command
+		String tmp = toks.nextToken();
+
+		if (tmp.equals("-"))
+			userPrompt = null;
+		else
+			userPrompt = tmp;
 	}
 
 	private void setConnectionSettings(String command) throws InvalidQueryException {
-		if (command.endsWith(lineEnd))
-			command = command.substring(0, command.length() - 1);
-
 		StringTokenizer ctokens = new StringTokenizer(command, " ");
 		if (ctokens.countTokens() > 1) {
 			// parse command
@@ -633,17 +1100,17 @@ public class MartShell {
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
 
-				if (key.equals(mysqlhost))
+				if (key.equals(MYSQLHOST))
 					martHost = value;
-				else if (key.equals(mysqlport))
+				else if (key.equals(MYSQLPORT))
 					martPort = value;
-				else if (key.equals(mysqluser))
+				else if (key.equals(MYSQLUSER))
 					martUser = value;
-				else if (key.equals(mysqlpass))
+				else if (key.equals(MYSQLPASS))
 					martPass = value;
-				else if (key.equals(mysqldbase))
+				else if (key.equals(MYSQLBASE))
 					martDatabase = value;
-				else if (key.equals(alternateConfigurationFile))
+				else if (key.equals(ALTCONFFILE))
 					altConfigurationFileURL = value;
 				else
 					throw new InvalidQueryException(martConnectionUsage(command));
@@ -675,9 +1142,12 @@ public class MartShell {
 				if (thisLine != null)
 					martDatabase = thisLine;
 
-				thisLine = Readline.readline("\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave unchaged,\n enter '-' to use configuration provided by "
-				+ martDatabase
-				+ "):", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave unchaged,\n enter '-' to use configuration provided by "
+							+ martDatabase
+							+ "):",
+						false);
 				if (thisLine != null) {
 					if (thisLine.equals("-"))
 						altConfigurationFileURL = null;
@@ -720,53 +1190,362 @@ public class MartShell {
 		return "Recieved invalid setMart request: "
 			+ command
 			+ "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
-			+ mysqlhost
+			+ MYSQLHOST
 			+ ", "
-			+ mysqlport
+			+ MYSQLPORT
 			+ ", "
-			+ mysqluser
+			+ MYSQLUSER
 			+ ", "
-			+ mysqlpass
+			+ MYSQLPASS
 			+ ", "
-			+ mysqldbase
+			+ MYSQLBASE
 			+ ", "
-			+ alternateConfigurationFile
+			+ ALTCONFFILE
 			+ "\n";
 	}
 
 	private void setVerbose(String command) throws InvalidQueryException {
-		if (command.endsWith(lineEnd))
-			command = command.substring(0, command.length() - 1);
-
-		if (!command.matches("\\w+\\s(true|false)"))
+		if (!command.matches("\\w+\\s(on|off)"))
 			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
 
-		boolean verbose = Boolean.valueOf(command.split("\\s")[1]).booleanValue();
-		String val = (verbose) ? "on" : "off";
+		String val = command.split("\\s")[1];
+		boolean verbose = (val.equals("on")) ? true : false;
+
 		System.out.println("Logging now " + val + "\n");
 		defaultLoggingConfiguration(verbose);
+	}
+
+	private void setOutputFormat(String command) throws InvalidQueryException {
+		StringTokenizer ctokens = new StringTokenizer(command, " ");
+		ctokens.nextToken();
+		String fSettings = ctokens.nextToken();
+
+		StringTokenizer fTokens = new StringTokenizer(fSettings, ",");
+		while (fTokens.hasMoreTokens()) {
+			StringTokenizer tokens = new StringTokenizer(fTokens.nextToken(), "=");
+			if (tokens.countTokens() < 2)
+				throw new InvalidQueryException(
+					"Recieved invalid setOutputFormat request: "
+						+ command
+						+ "\nusage: setOutputFormat x=y(,x=y)* where x  can be one of : "
+						+ FILE
+						+ " (note, use '-' for stdout, or specify a valid URL), "
+						+ FORMAT
+						+ " (note, use 'comma' for comma separated), "
+						+ SEPARATOR
+						+ "\n");
+
+			String key = tokens.nextToken();
+			String value = tokens.nextToken();
+
+			if (key.equals(FILE)) {
+				if (value.equals("-"))
+					outputFile = null;
+				else
+					outputFile = value;
+			} else if (key.equals(FORMAT))
+				outputFormat = value;
+			else if (key.equals(SEPARATOR))
+				if (key.equals("comma"))
+					outputSeparator = ",";
+				else
+					outputSeparator = value;
+			else
+				throw new InvalidQueryException(
+					"Recieved invalid setOutputFormat request: "
+						+ command
+						+ "\nmust be of format: setOutputFormat x=y(,x=y)* where x  can be one of : "
+						+ FILE
+						+ " (note, use '-' for stdout, specify a valid URL), "
+						+ FORMAT
+						+ " (note, use 'comma' for comma separated), "
+						+ SEPARATOR
+						+ "\n");
+		}
+	}
+
+	private void showOutputSettings() {
+		String thisFile = "stdout";
+		if (outputFile != null)
+			thisFile = outputFile;
+
+		System.out.println(
+			"Output Format: " + FORMAT + " = " + outputFormat + ", " + SEPARATOR + " = " + "'" + outputSeparator + "'" + ", " + FILE + " = " + thisFile);
+	}
+
+	private void WriteHistory(String command) throws InvalidQueryException {
+		try {
+			StringTokenizer com = new StringTokenizer(command, " ");
+			int tokCount = com.countTokens();
+			com.nextToken(); // skip commmand start
+
+			String req = null;
+			URL url = null;
+
+			if (tokCount < 2)
+				throw new InvalidQueryException("WriteHistory command must be provided a valid URL: " + command + "\n");
+			else if (tokCount == 2) {
+				//url
+				url = new URL(com.nextToken());
+			} else if (tokCount == 3) {
+				req = com.nextToken();
+				url = new URL(com.nextToken());
+			} else
+				throw new InvalidQueryException("Recieved invalid WriteHistory request " + command + "\n");
+
+			WriteHistoryLinesToURL(req, url);
+
+		} catch (Exception e) {
+			throw new InvalidQueryException("Could not write history " + e.getMessage());
+		}
+	}
+
+	private void WriteHistoryLinesToURL(String req, URL url) throws InvalidQueryException {
+		String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+
+		try {
+			OutputStreamWriter hisout = new OutputStreamWriter(new FileOutputStream(url.getFile()));
+			for (int i = 0, n = lines.length; i < n; i++) {
+				String thisline = lines[i];
+				if (!thisline.startsWith(SAVETOSCRIPTC))
+					hisout.write(thisline + "\n");
+			}
+			hisout.close();
+		} catch (Exception e) {
+			throw new InvalidQueryException(e.getMessage());
+		}
+	}
+
+	private void ExecuteScript(String command) throws InvalidQueryException {
+		StringTokenizer com = new StringTokenizer(command, " ");
+		if (!(com.countTokens() > 1))
+			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
+
+		com.nextToken(); // skip command start
+		URL url = null;
+		try {
+			url = new URL(com.nextToken());
+			ExecScriptFromURL(url);
+		} catch (Exception e) {
+			throw new InvalidQueryException("Could not execute script: " + url.getFile() + " " + e.getMessage());
+		}
+	}
+
+	private void ExecScriptFromURL(URL url) throws InvalidQueryException {
+		try {
+			reader = new BufferedReader(new InputStreamReader(url.openStream()));
+
+			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+				if (historyOn)
+					Readline.addToHistory(line);
+				parse(line);
+			}
+		} catch (Exception e) {
+			throw new InvalidQueryException(e.getMessage());
+		}
+	}
+
+	private void LoadScript(String command) throws InvalidQueryException {
+		StringTokenizer com = new StringTokenizer(command, " ");
+		if (!(com.countTokens() > 1))
+			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
+
+		com.nextToken(); // skip command start
+		URL url = null;
+		try {
+			url = new URL(com.nextToken());
+			LoadScriptFromURL(url);
+		} catch (Exception e) {
+			throw new InvalidQueryException("Could not load script: " + url.getFile() + " " + e.getMessage());
+		}
+	}
+
+	private void LoadScriptFromURL(URL url) throws InvalidQueryException {
+		if (!readlineLoaded)
+			throw new InvalidQueryException("Sorry, histrory functions are not available on your terminal.\n");
+		if (!historyOn)
+			throw new InvalidQueryException("Sorry, histrory is not activated.\n");
+
+		try {
+			Readline.readHistoryFile(url.getFile());
+		} catch (Exception e) {
+			throw new InvalidQueryException(e.getMessage());
+		}
+	}
+
+	private void Execute(String command) throws InvalidQueryException {
+		try {
+			StringTokenizer com = new StringTokenizer(command, " ");
+			int tokCount = com.countTokens();
+
+			if (tokCount < 2)
+				throw new InvalidQueryException(Help(EXECC));
+			else {
+				com.nextToken(); // skip commmand start
+				String req = com.nextToken();
+
+				String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+				for (int i = 0, n = lines.length; i < n; i++) {
+					String thisline = lines[i];
+
+					if (historyOn)
+						Readline.addToHistory(thisline);
+					parse(thisline);
+				}
+			}
+		} catch (Exception e) {
+			throw new InvalidQueryException("Could not execute command " + command + " " + e.getMessage());
+		}
+	}
+
+	private void History(String command) throws InvalidQueryException {
+		try {
+			StringTokenizer com = new StringTokenizer(command, " ");
+			int start = 1;
+
+			String req = null;
+
+			if (com.countTokens() > 1) {
+				com.nextToken(); // skip commmand start
+				req = com.nextToken();
+
+				int compos = req.indexOf(",");
+				if (compos >= 0) {
+					if (compos > 0) {
+						//n, or n,y
+						try {
+							start = Integer.parseInt(req.substring(0, compos));
+						} catch (NumberFormatException nfe) {
+							throw new InvalidQueryException(nfe.getMessage());
+						}
+					}
+				} else //n
+					try {
+						start = Integer.parseInt(req);
+					} catch (NumberFormatException nfe) {
+						throw new InvalidQueryException(nfe.getMessage());
+					}
+			}
+
+			String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+			for (int i = 0, n = lines.length; i < n; i++) {
+				System.out.print(start + " " + lines[i] + "\n");
+				start++;
+			}
+		} catch (Exception e) {
+			throw new InvalidQueryException("Could not show history " + e.getMessage());
+		}
+	}
+
+	private String[] GetHistoryLines(String req) throws InvalidQueryException {
+		if (!readlineLoaded)
+			throw new InvalidQueryException("Sorry, histrory functions are not available on your terminal.\n");
+		if (!historyOn)
+			throw new InvalidQueryException("Sorry, histrory is not activated.\n");
+
+		List lines = new ArrayList();
+		if (req == null)
+			Readline.getHistory(lines);
+		else {
+			int start = 0;
+			int end = 0;
+
+			if (req.indexOf(",") > -1) {
+				StringTokenizer pos = new StringTokenizer(req, ",", true);
+
+				if (pos.countTokens() > 2) {
+					//n,y
+					try {
+						start = Integer.parseInt(pos.nextToken()) - 1;
+						pos.nextToken(); // skip ,
+						end = Integer.parseInt(pos.nextToken());
+					} catch (NumberFormatException nfe) {
+						throw new InvalidQueryException(nfe.getMessage());
+					}
+				} else {
+					//either n, or ,y
+					try {
+						String tmp = pos.nextToken();
+						if (tmp.equals(",")) {
+							start = 0;
+							end = Integer.parseInt(pos.nextToken());
+						} else {
+							start = Integer.parseInt(tmp) - 1;
+							end = Readline.getHistorySize();
+						}
+					} catch (NumberFormatException nfe) {
+						throw new InvalidQueryException(nfe.getMessage());
+					}
+				}
+
+				for (int i = start; i < end; i++)
+					lines.add(Readline.getHistoryLine(i));
+			} else {
+				try {
+					start = Integer.parseInt(req) - 1;
+				} catch (NumberFormatException nfe) {
+					throw new InvalidQueryException(nfe.getMessage());
+				}
+				lines.add(Readline.getHistoryLine(start));
+			}
+		}
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private void parse(String line) throws IOException, InvalidQueryException {
+		if (line.equals(LINEEND)) {
+			String command = conline.append(line).toString().trim();
+			continueQuery = false;
+			conline = new StringBuffer();
+			parseCommand(command);
+		} else if (line.endsWith(LINEEND)) {
+			String command = conline.append(" " + line).toString().trim();
+			continueQuery = false;
+			conline = new StringBuffer();
+
+			parseCommand(command);
+		} else {
+			conline.append(" " + line);
+			continueQuery = true;
+		}
 	}
 
 	private void parseCommand(String command) throws IOException, InvalidQueryException {
 		int cLen = command.length();
 
-		if (cLen == 0) {
+		if (cLen == 0)
 			return;
-		} else if (command.startsWith(qStart)) {
+		else if (command.startsWith(HELPC))
+			System.out.print(Help(NormalizeCommand(command)));
+		else if (command.startsWith(QSTART))
 			parseQuery(command);
-		} else if (command.startsWith(setConnectionSettings))
-			setConnectionSettings(command);
-		else if (command.startsWith(showConnectionSettings))
+		else if (command.startsWith(DESCC))
+			DescribeRequest(NormalizeCommand(command));
+		else if (command.startsWith(SETCONSETSC))
+			setConnectionSettings(NormalizeCommand(command));
+		else if (command.startsWith(SHOWCONSETSC))
 			showConnectionSettings();
-		else if (command.startsWith(list))
-			listRequest(command);
-		else if (command.startsWith(setOutputSettings))
-			setOutputFormat(command);
-		else if (command.startsWith(showOutputSettings))
+		else if (command.startsWith(SETPROMPT))
+			setPrompt(NormalizeCommand(command));
+		else if (command.startsWith(SETOUTSETSC))
+			setOutputFormat(NormalizeCommand(command));
+		else if (command.startsWith(SHOWOUTSETSC))
 			showOutputSettings();
-		else if (command.startsWith(setVerbose))
-			setVerbose(command);
-		else if (command.equals(exit) || command.equals(quit))
+		else if (command.startsWith(SETVERBOSEC))
+			setVerbose(NormalizeCommand(command));
+		else if (command.startsWith(HISTORYC))
+			History(NormalizeCommand(command));
+		else if (command.startsWith(EXECC))
+			Execute(NormalizeCommand(command));
+		else if (command.startsWith(LOADSCRIPTC))
+			LoadScript(NormalizeCommand(command));
+		else if (command.startsWith(RUNSCRIPTC))
+			ExecuteScript(NormalizeCommand(command));
+		else if (command.startsWith(SAVETOSCRIPTC))
+			WriteHistory(NormalizeCommand(command));
+		else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
 			ExitShell();
 		else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
@@ -776,7 +1555,7 @@ public class MartShell {
 	private void parseQuery(String command) throws IOException, InvalidQueryException {
 		boolean start = true;
 		boolean selectClause = false;
-		boolean withClause = false;
+		boolean sequenceClause = false;
 		boolean fromClause = false;
 		boolean whereClause = false;
 		boolean limitClause = false;
@@ -784,7 +1563,7 @@ public class MartShell {
 		int listLevel = 0; // level of subquery/list
 
 		StringBuffer attString = new StringBuffer();
-		StringBuffer withString = new StringBuffer();
+		StringBuffer sequenceString = new StringBuffer();
 		String dataset = null;
 		StringBuffer whereString = new StringBuffer();
 		String outformat = null;
@@ -798,55 +1577,55 @@ public class MartShell {
 		while (cTokens.hasMoreTokens()) {
 			String thisToken = cTokens.nextToken();
 			if (start) {
-				if (!(thisToken.equalsIgnoreCase(qStart)))
+				if (!(thisToken.equalsIgnoreCase(QSTART)))
 					throw new InvalidQueryException("Invalid Query Recieved, should begin with select: " + command + "\n");
 				else {
 					start = false;
 					selectClause = true;
 				}
 			} else if (selectClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
+				if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of a select statement: " + command + "\n");
-				if (thisToken.equalsIgnoreCase(qWhere))
+				if (thisToken.equalsIgnoreCase(QWHERE))
 					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + command + "\n");
-				if (thisToken.equalsIgnoreCase(qInto))
+				if (thisToken.equalsIgnoreCase(QINTO))
 					throw new InvalidQueryException("Invalid Query Recieved, into statement before from statement: " + command + "\n");
-				if (thisToken.equalsIgnoreCase(qLimit))
+				if (thisToken.equalsIgnoreCase(QLIMIT))
 					throw new InvalidQueryException("Invalid Query Recieved, limit statement before from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWith)) {
+				else if (thisToken.equalsIgnoreCase(QSEQUENCE)) {
 					selectClause = false;
-					withClause = true;
-				} else if (thisToken.equalsIgnoreCase(qFrom)) {
+					sequenceClause = true;
+				} else if (thisToken.equalsIgnoreCase(QFROM)) {
 					selectClause = false;
-					fromClause = true;
-				} else if (!thisToken.equalsIgnoreCase("nothing"))
-					attString.append(thisToken);
-			} else if (withClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of an into statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qInto))
-					throw new InvalidQueryException("Invalid Query Recieved, into statement before from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qLimit))
-					throw new InvalidQueryException("Invalid Query Recieved, limit statement before from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom)) {
-					withClause = false;
 					fromClause = true;
 				} else
-					withString.append(thisToken);
+					attString.append(thisToken);
+			} else if (sequenceClause) {
+				if (thisToken.equalsIgnoreCase(QSTART))
+					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of an into statement: " + command + "\n");
+				else if (thisToken.equalsIgnoreCase(QWHERE))
+					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + command + "\n");
+				else if (thisToken.equalsIgnoreCase(QINTO))
+					throw new InvalidQueryException("Invalid Query Recieved, into statement before from statement: " + command + "\n");
+				else if (thisToken.equalsIgnoreCase(QLIMIT))
+					throw new InvalidQueryException("Invalid Query Recieved, limit statement before from statement: " + command + "\n");
+				else if (thisToken.equalsIgnoreCase(QFROM)) {
+					sequenceClause = false;
+					fromClause = true;
+				} else
+					sequenceString.append(thisToken);
 			} else if (fromClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
+				if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement after from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWith))
+				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
 					throw new InvalidQueryException("Invalid Query Recieved, with statement after from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere)) {
+				else if (thisToken.equalsIgnoreCase(QWHERE)) {
 					fromClause = false;
 					whereClause = true;
-				} else if (thisToken.equalsIgnoreCase(qInto)) {
+				} else if (thisToken.equalsIgnoreCase(QINTO)) {
 					fromClause = false;
 					intoClause = true;
-				} else if (thisToken.equalsIgnoreCase(qLimit)) {
+				} else if (thisToken.equalsIgnoreCase(QLIMIT)) {
 					fromClause = false;
 					limitClause = true;
 				} else {
@@ -856,83 +1635,83 @@ public class MartShell {
 						dataset = thisToken;
 				}
 			} else if (whereClause) {
-				if (listLevel < 1 && thisToken.equalsIgnoreCase(qWith))
+				if (listLevel < 1 && thisToken.equalsIgnoreCase(QSEQUENCE))
 					throw new InvalidQueryException("Invalid Query Recieved, with statement after where statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(lStart) || thisToken.startsWith(lStart)) {
+				else if (thisToken.equalsIgnoreCase(LSTART) || thisToken.startsWith(LSTART)) {
 					listLevel++;
 
-					if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
+					if (thisToken.endsWith(LEND) || thisToken.endsWith(LEND + ",") || thisToken.endsWith(LEND + LINEEND)) {
 						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == lEndChar)
+							if (thisToken.charAt(i) == LENDCHAR)
 								listLevel--;
 						}
 						whereString.append(" ").append(thisToken);
-					} else if (thisToken.equalsIgnoreCase(lineEnd) || thisToken.endsWith(lineEnd)) {
+					} else if (thisToken.equalsIgnoreCase(LINEEND) || thisToken.endsWith(LINEEND)) {
 						System.out.println("Token = " + thisToken);
 						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + command + "\n");
 					} else
 						whereString.append(" ").append(thisToken);
 				} else if (listLevel > 0) {
-					if (thisToken.equalsIgnoreCase(lEnd)) {
+					if (thisToken.equalsIgnoreCase(LEND)) {
 						listLevel--;
-					} else if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
+					} else if (thisToken.endsWith(LEND) || thisToken.endsWith(LEND + ",") || thisToken.endsWith(LEND + LINEEND)) {
 						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == lEndChar)
+							if (thisToken.charAt(i) == LENDCHAR)
 								listLevel--;
 						}
 						whereString.append(" ").append(thisToken);
-					} else if (thisToken.equalsIgnoreCase(lineEnd) || thisToken.endsWith(lineEnd)) {
+					} else if (thisToken.equalsIgnoreCase(LINEEND) || thisToken.endsWith(LINEEND)) {
 						System.out.println("Token = " + thisToken);
 						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + command + "\n");
 					} else
 						whereString.append(" ").append(thisToken);
-				} else if (thisToken.equalsIgnoreCase(qStart))
+				} else if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement after where statement, not in subquery: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom))
+				else if (thisToken.equalsIgnoreCase(QFROM))
 					throw new InvalidQueryException("Invalid Query Recieved, from statement after where statement, not in subquery: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere))
+				else if (thisToken.equalsIgnoreCase(QWHERE))
 					throw new InvalidQueryException("Invalid Query Recieved, where statement after where statement, not in subquery: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qInto)) {
+				else if (thisToken.equalsIgnoreCase(QINTO)) {
 					whereClause = false;
 					intoClause = true;
-				} else if (thisToken.equalsIgnoreCase(qLimit)) {
+				} else if (thisToken.equalsIgnoreCase(QLIMIT)) {
 					whereClause = false;
 					limitClause = true;
 				} else
 					whereString.append(" ").append(thisToken);
 			} else if (intoClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
+				if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement after into statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWith))
+				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
 					throw new InvalidQueryException("Invalid Query Recieved, with statement after into statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom))
+				else if (thisToken.equalsIgnoreCase(QFROM))
 					throw new InvalidQueryException("Invalid Query Recieved, from statement into where statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere))
+				else if (thisToken.equalsIgnoreCase(QWHERE))
 					throw new InvalidQueryException("Invalid Query Recieved, where statement into where statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qLimit)) {
+				else if (thisToken.equalsIgnoreCase(QLIMIT)) {
 					intoClause = false;
 					limitClause = true;
 				} else {
-					if (thisToken.endsWith(lineEnd))
+					if (thisToken.endsWith(LINEEND))
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
 					outformat = thisToken;
 				}
 			} else if (limitClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
+				if (thisToken.equalsIgnoreCase(QSTART))
 					throw new InvalidQueryException("Invalid Query Recieved, select statement after limit statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWith))
+				else if (thisToken.equalsIgnoreCase(QSEQUENCE))
 					throw new InvalidQueryException("Invalid Query Recieved, with statement after limit statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom))
+				else if (thisToken.equalsIgnoreCase(QFROM))
 					throw new InvalidQueryException("Invalid Query Recieved, from statement into limit statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere))
+				else if (thisToken.equalsIgnoreCase(QWHERE))
 					throw new InvalidQueryException("Invalid Query Recieved, where statement into limit statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qInto))
+				else if (thisToken.equalsIgnoreCase(QINTO))
 					throw new InvalidQueryException("Invalid Query Recieved, into statement into limit statement: " + command + "\n");
 				else {
 					if (limit > 0)
 						throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + command + "\n");
 					else {
-						if (thisToken.endsWith(lineEnd))
+						if (thisToken.endsWith(LINEEND))
 							thisToken = thisToken.substring(0, thisToken.length() - 1);
 						limit = Integer.parseInt(thisToken);
 					}
@@ -944,10 +1723,10 @@ public class MartShell {
 		if (dataset == null)
 			throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + command + "\n");
 
-		if (attString.length() == 0 && withString.length() == 0)
+		if (attString.length() == 0 && sequenceString.length() == 0)
 			throw new InvalidQueryException("Invalid Query Recieved, no attributes or sequence request found: " + command + "\n");
 
-		if (dataset.endsWith(lineEnd))
+		if (dataset.endsWith(LINEEND))
 			dataset = dataset.substring(0, dataset.length() - 1);
 
 		if (!martconf.containsDataset(dataset))
@@ -961,14 +1740,14 @@ public class MartShell {
 		query.setStarBases(dset.getStarBases());
 		query.setPrimaryKeys(dset.getPrimaryKeys());
 
-		if (withString.length() > 0) {
-			String seqrequest = withString.toString().trim();
+		if (sequenceString.length() > 0) {
+			String seqrequest = sequenceString.toString().trim();
 
 			int typecode = 0;
 			int left = 0;
 			int right = 0;
 
-			StringTokenizer tokens = new StringTokenizer(seqrequest, seqdelimiter, true);
+			StringTokenizer tokens = new StringTokenizer(seqrequest, SEQDELIMITER, true);
 			int n = tokens.countTokens();
 			switch (n) {
 				case 5 :
@@ -1047,7 +1826,7 @@ public class MartShell {
 		List filts = new ArrayList();
 
 		if (whereString.length() > 0) {
-			if (whereString.toString().endsWith(lineEnd))
+			if (whereString.toString().endsWith(LINEEND))
 				whereString.deleteCharAt(whereString.length() - 1);
 
 			List filtNames = new ArrayList();
@@ -1124,18 +1903,18 @@ public class MartShell {
 					start = false;
 					condition = true;
 				} else if (condition) {
-					if ( ! wTokens.hasMoreTokens() ) {
-						if (! ( thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded") ) )
-						  throw new InvalidQueryException("Invalid Query Recieved, filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+					if (!wTokens.hasMoreTokens()) {
+						if (!(thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")))
+							throw new InvalidQueryException("Invalid Query Recieved, filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
 					}
-					
+
 					if (thisToken.endsWith(",")) {
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
 						if (!(thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")))
 							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
 					}
 
-					if (thisToken.endsWith(lineEnd)) {
+					if (thisToken.endsWith(LINEEND)) {
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
 						if (!(thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")))
 							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
@@ -1204,13 +1983,13 @@ public class MartShell {
 				} else if (value) {
 					if (isList) {
 						//just get rid of the beginning peren if present
-						if (thisToken.startsWith(lStart)) {
+						if (thisToken.startsWith(LSTART)) {
 							listLevel++;
 							thisToken = thisToken.substring(1);
 						}
 
 						if (thisToken.startsWith("file:")) {
-							if (thisToken.endsWith(lineEnd))
+							if (thisToken.endsWith(LINEEND))
 								thisToken = thisToken.substring(0, thisToken.length() - 1);
 							if (thisToken.endsWith(","))
 								thisToken = thisToken.substring(0, thisToken.length() - 1);
@@ -1245,7 +2024,7 @@ public class MartShell {
 							query.addFilter(thisFilter);
 							start = true;
 							value = false;
-						} else if (thisToken.equals(qStart)) {
+						} else if (thisToken.equals(QSTART)) {
 							isList = false;
 							isNested = true;
 							subquery.append(" ").append(thisToken);
@@ -1253,7 +2032,7 @@ public class MartShell {
 							if (thisToken.endsWith(","))
 								thisToken = thisToken.substring(0, thisToken.length() - 1);
 
-							if (thisToken.endsWith(lEnd)) {
+							if (thisToken.endsWith(LEND)) {
 								value = false;
 								start = true;
 								listLevel--;
@@ -1300,13 +2079,13 @@ public class MartShell {
 								idlist.add(thisToken);
 						}
 					} else if (isNested) {
-						if (thisToken.equals(lStart) || thisToken.startsWith(lStart))
-						  listLevel++;
-						  
-						if (thisToken.indexOf(lEnd) >= 0) {
+						if (thisToken.equals(LSTART) || thisToken.startsWith(LSTART))
+							listLevel++;
+
+						if (thisToken.indexOf(LEND) >= 0) {
 							subquery.append(" ");
 							for (int i = 0, n = thisToken.length(); i < n; i++) {
-								if (thisToken.charAt(i) == lEndChar)
+								if (thisToken.charAt(i) == LENDCHAR)
 									listLevel--;
 								if (listLevel > 0)
 									subquery.append(thisToken.charAt(i));
@@ -1422,20 +2201,20 @@ public class MartShell {
 						"Recieved invalid into request: "
 							+ outformat
 							+ "\nmust be of format: x=y(,x=y)* where x  can be one of : "
-							+ file
-							+ "(note, use '-' for stdout, specify a valid URL), "
-							+ format
+							+ FILE
+							+ "(note, use '-' for stdout, or specify a valid URL), "
+							+ FORMAT
 							+ "(note, use 'tab' for tab separated, 'space' for space separated, and 'comma' for comma separated), "
-							+ separator
+							+ SEPARATOR
 							+ "\n");
 
 				String key = tok.nextToken();
 				String value = tok.nextToken();
-				if (key.equals(file))
+				if (key.equals(FILE))
 					thisFile = value;
-				else if (key.equals(format))
+				else if (key.equals(FORMAT))
 					thisFormat = value;
-				else if (key.equals(separator)) {
+				else if (key.equals(SEPARATOR)) {
 					if (value.equals("tab"))
 						thisSeparator = "\t";
 					else if (value.equals("space"))
@@ -1449,11 +2228,11 @@ public class MartShell {
 						"Recieved invalid into request: "
 							+ outformat
 							+ "\nmust be of format: x=y(,x=y)* where x  can be one of : "
-							+ file
+							+ FILE
 							+ "(note, use '-' for stdout, specify a valid URL), "
-							+ format
+							+ FORMAT
 							+ "(note, use 'tab' for tab separated, 'space' for space separated, and 'comma' for comma separated), "
-							+ separator
+							+ SEPARATOR
 							+ "\n");
 			}
 		}
@@ -1462,7 +2241,7 @@ public class MartShell {
 			if (outputFormat != null)
 				thisFormat = outputFormat;
 			else
-				thisFormat = defOutputFormat;
+				thisFormat = DEFOUTPUTFORMAT;
 		}
 
 		if (thisFile == null) {
@@ -1486,13 +2265,13 @@ public class MartShell {
 			if (outputSeparator != null)
 				thisSeparator = outputSeparator;
 			else
-				thisSeparator = defOutputSeparator;
+				thisSeparator = DEFOUTPUTSEPARATOR;
 		}
 
 		FormatSpec formatspec = new FormatSpec();
-		if (tabulated.equalsIgnoreCase(thisFormat))
+		if (TABULATED.equalsIgnoreCase(thisFormat))
 			formatspec.setFormat(FormatSpec.TABULATED);
-		else if (fasta.equalsIgnoreCase(thisFormat))
+		else if (FASTA.equalsIgnoreCase(thisFormat))
 			formatspec.setFormat(FormatSpec.FASTA);
 		else
 			throw new InvalidQueryException("Invalid Format Request Recieved, must be either tabulated or fasta\n" + outputFormat + "\n");
@@ -1509,76 +2288,6 @@ public class MartShell {
 			os.close();
 	}
 
-	private Filter getIDFilterForSubQuery(String fieldName, String tableConstraint, String command) throws InvalidQueryException {
-		command = command.trim();
-		
-		nestedLevel++;
-		
-		mainLogger.info("Recieved nested query at nestedLevel " + nestedLevel + "\n");
-		
-		if (nestedLevel > maxNesting)
-		  throw new InvalidQueryException("Only " + maxNesting + " levels of nested Query are allowed\n");
-		  
-		//validate, then call parseQuery on the subcommand
-		String[] tokens = command.split("\\s");
-		if (!tokens[0].trim().equals(qStart))
-			throw new InvalidQueryException("Invalid Nested Query Recieved: no select statement " + "recieved " + tokens[0].trim() + " in " + command + "\n");
-
-		for (int i = 1, n = tokens.length; i < n; i++) {
-			String tok = tokens[i];
-			if (tok.equals("with"))
-				throw new InvalidQueryException("Invalid Nested Query Recieved: with statement not allowed " + command + "\n");
-			else if (tok.equals("into"))
-				throw new InvalidQueryException("Invalid Nested Query Recieved: into statement not allowed " + command + "\n");
-			//else not needed
-		}
-
-		mainLogger.info("Recieved request for Nested Query\n:" + command + "\n");
-
-		subqueryOutput = new ByteArrayOutputStream();
-
-		FormatSpec thisFormatspec = new FormatSpec(FormatSpec.TABULATED);
-
-		thisFormatspec.setSeparator(",");
-		String results = null;
-
-		try {
-			parseQuery(command);
-			results = subqueryOutput.toString();
-			subqueryOutput.close();
-			subqueryOutput = null;
-		} catch (Exception e) {
-			try {
-				subqueryOutput.close();
-			} catch (Exception ex) {
-				subqueryOutput = null;
-				throw new InvalidQueryException("Could not execute Nested Query: " + ex.getMessage());
-			}
-			subqueryOutput = null;
-			throw new InvalidQueryException("Could not execute Nested Query: " + e.getMessage());
-		}
-
-		StringTokenizer lines = new StringTokenizer(results, "\n");
-		List idlist = new ArrayList();
-
-		while (lines.hasMoreTokens()) {
-			String id = lines.nextToken();
-
-			if (id.indexOf(".") >= 0)
-				id = id.substring(0, id.lastIndexOf("."));
-			if (!idlist.contains(id))
-				idlist.add(id);
-		}
-
-		String[] ids = new String[idlist.size()];
-		idlist.toArray(ids);
-		Filter f = new IDListFilter(fieldName, ids);
-		((IDListFilter) f).setTableConstraint(tableConstraint);
-		
-		nestedLevel--;
-		return f;
-	}
-
 	// MartShell instance variables
 	private Engine engine;
 	private MartConfiguration martconf;
@@ -1588,64 +2297,110 @@ public class MartShell {
 	private String martUser = null;
 	private String martPass = null;
 	private String martDatabase = null;
-  private boolean historyOn = true; // commandline history, default to on
-  private boolean completionOn = true; // command completion, default to on
-  private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
-  
+	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
+	private boolean historyOn = true; // commandline history, default to on
+	private boolean completionOn = true; // command completion, default to on
+	private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
+	private String userPrompt = null;
+
 	private String altConfigurationFileURL = null;
 	private String outputFile = null;
-	private final String defOutputFormat = "tabulated"; // default to tabulated output
+	private final String DEFOUTPUTFORMAT = "tabulated"; // default to tabulated output
 	private String outputFormat = null;
-	private final String defOutputSeparator = "\t"; // default to tab separated
+	private final String DEFOUTPUTSEPARATOR = "\t"; // default to tab separated
 	private String outputSeparator = null;
 	private String batchErrorMessage = null;
+	private Properties commandHelp = new Properties();
+	private final String HELPFILE = "data/help.properties"; //contains help general to the shell
+	private final String DSHELPFILE = "data/dshelp.properties"; // contains help for domain specific aspects
 
-	private final String exclusive = "exclusive";
-	private final String tabulated = "tabulated";
-	private final String fasta = "fasta";
-	private final String exit = "exit;";
-	private final String quit = "quit;";
-	private final String help = "help;";
-	private final String list = "list";
-	private final String lineEnd = ";";
-	private final String listStart = "list";
-	private final String qStart = "select";
-	private final String qWith = "with";
-	private final String qFrom = "from";
-	private final String qWhere = "where";
-	private final String qLimit = "limit";
-	private final String qInto = "into";
-	private final String lStart = "(";
-	private final String lEnd = ")";
-	private final char lEndChar = lEnd.charAt(0);
-	private final String id = "id";
-	private final String seqdelimiter = "+";
+	private final Pattern[] dsCommands = new Pattern[] { Pattern.compile("(.+)DOMAINSPECIFIC\\s(\\w+)(.+)", Pattern.DOTALL)};
+
+	private final List dsHelpItems = Collections.unmodifiableList(Arrays.asList(new String[] { "selectSequence" }));
+
+	// available commands
+	private final String EXITC = "exit";
+	private final String QUITC = "quit";
+	private final String HELPC = "help";
+	private final String DESCC = "describe";
+	private final String SETOUTSETSC = "setOutputSettings";
+	private final String SHOWOUTSETSC = "showOutputSettings";
+	private final String SETCONSETSC = "setConnectionSettings";
+	private final String SHOWCONSETSC = "showConnectionSettings";
+	private final String SETPROMPT = "setPrompt";
+	private final String SETVERBOSEC = "setVerbose";
+	private final String SHOWVERBOSEC = "showVerbose";
+	private final String EXECC = "exec";
+	private final String RUNSCRIPTC = "runScript";
+	private final String LOADSCRIPTC = "loadScript";
+	private final String SAVETOSCRIPTC = "saveToScript";
+	private final String HISTORYC = "history";
+
+	// query instructions
+	private final String QSTART = "select";
+	private final String QSEQUENCE = "sequence";
+	private final String QFROM = "from";
+	private final String QWHERE = "where";
+	private final String QLIMIT = "limit";
+	private final String QINTO = "into";
+	private final String LSTART = "(";
+	private final String LEND = ")";
+	private final char LENDCHAR = LEND.charAt(0);
+	private final String LINEEND = ";";
+	private final String ID = "id";
+	private final String SEQDELIMITER = "+";
+	private final String EXCLUSIVE = "exclusive";
+	private final String TABULATED = "tabulated";
+	private final String FASTA = "fasta";
+
+	protected final List availableCommands =
+		Collections.unmodifiableList(
+			Arrays.asList(
+				new String[] {
+					EXITC,
+					QUITC,
+					HELPC,
+					DESCC,
+					SETOUTSETSC,
+					SHOWOUTSETSC,
+					SHOWCONSETSC,
+					SETVERBOSEC,
+					SHOWVERBOSEC,
+					SETPROMPT,
+					EXECC,
+					RUNSCRIPTC,
+					LOADSCRIPTC,
+					SAVETOSCRIPTC,
+					HISTORYC,
+					QSTART,
+					QSEQUENCE,
+					QFROM,
+					QWHERE,
+					QLIMIT,
+					QINTO,
+					FASTA }));
 
 	// strings used to show/set output format settings
-	private final String setOutputSettings = "setOutputSettings";
-	private final String showOutputSettings = "showOutputSettings";
-	private final String file = "file";
-	private final String format = "format";
-	private final String separator = "separator";
+	private final String FILE = "file";
+	private final String FORMAT = "format";
+	private final String SEPARATOR = "separator";
 
 	// strings used to show/set mart connection settings
-	private final String setConnectionSettings = "setConnectionSettings";
-	private final String showConnectionSettings = "showConnectionSettings";
-	private final String mysqlhost = "mysqlhost";
-	private final String mysqluser = "mysqluser";
-	private final String mysqlpass = "mysqlpass";
-	private final String mysqlport = "mysqlport";
-	private final String mysqldbase = "mysqldbase";
-	private final String alternateConfigurationFile = "alternateConfigurationFile";
-
-	// strings used to show/set logging verbosity
-	private final String setVerbose = "setVerbose";
-	private final String showVerbose = "showVerbose";
+	private final String MYSQLHOST = "mysqlhost";
+	private final String MYSQLUSER = "mysqluser";
+	private final String MYSQLPASS = "mysqlpass";
+	private final String MYSQLPORT = "mysqlport";
+	private final String MYSQLBASE = "mysqldbase";
+	private final String ALTCONFFILE = "alternateConfigurationFile";
 
 	// variables for subquery
 	private ByteArrayOutputStream subqueryOutput = null;
 	private int nestedLevel = 0;
-	private final int maxNesting = 1; // change this to allow deeper nesting of queries inside queries
+	private final int MAXNESTING = 1; // change this to allow deeper nesting of queries inside queries
+	private final int MAXLINECOUNT = 60; // page prompt describe output line limit
+	private final int MAXCHARCOUNT = 80; // describe group output limit
+
+	private final String DASHES = "--------------------------------------------------------------------------------"; // describe output separator
 
 	private List qualifiers = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "exclusive", "excluded", "in" });
 
