@@ -580,10 +580,12 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 	public void addPushAction()
 	    throws ConfigurationException, SQLException {
 	    	
-		String filter2 = JOptionPane.showInputDialog("Filter Description to set:");	
-	    	
+		String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
+	    String[] filterTokens = filter2.split(":");
+	    
 		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-		FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+		//FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+		FilterDescription fd2 = dsView.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
         fd2.setType("drop_down_basic_filter");
         
         // set FilterDescription fd1 = to current node
@@ -592,7 +594,6 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		String pushField = fd2.getField();
 		String pushInternalName = fd2.getInternalName();
 		String pushTableName = fd2.getTableConstraint();
-		
 		// can add push actions to existing push actions so need to know the class of the node
 		String className = node.getUserObject().getClass().getName();
 		String field;
@@ -602,16 +603,15 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		  FilterDescription fd1 = (FilterDescription) node.getUserObject();
 		  field = fd1.getField();
 		  if (!fd1.getTableConstraint().equals(pushTableName))
-			field = "l_" + field;
+			field = "olook_" + field;
 		  options = fd1.getOptions();			
 		} else{
           PushAction pa1 = (PushAction) node.getUserObject();
           String intName = pa1.getInternalName();
           field = intName.split("_push")[0];
-          if (field.startsWith("g_")){
-            field = field.replaceFirst("g_","");
+          if (field.startsWith("glook_")){
+            field = field.replaceFirst("glook_","");
           }
-		  System.out.println(field);
           options = pa1.getOptions();
 		}
         
