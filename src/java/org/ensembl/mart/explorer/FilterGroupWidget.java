@@ -151,6 +151,10 @@ public class FilterGroupWidget extends PageWidget {
 
 			w = new ListFilterWidget(this, query, filterDescription, tree);
 
+		} else if ("id_list".equals(type)) {
+      
+      w = new IDListFilterWidget(this, query, filterDescription, tree);
+      
 		}
 
 		if (w != null) {
