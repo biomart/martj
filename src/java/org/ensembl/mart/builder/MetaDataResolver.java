@@ -40,9 +40,26 @@ public abstract class MetaDataResolver {
 		}		
 	}
 	
-
 	
-	public abstract Table [] getReferencedTables (String table_name);
+	public Table [] getReferencedTables (String table_name){
+		
+		Table [] exp_key_tables;
+		Table [] imp_key_tables;
+		
+		exp_key_tables = getExportedKeyTables(table_name);
+		imp_key_tables = getImportedKeyTables(table_name);
+		
+		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
+		System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
+		System.arraycopy(imp_key_tables,0,join_tables,exp_key_tables.length,imp_key_tables.length);
+		
+		return join_tables;
+	}
+	
+	
+	protected abstract Table [] getExportedKeyTables (String table_name);
+	protected abstract Table [] getImportedKeyTables (String table_name);
+	
 	
 	
 	public Column [] getReferencedColumns (String name){

@@ -46,7 +46,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 	
 	
 	
-	private Table [] getExportedKeyTables (String maintable){
+	protected Table [] getExportedKeyTables (String maintable){
 		
 		ArrayList exported_tabs= new ArrayList();
 		
@@ -75,7 +75,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 	}
 	
 	
-	private Table [] getImportedKeyTables (String maintable){
+	protected Table [] getImportedKeyTables (String maintable){
 		
 		ArrayList exported_tabs= new ArrayList();
 		
