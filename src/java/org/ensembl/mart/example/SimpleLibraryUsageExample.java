@@ -70,11 +70,11 @@ public class SimpleLibraryUsageExample {
 		DetailedDataSource ds =
 			new DetailedDataSource(
 				"mysql",
-				"ensembldb.ensembl.org",
-				"3306",
-				"ensembl_mart_22_1",
-				"jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_mart_22_1",
-				"anonymous",
+				"127.0.0.1",
+				"3364",
+				"ensembl_mart_28_1",
+				"jdbc:mysql://127.0.0.1:3364/ensembl_mart_28_1",
+				"ensro",
 				null,
 				10,
 				"com.mysql.jdbc.Driver");
