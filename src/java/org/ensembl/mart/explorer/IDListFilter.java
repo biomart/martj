@@ -73,13 +73,25 @@ public class IDListFilter implements Filter {
     public String getWhereClause(){
       StringBuffer buf = new StringBuffer();
       buf.append( type).append( " IN (");
-			for(int i=0; i<identifiers.length; ++i ) {
-				if ( i>0 ) buf.append( ", " );
+      for(int i=0; i<identifiers.length; ++i ) {
+        if ( i>0 ) buf.append( ", " );
         buf.append("\"").append( identifiers[i] ).append("\"");
       }
       buf.append( " ) " );
-			return buf.toString();
+      return buf.toString();
     }
+
+  public String getRightHandClause() {
+    StringBuffer buf = new StringBuffer();
+    buf.append( " IN (");
+    for(int i=0; i<identifiers.length; ++i ) {
+      if ( i>0 ) buf.append( ", " );
+      buf.append("\"").append( identifiers[i] ).append("\"");
+    }
+    buf.append( " ) " );
+    return buf.toString();
+  }
+
 
     public String[] getIdentifiers(){ return identifiers; }
 

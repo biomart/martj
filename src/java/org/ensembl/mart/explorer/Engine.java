@@ -122,16 +122,6 @@ public class Engine {
         this.database = database;
     }
 
-    public String[] tables(Query q) throws SQLException {
-        ArrayList tables = new ArrayList();
-        Connection conn = getDatabaseConnection( q );
-        ResultSet rs = conn.createStatement().executeQuery("show tables");
-        while (rs.next()) {
-            tables.add(rs.getString(1));
-        }
-        return toStringArray( tables );
-    }
-
     public String[] databases(Query q) throws SQLException {
         ArrayList tables = new ArrayList();
         Connection conn = getDatabaseConnection( q );
@@ -142,47 +132,84 @@ public class Engine {
         return toStringArray( tables );
     }
 
-
-  public Properties columnToTable( Query query ) throws SQLException {
-
-    Properties col2Table = new Properties();
-
-    Connection conn = getDatabaseConnection( query );
-    
-    String[] tables = tables( query );
-
-    // sort by length so that we have central tables before satelite
-    // tables. This means that for columns that appear in multiple tables
-    // (e.g. gene_stable_id) we use always use the one from the central
-    // table.
-    Arrays.sort( tables );
-
-    String base = query.getSpecies() + "_core_" + query.getFocus();
-
-    logger.debug("Filtering tables beginning with " + base + "(total num tables = "+tables.length+")");
-
-    for (int i=0; i<tables.length; ++i) {
-
-      String table = tables[i];
-
-      if ( table.startsWith( base ) ) {
-
-        logger.debug("loading table : " + table);
-        ResultSet rs = conn.createStatement().executeQuery("describe " + table);
-        while ( rs.next() ) {
-          String col = rs.getString(1);
-          if ( !col2Table.containsKey( col ) ) 
-            col2Table.put( col, table);
+    public String[] tables(Query q) throws SQLException {
+        ArrayList tables = new ArrayList();
+        Connection conn = getDatabaseConnection( q );
+        ResultSet rs = conn.createStatement().executeQuery("show tables");
+        while (rs.next()) {
+            tables.add(rs.getString(1));
         }
-      }
-      else {
-        logger.debug("ignoring table : " + table);
-      }
+        return toStringArray( tables );
     }
 
-    return col2Table;
-  }
 
+    public String[] columns(Query q, String table) throws SQLException {
+        ArrayList columns = new ArrayList();
+        Connection conn = getDatabaseConnection( q );
+        ResultSet rs = conn.createStatement().executeQuery("describe "+table);
+        while (rs.next()) {
+          columns.add( rs.getString(1) );
+        }
+        return toStringArray( columns );
+    }
+
+
+
+  /**
+   * Creates mappers from database. First mappers correspond to single
+   * tables, the last one to all tables (useful when joins needed).
+   */
+  public ColumnMapper[] mappers( Query query )  throws SQLException {
+
+    List tables = new ArrayList();
+    List mappers = new ArrayList();
+
+    String[] tableNames = tables( query );
+    Arrays.sort( tableNames ); // this makes the focus table first.
+    
+    String baseName = query.getSpecies() + "_core_" + query.getFocus();
+    logger.debug("Filtering tables beginning with " + baseName 
+                 + "(total num tables = "+tableNames.length+")");
+
+    Connection conn = createConnection( query );
+
+    // We create a mapper for each table. These can be used when no joins are
+    // necessary.
+    for (int i=0; i<tableNames.length; ++i) {
+      
+      String tableName = tableNames[i];
+      List cols = new ArrayList();
+      
+      if ( tableName.startsWith( baseName ) ) { // ignore irrelevant tables.
+        
+        ResultSet rs = conn.createStatement().executeQuery("describe " + tableName);
+
+        while ( rs.next() ) 
+          cols.add( rs.getString(1) );
+        
+        String[] colArray = toStringArray( cols );
+        Table table = new Table( tableName
+                                 ,colArray
+                                 ,baseName);
+        tables.add( table );
+        // create mapper for single table;
+        mappers.add( new ColumnMapper( new Table[]{ table }) );
+        
+      }
+      
+    }
+
+    // Create join mapper.
+    Table[] tableArr = new Table[ tables.size() ];
+    tables.toArray( tableArr );
+    ColumnMapper joinMapper = new ColumnMapper( tableArr );
+    mappers.add( joinMapper );
+
+    ColumnMapper[] mapperArr 
+      = (ColumnMapper[])mappers.toArray( new ColumnMapper[ mappers.size() ] );
+
+    return mapperArr;
+  }
 
   private String[] toStringArray( List list ) {
     return (String[])list.toArray(new String[ list.size() ]);

@@ -6,6 +6,9 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import java.sql.*;
 
+/**
+ * Compiles a Query into SQL.
+ */
 public class CompiledSQLQuery {
   public CompiledSQLQuery(Query query, Engine engine) {
     this.query = query;
@@ -24,23 +27,38 @@ public class CompiledSQLQuery {
   }
   
   private String compileSQL() throws InvalidQueryException{
-
+    
     try {
-      columnToTable = engine.columnToTable( query ) ;
+      mappers =  engine.mappers( query ) ;
+      
+      baseTableName = query.getSpecies() + "_core_" + query.getFocus();
+
+      StringBuffer buf = new StringBuffer();
+      
+      boolean success = false;
+      for(int m=0; m<mappers.length && !success; ++m) {
+        buf.delete(0, buf.length());
+        success = selectClause( buf, mappers[m] );
+        if ( success ) success = fromClause( buf, mappers[m] );
+        if ( success ) success = whereClause( buf, mappers[m] );
+        
+      }
+      
+      if ( !success ) throw new InvalidQueryException("Failed to compile query :" + query);
+
+      return buf.toString();
+      
     } catch (SQLException e) {
       throw new InvalidQueryException("Failed to load column to table mapping.", e);
     }
-
-    baseTableName = query.getSpecies() + "_core_" + query.getFocus();
-    StringBuffer buf = new StringBuffer();
-    selectClause( buf);
-    fromClause( buf );
-    whereClause( buf );
-    return buf.toString();
   }
 
 
-  private void selectClause( StringBuffer buf ) throws InvalidQueryException {
+  /**
+   * @return true if all attributes in the query could be mapped to tables by
+   * the mapper, otherwise false.
+   */
+  private boolean selectClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
 
     final int nAttributes = query.getAttributes().length;
 
@@ -52,29 +70,38 @@ public class CompiledSQLQuery {
 
       Attribute a = query.getAttributes()[i];
       String colName = a.getName();
-      String table = mapToTable( colName ); 
       
-      buf.append( table ).append(".").append( colName );
+      if ( !mapper.canMap( colName ) ) return false;
+      buf.append( mapper.qualifiedName( colName ) );
       
       if ( i+1 < nAttributes ) buf.append( ", " );
     }
+
+    return true;
   }
 
-  private void fromClause( StringBuffer buf ) throws InvalidQueryException {
 
-    // build array of "from" tables by looking at all the columns mentioned
-    // in the attributes and filters.
+  /**
+   * Builds array of "from" tables by looking at all the columns mentioned in
+   * the queries attributes and filters.
+   *
+   * @return true if all attributes and filter 'columns' in the query could
+   * be mapped to tables by the mapper, otherwise false.
+   */
+  private boolean fromClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
 
     Set relevantTables = new HashSet();
     
     for(int i=0; i<query.getAttributes().length; ++i) {
       String colName = query.getAttributes()[i].getName();
-      relevantTables.add( mapToTable( colName ) );
+      if ( !mapper.canMap( colName ) ) return false;
+      relevantTables.add( mapper.tableName( colName ) );
     }
 
     for(int i=0; i<query.getFilters().length; ++i) {
       String colName = query.getFilters()[i].getType();
-      relevantTables.add( mapToTable( colName ) );
+      if ( !mapper.canMap( colName ) ) return false;
+      relevantTables.add( mapper.tableName( colName ) );
     }
 
     fromTables = new String[ relevantTables.size() ];
@@ -85,9 +112,16 @@ public class CompiledSQLQuery {
       if ( i>0 ) buf.append( " , " ); 
       buf.append( fromTables[i] );
     }
+
+    return true;
   }
   
-  private void whereClause( StringBuffer buf ) throws InvalidQueryException {
+
+  /**
+   * @return true if all filter condition 'columns' in the query could be mapped to tables by
+   * the mapper, otherwise false.
+   */
+  private boolean whereClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
 
     final int nFilters = query.getFilters().length;
 
@@ -102,10 +136,13 @@ public class CompiledSQLQuery {
       for( int i=0; i<nFilters; ++i ) {
 
         Filter f = query.getFilters()[i];
-
         String colName = f.getType();
-        String table = mapToTable( colName );
-        buf.append( table ).append(".").append( f.getWhereClause() ).append( " " );
+        // don't need this next check because already checked in "fromClause"
+        // but leave incase this method is ever called without calling that
+        // method previously.
+        if ( !mapper.canMap( colName ) ) return false; 
+        colName = mapper.qualifiedName( colName );
+        buf.append( colName ).append( f.getRightHandClause() ).append( " " );
         if ( and ) buf.append( " AND " );
         and = true;
       }
@@ -128,31 +165,17 @@ public class CompiledSQLQuery {
           .append( "=").append( fromTables[i] ).append( joinKey );
       }
     }
+    
+    return true;
   }
 
   
   
-  /**
-   * @return table name corresponding to the column
-   * @throw InvalidQueryException if no mapping from colName to table found
-   */
-  private String mapToTable( String colName ) throws InvalidQueryException{
-     if ( colName==null ) 
-          throw new InvalidQueryException("Column is null.");
-   
-     String table = columnToTable.getProperty( colName );
-     if ( table==null ) 
-       throw new InvalidQueryException("Can't find table for column :" + colName);
-
-     return table;
-  }
-
-
   private String sql;
   private Query query;
   private Engine engine;
-  private Properties columnToTable;
   private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
   private String baseTableName = null;
   private String[] fromTables;
+  private ColumnMapper[] mappers;
 }

@@ -38,13 +38,18 @@ public class BasicFilter implements Filter {
       return buf.toString();
     }
 
-    public String getWhereClause(){
-			return type +condition+"?";
-    }
+  public String getWhereClause(){
+    return type +condition+"?";
+  }
+  
 
-		public String sqlValue() {
-			return value;
-    }
+  public String getRightHandClause() {
+    return condition+"?";
+  }
+
+  public String sqlValue() {
+    return value;
+  }
 
     private String type;
 

@@ -12,6 +12,14 @@ public interface Filter {
 
     /**
      * String to be included in where clause.
+     * TODO: remove this?
      */
     String getWhereClause();
+
+
+  /**
+   * String representing the "right hand side of the condition". This is any
+   * operator and values
+   */
+  String getRightHandClause();
 }
