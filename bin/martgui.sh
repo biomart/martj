@@ -8,8 +8,9 @@
 # Usage:
 #
 # prompt> bin/martgui.sh
+TMP_ROOT=`dirname $0`/..
 
-if [ -s src/jython/martexplorer/MartExplorerGUIApplication.py ] 
+if [ -s ${TMP_ROOT}/src/jython/martexplorer/MartExplorerGUIApplication.py ] 
 then
   CACHE_DIR=${HOME}/.martshell_cachedir
  
@@ -29,6 +30,5 @@ then
   #echo $CMD
   $CMD
 else 
-  TMP_ROOT=`dirname $0`/..
   java -jar ${TMP_ROOT}/lib/mart-explorer.jar $@
 fi
