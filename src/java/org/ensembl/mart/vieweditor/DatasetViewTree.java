@@ -203,7 +203,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     delete();
                 else if (e.getActionCommand().equals("save"))
                     save();
-                else if (e.getActionCommand().equals("save"))
+                else if (e.getActionCommand().equals("save as"))
                     save_as();
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -533,6 +533,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             fc = new JFileChooser(frame.getFileChooserPath());
             fc.setDragEnabled(true);
             fc.setSelectedFile(frame.getFileChooserPath());
+            fc.setDialogTitle("Save as");
         }
         else
             fc = new JFileChooser();
