@@ -34,6 +34,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,10 +50,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.ensembl.mart.lib.Engine;
+import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
@@ -658,8 +661,11 @@ public class MartShell {
 		batchErrorMessage = message;
 	}
 
-	private void Initialize() throws MalformedURLException, ConfigurationException {
-		engine = new Engine(martHost, martPort, martUser, martPass, martDatabase);
+	private void Initialize() throws MalformedURLException, ConfigurationException, SQLException {
+		engine = new Engine();
+    engine.setConnectionString(  "mysql", martHost, martPort, martDatabase);
+    engine.setUser(martUser);
+    engine.setPassword(martPass);
 
 		if (altConfigurationFile != null)
 			martconf = engine.getMartConfiguration(new URL(altConfigurationFile));
@@ -1614,7 +1620,7 @@ public class MartShell {
 		return ret;
 	}
 
-	private void parse(String line) throws IOException, InvalidQueryException {
+	private void parse(String line) throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
 		if (line.equals(LINEEND)) {
 			String command = conline.append(line).toString().trim();
 			continueQuery = false;
@@ -1649,7 +1655,7 @@ public class MartShell {
 		}
 	}
 
-	private void parseCommand(String command) throws IOException, InvalidQueryException {
+	private void parseCommand(String command) throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
 		int cLen = command.length();
 
 		command = command.replaceAll("\\s;$", ";");

@@ -1,6 +1,8 @@
 package org.ensembl.mart.lib;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.sql.SQLException;
 
 /*
     Copyright (C) 2003 EBI, GRL
@@ -41,10 +43,12 @@ public class URLIDListFilterHandler extends IDListFilterHandlerIMPL {
 		
 		if (idURL.getProtocol().equals("file")) {
 		  try {
-			  unversionedIds = HarvestStream(engine.getDatabaseConnection(), query, new InputStreamReader( idURL.openStream() ) );
-		  } catch (Exception e) {
+			  unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader( idURL.openStream() ) );
+		  } catch (SQLException e) {
 			  throw new InvalidQueryException("Could not parse URL IDListFilter: " + e.getMessage(), e);
-		  }
+      } catch (IOException e) {
+        throw new InvalidQueryException( "Problem reading from file", e );
+      }
 		}
 		else 
 		//impliment HTML parser here

@@ -17,20 +17,23 @@
 */
 
 package org.ensembl.mart.example;
+import java.sql.SQLException;
+
 import org.apache.log4j.*;
 import org.ensembl.mart.lib.*;
 
 public class SimpleLibraryUsageExample {
 
-  public static void main(String[] args) throws FormatException, SequenceException, InvalidQueryException  {
+  public static void main(String[] args) throws SequenceException, FormatException, InvalidQueryException, SQLException  {
     
     // Configure the logging system.
     BasicConfigurator.configure();
-    Logger.getRoot().setLevel(Level.WARN);
+    Logger.getRoot().setLevel(Level.INFO);
     
     // Initialise an engine encapsualting a specific Mart database.
-    Engine engine =
-      new Engine("kaka.sanger.ac.uk", "3306", "anonymous", "", "ensembl_mart_15_1");
+    Engine engine = new Engine();
+    engine.setConnectionString( "jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1" );
+    engine.setUser( "anonymous" );
     
     // Create a Query object.
     Query query = new Query();

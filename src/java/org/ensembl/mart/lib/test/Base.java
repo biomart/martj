@@ -26,9 +26,7 @@ public abstract class Base extends TestCase {
 	private final static String connprops = "data/testconnection.conf";
 	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
 
-	private String host = null;
-	private String port = null;
-	private String database = null;
+	private String dbURL = null;
 	private String user = null;
 	private String password = null;
 	private Properties p = new Properties();
@@ -46,9 +44,7 @@ public abstract class Base extends TestCase {
 			try {
 				p.load(connectionconf.openStream());
 
-				host = p.getProperty("mysqlhost");
-				port = p.getProperty("mysqlport");
-				database = p.getProperty("mysqldbase");
+				dbURL = p.getProperty("dburl");
 				user = p.getProperty("mysqluser");
 				password = p.getProperty("mysqlpass");
 			} catch (java.io.IOException e) {
@@ -58,8 +54,7 @@ public abstract class Base extends TestCase {
 		} else {
 			System.out.println("Failed to find connection configuration file " + connprops + " using default connection parameters");
 
-			host = "kaka.sanger.ac.uk";
-			database = "ensembl_mart_11_1";
+			dbURL = "jdbc://mysql/kaka.sanger.ac.uk/ensembl_mart_11_1";
 			user = "anonymous";
 		}
 
@@ -74,7 +69,10 @@ public abstract class Base extends TestCase {
 	public void setUp() {
 		init();
 
-		engine = new Engine(host, port, user, password, database);
+		engine = new Engine();
+    engine.setConnectionString(dbURL);
+    engine.setUser(user);
+    engine.setPassword(password);
 		genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		snpquery.setStarBases(new String[] { "hsapiens_snp" });
@@ -90,21 +88,10 @@ public abstract class Base extends TestCase {
 	}
 
   public Connection getDBConnection() throws Exception {
-		StringBuffer connStr = new StringBuffer();
-		connStr.append("jdbc:mysql://");
-		connStr.append( host );
 
-		if ( port != null && !"".equals(port) )
-				connStr.append(":").append( port );
-				
-		connStr.append("/").append( database ); // default table - we have to connect to one table
-		connStr.append("?autoReconnect=true");
-		Connection conn = null;
-		
 		Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-		logger.info(connStr.toString());
-		conn = java.sql.DriverManager.getConnection(connStr.toString(), user, password );
-		
-		return conn;
+		logger.info( dbURL );
+    		
+		return java.sql.DriverManager.getConnection(dbURL, user, password );
   }
 }

@@ -41,7 +41,7 @@ public class FileIDListFilterHandler extends IDListFilterHandlerIMPL {
 		String[] unversionedIds = null;
 		
 		try {
-			unversionedIds = HarvestStream(engine.getDatabaseConnection(), query, new InputStreamReader(new FileInputStream(idFile)));
+			unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader(new FileInputStream(idFile)));
 		} catch (Exception e) {
       throw new InvalidQueryException("Could not parse File IDListFilter: " + e.getMessage(), e);
 		} 
