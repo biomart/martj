@@ -109,7 +109,7 @@ public class DSViewURLAdaptor implements DSViewAdaptor {
    */
   public void update() throws ConfigurationException {
     try {
-       if (dsvurl.getProtocol().matches(".*file\\:.*"))
+       if (dsvurl.getProtocol().matches("file"))
          dsv = ConfigurationUtils.getDatasetView(dsvurl.openStream(), validate);
        else
          throw new ConfigurationException("Non-file URLS are not currently Supported: " + dsvurl + "\n");
