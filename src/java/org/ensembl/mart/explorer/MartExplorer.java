@@ -110,7 +110,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private AdaptorManager adaptorManager = new AdaptorManager();
 
   private final static String TITLE =
-    " Mart Explorer (Developement version)";
+    " Mart Explorer (Development version)";
 
   private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
