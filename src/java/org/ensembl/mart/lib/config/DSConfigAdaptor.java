@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import org.ensembl.mart.lib.DetailedDataSource;
-import org.python.modules.synchronize;
 
 /**
  * Interface for Objects providing access to one or more DatasetConfig Objects via
