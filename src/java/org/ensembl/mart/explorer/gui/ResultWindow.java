@@ -75,7 +75,7 @@ public class ResultWindow extends JFrame implements ResultTarget, Comparable {
         }
 
     public void output(ResultSet rs)  throws FormatterException {
-        logger.info("Outputing to window: " + name);
+        logger.debug("Outputing to window: " + name);
         setTitle( "Results - " + name );
         textArea.setText( "Dummy text" );
         setVisible( true );

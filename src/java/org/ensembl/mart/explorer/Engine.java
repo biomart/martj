@@ -70,31 +70,34 @@ public class Engine {
         return conn;
     }
 
-    public void execute(Query query)
-      throws SQLException, FormatterException, InvalidQueryException {
 
-      logger.warn( "Executing query : " + query );
+  public void execute(Query query) 
+    throws SQLException, FormatterException, InvalidQueryException {
+    
+    init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
+    CompiledSQLQuery csql = new CompiledSQLQuery( query );
+    String sql = csql.toSQL();
+    Connection conn = getDatabaseConnection( query );
 
+    logger.info( "QUERY : " + query );
+    logger.info( "SQL : " +sql );
 
-      init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
-      CompiledSQLQuery csql = new CompiledSQLQuery( query );
-      String sql = csql.toSQL();
-      logger.warn( "SQL = " +sql );
-      Connection conn = getDatabaseConnection( query );
-      PreparedStatement ps = conn.prepareStatement( sql );
-      List filters = query.getFilters();
-      int p=1;
-      for( int i=0; i<filters.size(); ++i) {
-				Filter f = (Filter)filters.get(i);
-        String value = f.getValue();
-				if ( value!=null ) {
-         	ps.setString( p++, value);
-        }
+    PreparedStatement ps = conn.prepareStatement( sql );
+    List filters = query.getFilters();
+    int p=1;
+    for( int i=0; i<filters.size(); ++i) {
+      Filter f = (Filter)filters.get(i);
+      String value = f.getValue();
+      if ( value!=null ) {
+        logger.info("SQL (prepared statement value) : "+p+" = " + value);
+        ps.setString( p++, value);
       }
-
-      ResultSet rs = ps.executeQuery();
-      query.getResultTarget().output( rs );
     }
+    
+    
+    ResultSet rs = ps.executeQuery();
+    query.getResultTarget().output( rs );
+  }
 
     public OutputStream execute(Query query, Formatter formatter) {
         throw new RuntimeException();

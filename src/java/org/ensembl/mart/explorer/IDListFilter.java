@@ -101,13 +101,10 @@ public class IDListFilter implements Filter {
 
   public void setUrl(URL url){ this.url = url; }
 
-  public String sqlValue() {
-	  return null;
-}
-
+  
   public String getValue() {
-		return null;
-}
+    return null;
+  }
   
   private String type;
   private String[] identifiers = new String[0];

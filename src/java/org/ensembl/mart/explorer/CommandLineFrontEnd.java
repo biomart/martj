@@ -20,7 +20,6 @@ public class CommandLineFrontEnd {
   private String password = null;
   private String species = null;
   private String focus = null;
-  private boolean verbose = false;
   private ResultFile resultFile = new ResultFile();
   private Formatter formatter = null;
   private boolean validQuery = true;
@@ -29,7 +28,6 @@ public class CommandLineFrontEnd {
   public static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:hvs:c:";
 
   public CommandLineFrontEnd() {
-		System.out.println(COMMAND_LINE_SWITCHES);
   }
   
 
@@ -67,18 +65,11 @@ public class CommandLineFrontEnd {
     int c;
     String arg;
     while ((c = g.getopt()) != -1) {
-      System.out.println( "c=" +(char)c);
       switch (c) {
 
-			case 'v':
-        verbose = true;
-      	break;
-
       case 'l':
-        // do nothing, should have been handled by MartExplorerApplication
-        break;
-
       case 'h':
+      case 'v':
         // do nothing, should have been handled by MartExplorerApplication
         break;
 
@@ -96,7 +87,6 @@ public class CommandLineFrontEnd {
 
       case 'u':
         user = g.getOptarg();
-      	System.out.println("user="+user);
         break;
 
       case 'p':
@@ -105,12 +95,10 @@ public class CommandLineFrontEnd {
 
       case 's':
         species = g.getOptarg() ;
-      	System.out.println("species="+species);
       	break;
 
-			case 'c':
+      case 'c':
         focus = g.getOptarg() ;
-      	System.out.println("focus="+focus);
       	break;
 
       case 'a':
@@ -202,9 +190,6 @@ public class CommandLineFrontEnd {
     q.setAttributes( attributes );
     q.setFilters( filters );
     q.setResultTarget( resultFile );
-
-		if ( verbose )
-      System.out.println( "QUERY : "+ q );
 
     Engine e = new Engine();
     try {

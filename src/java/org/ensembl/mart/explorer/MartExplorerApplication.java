@@ -35,11 +35,14 @@ public class MartExplorerApplication {
    * Initialise logging system to print to logging messages of level >= WARN
    * to console. Does nothing if system property log4j.configuration is set.
    */
-  public static void defaultLoggingConfiguration() {
+  public static void defaultLoggingConfiguration( boolean verbose) {
     if (System.getProperty("log4j.configuration") == null) {
       
       BasicConfigurator.configure();
-      Logger.getRoot().setLevel(Level.WARN);
+      if ( verbose ) 
+        Logger.getRoot().setLevel(Level.INFO);
+      else 
+        Logger.getRoot().setLevel(Level.WARN);
     }
   }
 
@@ -48,6 +51,7 @@ public class MartExplorerApplication {
         String loggingURL = null;
         boolean commandline = false;
         boolean help = false;
+        boolean verbose = false;
         Getopt g = new Getopt("MartExplorerApplication", args, CommandLineFrontEnd.COMMAND_LINE_SWITCHES);
         int c;
         while ((c = g.getopt()) != -1) {
@@ -63,6 +67,11 @@ public class MartExplorerApplication {
           case 'h':
             help = true;
             break;
+
+          case 'v':
+            verbose = true;
+            break;
+
           }
         }
         int offset = g.getOptind();
@@ -72,7 +81,7 @@ public class MartExplorerApplication {
             PropertyConfigurator.configure(loggingURL);
         }
         else {
-          defaultLoggingConfiguration();
+          defaultLoggingConfiguration( verbose );
         }
 
 

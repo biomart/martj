@@ -29,7 +29,6 @@ public class MartExplorerGUI extends JFrame {
 
   /** This method is called from within the constructor to initialize the form. */
   private void initGUI() {
-    logger.info("start init");
     clearToolBarButton.setText("Clear");
     clearToolBarButton.setLabel("Clear");
     clearToolBarButton.setActionCommand("Clear");
@@ -76,7 +75,6 @@ public class MartExplorerGUI extends JFrame {
                                       });
     setJMenuBar(menuBar);
     setSize(new java.awt.Dimension(500,402));
-    logger.info("finished init");
     exportToolBarButton.addActionListener(
                                           new ActionListener() {
                                               public void actionPerformed(ActionEvent e) { exportToolBarButtonActionPerformed(e); }
@@ -105,9 +103,7 @@ public class MartExplorerGUI extends JFrame {
   }
 
   public void run() {
-    logger.info("Running");
     setVisible(true);
-    logger.info("visible");
   }
 
   public void exitMenuItemActionPerformed(ActionEvent e) {
@@ -137,8 +133,7 @@ public class MartExplorerGUI extends JFrame {
 
     try {
       queryPanel.updateQuery( q );
-      logger.warn( "Executing query: " + q );
- 		} catch( Exception e ) {
+    } catch( Exception e ) {
       logger.warn( "Failed to execute query", e );
       JOptionPane.showMessageDialog( this, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 
@@ -151,8 +146,8 @@ public class MartExplorerGUI extends JFrame {
         try {
           engine.execute( q );
         } catch( Exception e ) {
-      		logger.warn( "Failed to execute query", e );
-    			JOptionPane.showMessageDialog( parent, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+          logger.warn( "Failed to execute query", e );
+          JOptionPane.showMessageDialog( parent, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
       }
      }
    }.start();
@@ -186,7 +181,6 @@ public class MartExplorerGUI extends JFrame {
     //query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE).toURL() ) );
     //q.setResultTarget( new ResultFile( "/tmp/kaka.txt", new SeparatedValueFormatter("\t") ) );
     q.setResultTarget( new ResultWindow( "Results_1", new SeparatedValueFormatter ("\t") ) );
-    logger.warn( "Initialising partial kaka query: " + q );
     queryPanel.updatePage( q );
   }
 
@@ -216,8 +210,8 @@ public class MartExplorerGUI extends JFrame {
   public ResultWindow createResultWindow(String name, Formatter formatter) {
 
     ResultWindow rw = null;
-    logger.warn( "name="+name );
-    logger.warn( "resultWindows="+resultWindows );
+    logger.debug( "name="+name );
+    logger.debug( "resultWindows="+resultWindows );
     if ( name!=null && resultWindows.containsKey( name ) ) {
       rw = (ResultWindow) resultWindows.get( name );
       rw.setFormatter( formatter );
