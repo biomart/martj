@@ -653,13 +653,17 @@ public class MartExplorer
     stopAction.setEnabled(false);
 
     QueryEditor qe = getSelectedQueryEditor();
+    
+    System.out.println("now seq desc "+qe.getQuery().getSequenceDescription());
+    
     if (qe != null) {
       if (qe.isRunning()) {
       
         stopAction.setEnabled(true);
       
       } else if (
-        qe.getQuery().getAttributes().length > 0
+        (qe.getQuery().getAttributes().length > 0
+      	|| qe.getQuery().getSequenceDescription() !=null)	
           && qe.getQuery().getDataset() != null
           && qe.getQuery().getDataSource() != null) {
 

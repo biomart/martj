@@ -804,9 +804,15 @@ public class SequenceGroupWidget
         SequenceDescription oldAttribute = query.getSequenceDescription();
 
         if (oldAttribute != newAttribute
-          && !newAttribute.equals(oldAttribute)) {
+         && !newAttribute.equals(oldAttribute)) {
 
           query.setSequenceDescription(newAttribute);
+          
+          System.out.println(" seq11 descripiton "+query.getSequenceDescription());
+          
+          sequenceDescritpionChanged(query,newAttribute,newAttribute);
+          
+          
         }
 
       } catch (InvalidQueryException e) {

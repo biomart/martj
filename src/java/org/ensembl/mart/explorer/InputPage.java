@@ -161,6 +161,10 @@ public class InputPage extends JPanel implements QueryListener {
    */
   public void attributeAdded(Query sourceQuery, int index, Attribute attribute) {
   }
+  
+  public void sequenceDescritpionChanged(Query sourceQuery, SequenceDescription seq, SequenceDescription mseq) {
+  }
+  
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)

@@ -58,6 +58,7 @@ import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryAdaptor;
+import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
@@ -160,6 +161,13 @@ public class QueryEditor extends JPanel {
         notifyAllListeners();
       }
 
+      public void sequenceDescriptionChanged(
+      Query sourceQuery,
+	  SequenceDescription seq,
+	  SequenceDescription mseq){
+      	notifyAllListeners();
+      }
+      
       public void attributeRemoved(
         Query sourceQuery,
         int index,
