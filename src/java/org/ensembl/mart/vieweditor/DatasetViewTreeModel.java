@@ -95,14 +95,26 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 fc.addFilterDescription((FilterDescription) editingNode.getUserObject());
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterDescription")) {
+			
 			if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
 				FilterDescription fd = (FilterDescription) parentNode.getUserObject();
 				fd.addOption((Option) editingNode.getUserObject());
+				
 			}
+			else if (childClassName.equals("org.ensembl.mart.lib.config.Enable")) {
+				FilterDescription fd = (FilterDescription) parentNode.getUserObject();
+				fd.addEnable((Enable) editingNode.getUserObject());
+			}
+						
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.Option")) {
-		    if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+		    if (childClassName.equals("org.ensembl.mart.lib.config.PushAction")) {
 			  Option op = (Option) parentNode.getUserObject();
-			  op.addOption((Option) editingNode.getUserObject());
+			  op.addPushAction((PushAction) editingNode.getUserObject());
+		    }
+	    } else if (parentClassName.equals("org.ensembl.mart.lib.config.PushAction")) {
+		    if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+		      PushAction pa = (PushAction) parentNode.getUserObject();
+		      pa.addOption((Option) editingNode.getUserObject());
 		    }
 	    }
 	    else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributePage")) {
@@ -135,7 +147,6 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         start = childClassName.lastIndexOf(".") + 1;
         finish = childClassName.length();
         String childName = childClassName.substring(start, finish);
-
         if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
             if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
                 view = (DatasetView) parentNode.getUserObject();
@@ -176,17 +187,18 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         } else if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
             if (child instanceof org.ensembl.mart.lib.config.Enable) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
-                //fd.insertEnable(index,(FilterDescription) editingNode.getUserObject());
+                fd.insertEnable(index,(Enable) editingNode.getUserObject());
             } else if (child instanceof org.ensembl.mart.lib.config.Disable) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
-                //fd.insertEnable(index,(FilterDescription) editingNode.getUserObject());
+                fd.insertDisable(index,(Disable) editingNode.getUserObject());
             } else if (child instanceof org.ensembl.mart.lib.config.Option) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
                 fd.insertOption(index, (Option) editingNode.getUserObject());
             } else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
 			    FilterDescription fd = (FilterDescription) parentNode.getUserObject();
 			    //fd.insertPushAction(index, (PushAction) editingNode.getUserObject());
-		    }else {
+		    }
+		    else {
                 String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
                 return error_string;
             }
@@ -197,10 +209,12 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             String error_string = "Error: Disable is a leaf node, no insertions are allowed.";
             return error_string;
         }
-        //else if (parent instanceof org.ensembl.mart.lib.config.Option) {
-            //String error_string = "Error: Option is a leaf node, no insertions are allowed.";
-            //return error_string;
-        //}
+        else if (parent instanceof org.ensembl.mart.lib.config.Option) {
+			if (child instanceof org.ensembl.mart.lib.config.PushAction) {
+				Option op = (Option) parentNode.getUserObject();
+				op.insertPushAction(index,(PushAction) editingNode.getUserObject());
+			}            
+        }
         
          else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
             if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {

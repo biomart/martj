@@ -396,11 +396,13 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 				Enable enable = enables[k];
 				DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
 				enableNode.setUserObject(enable);
+				this.add(enableNode);
 			}
 			for (int k = 0; k < disables.length; k++) {
 				Disable disable = disables[k];
 				DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
 				disableNode.setUserObject(disable);
+				this.add(disableNode);
 			}
 			for (int y = 0; y < ops.length; y++) {
 				Option option = (Option) ops[y];
@@ -445,6 +447,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 				
 				DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
 				pushActionNode.setUserObject(pa);
+				
 				this.add(pushActionNode);
 				Option[] paOptions = pa.getOptions();
 				for (int m = 0; m < paOptions.length; m++) {
