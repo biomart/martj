@@ -63,6 +63,31 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
         if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetConfig")) {
             setName("DatasetConfig: " + ((BaseNamedConfigurationObject) obj).getInternalName());
             DatasetConfig dsv = (DatasetConfig) obj;
+            
+            Importable[] imps = dsv.getImportables();
+			for (int i = 0; i < imps.length; i++) {
+				Importable importable = imps[i];
+				String impName = importable.getLinkName();
+				DatasetConfigTreeNode impNode = new DatasetConfigTreeNode("Importable:" + impName);
+				impNode.setUserObject(importable);
+				this.add(impNode);
+			}
+			Exportable[] exps = dsv.getExportables();
+			for (int i = 0; i < exps.length; i++) {
+				Exportable exportable = exps[i];
+				String expName = exportable.getLinkName();
+				DatasetConfigTreeNode expNode = new DatasetConfigTreeNode("Exportable:" + expName);
+				expNode.setUserObject(exportable);
+				this.add(expNode);
+			}
+			SeqModule[] sms = dsv.getSeqModules();
+			for (int i = 0; i < sms.length; i++) {
+				SeqModule sm = sms[i];
+				String smName = sm.getLinkName();
+				DatasetConfigTreeNode smNode = new DatasetConfigTreeNode("SeqModule:" + smName);
+				smNode.setUserObject(sm);
+				this.add(smNode);
+			}  
             FilterPage[] fpages = dsv.getFilterPages();
             for (int i = 0; i < fpages.length; i++) {
                 if (fpages[i].getClass().getName().equals("org.ensembl.mart.lib.config.FilterPage")) {

@@ -61,6 +61,10 @@ public class DatasetConfigXMLUtils {
   private final String DATASETCONFIG = "DatasetConfig";
   private final String STARBASE = "MainTable";
   private final String PRIMARYKEY = "Key";
+  private final String SEQMODULE = "SeqModule";
+  private final String BATCHSIZE = "BatchSize";
+  private final String IMPORTABLE = "Importable";
+  private final String EXPORTABLE = "Exportable";
   private final String ENABLE = "Enable";
   private final String DISABLE = "Disable";
   private final String FILTERPAGE = "FilterPage";
@@ -251,6 +255,34 @@ public class DatasetConfigXMLUtils {
       Element element = (Element) iter.next();
       dsv.addPrimaryKey(element.getTextNormalize());
     }
+	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, BATCHSIZE));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  dsv.addBatchSize(element.getTextNormalize());
+	}
+
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, SEQMODULE));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  dsv.addSeqModule(getSeqModule(element));
+	}
+	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, IMPORTABLE));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  dsv.addImportable(getImportable(element));
+	}
+	
+	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, EXPORTABLE));
+	  iter.hasNext();
+	  ) {
+	  Element element = (Element) iter.next();
+	  dsv.addExportable(getExportable(element));
+	}
 
     for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, FILTERPAGE));
       iter.hasNext();
@@ -283,6 +315,24 @@ public class DatasetConfigXMLUtils {
     df.setFilterDescription(desc);
 
     return df;
+  }
+
+  private SeqModule getSeqModule(Element thisElement) throws ConfigurationException {
+	SeqModule sm = new SeqModule();
+	loadAttributesFromElement(thisElement, sm);
+	return sm;
+  }
+
+  private Importable getImportable(Element thisElement) throws ConfigurationException {
+	Importable im = new Importable();
+	loadAttributesFromElement(thisElement, im);
+	return im;
+  }
+  
+  private Exportable getExportable(Element thisElement) throws ConfigurationException {
+	Exportable ex = new Exportable();
+	loadAttributesFromElement(thisElement, ex);
+	return ex;
   }
 
   private FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
@@ -567,6 +617,23 @@ public class DatasetConfigXMLUtils {
     for (int i = 0, n = pkeys.length; i < n; i++)
       root.addContent(getPrimaryKeyElement(pkeys[i]));
 
+	String[] batchSizes = dsconfig.getBatchSizes();
+	for (int i = 0, n = batchSizes.length; i < n; i++)
+	  root.addContent(getBatchSizeElement(batchSizes[i]));
+	
+	SeqModule[] seqmodules = dsconfig.getSeqModules();
+	for (int i = 0, n = seqmodules.length; i < n; i++)
+	  root.addContent(getSeqModuleElement(seqmodules[i]));
+
+	Importable[] imps = dsconfig.getImportables();
+	for (int i = 0, n = imps.length; i < n; i++)
+	  root.addContent(getImportableElement(imps[i]));
+	  
+	Exportable[] exps = dsconfig.getExportables();
+	for (int i = 0, n = exps.length; i < n; i++)
+	  root.addContent(getExportableElement(exps[i]));
+	  
+
     FilterPage[] fpages = dsconfig.getFilterPages();
     for (int i = 0, n = fpages.length; i < n; i++)
       root.addContent(getFilterPageElement(fpages[i]));
@@ -685,6 +752,30 @@ public class DatasetConfigXMLUtils {
     Element pkey = new Element(PRIMARYKEY);
     pkey.setText(primaryKeyString);
     return pkey;
+  }
+
+  private Element getBatchSizeElement(String batchSizeString) {
+	Element bsize = new Element(BATCHSIZE);
+	bsize.setText(batchSizeString);
+	return bsize;
+  }
+
+  private Element getSeqModuleElement(SeqModule smodule) {
+	Element module = new Element(SEQMODULE);
+	loadElementAttributesFromObject(smodule, module);
+	return module;
+  }
+
+  private Element getImportableElement(Importable smodule) {
+	Element module = new Element(IMPORTABLE);
+	loadElementAttributesFromObject(smodule, module);
+	return module;
+  }
+  
+  private Element getExportableElement(Exportable smodule) {
+	Element module = new Element(EXPORTABLE);
+	loadElementAttributesFromObject(smodule, module);
+	return module;
   }
 
   private Element getStarBaseElement(String starbaseString) {

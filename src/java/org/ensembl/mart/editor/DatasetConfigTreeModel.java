@@ -160,7 +160,18 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
                 config = (DatasetConfig) parentNode.getUserObject();
                 config.insertAttributePage(index, (AttributePage) editingNode.getUserObject());
 
-            } else {
+            } else if (child instanceof org.ensembl.mart.lib.config.SeqModule) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.insertSeqModule(index, (SeqModule) editingNode.getUserObject());
+
+			} else if (child instanceof org.ensembl.mart.lib.config.Importable) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.insertImportable(index, (Importable) editingNode.getUserObject());
+
+			} else if (child instanceof org.ensembl.mart.lib.config.Exportable) {
+				config = (DatasetConfig) parentNode.getUserObject();
+				config.insertExportable(index, (Exportable) editingNode.getUserObject());
+			} else {
                 String error_string = "Error: " + childName + " cannot be inserted in a DatasetConfig.";
                 return error_string;
             }

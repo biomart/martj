@@ -218,6 +218,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
                     copy();
                 else if (e.getActionCommand().equals("paste"))
                     paste();
+				else if (e.getActionCommand().equals("insert importable"))
+					insert(new Importable("new"), "Importable:");
+				else if (e.getActionCommand().equals("insert exportable"))
+					insert(new Exportable("new"), "Exportable:");
+				else if (e.getActionCommand().equals("insert seq module"))
+					insert(new SeqModule("new"), "SeqModule:");								
                 else if (e.getActionCommand().equals("insert filter page"))
                     insert(new FilterPage("new"), "FilterPage:");
                 else if (e.getActionCommand().equals("insert attribute page"))
@@ -473,7 +479,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
         String[] menuItems = null;
         String clickedNodeClass = editingNode.getUserObject().getClass().getName();
         if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetConfig"))
-            menuItems = new String[]{"copy", "cut", "paste", "delete", "hide toggle", "insert filter page", "insert attribute page"};
+            menuItems = new String[]{"copy", "cut", "paste", "delete", "hide toggle", "insert filter page", "insert attribute page",
+				"insert importable","insert exportable","insert seq module",};
         else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
             menuItems = new String[]{"copy", "cut", "paste", "delete", "hide toggle","insert filter group"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))

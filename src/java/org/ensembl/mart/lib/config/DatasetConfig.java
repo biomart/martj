@@ -63,6 +63,11 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private Hashtable filterPageNameMap = new Hashtable();
   private List mainTables = new ArrayList();
   private boolean hasBrokenMainTables = false;
+  
+  private List batchSizes = new ArrayList();
+  private List seqModules = new ArrayList();
+  private List importables = new ArrayList();
+  private List exportables = new ArrayList();
 
   private List primaryKeys = new ArrayList();
   private boolean hasBrokenPrimaryKeys = false;
@@ -349,6 +354,17 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Adds a batch size to the dataset.  
+   * 
+   * @param batchSize String size of batch.
+   */
+  public void addBatchSize(String batchSize) {
+	batchSizes.add(batchSize);
+  }
+  
+
+
+  /**
    * Adds a primary key to the dataset.  This is the key that joins the dimension tables
    *  with the star table.  Datasets with multiple starBases may have multiple primary keys.
    * 
@@ -449,6 +465,76 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       attributePages.add(a[i]);
       attributePageNameMap.put(a[i].getInternalName(), a[i]);
     }
+  }
+
+  /**
+   * Add a SeqModule to the DatasetConfig.
+   * 
+   * @param f SeqModule object.
+   */
+  public void addSeqModule(SeqModule f) {
+	seqModules.add(f);
+	//seqModuleNameMap.put(f.getInternalName(), f);
+  }
+
+  /**
+   * Add an Importable to the DatasetConfig.
+   * 
+   * @param f Importable object.
+   */
+  public void addImportable(Importable f) {
+	importables.add(f);
+	//seqModuleNameMap.put(f.getInternalName(), f);
+  }
+  
+  /**
+   * Add an Exportable to the DatasetConfig.
+   * 
+   * @param f SeqModule object.
+   */
+  public void addExportable(Exportable f) {
+	exportables.add(f);
+	//seqModuleNameMap.put(f.getInternalName(), f);
+  }
+
+
+  /**
+   * Insert an Importable at a particular Position within the List
+   * of Importable contained in the DatasetConfig. Importables at
+   * or after the given position are shifted right.
+   * @param position -- position to insert the Importable.
+   * @param a -- Importable to be inserted.
+   */
+  public void insertImportable(int position, Importable a) {
+	lazyLoad();
+	importables.add(position, a);
+	//attributePageNameMap.put(a.getInternalName(), a);
+  }
+
+  /**
+   * Insert an Exportable at a particular Position within the List
+   * of Exportable contained in the DatasetConfig. Exportables at
+   * or after the given position are shifted right.
+   * @param position -- position to insert the Exportable.
+   * @param a -- Exportable to be inserted.
+   */
+  public void insertExportable(int position, Exportable a) {
+	lazyLoad();
+	exportables.add(position, a);
+	//attributePageNameMap.put(a.getInternalName(), a);
+  }
+  
+  /**
+   * Insert an SeqModule at a particular Position within the List
+   * of SeqModules contained in the DatasetConfig. SeqModules at
+   * or after the given position are shifted right.
+   * @param position -- position to insert the SeqModule.
+   * @param a -- SeqModule to be inserted.
+   */
+  public void insertSeqModule(int position, SeqModule a) {
+	lazyLoad();
+	seqModules.add(position, a);
+	//attributePageNameMap.put(a.getInternalName(), a);
   }
 
   /**
@@ -586,6 +672,51 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     String[] p = new String[primaryKeys.size()];
     primaryKeys.toArray(p);
     return p;
+  }
+
+  /**
+   * Returns a list of batch sizes for this DatasetConfig.
+   * 
+   * @return pkeys String[]
+   */
+  public String[] getBatchSizes() {
+	lazyLoad();
+	String[] p = new String[batchSizes.size()];
+	batchSizes.toArray(p);
+	return p;
+  }
+
+  /**
+   * Returns a list of all SeqModule objects contained within the DatasetConfig, in the order they were added.
+   * @return FilterPage[]
+   */
+  public SeqModule[] getSeqModules() {
+	lazyLoad();
+	SeqModule[] fs = new SeqModule[seqModules.size()];
+	seqModules.toArray(fs);
+	return fs;
+  }
+
+  /**
+   * Returns a list of all Importable objects contained within the DatasetConfig, in the order they were added.
+   * @return FilterPage[]
+   */
+  public Importable[] getImportables() {
+	lazyLoad();
+	Importable[] fs = new Importable[importables.size()];
+	importables.toArray(fs);
+	return fs;
+  }
+  
+  /**
+   * Returns a list of all Exportable objects contained within the DatasetConfig, in the order they were added.
+   * @return FilterPage[]
+   */
+  public Exportable[] getExportables() {
+	lazyLoad();
+	Exportable[] fs = new Exportable[exportables.size()];
+	exportables.toArray(fs);
+	return fs;
   }
 
   /**
