@@ -311,8 +311,8 @@ public class DetailedDataSource implements DataSource {
       dbURL.append(":").append(port);
 
     if (databaseName != null && !databaseName.equals(""))
-      dbURL.append(databaseName);
-
+      {dbURL.append(databaseName);}
+    System.out.println("CONNECING: "+dbURL.toString());
     return dbURL.toString();
   }
 
