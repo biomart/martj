@@ -8,7 +8,7 @@ Known Issues
 are specified are relatively complete compared to the existing web MartView system 
 written in Perl.  
 
-- MartExplorer does not perform optimally when handling multiple dataset configurations.
+- MartExplorer does not perform optimally when handling genomic sequences.
 We are actively developing solutions to this issue.
 
 - The MartShell history/command completion system relies on JNI interaction with the GNU Readline
