@@ -162,6 +162,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
             new BasicFilter(
               filterDescription.getField(),
               option.getTableConstraint(),
+			  option.getKey(),
               "=",
               value,
               filterDescription.getHandlerFromContext());
@@ -262,6 +263,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "someLegalQualifiers",
         "someDisplayName",
         "someTableConstraint",
+        "someKey",
         null,
         "someDescription");
     fd.addOption(
@@ -272,6 +274,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "description1",
         "field1",
         "tableConstraint1",
+        "key1",
         "value1",
         "ref1",
         "type1",
@@ -286,6 +289,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "description2",
         "field2",
         "tableConstraint2",
+        "key2",
         "value2",
         "ref2",
         "type2",

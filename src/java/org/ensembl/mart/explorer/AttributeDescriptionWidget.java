@@ -69,8 +69,9 @@ public class AttributeDescriptionWidget
 		public InputPageAwareAttribute(
 			String field,
 			String tableConstraint,
+			String key,
 			InputPage inputPage) {
-			super(field, tableConstraint);
+			super(field, tableConstraint,key);
 			this.inputPage = inputPage;
 		}
 
@@ -100,6 +101,7 @@ public class AttributeDescriptionWidget
 			new InputPageAwareAttribute(
 				attributeDescription.getField(),
 				attributeDescription.getTableConstraint(),
+		        attributeDescription.getKey(),
 				this);
 		setField(attribute);
 

@@ -77,6 +77,7 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
+          fd.getKey(),
           BooleanFilter.isNotNULL, 
           fd.getHandlerFromContext());
 
@@ -84,6 +85,7 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
+		  fd.getKey(),
           BooleanFilter.isNULL, 
           fd.getHandlerFromContext());
 
@@ -93,6 +95,7 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
+		  fd.getKey(),
           BooleanFilter.isNotNULL_NUM, 
           fd.getHandlerFromContext());
 
@@ -100,6 +103,7 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
+		  fd.getKey(),
           BooleanFilter.isNULL_NUM, 
           fd.getHandlerFromContext());
 
@@ -218,6 +222,7 @@ public class BooleanFilterWidget
         "someLegalQualifiers",
         "someDisplayName",
         "someTableConstraint",
+        "someKey",
         null,
         "someDescription");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);

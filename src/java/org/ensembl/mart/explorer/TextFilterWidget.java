@@ -72,6 +72,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         "someLegalQualifiers",
         "someDisplayName",
         "someTableConstraint",
+        "someKey",
         null,
         "someDescription");
 
@@ -107,11 +108,12 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
     public InputPageAwareBasicFilter(
       String field,
       String tableConstraint,
+      String key,
       String condition,
       String value,
       InputPage inputPage) {
 
-      super(field, tableConstraint, condition, value);
+      super(field, tableConstraint, key, condition, value);
       this.inputPage = inputPage;
 
     }
@@ -169,6 +171,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         new BasicFilter(
           filterDescription.getField(),
           filterDescription.getTableConstraint(),
+		  filterDescription.getKey(),          
           filterDescription.getLegalQualifiers(),
           value,
           filterDescription.getHandlerFromContext());

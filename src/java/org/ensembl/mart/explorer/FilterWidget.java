@@ -153,16 +153,17 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
       String condition,
       String value,
       InputPage inputPage) {
-      this(field, null, condition, value, inputPage);
+      this(field, null, null, condition, value, inputPage);
     }
 
     public InputPageAwareBasicFilter(
       String field,
       String tableConstraint,
+      String key,
       String condition,
       String value,
       InputPage inputPage) {
-      super(field, tableConstraint, condition, value);
+      super(field, tableConstraint, key, condition, value);
       this.inputPage = inputPage;
     }
 
@@ -170,6 +171,7 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
       super(
         option.getFieldFromContext(),
         option.getTableConstraintFromContext(),
+        option.getKeyFromContext(),
         option.getQualifierFromContext(),
         option.getValueFromContext(),
         option.getHandlerFromContext());
