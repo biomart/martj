@@ -81,7 +81,7 @@
     <include name="jython.jar" />
     <include name="libreadline-java.jar" />
     <include name="log4j-1.2.6.jar" />
-    <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
+    <include name="mysql-connector-java-3.0.16-ga-bin.jar" />
     <include name="optional.jar" />
     <include name="xalan.jar" />
     <include name="p6spy.jar" />
@@ -113,7 +113,7 @@
      <include name="jdom.jar" />
      <include name="libreadline-java.jar" />
      <include name="martj.jar" />
-     <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
+     <include name="mysql-connector-java-3.0.16-ga-bin.jar" />
      <include name="ojdbc14.jar" />
      <include name="p6spy.jar" />     
      <include name="junit.jar" />     
@@ -129,7 +129,7 @@
      <exclude name="jdom.jar" />
      <exclude name="libreadline-java.jar" />
      <exclude name="martj.jar" />
-     <exclude name="mysql-connector-java-3.0.7-stable-bin.jar" />
+     <exclude name="mysql-connector-java-3.0.16-ga-bin.jar" />
   </patternset>
 
   <!-- readline platform dependant libraries -->
