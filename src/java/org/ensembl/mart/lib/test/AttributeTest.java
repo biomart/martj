@@ -6,7 +6,10 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.ensembl.mart.lib.*;
+import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.FieldAttribute;
+import org.ensembl.mart.lib.FormatSpec;
+import org.ensembl.mart.lib.Query;
 
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.

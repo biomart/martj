@@ -26,9 +26,9 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.DatabaseUtil;
-
 import junit.framework.TestCase;
+
+import org.ensembl.mart.lib.DatabaseUtil;
 
 /**
  * @author craig

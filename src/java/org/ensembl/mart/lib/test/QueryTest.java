@@ -1,8 +1,5 @@
 package org.ensembl.mart.lib.test;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import javax.sql.DataSource;
 
 import junit.framework.Test;
@@ -10,7 +7,13 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.ensembl.mart.lib.*;
+import org.ensembl.mart.lib.Attribute;
+import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.FieldAttribute;
+import org.ensembl.mart.lib.Filter;
+import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**

@@ -1,6 +1,7 @@
 package org.ensembl.mart.lib.test;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class StatOutputStream extends OutputStream {
 

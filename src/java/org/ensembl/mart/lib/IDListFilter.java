@@ -19,9 +19,11 @@
  */
 
 package org.ensembl.mart.lib;
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * IDListFilter object for storing a list of IDs of a particular

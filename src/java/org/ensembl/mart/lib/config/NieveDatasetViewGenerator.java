@@ -34,12 +34,6 @@ import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.LoggingUtils;
-import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
-import org.ensembl.mart.lib.config.MartRegistryXMLUtils;
-import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
  * Application allowing users to dump a nieve DatasetView

@@ -31,8 +31,8 @@ import javax.swing.JScrollPane;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterCollection;
-import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
 
 /**
  * @author craig

@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,10 +23,10 @@ import java.util.regex.Pattern;
 import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ewin.common.util.Log;
 import org.ewin.javax.sql.DefaultPoolingAlgorithm;
 import org.ewin.javax.sql.DriverManagerDataSource;
 import org.ewin.javax.sql.PoolingAlgorithmDataSource;
-import org.ewin.common.util.Log;
 
 /**
  * Utility class for working with JDBC databases.

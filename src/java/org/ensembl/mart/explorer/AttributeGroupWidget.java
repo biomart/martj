@@ -30,8 +30,8 @@ import javax.swing.JScrollPane;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
-import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
 
 /**
  * Widget representing an AttibuteGroup. 

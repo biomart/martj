@@ -25,9 +25,9 @@ import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatabaseLocation;
 import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;

@@ -23,7 +23,6 @@ import java.awt.event.ActionListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.naming.ConfigurationException;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
@@ -34,9 +33,9 @@ import javax.swing.JRadioButton;
 import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**

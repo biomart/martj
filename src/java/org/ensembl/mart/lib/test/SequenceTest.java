@@ -9,11 +9,13 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-
 import org.ensembl.datamodel.AssemblyLocation;
 import org.ensembl.datamodel.Exon;
 import org.ensembl.datamodel.Gene;
 import org.ensembl.datamodel.Transcript;
+import org.ensembl.driver.ConfigurationException;
+import org.ensembl.driver.Driver;
+import org.ensembl.driver.DriverManager;
 import org.ensembl.driver.ExonAdaptor;
 import org.ensembl.driver.GeneAdaptor;
 import org.ensembl.driver.SequenceAdaptor;
@@ -22,10 +24,6 @@ import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
-
-import org.ensembl.driver.ConfigurationException;
-import org.ensembl.driver.Driver;
-import org.ensembl.driver.DriverManager;
 
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.

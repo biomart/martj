@@ -14,7 +14,6 @@ import javax.sql.DataSource;
 
 import junit.framework.TestCase;
 
-
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.Query;

@@ -18,15 +18,13 @@
 
 package org.ensembl.mart.explorer;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 
 /**

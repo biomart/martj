@@ -21,8 +21,6 @@ package org.ensembl.mart.explorer;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.ensembl.mart.lib.config.DatasetView;
-
 /**
  * Editor for creating and editing existing virtual queries. A virtual query
  * is a query whose inputs are the results from other queries. 

@@ -20,8 +20,6 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.JCheckBox;
 

@@ -22,8 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,9 +41,9 @@ import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.util.LoggingUtil;
 
 

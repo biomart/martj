@@ -18,8 +18,8 @@
  
 package org.ensembl.mart.lib.config;
 
-import org.jdom.filter.Filter;
 import org.jdom.Element;
+import org.jdom.filter.Filter;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>

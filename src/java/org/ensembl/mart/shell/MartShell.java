@@ -75,7 +75,6 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
-
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 

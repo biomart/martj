@@ -29,10 +29,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ensembl.mart.lib.InvalidQueryException;
-import org.ensembl.mart.lib.QueryRunner;
-import org.ensembl.mart.lib.SequenceException;
-
 import org.ensembl.util.FormattedSequencePrintStream;
 
 /** 

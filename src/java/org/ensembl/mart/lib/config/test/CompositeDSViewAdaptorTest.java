@@ -18,12 +18,12 @@
 
 package org.ensembl.mart.lib.config.test;
 
-import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.test.Base;
 
 /**
  * Tests CompositeDSViewAdaptor.

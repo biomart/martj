@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -45,11 +44,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
-import org.ensembl.mart.lib.Attribute;
-import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
-import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
