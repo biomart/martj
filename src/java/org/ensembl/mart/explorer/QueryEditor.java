@@ -332,8 +332,8 @@ public class QueryEditor extends JPanel {
     //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
     String[] urls = new String[] { 
+      //"data/XML/hsapiens_gene_est.xml"
       "data/XML/hsapiens_gene_ensembl.xml" 
-      ,"data/XML/hsapiens_gene_est.xml"
       //,"data/XML/hsapiens_gene_vega.xml" 
     };
     for (int i = 0; i < urls.length; i++) {
