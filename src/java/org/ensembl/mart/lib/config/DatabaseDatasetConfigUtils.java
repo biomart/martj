@@ -2995,7 +2995,6 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 						for (int p = 0, q = ops.length; p < q; p++) {
 						  if ((ops[p].getField() != null && ops[p].getField().equals(cname))
 							 && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
-							  System.out.println("EXCLUDING BOOL OPTION\t" + ops[p]);
 							  newOption = false;
 							  break outer;
 						  }
@@ -3018,9 +3017,10 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 			  }
 			  if (!cname.endsWith("_bool")){
 				AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey);
-				//ad.setHidden("false");
-				if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname,tableName) == null)	
+				
+				if (dsv.getAttributeDescriptionByFieldNameTableConstraint(cname,tableName) == null){
 				  ac.addAttributeDescription(ad);
+				}
 				if (cname.endsWith("_list")){
             	
 					FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
@@ -3040,7 +3040,6 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 						  for (int p = 0, q = ops.length; p < q; p++) {
 							if ((ops[p].getField() != null && ops[p].getField().equals(cname))
 							   && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
-								System.out.println("EXCLUDING LIST OPTION\t" + ops[p]);
 								newOption = false;
 								break outer;
 							}
@@ -3080,9 +3079,6 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 							updateDropDown(dsv, dsource, currFilt);
 					}
 					
-					//if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName) == null)	
-					  //fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
-        		
 				}
 			}
         
@@ -3091,6 +3087,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 				logger.fine("Skipping " + tableName + "\n");
 			}
 		  }
+		  
 		  if (ac != null && ac.getAttributeDescriptions().size() > 0)
 			ag.addAttributeCollection(ac);
 
@@ -3104,13 +3101,14 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 		  fcList.addFilterDescription(fdLists);
 		if (fcList != null && fcList.getFilterDescriptions().size() > 0) 
 		   fg.addFilterCollection(fcList);	
+		
         if (ag != null && ag.getAttributeCollections().length > 0)    
 		  ap.addAttributeGroup(ag);
 		if (fg != null && fg.getFilterCollections().length > 0)  
-		  fp.addFilterGroup(fg);
-        
-        if (ap != null && ap.getAttributeGroups().size() > 0)
+		  fp.addFilterGroup(fg);	
+        if (ap != null && ap.getAttributeGroups().size() > 0){
 		  dsv.addAttributePage(ap);
+        }
 		if (fp != null && fp.getFilterGroups().size() > 0)
 		  dsv.addFilterPage(fp);	
 			
