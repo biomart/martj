@@ -314,7 +314,7 @@ public class FilterGroup {
   	boolean found = false;
   	
   	if (lastFSetDescription == null) {
-  		for (Iterator iter = filterSets.keySet().iterator(); iter.hasNext();) {
+  		for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
 				FilterSet fset = (FilterSet) iter.next();
 				if (fset.containsFilterSetDescription(internalName)) {
 					lastFSetDescription = fset.getFilterSetDescriptionByName(internalName);

@@ -38,17 +38,30 @@ public class NullableFilter implements Filter {
 	public NullableFilter() {
 	}
 
+
+/**
+ * Constructor for a basic NullableFilter, with type and condition set.
+ * 
+	 * @param type - String, type of filter
+	 * @param condition - String, one of isNULL or isNotNull
+ */
+	public NullableFilter(String type, String condition) {
+    this(type, "", condition);
+	}
+
 	/**
 	 * constructor for a fully defined NullableFilter.
 	 * static isNULL and isNotNull variables can be used
 	 * to set the condition
 	 * 
 	 * @param type - String, type of filter
+	 * @param tableConstraint - String, tableConstraint for the Filter
 	 * @param condition - String, one of isNULL or isNotNull
-	 */
-	public NullableFilter(String type, String condition) {
+	 */	
+	public NullableFilter(String type, String tableConstraint, String condition) {
 		this.type = type;
-		this.condition = "is" + condition + "null ";
+		this.tableConstraint = tableConstraint;
+		this.condition = " is" + condition + "null ";		
 	}
 	
 	public NullableFilter(NullableFilter o) {
@@ -79,7 +92,7 @@ public class NullableFilter implements Filter {
 	 * returns the where clause for the SQL as type is null
 	 */
 	public String getWhereClause() {
-		return type + condition;
+		return type + " " + condition;
 	}
 
 	/**
@@ -89,7 +102,7 @@ public class NullableFilter implements Filter {
 	 * @param condition - String
 	 */
 	public void setCondition(String condition) {
-		this.condition = "is" + condition + "null ";
+		this.condition = " is" + condition + "null ";
 	}
 
 	/**

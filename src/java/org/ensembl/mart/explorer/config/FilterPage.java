@@ -101,6 +101,7 @@ public class FilterPage {
 		Integer fgRankInt = new Integer(fcRank);
 		filterGroups.put(fgRankInt, fg);
 		filterGroupNameMap.put(fg.getInternalName(), fgRankInt);
+		fcRank++;
 	}
 
 	/**
@@ -115,6 +116,7 @@ public class FilterPage {
 			Integer fgRankInt = new Integer(fcRank);
 			filterGroups.put(fgRankInt, fg[i]);
 			filterGroupNameMap.put(fg[i].getInternalName(), fgRankInt);
+			fcRank++;
 		}
 	}
 
