@@ -11,8 +11,7 @@
 <li><a href="#running">Running MartExplorer</a></li>
 <li><a href="#building">Building and executing a query</a></li>
 <li><a href="#marts">Adding Mart Databases</a></li>
-<li><a href="#files">Adding Registry and Configuration Files</a></li>
-<li><a href="#advanced">Advanced Features</a></li>
+<li><a href="#advanced">Enabling other Options</a></li>
 </ul>
 
 <a name="overview"></a><h2>Overview</h2> 
@@ -30,20 +29,12 @@ query and can be used to change the contents of the input panel by
 clicking on the appropriate item; <b>Attributes</b>,<b>Filters</b> or
 <b>Format</b>.  Attributes and filters can be added and removed using
 the appropriate input pages and the output format can be set via the
-format page.  Attributes and Filters can also be deleted via the
-tree. Simply click on them and then press the delete key. The order of
-attributes can also be changed by dragging and dropping them.
+format page. 
 </p>
 
-<p>Once the user is ready to execute a query the results can be
-previewed in the preview panel or all of the results can be saved to a
-file. It is easy to modify and rerun the query allowing for iterative
-development of complex queries.
+<p>The results of a query can be previewed in the preview panel, or all
+results can be saved to a file.
 </p>
-
-<p>It is also possible to add and remove marts.</p>
-
-
 
 <a href="#top">top</a>
 
@@ -108,10 +99,10 @@ It is possible to add new Mart databases in addition to the default ones already
 This can be done in two ways:  by specifying an Mart Registry file and/or interactively during MartExplorer session. 
 The former makes added databases available at a start up the latter only for the duration of the Mart Explorer session.
 
-<br><br>Registry file<br> 
+<br><br><b>Registry file</b><br> 
 At start up MartExplorer reads an registry file, which specifies a set mart databases. The defalut registry file is located in the data directory: defaultMartRegistry.xml. It is possible to overide its contents by placing a .userMartRegistry.xml file in the user's home directory. This must be a valid registry file. See the default file (data/defaultMartRegistry.xml) for an example and the documentation for more details. The easiest approach is to simply copy the defaultMartRegistry.xml to user home directory changing its name to .userMartRegistry.xml and edit the file according to one's requirements.
 
-<br><br>Interactively<br> 
+<br><br><b>Interactively</b><br> 
 Mart databases can also be added using the "Add Mart" settings window. 
 This is opened with the menu item Settings -> Add Mart. 
 This button opens the database connection window from which the user can specify mart database connection parameters. 
@@ -119,118 +110,16 @@ Once this is done the marts will be available for use in new queries.
 Note that some values are "pre-loaded" into the drop down lists that are available by pressing the small downward arrow 
 at the end of each text entry box. This can save you typing the entries.
 
+<a name="advanced"></a><h2>Enabling other Options</h2>
 
-<p>This is a brief description of the parameters together with
-some example values:
-
-<dl>
-
-<dt><b>Database type</b></dt><dd>Type of database server, e.g. mysql</dd>
-
-<dt><b>Database Driver</b></dt><dd>This is the JDBC driver that the program
-uses to connect to the database. For mysql databases this should
-probably be set to com.mysql.jdbc.Driver</dd>
-
-<dt><b>Host</b></dt><dd>This is the name of the computer on which the
-database server is running, e.g. martdb.ebi.ac.uk. </dd>
-
-<dt><b>Port</b></dt><dd>This is the port on the host computer that the
-database server is running on. The default port for MySQL servers is
-3306. </dd>
-
-<dt><b>Database</b></dt><dd>This is the name of the database on the database
-server. It is also the name of the mart.</dd>
-
-<dt><b>User</b></dt><dd>This is the user name to use when connecting to the
-database, the user name "anonymous" works with martdb.ebi.ac.uk.</dd>
-
-<dt><b>Password</b></dt><dd>If the database requires a password then it can
-be entered here. MartExplorer can remember the password by checking
-the box next to the password field but it is stored unencrypted so
-this should not be used for sensitive passwords.</dd>
-
-<dt><b>Connection Name</b></dt><dd>This optional field can be used to
-give the mart a user fiendly name. The connection name is used in the
-dataset selection page of the QueryEditor. If the value is left blank
-then a default name is used.</dd>
-
-</p></dl>
-
-</dd>
-
-
-<a name="files"></a><h2>Adding Registry and Configuration Files</h2>
-
-<p>Registry and Configuration Files can be added and removed interactively using the Add File settings window. 
-This is opened with the menu item Settings -> Add File. 
-The window contains a drop down list of loaded files plus several buttons for adding and removing them:
-</p>
-
-<dl>
-<dt><b>Add Registry File</b></dt> <dd>This button opens a file selection
-dialog box from which the user can select a registry file. Once the
-registry file has been imported the marts it specifies will be
-available.  </dd>
-
-
-<dt><b>Add Dataset Configuration File</b></dt><dd>This is only really
-useful for people developing their own dataset configuration
-files. The button opens a file selection dialog box from which the
-user can select a dataset configuration file. Once the file has been
-loaded the mart it specifies will be available for building
-queries. Note that it will not be possible to execute the query until
-a database has been associated with it. See <a
-href="#advanced">Advanced Features</a> for the method to change the
-database.</dd>
-
-
-<dt><b>Remove</b></dt><dd>Remove the file currently displayed in the drop-down list.</dd>
-
-<dt><b>Remove All</b></dt><dd>Remove all available files. </dd>
-</dl>
-
-<a href="#top">top</a>
-
-
-
-<a name="advanced"></a><h2>Advanced Features</h2>
-
-With these features the user can log output and enable more options
-when constructing queries.
-
-<p>Logging output can be enabled / disabled via <b>Settings -> Advanced
--> Logging</b>. The log messages are printed to the console where
-MartExplorer was started from.
-</p>
-
-<p>Several advanced options can be enabled / disabled via <b>Settings
--> Advanced -> Enable Advanced Options</b>. The advanced options are:
+<p> By selcting Settings -> Enable, a user may choose to enable extra options:
 <ul>
-
-<li>All datasets available in a mart become available when building
-queries rather just the default ones. The system administrator who
-publishes the mart determines which datasets are default and which are
-not. Marts will often only contain default datasets.  </li>
-
-<li>The mart database a query is executed against can be changed. This
-feature is useful for testing a query against several (compatible)
-datasets and when developing a dataset configuration file locally and
-testing it against an existing database. The database can be changed
-by clicking on the <b>Mart Database</b> item in the tree view and then
-selecting the database using the data entry area.  </li>
-
-<li>The dataset a query is about can be changed.  The dataset
-configuration can be changed by first clicking on the <b>Dataset</b> item
-in the tree view and then selecting the dataset in the input page that
-appears. All existing attributes and filters will be removed.  </li>
-
+<li> <b>Optional Dataset Configuration</b> When a dataset has more than one configuration file, the user must check this option to be able to select it in the tree. When this is not set the default configuration file is used.</li>
+<li> <b>Logging</b> With this option set, the actual query sent to the database (e.g. MySQL query) is printed in the shell where MartExplorer is running from.</li>
 </ul>
 </p>
 
-
 <a href="#top">top</a>
-
-
 
 </body>
 </html>
