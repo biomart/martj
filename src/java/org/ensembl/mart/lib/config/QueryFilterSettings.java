@@ -35,7 +35,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String typeKey = "type";
 	protected final String qualifierKey = "qualifier";
 	protected final String legalQualifiersKey = "legal_qualifiers";
-    protected final String hiddenKey = "hidden";
+    //protected final String hiddenKey = "hidden";
     
   private final String[] titles = new String[] { fieldKey, 
                                                  valueKey,
@@ -45,7 +45,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  typeKey,
                                                  qualifierKey,
                                                  legalQualifiersKey,
-                                                 hiddenKey
+                                                 //hiddenKey
   };
 
 	/**
@@ -128,13 +128,13 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	}
 
 	
-	public void setHidden(String hidden) {
-	  setAttribute(hiddenKey, hidden);
-	}
+	//public void setHidden(String hidden) {
+	//  setAttribute(hiddenKey, hidden);
+	//}
 
-	public String getHidden() {
-	  return getAttribute(hiddenKey);
-	}
+	//public String getHidden() {
+	//  return getAttribute(hiddenKey);
+	//}
 
 
 	public void setKey(String key) {

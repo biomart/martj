@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.vieweditor;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -32,6 +33,8 @@ import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.JTree;
 
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -41,7 +44,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
-
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
 /**
  * DatasetViewTreeWidget extends internal frame.
  *
@@ -114,6 +117,11 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                     view, this);
             tree = new DatasetViewTree(view,
                     this, attrTable);
+                    
+			//DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+			//renderer.setTextNonSelectionColor(Color.red);
+			//tree.setCellRenderer(renderer);        
+			tree.setCellRenderer(new MyRenderer());        
             // for update         
             setDatasetView(view);
             
@@ -221,6 +229,11 @@ public class DatasetViewTreeWidget extends JInternalFrame {
         tree.paste();
     }
 
+	public void makeHidden(){
+		tree.makeHidden();
+	}
+
+
     public void insert(){
        // tree.insert();
     }
@@ -249,4 +262,45 @@ public class DatasetViewTreeWidget extends JInternalFrame {
         }
     }
 
+}
+
+class MyRenderer extends DefaultTreeCellRenderer {
+
+	public MyRenderer() {	
+	}
+
+	public Component getTreeCellRendererComponent(
+						JTree tree,
+						Object value,
+						boolean sel,
+						boolean expanded,
+						boolean leaf,
+						int row,
+						boolean hasFocus) {
+
+		if (isHidden(value)){
+			setTextNonSelectionColor(Color.lightGray);
+			setTextSelectionColor(Color.lightGray);
+		} else{
+		    setTextNonSelectionColor(Color.black);
+			setTextSelectionColor(Color.black);
+		}
+		super.getTreeCellRendererComponent(
+						tree, value, sel,
+						expanded, leaf, row,
+						hasFocus);			
+		
+		return this;
+	}
+
+	protected boolean isHidden(Object value) {
+		DatasetViewTreeNode node =
+				(DatasetViewTreeNode)value;
+		BaseConfigurationObject nodeObject = (BaseConfigurationObject) node.getUserObject();		
+		if (nodeObject.getAttribute("hidden") != null && nodeObject.getAttribute("hidden").equals("true")){
+			return true;
+		}
+
+		return false;
+	}
 }

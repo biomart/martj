@@ -29,10 +29,12 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	protected final String internalNameKey = "internalName";
 	protected final String displayNameKey = "displayName";
 	protected final String descriptionKey = "description";
+	protected final String hiddenKey = "hidden";
   
   private final String[] titles = new String[] { internalNameKey,
                                                  displayNameKey,
-                                                 descriptionKey
+                                                 descriptionKey,
+                                                 hiddenKey
   };
 
 	/**
@@ -106,6 +108,15 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	}
 
 	/**
+	 * Returns the hidden status
+	 * @return String hidden
+	 */
+	public String getHidden() {
+		return attributes.getProperty(hiddenKey);
+	}
+
+
+	/**
 	 * Sets the description for this object
 	 * @param string
 	 */
@@ -128,6 +139,15 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	public void setInternalName(String internalName) {
 		attributes.setProperty(internalNameKey, internalName);
 	}
+
+	/**
+	 * Sets the hidden for this object
+	 * @param string
+	 */
+	public void setHidden(String hidden) {
+		attributes.setProperty(hiddenKey, hidden);
+	}
+
 
 	public int hashCode() {
     return super.hashCode();

@@ -463,6 +463,8 @@ public class MartViewEditor extends JFrame {
 				naiveDatasetView();  				  
 			else if (e.getActionCommand().startsWith("Update"))
 				updateDatasetView();
+			else if (e.getActionCommand().startsWith("Hidden"))
+				makeHidden();	
                 	  				  				  																				  
         }
     }
@@ -478,6 +480,11 @@ public class MartViewEditor extends JFrame {
     public void paste() {
          ((DatasetViewTreeWidget)desktop.getSelectedFrame()).paste();
     }
+
+	public void makeHidden() {
+		 ((DatasetViewTreeWidget)desktop.getSelectedFrame()).makeHidden();
+	}
+
 
     public void insert() {
           //((DatasetViewTreeWidget)desktop.getSelectedFrame()).insert();
@@ -620,9 +627,11 @@ public class MartViewEditor extends JFrame {
 			return;
 		}	
 		
-		//DatabaseDatasetViewUtils.getValidatedDatasetView(ds,((DatasetViewTreeWidget)desktop.getSelectedFrame()).getDatasetView());
-		
+		// check whether existing filters and atts are still in database
 		DatasetView dsv = DatabaseDatasetViewUtils.getValidatedDatasetView(ds,((DatasetViewTreeWidget)desktop.getSelectedFrame()).getDatasetView());
+		// check for new tables and cols
+		dsv = DatabaseDatasetViewUtils.getNewFiltsAtts(ds,database,dsv);
+		
 		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,dsv,null,null,database);
 		frame.setVisible(true);
 		desktop.add(frame);
@@ -631,7 +640,7 @@ public class MartViewEditor extends JFrame {
 		} catch (java.beans.PropertyVetoException e) {
 		}	  
 	  }
-	  catch (SQLException e){
+	  catch (Exception e){
 	  }		
 	}
 		

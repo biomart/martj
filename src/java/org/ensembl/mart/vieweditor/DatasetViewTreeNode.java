@@ -70,6 +70,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                     String fpName = fp.getInternalName();
                     DatasetViewTreeNode fpNode = new DatasetViewTreeNode("FilterPage:" + fpName);
                     fpNode.setUserObject(fp);
+               
                     this.add(fpNode);
                     List groups = fp.getFilterGroups();
                     for (int j = 0; j < groups.size(); j++) {

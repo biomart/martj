@@ -44,7 +44,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String homepageURLKey = "homepageURL";
   private final String linkoutURLKey = "linkoutURL";
   private final String maxLengthKey = "maxLength";
-  private final String hiddenKey = "hidden";
+  //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
   private boolean hasBrokenField = false;
@@ -72,7 +72,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
-    setAttribute(hiddenKey,null);
+    //setAttribute(hiddenKey,null);
   }
 
   /**
@@ -161,18 +161,18 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   /**
    * @param hidden - hidden flag
    */
-  public void setHidden(String hidden) {
-	setAttribute(hiddenKey, hidden);
-  }
+  //public void setHidden(String hidden) {
+//	setAttribute(hiddenKey, hidden);
+  //}
 
   /**
    * Returns the hidden flag.
    * 
    * @return String hidden.
    */
-  public String getHidden() {
-	return getAttribute(hiddenKey);
-  }
+  //public String getHidden() {
+//	return getAttribute(hiddenKey);
+  //}
 
   /**
    * @param key - join field key for the field

@@ -256,6 +256,8 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     save();
                 else if (e.getActionCommand().equals("save as"))
                     save_as();
+				else if (e.getActionCommand().equals("Hidden on/off"))
+	                makeHidden();    
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -465,27 +467,27 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         String[] menuItems = null;
         String clickedNodeClass = editingNode.getUserObject().getClass().getName();
         if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetView"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter page", "insert attribute page", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off", "insert filter page", "insert attribute page", "delete", "save","save as"};
         else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter group", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute group", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter collection", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter collection", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute collection", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute collection", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter description", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
-					menuItems = new String[]{"copy", "cut", "paste", "add push action", "delete", "save","save as"};            
+					menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","add push action", "delete", "save","save as"};            
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
-			menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
+			menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","delete", "save","save as"};
 
         for (int i = 0; i < menuItems.length; i++) {
             JMenuItem menuItem = new JMenuItem(menuItems[i]);
@@ -533,6 +535,32 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         DatasetViewTreeNodeSelection ss = new DatasetViewTreeNodeSelection(copiedNode);
         clipboard.setContents(ss, this);
     }
+
+	public void makeHidden() {
+		BaseNamedConfigurationObject bc = (BaseNamedConfigurationObject)editingNode.getUserObject();
+		if (bc.getHidden() == null || !bc.getHidden().equals("true")){
+			bc.setHidden("true");
+			Enumeration children = editingNode.breadthFirstEnumeration();
+			DatasetViewTreeNode childNode = null;
+			while (children.hasMoreElements()){
+				childNode = (DatasetViewTreeNode) children.nextElement();
+				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
+				ch.setHidden("true");
+			}
+		}
+		else{
+			bc.setHidden("false");
+			Enumeration children = editingNode.breadthFirstEnumeration();
+			DatasetViewTreeNode childNode = null;
+			while (children.hasMoreElements()){
+				childNode = (DatasetViewTreeNode) children.nextElement();
+				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
+				ch.setHidden("false");
+			}			
+		}
+		
+	}
+
 
     public DatasetViewTreeNode getEditingNode() {
         return editingNode;
