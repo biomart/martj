@@ -79,9 +79,26 @@ public class DatasetViewXMLUtils {
 	// attribute names needed by code
 	private static final String INTERNALNAME = "internalName";
 
+  /**
+   * Returns a DatasetView from an XML stored as a byte[]
+   * @param b - byte[] holding XML
+   * @return DatasetView for xml in byte[]
+   * @throws ConfigurationException
+   */
   public static DatasetView ByteArrayToDatasetView(byte[] b) throws ConfigurationException {
     ByteArrayInputStream bin = new ByteArrayInputStream(b);
     return XMLStreamToDatasetView(bin);
+  }
+  
+  /**
+   * Returns a Document Object parsed from an XML stored as a ByteArray
+   * @param b - byte[] holding XML
+   * @return Document for XML
+   * @throws ConfigurationException
+   */
+  public static Document ByteArrayToDocument(byte[] b) throws ConfigurationException {
+    ByteArrayInputStream bin = new ByteArrayInputStream(b);
+    return XMLStreamToDocument(bin, false);
   }
 
 	/**
@@ -188,7 +205,7 @@ public class DatasetViewXMLUtils {
 		DatasetView d = new DatasetView();
     loadAttributesFromElement(thisElement, d);
 
-		LoadDatasetViewWithDocument(d, doc);
+//		LoadDatasetViewWithDocument(d, doc);
 
 		if (digest != null)
 			d.setMessageDigest(digest);
