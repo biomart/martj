@@ -277,7 +277,7 @@ public class MartExplorerTool {
     else if ( seqDescription == null && attributes.size()==0 )
       validationError("If not requesting Sequences, at least one attributes must be chosen (use -a).");
 
-    else if ( idFilter!=null && idFilter.getType()==null ) 
+    else if ( idFilter!=null && idFilter.getName()==null ) 
       validationError("You must set id filter type if you use an id filter (use -t).");
 
     else if (formatspec.getFormat() == -1 )
@@ -320,8 +320,8 @@ public class MartExplorerTool {
     if ( idFilter!=null ) filters.add( idFilter );
 
     Query q = new Query();
-    q.setSpecies( species );
-    q.setFocus( focus );
+    //q.setSpecies( species );
+    //q.setFocus( focus );
     q.setAttributes( attributes );
 
     q.setFilters( (Filter[])filters.toArray( new Filter[]{}) );
@@ -462,7 +462,7 @@ public class MartExplorerTool {
             try {
 
                 // retain current filterType if set
-                String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
+                String filterType =  ( idFilter!=null ) ? idFilter.getName() : null;
 
                 idFilter = new IDListFilter(filterType, new URL( url ));
 
@@ -484,7 +484,7 @@ public class MartExplorerTool {
     try {
 
       // retain current filterType if set
-      String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
+      String filterType =  ( idFilter!=null ) ? idFilter.getName() : null;
 
       idFilter = new IDListFilter(filterType, new InputStreamReader( instream ));
 
@@ -504,7 +504,7 @@ public class MartExplorerTool {
     if ( idFilter==null )
       idFilter = new IDListFilter();
     
-    if ( idFilter.getType()==null )
+    if ( idFilter.getName()==null )
       idFilter.setType( type );
     else
       validationError("ID Filter type already set, can't set it again: " + type);
