@@ -104,7 +104,7 @@ public class MartConfigurationFactory {
 	public MartConfiguration getInstance(Connection conn, String systemID)
 		throws ConfigurationException {
 	
-		logger.info("Using " + systemID + " from mart database for configuration\n");
+		//logger.info("Using " + systemID + " from mart database for configuration\n");
 		
 		try {
 			SAXBuilder builder = new SAXBuilder();
@@ -136,7 +136,7 @@ public class MartConfigurationFactory {
   public MartConfiguration getInstance(URL martConfFile)
     throws ConfigurationException {
 
-   logger.info("Using URL " + martConfFile + " for configuration\n");
+   //logger.info("Using URL " + martConfFile + " for configuration\n");
    
     try {
       SAXBuilder builder = new SAXBuilder();
