@@ -252,9 +252,6 @@ public class MartShellLib {
 	 * throws InvalidQueryException for all underlying exceptions
 	 */
 	public String QueryToMQL(Query query) throws InvalidQueryException, ConfigurationException {
-		String commandEnd = ";";
-		//LoadMaps();
-
 		StringBuffer mqlbuf = new StringBuffer();
 		boolean success = false;
 
@@ -270,28 +267,37 @@ public class MartShellLib {
 
 		DatasetView dataset = adaptor.getDatasetViewByInternalName(datasetName);
 
-		success = getGetClause(query, dataset, mqlbuf);
+    success = getUsingClause(query, dataset, mqlbuf);
+    
+    if (success)
+		  success = getGetClause(query, dataset, mqlbuf.append(" "));
 
 		if (success && (query.getType() == Query.SEQUENCE))
 			getSequenceClause(query, mqlbuf.append(" "));
-
-		if (success)
-			mqlbuf.append("from ").append(dataset);
 
 		if (success && (query.getTotalFilterCount() > 0))
 			success = getWhereClause(query, dataset, mqlbuf.append(" "));
 
 		if (success && query.hasLimit())
-			mqlbuf.append("limit ").append(query.getLimit());
+			mqlbuf.append(" ").append("limit ").append(query.getLimit());
 
 		if (!success)
 			throw new InvalidQueryException("Could not compile MQL from Query\n" + MQLError + "\n");
-		return mqlbuf.append(commandEnd).toString();
+		
+    return mqlbuf.toString();
 	}
 
+  private boolean getUsingClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
+    boolean success = true;
+    
+    mqlbuf.append(USINGQSTART).append(" ").append(dataset.getInternalName());
+    
+    return success;
+  }
+  
 	private boolean getGetClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
 		Attribute[] attributes = query.getAttributes();
-		mqlbuf.append("select");
+		mqlbuf.append(GETQSTART);
 
 		if (attributes.length == 0) {
 			if (query.getType() == Query.SEQUENCE)
@@ -305,8 +311,6 @@ public class MartShellLib {
 		mqlbuf.append(" ");
 		boolean success = true;
 
-		List attMaps = (ArrayList) field_Attribute.get(dataset.getInternalName());
-
 		for (int i = 0, n = attributes.length;(success && i < n); i++) {
 			if (i > 0)
 				mqlbuf.append(", ");
@@ -315,20 +319,11 @@ public class MartShellLib {
 			String fname = attribute.getField();
 			String tconstraint = attribute.getTableConstraint();
 
-			boolean thisMapped = false;
-
-			for (Iterator iter = attMaps.iterator(); !(thisMapped) && iter.hasNext();) {
-				UIMapper attMap = (UIMapper) iter.next();
-
-				if (attMap.canMap(fname) || attMap.canMap(fname, tconstraint)) {
-					mqlbuf.append(attMap.getInternalName());
-					thisMapped = true;
-				}
-			}
-
-			if (!thisMapped) {
+      if (dataset.supportsAttributeDescription(fname, tconstraint))
+					mqlbuf.append(dataset.getAttributeDescriptionByFieldNameTableConstraint(fname, tconstraint).getInternalName());
+			else {
 				success = false;
-				MQLError = "Could not map attribute " + attribute;
+				MQLError = "Could not map attribute " + attribute.getField() + " " + attribute.getTableConstraint();
 			}
 		}
 
@@ -352,125 +347,83 @@ public class MartShellLib {
 			mqlbuf.append("+").append(rflank);
 	}
 
-	private boolean getWhereClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
+	private boolean getWhereClause(Query query, DatasetView datasetview, StringBuffer mqlbuf) {
 		boolean success = true;
 
 		mqlbuf.append("where ");
-		List filtMaps = (ArrayList) field_Filter.get(dataset.getInternalName());
-		List FiltSetMaps = (ArrayList) field_FilterSet.get(dataset.getInternalName());
 
 		Filter[] filters = query.getFilters();
-		//TODO: refactor
-
-		//		if (success && filters.length > 0) {
-		//			for (int i = 0, n = filters.length;(success && (i < n)); i++) {
-		//				Filter filter = filters[i];
-		//				boolean thisMapped = false;
-		//
-		//				String fname = filter.getField();
-		//				String tconstraint = filter.getTableConstraint();
-		//
-		//				for (Iterator iter = filtMaps.iterator(); success && !(thisMapped) && iter.hasNext();) {
-		//					UIMapper filtMapper = (UIMapper) iter.next();
-		//
-		//					String filterSetReq = null;
-		//
-		//					if (filtMapper.canMap(fname)) {
-		//						FilterDescription uifilter =
-		//							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
-		//
-		//						if (filterSetReq == null || filterSetReq.equals("")) {
-		//							// perfect field -> internalName relationship
-		//							thisMapped = true;
-		//							success = mapBasicFilter(filter, mqlbuf.append(filtMapper.getInternalName()).append(" "));
-		//						}
-		//					} else if (filtMapper.canMap(fname, tconstraint)) {
-		//						FilterDescription uifilter =
-		//							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
-		//						filterSetReq = uifilter.getFilterSetReq();
-		//
-		//						if (filterSetReq == null || filterSetReq.equals("")) {
-		//							// perfect field + tableconstraint -> internalName relationship
-		//							thisMapped = true;
-		//							success = mapBasicFilter(filter, mqlbuf.append(filtMapper.getInternalName()).append(" "));
-		//						}
-		//					} else {
-		//						// filterSet
-		//						String filterInternalName = filtMapper.getInternalName();
-		//						FilterDescription uifilter = (FilterDescription) dataset.getFilterDescriptionByInternalName(filterInternalName);
-		//						// must be a FilterDescription
-		//
-		//						if (uifilter.inFilterSet()) {
-		//							if (uifilter.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-		//								if (fname.endsWith(filtMapper.getPrimaryKey())) {
-		//									// field modifier
-		//									String fieldModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getPrimaryKey()));
-		//
-		//									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
-		//										UIMapper setMap = (UIMapper) iterator.next();
-		//										if (setMap.canMap(fieldModifier)) {
-		//											thisMapped = true;
-		//											success =
-		//												mapBasicFilter(
-		//													filter,
-		//													mqlbuf.append(setMap.getInternalName()).append(".").append(
-		//														filtMapper.getInternalName()).append(
-		//														" "));
-		//										}
-		//									}
-		//								}
-		//							} else {
-		//								if (tconstraint.endsWith(filtMapper.getCompositeKey())) {
-		//									// table modifier
-		//									String tableModifier = tconstraint.substring(0, tconstraint.indexOf(filtMapper.getCompositeKey()));
-		//
-		//									for (Iterator iterator = FiltSetMaps.iterator(); success && !(thisMapped) && iterator.hasNext();) {
-		//										UIMapper setMap = (UIMapper) iterator.next();
-		//										if (setMap.canMap(tableModifier)) {
-		//											thisMapped = true;
-		//											success =
-		//												mapBasicFilter(
-		//													filter,
-		//													mqlbuf.append(setMap.getInternalName()).append(".").append(
-		//														filtMapper.getInternalName()).append(
-		//														" "));
-		//										}
-		//									}
-		//								}
-		//							}
-		//						}
-		//					}
-		//				}
-		//
-		//				if (!thisMapped) {
-		//					success = false;
-		//					MQLError = "Could not map Filter " + filter;
-		//				}
-		//			}
-		//		}
-
-		return success;
+    for (int i = 0, n = filters.length; (success && i < n); i++) {
+      if (i > 0)
+        mqlbuf.append(" and ");
+        
+      Filter filter = filters[i];
+      
+      if (filter instanceof BasicFilter)
+        success = mapBasicFilter((BasicFilter) filter, datasetview, mqlbuf);
+      else if (filter instanceof BooleanFilter)
+        success = mapBooleanFilter((BooleanFilter) filter, datasetview, mqlbuf);
+      else
+        success = mapIDListFilter((IDListFilter) filter, datasetview, mqlbuf);
+        
+      if (!success)
+        MQLError = "Could not map filter " + filter.getField() + " " + filter.getTableConstraint();
+		}
+    
+    return success;    
 	}
 
-	private boolean mapIDListFilter(IDListFilter idfilter, StringBuffer mqlbuf) {
+  private boolean mapBooleanFilter(BooleanFilter filter, DatasetView datasetview , StringBuffer mqlbuf) {
+    String field = filter.getField();
+    String tableConstraint = filter.getTableConstraint();
+    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+      return false;
+    
+    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
+    String filterCondition = filter.getCondition();
+    
+    mqlbuf.append(filterName);
+    
+    if (filterCondition.equals(BooleanFilter.isNULL) || filterCondition.equals(BooleanFilter.isNotNULL_NUM))
+      mqlbuf.append(" excluded");
+    else
+      mqlbuf.append(" exclusive");
+    
+    return true;
+  }
+  
+	private boolean mapIDListFilter(IDListFilter filter, DatasetView datasetview, StringBuffer mqlbuf) {
+    String field = filter.getField();
+    String tableConstraint = filter.getTableConstraint();
+    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+      return false;
+      
 		boolean success = true;
-		String handler = idfilter.getHandler();
+    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
+    String filterCondition = filter.getCondition();
+    
+    mqlbuf.append(filterName).append(" in ");
+    
+		String handler = filter.getHandler();
 
 		if (handler.equals(IDListFilter.FILE)) {
-			mqlbuf.append(idfilter.getFile());
+			mqlbuf.append(filter.getFile());
 		} else if (handler.equals(IDListFilter.URL)) {
-			mqlbuf.append(idfilter.getUrl());
+			mqlbuf.append(filter.getUrl());
 		} else if (handler.equals(IDListFilter.SUBQUERY)) {
-			Query subq = idfilter.getSubQuery();
-
+			Query subq = filter.getSubQuery();
+      mqlbuf.append(subq.getQueryName());
+      
 			try {
-				mqlbuf.append("(").append(QueryToMQL(subq)).append(")");
-			} catch (Exception e) {
+        mqlbuf.insert(0, QueryToMQL(subq) + " as " + subq.getQueryName() + ";");        
+			} catch (Exception e) { 
 				success = false;
 				MQLError = ("Could not map subquery:\n" + subq + "\n" + e);
 			}
 		} else if (handler.equals(IDListFilter.STRING)) {
-			String[] ids = idfilter.getIdentifiers();
+			String[] ids = filter.getIdentifiers();
 			mqlbuf.append("(");
 
 			for (int i = 0, n = ids.length; i < n; i++) {
@@ -485,24 +438,16 @@ public class MartShellLib {
 		return success;
 	}
 
-	private boolean mapBasicFilter(Filter filter, StringBuffer mqlbuf) {
-		boolean success = true;
+	private boolean mapBasicFilter(BasicFilter filter, DatasetView datasetview, StringBuffer mqlbuf) {
+    String field = filter.getField();
+    String tableConstraint = filter.getTableConstraint();
+    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+      return false;
+  	
+    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+		mqlbuf.append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint)).append(" ").append(filter.getCondition()).append(" ").append(filter.getValue());		
 
-		if (filter instanceof BooleanFilter) {
-			String condition = ((BooleanFilter) filter).getRightHandClause();
-			if (condition.equals(BooleanFilter.isNULL) || condition.equals(BooleanFilter.isNULL_NUM))
-				mqlbuf.append("excluded");
-			else
-				mqlbuf.append("exclusive");
-		} else if (filter instanceof IDListFilter) {
-			success = mapIDListFilter((IDListFilter) filter, mqlbuf.append("in "));
-		} else if (filter instanceof BasicFilter) {
-			BasicFilter bfilter = (BasicFilter) filter;
-			mqlbuf.append(bfilter.getCondition()).append(" ").append(bfilter.getValue());
-		}
-		//dont need else
-
-		return success;
+		return true;
 	}
 
 	/**
@@ -618,9 +563,9 @@ public class MartShellLib {
 						usingClause = true;
 					}
 				} else if (usingClause) {
-					if (thisToken.equalsIgnoreCase(QSEQUENCE))
+					if ( domainSpecificHandlerAvailable( thisToken ) )
 						throw new InvalidQueryException(
-							"Invalid Query Recieved, sequence clause before " + GETQSTART + " clause: " + newquery + "\n");
+							"Invalid Query Recieved, domain specific clause before " + GETQSTART + " clause: " + newquery + "\n");
 					else if (thisToken.equalsIgnoreCase(QWHERE))
 						throw new InvalidQueryException(
 							"Invalid Query Recieved, where clause before " + GETQSTART + " clause: " + newquery + "\n");
@@ -982,9 +927,9 @@ public class MartShellLib {
 					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
 						throw new InvalidQueryException(
 							"Invalid Query Recieved, " + GETQSTART + " clause in limit clause: " + newquery + "\n");
-					else if (thisToken.equalsIgnoreCase(QSEQUENCE))
+					else if ( domainSpecificHandlerAvailable( thisToken ) )
 						throw new InvalidQueryException(
-							"Invalid Query Recieved, sequence clause in limit clause: " + newquery + "\n");
+							"Invalid Query Recieved, domain specific clause in limit clause: " + newquery + "\n");
 					else if (thisToken.equalsIgnoreCase(QWHERE))
 						throw new InvalidQueryException("Invalid Query Recieved, where clause in limit clause: " + newquery + "\n");
 					else {
@@ -1027,6 +972,11 @@ public class MartShellLib {
 		return keyword.equalsIgnoreCase(QSEQUENCE);
 	}
 
+  private boolean domainSpecificSubQueryAllowed(String keyword) {
+    //  modify this to add other domainSpecific keywords, or just replace it with a module
+    return !QSEQUENCE.equalsIgnoreCase(keyword);
+  }
+  
 	private Filter getIDFilterForSubQuery(
 		String fieldName,
 		String tableConstraint,
@@ -1069,9 +1019,9 @@ public class MartShellLib {
 
 		for (int i = 1, n = tokens.length; i < n; i++) {
 			String tok = tokens[i];
-			if (tok.equals(QSEQUENCE))
+			if ( domainSpecificHandlerAvailable( tok ) && !domainSpecificSubQueryAllowed( tok ) )
 				throw new InvalidQueryException(
-					"Invalid Nested Query Recieved: sequence statement not allowed " + nestedQuery + "\n");
+					"Invalid Nested Query Recieved: domain specific statement " + tok + " is not allowed " + nestedQuery + "\n");
 			//else not needed
 		}
 
