@@ -272,9 +272,9 @@ public final class GeneFlankSeqQueryRunner extends BaseSeqQueryRunner {
 
         //modify flanks, if necessary, and write sequence
         if (query.getSequenceDescription().getLeftFlank() > 0)
-          geneloc = geneloc.extendLeftFlank(query.getSequenceDescription().getLeftFlank());
+          geneloc = geneloc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
         if (query.getSequenceDescription().getRightFlank() > 0)
-          geneloc = geneloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
+          geneloc = geneloc.getRightFlankOnly(query.getSequenceDescription().getRightFlank());
 
         if (geneloc.getStrand() < 0)
           osr.write(
