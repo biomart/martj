@@ -510,10 +510,10 @@ public class MartShell {
 
 		try {
 			// load help file
-			LoadHelpFile();
+			LoadHelpFiles();
 
 			//display startup information
-			System.out.println(Help(STARTUP));
+			System.out.println(supportHelp.getProperty(STARTUP));
 			System.out.println("connected to " + martDatabase + " on " + martHost + ":" + martPort + "\n");
 		} catch (InvalidQueryException e2) {
 			System.out.println("Couldnt display startup information\n" + e2.getMessage());
@@ -974,7 +974,7 @@ public class MartShell {
 
 	public String Help(String command) throws InvalidQueryException {
 		if (!helpLoaded)
-			LoadHelpFile();
+			LoadHelpFiles();
 
 		StringBuffer buf = new StringBuffer();
 
@@ -983,18 +983,17 @@ public class MartShell {
 
 			for (Iterator iter = commandHelp.keySet().iterator(); iter.hasNext();) {
 				String element = (String) iter.next();
-				buf.append("\t\tITEM: " + element).append("\n");
+        //mainLogger.info("ELEMENT IS <" + element + ">\nVALUE IS " + commandHelp.getProperty(element) + "\n" );
+				buf.append("\t\t" + element).append("\n");
 			}
 			return buf.toString();
 
-		} else if (command.startsWith(HELPC)) {
+		} else {
 			buf.append("\n");
 			StringTokenizer hToks = new StringTokenizer(command, " ");
 			hToks.nextToken(); // skip help
-			String comm = hToks.nextToken();
+			command = hToks.nextToken();
 
-			return Help(comm);
-		} else {
 			if (commandHelp.containsKey(command)) {
 				String output = commandHelp.getProperty(command);
 
@@ -1003,8 +1002,8 @@ public class MartShell {
 
 				while (m.find()) {
 					String replacement = m.group(1);
-					if (commandHelp.containsKey(replacement))
-						m.appendReplacement(buf, Help(replacement));
+					if (supportHelp.containsKey(replacement))
+						m.appendReplacement(buf, supportHelp.getProperty(replacement));
 					else
 						m.appendReplacement(buf, "");
 				}
@@ -1017,25 +1016,31 @@ public class MartShell {
 				m = INSERTP.matcher(output);
 				while (m.find()) {
 					String replacement = m.group(1);
-					if (commandHelp.containsKey(replacement))
-						m.appendReplacement(buf, Help(replacement));
+					if (supportHelp.containsKey(replacement))
+						m.appendReplacement(buf, supportHelp.getProperty(replacement));
 					else
 						m.appendReplacement(buf, "");
 				}
 				m.appendTail(buf);
 			} else
 				buf.append("Sorry, no information available for item: ").append(command).append("\n");
+				
 			return buf.toString();
 		}
 	}
-
-	private void LoadHelpFile() throws InvalidQueryException {
+  
+	private void LoadHelpFiles() throws InvalidQueryException {
 		URL help = ClassLoader.getSystemResource(HELPFILE);
 		URL dshelp = ClassLoader.getSystemResource(DSHELPFILE);
+		URL helpsupport = ClassLoader.getSystemResource(HELPSUPPORT);
+		URL dshelpsupport = ClassLoader.getSystemResource(DSHELPSUPPORT);
 		try {
 			commandHelp.load(help.openStream());
 			commandHelp.load(dshelp.openStream());
 
+      supportHelp.load(helpsupport.openStream());
+      supportHelp.load(dshelpsupport.openStream());
+      
 			if (!historyOn) {
 				commandHelp.remove(HISTORYQ);
 				commandHelp.remove(EXECC);
@@ -1048,11 +1053,8 @@ public class MartShell {
 				availableCommands.remove(SAVETOSCRIPTC);
 			}
 
-			if (!completionOn) {
+			if (!completionOn)
 				commandHelp.remove(COMPLETIONQ);
-				commandHelp.remove("COMPLETIONUSAGE");
-			}
-
 		} catch (IOException e) {
 			helpLoaded = false;
 			throw new InvalidQueryException("Could not load Help File " + e.getMessage());
@@ -1091,47 +1093,48 @@ public class MartShell {
 	}
 
 	private void DescribeRequest(String command) throws InvalidQueryException {
-		StringTokenizer toks = new StringTokenizer(command, " ");
-		int tokCount = toks.countTokens();
-		toks.nextToken(); // skip describe
-
-		System.out.println();
-
-		if (tokCount == 1) {
-			String output = "This mart contains the following datasets:\n";
-			Dataset[] dsets = martconf.getDatasets();
-			for (int i = 0, n = dsets.length; i < n; i++) {
-				Dataset dset = dsets[i];
-				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
-			}
-			System.out.println(output);
-		} else if (tokCount == 2) {
-			String dsetName = toks.nextToken();
-
-			if (!martconf.containsDataset(dsetName))
-				throw new InvalidQueryException(
-					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-
-			DescribeDataset(martconf.getDatasetByName(dsetName));
-		} else if (tokCount > 2) {
-
-			int mod = tokCount % 2; // must be even number of elements
-			if (mod > 0)
-				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
-
-			List args = new ArrayList();
-
-			String dsetName = toks.nextToken();
-			if (!martconf.containsDataset(dsetName))
-				throw new InvalidQueryException(
-					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-
-			while (toks.hasMoreTokens()) {
-				args.add(new String[] { toks.nextToken(), toks.nextToken()});
-			}
-
-			DescribeDataset(martconf.getDatasetByName(dsetName), args);
-		}
+		System.out.println("Sorry, describe not supported yet");
+//		StringTokenizer toks = new StringTokenizer(command, " ");
+//		int tokCount = toks.countTokens();
+//		toks.nextToken(); // skip describe
+//
+//		System.out.println();
+//
+//		if (tokCount == 1) {
+//			String output = "This mart contains the following datasets:\n";
+//			Dataset[] dsets = martconf.getDatasets();
+//			for (int i = 0, n = dsets.length; i < n; i++) {
+//				Dataset dset = dsets[i];
+//				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
+//			}
+//			System.out.println(output);
+//		} else if (tokCount == 2) {
+//			String dsetName = toks.nextToken();
+//
+//			if (!martconf.containsDataset(dsetName))
+//				throw new InvalidQueryException(
+//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+//
+//			DescribeDataset(martconf.getDatasetByName(dsetName));
+//		} else if (tokCount > 2) {
+//
+//			int mod = tokCount % 2; // must be even number of elements
+//			if (mod > 0)
+//				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
+//
+//			List args = new ArrayList();
+//
+//			String dsetName = toks.nextToken();
+//			if (!martconf.containsDataset(dsetName))
+//				throw new InvalidQueryException(
+//					"Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+//
+//			while (toks.hasMoreTokens()) {
+//				args.add(new String[] { toks.nextToken(), toks.nextToken()});
+//			}
+//
+//			DescribeDataset(martconf.getDatasetByName(dsetName), args);
+//		}
 	}
 
 	private void DescribeDataset(Dataset dset) throws InvalidQueryException {
@@ -2780,11 +2783,15 @@ public class MartShell {
 
 	private String batchErrorMessage = null;
 	private Properties commandHelp = new Properties();
+	private Properties supportHelp = new Properties();
+	
 	private final String HELPFILE = "data/help.properties";
 	//contains help general to the shell
 	private final String DSHELPFILE = "data/dshelp.properties";
 	// contains help for domain specific aspects
-
+  private final String HELPSUPPORT = "data/helpSupport.properties";
+  private final String DSHELPSUPPORT = "data/dshelpSupport.properties";
+  
 	private final Pattern DOMAINSPP = Pattern.compile("DOMAINSPECIFIC:(\\w+)", Pattern.DOTALL);
 	private Pattern INSERTP = Pattern.compile("INSERT:(\\w+)", Pattern.DOTALL);
 
