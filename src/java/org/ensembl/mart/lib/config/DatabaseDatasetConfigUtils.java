@@ -2070,7 +2070,6 @@ public class DatabaseDatasetConfigUtils {
 
     int resolution = 1;
     int numberKeys;
-
     while (sortedMainTables.size() < mainTables.length) {
       for (int i = 0, n = mainTables.length; i < n; i++) {
         numberKeys = 0;
@@ -2090,8 +2089,10 @@ public class DatabaseDatasetConfigUtils {
           break;
         }
       }
+      // incase first main table has 2 keys
+      if (sortedMainTables.size() < 1)
+        resolution++;
     }
-
     String[] retList = new String[sortedMainTables.size()];
     sortedMainTables.toArray(retList);
     return retList;
@@ -2300,16 +2301,13 @@ public class DatabaseDatasetConfigUtils {
     //primaryKeys should be in this same order
 
     List starbases = new ArrayList();
-
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
-
     List primaryKeys = new ArrayList();
 
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
       //System.out.println("getting table name "+tableName);
       TableDescription table = getTableDescriptionFor(databaseName, tableName);
-
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
