@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Logger;
 
@@ -148,7 +149,11 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
    */
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
     // Currently does not do anything, as URL DSViews are fully loaded at instantiation.  Could change in the future.
-
+    try {
+      DatasetViewXMLUtils.LoadDatasetViewWithDocument(dsv, DatasetViewXMLUtils.XMLStreamToDocument(InputSourceUtil.getStreamForURL(dsvurl), validate));
+    } catch (IOException e) {
+      throw new ConfigurationException("Recieved IOException lazyLoading DatasetView: " + e.getMessage(), e);
+    }
   }
 
   /* (non-Javadoc)
