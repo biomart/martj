@@ -31,25 +31,34 @@ public class Transformation {
 	
 	public void create (Table [] ref_tables) {
 		
+		//TransformationUnit unit;
+		
 		Table temp_end = new Table();
 		for (int i=0; i<ref_tables.length; i++){
 			
 			if (ref_tables[i].skip) continue;
-			TransformationUnit unit = new TransformationUnit(ref_tables[i]);
-			unit.cardinality=ref_tables[i].cardinality;
-			unit.column_operations=column_operations;
-			units.add(unit);
+			if (type.equals("central") && i==0){
+				TransformationUnitSingle sunit =  new TransformationUnitSingle(ref_tables[i]);
+				sunit.single=true;
+				units.add(sunit);	
+			} 
 			
+			TransformationUnitDouble dunit = new TransformationUnitDouble(ref_tables[i]);
+			dunit.cardinality=ref_tables[i].cardinality;
+			dunit.column_operations=column_operations; 
+			units.add(dunit);
 		}
 	}
 	
 	
 	
+	
+	
 	public void addAdditionalUnit(Table ref_table,String final_table_key,String final_table_extension){
 		
-		TransformationUnit unit = new TransformationUnit(ref_table);
+		TransformationUnitDouble unit = new TransformationUnitDouble(ref_table);
 		unit.extension_key=final_table_key;
-		unit.extension=final_table_extension;
+		unit.central_extension=final_table_extension;
 		unit.is_extension=true;
 		unit.has_extension=true;
 		addUnit(unit);
@@ -73,21 +82,44 @@ public class Transformation {
 		
 		Table temp_end = new Table();
 		ArrayList unwanted = new ArrayList();
+        Table converted_ref = null;
+		boolean single = false;
 		
 		for (int i=0; i<getUnits().length; i++){
 			
 			TransformationUnit unit = getUnits()[i];
-			
 			Table temp_start = new Table();
+			String temp_end_name;
+			
+			if(unit.single){
+				single=true;
+				temp_end_name ="TEMP"+i;
+				unit.transform(temp_start,temp_end_name);
+				converted_ref=unit.temp_end;
+				unit.temp_end.setName(temp_end_name);
+				unit.temp_end_name=temp_end_name;
+				continue;
+			}
+			
 			
 			if (i == 0){
 				temp_start = start_table;	
 			} else  {temp_start=temp_end;}
 			
 			
-			String temp_end_name;
 			boolean final_table = false;
 			temp_end_name ="TEMP"+i;
+			
+			
+			
+			if (single == true){
+				temp_start = start_table;
+				unit.ref_table=converted_ref;
+				unit.cardinality="n1";
+				single=false;
+			}
+			
+			
 			
 			//unit.temp_start.key=unit.ref_table.key;
 			unit.transform(temp_start, temp_end_name);
@@ -104,7 +136,7 @@ public class Transformation {
 				unit.temp_start.key=unit.extension_key;	
 			}
 			if (unit.has_extension){
-				unit.temp_start.extension=unit.extension;    	
+				unit.temp_start.extension=unit.central_extension;    	
 			}
 			
 			unit.temp_end.final_table=final_table;

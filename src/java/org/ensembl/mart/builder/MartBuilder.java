@@ -103,7 +103,11 @@ public class MartBuilder {
 			String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
 			if (input.equals("Y")){
 				tran[i].central=true;		
+			
+			String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
+			tran[i].getFinalUnit().getTemp_end().central_extension=extension;
 			}
+			
 		}
 		
 		target_schema.createTransformationsForCentralFilters();
