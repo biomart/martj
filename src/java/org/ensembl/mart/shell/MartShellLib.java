@@ -1465,7 +1465,7 @@ public class MartShellLib {
                   query.setDataSource(adaptorManager.getAdaptorByName(dsrq.mart).getDataSource());
 
                 thisDatasetConfig =
-                  adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+                  adaptorManager.getAdaptorByName(dsrq.mart).getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
                 query.setDataset(thisDatasetConfig.getDataset());
               } catch (ConfigurationException e1) {
                 throw new InvalidQueryException("Could not set parse using request " + thisToken + "\n");
