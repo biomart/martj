@@ -7,6 +7,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import org.ensembl.mart.explorer.Query;
 import org.ensembl.mart.explorer.*;
+import javax.swing.JScrollPane;
 
 /** Panel in which user enters a query. */
 public class QueryPanel extends JPanel {
@@ -27,7 +28,7 @@ public class QueryPanel extends JPanel {
         setLayout(new java.awt.BorderLayout());
         add(queryTabs, java.awt.BorderLayout.CENTER);
         queryTabs.add(databaseTab, "Database");
-        queryTabs.add(filterTab, "Filters");
+        queryTabs.add(new JScrollPane(filterTab), "Filters");
         queryTabs.add(attributeTab, "Attributes");
         queryTabs.add(exportTab, "Export");
     }

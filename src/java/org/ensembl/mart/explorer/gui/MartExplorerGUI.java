@@ -168,6 +168,8 @@ public class MartExplorerGUI extends JFrame {
     q.setHost( "kaka.sanger.ac.uk" );
     q.setUser( "anonymous" );
     q.setDatabase( "ensembl_mart_10_1" );
+    q.setSpecies( "homo_sapiens" );
+    q.setFocus( "gene" );
     //q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000170057"}) );
     try {
       // Add some test filters (user must manually select wich to use

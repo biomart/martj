@@ -42,25 +42,17 @@ public class DatabaseConfigPage extends JPanel implements org.ensembl.mart.explo
         add(userPanel);
         add(passwordPanel);
         add(databasePanel);
-        add(focusPanel);
         host.setEditable(true);
         host.setToolTipText("Database host computer");
         user.setEditable(true);
         user.setToolTipText("Database user name");
-        databaseLabel.setText("Species");
+        databaseLabel.setText("Database");
         databaseLabel.setToolTipText("Species to retrieve data about");
         databasePanel.setLayout(new javax.swing.BoxLayout(databasePanel, javax.swing.BoxLayout.X_AXIS));
         databasePanel.add(databaseLabel);
         databasePanel.add(database);
-        database.setToolTipText("Species to retrieve data about");
+        database.setToolTipText("Database");
         database.setEditable(true);
-        focusPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(
-            new java.awt.Color(153, 153, 153), 1), "Focus", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP,
-            new java.awt.Font("SansSerif", 0, 11), new java.awt.Color(60, 60, 60)));
-        focusPanel.add(ensemblGeneFocusButton);
-        ensemblGeneFocusButton.setText("jRadioButton1");
-        ensemblGeneFocusButton.setLabel("Ensembl Genes");
-        ensemblGeneFocusButton.setSelected(true);
         password.setText("");
         password.setPreferredSize(new java.awt.Dimension(4, 21));
         password.setMaximumSize(new java.awt.Dimension(2147483647, 21));
@@ -109,7 +101,5 @@ public class DatabaseConfigPage extends JPanel implements org.ensembl.mart.explo
     private JPanel databasePanel = new JPanel();
     private JLabel databaseLabel = new JLabel();
     private JComboBox database = new JComboBox();
-    private JPanel focusPanel = new JPanel();
-    private JRadioButton ensemblGeneFocusButton = new JRadioButton();
     private JPasswordField password = new JPasswordField();
 }

@@ -83,11 +83,13 @@ public class Engine {
       Connection conn = getDatabaseConnection( query );
       PreparedStatement ps = conn.prepareStatement( sql );
       List filters = query.getFilters();
-      int p=0;
+      int p=1;
       for( int i=0; i<filters.size(); ++i) {
 				Filter f = (Filter)filters.get(i);
         String value = f.getValue();
-				if ( value!=null ) ps.setString( p++, value);
+				if ( value!=null ) {
+         	ps.setString( p++, value);
+        }
       }
 
       ResultSet rs = ps.executeQuery();
