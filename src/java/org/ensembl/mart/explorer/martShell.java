@@ -505,10 +505,10 @@ public class martShell {
 			} else if (key.equals(format))
 				outputFormat = value;
 			else if (key.equals(separator))
-			  if (key.equals("comma"))
-			    outputSeparator = ",";
-			  else
-			 	  outputSeparator = value;
+				if (key.equals("comma"))
+					outputSeparator = ",";
+				else
+					outputSeparator = value;
 			else
 				throw new InvalidQueryException(
 					"Recieved invalid setOutputFormat request: "
@@ -663,19 +663,19 @@ public class martShell {
 			+ "\n";
 	}
 
-  private void setVerbose(String command) throws InvalidQueryException {
-  	if (command.endsWith(lineEnd))
-  	  command = command.substring(0, command.length() - 1);
-  	  
-  	if (! command.matches("\\w+\\s(true|false)"))
-  	  throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
-  	  
-  	boolean verbose = Boolean.valueOf(command.split("\\s")[1]).booleanValue();
-  	String val = (verbose) ? "on" : "off";
-  	System.out.println("Logging now "+val+"\n");
-		defaultLoggingConfiguration(verbose); 	
-  }
-  
+	private void setVerbose(String command) throws InvalidQueryException {
+		if (command.endsWith(lineEnd))
+			command = command.substring(0, command.length() - 1);
+
+		if (!command.matches("\\w+\\s(true|false)"))
+			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
+
+		boolean verbose = Boolean.valueOf(command.split("\\s")[1]).booleanValue();
+		String val = (verbose) ? "on" : "off";
+		System.out.println("Logging now " + val + "\n");
+		defaultLoggingConfiguration(verbose);
+	}
+
 	private void parseCommand(String command) throws IOException, InvalidQueryException {
 		int cLen = command.length();
 
@@ -693,8 +693,8 @@ public class martShell {
 			setOutputFormat(command);
 		else if (command.startsWith(showOutputSettings))
 			showOutputSettings();
-	  else if (command.startsWith(setVerbose))
-	    setVerbose(command);
+		else if (command.startsWith(setVerbose))
+			setVerbose(command);
 		else if (command.equals(exit) || command.equals(quit))
 			ExitShell();
 		else {
@@ -785,11 +785,9 @@ public class martShell {
 						dataset = thisToken;
 				}
 			} else if (whereClause) {
-				if (thisToken.equalsIgnoreCase(qWith))
+				if (listLevel < 1 && thisToken.equalsIgnoreCase(qWith))
 					throw new InvalidQueryException("Invalid Query Recieved, with statement after where statement: " + command + "\n");
 				else if (thisToken.equalsIgnoreCase(lStart) || thisToken.startsWith(lStart)) {
-					if (listLevel > 0 && thisToken.equalsIgnoreCase(lStart + qStart))
-						throw new InvalidQueryException("Invalid Query Recieved: Only one nested query allowed: " + command + "\n");
 					listLevel++;
 
 					if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
@@ -804,8 +802,6 @@ public class martShell {
 					} else
 						whereString.append(" ").append(thisToken);
 				} else if (listLevel > 0) {
-					if (listLevel > 1 && thisToken.equalsIgnoreCase(qStart))
-						throw new InvalidQueryException("Invalid Query Recieved: Only one nested query allowed: " + command + "\n");
 					if (thisToken.equalsIgnoreCase(lEnd)) {
 						listLevel--;
 					} else if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
@@ -1057,11 +1053,22 @@ public class martShell {
 					start = false;
 					condition = true;
 				} else if (condition) {
-					if (thisToken.endsWith(","))
+					if ( ! wTokens.hasMoreTokens() ) {
+						if (! ( thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded") ) )
+						  throw new InvalidQueryException("Invalid Query Recieved, filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+					}
+					
+					if (thisToken.endsWith(",")) {
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
+						if (!(thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")))
+							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+					}
 
-					if (thisToken.endsWith(lineEnd))
+					if (thisToken.endsWith(lineEnd)) {
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
+						if (!(thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")))
+							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+					}
 
 					if (thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")) {
 						//process exclusive/excluded filter
@@ -1090,10 +1097,24 @@ public class martShell {
 						Filter thisFilter = null;
 
 						if (fds.getType().equals("boolean")) {
-							String thisCondition = (thisToken.equals(exclusive)) ? NullableFilter.isNotNULL : NullableFilter.isNULL;
+							String thisCondition = null;
+							if (thisToken.equalsIgnoreCase("exclusive"))
+								thisCondition = NullableFilter.isNotNULL;
+							else if (thisToken.equalsIgnoreCase("excluded"))
+								thisCondition = NullableFilter.isNULL;
+							else
+								throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+
 							thisFilter = new NullableFilter(thisFieldName, thisTableConstraint, thisCondition);
 						} else if (fds.getType().equals("boolean_num")) {
-							String thisCondition = (cond.equals(exclusive)) ? "=" : "!=";
+							String thisCondition;
+							if (cond.equalsIgnoreCase("exclusive"))
+								thisCondition = "=";
+							else if (cond.equalsIgnoreCase("excluded"))
+								thisCondition = "!=";
+							else
+								throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
+
 							thisFilter = new BasicFilter(thisFieldName, thisTableConstraint, thisCondition, "1");
 						} else
 							throw new InvalidQueryException("Recieved invalid exclusive/excluded query: " + command + "\n");
@@ -1208,6 +1229,9 @@ public class martShell {
 								idlist.add(thisToken);
 						}
 					} else if (isNested) {
+						if (thisToken.equals(lStart) || thisToken.startsWith(lStart))
+						  listLevel++;
+						  
 						if (thisToken.indexOf(lEnd) >= 0) {
 							subquery.append(" ");
 							for (int i = 0, n = thisToken.length(); i < n; i++) {
@@ -1345,8 +1369,8 @@ public class martShell {
 						thisSeparator = "\t";
 					else if (value.equals("space"))
 						thisSeparator = " ";
-				  else if (value.equals("comma"))
-				    thisSeparator = ",";
+					else if (value.equals("comma"))
+						thisSeparator = ",";
 					else
 						thisSeparator = value;
 				} else
@@ -1371,7 +1395,10 @@ public class martShell {
 		}
 
 		if (thisFile == null) {
-			if (outputFile != null) {
+			if (subqueryOutput != null) {
+				thisFile = "subquery";
+				os = subqueryOutput;
+			} else if (outputFile != null) {
 				thisFile = outputFile;
 				os = new FileOutputStream(new URL(outputFile).getFile());
 			} else {
@@ -1407,413 +1434,37 @@ public class martShell {
 		mainLogger.info("limit " + limit);
 
 		engine.execute(query, formatspec, os, limit);
-		if (!thisFile.equals("stdout"))
+		if (!(thisFile.equals("stdout") || thisFile.equals("subquery")))
 			os.close();
 	}
 
 	private Filter getIDFilterForSubQuery(String fieldName, String tableConstraint, String command) throws InvalidQueryException {
-		boolean start = true;
-		boolean selectClause = false;
-		boolean fromClause = false;
-		boolean whereClause = false;
-		int listLevel = 0; // level of /list
+		command = command.trim();
+		
+		nestedLevel++;
+		
+		mainLogger.info("Recieved nested query at nestedLevel " + nestedLevel + "\n");
+		
+		if (nestedLevel > maxNesting)
+		  throw new InvalidQueryException("Only " + maxNesting + " levels of nested Query are allowed\n");
+		  
+		//validate, then call parseQuery on the subcommand
+		String[] tokens = command.split("\\s");
+		if (!tokens[0].trim().equals(qStart))
+			throw new InvalidQueryException("Invalid Nested Query Recieved: no select statement " + "recieved " + tokens[0].trim() + " in " + command + "\n");
 
-		StringBuffer attString = new StringBuffer();
-		StringBuffer withString = new StringBuffer();
-		String dataset = null;
-		StringBuffer whereString = new StringBuffer();
-		String outfile = null;
-		int limit = 0;
-
-		StringTokenizer cTokens = new StringTokenizer(command, " ");
-
-		if (cTokens.countTokens() < 2)
-			throw new InvalidQueryException("\nInvalid Query Recieved " + command + "\n");
-
-		while (cTokens.hasMoreTokens()) {
-			String thisToken = cTokens.nextToken();
-			if (start) {
-				if (!(thisToken.equalsIgnoreCase(qStart)))
-					throw new InvalidQueryException("Invalid Query Recieved, should begin with select: " + command + "\n");
-				else {
-					start = false;
-					selectClause = true;
-				}
-			} else if (selectClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement in the middle of a select statement: " + command + "\n");
-				if (thisToken.equalsIgnoreCase(qWhere))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement before from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom)) {
-					selectClause = false;
-					fromClause = true;
-				} else
-					attString.append(thisToken);
-			} else if (fromClause) {
-				if (thisToken.equalsIgnoreCase(qStart))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement after from statement: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere)) {
-					fromClause = false;
-					whereClause = true;
-				} else {
-					if (dataset != null)
-						throw new InvalidQueryException("Invalid Query Recieved, dataset already set, attempted to set again: " + command + "\n");
-					else
-						dataset = thisToken;
-				}
-			} else if (whereClause) {
-				if (thisToken.equalsIgnoreCase(lStart) || thisToken.startsWith(lStart)) {
-					if (listLevel > 0 && thisToken.equalsIgnoreCase(lStart + qStart))
-						throw new InvalidQueryException("Invalid Query Recieved: Only one nested query allowed: " + command + "\n");
-					listLevel++;
-
-					if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
-						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == lEndChar)
-								listLevel--;
-						}
-						whereString.append(" ").append(thisToken);
-					} else if (thisToken.equalsIgnoreCase(lineEnd) || thisToken.endsWith(lineEnd)) {
-						System.out.println("Token = " + thisToken);
-						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + command + "\n");
-					} else
-						whereString.append(" ").append(thisToken);
-				} else if (listLevel > 0) {
-					if (listLevel > 1 && thisToken.equalsIgnoreCase(qStart))
-						throw new InvalidQueryException("Invalid Query Recieved: Only one nested query allowed: " + command + "\n");
-					if (thisToken.equalsIgnoreCase(lEnd)) {
-						listLevel--;
-					} else if (thisToken.endsWith(lEnd) || thisToken.endsWith(lEnd + ",") || thisToken.endsWith(lEnd + lineEnd)) {
-						for (int i = 0, n = thisToken.length(); i < n; i++) {
-							if (thisToken.charAt(i) == lEndChar)
-								listLevel--;
-						}
-						whereString.append(" ").append(thisToken);
-					} else if (thisToken.equalsIgnoreCase(lineEnd) || thisToken.endsWith(lineEnd)) {
-						System.out.println("Token = " + thisToken);
-						throw new InvalidQueryException("Recieved Invalid Query, failure to close list clause in where statement: " + command + "\n");
-					} else
-						whereString.append(" ").append(thisToken);
-				} else if (thisToken.equalsIgnoreCase(qStart))
-					throw new InvalidQueryException("Invalid Query Recieved, select statement after where statement, not in subquery: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qFrom))
-					throw new InvalidQueryException("Invalid Query Recieved, from statement after where statement, not in subquery: " + command + "\n");
-				else if (thisToken.equalsIgnoreCase(qWhere))
-					throw new InvalidQueryException("Invalid Query Recieved, where statement after where statement, not in subquery: " + command + "\n");
-				else
-					whereString.append(" ").append(thisToken);
-			}
-			// else not needed, as these are the only states present
+		for (int i = 1, n = tokens.length; i < n; i++) {
+			String tok = tokens[i];
+			if (tok.equals("with"))
+				throw new InvalidQueryException("Invalid Nested Query Recieved: with statement not allowed " + command + "\n");
+			else if (tok.equals("into"))
+				throw new InvalidQueryException("Invalid Nested Query Recieved: into statement not allowed " + command + "\n");
+			//else not needed
 		}
 
-		if (dataset == null)
-			throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + command + "\n");
+		mainLogger.info("Recieved request for Nested Query\n:" + command + "\n");
 
-		if (attString.length() == 0 && withString.length() == 0)
-			throw new InvalidQueryException("Invalid Query Recieved, no attributes or sequence request found: " + command + "\n");
-
-		if (dataset.endsWith(lineEnd))
-			dataset = dataset.substring(0, dataset.length() - 1);
-
-		if (!martconf.containsDataset(dataset))
-			throw new InvalidQueryException("Dataset " + dataset + " is not found in this mart\n");
-
-		Dataset dset = martconf.getDatasetByName(dataset);
-		Query subquery = new Query();
-		FilterPage currentFpage = null;
-		AttributePage currentApage = null;
-
-		subquery.setStarBases(dset.getStarBases());
-		subquery.setPrimaryKeys(dset.getPrimaryKeys());
-
-		//parse attributes
-		List atts = new ArrayList();
-		StringTokenizer attTokens = new StringTokenizer(attString.toString(), ",");
-		if (attTokens.countTokens() < 1)
-			throw new InvalidQueryException("Invalid Query Recieved: no attributes? " + command + "\n");
-
-		while (attTokens.hasMoreTokens()) {
-			String attname = attTokens.nextToken().trim(); // remove leading and trailing whitespace
-			if (!dset.containsUIAttributeDescription(attname))
-				throw new InvalidQueryException("Attribute " + attname + " is not found in this mart\n");
-
-			if (currentApage == null) {
-				currentApage = dset.getPageForUIAttributeDescription(attname);
-				atts.add(dset.getUIAttributeDescriptionByName(attname));
-			} else {
-				if (!currentApage.containsUIAttributeDescription(attname)) {
-					currentApage = dset.getPageForUIAttributeDescription(attname);
-
-					for (int i = 0, n = atts.size(); i < n; i++) {
-						UIAttributeDescription element = (UIAttributeDescription) atts.get(i);
-
-						if (!currentApage.containsUIAttributeDescription(element.getInternalName()))
-							throw new InvalidQueryException(
-								"Cannot request attributes from different Attribute Pages " + attname + " in " + currentApage + " intName is not\n");
-					}
-				}
-				atts.add(dset.getUIAttributeDescriptionByName(attname));
-			}
-		}
-
-		for (int i = 0, n = atts.size(); i < n; i++) {
-			UIAttributeDescription attd = (UIAttributeDescription) atts.get(i);
-			Attribute attr = new FieldAttribute(attd.getFieldName(), attd.getTableConstraint());
-			subquery.addAttribute(attr);
-		}
-
-		//parse filters, if present
-		List filts = new ArrayList();
-
-		if (whereString.length() > 0) {
-			if (whereString.toString().endsWith(lineEnd))
-				whereString.deleteCharAt(whereString.length() - 1);
-
-			List filtNames = new ArrayList();
-			String filterName = null;
-			String cond = null;
-			String val = null;
-			String filterSetName = null;
-			FilterSetDescription fset = null;
-
-			start = true;
-			listLevel = 0;
-
-			boolean condition = false;
-			boolean value = false;
-			boolean isList = false;
-
-			List idlist = null; // will hold ids from a list
-
-			StringTokenizer wTokens = new StringTokenizer(whereString.toString(), " ");
-
-			while (wTokens.hasMoreTokens()) {
-				String thisToken = wTokens.nextToken().trim();
-
-				if (start) {
-					//reset all values
-					filterName = null;
-					cond = null;
-					val = null;
-					filterSetName = null;
-					fset = null;
-					idlist = new ArrayList();
-					isList = false;
-
-					if (thisToken.indexOf(".") > 0) {
-						StringTokenizer dtokens = new StringTokenizer(thisToken, ".");
-						if (dtokens.countTokens() < 2)
-							throw new InvalidQueryException("Invalid FilterSet Request, must be filtersetname.filtername: " + thisToken + "\n");
-						filterSetName = dtokens.nextToken();
-						filterName = dtokens.nextToken();
-					} else
-						filterName = thisToken;
-
-					if (!dset.containsUIFilterDescription(filterName))
-						throw new InvalidQueryException("Filter " + filterName + " not supported by mart");
-					else {
-						if (currentFpage == null)
-							currentFpage = dset.getPageForUIFilterDescription(filterName);
-						else {
-							if (!currentFpage.containsUIFilterDescription(filterName)) {
-								currentFpage = dset.getPageForUIFilterDescription(filterName);
-
-								for (int i = 0, n = filtNames.size(); i < n; i++) {
-									String element = (String) filtNames.get(i);
-									if (!currentFpage.containsUIFilterDescription(element))
-										throw new InvalidQueryException(
-											"Cannot use filters from different FilterPages: filter " + filterName + " in page " + currentFpage + "filter " + element + "is not\n");
-								}
-							}
-						}
-
-						if (filterSetName != null) {
-							if (! currentFpage.containsFilterSetDescription(filterSetName))
-								throw new InvalidQueryException("Request for FilterSet that is not supported by the current FilterPage for your filter request: ");
-							else
-								fset = currentFpage.getFilterSetDescriptionByName(filterSetName);
-						}
-					}
-
-					start = false;
-					condition = true;
-				} else if (condition) {
-					if (thisToken.endsWith(","))
-						thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-					if (thisToken.endsWith(lineEnd))
-						thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-					if (thisToken.equalsIgnoreCase("exclusive") || thisToken.equalsIgnoreCase("excluded")) {
-						//process exclusive/excluded filter
-						String thisFieldName = null;
-						String thisTableConstraint = null;
-
-						UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
-
-						if (fds.inFilterSet()) {
-							if (fset == null)
-								throw new InvalidQueryException("Request for this filter must be specified with a filterset " + filterName + "\n");
-							else {
-								if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-									thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
-									thisTableConstraint = fds.getTableConstraint();
-								} else {
-									thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-									thisFieldName = fds.getFieldName();
-								}
-							}
-						} else {
-							thisFieldName = fds.getFieldName();
-							thisTableConstraint = fds.getTableConstraint();
-						}
-
-						Filter thisFilter = null;
-
-						if (fds.getType().equals("boolean")) {
-							String thisCondition = (thisToken.equals(exclusive)) ? NullableFilter.isNotNULL : NullableFilter.isNULL;
-							thisFilter = new NullableFilter(thisFieldName, thisTableConstraint, thisCondition);
-						} else if (fds.getType().equals("boolean_num")) {
-							String thisCondition = (cond.equals(exclusive)) ? "=" : "!=";
-							thisFilter = new BasicFilter(thisFieldName, thisTableConstraint, thisCondition, "1");
-						} else
-							throw new InvalidQueryException("Recieved invalid exclusive/excluded query: " + command + "\n");
-
-						subquery.addFilter(thisFilter);
-						condition = false;
-						start = true;
-					} else {
-						cond = thisToken;
-						if (cond.equals("in"))
-							isList = true;
-
-						condition = false;
-						value = true;
-					}
-				} else if (value) {
-					if (listLevel > 0 && (thisToken.endsWith(lineEnd) || thisToken.equalsIgnoreCase(lineEnd)))
-						throw new InvalidQueryException("Invalid Query: " + command + "\n");
-
-					if (isList) {
-						//just get rid of the beginning peren if present
-						if (thisToken.startsWith(lStart)) {
-							listLevel++;
-							thisToken = thisToken.substring(1);
-						}
-
-						if (thisToken.endsWith(","))
-							thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-						if (thisToken.endsWith(lEnd)) {
-							value = false;
-							start = true;
-							listLevel--;
-							thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-							//process list
-							StringTokenizer idtokens = new StringTokenizer(thisToken, ",");
-							while (idtokens.hasMoreTokens()) {
-								idlist.add(idtokens.nextToken());
-							}
-							String thisFieldName = null;
-							String thisTableConstraint = null;
-
-							UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
-							if (!fds.getType().equals("list"))
-								throw new InvalidQueryException("Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
-
-							if (fds.inFilterSet()) {
-								if (fset == null)
-									throw new InvalidQueryException(
-										"Request for this filter must be specified with a filterset via filtersetname.filtername: " + filterName + "\n");
-								else {
-									if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-										thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
-										thisTableConstraint = fds.getTableConstraint();
-									} else {
-										thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-										thisFieldName = fds.getFieldName();
-									}
-								}
-							} else {
-								thisFieldName = fds.getFieldName();
-								thisTableConstraint = fds.getTableConstraint();
-							}
-
-							String[] ids = new String[idlist.size()];
-							idlist.toArray(ids);
-							Filter thisFilter = new IDListFilter(thisFieldName, ids);
-							((IDListFilter) thisFilter).setTableConstraint(thisTableConstraint);
-							subquery.addFilter(thisFilter);
-							start = true;
-							value = false;
-						} else
-							idlist.add(thisToken);
-					} else {
-						if (thisToken.endsWith(","))
-							thisToken = thisToken.substring(0, thisToken.length() - 1);
-
-						if (dset.getUIFilterDescriptionByName(filterName) instanceof UIFilterDescription) {
-							String thisFieldName = null;
-							String thisTableConstraint = null;
-
-							UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
-							if (!fds.getType().equals("list"))
-								throw new InvalidQueryException("Cannot query this filter with a list input using in: " + filterName + "in command: " + command + "\n");
-
-							if (fds.inFilterSet()) {
-								if (fset == null)
-									throw new InvalidQueryException(
-										"Request for this filter must be specified with a filterset via filtersetname.filtername: " + filterName + "\n");
-								else {
-									if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-										thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
-										thisTableConstraint = fds.getTableConstraint();
-									} else {
-										thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-										thisFieldName = fds.getFieldName();
-									}
-								}
-							} else {
-								thisFieldName = fds.getFieldName();
-								thisTableConstraint = fds.getTableConstraint();
-							}
-
-							subquery.addFilter(new BasicFilter(thisFieldName, thisTableConstraint, cond, thisToken));
-							start = true;
-							value = false;
-						} else {
-							String thisHandlerParam = null;
-
-							UIDSFilterDescription fds = (UIDSFilterDescription) dset.getUIFilterDescriptionByName(filterName);
-
-							if (fds.IsInFilterSet()) {
-								if (fset == null)
-									throw new InvalidQueryException(
-										"Request for this filter must be specified with a filterset via filtersetname.filtername: " + filterName + "\n");
-								else {
-									if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME))
-										thisHandlerParam = fset.getFieldNameModifier() + ":" + thisToken;
-									else
-										thisHandlerParam = fset.getTableConstraintModifier() + ":" + thisToken;
-								}
-							} else
-								thisHandlerParam = thisToken;
-
-							DomainSpecificFilter thisFilter = new DomainSpecificFilter(fds.getObjectCode(), thisHandlerParam);
-							subquery.addDomainSpecificFilter(thisFilter);
-							start = true;
-							value = false;
-						}
-					}
-				}
-				//dont need else
-			}
-		}
-
-		mainLogger.info("Recieved request for Nested Query\n:" + subquery + "\n");
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		subqueryOutput = new ByteArrayOutputStream();
 
 		FormatSpec thisFormatspec = new FormatSpec(FormatSpec.TABULATED);
 
@@ -1821,12 +1472,21 @@ public class martShell {
 		String results = null;
 
 		try {
-			engine.execute(subquery, thisFormatspec, bos);
-			results = bos.toString();
-			bos.close();
+			parseQuery(command);
+			results = subqueryOutput.toString();
+			subqueryOutput.close();
+			subqueryOutput = null;
 		} catch (Exception e) {
+			try {
+				subqueryOutput.close();
+			} catch (Exception ex) {
+				subqueryOutput = null;
+				throw new InvalidQueryException("Could not execute Nested Query: " + ex.getMessage());
+			}
+			subqueryOutput = null;
 			throw new InvalidQueryException("Could not execute Nested Query: " + e.getMessage());
 		}
+
 		StringTokenizer lines = new StringTokenizer(results, "\n");
 		List idlist = new ArrayList();
 
@@ -1835,14 +1495,16 @@ public class martShell {
 
 			if (id.indexOf(".") >= 0)
 				id = id.substring(0, id.lastIndexOf("."));
-		  if (! idlist.contains(id))
-			  idlist.add(id);
+			if (!idlist.contains(id))
+				idlist.add(id);
 		}
 
 		String[] ids = new String[idlist.size()];
 		idlist.toArray(ids);
 		Filter f = new IDListFilter(fieldName, ids);
 		((IDListFilter) f).setTableConstraint(tableConstraint);
+		
+		nestedLevel--;
 		return f;
 	}
 
@@ -1902,10 +1564,15 @@ public class martShell {
 	private final String mysqldbase = "mysqldbase";
 	private final String alternateConfigurationFile = "alternateConfigurationFile";
 
-  // strings used to show/set logging verbosity
-  private final String setVerbose = "setVerbose";
-  private final String showVerbose = "showVerbose";
-  
+	// strings used to show/set logging verbosity
+	private final String setVerbose = "setVerbose";
+	private final String showVerbose = "showVerbose";
+
+	// variables for subquery
+	private ByteArrayOutputStream subqueryOutput = null;
+	private int nestedLevel = 0;
+	private final int maxNesting = 1; // change this to allow deeper nesting of queries inside queries
+
 	private List qualifiers = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "exclusive", "excluded", "in" });
 
 	private boolean continueQuery = false;
