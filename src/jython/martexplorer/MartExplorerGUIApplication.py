@@ -7,6 +7,12 @@
 # editor.queryChanged / only execute if queryChanged or db settings changed.
 
 
+# TODO propagate all exceptions to GUI, currently in linux just not
+# finishing (hour glass remains)
+
+# TODO Add "stop" button, disable others.
+
+
 # TODO 3 - FilterManagerPage + XXXFilterPages. add implementation for
 # Filter . Clicking should cause a list of available (not already
 # added) items to be shown. Selecting one of these will cause the
