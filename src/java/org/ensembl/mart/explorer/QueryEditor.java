@@ -39,6 +39,7 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
@@ -77,6 +78,7 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 import org.ensembl.mart.shell.MartShellLib;
 import org.ensembl.mart.util.AutoFlushOutputStream;
 import org.ensembl.mart.util.FileUtil;
+import org.ensembl.mart.util.LoggingUtil;
 import org.ensembl.mart.util.MaximumBytesInputFilter;
 import org.ensembl.mart.util.PollingInputStream;
 import org.ensembl.util.ExtensionFileFilter;
@@ -99,7 +101,7 @@ public class QueryEditor
   extends JPanel
   implements PropertyChangeListener, TreeSelectionListener {
 
-	private DSViewAdaptor dsViewAdaptor;
+  private DSViewAdaptor dsViewAdaptor;
 
   private JSplitPane topAndBottom;
 
@@ -129,7 +131,7 @@ public class QueryEditor
   private DefaultTreeModel treeModel;
   private DefaultMutableTreeNode rootNode;
 
-	private JToolBar toolBar = new JToolBar();
+  private JToolBar toolBar = new JToolBar();
   private JTree treeView;
   private JPanel inputPanel;
   private JEditorPane outputPanel = new JEditorPane();
@@ -146,24 +148,29 @@ public class QueryEditor
   /** Maps attributes to the tree node they are represented by. */
   private Map attributeToWidget;
 
-	private Feedback feedback = new Feedback(this);
+  private Feedback feedback = new Feedback(this);
 
-	private JFileChooser saveResultsChooser = new JFileChooser();
+  private JFileChooser resultsFileChooser = new JFileChooser();
 
-	/** File for temporarily storing results in while this instance exists. */
-	private File tmpResultFile;
+  /** File for temporarily storing results in while this instance exists. */
+  private File tmpFile;
 
-	private boolean resultsStale = true;
+  private boolean resultsStale = true;
 
-  public QueryEditor() {
+  private int maxPreviewBytes = 10000;
 
-    
+  /**
+   * 
+   * @throws IOException if fails to create temporary results file.
+   */
+  public QueryEditor() throws IOException {
+
     this.query = new Query();
     this.attributeToWidget = new HashMap();
 
     query.addPropertyChangeListener(this);
 
-		initToolbar();
+    initToolbar();
     initTree();
     initInputPanel();
     initOutputPanel();
@@ -173,96 +180,73 @@ public class QueryEditor
 
     layoutPanes();
 
-    mqlFileChooser.addChoosableFileFilter(new ExtensionFileFilter("mql", "MQL Files"));
+    mqlFileChooser.addChoosableFileFilter(
+      new ExtensionFileFilter("mql", "MQL Files"));
 
-		
+    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
+
+  }
+
+  private void initToolbar() {
+
+    toolBar.add(createButton("Execute", new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doExecute();
+      }
+    }));
+
+    toolBar.add(createButton("Save", new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doSaveResults();
+      }
+    }));
+
+    toolBar.add(createButton("Save As", new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doSaveResultsAs();
+      }
+    }));
+
+    toolBar.addSeparator();
+
+    toolBar.add(createButton("Export MQL", new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doExportMQL();
+      }
+    }));
+
+    toolBar.setMaximumSize(toolBar.getSize());
+
   }
 
   /**
-	 * 
-	 */
-	private void initToolbar() {
-		
-		toolBar.add(createButton("Execute", new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doExecute();
-			}}));
-		toolBar.add(createButton("Save Results", new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doSaveResults();
-			}}));
-		toolBar.addSeparator();
-		toolBar.add(createButton("Export MQL", new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doExportMQL();
-			}}));
-//		toolBar.add(createButton("Execute", new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				doExecute();
-//			}}));
-		JLabel label = new JLabel("Font");
-		toolBar.add(label);
-		toolBar.setMaximumSize(toolBar.getSize());
-		
-	}
+   * Save results to file, user must select file if no output file selected. 
+   */
+  private void doSaveResults() {
+    runQuery(true, false);
+  }
 
-	/**
-	 * 
-	 */
-	private void doSaveResults() {
-		File f = saveResultsChooser.getSelectedFile();
-		if ( f==null ) doSaveResultsAs();
-		else save( f );
-	}
+  /**
+   * Save results to file, user must select output file.
+   */
+  private void doSaveResultsAs() {
 
+    runQuery(true, true);
+  }
 
-	/**
-	 * Saves results to specified file.
-	 * 
-	 * If no results are present the query is executed before saving.
-	 * @param target file to save results in.
-	 */
-	private void save(File target) {
-		
-		System.out.println("Saving results to: "+ saveResultsChooser.getSelectedFile());
-		
-		if ( tmpResultFile==null || resultsStale ) doExecute();
-		
-		try {
-			FileUtil.copyFile( tmpResultFile, saveResultsChooser.getSelectedFile() );
-		} catch (IOException e) {
-			feedback.warn(e);
-		}
-	}
+  /**
+   * convenience method.
+   * @param label
+   * @param listener
+   * @return
+   */
+  private JButton createButton(String label, ActionListener listener) {
+    JButton b = new JButton(label);
+    b.addActionListener(listener);
+    return b;
+  }
 
-	/**
-		 * 
-		 */
-		private void doSaveResultsAs() {
-			
-			// set default results file if none set
-			if ( saveResultsChooser.getSelectedFile()==null )
-				saveResultsChooser.setSelectedFile( new File(getName()+".mart"));
-				
-			if ( saveResultsChooser.showSaveDialog(this) 
-			     == JFileChooser.APPROVE_OPTION) 
-				save( saveResultsChooser.getSelectedFile() );
-		}
-
-
-	/**
-	 * convenience method.
-	 * @param label
-	 * @param listener
-	 * @return
-	 */
-	private JButton createButton(String label, ActionListener listener) {
-		JButton b = new JButton(label);
-		b.addActionListener( listener );
-		return b;
-	}
-
-	/**
+  /**
    * Repositions the dividers after the component has been resized to maintain
    * the relative size of the panes.
    */
@@ -339,17 +323,17 @@ public class QueryEditor
         new JScrollPane(outputPanel));
     topAndBottom.setOneTouchExpandable(true);
 
-		// don't use default FlowLayout manager because it won't resize components if
-		// QueryEditor is resized.
-		setLayout(new BorderLayout());
+    // don't use default FlowLayout manager because it won't resize components if
+    // QueryEditor is resized.
+    setLayout(new BorderLayout());
 
-		addComponentListener(new ComponentAdapter() {
-			public void componentResized(ComponentEvent e) {
-				resizeSplits();
-			}
+    addComponentListener(new ComponentAdapter() {
+      public void componentResized(ComponentEvent e) {
+        resizeSplits();
+      }
 
-		});
-		add( toolBar, BorderLayout.NORTH );
+    });
+    add(toolBar, BorderLayout.NORTH);
     add(topAndBottom, BorderLayout.CENTER);
 
   }
@@ -358,7 +342,7 @@ public class QueryEditor
    * 
    */
   private void initOutputPanel() {
-    //outputPanel.add( outputPanel );
+    outputPanel.setEditable(false);
   }
 
   /**
@@ -412,19 +396,12 @@ public class QueryEditor
 
     DatasetView[] views = adaptor.getDatasetViews();
 
-    DataSource ds =
-      DatabaseUtil.createDataSource(
-        "mysql",
-        //"127.0.0.1",
-        //"3313",
-        "ensembldb.ensembl.org",
-        "3306",
-        "ensembl_mart_17_1",
-        //"ensro",
-        "anonymous",
-        null,
-        10,
-        "com.mysql.jdbc.Driver");
+    DataSource ds = DatabaseUtil.createDataSource("mysql",
+      //"127.0.0.1",
+    //"3313",
+  "ensembldb.ensembl.org", "3306", "ensembl_mart_17_1",
+      //"ensro",
+  "anonymous", null, 10, "com.mysql.jdbc.Driver");
 
     for (int i = 0, n = views.length; i < n; i++) {
       views[i].setDatasource(ds);
@@ -433,9 +410,14 @@ public class QueryEditor
     return views;
   }
 
-  public static void main(String[] args) throws ConfigurationException {
+  public static void main(String[] args) throws Exception {
+
+    // enable logging messages
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    logger.setLevel(Level.FINEST);
 
     DatasetView[] views = testDSViews();
+
     final QueryEditor editor = new QueryEditor();
     editor.setName("test_query");
     editor.setDatasetViews(views);
@@ -542,7 +524,7 @@ public class QueryEditor
       treeModel.nodeChanged(outputSettingsPage.getNode());
     }
 
-		resultsStale = true;
+    resultsStale = true;
 
   }
 
@@ -686,39 +668,56 @@ public class QueryEditor
     return query;
   }
 
+  /**
+   * Executes query and writes results to temporary file.
+   *
+   */
   public void doExecute() {
+    runQuery(false, false);
+  }
 
-    int nPreviewBytes = 10000;
-    
-    if ( tmpResultFile==null ) { 
-    
-			try {
-				tmpResultFile = File.createTempFile("mart"+System.currentTimeMillis(),".tmp");
-				System.out.println(tmpResultFile);
-			} catch (IOException e) {
-				feedback.warn(e);
-			}
+  /**
+   * Executes query and stores the results in a temporary file. These results 
+   * may be stored in a user specified results file.
+   * 
+   * Part of the temporary file is read and
+   * displyed in the preview pane. Saving is implemented by copying the tmp
+   * file to the file selected by the user.
+   * 
+   * Threads are used for concurrent writing and reading from the temporary file.
+   * 
+   * @param save whether results file should be saved
+   * @param changeResultsFile if true the results file chooser is displayed
+   */
+  private void runQuery(final boolean save, final boolean changeResultsFile) {
+
+    // Possible OPTIMISATION could write out to a dual outputStream, one outputStream goes
+    // to a file, the other is a pipe into the application. This would prevent the
+    // need to read from the file system and remove the need for PollingFileInputStream.
+
+    //  user select result file if necessary
+    if (save
+      && resultsFileChooser.getSelectedFile() == null
+      || changeResultsFile) {
+
+      if (resultsFileChooser.getSelectedFile() == null)
+        resultsFileChooser.setSelectedFile(new File(getName() + ".mart"));
+
+      int option = resultsFileChooser.showSaveDialog(this);
+      if (option != JFileChooser.APPROVE_OPTION)
+        return;
+
     }
-		
-    outputPanel.setEditable(false);
-    outputPanel.setText(""); // clear last results set
+
+    // clear last results set before executing query
+    outputPanel.setText("");
 
     try {
 
-      // OPTIMISATION could write out to a dual outputStream, one outputStream goes
-      // to a file, the other is a pipe into the application. This would prevent the
-      // need to read from the file system and remove the need for PollingFileInputStream.
-
-      // Write results to file, we need to force flush() calls because until we do that the
-      // data might be buffered in memory and we can't read it into the preview pane
-      // until is is written to disk.
-      final OutputStream os =
-        new AutoFlushOutputStream(new FileOutputStream(tmpResultFile), nPreviewBytes);
-
-      // Read results from file. We use the PollingInputStream wrapper so that we keep reading
-      // every 500ms, otherwise
+      // We use the PollingInputStream wrapper so that we keep trying to read from
+      // file even reach end. Needed because we might read faster than we write to it.
       final PollingInputStream pis =
-        new PollingInputStream(new FileInputStream(tmpResultFile));
+        new PollingInputStream(new FileInputStream(tmpFile));
       pis.setLive(true);
 
       // JEditorPane.read(inputStream,...) only displays the contents of the inputStream 
@@ -726,35 +725,22 @@ public class QueryEditor
       // memory usage becoming extreme for large queries we limit the amount of data
       // to display by closing the inputStream (potentially) prematurely by the using the
       // MaximumBytesInputFilter() wrapper around the inputStream. 
-      final InputStream is = new MaximumBytesInputFilter(pis, nPreviewBytes);
+      final InputStream is = new MaximumBytesInputFilter(pis, maxPreviewBytes);
 
-      // Write results to file on one thread.
       new Thread() {
 
         public void run() {
-
-          FormatSpec formatSpec = FormatSpec.TABSEPARATEDFORMAT;
+          execute();
+          // copy tmp file to results file if necessary
           try {
-
-            engine.execute(query, formatSpec, os);
-            os.close();
-       			resultsStale = false;     
-          } catch (SequenceException e) {
-            feedback.warn(e);
-          } catch (FormatException e) {
-						feedback.warn(e);
-          } catch (InvalidQueryException e) {
-						feedback.warn(e);
-          } catch (SQLException e) {
-						feedback.warn(e);
+            if (save)
+              FileUtil.copyFile(tmpFile, resultsFileChooser.getSelectedFile());
           } catch (IOException e) {
-						feedback.warn(e);
-          } finally {
-						// tell the inputStream to stop reading once a -1 has been read
-						// from the file because we aren't writing any more.
-						pis.setLive(false);
+            feedback.warn(e);
           }
-
+          // tell the inputStream to stop reading once a -1 has been read
+          // from the file because we aren't writing any more.
+          pis.setLive(false);
         }
       }
       .start();
@@ -764,20 +750,77 @@ public class QueryEditor
 
         public void run() {
 
-          System.out.println("Start reading ...");
-          try {
-            outputPanel.read(is, null);
-            is.close();
-          } catch (IOException e) {
-						feedback.warn(e);
-          }
-          System.out.println("Finish reading ...");
+          loadPreviewPanel(is);
         }
       }
       .start();
 
     } catch (FileNotFoundException e) {
-			feedback.warn(e);
+      feedback.warn(e);
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+  }
+
+  /**
+   * Reads all data from is and displays in preview panel.
+   */
+  private void loadPreviewPanel(InputStream is) {
+
+    try {
+      outputPanel.read(is, null);
+      is.close();
+    } catch (IOException e) {
+      feedback.warn(e);
+    }
+  }
+
+  /**
+   * 
+   */
+  protected void execute() {
+
+    if (query.getDatasetInternalName() == null) {
+      feedback.warn("Dataset view must be set before executing query.");
+      return;
+    } else if (query.getDataSource() == null) {
+      feedback.warn("Data base must be set before executing query.");
+      return;
+    } else if (query.getAttributes().length == 0) {
+      feedback.warn("Attributes must be set before executing query.");
+      return;
+    } // TODO check output format set query.
+    
+
+    if (!resultsStale)
+      return;
+
+    try {
+
+      // The preview pane loading system can't read bytes from tmpFile
+      // until they are written to disk so we force the output memory buffer to
+      // flush often.
+      final OutputStream os =
+        new AutoFlushOutputStream(
+          new FileOutputStream(tmpFile),
+          maxPreviewBytes);
+
+      engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, os);
+      os.close();
+      resultsStale = false;
+
+    } catch (SequenceException e) {
+      feedback.warn(e);
+    } catch (FormatException e) {
+      feedback.warn(e);
+    } catch (InvalidQueryException e) {
+      feedback.warn(e);
+    } catch (SQLException e) {
+      feedback.warn(e);
+    } catch (IOException e) {
+      feedback.warn(e);
     }
 
   }
@@ -817,36 +860,37 @@ public class QueryEditor
   /**
    * Exports mql to a file chosen by user.
    */
-	public void doExportMQL() {
+  public void doExportMQL() {
 
-		try {
+    try {
 
-			if (mqlFileChooser.getSelectedFile() == null) {
-				mqlFileChooser.setCurrentDirectory(
-					new File(System.getProperty("user.home")));
-				mqlFileChooser.setSelectedFile(new File(query.getQueryName() + ".mql"));
-			}
+      if (mqlFileChooser.getSelectedFile() == null) {
+        mqlFileChooser.setCurrentDirectory(
+          new File(System.getProperty("user.home")));
+        mqlFileChooser.setSelectedFile(new File(query.getQueryName() + ".mql"));
+      }
 
-			String mql = getMQL();
+      String mql = getMQL();
 
-			if (mqlFileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
-				return;
+      if (mqlFileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+        return;
 
-			File f = mqlFileChooser.getSelectedFile().getAbsoluteFile();
-			FileOutputStream os;
-			os = new FileOutputStream(f);
-			os.write(mql.getBytes());
-			os.write('\n');
-			os.close();
-		} catch (InvalidQueryException e) {
-			feedback.warn(e.getMessage());
-		} catch (IOException e) {
-			feedback.warn(e.getMessage());
-		}
-	}
+      File f = mqlFileChooser.getSelectedFile().getAbsoluteFile();
+      FileOutputStream os;
+      os = new FileOutputStream(f);
+      os.write(mql.getBytes());
+      os.write('\n');
+      os.close();
+    } catch (InvalidQueryException e) {
+      feedback.warn(e.getMessage());
+    } catch (IOException e) {
+      feedback.warn(e.getMessage());
+    }
+  }
 
-
-	public void finalise() {
-		if ( tmpResultFile.exists() ) System.out.println("deleted:"+tmpResultFile.delete());
-	}
+  public void finalize() {
+    System.out.println("finalize");
+    if (tmpFile.exists())
+      logger.fine("deleted:" + tmpFile.delete());
+  }
 }

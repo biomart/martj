@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -568,10 +569,17 @@ public class MartExplorer extends JFrame {
 				"No datasets available. You need load one or more "
 					+ "datasets before you can create a query.");
 		} else {
-			QueryEditor qe = new QueryEditor();
-			qe.setDatasetViews(views);
-			qe.setName(nextQueryBuilderTabLabel());
-			addQueryEditor(qe);
+      
+			QueryEditor qe;
+      try {
+        qe = new QueryEditor();
+        qe.setDatasetViews(views);
+        qe.setName(nextQueryBuilderTabLabel());
+        addQueryEditor(qe);
+      } catch (IOException e) {
+      feedback.warn(e);
+      }
+			
 		}
 
 	}
