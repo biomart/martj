@@ -94,7 +94,7 @@ public class MartCompleter implements ReadlineCompleter {
 					}
 			}
 			
-			if (seqsLoaded && Readline.getLineBuffer().endsWith(FROM)) {
+			if (seqsLoaded && Readline.getLineBuffer().indexOf(FROM) >= 0) {
 				commandSet = new TreeSet();
 				for (Iterator iter = backupSet.iterator(); iter.hasNext();)
           commandSet.add(iter.next());
