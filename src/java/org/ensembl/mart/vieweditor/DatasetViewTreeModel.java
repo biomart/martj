@@ -1,3 +1,21 @@
+/*
+	Copyright (C) 2003 EBI, GRL
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 package org.ensembl.mart.vieweditor;
 
 import org.ensembl.mart.lib.config.*;
@@ -8,12 +26,16 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.*;
 
 /**
- * Created by IntelliJ IDEA.
- * User: katerina
- * Date: 18-Nov-2003
- * Time: 18:35:08
- * To change this template use Options | File Templates.
+ * Class DatasetViewTreeModel extends DefaultTreeModel.
+ *
+ * <p>This class is written for the attributes table to implement autoscroll
+ * </p>
+ *
+ * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
+ * //@see org.ensembl.mart.config.DatasetView
  */
+
+
 public class DatasetViewTreeModel extends DefaultTreeModel {
 
 // This class represents the data model for this tree
@@ -33,14 +55,14 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         String value = (String) newValue;
         System.out.println("in model valueForPathChanged");
         current_node.setName(value);
-        BaseNamedConfigurationObject nodeInfo = (BaseNamedConfigurationObject) current_node.getUserObject();
+        BaseConfigurationObject nodeInfo = (BaseConfigurationObject) current_node.getUserObject();
         //nodeInfo.setInternalName(value);
         //System.out.println(view.containsAttributePage(value));
 
         nodeChanged(current_node);
     }
 
-    public String insertNodeInto(DatasetViewTreeNode editingNode, DatasetViewTreeNode parentNode, int index) {
+    public void reload(DatasetViewTreeNode editingNode, DatasetViewTreeNode parentNode){
         int start, finish;
         String parentClassName = (parentNode.getUserObject().getClass()).getName();
         String childClassName = (editingNode.getUserObject().getClass()).getName();
@@ -51,85 +73,180 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         if (parentClassName.equals("org.ensembl.mart.lib.config.DatasetView")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
                 view = (DatasetView) parentNode.getUserObject();
-                //view.addFilterPage((FilterPage) editingNode.getUserObject());
+                view.addFilterPage((FilterPage) editingNode.getUserObject());
+                //view.removeAttributePage();
 
             } else if (childClassName.equals("org.ensembl.mart.lib.config.AttributePage")) {
                 view = (DatasetView) parentNode.getUserObject();
-                //view.addAttributePage((AttributePage) editingNode.getUserObject());
+                view.addAttributePage((AttributePage) editingNode.getUserObject());
 
-            }else {
-                String error_string = "Error: " + childName + " cannot be inserted in a DatasetView.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterPage")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
                 FilterPage fp = (FilterPage) parentNode.getUserObject();
-               // int position = view.indexOfFilterPage(fp);
                 fp.addFilterGroup((FilterGroup) editingNode.getUserObject());
-               // view.setFilterPageAt(position,fp);
-            } else {
-                String error_string = "Error: " + childName + " cannot be inserted in a FilterPage.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterGroup")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterCollection")) {
                 FilterGroup fg = (FilterGroup) parentNode.getUserObject();
-               // FilterPage fp = (FilterPage)((DatasetViewTreeNode)(parentNode.getParent())).getUserObject();
-               // int fgPosition = fp.indexOfFilterGroup(fg);
-               // int fpPosition = view.indexOfFilterPage(fp);
                 fg.addFilterCollection((FilterCollection) editingNode.getUserObject());
-               // fp.setFilterGroupAt(fgPosition,fg);
-               // view.setFilterPageAt(fpPosition,fp);
-            } else {
-                String error_string = "Error: " + childName + " cannot be inserted in a FilterGroup.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterCollection")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.FilterDescription")) {
                 FilterCollection fc = (FilterCollection) parentNode.getUserObject();
                 fc.addFilterDescription((FilterDescription) editingNode.getUserObject());
-            } else {
-                String error_string = "Error: " + childName + " cannot be inserted in a FilterCollection.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterDescription")) {
-            String error_string = "Error: a FilterDescription is a leaf node, no insertions are allowed.";
-            return error_string;
+
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributePage")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
                 ap.addAttributeGroup((AttributeGroup) editingNode.getUserObject());
-            } else {
-                String error_string = "Error: " + childName + " cannot be inserted in an AttributePage.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
                 AttributeGroup ag = (AttributeGroup) parentNode.getUserObject();
                 ag.addAttributeCollection((AttributeCollection) editingNode.getUserObject());
-            } else {
-                String error_string = "Error: " + childName + " cannot be inserted in an AttributeGroup.";
-                return error_string;
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
                 AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
                 ac.addAttributeDescription((AttributeDescription) editingNode.getUserObject());
+            }
+        } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+
+        }
+        super.reload(parentNode);
+
+    }
+
+    public String insertNodeInto(DatasetViewTreeNode editingNode, DatasetViewTreeNode parentNode, int index) {
+        int start,finish;
+        Object child = editingNode.getUserObject();
+        Object parent = parentNode.getUserObject();
+        String childClassName = (editingNode.getUserObject().getClass()).getName();
+        start = childClassName.lastIndexOf(".") + 1;
+        finish = childClassName.length();
+        String childName = childClassName.substring(start, finish);
+
+        if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
+                view = (DatasetView) parentNode.getUserObject();
+                view.insertFilterPage(index,(FilterPage) editingNode.getUserObject());
+
+            } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
+                view = (DatasetView) parentNode.getUserObject();
+                view.insertAttributePage(index,(AttributePage) editingNode.getUserObject());
+
+            }else {
+                String error_string = "Error: " + childName + " cannot be inserted in a DatasetView.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
+                FilterPage fp = (FilterPage) parentNode.getUserObject();
+                fp.insertFilterGroup(index,(FilterGroup) editingNode.getUserObject());
+            } else {
+                String error_string = "Error: " + childName + " cannot be inserted in a FilterPage.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterCollection) {
+                FilterGroup fg = (FilterGroup) parentNode.getUserObject();
+                fg.insertFilterCollection(index,(FilterCollection) editingNode.getUserObject());
+            } else {
+                String error_string = "Error: " + childName + " cannot be inserted in a FilterGroup.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
+                FilterCollection fc = (FilterCollection) parentNode.getUserObject();
+                fc.insertFilterDescription(index,(FilterDescription) editingNode.getUserObject());
+            } else {
+                String error_string = "Error: " + childName + " cannot be inserted in a FilterCollection.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
+            String error_string = "Error: a FilterDescription is a leaf node, no insertions are allowed.";
+            return error_string;
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
+                AttributePage ap = (AttributePage) parentNode.getUserObject();
+                ap.insertAttributeGroup(index,(AttributeGroup) editingNode.getUserObject());
+            } else {
+                String error_string = "Error: " + childName + " cannot be inserted in an AttributePage.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
+                AttributeGroup ag = (AttributeGroup) parentNode.getUserObject();
+                ag.insertAttributeCollection(index,(AttributeCollection) editingNode.getUserObject());
+            } else {
+                String error_string = "Error: " + childName + " cannot be inserted in an AttributeGroup.";
+                return error_string;
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+                AttributeCollection ac = (AttributeCollection) parentNode.getUserObject();
+                ac.insertAttributeDescription(index,(AttributeDescription) editingNode.getUserObject());
             } else {
                 String error_string = "Error: " + childName + " cannot be inserted in an AttributeCollection.";
                 return error_string;
             }
-        } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributeDescription) {
             String error_string = "Error: AttributeDescription is a leaf node, no insertions are allowed.";
             return error_string;
         }
-        System.out.println(index);
         super.insertNodeInto(editingNode, parentNode, index);
         return "success";
     }
 
-    public void removeNodeFromParent(DatasetViewTreeNode editingNode) {
-        super.removeNodeFromParent(editingNode);
+    public void removeNodeFromParent(DatasetViewTreeNode node) {
+        Object child = node.getUserObject();
+        Object parent = ((DatasetViewTreeNode)node.getParent()).getUserObject();
+
+        if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
+                view = (DatasetView)((DatasetViewTreeNode) node.getParent()).getUserObject();
+                view.removeFilterPage((FilterPage) node.getUserObject());
+
+            } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
+                view =(DatasetView)((DatasetViewTreeNode) node.getParent()).getUserObject();
+                view.removeAttributePage((AttributePage) node.getUserObject());
+
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
+                FilterPage fp = (FilterPage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                fp.removeFilterGroup((FilterGroup) node.getUserObject());
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterCollection) {
+                FilterGroup fg = (FilterGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                fg.removeFilterCollection((FilterCollection) node.getUserObject());
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
+            if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
+                FilterCollection fc = (FilterCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                fc.removeFilterDescription((FilterDescription) node.getUserObject());
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
+                AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
+                AttributeGroup ag = (AttributeGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                ag.removeAttributeCollection((AttributeCollection) node.getUserObject());
+            }
+        } else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
+            if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+                AttributeCollection ac = (AttributeCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
+            }
+        }
+        super.removeNodeFromParent(node);
 
     }
 }

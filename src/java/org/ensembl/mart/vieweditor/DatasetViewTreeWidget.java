@@ -25,49 +25,23 @@ import javax.swing.*;
 import javax.swing.table.TableColumn;
 
 import org.ensembl.mart.explorer.QueryEditor;
-import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.*;
 
 /**
- * Tree representation of a DatasetView object.
+ * DatasetViewTreeWidget extends internal frame.
  *
- * <p>This widget implements the MVC design pattern.
- * It's datasetView attribute is the model and can be changed.
- * The widget provides a tree
- * view representation of the model (not implemented) and offers these user control actions:
- * </p>
  *
- * <ul>
- * <li> Select a node. (not implemented) </li>
- * <li> Change the order of some nodes. (not implemented) </li>
- * <li> Add a node, context sensitive. (not implemented) </li>
- * <li> Delete a node. (not implemented) </li>
- * </ul>
- *
- * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
  * //@see org.ensembl.mart.config.DatasetView
  */
 public class DatasetViewTreeWidget extends JInternalFrame {
-
-    // NOTE see org.ensembl.mart.explorer.QueryEditor for examples of using JTree
-
-    // TODO load tree when datasetView set, DONE!!!!!!!!
-    // TODO check that resizing the widget works (manually resize via dragging "corners"), DONE!!!!!
-    // TODO remove tree when setDatasetView(null), need to make sure we can add and remove at will
-    // TODO add DatasetView.setSelected(XXXX), this should propagate a change event. Katerina/Craig/Darin
-    // TODO Selecting a node in tree calls datasetView.setSelected(XXXX).
-    // TODO Support reordering nodes of the same type e.g.change the order of attributes. Preferably by drag and drop mechanism
-    // TODO Support deleting node by "delete" key, undo?
-    // TODO Support deleting node by "right click | delete"
-    // TODO Support adding a node (context sensitive) by "right click | add XXXX"
 
     private DatasetView datasetView = null;
     private static int openFrameCount = 0;
     private static final int xOffset = 30, yOffset = 30;
     private JDesktopPane desktop;
     private GridBagConstraints constraints;
+    private DatasetViewTree tree;
 
     public DatasetViewTreeWidget(File file) {
 
@@ -79,28 +53,27 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 
         try {
             this.setFrameIcon(createImageIcon("MartView_cube.gif"));
+            DatasetView view = new DatasetView();
+            if (file == null) {
+                view = new DatasetView("new", "new", "new");
+                view.addFilterPage(new FilterPage("new"));
+                view.addAttributePage(new AttributePage("new"));
+            } else {
+                URL url = file.toURL();
+                DSViewAdaptor adaptor = new URLDSViewAdaptor(url, true);
 
-            URL url = file.toURL();
-            DSViewAdaptor adaptor = new URLDSViewAdaptor(url, true);
-
-            // only view one in the file so get that one
-            DatasetView view = adaptor.getDatasetViews()[0];
+                // only view one in the file so get that one
+                view = adaptor.getDatasetViews()[0];
+            }
             this.setTitle(view.getInternalName());
-            JFrame.setDefaultLookAndFeelDecorated(true);
-            /*
-            constraints = new GridBagConstraints();
-            GridBagLayout layout = new GridBagLayout();
-            this.getContentPane().setLayout(layout);
-            constraints.fill = GridBagConstraints.BOTH;
 
-            constraints.weightx = 10;
-            constraints.weighty = 10;  */
+            JFrame.setDefaultLookAndFeelDecorated(true);
+
             DatasetViewAttributesTable attrTable = new DatasetViewAttributesTable(
                     view, this);
-            //TableColumn column = attrTable.getColumnModel().getColumn(1);
-
-            JScrollPane treeScrollPane = new JScrollPane(new DatasetViewTree(view,
-                    this, attrTable));
+            tree = new DatasetViewTree(view,
+                    this, attrTable);
+            JScrollPane treeScrollPane = new JScrollPane(tree);
             JScrollPane tableScrollPane = new JScrollPane(attrTable);
             JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                     treeScrollPane, tableScrollPane);
@@ -113,9 +86,6 @@ public class DatasetViewTreeWidget extends JInternalFrame {
             tableScrollPane.setMinimumSize(minimumSize);
 
             this.getContentPane().add(splitPane);
-
-            //add(this.getContentPane(), new JScrollPane(new DatasetViewTree(view, this, attrTable)), constraints, 0, 0, 1, 1);
-            //add(this.getContentPane(), new JScrollPane(attrTable), constraints, 1, 0, 1, 1);
 
             //...Then set the window size or call pack...
             setSize(500, 400);
@@ -180,11 +150,32 @@ public class DatasetViewTreeWidget extends JInternalFrame {
      * Removes current dataset view if one is loaded, otherwise does nothing.
      */
     private void clearDatasetView() {
-        // TODO Auto-generated method stub
 
     }
 
+    public void save(){
+        tree.save();
+    }
 
+    public void cut(){
+        tree.cut();
+    }
+
+    public void copy(){
+        tree.copy();
+    }
+
+    public void paste(){
+        tree.paste();
+    }
+
+    public void insert(){
+       // tree.insert();
+    }
+
+    public void delete(){
+        tree.delete();
+    }
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
         java.net.URL imgURL = DatasetViewTreeWidget.class.getResource(path);

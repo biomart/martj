@@ -1,3 +1,21 @@
+/*
+	Copyright (C) 2003 EBI, GRL
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 package org.ensembl.mart.vieweditor;
 
 
@@ -8,6 +26,16 @@ import java.awt.event.*;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
+
+/**
+ * Class MartViewEditor extends JFrame..
+ *
+ * <p>This class contains the main function, it draws the external frame, toolsbar, menus.
+ * </p>
+ *
+ * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
+ * //@see org.ensembl.mart.config.DatasetView
+ */
 
 public class MartViewEditor extends JFrame {
 
@@ -49,8 +77,6 @@ public class MartViewEditor extends JFrame {
         this.getContentPane().add(toolBar, BorderLayout.NORTH);
 
         desktop = new JDesktopPane();
-        createFrame(null); //create first "window"
-        //setContentPane(desktop);
         this.getContentPane().add(desktop, BorderLayout.CENTER);
         setJMenuBar(createMenuBar());
 
@@ -79,31 +105,26 @@ public class MartViewEditor extends JFrame {
                 "Next");
         toolBar.add(button);
 
-        //first button
         button = makeNavigationButton("copy", COPY,
                 "Copy a tree node",
                 "Previous");
         toolBar.add(button);
 
-        //second button
         button = makeNavigationButton("cut", CUT,
                 "Cut a tree node",
                 "Up");
         toolBar.add(button);
 
-        //third button
         button = makeNavigationButton("paste", PASTE,
                 "Paste tree node",
                 "Next");
         toolBar.add(button);
 
-        //second button
         button = makeNavigationButton("undo", UNDO,
                 "Undo",
                 "Up");
         toolBar.add(button);
 
-        //third button
         button = makeNavigationButton("redo", REDO,
                 "Redo",
                 "Next");
@@ -288,7 +309,6 @@ public class MartViewEditor extends JFrame {
 
     //Create a new internal frame.
     protected void createFrame(File file) {
-        if (file != null) {
 
             DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file);
             frame.setVisible(true);
@@ -297,7 +317,7 @@ public class MartViewEditor extends JFrame {
                 frame.setSelected(true);
             } catch (java.beans.PropertyVetoException e) {
             }
-        }
+
     }
 
     //Quit the application.
@@ -380,27 +400,27 @@ public class MartViewEditor extends JFrame {
     }
 
     public void cut() {
-
+         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).cut();
     }
 
     public void copy() {
-
+         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).copy();
     }
 
     public void paste() {
-
+         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).paste();
     }
 
     public void insert() {
-
+          //((DatasetViewTreeWidget)desktop.getSelectedFrame()).insert();
     }
 
     public void delete() {
-
+          ((DatasetViewTreeWidget)desktop.getSelectedFrame()).delete();
     }
 
     public void newDatasetView() {
-
+        createFrame(null);
     }
 
     public void openDatasetView() {
@@ -421,7 +441,7 @@ public class MartViewEditor extends JFrame {
     }
 
     public void save() {
-
+         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
     }
 
     public void save_as() {
@@ -429,7 +449,7 @@ public class MartViewEditor extends JFrame {
     }
 
     public void exit() {
-
+        System.exit(0);
     }
 
     public void undo() {
