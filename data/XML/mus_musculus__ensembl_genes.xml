@@ -17,28 +17,28 @@
             <Enable ref="band_start"/>
             <Enable ref="band_end"/>
             <Option displayName="1" internalName="1" isSelectable="true" value="1">
-              <PushOptions internalName="band_start_push_chr1" ref="band_start">
+              <PushAction internalName="band_start_push_chr1" ref="band_start">
                 <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
                 <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
                 <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr_1" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr_1" ref="band_end">
                 <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
                 <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
                 <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="2" internalName="2" isSelectable="true" value="2">
-              <PushOptions internalName="band_start_push_chr2" ref="band_start">
+              <PushAction internalName="band_start_push_chr2" ref="band_start">
                 <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
                 <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
                 <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr2" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr2" ref="band_end">
                 <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
                 <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
                 <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
         </FilterCollection>

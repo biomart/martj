@@ -17,28 +17,28 @@
             <Enable ref="band_start"/>
             <Enable ref="band_end"/>
             <Option displayName="1" internalName="chr1" isSelectable="true" value="1">
-              <PushOptions internalName="band_start_push_chr1" ref="band_start">
+              <PushAction internalName="band_start_push_chr1" ref="band_start">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr_1" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr_1" ref="band_end">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="2" internalName="chr2" isSelectable="true" value="2">
-              <PushOptions internalName="band_start_push_chr2" ref="band_start">
+              <PushAction internalName="band_start_push_chr2" ref="band_start">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr2" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr2" ref="band_end">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
         </FilterCollection>
@@ -58,22 +58,22 @@
           <FilterDescription internalName="encode_type" type="list">
             <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016:29950015"/>
                 <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
                 <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
                 <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
           <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" legal_qualifiers="=" qualifier="=" type="text"/>

@@ -69,7 +69,7 @@
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
 
-<!ELEMENT Option (Option|PushOptions|PushOptions|Option)*>
+<!ELEMENT Option (Option|PushAction|PushAction|Option)*>
 <!ATTLIST Option 
                  %desc_data;
                  isSelectable  CDATA #REQUIRED
@@ -82,8 +82,8 @@
                  tableConstraint    CDATA #IMPLIED
                  handler        CDATA #IMPLIED>
 
-<!ELEMENT PushOptions (Option)+>
-<!ATTLIST PushOptions
+<!ELEMENT PushAction (Option)+>
+<!ATTLIST PushAction
 				%desc_data;
 				ref CDATA #REQUIRED>
 

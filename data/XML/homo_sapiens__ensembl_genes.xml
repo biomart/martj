@@ -16,28 +16,28 @@
             <Enable ref="band_start"/>
             <Enable ref="band_end"/>
             <Option displayName="1" internalName="chr1" isSelectable="true" value="1">
-              <PushOptions internalName="band_start_push_chr1" ref="band_start">
+              <PushAction internalName="band_start_push_chr1" ref="band_start">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr_1" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr_1" ref="band_end">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="2" internalName="chr2" isSelectable="true" value="2">
-              <PushOptions internalName="band_start_push_chr2" ref="band_start">
+              <PushAction internalName="band_start_push_chr2" ref="band_start">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr2" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr2" ref="band_end">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
         </FilterCollection>
@@ -57,22 +57,22 @@
           <FilterDescription internalName="encode_type" type="list">
             <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016:29950015"/>
                 <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
                 <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
                 <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
           <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" legal_qualifiers="=" qualifier="=" type="text"/>
@@ -160,7 +160,7 @@
             <Enable ref="pathology_filter"/>
             <Enable ref="cell_type_filter"/>
             <Option description="Filter for GNF Related Expression Patterns" displayName="GNF data (AFFY-HG-U95)" internalName="gnf" isSelectable="false" type="tree">
-              <PushOptions internalName="anatomical_site_push" ref="anatomical_site_filter">
+              <PushAction internalName="anatomical_site_push" ref="anatomical_site_filter">
                 <Option displayName="Anatomical Site" field="gnf.anatomical_site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Alimentary" internalName="alimentary" isSelectable="true" value="Alimentary">
                     <Option displayName="Large intestine" internalName="large_intestine" isSelectable="true" value="large intestine">
@@ -557,8 +557,8 @@
                     <Option displayName="Urethra" internalName="urethra" isSelectable="true" value="urethra"/>
                   </Option>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="development_stage_push" ref="development_stage_filter">
+              </PushAction>
+              <PushAction internalName="development_stage_push" ref="development_stage_filter">
                 <Option displayName="Development Stage" field="gnf.development_stage" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="development_stage" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Adult" internalName="adult" isSelectable="true" value="Adult"/>
                   <Option displayName="Child" internalName="child" isSelectable="true" value="Child"/>
@@ -593,8 +593,8 @@
                   <Option displayName="Infant" internalName="infant" isSelectable="true" value="Infant"/>
                   <Option displayName="Toddler" internalName="toddler" isSelectable="true" value="Toddler"/>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="pathology_push" ref="pathology_filter">
+              </PushAction>
+              <PushAction internalName="pathology_push" ref="pathology_filter">
                 <Option displayName="Pathology" field="gnf.pathology" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="pathology" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Auto-immune disorders" internalName="auto-immune_disorders" isSelectable="true" value="Auto-immune disorders">
                     <Option displayName="Alopecia areata" internalName="alopecia_areata" isSelectable="true" value="alopecia areata"/>
@@ -747,8 +747,8 @@
                     </Option>
                   </Option>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="cell_type_push" ref="cell_type_filter">
+              </PushAction>
+              <PushAction internalName="cell_type_push" ref="cell_type_filter">
                 <Option displayName="Cell Type" field="gnf.cell_type" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="cell_type" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="A cell" internalName="a_cell" isSelectable="true" value="A cell"/>
                   <Option displayName="Acidophil cell" internalName="acidophil_cell" isSelectable="true" value="acidophil cell"/>
@@ -936,10 +936,10 @@
                   <Option displayName="White blood cell" internalName="white_blood_cell" isSelectable="true" value="white blood cell"/>
                   <Option displayName="Zymogenic cell" internalName="zymogenic_cell" isSelectable="true" value="zymogenic cell"/>
                 </Option>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option description="Filter for E-Genetics/Sanbi Related Expression Patterns" displayName="eGenetics/SANBI data" internalName="est" isSelectable="false" type="tree">
-              <PushOptions internalName="anatomical_site_push" ref="anatomical_site_filter">
+              <PushAction internalName="anatomical_site_push" ref="anatomical_site_filter">
                 <Option displayName="Anatomical Site" field="est.anatomical_site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Alimentary" internalName="alimentary" isSelectable="true" value="Alimentary">
                     <Option displayName="Large intestine" internalName="large_intestine" isSelectable="true" value="large intestine">
@@ -1336,8 +1336,8 @@
                     <Option displayName="Urethra" internalName="urethra" isSelectable="true" value="urethra"/>
                   </Option>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="development_stage_push" ref="development_stage_filter">
+              </PushAction>
+              <PushAction internalName="development_stage_push" ref="development_stage_filter">
                 <Option displayName="Development Stage" field="est.development_stage" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="development_stage" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Adult" internalName="adult" isSelectable="true" value="Adult"/>
                   <Option displayName="Child" internalName="child" isSelectable="true" value="Child"/>
@@ -1372,8 +1372,8 @@
                   <Option displayName="Infant" internalName="infant" isSelectable="true" value="Infant"/>
                   <Option displayName="Toddler" internalName="toddler" isSelectable="true" value="Toddler"/>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="pathology_push" ref="pathology_filter">
+              </PushAction>
+              <PushAction internalName="pathology_push" ref="pathology_filter">
                 <Option displayName="Pathology" field="est.pathology" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="pathology" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="Auto-immune disorders" internalName="auto-immune_disorders" isSelectable="true" value="Auto-immune disorders">
                     <Option displayName="Alopecia areata" internalName="alopecia_areata" isSelectable="true" value="alopecia areata"/>
@@ -1526,8 +1526,8 @@
                     </Option>
                   </Option>
                 </Option>
-              </PushOptions>
-              <PushOptions internalName="cell_type_push" ref="cell_type_filter">
+              </PushAction>
+              <PushAction internalName="cell_type_push" ref="cell_type_filter">
                 <Option displayName="Cell Type" field="est.cell_type" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="cell_type" isSelectable="false" legal_qualifiers="=" qualifier="=" type="tree">
                   <Option displayName="A cell" internalName="a_cell" isSelectable="true" value="A cell"/>
                   <Option displayName="Acidophil cell" internalName="acidophil_cell" isSelectable="true" value="acidophil cell"/>
@@ -1715,7 +1715,7 @@
                   <Option displayName="White blood cell" internalName="white_blood_cell" isSelectable="true" value="white blood cell"/>
                   <Option displayName="Zymogenic cell" internalName="zymogenic_cell" isSelectable="true" value="zymogenic cell"/>
                 </Option>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
           <FilterDescription description="Filter for Genes expressed in Specified Anatomical Sites" displayName="Anatomical Site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site_filter" legal_qualifiers="=" type="tree"/>

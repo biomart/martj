@@ -15,28 +15,28 @@
             <Enable ref="band_start"/>
             <Enable ref="band_end"/>
             <Option displayName="1" internalName="chr1" isSelectable="true" value="1">
-              <PushOptions internalName="band_start_push_chr1" ref="band_start">
+              <PushAction internalName="band_start_push_chr1" ref="band_start">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr_1" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr_1" ref="band_end">
                 <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
                 <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
                 <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="2" internalName="chr2" isSelectable="true" value="2">
-              <PushOptions internalName="band_start_push_chr2" ref="band_start">
+              <PushAction internalName="band_start_push_chr2" ref="band_start">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
-              <PushOptions internalName="band_end_push_chr2" ref="band_end">
+              </PushAction>
+              <PushAction internalName="band_end_push_chr2" ref="band_end">
                 <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
                 <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
                 <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
         </FilterCollection>
@@ -56,22 +56,22 @@
           <FilterDescription internalName="encode_type" type="list">
             <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016:29950015"/>
                 <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
                 <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
-              <PushOptions internalName="push_to_encode_region" ref="encode_region">
+              <PushAction internalName="push_to_encode_region" ref="encode_region">
                 <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
                 <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
           <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" legal_qualifiers="=" qualifier="=" type="text"/>
@@ -96,19 +96,19 @@
           <FilterDescription description="Filter for SNPs with allele frequence data from specified populations." displayName="With allele frequency data from population:" internalName="allele_frequence_population" type="list">
             <Enable ref="minor_allele_frequency_filter" valueCondition="true"/>
             <Option displayName="ANY" field="overall_min_freq" internalName="any_population" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
-              <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
+              <PushAction internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
                 <Option field="overall_min_freq" internalName="minor_allele_frequency" isSelectable="true" legal_qualifiers="&gt;,&gt;=,&lt;,&lt;=" qualifier="=" tableConstraint="snp_main" type="text"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option description="Include/exclude SNPs with Central Asia Population Allele Frequency Data." displayName="Central Asia" field="central_asia" internalName="central_asia" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
-              <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
+              <PushAction internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
                 <Option field="central_asia" internalName="minor_allele_frequency" isSelectable="true" legal_qualifiers="&gt;,&gt;=,&lt;,&lt;=" qualifier="=" tableConstraint="snp_main" type="text"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option description="Include/Exclude SNPs with Central/South African Population Allele Frequency Data" displayName="Central/South Africa" field="central_south_america" internalName="central_south_africa" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
-              <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
+              <PushAction internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
                 <Option field="central_south_africa" internalName="minor_allele_frequency" isSelectable="true" legal_qualifiers="&gt;,&gt;=,&lt;,&lt;=" qualifier="=" tableConstraint="snp_main" type="text"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
           <FilterDescription displayName="freq of the minor allele" internalName="minor_allele_frequency_filter" type="text"/>
@@ -118,34 +118,34 @@
         <FilterCollection displayName="type of gene" internalName="gene_type">
           <FilterDescription internalName="gene_type_filters" type="list">
             <Option description="Filter for Ensembl Gene Related Snp Filters" displayName="Ensembl Genes" internalName="ensembl_gene" isSelectable="true">
-              <PushOptions internalName="gene_association_filter_push" ref="gene_association_filter">
+              <PushAction internalName="gene_association_filter_push" ref="gene_association_filter">
                 <Option description="Snps associated with Coding Sequence" displayName="coding Only" field="ensemblcoding" internalName="coding_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with  Intronic Sequence" displayName="Intronic only" field="ensemblintronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with  5&quot; Sequence" displayName="5&quot; UTR only" field="ensembl5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 3&quot; UTR Sequence" displayName="3&quot; UTR Only" field="ensembl3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 5&quot; Upstream Sequence" displayName="5&quot; Upstream Only" field="ensembl5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 3&quot; Downstream Sequence" displayName="3&quot; Downstream Only" field="ensembl3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
-              </PushOptions>
-              <PushOptions internalName="snp_effect_filter_push" ref="snp_effect_filter">
+              </PushAction>
+              <PushAction internalName="snp_effect_filter_push" ref="snp_effect_filter">
                 <Option description="Filter only Synonymous SNPs" displayName="Synonymous SNPs" field="ensemblsyn_exclusive" internalName="synonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
                 <Option description="Filter only Non-synonymous SNPs" displayName="Non-synonymous SNPs" field="ensemblnonsyn_exclusive" internalName="nonsynonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
                 <Option description="Filter only for Stop SNPs" displayName="Stop SNPs" field="ensemblstop_exclusive" internalName="stop_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
-              </PushOptions>
+              </PushAction>
             </Option>
             <Option description="Filter for Vega Gene Related Snp Filters" displayName="Vega Genes" internalName="vega_gene" isSelectable="true">
-              <PushOptions internalName="gene_association_filter_push" ref="gene_association_filter">
+              <PushAction internalName="gene_association_filter_push" ref="gene_association_filter">
                 <Option description="Snps associated with Coding Sequence" displayName="coding Only" field="vegacoding" internalName="coding_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with  Intronic Sequence" displayName="Intronic only" field="vegaintronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with  5&quot; Sequence" displayName="5&quot; UTR only" field="vega5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 3&quot; UTR Sequence" displayName="3&quot; UTR Only" field="vega3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 5&quot; Upstream Sequence" displayName="5&quot; Upstream Only" field="vega5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
                 <Option description="Snps associated with 3&quot; Downstream Sequence" displayName="3&quot; Downstream Only" field="vega3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean"/>
-              </PushOptions>
-              <PushOptions internalName="snp_effect_filter_push" ref="snp_effect_filter">
+              </PushAction>
+              <PushAction internalName="snp_effect_filter_push" ref="snp_effect_filter">
                 <Option description="Filter only Synonymous SNPs" displayName="Synonymous SNPs" field="vegasyn_exclusive" internalName="synonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
                 <Option description="Filter only Non-synonymous SNPs" displayName="Non-synonymous SNPs" field="veganonsyn_exclusive" internalName="nonsynonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
                 <Option description="Filter only for Stop SNPs" displayName="Stop SNPs" field="vegastop_exclusive" internalName="stop_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="snp_main" type="boolean_num"/>
-              </PushOptions>
+              </PushAction>
             </Option>
           </FilterDescription>
         </FilterCollection>
