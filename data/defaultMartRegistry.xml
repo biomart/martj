@@ -10,7 +10,6 @@
                     instanceName = "central_registry"
                     user         = "anonymous"
                     password     = ""
-                    visible      ="1"
 />
 
 </MartRegistry>
