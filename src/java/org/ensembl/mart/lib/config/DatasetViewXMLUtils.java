@@ -184,43 +184,7 @@ public class DatasetViewXMLUtils {
 
     DatasetView d = new DatasetView(intName, dispname, desc);
 
-    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
-      Element option = (Element) iter.next();
-      d.addOption(getOption(option));
-    }
-
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(DEFAULTFILTER)); iter.hasNext();) {
-      Element element = (Element) iter.next();
-      d.addDefaultFilter(getDefaultFilter(element));
-    }
-
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(STARBASE)); iter.hasNext();) {
-      Element element = (Element) iter.next();
-      d.addStarBase(element.getTextNormalize());
-    }
-
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(PRIMARYKEY)); iter.hasNext();) {
-      Element element = (Element) iter.next();
-      d.addPrimaryKey(element.getTextNormalize());
-    }
-
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERPAGE)); iter.hasNext();) {
-      Element element = (Element) iter.next();
-      d.addFilterPage(getFilterPage(element));
-    }
-
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEPAGE)); iter.hasNext();) {
-      Element element = (Element) iter.next();
-      d.addAttributePage(getAttributePage(element));
-    }
-
-    // we need to manually set the "parent" references on these options
-    // so they are availbe for future use.
-    List fds = d.getAllFilterDescriptions();
-    for (Iterator iter = fds.iterator(); iter.hasNext();) {
-      FilterDescription fd = (FilterDescription) iter.next();
-      fd.setParentsForAllPushOptionOptions(d);
-    }
+    LoadDatasetViewWithDocument(d, doc);
 
     if (digest != null)
       if (digestAlgorithm == null)
@@ -231,6 +195,64 @@ public class DatasetViewXMLUtils {
     return d;    
   }
 
+  /**
+   * Takes a reference to a DatasetView, and a JDOM Document, and parses the JDOM document to add all of the information
+   * from the XML for a particular DatasetView object into the existing DatasetView reference passed into the method.
+   * @param dsv -- DatasetView reference to be updated
+   * @param doc -- Document containing DatasetView.dtd compliant XML for dsv
+   * @throws ConfigurationException when the internalName returned by the JDOM Document does not match
+   *         that of the dsv reference, and for any other underlying Exception
+   */
+  public static void LoadDatasetViewWithDocument(DatasetView dsv, Document doc) throws ConfigurationException {
+    Element thisElement = doc.getRootElement();
+    String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+    String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+    String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+    
+    // a DatasetView object must have been constructed with an internalName, displayName and descripton
+    // test that the internalNames match , throw an exception if they are not
+    if (!intName.equals(dsv.getInternalName()))
+      throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
+    
+    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
+      Element option = (Element) iter.next();
+      dsv.addOption(getOption(option));
+    }
+
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(DEFAULTFILTER)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      dsv.addDefaultFilter(getDefaultFilter(element));
+    }
+
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(STARBASE)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      dsv.addStarBase(element.getTextNormalize());
+    }
+
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(PRIMARYKEY)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      dsv.addPrimaryKey(element.getTextNormalize());
+    }
+
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERPAGE)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      dsv.addFilterPage(getFilterPage(element));
+    }
+
+    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEPAGE)); iter.hasNext();) {
+      Element element = (Element) iter.next();
+      dsv.addAttributePage(getAttributePage(element));
+    }
+
+    // we need to manually set the "parent" references on these options
+    // so they are availbe for future use.
+    List fds = dsv.getAllFilterDescriptions();
+    for (Iterator iter = fds.iterator(); iter.hasNext();) {
+      FilterDescription fd = (FilterDescription) iter.next();
+      fd.setParentsForAllPushOptionOptions(dsv);
+    }
+  }
+  
 	private static DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
 		FilterDescription desc = getFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
 		String value = thisElement.getAttributeValue(VALUE);
