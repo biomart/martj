@@ -350,7 +350,7 @@ public class AttributePage extends BaseConfigurationObject {
 		int tmp = super.hashCode();
 
 		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
-			Object element = (AttributeGroup) iter.next();
+			Object element = iter.next();
 			if (element instanceof AttributeGroup)
 				tmp = (31 * tmp) + ((AttributeGroup) element).hashCode();
 			else
