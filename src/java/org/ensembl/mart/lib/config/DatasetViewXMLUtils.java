@@ -150,8 +150,7 @@ public class DatasetViewXMLUtils {
   public static Document XMLStreamToDocument(InputStream xmlinput, boolean validate) throws ConfigurationException {
     try {
       SAXBuilder builder = new SAXBuilder();
-      builder.setValidation(true); // validate against the DTD
-      // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
+      // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the Classpath.
       builder.setEntityResolver(new MartDTDEntityResolver());
       builder.setValidation(validate);
       
