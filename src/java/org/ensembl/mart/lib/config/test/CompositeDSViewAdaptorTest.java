@@ -18,20 +18,22 @@
 
 package org.ensembl.mart.lib.config.test;
 
-import junit.framework.TestCase;
-
+import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
  * Tests CompositeDSViewAdaptor.
  */
-public class CompositeDSViewAdaptorTest extends TestCase {
+public class CompositeDSViewAdaptorTest extends Base {
 
 
   public void testAll() throws Exception {
-  
+    setUp();
+    
     CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
   
     assertTrue( adaptor.getDatasetDisplayNames().length==0 );
@@ -54,7 +56,35 @@ public class CompositeDSViewAdaptorTest extends TestCase {
     adaptor.clear();
     assertTrue( adaptor.getDatasetDisplayNames().length==0 );
     assertTrue( adaptor.getDatasetViews().length==0 );
-      
+
+    // this falls over if _meta_DatasetView_DatabaseDSViewAdaptorTest.USER doesnt exist
+    DatabaseDSViewAdaptor dbAdaptor = DatabaseDSViewAdaptorTest.getSampleDatasetViewAdaptor(martJDataSource);
+    
+    // make sure testDataset.xml is stored in the table, then update it
+    DatabaseDSViewAdaptor.storeDatasetView(martJDataSource, DatabaseDSViewAdaptorTest.USER, DatasetViewXMLUtilsTest.TestDatasetViewInstance(false), true);
+    dbAdaptor.update();
+    
+    adaptor.add( dbAdaptor );
+    assertTrue( adaptor.getDatasetViews().length==1 );
+    assertTrue( adaptor.getDatasetDisplayNames().length==1 );
+    
+    view = adaptor.getDatasetViews()[0];
+    assertNotNull( view );
+    assertTrue( view.getAllFilterDescriptions().size()>0 );
+    
+    //clean up the _meta_DatasetView table
+    String metatable = DatabaseDatasetViewUtils.getDSViewTableFor(martJDataSource, DatabaseDSViewAdaptorTest.USER);
+    DatabaseDatasetViewUtils.DeleteOldDSViewEntriesFor(martJDataSource, metatable, view.getInternalName(), view.getDisplayName());
+    
+    assertTrue( adaptor.remove( dbAdaptor ));
+    assertTrue( adaptor.getDatasetDisplayNames().length==0 );
+    assertTrue( adaptor.getDatasetViews().length==0 );
+    
+    adaptor.add( urlAdaptor );
+    adaptor.add( dbAdaptor );
+    adaptor.clear();
+    assertTrue( adaptor.getDatasetDisplayNames().length==0 );
+    assertTrue( adaptor.getDatasetViews().length==0 );                  
   }
 
 	/**
