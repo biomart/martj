@@ -47,6 +47,44 @@ public class TextFilterWidget
   private JTextField textField;
   private BasicFilter filter;
 
+
+	/**
+	   * NullableFilter that has contains a tree node.
+	   */
+	private class InputPageAwareBasicFilter
+		extends BasicFilter
+		implements InputPageAware {
+		private InputPage inputPage;
+
+		public InputPageAwareBasicFilter(
+			String field,
+			String condition,
+			String value,
+			InputPage inputPage) {
+
+			super(field, condition, value);
+			this.inputPage = inputPage;
+
+		}
+
+		public InputPageAwareBasicFilter(
+			String field,
+			String tableConstraint,
+			String condition,
+			String value,
+			InputPage inputPage) {
+
+			super(field, tableConstraint, condition, value);
+			this.inputPage = inputPage;
+
+		}
+
+		public InputPage getInputPage() {
+			return inputPage;
+		}
+	}
+
+
   /**
    * @param query
    * @param filterDescription
@@ -87,11 +125,12 @@ public class TextFilterWidget
     // Add / change filter
     BasicFilter old = filter;
     setFilter(
-      new BasicFilter(
+      new InputPageAwareBasicFilter(
         filterDescription.getFieldName(),
         filterDescription.getTableConstraint(),
         filterDescription.getQualifier(),
-        value));
+        value,
+        this ));
 
     updateQueryFilters( old, filter );
 

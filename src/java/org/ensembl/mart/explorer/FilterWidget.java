@@ -20,7 +20,6 @@ package org.ensembl.mart.explorer;
 
 import java.beans.PropertyChangeListener;
 
-import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.UIFilterDescription;

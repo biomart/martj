@@ -34,7 +34,7 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
  * A boolean filter widget has a description and three radio buttons;
- * "require", "ignore", "irrelevant". If the state of these buttons is 
+ * "require", "ignore", "irrelevant". The state of these buttons is 
  * synchronised with that of the query.
  */
 public class BooleanFilterWidget extends FilterWidget 
@@ -47,8 +47,35 @@ implements PropertyChangeListener , ActionListener{
   private Object currentButton = null;
   
   private NullableFilter filter;
-  private String type;
+  private String requireCondition;
+  private String excludeCondition;
   
+
+  /**
+   * NullableFilter that has contains an InputPage, this page is used by the QueryEditor
+   * when it detects the filter has been added or removed from the query.
+   */
+  private class InputPageAwareNullableFilter extends NullableFilter implements InputPageAware {
+    private InputPage inputPage;
+
+		public InputPageAwareNullableFilter(String field, String condition, InputPage inputPage) {
+			super(field, condition);
+			this.inputPage = inputPage;
+		}
+
+		public InputPageAwareNullableFilter(
+			String field,
+			String tableConstraint,
+			String condition,
+      InputPage inputPage) {
+			super(field, tableConstraint, condition);
+			this.inputPage = inputPage;
+		}
+
+    public InputPage getInputPage() {
+      return inputPage;
+    }
+  }
 
   /**
    * @param query
@@ -57,7 +84,15 @@ implements PropertyChangeListener , ActionListener{
   public BooleanFilterWidget(Query query, UIFilterDescription filterDescription) {
     super(query, filterDescription);
     
-    this.type = filterDescription.getType().intern();
+    
+    if ( "boolean".equals( filterDescription.getType() ) ) {
+      requireCondition = NullableFilter.isNotNULL;
+      excludeCondition = NullableFilter.isNULL;
+    } else {
+      requireCondition = NullableFilter.isNotNULL_NUM;
+      excludeCondition = NullableFilter.isNULL_NUM;
+    }
+    
     irrelevant.setSelected( true );
     currentButton = irrelevant;
     
@@ -80,6 +115,7 @@ implements PropertyChangeListener , ActionListener{
     add( panel );
   }
 
+
   /**
    * Respond to a change in the query if necessary.
    * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
@@ -92,61 +128,38 @@ implements PropertyChangeListener , ActionListener{
   /* (non-Javadoc)
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
    */
-  public void actionPerformed(ActionEvent evt) {
-    
-    // user clicked currently selected button
-    if ( evt.getSource()==currentButton ) return;
-    
-    currentButton = evt.getSource();
-    
-    System.out.println( "action " + evt.getSource());
-    
-    if ( currentButton==require ) addRequireFilter();
-    else if ( currentButton==exclude ) addExcludeFilter();
-    else removeFilter();
-    
-  }
+	public void actionPerformed(ActionEvent evt) {
 
-  /**
-   * 
-   */
-  private void removeFilter() {
-    // TODO Auto-generated method stub
-    
-  }
+		// user clicked currently selected button
+		if (evt.getSource() == currentButton)
+			return;
 
-  /**
-   * 
-   */
-  private void addExcludeFilter() {
-    String condition =
-      (type == "boolean") ? NullableFilter.isNULL : NullableFilter.isNULL_NUM;
-    
-    // TODO refactor the first and last line into the propertyChange block.
-    NullableFilter oldFilter = filter;
-    setFilter(
-      new NullableFilter(
-        filterDescription.getFieldName(),
-        filterDescription.getTableConstraint(),
-        condition));
-    updateQueryFilters( oldFilter, filter );
-  }
+		currentButton = evt.getSource();
 
-  /**
-   * @param filter
-   */
-  private void setFilter(NullableFilter filter) {
-    // TODO Auto-generated method stub
-    this.filter = filter;
-    
-  }
+		NullableFilter oldFilter = filter;
 
-  /**
-   * 
-   */
-  private void addRequireFilter() {
-    // TODO Auto-generated method stub
-    
-  }
+		if (currentButton == require) resetFilter( requireCondition );
+    else if (currentButton == exclude) resetFilter( excludeCondition );
+    else filter = null;
+
+		updateQueryFilters(oldFilter, filter);
+	}
+
+	/**
+	 * @param filter
+	 */
+	private void resetFilter(String condition) {
+
+		this.filter =
+			new InputPageAwareNullableFilter(
+				filterDescription.getFieldName(),
+				filterDescription.getTableConstraint(),
+				condition,
+        this );
+
+		setNodeLabel(
+			null,
+			filterDescription.getFieldName() + filter.getRightHandClause());
+	}
 
 }

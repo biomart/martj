@@ -45,6 +45,31 @@ public class AttributeDescriptionWidget
 	private Attribute attribute;
 	private JCheckBox button;
 
+
+  /**
+   * NullableFilter that has contains an InputPage, this page is used by the QueryEditor
+   * when it detects the filter has been added or removed from the query.
+   */
+  private class InputPageAwareAttribute extends FieldAttribute implements InputPageAware {
+
+    private InputPage inputPage;
+
+		public InputPageAwareAttribute(String field, InputPage inputPage) {
+			super(field);
+      this.inputPage = inputPage;
+		}
+
+		public InputPageAwareAttribute(String field, String tableConstraint, InputPage inputPage) {
+			super(field, tableConstraint);
+      this.inputPage = inputPage;
+		}
+
+    
+    public InputPage getInputPage() {
+      return inputPage;
+    }
+  }
+
 	/**
 	 * @param query
 	 * @param name
@@ -59,9 +84,10 @@ public class AttributeDescriptionWidget
 		this.query = query;
 
 		attribute =
-			new FieldAttribute(
+			new InputPageAwareAttribute(
 				attributeDescription.getFieldName(),
-				attributeDescription.getTableConstraint());
+				attributeDescription.getTableConstraint(),
+        this);
     setField( attribute );
     
 		button = new JCheckBox(attributeDescription.getDisplayName());

@@ -42,8 +42,6 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import org.ensembl.mart.lib.Attribute;
-import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.Dataset;
@@ -260,19 +258,22 @@ public class QueryEditor
       if ("attribute".equals(propertyName)) {
 
         if (newValue != null && oldValue == null)
-          updateAttributeAdded((Attribute) newValue);
+        insertNode( attributesPage.getNode(), 
+            ((InputPageAware)newValue).getInputPage().getNode() );
+          
         else if (newValue == null && oldValue != null)
-          updateAttributeRemoved((Attribute) oldValue);
+          treeModel.removeNodeFromParent( ((InputPageAware)oldValue).getInputPage().getNode() );
+          
 
       } else if ("filter".equals(propertyName)) {
 
         if (newValue != null && oldValue == null)
-          updateFilterAdded((Filter) newValue);
+        insertNode( filtersPage.getNode(), ((InputPageAware)newValue).getInputPage().getNode() );
+          
+          
         else if (newValue == null && oldValue != null)
-          updateFilterRemoved((Filter) oldValue);
-        else if ( newValue!=null && oldValue!=null )
-          updateFilterChanged( (Filter)newValue, (Filter)oldValue );
-
+        treeModel.removeNodeFromParent( ((InputPageAware)oldValue).getInputPage().getNode() );
+          
       } else {
         logger.warning("Unrecognised propertyChange: " + propertyName);
       }
@@ -290,56 +291,6 @@ public class QueryEditor
 		}
 
 	}
-
-	/**
-   * @param filter
-   * @param filter2
-   */
-  private void updateFilterChanged(Filter filter, Filter filter2) {
-    // TODO Auto-generated method stub
-    
-  }
-
-  /**
-   * @param filter
-   */
-  private void updateFilterRemoved(Filter filter) {
-    treeModel.removeNodeFromParent( filtersPage.getInputPage( filter ).getNode() );
-    
-  }
-
-  /**
-   * @param filter
-   */
-  private void updateFilterAdded(Filter filter) {
-    
-    insertNode( filtersPage.getNode(), 
-    filtersPage.getInputPage( filter ).getNode() );
-  }
-
-  /**
-   * Remove the tree node representing the attribute
-	 * @param attribute that has been removed from Query.
-	 */
-  private void updateAttributeRemoved(Attribute attribute) {
-    
-    treeModel.removeNodeFromParent( attributesPage.getInputPage( attribute ).getNode() );
-  
-  }
-
-
-	/**
-	 * @param attribute that has been added to the Query.
-	 */
-  private void updateAttributeAdded(Attribute attribute) {
-
-    insertNode( attributesPage.getNode(), 
-    attributesPage.getInputPage( attribute ).getNode() );
-
-  }
-
-
-
 
   /**
    * Inserts child node under parent in tree and select it.
