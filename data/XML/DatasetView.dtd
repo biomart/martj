@@ -5,13 +5,13 @@
 >
 
                    
-<!ELEMENT DatasetView (Option*, DefaultFilter*, StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
+<!ELEMENT DatasetView (Option*, DefaultFilter*, MainTable+, Key+, FilterPage+, AttributePage+)>
 <!ATTLIST DatasetView %desc_data;
                       dataset CDATA #REQUIRED>
 
-<!ELEMENT StarBase (#PCDATA)>
+<!ELEMENT MainTable (#PCDATA)>
 
-<!ELEMENT PrimaryKey (#PCDATA)>
+<!ELEMENT Key (#PCDATA)>
 
 <!ELEMENT FilterPage (FilterGroup|DSFilterGroup|DSFilterGroup|FilterGroup)+>
 <!ATTLIST FilterPage %desc_data;>
@@ -35,6 +35,7 @@
                    qualifier      CDATA #IMPLIED
                    legal_qualifiers          CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED
+                   key                CDATA #IMPLIED
                    handler            CDATA #IMPLIED>
 
 <!ELEMENT Enable EMPTY>
@@ -64,7 +65,8 @@
 <!ATTLIST AttributeDescription
                     %desc_data;
                     field          CDATA #REQUIRED
-                    tableConstraint  CDATA #IMPLIED
+                    tableConstraint  CDATA #REQUIRED
+                    key              CDATA #REQUIRED
                     maxLength         NMTOKEN #IMPLIED
                     source                CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
@@ -81,6 +83,7 @@
                  qualifier CDATA #IMPLIED
                  legal_qualifiers     CDATA #IMPLIED
                  tableConstraint    CDATA #IMPLIED
+                 key                CDATA #IMPLIED
                  handler        CDATA #IMPLIED>
 
 <!ELEMENT PushAction (Option)+>
