@@ -677,8 +677,6 @@ public class MartExplorer
 
     QueryEditor qe = getSelectedQueryEditor();
     
-    System.out.println("now seq desc "+qe.getQuery().getSequenceDescription());
-    
     if (qe != null) {
       if (qe.isRunning()) {
       
