@@ -117,20 +117,30 @@ public class DatabaseUtil {
 
 	private static Logger logger = Logger.getLogger(DatabaseUtil.class.getName());
 
+  /**
+   * Convenience method which calls createDataSource(DEFAULTDATABASETYPE, host, DEFAULTPORT, database, user, password, DEFAULTPOOLSIZE, DEFAULTDRIVER);
+   * @param host host name e.g. ensembldb.ensembl.org
+   * @param database name of database on database server  
+   * @param user username
+   * @param password password, can be null
+   * @return connection pool capable datasource
+   * @throws ConfigurationException thrown if a problem occurs creating the datasource
+   */
+  public static DataSource createDataSource(String host, String database, String user, String password) throws ConfigurationException {
+    return createDataSource(DEFAULTDATABASETYPE, host, DEFAULTPORT, database, user, password, DEFAULTPOOLSIZE, DEFAULTDRIVER);
+  }
+  
 	/**
 	 * Convenience method which constructs a connection URL and calls createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName).
 	 * @see #createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName)
-	 * @param dbType database type.
+	 * @param dbType database type e.g. mysql.
 	 * @param host host name e.g. ensembldb.ensembl.org
-	 * @param port port number. e.g. 3306.  NO DEFAULT IS SET, so that underlying JDBC driver can manage a null port
+	 * @param port port number. e.g. 3306.
 	 * @param database name of database on database server  
 	 * @param user username
 	 * @param password password, can be null
 	 * @param maxPoolSize maximum poolsize.
 	 * @param jdbcDriverClassName name of jdbc driver to back the datasource.
-   * 
-   * If both dbType and jdbcDriverClassName are null, these default to DEFAULTDATABASETYPE and DEFAULTDRIVER, respectively.
-   * 
 	 * @return connection pool capable datasource
 	 * @throws ConfigurationException thrown if a problem occurs creating the datasource
 	 */
@@ -144,11 +154,6 @@ public class DatabaseUtil {
 		int maxPoolSize,
 		String jdbcDriverClassName)
 		throws ConfigurationException {
-
-    if (dbType == null && jdbcDriverClassName == null) {
-      dbType = DEFAULTDATABASETYPE;
-      jdbcDriverClassName = DEFAULTDRIVER;
-    }    
       
 		StringBuffer connString = new StringBuffer();
 		connString.append("jdbc:").append(dbType).append("://");
