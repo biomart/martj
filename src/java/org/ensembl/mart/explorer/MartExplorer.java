@@ -254,7 +254,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private Action executeAction =
     new AbstractAction("Execute Query", createImageIcon("run.gif")) {
     public void actionPerformed(ActionEvent event) {
-      doPreconfig();
+      doPreview();
     }
   };
 
@@ -504,7 +504,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   /**
    * 
    */
-  protected void doPreconfig() {
+  protected void doPreview() {
     if (isQueryEditorSelected())
       getSelectedQueryEditor().doPreview();
   }
