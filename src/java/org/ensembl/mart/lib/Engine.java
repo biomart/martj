@@ -88,16 +88,19 @@ public class Engine {
     Filter[] filters = query.getFilters();
     for (int i = 0, n = filters.length; i < n; i++) {
       Filter filter = filters[i];
-      //if (filter.getHandler() != null) {
-        //String handler = filter.getHandler();
-        //if (!needsHandler.containsKey(handler))
-          //needsHandler.put(handler, new ArrayList());
+      if (filter instanceof IDListFilter) {
+        IDListFilter idfilter = (IDListFilter) filter;
+        if (idfilter.getHandler() != null) {
+          String handler = idfilter.getHandler();
+          if (!needsHandler.containsKey(handler))
+            needsHandler.put(handler, new ArrayList());
 
-        //List unhandledFilters = (ArrayList) needsHandler.get(handler);
-        //if (!unhandledFilters.contains(filter))
-          //unhandledFilters.add(filter);
-        //needsHandler.put(handler, unhandledFilters);
-      //}
+          List unhandledFilters = (ArrayList) needsHandler.get(handler);
+          if (!unhandledFilters.contains(filter))
+            unhandledFilters.add(filter);
+          needsHandler.put(handler, unhandledFilters);
+        } 
+      }
     }
 
     for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
@@ -232,18 +235,22 @@ public class Engine {
     Hashtable needsHandler = new Hashtable();
 
     Filter[] filters = query.getFilters();
+    
     for (int i = 0, n = filters.length; i < n; i++) {
       Filter filter = filters[i];
-      //if (filter.getHandler() != null) {
-        //String handler = filter.getHandler();
-        //if (!needsHandler.containsKey(handler))
-          //needsHandler.put(handler, new ArrayList());
-
-        //List unhandledFilters = (ArrayList) needsHandler.get(handler);
-        //if (!unhandledFilters.contains(filter))
-          //unhandledFilters.add(filter);
-        //needsHandler.put(handler, unhandledFilters);
-      //}
+      if (filter instanceof IDListFilter) {
+        IDListFilter idfilter = (IDListFilter) filter;
+        if (idfilter.getHandler() != null) {
+          String handler = idfilter.getHandler();
+          if (!needsHandler.containsKey(handler))
+            needsHandler.put(handler, new ArrayList());
+          
+          List unhandledFilters = (ArrayList) needsHandler.get(handler);
+          if (!unhandledFilters.contains(filter))
+            unhandledFilters.add(filter);
+          needsHandler.put(handler, unhandledFilters);
+        } 
+      }
     }
 
     for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {

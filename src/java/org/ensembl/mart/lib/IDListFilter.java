@@ -19,12 +19,19 @@
  */
 
 package org.ensembl.mart.lib;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * IDListFilter object for storing a list of IDs of a particular
@@ -52,6 +59,8 @@ public class IDListFilter implements Filter {
   public static final String URL = "org.ensembl.mart.lib.URLIDListFilterHandler";
   public static final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
 
+  private Logger logger = Logger.getLogger(IDListFilter.class.getName());
+  
   /**
    * Construct an IDListFilter object of a given field name on a String[] List of 
    * identifiers. This will not need further processing by an UnprocessedFilterHandler
@@ -133,10 +142,13 @@ public class IDListFilter implements Filter {
     this.url = null;
     this.subQuery = null;
 
-    //if (handler != null)
-      //this.handler = handler;
-    //else
-      //this.handler = FILE;
+    try {
+      HarvestStream( new InputStreamReader( new FileInputStream(file) ) );
+    } catch (FileNotFoundException e) {
+      if (logger.isLoggable(Level.WARNING)) {
+        logger.warning("Could not find file " + file + " no ids harvested\n");
+      }
+    }
 
     setHashCode();
   }
@@ -183,6 +195,18 @@ public class IDListFilter implements Filter {
     this.file = null;
     this.subQuery = null;
 
+    try {
+      HarvestStream( new InputStreamReader( url.openStream() ) );
+    } catch (FileNotFoundException e) {
+      if (logger.isLoggable(Level.WARNING)) {
+        logger.warning("Could not harvest URL " + url + " no ids harvested\n");
+      }
+    } catch (IOException e) {
+      if (logger.isLoggable(Level.WARNING)) {
+        logger.warning("Could not harvest URL " + url + " no ids harvested\n");
+      }
+    }
+    
     //if (handler != null)
       //this.handler = handler;
     //else
@@ -231,18 +255,44 @@ public class IDListFilter implements Filter {
     this.file = null;
     this.url = null;
 
-    //if (handler != null)
-      //this.handler = handler;
-    //else
-      //this.handler = SUBQUERY;
+    if (handler != null)
+      this.handler = handler;
+    else
+      this.handler = SUBQUERY;
     setHashCode();
   }
 
+  /**
+   * Harvests an InputStreamReader for IDS, one per line into a String[]
+   * 
+   * @param instream - InputStreamReader object with IDs, one per line.
+   * @return String[] list of IDs harvested from instream
+   * @throws InvalidQueryException for all underlying exceptions
+   */
+  private void HarvestStream(InputStreamReader instream) {
+    try {
+      BufferedReader in = new BufferedReader(instream);
+
+      for (String line = in.readLine(); line != null; line = in.readLine())
+        identifiers.add(line);
+      
+      in.close();
+    } catch (Exception e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning("Problem getting IDs from Stream: " + e.getMessage());
+    }
+
+    if (identifiers.size() < 1) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning("No IDS harvested from Stream\n");
+    }
+  }
+  
   private void setHashCode() {
     hashcode = (field == null) ? 0 : field.hashCode();
     hashcode = (tableConstraint != null) ? (31 * hashcode) + tableConstraint.hashCode() : hashcode;
 	  hashcode = (key != null) ? (31 * hashcode) + key.hashCode() : hashcode;
-    //hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
+    hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
     if (identifiers.size() > 0) {
       for (Iterator iter = identifiers.iterator(); iter.hasNext();) {
@@ -368,6 +418,9 @@ public class IDListFilter implements Filter {
   }
 
 
+  public String getHandler() {
+    return handler;
+  }
 
   /**
    * returns a description of the object useful for logging systems.
@@ -381,7 +434,7 @@ public class IDListFilter implements Filter {
     buf.append(" field=").append(field);
     buf.append(", tableConstraint=").append(tableConstraint);
     buf.append(", key=").append(key);
-    //buf.append(", handler=").append(handler);
+    buf.append(", handler=").append(handler);
     buf.append(", identifiers=").append(identifiers);
     buf.append(", File=").append(file);
     buf.append(", URL=").append(url);
@@ -409,7 +462,7 @@ public class IDListFilter implements Filter {
   private final String field;
   private final String tableConstraint;
   private final String key;
-  //private final String handler;
+  private String handler;
 
   private final Query subQuery; // for Query based Filter
   private final File file;
