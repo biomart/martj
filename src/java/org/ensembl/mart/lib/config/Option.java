@@ -591,6 +591,27 @@ public class Option extends QueryFilterSettings {
 		return null;
 	}
 
+  /**
+   * Get the displayName of an Option by a given field and tableConstraint.
+   * @param field -- field for Option for which displayName is desired
+   * @param tableConstraint -- tableConstraint for Option for which displayName is desired
+   * @return String displayName
+   */
+  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint) {
+    if (getAttribute(fieldKey) != null && getAttribute(fieldKey).equals(field) && getAttribute(tableConstraintKey) != null && getAttribute(tableConstraintKey).equals(tableConstraint))
+      return  attributes.getProperty(displayNameKey) ;
+    else {
+      for (int i = 0, n = pushActions.size(); i < n; i++) {
+        PushAction element = (PushAction) pushActions.get(i);
+        if (element.supports(field, tableConstraint)) {
+          return  attributes.getProperty(displayNameKey)  + "." + element.getOptionDisplayNameByFieldNameTableConstraint(field, tableConstraint);
+        }
+      }
+    }
+
+    return null;
+  }
+  
 	/**
 		* Debug output
 		*/

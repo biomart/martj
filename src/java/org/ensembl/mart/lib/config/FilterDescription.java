@@ -402,6 +402,26 @@ public class FilterDescription extends QueryFilterSettings {
 
 		return ret;
 	}
+  
+  /**
+   * Returns the displayName of the FilterDescription/Option that supports a given field and tableConstraint, which
+   * could be this particular FilterDescription, or a child Option (possibly occuring within a PushAction).
+   * @param field --  String field
+   * @param tableConstraint -- String table
+   * @return String displayName of supporting FilterDescription/Option
+   */
+  public String getDisplayNameByFieldNameTableConstraint(String field, String tableConstraint) {
+    String ret = null;
+
+    if (supports(field, tableConstraint)) {
+      if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint))
+        ret = getAttribute(displayNameKey);
+      else
+        ret = lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint);
+    }
+
+    return ret;
+  }
 
 	/**
 	 * Determine if this FilterDescription, or a child Option (possibly occuring within a PushAction)

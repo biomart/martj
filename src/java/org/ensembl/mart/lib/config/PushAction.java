@@ -242,6 +242,19 @@ public class PushAction extends BaseNamedConfigurationObject {
 			return null;
 	}
 
+  /**
+   * Get the displayName for an Option within the PushAction which supports a given field and tableConstraint.
+   * @param field -- field of the requested Option
+   * @param tableConstraint -- tableConstraint of the requestedOption
+   * @return String displayName of the Option supporting the field and tableConstraint, or null if none found
+   */
+  public String getOptionDisplayNameByFieldNameTableConstraint(String field, String tableConstraint) {
+    if (supports(field, tableConstraint))
+      return lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint);
+    else
+      return null;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
