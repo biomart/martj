@@ -30,6 +30,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.prefs.Preferences;
 
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.Transferable;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
@@ -60,7 +64,7 @@ import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
  * //@see org.ensembl.mart.config.DatasetConfig
  */
 
-public class MartEditor extends JFrame {
+public class MartEditor extends JFrame implements ClipboardOwner {
 
   private JDesktopPane desktop;
   static private final String newline = "\n";
@@ -89,6 +93,8 @@ public class MartEditor extends JFrame {
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
 
+  protected Clipboard clipboardEditor;
+
   public MartEditor() {
     super("Mart Editor (Development version)");
     JFrame.setDefaultLookAndFeelDecorated(true);
@@ -114,6 +120,9 @@ public class MartEditor extends JFrame {
 
     //Make dragging a little faster but perhaps uglier.
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
+    
+	clipboardEditor = new Clipboard("editor_clipboard");
+    
   }
 
   protected void addButtons(JToolBar toolBar) {
@@ -484,6 +493,10 @@ public class MartEditor extends JFrame {
 
   public File getFileChooserPath() {
     return file;
+  }
+
+  public void lostOwnership(Clipboard c, Transferable t) {
+
   }
 
   public static DetailedDataSource getDetailedDataSource() {

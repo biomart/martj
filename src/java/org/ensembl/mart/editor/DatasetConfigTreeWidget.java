@@ -46,6 +46,9 @@ import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.SimpleDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
+
+
+
 /**
  * DatasetConfigTreeWidget extends internal frame.
  *
@@ -64,6 +67,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
     private File file = null;
     private MartEditor editor;
 
+	
     public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
@@ -173,6 +177,10 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
     public DatasetConfig getDatasetConfig() {
         return datasetConfig;
     }
+    
+	public MartEditor getEditor() {
+		return editor;
+	}
 
     public void addAttributesTable(JTable table) {
         add(this.getContentPane(), new JScrollPane(table), constraints, 1, 0, 1, 1);

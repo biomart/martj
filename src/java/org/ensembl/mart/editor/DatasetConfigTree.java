@@ -22,7 +22,7 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.datatransfer.Clipboard;
+//import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -84,7 +84,7 @@ import org.ensembl.mart.lib.config.*;
  * //@see org.ensembl.mart.config.DatasetConfig
  */
 
-public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwner {
+public class DatasetConfigTree extends JTree implements Autoscroll {//, ClipboardOwner {
 
     public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
     protected Insets scrollInsets = defaultScrollInsets;
@@ -98,7 +98,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
     protected DatasetConfigTreeWidget frame;
     protected DatasetConfigAttributesTable attrTable = null;
     protected DatasetConfigAttributeTableModel attrTableModel = null;
-    protected Clipboard clipboard;
+    //protected Clipboard clipboard;
     protected boolean cut = false;
     protected int editingNodeIndex;
     protected File file = null;
@@ -121,7 +121,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
         setModel(treemodel);
         this.setSelectionInterval(0, 0);
         DatasetConfigTreeDnDListener dndListener = new DatasetConfigTreeDnDListener(this);
-        clipboard = new Clipboard("tree_clipboard");
+        //clipboard = new Clipboard("tree_clipboard");
 
     }
 
@@ -491,7 +491,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 					menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert push action", "automate push action", "delete", "save","save as"};            
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
-			menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert push action", "delete", "save","save as"};
+			menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert option", "insert push action", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","delete", "save","save as"};
 
@@ -539,7 +539,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Option"))
             copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
         DatasetConfigTreeNodeSelection ss = new DatasetConfigTreeNodeSelection(copiedNode);
-        clipboard.setContents(ss, this);
+        //clipboard.setContents(ss, this);
+        //try to set owner as the MartEditor object so can copy and paste between trees
+        frame.getEditor().clipboardEditor.setContents(ss,(ClipboardOwner) frame.getEditor());
     }
 
 	public void makeHidden() {
@@ -573,7 +575,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
     }
 
     public void paste() {
-        Transferable t = clipboard.getContents(this);
+        Transferable t = frame.getEditor().clipboardEditor.getContents(this);
         try {
 
             DatasetConfigTreeNode selnode = (DatasetConfigTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));
@@ -618,7 +620,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 
 	public void addPushAction()
 	    throws ConfigurationException, SQLException {
-		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");		
+		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");
+		String orderSQL = JOptionPane.showInputDialog("ORDER BY:");		
 		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
 	    //String[] filterTokens = filter2.split(":");
         //		FilterDescription fd2 = dsConfig.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
@@ -663,7 +666,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 			String opName = op.getInternalName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-			pa.addOptions(MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField,pushTableName,field,opName));
+			pa.addOptions(MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField,pushTableName,field,opName,orderSQL));
 			
 			if (pa.getOptions().length > 0){  
 			  Enumeration children = parentNode.children();
@@ -756,7 +759,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 		}
 	}
 
-    public void lostOwnership(Clipboard c, Transferable t) {
+    //public void lostOwnership(Clipboard c, Transferable t) {
 
-    }
+    //}
 }
