@@ -19,12 +19,29 @@ CACHE_DIR=${HOME}/.martshell_cachedir
 TMP_ROOT=`dirname $0`/..
 
 TMP_CLASSPATH=${TMP_ROOT}/build/classes 
-TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/mart-explorer.jar
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/build/mart-explorer.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/mysql-connector-java-3.0.7-stable-bin.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/log4j-1.2.6.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jython.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/java-getopt-1.0.9.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jdom.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/libreadline-java.jar
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ensj-util.jar
 
-LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${TMP_ROOT}/lib" java -Xmx200m -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
+TMP_LD_LIBPATH=${LD_LIBRARY_PATH}
+
+PLATFORM=`uname -ms`
+case "$PLATFORM" in
+[Ll]inux*)
+  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  ;;
+*alpha*)
+  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/alpha"
+  ;;
+*)
+  echo "warning, this platform is not known to be supported, using linux libraries\n"
+  TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  ;;
+esac
+
+LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -Xmx200m -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
