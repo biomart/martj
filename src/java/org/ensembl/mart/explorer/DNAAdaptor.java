@@ -56,7 +56,7 @@ public class DNAAdaptor {
 	 */
 	public void CacheSequence(String species, String chr, int start, int end) throws SequenceException {
 		// if first time called, or required DNA is not from same big seg get a new big seg
-	    if( (sql == null) || (lastChr != chr) || (start < cachedSeqStart) || (start > cachedSeqEnd) || (end > cachedSeqEnd)) {
+	    if( (sql == null) || (! lastChr.equals(chr)) || (start < cachedSeqStart) || (start > cachedSeqEnd) || (end > cachedSeqEnd)) {
 	    	cachedSeq = new StringBuffer();
 			  int tmp =  start - 1;
 			  // exact coord of a chunk start
@@ -69,6 +69,8 @@ public class DNAAdaptor {
 			    ps.setInt(2, end);
 			    ps.setString(3, chr);
 
+          //logger.info("SQL: "+sql+"\nparameter1="+cachedSeqStart+"\nparameter2="+end+"\nparameter3="+chr);
+          
 				  ResultSet rs = ps.executeQuery();
 				  while ( rs.next() ) {
 				     int nColumns = rs.getMetaData().getColumnCount();
