@@ -2981,6 +2981,13 @@ public class DatabaseDatasetConfigUtils {
     att.setDisplayName(columnName.replaceAll("_", " "));
     att.setKey(joinKey);
     att.setTableConstraint(tableName);
+    
+    if (maxSize > 255){
+    	System.out.println(columnName + "\t" + maxSize);
+    	maxSize = 255;
+    	
+    }
+    
     att.setMaxLength(String.valueOf(maxSize));
 
     return att;
