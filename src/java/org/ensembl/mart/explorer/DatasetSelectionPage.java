@@ -51,7 +51,7 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
    */
   public DatasetSelectionPage(Query query, MartConfiguration config) {
     
-    super("Dataset", query);
+    super(query, "Dataset");
     
     
     initPage( config );

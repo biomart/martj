@@ -41,7 +41,7 @@ public class AttributePageWidget extends PageWidget {
 	 */
 	public AttributePageWidget(Query query, String name, AttributePage page) {
 
-		super(name, query);
+		super(query, name);
 
 		this.page = page;
     

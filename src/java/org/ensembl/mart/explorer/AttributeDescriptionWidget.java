@@ -53,7 +53,7 @@ public class AttributeDescriptionWidget
 		final Query query,
 		UIAttributeDescription attributeDescription) {
 
-		super(attributeDescription.getDisplayName(), query);
+		super(query, attributeDescription.getDisplayName());
 
 		this.attributeDescription = attributeDescription;
 		this.query = query;

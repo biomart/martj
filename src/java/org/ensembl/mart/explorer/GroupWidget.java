@@ -33,7 +33,7 @@ public class GroupWidget extends InputPage {
    * @param query
    */
   public GroupWidget(String name, Query query) {
-    super(name, query);
+    super(query, name);
     // TODO Auto-generated constructor stub
   }
 

@@ -26,7 +26,7 @@ public class InputPage extends JPanel {
 
   protected List leafWidgets;  
 
-  public InputPage(String name, Query query) {
+  public InputPage(Query query, String name) {
     setName(name);
     this.query = query;
     setNodeLabel(name, null );

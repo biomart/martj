@@ -36,7 +36,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 	 * @param query
 	 */
 	public FilterPageSetWidget(Query query, Dataset dataset) {
-		super("Filters", query);
+		super(query, "Filters");
 
 
     

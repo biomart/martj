@@ -44,7 +44,7 @@ public class OutputSettingsPage extends InputPage implements ActionListener {
 	 *
 	 */
 	public OutputSettingsPage() {
-		super("Output", null);
+		super(null, "Output");
 
 		ButtonGroup group = new ButtonGroup();
 		tabulated = new JRadioButton("Tabulated Format");

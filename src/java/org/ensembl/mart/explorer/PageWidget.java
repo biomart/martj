@@ -22,9 +22,9 @@ public class PageWidget extends InputPage {
    * @param name
    * @param query
    */
-  public PageWidget(String name, Query query) {
+  public PageWidget(Query query, String name) {
     
-    super(name, query);
+    super(query, name);
     
     setBorder( BorderFactory.createEmptyBorder( 10, 5, 5, 5 ) );
     setBackground( Color.BLACK );

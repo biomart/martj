@@ -1,9 +1,13 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.DSFilterGroup;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 
 /**
@@ -24,8 +28,32 @@ public class FilterPageWidget extends PageWidget {
    * @param filterPage source object this instance represents
    */
   public FilterPageWidget(Query query, String name, FilterPage filterPage) {
-    super(name, query);
+    super(query, name);
     // TODO :1 create and filter group widgets. see AttributeFilterPage
+    
+    List filterGroups = filterPage.getFilterGroups();
+        for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
+          Object element = iter.next();
+          if ( element instanceof FilterGroup ) {
+            FilterGroup group = (FilterGroup)element;
+            String groupName = group.getDisplayName();
+    
+            FilterGroupWidget w = new FilterGroupWidget( query, groupName, group );
+            tabbedPane.add( groupName, w);  
+            leafWidgets.addAll( w.getLeafWidgets() );
+          }
+          else if ( element instanceof DSFilterGroup ) {
+            // TODO handle DSAttributeGroup
+            logger.warning( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
+            // create filterPage
+            // add pag as tab
+          }
+          else {
+            throw new RuntimeException( "Unrecognised type in filter group list: " 
+                                        + element);
+          }
+      
+        }
   }
 
   

@@ -29,8 +29,8 @@ public class PageSetWidget extends InputPage implements ChangeListener {
    * @param name Name of this widget
    * @param query model this leafWidgets listens to and manipulates
    */
-  public PageSetWidget(String name, Query query) {
-    super(name, query);
+  public PageSetWidget(Query query, String name) {
+    super(query, name);
     
     tabbedPane = new JTabbedPane();
     tabbedPane.setForeground( SELECTED_FOREGROUND );
@@ -104,7 +104,6 @@ public class PageSetWidget extends InputPage implements ChangeListener {
       Color background = UNSELECTED_BACKGROUND;
       
       if ( i==tabbedPane.getSelectedIndex() ) {
-        System.out.println("tab change to " + i);
         foreground = SELECTED_FOREGROUND;
         background = SELECTED_BACKGROUND;
       }
