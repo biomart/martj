@@ -323,7 +323,7 @@ public class QueryEditor
 			lastDatasetOption = (Option)newValue;
 
 			datasetChanged(  martConfiguration.getDatasetByName( lastDatasetOption.getRef() ) );
-      treeModel.nodeChanged( datasetSelectionPage.getNode() );
+      
 		}
 
 		if (evt.getSource() == query) {
@@ -387,6 +387,9 @@ public class QueryEditor
 	 * Update the model (query) and the view (tree and inputPanels).
 	 */
 	private void datasetChanged(Dataset dataset) {
+
+    treeModel.nodeChanged( datasetSelectionPage.getNode() );
+    System.out.println( datasetSelectionPage.getNode() );
 
 		// Basically we remove most things from the model and views before adding those things that should
 		// be present back in.

@@ -154,11 +154,11 @@ public class TreeFilterWidget extends FilterWidget {
     
     String name = (String)optionToName.get( option );
     selected.setText( name );
-    
+    setNodeLabel( null, name );
     Option old = this.option;
     this.option = option;
     changeSupport.firePropertyChange( getPropertyName(), old, option);
-    setNodeLabel( name, null );
+
   }
 
 	/**
