@@ -37,7 +37,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public final int DEFAULTMAXLENGTH = 10;
 
-  //private final String martResultSetKey = "martResultSetClassName";
+  private final String datasetLinkKey = "datasetLink";
   private final String fieldKey = "field";
   private final String tableConstraintKey = "tableConstraint";
   private final String keyKey = "key";
@@ -45,6 +45,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String homepageURLKey = "homepageURL";
   private final String linkoutURLKey = "linkoutURL";
   private final String maxLengthKey = "maxLength";
+  
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
@@ -67,7 +68,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     super();
     
     setAttribute(fieldKey, null);
-    //setAttribute(martResultSetKey, null);
+    setAttribute(datasetLinkKey, null);
     setAttribute(maxLengthKey, null);
     setAttribute(tableConstraintKey, null);
 	  setAttribute(keyKey, null);
@@ -86,7 +87,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -113,7 +114,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String description,
     String source,
     String homePageURL,
-    String linkoutURL)
+    String linkoutURL,
+    String datasetLink)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -128,6 +130,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(sourceKey, source);
     setAttribute(homepageURLKey, homePageURL);
     setAttribute(linkoutURLKey, linkoutURL);
+    setAttribute(datasetLinkKey, datasetLink);
   }
 
   /**
@@ -161,20 +164,20 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   }
 
   /**
-   * @param hidden - hidden flag
+   * @param String datasetLink
    */
-  //public void setHidden(String hidden) {
-//	setAttribute(hiddenKey, hidden);
-  //}
+  public void setDatasetLink(String datasetLink) {
+	setAttribute(datasetLinkKey, datasetLink);
+  }
 
   /**
-   * Returns the hidden flag.
+   * Returns the datasetLink.
    * 
-   * @return String hidden.
+   * @return String datasetLink.
    */
-  //public String getHidden() {
-//	return getAttribute(hiddenKey);
-  //}
+  	public String getDatasetLink() {
+		return getAttribute(datasetLinkKey);
+  	}
 
   /**
    * @param key - join field key for the field
