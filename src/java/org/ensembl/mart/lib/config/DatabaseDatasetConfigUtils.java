@@ -2932,14 +2932,20 @@ public class DatabaseDatasetConfigUtils {
 
               FilterDescription currFilt = null;
               if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName) != null)
-                currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
 
-              if (currFilt == null)
+              	System.out.println("cname "+ cname+ " tableName " + tableName);
+              	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName);
+
+              if (currFilt == null) {
                 fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
-
+System.out.println("Going to null ");
+              }
               else { // update options if has any
-                if (currFilt.hasOptions())
-                  updateDropDown(dsv, currFilt);
+
+              	// awaiting proper fix
+              	//                if (currFilt.hasOptions())
+                	if(false)
+                  updateDropDown(dsv, currFilt); 
               }
 
             } else { // is a main table bool filter
@@ -3077,12 +3083,21 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException, SQLException {
 
     Option[] ops = fd1.getOptions();
+    
+    System.out.println("options size " + ops.length);
+    
     if (ops[0].getTableConstraint() != null)
       return;
     // drop down lists of options shouldn't be updated
 
     PushAction[] pas = ops[0].getPushActions();
+
+    
+    System.out.println ("Push size "+ pas.length);
     Option[] paOps = pas[0].getOptions();
+    
+    
+    
     PushAction[] pas2 = paOps[0].getPushActions();
 
     for (int i = 0; i < ops.length; i++) {
