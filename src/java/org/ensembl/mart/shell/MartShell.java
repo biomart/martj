@@ -313,7 +313,7 @@ public class MartShell {
 				if (mainBatchFile != null) {
 					try {
 						ms.setBatchOutputFile(mainBatchFile);
-					} catch (FileNotFoundException e) {
+					} catch (Exception e) {
 						validQuery = false;
 					}
 				}
@@ -462,7 +462,7 @@ public class MartShell {
 	 * It Returns true if the commands were executed successfully.  If there is an error,
 	 * it sets the BatchError message, and returns false.
 	 *  
-	 * @param batchScriptFile
+	 * @param batchScriptFile - String path to file to be loaded and evaluated
 	 * @return boolean true if all commands are executed successfully, false if not.
 	 */
 	public boolean RunBatchScript(String batchScriptFile) {
@@ -486,6 +486,16 @@ public class MartShell {
 		return valid;
 	}
 
+  /**
+   * Method for running a single command non-interactively.  This will
+   * attempt to parse/run the entire queryString provided.  It returns
+   * true if the command was executed successfully, false if exceptions
+   * occur (including connection exceptions, IO Exceptions, etc.).  When
+   * Exceptions occur, the message is stored in the BatchError message.
+   * 
+   * @param querystring - String Mart Query Languate String to be evaluated
+   * @return boolean true if querystring is executed successfully, false if not.
+   */
 	public boolean RunBatch(String querystring) {
 		historyOn = false;
 		completionOn = false;
@@ -523,51 +533,113 @@ public class MartShell {
 		return validQuery;
 	}
 
+  /**
+   * Method allowing client scripts to specifically turn off command completion
+   *
+   */
 	public void UnsetCommandCompletion() {
 		completionOn = false;
 	}
 
+  /**
+   * Method allowing client scripts to specify an alternate MartConfiguration.xml
+   * document to use in place of that provided by the Mart database.
+   * 
+   * @param confFile - String path to alternate MartConfiguration.xml file
+   */
 	public void setAlternateMartConfiguration(String confFile) {
 		altConfigurationFile = confFile;
 	}
 
+  /**
+   * Set the Database Host name of the RDBMS.
+   * 
+   * @param dbhost - String host name of the RDBMS.
+   */
 	public void setDBHost(String dbhost) {
 		this.martHost = dbhost;
 	}
 
+  /**
+   * Set the port for the RDBMS.
+   * 
+   * @param dbport - String Port that the RDBMS is running on
+   */
 	public void setDBPort(String dbport) {
 		this.martPort = dbport;
 	}
 
+  /**
+   * Set the username to use to connect to the specified RDBMS.
+   * 
+   * @param dbuser - String user name for RDBMS connection
+   */
 	public void setDBUser(String dbuser) {
 		this.martUser = dbuser;
 	}
 
+  /**
+   * Set the password to use to connect to the specified RDBMS.
+   * 
+   * @param dbpass - String password for RDBMS connection.
+   */
 	public void setDBPass(String dbpass) {
 		martPass = dbpass;
 	}
 
+  /**
+   * Set the name of the mart database to query.
+   * 
+   * @param db - String name of the mart database
+   */
 	public void setDBDatabase(String db) {
 		martDatabase = db;
 	}
 
-	public void setBatchOutputFile(String batchFile) throws FileNotFoundException {
+  /**
+   * Set the name of a file to output a batch Mart Query command using the -e flag
+   * 
+   * @param batchFile - String path to output file.
+   * @throws IOException when the specified file cannot be created.
+   */
+	public void setBatchOutputFile(String batchFileName) throws IOException {
 		try {
+			File batchFile = new File( batchFileName );
+			if (! batchFile.exists())
+			  batchFile.createNewFile();
+			  
 			sessionOutputFile = new FileOutputStream(batchFile);
 		} catch (FileNotFoundException e) {
-			setBatchError("Could not open file " + batchFile + "\n" + e.getMessage());
+			setBatchError("Could not open file " + batchFileName + "\n" + e.getMessage());
 			throw e;
 		}
 	}
 
+  /**
+   * Set the format for output of a batch Mart Query command using the -e flag
+   * 
+   * @param outputFormat - String format, must be either tabulated or fasta, or an exception will be thrown when the query executes.
+   */
 	public void setBatchOutputFormat(String outputFormat) {
 		this.sessionOutputFormat = outputFormat;
 	}
 
+  /**
+   * Set the output separator for tabulated output of a batch Mart Query command
+   * using the -e flag.
+   * 
+   * @param outputSeparator - String field separator (defaults to tab separated if none specified)
+   */
 	public void setBatchOutputSeparator(String outputSeparator) {
 		this.sessionOutputSeparator = outputSeparator;
 	}
 
+  /**
+   * Get any error message, if the runBatch or runBatchScript command returns
+   * false.
+   * 
+   * @return String error message
+   */
 	public String getBatchError() {
 		return batchErrorMessage;
 	}
@@ -600,7 +672,7 @@ public class MartShell {
 			sessionOutputFile.close();
 		
 		// if history and completion are on, save the history file
-		if (historyOn && completionOn)
+		if (readlineLoaded && historyOn)
 		  Readline.writeHistoryFile( history_file );
 
 		System.exit(0);
