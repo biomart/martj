@@ -20,12 +20,9 @@ package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ContainerAdapter;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
@@ -34,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -198,8 +194,11 @@ public class QueryEditor
 	 */
 	private void addDatasetSelectionPage() {
 
+    // pass null instead of query because we
+    // don't want this widget to interact with 
+    // the query
 		datasetSelectionPage =
-			new TreeFilterWidget(query, martConfiguration.getLayout());
+			new TreeFilterWidget(null, martConfiguration.getLayout());
 
 		lastDatasetOption = datasetSelectionPage.getOption();
 

@@ -41,10 +41,8 @@ import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
- * Represents a set of user selectable options arranged as a tree.
- * Components consists of a label, text area and button. The text area
- * contains the current selection and the tree causes the option
- * tree to be displayed.
+ * Represents a set of user options as a tree.
+ * Component consists of a label, text area and button. 
  */
 public class TreeFilterWidget extends FilterWidget {
 
@@ -76,10 +74,10 @@ public class TreeFilterWidget extends FilterWidget {
 		Box box = Box.createHorizontalBox();
 		box.add(menu);
 		box.add(label);
-		box.add(Box.createHorizontalStrut(5));
+    box.add(Box.createHorizontalStrut(5));
+    box.add(button);		box.add(Box.createHorizontalStrut(5));
 		box.add(selected);
-		box.add(Box.createHorizontalStrut(5));
-		box.add(button);
+
 
 		setLayout(new BorderLayout());
 		add(box, BorderLayout.NORTH);
