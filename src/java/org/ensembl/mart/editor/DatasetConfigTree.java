@@ -670,7 +670,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 	public void addPushAction()
 	    throws ConfigurationException, SQLException {
 		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");
-		String orderSQL = JOptionPane.showInputDialog("ORDER BY:");		
+		String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");		
 		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
 	    //String[] filterTokens = filter2.split(":");
         //		FilterDescription fd2 = dsConfig.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
