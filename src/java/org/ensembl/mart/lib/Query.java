@@ -16,6 +16,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA 
  */
 
+//TODO: Either needs to have a DatasetConfig associated with it, or a dataset and internalName, before being sent to QueryToMQL
 package org.ensembl.mart.lib;
 
 import java.util.ArrayList;
