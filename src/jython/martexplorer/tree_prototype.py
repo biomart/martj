@@ -1,3 +1,5 @@
+
+
 # Jython prototype of a "tree" based mart-explorer graphical user
 # interface.
 
@@ -19,6 +21,10 @@
 # TODO support removing filter and attribute items from
 # quesry. "Delete" and or right click/delete.
 
+# try this tip to get compilation / jars working
+#http://lists.free.net.ph/pipermail/python/2002-April/000220.html
+
+import pawt.swing.JPanel
 from pawt.swing import *
 from pawt.swing.tree import *
 from org.ensembl.mart.explorer.gui import *
@@ -26,6 +32,46 @@ from java.lang import *
 from javax.swing.event import *
 from java.awt import *
 
+
+class Dummy(QueryInputPage, JPanel):
+    def __init__(self, message):
+        self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
+
+    def updateQuery(self, query):
+        pass
+
+    def updatePage(self, query):
+        pass
+
+    def clear(self):
+        pass
+
+
+class SpeciesInputPage(QueryInputPage, JPanel):
+
+    def __init__(self):
+        self.species = JComboBox()
+        self.species.editable = 1 
+        self.species.minimumSize = Dimension(250,21) 
+        self.species.preferredSize = self.species.minimumSize
+        self.add( JLabel("Species") )
+        self.add( self.species )
+        
+    def updateQuery(self, query):
+        item = self.species.selectedItem
+        if item: query.species = item
+        else: raise InvalidQueryException("Species must be set")
+
+    def updatePage(self, query):
+        Tool.prepend( query.species, self.species )
+
+    def clear(self):
+        Tool.clear( self.species )
+
+    def toString(self):
+        item = self.species.selectedItem
+        if item: return item
+        else: return "UNSET"
 
 
 class CardContainer(JPanel):
@@ -40,137 +86,91 @@ class CardContainer(JPanel):
 
 
 
-class NodeInfo(Object, TreeSelectionListener): 
+class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener): 
 
-    """Represents a single 'userObject' node for inclusion in a
-DefaultMutableTreeNode. It has two functions: (1) When the containing
-tree node is selected it causes the corresponding self.component to be
-displayed, and (2) it creates the text displayed against the tree node
-in the JTree."""
+    """Represents a TreeNode which: (1) causes the corresponding
+    self.targetComponent to be displayed when it is selected, (2)
+    generates custom text for display in tree via toString()
+    method. """
 
-    def __init__(self, cardContainer, targetComponent, targetCardName):
+    def __init__(self, tree, parent, position, cardContainer, targetComponent, targetCardName):
+        
+        """ Adds targetComponent to cardContainer with the name
+        targetCardName. Makes this a tree listener and inserts self as
+        child of parent at specified position."""
+
+        DefaultMutableTreeNode.__init__(self)
 	self.cardContainer = cardContainer
 	self.targetComponent = targetComponent
+        if targetComponent==None:
+            self.targetComponent = Dummy( targetCardName )
 	self.targetCardName = targetCardName
-    
+        tree.addTreeSelectionListener( self )
+        tree.model.insertNodeInto( self, parent, position)
+        cardContainer.add( self.targetComponent, self.targetCardName)
+        
 
     def toString(self):
-	return "<html><b>My</b>"+self.targetComponent.toString()+"</html>"
+	return "<html><b>"+self.targetCardName+"</b>"+self.targetComponent.toString()+"</html>"
 
 
     def valueChanged(self, event):
 
 	""" Brings the targetComponent to the front of the
 	cardContainer if this was the node selected in the tree"""
-	
-	if self == event.newLeadSelectionPath.lastPathComponent.userObject:
-	    print self.toString(),"heard a selection"
+	if self == event.newLeadSelectionPath.lastPathComponent:
+            print "showing",self.targetCardName
 	    self.cardContainer.show( self.targetCardName )
 
 
-class TreeExplorer(JPanel):
+
+class tree_prototype(JPanel):
+
 
     def __init__(self):
-        print "te init s"
+        print "te init s2"
 
-        self.rootNode = DefaultMutableTreeNode( "Query" )
-        self.dbNode = DefaultMutableTreeNode( "Database" )
-        self.speciesNode = DefaultMutableTreeNode( "Species" )
-        self.focusNode = DefaultMutableTreeNode( "Focus" )
-        self.filtersNode = DefaultMutableTreeNode( "Filters" )
-        self.regionNode = DefaultMutableTreeNode( "Region" )
-        self.outputNode = DefaultMutableTreeNode( "Output" )
-        self.attributesNode = DefaultMutableTreeNode( "Attributes" )
-        self.formatNode = DefaultMutableTreeNode( "Format" )
-        self.destinationNode = DefaultMutableTreeNode( "Destination" )
+        rootNode = DefaultMutableTreeNode( "Query" )
+        treeModel = DefaultTreeModel( rootNode )
+        tree = JTree( treeModel )
+        configPanel = CardContainer()
         
-        treeModel = DefaultTreeModel( self.rootNode )
-
-        treeModel.insertNodeInto( self.dbNode, self.rootNode, 0)
-        treeModel.insertNodeInto( self.speciesNode, self.rootNode, 1)
-        treeModel.insertNodeInto( self.focusNode, self.rootNode, 2)
-        treeModel.insertNodeInto( self.filtersNode, self.rootNode, 3)
-        treeModel.insertNodeInto( self.outputNode, self.rootNode, 4)
-
-        treeModel.insertNodeInto( self.regionNode, self.filtersNode, 0)
-
-        treeModel.insertNodeInto( self.attributesNode, self.outputNode, 0)
-        treeModel.insertNodeInto( self.formatNode, self.outputNode, 1)
-        treeModel.insertNodeInto( self.destinationNode, self.outputNode, 2)
-	
-        self.tree = JTree( treeModel, valueChanged=self.nodeSelected )
-
-        self.configPanel = CardContainer()
-
-        self.databasePanel = DatabaseConfigPage()
-        self.regionPanel = FilterPanel()
-        self.formatPanel = ExportPanel()
-
-        self.configPanel.add( self.databasePanel, "DATABASE"  )
-	self.configPanel.add( self.regionPanel, "REGION_FILTER" )
-	self.configPanel.add( self.formatPanel, "FORMAT_PANEL" )
-	
-	# tmp EXAMPLE
-	myTreeNode = NodeInfo( self.configPanel, self.regionPanel, "REGION_FILTER" )
-        treeModel.insertNodeInto( DefaultMutableTreeNode(myTreeNode), self.rootNode, 0)
-        self.tree.addTreeSelectionListener( myTreeNode )
-
-	self.expand()
+        dbNode = QueryTreeNode( tree, rootNode, 0, configPanel, DatabaseConfigPage(), "DATABASE" )
+        speciesNode = QueryTreeNode( tree, rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
+        focusNode = QueryTreeNode( tree, rootNode, 2, configPanel, None,"focus" )
+        filtersNode = QueryTreeNode( tree, rootNode, 3, configPanel, None,"filter" )
+        regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel, None,"region" )
+        outputNode = QueryTreeNode( tree, rootNode, 4, configPanel, None,"output" )
+        attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel, None,"attribute" )
+        formatNode = QueryTreeNode( tree, outputNode, 1, configPanel, None,"format" )
+        destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel, None,"destination" )
+        
+        # expand branches in tree
+	path = TreePath(rootNode).pathByAddingChild( filtersNode )
+	tree.expandPath( path )
+        path = TreePath(rootNode).pathByAddingChild( outputNode )
+	tree.expandPath( path )
+        path = path.pathByAddingChild( attributesNode )
+	tree.expandPath( path )
 
         self.layout = BorderLayout()
-	scrollPane = JScrollPane(self.tree)
-	scrollPane.setPreferredSize( Dimension(150,300) )
+	scrollPane = JScrollPane(tree)
+	scrollPane.setPreferredSize( Dimension(250,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( self.configPanel )
+	self.add( JScrollPane( configPanel ) )
 
 
+    def updateQuery(self, query):
+        pass
+
+    def updatePage(self, query):
+        pass
+
+    def clear(self):
+        pass
 
 
-
-
-    def expand(self):
-	""" Expands Filter, Output and attribute nodes. """
-	path = TreePath(self.rootNode).pathByAddingChild(self.filtersNode)
-	self.tree.expandPath( path )
-	path = TreePath(self.rootNode).pathByAddingChild(self.outputNode)
-	self.tree.expandPath( path )
-	path = TreePath(self.rootNode).pathByAddingChild(self.attributesNode)
-	self.tree.expandPath( path )
-
-
-
-    def nodeSelected(self, event=None):
-        node = event.newLeadSelectionPath.lastPathComponent
-
-        if node==self.dbNode:
-            print "Set database"
-
-        elif node==self.speciesNode:
-            print "Set species"
-
-        elif node==self.focusNode:
-            print "Set focus"
-
-        elif node==self.filtersNode:
-            print "Add filters"
-
-        elif node==self.attributesNode:
-            print "Add attributes"
-
-        elif node==self.regionNode:
-            print "Set region"
-            
-        elif node==self.formatNode:
-            print "Set format"
-
-        elif node==self.destinationNode:
-            print "Set destination"
-
-        else:
-            print "ignoring selection"
-
-    
 if __name__=="__main__":
-    frame =JFrame("Explorer", defaultCloseOperation=JFrame.DISPOSE_ON_CLOSE, size=(300,300))
-    frame.contentPane.add( TreeExplorer() )
+    frame =JFrame("Explorer", defaultCloseOperation=JFrame.DISPOSE_ON_CLOSE, size=(800,500))
+    frame.contentPane.add( tree_prototype() )
     frame.visible=1
