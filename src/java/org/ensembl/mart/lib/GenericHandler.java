@@ -189,9 +189,9 @@ public class GenericHandler implements UnprocessedFilterHandler {
 						DatasetView dsv = query.getDatasetView();
 						FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[0]);
 						
-						
 						Filter posFilter =
-							new IDListFilter(fd.getFieldFromContext(), fd.getTableConstraintFromContext(), fd.getKeyFromContext(), tids);
+							//new IDListFilter(fd.getFieldFromContext(), fd.getTableConstraintFromContext(), fd.getKeyFromContext(), tids);
+						new IDListFilter(fd.getField(newfilterCols[0]), fd.getTableConstraint(newfilterCols[0]), fd.getKey(newfilterCols[0]), tids);
 						
 						newQuery.addFilter(posFilter);
 					 } else
