@@ -25,8 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /**
  * UnprocessedFilterHandler implementing object designed to process requests for Genes fitting

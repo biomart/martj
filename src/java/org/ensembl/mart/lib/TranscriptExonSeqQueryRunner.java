@@ -31,11 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.ensembl.util.SequenceUtil;
 import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.util.SequenceUtil;
 
 /**
  * Outputs Transcript Exon sequences in one of the supported formats
@@ -132,7 +133,13 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
 			String sqlbase = csql.toSQL();
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
+			sqlbase += " order by  "
+				+ structure_table
+				+ ".gene_id, "
+				+ structure_table
+				+ ".transcript_id, "
+				+ structure_table
+				+ ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -336,7 +343,16 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 						osr.print((String) exonatts.get(DisplayID));
 
 						String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
-						osr.print(separator + "strand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
+						osr.print(
+							separator
+								+ "strand="
+								+ strandout
+								+ separator
+								+ "chr="
+								+ exonloc.getChr()
+								+ separator
+								+ "assembly="
+								+ assemblyout);
 
 						if (osr.checkError())
 							throw new IOException();
@@ -379,7 +395,9 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 
 						// write out the sequence
 						if (exonloc.getStrand() < 0)
-							osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
+							osr.write(
+								SequenceUtil.reverseComplement(
+									dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
 						else
 							osr.write(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()));
 
@@ -390,10 +408,12 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					}
 				}
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -420,7 +440,8 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 						osr.print(">" + (String) exonatts.get(DisplayID));
 
 						String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
-						osr.print("\tstrand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
+						osr.print(
+							"\tstrand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
 
 						if (osr.checkError())
 							throw new IOException();
@@ -463,7 +484,9 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 
 						// write out the sequence
 						if (exonloc.getStrand() < 0)
-							osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
+							osr.writeSequence(
+								SequenceUtil.reverseComplement(
+									dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
 						else
 							osr.writeSequence(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()));
 
@@ -475,10 +498,12 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					}
 				}
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}

@@ -7,8 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /**
  * Implimentation of the QueryRunner for executing a Query and 
@@ -48,8 +47,8 @@ public final class AttributeQueryRunner implements QueryRunner {
 			String sqlbase = csql.toSQL();
 
 			while (moreRows) {
-        sql = sqlbase;
-        
+				sql = sqlbase;
+
 				if (limit > 0) {
 					sql = sql + " limit " + limit;
 					moreRows = false;
@@ -59,8 +58,8 @@ public final class AttributeQueryRunner implements QueryRunner {
 					batchStart += batchLength;
 				}
 
-				logger.debug("QUERY : " + query);
-				logger.debug("SQL : " + sql);
+				logger.info("QUERY : " + query);
+				logger.info("SQL : " + sql);
 
 				PreparedStatement ps = conn.prepareStatement(sql);
 				int p = 1;
@@ -68,40 +67,38 @@ public final class AttributeQueryRunner implements QueryRunner {
 					Filter f = query.getFilters()[i];
 					String value = f.getValue();
 					if (value != null) {
-						if (logger.isDebugEnabled())
-							logger.debug("SQL (prepared statement value) : " + p + " = " + value);
+						logger.info("SQL (prepared statement value) : " + p + " = " + value);
 						ps.setString(p++, value);
 					}
 				}
 
 				ResultSet rs = ps.executeQuery();
 
-        int rows = 0;
+				int rows = 0;
 				while (rs.next()) {
 					rows++;
-					
+
 					for (int i = 1, nColumns = rs.getMetaData().getColumnCount(); i <= nColumns; ++i) {
 						if (i > 1)
 							osr.print(format.getSeparator());
 						String v = rs.getString(i);
 						if (v != null)
 							osr.print(v);
-						logger.debug(v);
 					}
 					osr.print("\n");
-					
+
 					if (osr.checkError())
-					  throw new IOException();
+						throw new IOException();
 				}
 				if (rows < batchLength)
 					moreRows = false;
 				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
 			}
 		} catch (IOException e) {
-			logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+			logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 			throw new InvalidQueryException(e);
 		} catch (SQLException e) {
-			logger.warn(e.getMessage());
+			logger.warning(e.getMessage());
 			throw new InvalidQueryException(e);
 		}
 	}

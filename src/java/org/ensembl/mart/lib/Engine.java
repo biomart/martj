@@ -25,8 +25,9 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
@@ -54,8 +55,9 @@ public class Engine {
 			try {
 				Class.forName(driverNames[i]).newInstance();
 			} catch (Exception e) {
-				logger.warn("Failed to load driver" + driverNames[i], e);
-				throw new RuntimeException(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Failed to load driver" + driverNames[i]);
+				throw new RuntimeException(e.getMessage(), e);
 			}
 		}
 	}
@@ -190,7 +192,7 @@ public class Engine {
 			query = idhandler.ModifyQuery(this, unprocessedFilters, query);
 		}
 
-		logger.info(query);
+		logger.info(query.toString());
 		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, getConnection(), os);
 		qr.execute(limit);
 	}

@@ -31,11 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.ensembl.util.SequenceUtil;
 import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.util.SequenceUtil;
 
 /**
  * Writes out upstream or downstream sequences of transcripts in one of the supported formats.
@@ -135,7 +136,13 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
 			String sqlbase = csql.toSQL();
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
+			sqlbase += " order by  "
+				+ structure_table
+				+ ".gene_id, "
+				+ structure_table
+				+ ".transcript_id, "
+				+ structure_table
+				+ ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -331,7 +338,16 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 					SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 					SequenceDescription seqd = query.getSequenceDescription();
 
-					osr.print(separator + "strand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
+					osr.print(
+						separator
+							+ "strand="
+							+ strandout
+							+ separator
+							+ "chr="
+							+ tranloc.getChr()
+							+ separator
+							+ "assembly="
+							+ assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -369,7 +385,9 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						tranloc = tranloc.getRightFlankOnly(seqd.getRightFlank());
 
 					if (tranloc.getStrand() < 0)
-						osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
+						osr.write(
+							SequenceUtil.reverseComplement(
+								dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
 					else
 						osr.write(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()));
 
@@ -379,10 +397,12 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						throw new IOException();
 				}
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -407,7 +427,8 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 					SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 					SequenceDescription seqd = query.getSequenceDescription();
 
-					osr.print("\tstrand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
+					osr.print(
+						"\tstrand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -445,7 +466,9 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						tranloc = tranloc.getRightFlankOnly(seqd.getRightFlank());
 
 					if (tranloc.getStrand() < 0)
-						osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
+						osr.writeSequence(
+							SequenceUtil.reverseComplement(
+								dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
 					else
 						osr.writeSequence(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()));
 
@@ -457,10 +480,11 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 
 				}
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}

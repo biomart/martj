@@ -30,11 +30,12 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.ensembl.util.SequenceUtil;
 import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.util.SequenceUtil;
 
 /**
  * Writes out Gene Sequences Exons and Introns) in one of the supported formats.
@@ -130,7 +131,13 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
+			sqlbase += " order by  "
+				+ structure_table
+				+ ".gene_id, "
+				+ structure_table
+				+ ".transcript_id, "
+				+ structure_table
+				+ ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -296,7 +303,16 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 
 				osr.print((String) geneatts.get(DisplayID));
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(Assembly));
+				osr.print(
+					separator
+						+ "strand="
+						+ strandout
+						+ separator
+						+ "chr="
+						+ geneloc.getChr()
+						+ separator
+						+ "assembly="
+						+ (String) geneatts.get(Assembly));
 
 				if (osr.checkError())
 					throw new IOException();
@@ -335,7 +351,9 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					geneloc = geneloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.write(
+						SequenceUtil.reverseComplement(
+							dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
 					osr.write(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 
@@ -345,10 +363,12 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -362,7 +382,15 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 
 				osr.print(">" + (String) geneatts.get(DisplayID));
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(Assembly));
+				osr.print(
+					"\tstrand="
+						+ strandout
+						+ separator
+						+ "chr="
+						+ geneloc.getChr()
+						+ separator
+						+ "assembly="
+						+ (String) geneatts.get(Assembly));
 
 				if (osr.checkError())
 					throw new IOException();
@@ -401,7 +429,9 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					geneloc = geneloc.getRightFlankOnly(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.writeSequence(
+						SequenceUtil.reverseComplement(
+							dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
 					osr.writeSequence(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 
@@ -412,16 +442,18 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
 	};
 
-  private final int maxColumnLen = 80;
+	private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;

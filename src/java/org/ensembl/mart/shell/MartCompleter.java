@@ -28,22 +28,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
 import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DSFilterGroup;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
 
@@ -198,7 +199,7 @@ public class MartCompleter implements ReadlineCompleter {
 
 	public void SetModeForLine(String currentCommand) {
 		if (lastLine == null || !(lastLine.equals(currentCommand))) {
-			if (currentCommand.startsWith(DESCRIBE) )
+			if (currentCommand.startsWith(DESCRIBE))
 				SetDescribeMode();
 			else if (currentCommand.startsWith(HELP))
 				SetHelpMode();
@@ -254,15 +255,15 @@ public class MartCompleter implements ReadlineCompleter {
 				// if none of the key placeholders are present, may still need to further refine the mode
 				if (attributeMode) {
 					if (lineWords.length > 0) {
-            
-            logger.info(" in attributeMode\n");
-            
+
+						logger.info(" in attributeMode\n");
+
 						String lastWord = lineWords[lineWords.length - 1];
 
-						if ( lastWord.equals(MartShellLib.GETQSTART) ) {
-							
+						if (lastWord.equals(MartShellLib.GETQSTART)) {
+
 							logger.info("resetting lastAttributeName and currentApages\n");
-							
+
 							lastAttributeName = null;
 							currentApages = new ArrayList();
 						} else {
@@ -307,19 +308,19 @@ public class MartCompleter implements ReadlineCompleter {
 
 								logger.info(" going to whereQualifiers Mode after boolean qualifier\n");
 
-                whereNamesMode = false;
-                whereQualifiersMode = true;
-                whereValuesMode = false;
+								whereNamesMode = false;
+								whereQualifiersMode = true;
+								whereValuesMode = false;
 								SetEmptyMode();
 							} else {
 
 								logger.info(" going to whereValuesMode\n");
 
-                whereNamesMode = false;
+								whereNamesMode = false;
 								whereQualifiersMode = false;
 								whereValuesMode = true;
 								SetWhereValues();
-							}							
+							}
 						}
 
 						if (whereNamesMode) {
@@ -866,10 +867,10 @@ public class MartCompleter implements ReadlineCompleter {
 		else if (!usingLocalDataset && envDataset != null)
 			newPages = envDataset.getPagesForAttribute(lastAttributeName);
 		else
-		  newPages = new ArrayList();
-		
-		if ( newPages.size() < currentApages.size() )
-		  currentApages = new ArrayList(newPages);
+			newPages = new ArrayList();
+
+		if (newPages.size() < currentApages.size())
+			currentApages = new ArrayList(newPages);
 	}
 
 	/**
@@ -940,16 +941,14 @@ public class MartCompleter implements ReadlineCompleter {
 
 		if (currentDataset != null) {
 			if (currentDataset.containsFilterDescription(lastFilterName))
-				currentSet.addAll(
-					currentDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
+				currentSet.addAll(currentDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
 		} else if (!usingLocalDataset && envDataset != null) {
 			logger.info("getting qualifiers for filter " + lastFilterName + "\n");
-			
+
 			if (envDataset.containsFilterDescription(lastFilterName)) {
 				logger.info("Its a filter, getting from dataset\n");
-				
-				currentSet.addAll(
-					envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
+
+				currentSet.addAll(envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
 			}
 		} else
 			SetNoDatasetMode();
@@ -971,16 +970,16 @@ public class MartCompleter implements ReadlineCompleter {
 
 	private void pruneFilterPages() {
 		List newPages = new ArrayList();
-		
+
 		if (currentDataset != null)
 			newPages = currentDataset.getPagesForFilter(lastFilterName);
 		else if (!usingLocalDataset && envDataset != null)
 			newPages = envDataset.getPagesForFilter(lastFilterName);
 		else
 			newPages = new ArrayList();
-			
+
 		if (newPages.size() < currentFpages.size())
-		  currentFpages = new ArrayList(newPages);
+			currentFpages = new ArrayList(newPages);
 	}
 
 	/**
@@ -998,7 +997,8 @@ public class MartCompleter implements ReadlineCompleter {
 		} else if (key.equals(DESCRIBE)) {
 			setMapper.put(key, commands);
 		} else {
-			logger.warn("Key " + key + " is not a member of the command completion system\n");
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Key " + key + " is not a member of the command completion system\n");
 		}
 	}
 }

@@ -17,11 +17,11 @@
  */
 
 package org.ensembl.mart.lib;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 
 /**
  * Contains the knowledge for creating the different sequences

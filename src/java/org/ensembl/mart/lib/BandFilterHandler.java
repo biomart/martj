@@ -24,8 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /**
  * This DSFilterHandler implementing object resolves requests for

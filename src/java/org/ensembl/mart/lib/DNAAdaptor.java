@@ -24,8 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Object for getting DNA Seqeuence Strings
@@ -56,8 +56,7 @@ public class DNAAdaptor {
 	 * @param start
 	 * @param end
 	 */
-	public void CacheSequence(String species, String chr, int start, int end)
-		throws SequenceException {
+	public void CacheSequence(String species, String chr, int start, int end) throws SequenceException {
 		// if first time called, or required DNA is not from same big seg get a new big seg
 		if ((sql == null)
 			|| (!lastChr.equals(chr))
@@ -66,16 +65,14 @@ public class DNAAdaptor {
 			|| (end > cachedSeqEnd)) {
 			List bytes = new ArrayList();
 			int seqLength = 0;
-			
+
 			int tmp = start - 1;
 			// exact coord of a chunk start
 			cachedSeqStart = tmp - (tmp % chunkSize) + 1;
 
 			try {
 				sql =
-					"select sequence from "
-						+ species
-						+ "_dna_chunks_support where chr_start between ? and ? and chr_name = ?";
+					"select sequence from " + species + "_dna_chunks_support where chr_start between ? and ? and chr_name = ?";
 				PreparedStatement ps = conn.prepareStatement(sql);
 				ps.setInt(1, cachedSeqStart);
 				ps.setInt(2, end);
@@ -94,10 +91,8 @@ public class DNAAdaptor {
 							seqLength += theseBytes.length;
 						}
 					} else {
-						logger.error(
-							"No Sequence Returned for chromosome "
-								+ chr
-								+ "\n");
+						if (logger.isLoggable(Level.WARNING))
+							logger.warning("No Sequence Returned for chromosome " + chr + "\n");
 					}
 				}
 
@@ -105,12 +100,7 @@ public class DNAAdaptor {
 				int nextPos = 0;
 				for (int i = 0, n = bytes.size(); i < n; i++) {
 					byte[] theseBytes = (byte[]) bytes.get(i);
-					System.arraycopy(
-						theseBytes,
-						0,
-						cachedSeq,
-						nextPos,
-						theseBytes.length);
+					System.arraycopy(theseBytes, 0, cachedSeq, nextPos, theseBytes.length);
 					nextPos += theseBytes.length;
 				}
 
@@ -119,11 +109,7 @@ public class DNAAdaptor {
 				lastChr = chr;
 				cachedSeqEnd = cachedSeqStart + cachedSeq.length - 1;
 			} catch (SQLException e) {
-				throw new SequenceException(
-					"Could not cache Sequence for chromosome "
-						+ chr
-						+ " "
-						+ e.getMessage());
+				throw new SequenceException("Could not cache Sequence for chromosome " + chr + " " + e.getMessage());
 			}
 		}
 	}
@@ -135,14 +121,14 @@ public class DNAAdaptor {
 	 * 
 	 * @return String sequence
 	 */
-	public byte[] getSequence(String species, String chr, int start, int end)
-		throws SequenceException {
+	public byte[] getSequence(String species, String chr, int start, int end) throws SequenceException {
 		CacheSequence(species, chr, start, end);
 		// may not do anything if cachedSeq is sufficient
 
 		int len = (end - start) + 1;
 		if (cachedSeq.length < 1) {
-			logger.warn("failed to get DNA for chr " + chr + "\n");
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("failed to get DNA for chr " + chr + "\n");
 			return Npad(len);
 		}
 
@@ -155,8 +141,7 @@ public class DNAAdaptor {
 		//user may ask for more sequence than is available, return as much as possible
 		if (len > cacheLen - seqstart - 1) {
 
-			logger.info(
-				"Warning, not enough sequence to satisfy request, returning as much as possible\n");
+			logger.info("Warning, not enough sequence to satisfy request, returning as much as possible\n");
 
 			retBytes = new byte[cacheLen - seqstart + 1];
 			System.arraycopy(cachedSeq, seqstart, retBytes, 0, retBytes.length);

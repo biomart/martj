@@ -20,12 +20,17 @@
 
 package org.ensembl.mart.lib;
 
-import java.util.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.ensembl.util.StringUtil;
-
-import java.sql.*;
 
 /**
  * Compiles a Query object into SQL.
@@ -85,18 +90,18 @@ public class CompiledSQLQuery {
 			buf.delete(0, buf.length());
 
 			success = selectClause(buf, mappers[m]);
-			if (logger.isDebugEnabled())
-				logger.debug("select clause:" + buf.toString());
+			if (logger.isLoggable( Level.FINE ))
+				logger.fine("select clause:" + buf.toString());
 
 			if (success)
 				success = fromClause(buf, mappers[m]);
-			if (success && logger.isDebugEnabled())
-				logger.debug("select + from clauses:" + buf.toString());
+			if (success && logger.isLoggable( Level.FINE))
+				logger.fine("select + from clauses:" + buf.toString());
 
 			if (success)
 				success = whereClause(buf, mappers[m]);
-			if (success && logger.isDebugEnabled())
-				logger.debug("select + from + where clauses:" + buf.toString());
+			if (success && logger.isLoggable( Level.FINE))
+				logger.fine("select + from + where clauses:" + buf.toString());
 
 		}
 		if (!success)
@@ -332,8 +337,8 @@ public class CompiledSQLQuery {
 		FieldMapperCache.instance.cacheMappers( query, mappers );
 		
 		StringBuffer buf = new StringBuffer();
-		if ( logger.isDebugEnabled()) {
-			logger.debug( "Num mappers = " + mappers.length );
+		if ( logger.isLoggable( Level.FINE)) {
+			logger.fine( "Num mappers = " + mappers.length );
 		}
 	}
 

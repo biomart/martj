@@ -31,11 +31,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.ensembl.util.SequenceUtil;
 import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.util.SequenceUtil;
 
 /**
  * Outputs peptide sequence in one of the supported output format
@@ -55,11 +56,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	 * @param conn a java.sql.Connection object
 	 * @param os an OutputStream object
 	 */
-	public PeptideSeqQueryRunner(
-		Query query,
-		FormatSpec format,
-		Connection conn,
-		OutputStream os) {
+	public PeptideSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
@@ -101,15 +98,11 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		query.addAttribute(new FieldAttribute(StrandColumn, "_structure_dm"));
 
 		for (int i = 0; i < displayIDs.size(); i++) {
-			query.addAttribute(
-				new FieldAttribute(
-					(String) displayIDs.get(i),
-					"_structure_dm"));
+			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm"));
 		}
 	}
 
-	public void execute(int limit)
-		throws SequenceException, InvalidQueryException {
+	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
 		boolean moreRows = true; // will turn false on last batch of SQL
 		int batchStart = 0;
@@ -140,11 +133,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  "
-				+ structure_table
-				+ ".transcript_id, "
-				+ structure_table
-				+ ".rank";
+			sqlbase += " order by  " + structure_table + ".transcript_id, " + structure_table + ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -167,11 +156,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					Filter f = query.getFilters()[i];
 					String value = f.getValue();
 					if (value != null) {
-						logger.info(
-							"SQL (prepared statement value) : "
-								+ p
-								+ " = "
-								+ value);
+						logger.info("SQL (prepared statement value) : " + p + " = " + value);
 						ps.setString(p++, value);
 					}
 				}
@@ -180,9 +165,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				ResultSetMetaData rmeta = rs.getMetaData();
 
 				// process columnNames for required attribute indices
-				for (int i = 1, nColumns = rmeta.getColumnCount();
-					i <= nColumns;
-					++i) {
+				for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
 					String column = rmeta.getColumnName(i);
 					if (column.equals(queryID))
 						queryIDindex = i;
@@ -236,37 +219,18 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						int strand = rs.getInt(strandIndex);
 
 						//	order the locations by their rank in ascending order
-						((TreeMap) tranatts.get(Locations)).put(
-							rank,
-							new SequenceLocation(chr, start, end, strand));
+						 ((TreeMap) tranatts.get(Locations)).put(rank, new SequenceLocation(chr, start, end, strand));
 
 						// keep track of the lowest start and highest end for the gene	
 						if (!(tranatts.containsKey(Geneloc))) {
-							tranatts.put(
-								Geneloc,
-								new SequenceLocation(chr, start, end, strand));
+							tranatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
 						} else {
-							SequenceLocation geneloc =
-								(SequenceLocation)
-									((Hashtable) traniDs.get(tranID)).get(
-									Geneloc);
+							SequenceLocation geneloc = (SequenceLocation) ((Hashtable) traniDs.get(tranID)).get(Geneloc);
 							if (start < geneloc.getStart()) {
-								tranatts.put(
-									Geneloc,
-									new SequenceLocation(
-										chr,
-										start,
-										geneloc.getEnd(),
-										strand));
+								tranatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
 								// overwrite the previous copy
 								if (end > geneloc.getEnd())
-									tranatts.put(
-										Geneloc,
-										new SequenceLocation(
-											chr,
-											geneloc.getStart(),
-											end,
-											strand));
+									tranatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
 								// overwrite the previous copy
 							}
 						}
@@ -276,13 +240,10 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					if (!(tranatts.containsKey(DisplayID))) {
 						StringBuffer displayID = new StringBuffer();
 
-						for (int i = 0, n = displayIDindices.size();
-							i < n;
-							i++) {
+						for (int i = 0, n = displayIDindices.size(); i < n; i++) {
 							if (i > 0)
 								displayID.append(separator);
-							int currindex =
-								((Integer) displayIDindices.get(i)).intValue();
+							int currindex = ((Integer) displayIDindices.get(i)).intValue();
 							if (rs.getString(currindex) != null)
 								displayID.append(rs.getString(currindex));
 						}
@@ -294,8 +255,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					// currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
 
 					for (int i = 0, n = otherIndices.size(); i < n; i++) {
-						int currindex =
-							((Integer) otherIndices.get(i)).intValue();
+						int currindex = ((Integer) otherIndices.get(i)).intValue();
 						if (rs.getString(currindex) != null) {
 							String field = attributes[currindex - 1].getField();
 							if (!fields.contains(field))
@@ -304,10 +264,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 							String value = rs.getString(currindex);
 
 							if (tranatts.containsKey(field)) {
-								if (!((ArrayList) tranatts.get(field))
-									.contains(value))
-									((ArrayList) tranatts.get(field)).add(
-										value);
+								if (!((ArrayList) tranatts.get(field)).contains(value))
+									 ((ArrayList) tranatts.get(field)).add(value);
 							} else {
 								List values = new ArrayList();
 								values.add(value);
@@ -349,8 +307,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				osr.print((String) atts.get(DisplayID));
 
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
-				String strandout =
-					geneloc.getStrand() > 0 ? "forward" : "revearse";
+				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
 				osr.print(
 					separator
@@ -393,38 +350,20 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
-				dna.CacheSequence(
-					species,
-					geneloc.getChr(),
-					geneloc.getStart(),
-					geneloc.getEnd());
+				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				List locbytes = new ArrayList();
 				int seqLen = 0;
 
 				// to collect all sequence before translation
-				for (Iterator lociter = locations.keySet().iterator();
-					lociter.hasNext();
-					) {
-					SequenceLocation loc =
-						(SequenceLocation) locations.get(
-							(Integer) lociter.next());
+				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
+					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
 						theseBytes =
-							SequenceUtil.reverseComplement(
-								dna.getSequence(
-									species,
-									loc.getChr(),
-									loc.getStart(),
-									loc.getEnd()));
+							SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
-						theseBytes =
-							dna.getSequence(
-								species,
-								loc.getChr(),
-								loc.getStart(),
-								loc.getEnd());
+						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
 
 					locbytes.add(theseBytes);
 					seqLen += theseBytes.length;
@@ -435,12 +374,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				int nextPos = 0;
 				for (int i = 0, n = locbytes.size(); i < n; i++) {
 					byte[] thisChunk = (byte[]) locbytes.get(i);
-					System.arraycopy(
-						thisChunk,
-						0,
-						sequence,
-						nextPos,
-						thisChunk.length);
+					System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
 					nextPos += thisChunk.length;
 				}
 
@@ -452,10 +386,12 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -471,18 +407,10 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				osr.print(">" + displayIDout);
 
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
-				String strandout =
-					geneloc.getStrand() > 0 ? "forward" : "revearse";
+				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
 				osr.print(
-					"\tstrand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ assemblyout);
+					"\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
 
 				if (osr.checkError())
 					throw new IOException();
@@ -514,38 +442,20 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
-				dna.CacheSequence(
-					species,
-					geneloc.getChr(),
-					geneloc.getStart(),
-					geneloc.getEnd());
+				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				List locbytes = new ArrayList();
 				int seqLen = 0;
 
 				// to collect all sequence before translation
-				for (Iterator lociter = locations.keySet().iterator();
-					lociter.hasNext();
-					) {
-					SequenceLocation loc =
-						(SequenceLocation) locations.get(
-							(Integer) lociter.next());
+				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
+					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
 						theseBytes =
-							SequenceUtil.reverseComplement(
-								dna.getSequence(
-									species,
-									loc.getChr(),
-									loc.getStart(),
-									loc.getEnd()));
+							SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
-						theseBytes =
-							dna.getSequence(
-								species,
-								loc.getChr(),
-								loc.getStart(),
-								loc.getEnd());
+						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
 
 					locbytes.add(theseBytes);
 					seqLen += theseBytes.length;
@@ -556,12 +466,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				int nextPos = 0;
 				for (int i = 0, n = locbytes.size(); i < n; i++) {
 					byte[] thisChunk = (byte[]) locbytes.get(i);
-					System.arraycopy(
-						thisChunk,
-						0,
-						sequence,
-						nextPos,
-						thisChunk.length);
+					System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
 					nextPos += thisChunk.length;
 				}
 
@@ -575,10 +480,12 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				if (logger.isLoggable(Level.WARNING))
+					logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -588,8 +495,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
-	private Logger logger =
-		Logger.getLogger(PeptideSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(PeptideSeqQueryRunner.class.getName());
 	private Query query = null;
 	private String dataset = null;
 	private String species = null;

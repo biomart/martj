@@ -21,8 +21,8 @@ package org.ensembl.mart.lib.config;
 import java.io.IOException;
 import java.sql.Connection;
 import java.util.StringTokenizer;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;

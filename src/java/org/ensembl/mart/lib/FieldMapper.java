@@ -19,8 +19,11 @@
 
 package org.ensembl.mart.lib;
 
-import org.apache.log4j.Logger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -60,9 +63,9 @@ public class FieldMapper {
     for(int i=0; i<tables.length; ++i) {
 
       Table table = tables[i];
-      if ( logger.isDebugEnabled() ) {
-      	logger.debug("table="+table);
-				logger.debug("table.columns.length="+table.columns.length);
+      if ( logger.isLoggable( Level.FINE ) ) {
+      	logger.fine("table="+table);
+				logger.fine("table.columns.length="+table.columns.length);
       }
       for(int j=0; j<table.columns.length; ++j){
 		    

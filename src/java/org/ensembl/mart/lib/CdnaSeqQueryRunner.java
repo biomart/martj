@@ -31,11 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
-import org.ensembl.util.SequenceUtil;
 import org.ensembl.util.FormattedSequencePrintStream;
+import org.ensembl.util.SequenceUtil;
 
 /**
  * Outputs Cdna sequence in one of the supported output formats
@@ -355,10 +355,10 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 				if (osr.checkError())
 					throw new IOException();
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -424,10 +424,10 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warn(e.getMessage());
+				logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n" + e.getMessage());
+				logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
