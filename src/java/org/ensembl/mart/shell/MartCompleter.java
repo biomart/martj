@@ -466,7 +466,9 @@ public class MartCompleter implements ReadlineCompleter {
           return null;
         }
 
-        ret = adaptor.getDatasetViewByDatasetInternalName(toks[2], toks[3]);
+        ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], toks[2]);
+        
+        System.err.println("Recieved dataset " + ret.getDataset() + "." + ret.getInternalName());
       } else if (toks.length == 2) {
         //either sourcename.datasetname or datasetname.viewname relative to envMart
         if (adaptorManager.supportsAdaptor(toks[0])) {
