@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -97,15 +98,16 @@ public class MartShell {
 
 	// main variables
 	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
-	private static String COMMAND_LINE_SWITCHES = "hAC:M:H:P:U:p:d:vl:e:O:F:R:E:";
+	private static String COMMAND_LINE_SWITCHES = "hAC:M:H:T:P:U:p:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
 	private static String mainHost = null;
 	private static String mainPort = null;
 	private static String mainDatabase = null;
+	private static String mainDatabaseType = null;
 	private static String mainUser = null;
 	private static String mainPassword = null;
-	private static boolean mainBatchMode = false; // if -e is passed, go true
+	private static boolean mainBatchMode = false; // if -e is passed, true
 	private static String mainBatchSQL = null;
 	private static String mainBatchScriptFile = null;
 	// can hold the URL to a mart script
@@ -126,6 +128,7 @@ public class MartShell {
 			+ "\n-C  MART_CONFIGURATION_FILE_URL                           -  URL to Alternate Mart XML Configuration File"
 			+ "\n-M  CONNECTION_CONFIGURATION_FILE_URL            - URL to mysql connection configuration file"
 			+ "\n-H HOST                        - database host"
+			+ "\n-T DATABASE_TYPE               - type of Relational Database Management System holing the mart (default mysql)"
 			+ "\n-P PORT                        - database port"
 			+ "\n-U USER                        - database user name"
 			+ "\n-p PASSWORD                    - database password"
@@ -176,11 +179,12 @@ public class MartShell {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			mainHost = p.getProperty("mysqlhost");
-			mainPort = p.getProperty("mysqlport");
-			mainDatabase = p.getProperty("mysqldbase");
-			mainUser = p.getProperty("mysqluser");
-			mainPassword = p.getProperty("mysqlpass");
+			mainHost = p.getProperty("host");
+			mainPort = p.getProperty("port");
+			mainDatabase = p.getProperty("databaseName");
+			mainUser = p.getProperty("user");
+			mainPassword = p.getProperty("password");
+			mainDatabaseType = p.getProperty("databaseType");
 			mainConfiguration = p.getProperty("alternateConfigurationFile");
 
 		} catch (java.net.MalformedURLException e) {
@@ -191,91 +195,154 @@ public class MartShell {
 		confinUse = connfile;
 	}
 
-	public static void main(String[] args) {
+  private static String[] harvestArguments(String[] oargs) throws Exception {
+    Hashtable argtable = new Hashtable();
+    String key = null;
+    
+    for (int i = 0, n = oargs.length; i < n; i++) {
+			String arg = oargs[i];
+      
+      System.out.println("ARG"+ i + " " + arg + "\n");
+      
+			if (arg.startsWith("-")) {
+        key = arg;
+        System.out.println("Starts with - \n");
+        
+        if (! argtable.containsKey(key))
+          argtable.put(key, new StringBuffer());         
+			}
+      else {
+        if (key == null)
+          throw new Exception("Invalid Arguments Passed to MartShell\n");
+        StringBuffer value = (StringBuffer) argtable.get(key);
+        if (value.length() > 0)
+          value.append(" ");
+        value.append(arg);
+        argtable.put(key, value);
+      }        
+		}
+        
+    String[] ret = new String[argtable.size()];
+    int argnum = 0;
+    
+    for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
+			String thiskey = (String) iter.next();
+      String thisvalue = (String) argtable.get(key);
+			ret[argnum] = thiskey;
+      argnum++;
+      ret[argnum] = thisvalue;
+      argnum++;
+		}    
+    System.out.println("args now:\n");
+    for (int i = 0, n = ret.length; i < n; i++) {
+			System.out.println("ARG" + i + " " + ret[i] + "\n");
+		}
+    
+    return ret;
+  }
+  
+	public static void main(String[] oargs) {
 		String loggingURL = null;
 		boolean help = false;
 		boolean verbose = false;
 		boolean commandComp = true;
 
+    String[] args = null;
+    if (oargs.length > 0) {
+		  try {
+			  args = harvestArguments(oargs);
+		  } catch (Exception e1) {
+			  System.out.println(e1.getMessage());
+			  e1.printStackTrace();
+        System.exit(1);
+		  }
+      
+      Getopt g = new Getopt("MartShell", args, COMMAND_LINE_SWITCHES);
+      int c;
+
+      while ((c = g.getopt()) != -1) {
+
+        switch (c) {
+
+          case 'h' :
+            help = true;
+            break;
+
+          case 'C' :
+            mainConfiguration = g.getOptarg();
+            break;
+
+          case 'A' :
+            commandComp = false;
+            break;
+
+            // get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
+          case 'M' :
+            getConnProperties(g.getOptarg());
+            break;
+
+          case 'H' :
+            mainHost = g.getOptarg();
+            break;
+
+          case 'T' :
+            mainDatabaseType = g.getOptarg();
+            break;
+          
+          case 'P' :
+            mainPort = g.getOptarg();
+            break;
+
+          case 'U' :
+            mainUser = g.getOptarg();
+            break;
+
+          case 'p' :
+            mainPassword = g.getOptarg();
+            break;
+
+          case 'd' :
+            mainDatabase = g.getOptarg();
+            break;
+
+          case 'v' :
+            verbose = true;
+            break;
+
+          case 'l' :
+            loggingURL = g.getOptarg();
+            break;
+
+          case 'e' :
+            mainBatchSQL = g.getOptarg();
+            mainBatchMode = true;
+            break;
+
+          case 'O' :
+            mainBatchFile = g.getOptarg();
+            break;
+
+          case 'F' :
+            mainBatchFormat = g.getOptarg();
+            break;
+
+          case 'R' :
+            mainBatchSeparator = g.getOptarg();
+            break;
+
+          case 'E' :
+            mainBatchScriptFile = g.getOptarg();
+            mainBatchMode = true;
+            break;
+        }
+      }
+    } else {
+      args = new String[0];
+    }
+    
 		// check for the defaultConf file, and use it, if present.  Some values may be overridden with a user specified file with -g
 		if (new File(defaultConf).exists())
 			getConnProperties(defaultConf);
-
-		Getopt g = new Getopt("MartExplorerTool", args, COMMAND_LINE_SWITCHES);
-		int c;
-
-		while ((c = g.getopt()) != -1) {
-
-			switch (c) {
-
-				case 'h' :
-					help = true;
-					break;
-
-				case 'C' :
-					mainConfiguration = g.getOptarg();
-					break;
-
-				case 'A' :
-					commandComp = false;
-					break;
-
-					// get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
-				case 'M' :
-					getConnProperties(g.getOptarg());
-					break;
-
-				case 'H' :
-					mainHost = g.getOptarg();
-					break;
-
-				case 'P' :
-					mainPort = g.getOptarg();
-					break;
-
-				case 'U' :
-					mainUser = g.getOptarg();
-					break;
-
-				case 'p' :
-					mainPassword = g.getOptarg();
-					break;
-
-				case 'd' :
-					mainDatabase = g.getOptarg();
-					break;
-
-				case 'v' :
-					verbose = true;
-					break;
-
-				case 'l' :
-					loggingURL = g.getOptarg();
-					break;
-
-				case 'e' :
-					mainBatchSQL = g.getOptarg();
-					mainBatchMode = true;
-					break;
-
-				case 'O' :
-					mainBatchFile = g.getOptarg();
-					break;
-
-				case 'F' :
-					mainBatchFormat = g.getOptarg();
-					break;
-
-				case 'R' :
-					mainBatchSeparator = g.getOptarg();
-					break;
-
-				case 'E' :
-					mainBatchScriptFile = g.getOptarg();
-					mainBatchMode = true;
-					break;
-			}
-		}
 
 		// Initialise logging system
 		if (loggingURL != null) {
@@ -299,6 +366,8 @@ public class MartShell {
 		MartShell ms = new MartShell();
 		if (mainHost != null)
 			ms.setDBHost(mainHost);
+	  if (mainDatabaseType != null)
+	    ms.setDBType(mainDatabaseType);
 		if (mainPort != null)
 			ms.setDBPort(mainPort);
 		if (mainUser != null)
@@ -339,6 +408,8 @@ public class MartShell {
 				System.out.println("Invalid Batch command:" + ms.getBatchError() + "\n" + usage());
 				System.exit(0);
 			}
+      else
+        System.exit(0);
 		} else {
 			if (!commandComp)
 				ms.UnsetCommandCompletion();
@@ -571,6 +642,14 @@ public class MartShell {
 		this.martHost = dbhost;
 	}
 
+  /**
+   * Set the Type of the RDBMS.  Defaults to mysql
+   * @param dbtype - String type of rdbms, to pass in a Connection URL
+   */
+  public void setDBType(String dbtype) {
+  	this.martDatabaseType = dbtype;
+  }
+  
   /**
    * Set the port for the RDBMS.
    * 
@@ -1215,15 +1294,17 @@ public class MartShell {
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
 
-				if (key.equals(MYSQLHOST))
+				if (key.equals(DBHOST))
 					martHost = value;
-				else if (key.equals(MYSQLPORT))
+				else if (key.equals(DATABASETYPE))
+				  martDatabaseType = value;
+				else if (key.equals(DBPORT))
 					martPort = value;
-				else if (key.equals(MYSQLUSER))
+				else if (key.equals(DBUSER))
 					martUser = value;
-				else if (key.equals(MYSQLPASS))
+				else if (key.equals(DBPASSWORD))
 					martPass = value;
-				else if (key.equals(MYSQLBASE))
+				else if (key.equals(DATABASENAME))
 					martDatabase = value;
 				else if (key.equals(ALTCONFFILE))
 					altConfigurationFile = value;
@@ -1243,6 +1324,11 @@ public class MartShell {
 				if (thisLine != null)
 					martHost = thisLine;
 
+				String myDBType = (martDatabaseType == null) ? "" : martDatabaseType;
+				thisLine = Readline.readline("\nPlease enter the type of RDBMS hosting the mart database (press enter to leave as '" + myDBType + "'): ", false);
+				if (thisLine != null)
+					martDatabaseType = thisLine;
+					
         String myPort = (martPort == null) ? "" : martPort;
 				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave as '" + myPort + "'): ", false);
 				if (thisLine != null)
@@ -1302,6 +1388,8 @@ public class MartShell {
 			"\nMart connections now:"
 				+ "\nHost "
 				+ martHost
+				+ "\nDatabaseType "
+				+ martDatabaseType
 				+ "\nPort "
 				+ martPort
 				+ "\nUser "
@@ -1732,6 +1820,7 @@ public class MartShell {
 	private String martUser = null;
 	private String martPass = null;
 	private String martDatabase = null;
+	private String martDatabaseType = "mysql"; //default
 	private MartCompleter mcl; // will hold the MartCompleter, if Readline is loaded and completion turned on
 	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
 	private boolean historyOn = false; // commandline history, default to off
@@ -1808,11 +1897,12 @@ public class MartShell {
 	private final String SEPARATOR = "separator";
 
 	// strings used to show/set mart connection settings
-	private final String MYSQLHOST = "mysqlhost";
-	private final String MYSQLUSER = "mysqluser";
-	private final String MYSQLPASS = "mysqlpass";
-	private final String MYSQLPORT = "mysqlport";
-	private final String MYSQLBASE = "mysqldbase";
+	private final String DBHOST = "host";
+	private final String DBUSER = "user";
+	private final String DBPASSWORD = "password";
+	private final String DBPORT = "port";
+	private final String DATABASENAME = "databaseName";
+	private final String DATABASETYPE = "databaseType";
 	private final String ALTCONFFILE = "alternateConfigurationFile";
 
 	// variables for subquery
