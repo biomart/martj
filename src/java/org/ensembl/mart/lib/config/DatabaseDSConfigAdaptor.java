@@ -77,8 +77,8 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
     String databaseName = ds.getDatabaseName();
 
     adaptorName = ds.getName();
-
-    cache = new DatasetConfigCache(this, new String[] { adaptorName, user });
+    String cacheName = ds.getHost() + "__" + ds.getDatabaseName();
+    cache = new DatasetConfigCache(this, new String[] { cacheName, user });
     
     //set up the preferences node with the datasource information as the root node
     if (clearCache) {
