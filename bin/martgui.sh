@@ -30,5 +30,5 @@ then
   #echo $CMD
   $CMD
 else 
-  java -jar ${TMP_ROOT}/lib/mart-explorer.jar $@
+  java -jar ${TMP_ROOT}/lib/martj.jar $@
 fi

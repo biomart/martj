@@ -2,7 +2,7 @@
 
 <!--
 
-  Ant build file for the mart-explorer tree.
+  Ant build file for the martj tree.
 
   see:
   <a href="http://jakarta.apache.org/ant">Ant Project Homepage</a>
@@ -23,7 +23,7 @@
 
   author:  Michael Heuer, modified by Keith James (JUnit support), modified
            Greg Cox (fixed documentation), modified by Craig Melsopp
-           (configured for ensembl-java project and then mart-explorer.)
+           (configured for ensembl-java project and then martj.)
   version: $Id$
 
   portions Copyright (c) 1999-2000 The Apache Software Foundation.
@@ -33,7 +33,7 @@
 <project default="compile" basedir=".">
 
 
-  <property name="name" value="mart-explorer" />
+  <property name="name" value="martj" />
   <property name="version" value="0.01" />
   <property name="build.name" value="${name}-${version}" />
   <property name="build.compiler" value="modern" />
@@ -150,7 +150,7 @@
   <target name="export-build" 
   description="Performs a fresh, temporary, cvs check-out and compiles.">
 
-    <property name="package" value="mart-explorer" />
+    <property name="package" value="martj" />
     <property name="destination" value="/tmp" />
     <property name="root" value="${destination}/${package}" />
     <property name="build.sysclasspath" value="ignore"/>
@@ -181,7 +181,7 @@
 
 
   <target name="jar" depends="compile"
-  description="Creates mart-explorer.jar in 'build' directory."
+  description="Creates martj.jar in 'build' directory."
   >
 
     <jar
