@@ -2699,7 +2699,7 @@ public class DatabaseDatasetConfigUtils {
               }
               else { // update options if has any
 
-              	                if (currFilt.hasOptions())
+              if (currFilt.hasOptions())
                   updateDropDown(dsv, currFilt); 
               }
 
@@ -2874,9 +2874,15 @@ public class DatabaseDatasetConfigUtils {
     for (int k = 0; k < pas.length; k++) {
 
       String ref = pas[k].getRef();
+      
+      
+      
       FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(ref);
-      updatePushAction(dsConfig, fd1, fd2);
-
+      
+      if (fd2 != null){// because of martp placeholders
+		updatePushAction(dsConfig, fd1, fd2);
+      }
+      
     }
     Option[] newOps = fd1.getOptions();
     for (int k = 0; k < newOps.length; k++) {
@@ -2901,7 +2907,6 @@ public class DatabaseDatasetConfigUtils {
 
   private void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2)
     throws ConfigurationException, SQLException {
-
     fd2.setType("drop_down_basic_filter");
 
     String pushField = fd2.getField();
