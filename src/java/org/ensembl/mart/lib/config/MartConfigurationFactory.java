@@ -21,8 +21,9 @@ package org.ensembl.mart.lib.config;
 import java.net.URL;
 import java.sql.Connection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
-import org.apache.log4j.Logger;
+
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
