@@ -132,7 +132,7 @@ public final class SequenceDescription {
 
         case GENEEXONS:
 		      this.seqt = type;
-		      this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+		      this.seqtype = (String) SEQS.get(GENEEXONS);
 		      this.description = "exon";
 		      this.leftflank = lflank;
 		      this.rightflank = rflank;
