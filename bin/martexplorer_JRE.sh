@@ -41,5 +41,4 @@ case "$PLATFORM" in
   ;;
 esac
 
-echo "This is a DEMO of MartExplorer (development version) "
 $JAVA -Xmx128m -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
