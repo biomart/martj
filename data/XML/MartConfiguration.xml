@@ -73,7 +73,7 @@
           <FilterDescription description="filter to include/exclude genes mapping to GKB IDs" displayName="with GKB ID(s)" fieldName="GKB" internalName="gkb_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes mapping to GO IDs" displayName="with GO IDs" fieldName="GO" internalName="go_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes associated with HUGO IDs" displayName="with HUGO ID(s)" fieldName="HUGO" internalName="hugo_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude genes associated with InterPro IDs" displayName="with InterPro ID(s)" fieldName="Interpro" internalName="interpro_id_xrefs" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="filter to include/exclude genes associated with InterPro IDs" displayName="with InterPro ID(s)" fieldName="interpro" internalName="interpro_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes associated with LocusLink IDs" displayName="with LocusLink ID(s)" fieldName="LocusLink" internalName="locuslink_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes associated with MIM IDs" displayName="with MIM ID(s)" fieldName="MIM" internalName="mim_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes with PDB IDs" displayName="with PDB ID(s)" fieldName="PDB" internalName="pdb_id_xrefs" tableConstraint="main" type="boolean"/>
@@ -939,7 +939,7 @@
           <FilterDescription description="filter to include/exclude AFFY-MOE430 ID(s)" displayName="with AFFY-MOE_430 ID(s)" fieldName="AFFY_MOE430" internalName="affy_moe_430_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude AFFY-Mu11Ksub ID(s)" displayName="with AFFY-Mu11Ksub ID(s)" fieldName="AFFY_Mu11Ksub" internalName="affy_mu11ksub_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude EMBL ID(s)" displayName="with EMBL ID(s)" fieldName="EMBL" internalName="embl_id_xrefs" tableConstraint="main" type="boolean"/>
-          <FilterDescription description="filter to include/exclude InterPro ID(s)" displayName="with InterPro ID(s)" fieldName="Interpro" internalName="interpro_id_xrefs" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="filter to include/exclude InterPro ID(s)" displayName="with InterPro ID(s)" fieldName="interpro" internalName="interpro_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" fieldName="LocusLink" internalName="locuslink_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" fieldName="MIM" internalName="mim_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude PDB ID(s)" displayName="with PDB ID(s)" fieldName="PDB" internalName="pdb_id_xrefs" tableConstraint="main" type="boolean"/>
