@@ -165,33 +165,26 @@ public class IDListFilterWidget
 
     Filter newFilter = createFilter();
 
+    query.removeQueryChangeListener(this);
+
     if (newFilter == null) {
-      
-      if (filter != null) {
-      
+
+      if (filter != null)
         query.removeFilter(filter);
-        System.out.println("Deleting filter: " + filter);
-      } else {
-        System.out.println("No filter to Deleting filter ");
-      }
-      
+
     } else {
 
-      if (filter != null){
+      if (filter != null)
         query.replaceFilter(filter, newFilter);
-        System.out.println("Replacing " +filter + " -> " +newFilter);
-      }
-        
-      else {
+
+      else
         query.addFilter(newFilter);
-        System.out.println("Adding "+ newFilter);
-      }
-        
 
     }
 
     filter = newFilter;
 
+    query.addQueryChangeListener(this);
   }
 
   /**
@@ -230,6 +223,7 @@ public class IDListFilterWidget
    * @param args
    * @throws Exception
    */
+
   public static void main(String[] args) throws Exception {
 
     // enable logging messages

@@ -183,7 +183,7 @@ public class InputPage extends JPanel implements QueryListener {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.QueryChangeListener#filterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
    */
-  public void filterChanged(Query sourceQuery, Filter oldFilter, Filter newFilter) {
+  public void filterChanged(Query sourceQuery, int index, Filter oldFilter, Filter newFilter) {
   }
 
   /* (non-Javadoc)

@@ -284,6 +284,7 @@ public class QueryTest extends TestCase implements QueryListener {
    */
   public void filterChanged(
     Query sourceQuery,
+    int index,
     Filter oldFilter,
     Filter newFilter) {
     numChanges++;

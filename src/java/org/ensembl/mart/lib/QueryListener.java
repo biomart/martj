@@ -61,6 +61,7 @@ public interface QueryListener {
 
   void filterChanged(
     Query sourceQuery,
+    int index,
     Filter oldFilter,
     Filter newFilter);
 

@@ -537,7 +537,8 @@ public class Query {
 		for (int i = 0; i < listeners.size(); ++i)
 			((QueryListener) listeners.get(i)).filterChanged(
 				this,
-				oldFilter,
+				index,
+        oldFilter,
 				newFilter);
 
 	}

@@ -17,7 +17,11 @@
  */
 package org.ensembl.mart.explorer;
 import org.ensembl.mart.lib.Attribute;
+import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Filter;
+import org.ensembl.mart.lib.IDListFilter;
+import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.FilterDescription;
 /**
  * Used to create the label on the TreeNode it added to and store optional
  * attribute and filter objects.
@@ -75,18 +79,87 @@ public class TreeNodeData {
 		this.attribute = attribute;
 		this.filter = filter;
 	}
-	public TreeNodeData(Type type, String separator,
+	
+  
+  public TreeNodeData(Type type, String separator,
 			String rightText, Attribute attribute) {
 		this(type, separator, rightText, attribute, null);
 	}
-	public TreeNodeData(Type type, String separator,
+	
+  
+  public TreeNodeData(Type type, String separator,
 			String rightText, Filter filter) {
 		this(type, separator, rightText, null, filter);
 	}
-	public TreeNodeData(Type type, String separator,
+	
+  
+  public TreeNodeData(Type type, String separator,
 			String rightText) {
 		this(type, separator, rightText, null, null);
 	}
+  
+  
+  /**
+   * Creates a TreeNodeData instance containing the filter and
+   * with a label derived from the query.datasetConfig and the filter.
+   * @param query
+   * @param filter
+   */
+  public TreeNodeData(Query query, Filter filter) {
+    
+    this.filter = filter;
+    
+    // use rawfield as default for label
+    String fieldName = filter.getField();
+
+    // Try to get a user friendly fieldName, 
+    // otherwise use the raw one from filter
+    if (query.getDatasetConfig() != null) {
+
+      FilterDescription fd =
+        query
+          .getDatasetConfig()
+          .getFilterDescriptionByFieldNameTableConstraint(
+          filter.getField(),
+          filter.getTableConstraint());
+
+      if (fd != null)
+        fieldName =
+          fd.getDisplayNameByFieldNameTableConstraint(
+            filter.getField(),
+            filter.getTableConstraint());
+
+    }
+
+    // Try to make the condition prettier
+    String condition = filter.getCondition();
+    if (filter instanceof BooleanFilter && condition != null) {
+      condition = condition.toLowerCase();
+
+      if (condition.matches("\\s*is\\s+null\\s*"))
+        condition = "excluded";
+      else if (condition.matches("\\s*is\\s+not\\s+null\\s*"))
+        condition = "required";
+    }
+    
+    if (filter instanceof IDListFilter) {
+      IDListFilter f = (IDListFilter) filter;
+      if ( f.getFile()!=null ) condition = "in " + f.getFile();
+      else if (f.getUrl()!=null) condition = "in " + f.getUrl();
+      else if (f.getIdentifiers()!=null && f.getIdentifiers().length!=0 )condition = "in list";
+    }
+    
+    if (condition == null)
+      condition = "";
+
+    String value = filter.getValue();
+    if (value == null)
+      value = "";
+
+    this.rightText = fieldName + " " + condition + " " + value;
+
+  }
+  
 	/**
 	 * Generates a small piece of html that is used to create the "labels" for
 	 * tree nodes.

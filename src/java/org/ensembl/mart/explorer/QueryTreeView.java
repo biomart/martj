@@ -568,57 +568,8 @@ public class QueryTreeView extends JTree implements QueryListener {
    */
   public void filterAdded(Query sourceQuery, int index, Filter filter) {
 
-    // use rawfield as default for label
-    String fieldName = filter.getField();
-
-    // Try to get a user friendly fieldName, 
-    // otherwise use the raw one from filter
-    if (query.getDatasetConfig() != null) {
-
-      FilterDescription fd =
-        query
-          .getDatasetConfig()
-          .getFilterDescriptionByFieldNameTableConstraint(
-          filter.getField(),
-          filter.getTableConstraint());
-
-      if (fd != null)
-        fieldName =
-          fd.getDisplayNameByFieldNameTableConstraint(
-            filter.getField(),
-            filter.getTableConstraint());
-
-    }
-
-    // Try to make the condition prettier
-    String condition = filter.getCondition();
-    if (filter instanceof BooleanFilter && condition != null) {
-      condition = condition.toLowerCase();
-
-      if (condition.matches("\\s*is\\s+null\\s*"))
-        condition = "excluded";
-      else if (condition.matches("\\s*is\\s+not\\s+null\\s*"))
-        condition = "required";
-    }
-    
-    if (filter instanceof IDListFilter) {
-      IDListFilter f = (IDListFilter) filter;
-      if ( f.getFile()!=null ) condition = "in " + f.getFile();
-      else if (f.getUrl()!=null) condition = "in " + f.getUrl();
-      else if (f.getIdentifiers()!=null && f.getIdentifiers().length!=0 )condition = "in list";
-    }
-    
-    if (condition == null)
-      condition = "";
-
-    String value = filter.getValue();
-    if (value == null)
-      value = "";
-
-    String nodeLabel = fieldName + " " + condition + " " + value;
-
-    TreeNodeData userObject = new TreeNodeData(null, null, nodeLabel, filter);
-    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
+    DefaultMutableTreeNode treeNode =
+      new DefaultMutableTreeNode(new TreeNodeData(query, filter));
 
     filtersNode.insert(treeNode, index);
     treeModel.reload(filtersNode);
@@ -627,8 +578,8 @@ public class QueryTreeView extends JTree implements QueryListener {
 
   }
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+  /**
+   * Removes filter at specified index from tree.
    */
   public void filterRemoved(Query sourceQuery, int index, Filter filter) {
 
@@ -638,16 +589,24 @@ public class QueryTreeView extends JTree implements QueryListener {
 
   }
 
-
   /**
-   * Replaces oldFilter with newFilter in tree.
+   * Replaces oldFilter in tree at the specified index with newFilter.
    */
   public void filterChanged(
     Query sourceQuery,
+    int index,
     Filter oldFilter,
     Filter newFilter) {
-      
-      // TODO implement
+
+    DefaultMutableTreeNode node =
+      new DefaultMutableTreeNode(
+        new TreeNodeData(sourceQuery, newFilter));
+    
+    filtersNode.remove(index);
+    filtersNode.insert(node, index);
+    treeModel.reload(filtersNode);
+    
+    select(filtersNode, index, false);
   }
 
   /**
