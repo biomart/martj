@@ -223,7 +223,7 @@ public class MartViewEditor extends JFrame {
 		
 		menuItem = new JMenuItem("Naive XML from database");
 		menuItem.addActionListener(menuActionListener);
-		menuItem.setMnemonic(KeyEvent.VK_I);
+		menuItem.setMnemonic(KeyEvent.VK_M);
 		menu.add(menuItem);       
 		
 		menuItem = new JMenuItem("Update XML");
@@ -601,14 +601,26 @@ public class MartViewEditor extends JFrame {
 			return;
 		}	
 		
-		String[] datasets = DatabaseDatasetViewUtils.getNaiveDatasetNamesFor(ds,database);
+  		String[] datasets = DatabaseDatasetViewUtils.getNaiveDatasetNamesFor(ds,database);
 		String dataset = (String) JOptionPane.showInputDialog(null,
 				   "Choose one", "Dataset",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);
 		if (dataset == null)
 					return;	
-		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,null,dataset,database);
+
+
+  // for oracle. arrayexpress: needs user, not instance
+  String dbtype = databaseDialog.getDatabaseType();
+  String qdb;
+
+  System.out.println(dataset + ":"+ database+":"+user+":"+dbtype);
+
+  if (dbtype.startsWith("oracle")) qdb = user.toUpperCase();  // not sure why needs uppercase
+  else qdb = database;
+    
+  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,null,dataset,qdb);
+
 		frame.setVisible(true);
 		desktop.add(frame);
 		try {

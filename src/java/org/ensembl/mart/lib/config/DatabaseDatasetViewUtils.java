@@ -2157,6 +2157,50 @@ public class DatabaseDatasetViewUtils {
     String capTablePattern = tablePattern.toUpperCase();
 
     //get all main tables
+
+    if (dsource.getDatabaseType().equals("oracle:thin"))
+        {
+
+System.out.println("database type: "+ dsource.getDatabaseType());
+
+
+    ResultSet rsSch = dmd.getSchemas();
+    while (rsSch.next()) {
+      String databaseName2 = rsSch.getString(1);
+
+    //first search for tablePattern    
+      ResultSet rsTab = dmd.getTables(null, databaseName2, tablePattern, null);
+
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      potentials.add(tableName);
+    }
+    rsTab.close();
+
+    //now try capitals, should NOT get mixed results
+    rsTab = dmd.getTables(null, databaseName2, capTablePattern, null);
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      //NN
+      System.out.println(tableName);
+
+      if (!potentials.contains(tableName))
+        potentials.add(tableName);
+    }
+    rsTab.close();
+    }
+    rsSch.close();
+}
+    else
+        {
+
+
+
+
+
+
+
+    //====
     //first search for tablePattern    
     ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
 
@@ -2175,6 +2219,8 @@ public class DatabaseDatasetViewUtils {
         potentials.add(tableName);
     }
     rsTab.close();
+
+        }
     conn.close();
 
     String[] retList = new String[potentials.size()];
@@ -2206,7 +2252,9 @@ public class DatabaseDatasetViewUtils {
             for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
 			  ColumnDescription column = table.columnDescriptions[j];
               String cname = column.name;
-              if (cname.endsWith("_key"))
+              //NN
+              if (cname.endsWith("_KEY") || cname.endsWith("_key"))
+              //if (cname.endsWith("_key"))
                 numberKeys++;
 			}
 			if (numberKeys == resolution){
@@ -2451,8 +2499,10 @@ public class DatabaseDatasetViewUtils {
 	  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
-        if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
-          primaryKeys.add(cname);
+        //NN added uppercase   
+        //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+        if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname)))
+            primaryKeys.add(cname);
 	  }	
 	}
 	
@@ -2525,7 +2575,9 @@ public class DatabaseDatasetViewUtils {
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         
-        String cname = column.name;
+        //NN 
+        String cname = column.name.toLowerCase();
+        //String cname = column.name;
         
         // ignore the key columns as atts and filters
         if (cname.endsWith("_key"))
@@ -2646,12 +2698,13 @@ public class DatabaseDatasetViewUtils {
 		List primaryKeys = new ArrayList();
 	
 		for (int i = 0, n = starbases.size(); i < n; i++) {
-		  String tableName = (String) starbases.get(i);
+      String tableName = (String) starbases.get(i);
+
 		  TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
       
 		  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
 			ColumnDescription column = table.columnDescriptions[j];
-			String cname = column.name;
+			String cname = column.name.toLowerCase();
 			if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
 			  primaryKeys.add(cname);
 		  }	
@@ -2715,7 +2768,8 @@ public class DatabaseDatasetViewUtils {
 		  outer:for (int k = pkeys.length - 1; k > -1; k--){
 			for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
 			  ColumnDescription column = table.columnDescriptions[j];
-			  String cname = column.name;
+     //NN
+			  String cname = column.name.toLowerCase();
 			  if (cname.equals(pkeys[k])){
 				joinKey = cname;
 				break outer;		
@@ -2726,7 +2780,7 @@ public class DatabaseDatasetViewUtils {
 		  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
 			ColumnDescription column = table.columnDescriptions[j];
         
-			String cname = column.name;
+			String cname = column.name.toLowerCase();
         
 			// ignore the key columns as atts and filters
 			if (cname.endsWith("_key"))
@@ -2912,7 +2966,7 @@ public class DatabaseDatasetViewUtils {
 	  
 	  List options = new ArrayList();
 	  
-	  if (tableName.equals("main")){
+	  if (tableName.equalsIgnoreCase("main")){
 	    String[] starNames = dsView.getStarBases();
 	    String[] primaryKeys = dsView.getPrimaryKeys();
 		   for (int k = 0; k < primaryKeys.length; k++) {
@@ -2932,7 +2986,9 @@ public class DatabaseDatasetViewUtils {
 	    op = new Option();
 	    op.setDisplayName(value);
 		op.setInternalName(value);
-		if (!columnName.startsWith("silent_"))
+  //NN
+		if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
+      //if (!columnName.startsWith("silent_"))
 		  op.setValue(value);
 		op.setSelectable("true");
 		options.add(op);
