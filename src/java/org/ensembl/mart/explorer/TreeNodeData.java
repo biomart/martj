@@ -40,7 +40,7 @@ public class TreeNodeData {
 			return label;
 		}
 	};
-	public static final Type DATASOURCE = new Type("Datasource");
+	public static final Type DATASOURCE = new Type("Mart database");
 	public static final Type DATASET = new Type("Dataset");
 	public static final Type ATTRIBUTES = new Type("Attributes");
 	public static final Type FILTERS = new Type("Filters");
