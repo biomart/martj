@@ -56,7 +56,7 @@ public class DatasetViewWidget
 
 	private Map optionToView = new HashMap();
 
-	private DatasetViewSettings datasetViewSettings;
+	private AdaptorManager datasetViewSettings;
 
 	private static final Logger logger =
 		Logger.getLogger(DatasetViewWidget.class.getName());
@@ -75,7 +75,7 @@ public class DatasetViewWidget
 	 */
 	public DatasetViewWidget(
 		Query query,
-		DatasetViewSettings datasetViewSettings) {
+		AdaptorManager datasetViewSettings) {
 
 		super(query, "Dataset View");
 

@@ -43,7 +43,7 @@ public class DatasourceWidget extends InputPage {
   private static int MAX_CONNECTION_POOL_SIZE = 10;
 
 
-  private MartSettings martManager;
+  private DataSourceManager martManager;
   private JTextField martName = new JTextField(30);
   private String none = "None";
   private static Logger logger =
@@ -54,7 +54,7 @@ public class DatasourceWidget extends InputPage {
    * @param datasources list of available datasources. A reference to this list
    * is kept so that the widget is always up to date.
    */
-  public DatasourceWidget(Query query, MartSettings martManager) {
+  public DatasourceWidget(Query query, DataSourceManager martManager) {
 
     super(query);
 
@@ -105,7 +105,7 @@ public class DatasourceWidget extends InputPage {
     logger.setLevel(Level.FINEST);
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
-    MartSettings mm = QueryEditor.testDatasetViewSettings().getMartSettings();
+    DataSourceManager mm = QueryEditor.testDatasetViewSettings().getMartSettings();
     Query q = new Query();
     DatasourceWidget dw = new DatasourceWidget(q, mm);
 

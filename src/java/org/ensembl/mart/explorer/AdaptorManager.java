@@ -64,9 +64,9 @@ import org.ensembl.mart.lib.config.SimpleDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
- * Widget representing the currently selected dataset view
- * and enabling the user to select another, add and delete 
- * datasetViews.
+ * Widget representing the availabled adaptors.
+ * Enables the user to select add and delete 
+ * adaptors.
  * 
  * 
  * 
@@ -101,10 +101,10 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  * 
  * TODO import from database
  */
-public class DatasetViewSettings extends Box {
+public class AdaptorManager extends Box {
 
-	private MartSettings martSettings = new MartSettings(this);
-	private Logger logger = Logger.getLogger(DatasetViewSettings.class.getName());
+	private DataSourceManager martSettings = new DataSourceManager(this);
+	private Logger logger = Logger.getLogger(AdaptorManager.class.getName());
 	private Feedback feedback = new Feedback(this);
 	// Used to find and remove separators in datasetView.displayNames
 	private Matcher separatorMatcher = Pattern.compile("__").matcher("");
@@ -133,7 +133,7 @@ public class DatasetViewSettings extends Box {
 	 * and the query is the Model.
 	 * @param query underlying model for this widget.
 	 */
-	public DatasetViewSettings() {
+	public AdaptorManager() {
 		super(BoxLayout.Y_AXIS);
 
 		prefs = Preferences.userNodeForPackage(this.getClass());
@@ -164,8 +164,16 @@ public class DatasetViewSettings extends Box {
 		treeMenu.setMaximumSize(new Dimension(0, 100));
 		treeMenu.add(treeTopMenu);
 
-		JButton add = new JButton("Import from file");
-		add.addActionListener(new ActionListener() {
+
+    JButton addDB = new JButton("Add Database");
+    addDB.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doAddDatabase();
+      }
+    });
+
+		JButton addFile = new JButton("Add File");
+		addFile.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				doLoadtFromFile();
 			}
@@ -187,7 +195,8 @@ public class DatasetViewSettings extends Box {
 
 		Box bottom = Box.createHorizontalBox();
 		bottom.add(Box.createHorizontalGlue());
-		bottom.add(add);
+    bottom.add(addDB);
+    bottom.add(addFile);
 		bottom.add(delete);
 
 		add(top);
@@ -197,7 +206,16 @@ public class DatasetViewSettings extends Box {
 
 
 
-	private void loadPrefs() {
+	/**
+   * 
+   */
+  private void doAddDatabase() {
+    martSettings.showDialog(this);
+  }
+
+
+
+  private void loadPrefs() {
 
     byte[] b = prefs.getByteArray(REGISTRY_KEY, new byte[0]); 
     try {
@@ -484,7 +502,7 @@ public class DatasetViewSettings extends Box {
 	 * Runs a test; an instance of this class is shown in a Frame.
 	 */
 	public static void main(String[] args) throws Exception {
-		DatasetViewSettings dvm = new DatasetViewSettings();
+		AdaptorManager dvm = new AdaptorManager();
 		dvm.setSize(950, 750);
 		dvm.showDialog(null);
 		System.exit(0);
@@ -559,24 +577,6 @@ public class DatasetViewSettings extends Box {
 
 	}
 
-	/**
-	   * TODO call this from a button
-	   * @param ds
-	   */
-	private void doLoadFromDataSource(DataSource ds)
-		throws ConfigurationException {
-
-		//      DatabaseDSViewAdaptor adaptor =
-		//        new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
-		//
-		//      databaseDSViewAdaptors.add(adaptor);
-		//
-		//      DatasetView[] views = adaptor.getDatasetViews();
-		//      if (views.length == 0) {
-		//        feedback.warn("No Views found in database: " + adaptor.toString());
-		//      } 
-
-	}
 
 	public boolean contains(DatasetView dsv) {
 
@@ -650,7 +650,7 @@ public class DatasetViewSettings extends Box {
    * datasources.
 	 * @return
 	 */
-	public MartSettings getMartSettings() {
+	public DataSourceManager getMartSettings() {
 		return martSettings;
 	}
 

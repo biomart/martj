@@ -194,7 +194,7 @@ public class QueryEditor extends JPanel {
     }
   }
 
-  private DatasetViewSettings datasetViewSettings;
+  private AdaptorManager datasetViewSettings;
 
   private QueryEditorContext editorManager;
 
@@ -216,7 +216,7 @@ public class QueryEditor extends JPanel {
 
   private JFileChooser mqlFileChooser = new JFileChooser();
 
-  private DatasetViewSettings datasetPage;
+  private AdaptorManager datasetPage;
   private String currentDatasetName;
   private OutputSettingsPage outputSettingsPage;
 
@@ -250,7 +250,7 @@ public class QueryEditor extends JPanel {
    */
   public QueryEditor(
     QueryEditorContext editorManager,
-    DatasetViewSettings datasetViewSettings)
+    AdaptorManager datasetViewSettings)
     throws IOException {
 
     this.datasetViewSettings = datasetViewSettings;
@@ -583,7 +583,7 @@ public class QueryEditor extends JPanel {
 
     DatasetView[] views = null;
 
-    DatasetViewSettings dvs = testDatasetViewSettings();
+    AdaptorManager dvs = testDatasetViewSettings();
     final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
 
@@ -863,8 +863,8 @@ public class QueryEditor extends JPanel {
   /**
    * 
    */
-  public static DatasetViewSettings testDatasetViewSettings() {
-    DatasetViewSettings dvs = new DatasetViewSettings();
+  public static AdaptorManager testDatasetViewSettings() {
+    AdaptorManager dvs = new AdaptorManager();
     try {
       dvs.add( testDSViewAdaptor() );
     } catch (ConfigurationException e) {

@@ -45,13 +45,13 @@ import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
  * Widget for storing, selecting, adding and removing Marts.
  * Database addition dialog uses the preferences for this user in this package.
  */
-public class MartSettings extends Box {
+public class DataSourceManager extends Box {
 
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
-  private DatasetViewSettings datasetViewSettings = null;
+  private AdaptorManager datasetViewSettings = null;
 
   private final static Logger logger =
-    Logger.getLogger(MartSettings.class.getName());
+    Logger.getLogger(DataSourceManager.class.getName());
 
   private Vector marts = new Vector();
   private HashMap stringToMart = new HashMap();
@@ -64,7 +64,7 @@ public class MartSettings extends Box {
    * Constructor is deliberably onoly available to package memebers. 
    * @param datasetViewSettings
    */
-  MartSettings(DatasetViewSettings datasetViewSettings) {
+  DataSourceManager(AdaptorManager datasetViewSettings) {
 
     super(BoxLayout.Y_AXIS);
 
@@ -319,8 +319,8 @@ public class MartSettings extends Box {
    */
   public static void main(String[] args) throws Throwable {
 
-    DatasetViewSettings dsvs = new DatasetViewSettings();
-    MartSettings mm = dsvs.getMartSettings();
+    AdaptorManager dsvs = new AdaptorManager();
+    DataSourceManager mm = dsvs.getMartSettings();
 
     // load some test values and check that the
     // manager works. 

@@ -67,7 +67,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   // TODO clone query
   // TODO load registry file
 
-  private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
+  private AdaptorManager datasetViewSettings = new AdaptorManager();
 
   private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -191,17 +191,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     JMenu settings = new JMenu("Settings");
 
-    JMenuItem datasources = new JMenuItem("Datasources");
-    settings.add(datasources);
-    datasources.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doDatasourceSettings();
-      }
-    });
-
-    JMenuItem datasetviews = new JMenuItem("DatasetViews");
-    settings.add(datasetviews);
-    datasetviews.addActionListener(new ActionListener() {
+    JMenuItem adaptors = new JMenuItem("Adaptors");
+    settings.add(adaptors);
+    adaptors.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doDatasetViewSettings();
       }
@@ -274,13 +266,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   }
 
-  /**
-   * 
-   */
-  protected void doDatasourceSettings() {
-
-    datasetViewSettings.getMartSettings().showDialog(this);
-  }
 
   /**
    * Delete currently selected QueryBuilder from tabbed pane if one is 

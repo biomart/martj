@@ -49,7 +49,7 @@ public class InputPageContainer
   public InputPageContainer(
     Query query,
     QueryTreeView tree,
-    DatasetViewSettings datasetViewSettings) {
+    AdaptorManager datasetViewSettings) {
 
     super();
 
