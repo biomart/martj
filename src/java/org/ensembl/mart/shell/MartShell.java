@@ -621,8 +621,12 @@ public class MartShell {
         if (thisline != null) {
           if (thisline.equals(EXITC) || thisline.equals(QUITC))
             break;
+          if (thisline.startsWith(HELPC))
+            System.out.print(Help(normalizeCommand(thisline)));
+          else {
           parse(thisline);
           thisline = null;
+          }
         }
       } catch (Exception e) {
         if (e instanceof EOFException) {
