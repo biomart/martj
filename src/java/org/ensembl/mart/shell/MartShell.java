@@ -844,13 +844,16 @@ public class MartShell {
   }
 
   private void ExitShell() throws IOException {
-    System.out.println(); //ensures that newline is printed before exit
     Readline.cleanup();
 
     // if history and completion are on, save the history file
     if (readlineLoaded && historyOn)
       Readline.writeHistoryFile(history_file);
 
+    //  ensures that newline is printed before exit
+    System.out.println();
+    System.out.println();
+    System.out.flush();
     System.exit(0);
   }
 
