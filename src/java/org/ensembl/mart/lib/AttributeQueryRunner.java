@@ -113,10 +113,12 @@ public final class AttributeQueryRunner implements QueryRunner {
         rs.close();
       }
     } catch (IOException e) {
-      logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+    	if (logger.isLoggable(Level.WARNING))
+        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
       throw new InvalidQueryException(e);
     } catch (SQLException e) {
-      logger.warning(e.getMessage());
+			if (logger.isLoggable(Level.WARNING))
+        logger.warning(e.getMessage());
       throw new InvalidQueryException(e);
     } finally {
       DatabaseUtil.close(conn);
@@ -146,7 +148,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
       String column = rmeta.getColumnName(i);
 
-      if (column.equals(queryID))
+      if (column.toLowerCase().equals(queryID.toLowerCase()))
         queryIDindex = i;
     }
 

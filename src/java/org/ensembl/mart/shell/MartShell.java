@@ -33,6 +33,7 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -280,7 +281,7 @@ public class MartShell {
 			try {
 				args = harvestArguments(oargs);
 			} catch (Exception e1) {
-				System.out.println(e1.getMessage());
+				System.err.println(e1.getMessage());
 				e1.printStackTrace();
 				System.exit(1);
 			}
@@ -358,14 +359,17 @@ public class MartShell {
 			try {
 				LoggingUtils.setLoggingConfiguration(InputSourceUtil.getStreamForString(loggingURL));
 			} catch (SecurityException e) {
-				System.out.println("Caught Security Exception when adding logger configuration URL");
+				System.err.println("Caught Security Exception when adding logger configuration URL");
 				e.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			} catch (MalformedURLException e) {
-				System.out.println("User supplied URL " + loggingURL + " is not well formed");
+				System.err.println("User supplied URL " + loggingURL + " is not well formed");
 				e.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			} catch (IOException e) {
-				System.out.println("Could not read input from URL " + loggingURL + "\n");
+				System.err.println("Could not read input from URL " + loggingURL + "\n");
 				e.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			}
 		} else {
 			LoggingUtils.setVerbose(verbose);
@@ -380,39 +384,46 @@ public class MartShell {
 		// check for help
 		if (help) {
 			if (helpCommand.equals(""))
-				System.out.println(usage());
+				System.err.println(usage());
 			else {
 				MartShell ms = new MartShell();
 				ms.UnsetCommandCompletion();
 				try {
 					System.out.println(ms.Help(helpCommand));
 				} catch (InvalidQueryException e) {
-					System.out.println("Couldnt provide Help for " + helpCommand + e.getMessage());
+					System.err.println("Couldnt provide Help for " + helpCommand + e.getMessage());
 					e.printStackTrace();
+					System.exit(0);
 				}
 			}
 			return;
 		}
 
+    if (!mainBatchMode)
+		  System.out.println("Starting Interactive MartShell\n");
+		
 		MartShell ms = new MartShell();
 
 		if (mainRegistry != null)
 			try {
 				ms.addMartRegistry(mainRegistry);
 			} catch (MalformedURLException e1) {
-				System.out.println("Could not set default Registry file " + e1.getMessage());
+				System.err.println("Could not set default Registry file " + e1.getMessage());
 				e1.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			} catch (ConfigurationException e1) {
-				System.out.println("Could not set default Registry file " + e1.getMessage());
+				System.err.println("Could not set default Registry file " + e1.getMessage());
 				e1.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			}
 
 		if (mainInitScript != null)
 			try {
 				ms.initializeWithScript(mainInitScript);
 			} catch (Exception e2) {
-				System.out.println("Could not initialize MartShell with initScript " + e2.getMessage());
+				System.err.println("Could not initialize MartShell with initScript " + e2.getMessage());
 				e2.printStackTrace();
+				System.err.println("\n\nContinuing to load\n");
 			}
 
 		if (mainDefaultDataset != null)
@@ -445,13 +456,14 @@ public class MartShell {
 				validQuery = ms.RunBatch(mainBatchSQL);
 			}
 			if (!validQuery) {
-				System.out.println("Invalid Batch command:" + ms.getBatchError() + "\n" + usage());
-				System.exit(0);
+				System.err.println("Invalid Batch command:" + ms.getBatchError() + "\n" + usage());
+				System.exit(1);
 			} else
 				System.exit(0);
 		} else {
 			if (!commandComp)
 				ms.UnsetCommandCompletion();
+		  
 			ms.RunInteractive();
 		}
 	}
@@ -475,6 +487,8 @@ public class MartShell {
 	 *
 	 */
 	public void RunInteractive() {
+		continueQuery = false;
+		
 		try {
 			Readline.load(ReadlineLibrary.Getline);
 			//		Getline doesnt support completion, or history manipulation/files
@@ -522,7 +536,7 @@ public class MartShell {
       System.out.println(supportHelp.getProperty(STARTUP));
       System.out.println();
     } catch (InvalidQueryException e2) {
-      System.out.println("Couldnt display startup information\n" + e2.getMessage());
+      System.err.println("Couldnt display startup information\n" + e2.getMessage());
 
       StackTraceElement[] stacks = e2.getStackTrace();
       StringBuffer stackout = new StringBuffer();
@@ -585,7 +599,7 @@ public class MartShell {
 			}
 
 		} catch (Exception e1) {
-			System.out.println("Could not initialize connection: " + e1.getMessage());
+			System.err.println("Could not initialize connection: " + e1.getMessage());
 
 			StackTraceElement[] stacks = e1.getStackTrace();
 			StringBuffer stackout = new StringBuffer();
@@ -613,7 +627,7 @@ public class MartShell {
 					thisline = null;
 				}
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
+				System.err.println(e.getMessage());
 
 				StackTraceElement[] stacks = e.getStackTrace();
 				StringBuffer stackout = new StringBuffer();
@@ -1304,10 +1318,16 @@ public class MartShell {
 			throw new InvalidQueryException(MARTREQ + " " + name + " has not been stored\n");
 
     DataSource reqMart = (DataSource) martMap.get(name);
+			
 		String ret = null;
 		try {
-			String user = reqMart.getConnection().getMetaData().getUserName();
-			DatabaseURLElements els = DatabaseUtil.decompose(reqMart.getConnection().getMetaData().getURL());
+			java.sql.Connection reqCon = reqMart.getConnection();
+			DatabaseMetaData reqMeta =  reqCon.getMetaData();
+			
+			String user = reqMeta.getUserName();
+			String conURL = reqMeta.getURL();
+
+			DatabaseURLElements els = DatabaseUtil.decompose(conURL);
 			ret = "Mart: " + name + " HOST: " + els.host + " USER: " + user + " MART NAME: " + els.databaseName;
 		} catch (Exception e) {
 			throw new InvalidQueryException("Could not parse Mart for Information " + e.getMessage(), e);
@@ -1468,25 +1488,32 @@ public class MartShell {
 			String connSettings = toks.nextToken();
 
 			while (toks.hasMoreTokens())
-				connSettings += toks.nextToken();
-
-			if (connSettings.indexOf("as") > 0) {
-				String[] vals = connSettings.split("as");
-				connSettings = vals[0].trim();
-				sourceKey = vals[1].trim();
+				connSettings += " " + toks.nextToken();
+		
+			if (connSettings.indexOf(" as ") > 0) {
+				String tmpC = connSettings.substring(0, connSettings.indexOf(" as ")).trim();
+				sourceKey = connSettings.substring(connSettings.indexOf(" as ") + 3).trim();
+				connSettings = tmpC;
 			}
 
+      connSettings = connSettings.replaceAll("\\s+", "");
+        
 			//pattern to find and parse all occurances of x=y, or x = y in a string
-			Pattern pat = Pattern.compile("(\\w+)\\s*\\=+\\s*([^\\,]+)\\,*\\s*");
+			Pattern pat = Pattern.compile("(\\w+\\=\\'[^\\']+\\')");
 			Matcher mat = pat.matcher(connSettings);
 			boolean matchFound = false;
 
 			while (mat.find()) {
 				matchFound = true;
+				String addReq = mat.group();
 
-				String key = mat.group(1);
-				String value = mat.group(2);
+				String[] setkv = addReq.split("\\=");
 
+				String key = setkv[0];
+				String value = setkv[1];
+
+				value = value.substring(value.indexOf("'") + 1, value.lastIndexOf("'")); // strip off leading and trailing quotes
+          
 				if (key.equals(DBHOST))
 					martHost = value;
 				else if (key.equals(DATABASETYPE))
@@ -1585,7 +1612,7 @@ public class MartShell {
 		try {
 			DataSource ds =
 				DatabaseUtil.createDataSource(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, DatabaseUtil.DEFAULTPOOLSIZE, martDriver);
-
+			
 			if (sourceKey != null)
 				martMap.put(sourceKey, ds);
 			else
@@ -1975,6 +2002,11 @@ public class MartShell {
 			try {
 				String fSettings = toks.nextToken();
 
+        while (toks.hasMoreTokens())
+          fSettings += " " + toks.nextToken();
+        
+        fSettings = fSettings.replaceAll("\\s+", "");
+          
 				//pattern to find all occurances of x='y' in a string
 				Pattern pat = Pattern.compile("(\\w+\\=\\'[^\\']+\\')");
 				Matcher mat = pat.matcher(fSettings);

@@ -86,8 +86,9 @@ public class TableCache {
 		while (rs.next()) {
       // 3rd column is the table name. See MetaData documentation for more info.
 			String tableName = rs.getString(3);
+
 			for (int i = 0; i < query.getStarBases().length; i++) {
-				if (tableName.startsWith(query.getStarBases()[i])) {
+				if (tableName.toLowerCase().startsWith(query.getStarBases()[i])) {
 					tablesTmp.add(new Table(tableName, columns(tableName, conn), ""));
 				}
 			}
@@ -109,9 +110,10 @@ public class TableCache {
 	private String[] columns(String table, Connection conn) throws SQLException {
 		ArrayList columnsTmp = new ArrayList();
 
-		ResultSet rs = conn.createStatement().executeQuery("describe " + table);
+		ResultSet rs = conn.getMetaData().getColumns(conn.getCatalog(), null, table, null);
 		while (rs.next()) {
-			columnsTmp.add(rs.getString(1));
+			//ColumnName is index 4
+			columnsTmp.add(rs.getString(4));
 		}
 
 		String[] columns = new String[columnsTmp.size()];

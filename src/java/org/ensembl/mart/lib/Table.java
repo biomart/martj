@@ -44,7 +44,7 @@ public class Table implements Comparable {
 		int pos = Arrays.binarySearch(tables, new Table(tableName, new String[]{}, tableName));
 		if ( pos>-1 && pos<tables.length ) {
 			Table tmp = tables[pos];
-			if ( tableName.equals(tmp.name) ) result = tmp;
+			if ( tableName.toLowerCase().equals(tmp.name.toLowerCase()) ) result = tmp;
 		}
 		return result;
 	}
@@ -71,7 +71,7 @@ public class Table implements Comparable {
 
   public int compareTo( Object other ) {
     if ( ! (other instanceof Table) ) return 1;
-    else return name.compareTo( ((Table)other).name );
+    else return name.toLowerCase().compareTo( ((Table)other).name.toLowerCase() );
   }
 
 

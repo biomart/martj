@@ -344,13 +344,13 @@ public class CompiledSQLQuery {
       String tableName = table.name;
       for (int j = 0; j < starNames.length; j++) {
         String starName = starNames[j];
-        if (tableName.startsWith(starName) && tableName.endsWith("_dm")) {
+        if (tableName.toLowerCase().startsWith(starName.toLowerCase()) && tableName.toLowerCase().endsWith("_dm")) {
         	String thisPrimaryKey = null;
         	
         	//find the first primary key that maps to this table
         	for (int k = 0, n = primaryKeys.length; k < n && (thisPrimaryKey == null); k++) {
             for (int l = 0, m = table.columns.length; l < m && (thisPrimaryKey == null); l++) {
-              if (primaryKeys[k].equals(table.columns[l])) thisPrimaryKey = primaryKeys[k];
+              if (primaryKeys[k].toLowerCase().equals(table.columns[l].toLowerCase())) thisPrimaryKey = table.columns[l];
             }
           }
         	

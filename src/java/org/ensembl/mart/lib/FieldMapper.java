@@ -116,13 +116,13 @@ public class FieldMapper {
     	 	qName = table + "." + strippedColumn( name );
 		}
 		else {
-			Pattern p = Pattern.compile(".*" + constraint + ".*\\." + name);
+			Pattern p = Pattern.compile(".*" + constraint.toLowerCase() + ".*\\." + name.toLowerCase());
 			for (int i = 0; 
 						i < tableAndColumns.length && qName==null; 
 						i++) {
 				// todo
 				String s = tableAndColumns[i];
-				if ( p.matcher( s ).matches() ) qName=s;
+				if ( p.matcher( s.toLowerCase() ).matches() ) qName=s;
 			}
 		}
     
