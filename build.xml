@@ -92,6 +92,7 @@
       <include name="${install}" />
       <include name="${buildfile}" />
       <include name="${spy.properties}" />
+      <include name="example*.xml" />
   </patternset>
 
   <!-- binary distribution jars -->
