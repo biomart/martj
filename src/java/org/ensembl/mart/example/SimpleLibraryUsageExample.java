@@ -19,8 +19,6 @@
 package org.ensembl.mart.example;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
@@ -63,7 +61,7 @@ public class SimpleLibraryUsageExample {
 
 		// Create a Query object.
 		Query query = new Query();
-		DataSource ds =
+		DetailedDataSource ds =
 			new DetailedDataSource(
 				"mysql",
 				"ensembldb.ensembl.org",

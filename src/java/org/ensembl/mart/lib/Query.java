@@ -24,8 +24,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.util.StringUtil;
 
@@ -466,7 +464,7 @@ public class Query {
 	/**
 	 * Datasource this query applies to.
 	 */
-	private DataSource dataSource;
+	private DetailedDataSource dataSource;
 
 	/**
 	 * Name of dataset this query applies to.
@@ -542,7 +540,7 @@ public class Query {
 
 	}
 
-	public DataSource getDataSource() {
+	public DetailedDataSource getDataSource() {
 		return dataSource;
 	}
 
@@ -550,8 +548,8 @@ public class Query {
 	 * Sets the value and notifies listeners.
 	 * @param dataSource new dataSource.
 	 */
-	public synchronized void setDataSource(DataSource dataSource) {
-		DataSource oldDatasource = this.dataSource;
+	public synchronized void setDataSource(DetailedDataSource dataSource) {
+		DetailedDataSource oldDatasource = this.dataSource;
 		this.dataSource = dataSource;
 		log();
 		for (int i = 0; i < listeners.size(); ++i)

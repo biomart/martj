@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.event.ChangeEvent;
@@ -103,8 +102,8 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
    */
   public void datasourceChanged(
     Query sourceQuery,
-    DataSource oldDatasource,
-    DataSource newDatasource) {
+    DetailedDataSource oldDatasource,
+    DetailedDataSource newDatasource) {
 
     DetailedDataSource ds = (DetailedDataSource) newDatasource;
 
@@ -151,7 +150,7 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
   public void stateChanged(ChangeEvent e) {
     String selected = (String) chooser.getSelectedItem();
 
-    DataSource ds = null;
+    DetailedDataSource ds = null;
     if (selected != null && selected != none)
       try {
         int n = chooser.getItemCount();
