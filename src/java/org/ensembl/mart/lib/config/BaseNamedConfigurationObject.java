@@ -29,6 +29,11 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 	protected final String internalNameKey = "internalName";
 	protected final String displayNameKey = "displayName";
 	protected final String descriptionKey = "description";
+  
+  private final String[] titles = new String[] { internalNameKey,
+                                                 displayNameKey,
+                                                 descriptionKey
+  };
 
 	/**
 	 * Determines if string is an invalid attribute value.
@@ -58,6 +63,10 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
 
 	public BaseNamedConfigurationObject() {
 		super();
+    
+    for (int i = 0, n = titles.length; i < n; i++) {
+      setAttribute(titles[i], null); //establishes the order of the keys, and adds all possible attribute titles to getXMLAttributeTitles, even if never set in future
+    }
 	}
 
 	public BaseNamedConfigurationObject(String internalName, String displayName, String description)

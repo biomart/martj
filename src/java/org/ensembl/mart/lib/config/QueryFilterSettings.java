@@ -34,6 +34,15 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String typeKey = "type";
 	protected final String qualifierKey = "qualifier";
 	protected final String legalQualifiersKey = "legal_qualifiers";
+  
+  private final String[] titles = new String[] { fieldKey, 
+                                                 valueKey,
+                                                 handlerKey,
+                                                 tableConstraintKey,
+                                                 typeKey,
+                                                 qualifierKey,
+                                                 legalQualifiersKey
+  };
 
 	/**
 	 * Copy constructor.  Creates an exact copy of an existing object.
@@ -49,6 +58,10 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings() {
 		super();
+    
+    for (int i = 0, n = titles.length; i < n; i++) {
+      setAttribute(titles[i], null); //establishes the order of the keys, and adds all possible attribute titles to getXMLAttributeTitles, even if never set in future
+    }
 	}
 
   /**

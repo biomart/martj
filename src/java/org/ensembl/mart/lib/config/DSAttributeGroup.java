@@ -42,6 +42,8 @@ public class DSAttributeGroup extends BaseNamedConfigurationObject {
 	 */
 	public DSAttributeGroup() throws ConfigurationException {
 		super();
+    
+    setAttribute(handlerKey, null);
 	}
 
 	/**

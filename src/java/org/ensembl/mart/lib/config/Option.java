@@ -93,6 +93,9 @@ public class Option extends QueryFilterSettings {
 	 */
 	public Option() {
 		super();
+    
+    setAttribute(isSelectableKey, null);
+    setAttribute(refKey, null);
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {

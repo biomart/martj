@@ -31,7 +31,7 @@ import java.util.Properties;
 public abstract class BaseConfigurationObject {
   //Properties Object holds values from XML attributes keyed to AttributeTitle returned by getXMLAttributeTitles.
   protected Properties attributes = new Properties();
-  protected String[] xmlTitles = null;
+  protected List xmlTitles = new ArrayList();
   //want to preserve the order of the titles for multiple calls to getXMLAttributeTitles
 
   /**
@@ -40,9 +40,13 @@ public abstract class BaseConfigurationObject {
    * @param bo
    */
   public BaseConfigurationObject(BaseConfigurationObject bo) {
-    for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
+    for (Iterator iter = xmlTitles.iterator(); iter.hasNext();) {
       String key = (String) iter.next();
-      setAttribute(new String(key), new String(bo.getAttribute(key)));
+      
+      if (bo.getAttribute(key) == null)
+        setAttribute(new String(key), null);
+      else
+        setAttribute(new String(key), new String(bo.getAttribute(key)));
     }
   }
 
@@ -60,6 +64,8 @@ public abstract class BaseConfigurationObject {
    * @param value - String value for this attribute
    */
   public void setAttribute(String key, String value) {
+    if (!xmlTitles.contains(key))
+      xmlTitles.add(key);
     if (value != null)
       attributes.setProperty(key, value);
   }
@@ -82,27 +88,11 @@ public abstract class BaseConfigurationObject {
    * @return String[] List of XMLAttribute Titles.
    */
   public String[] getXmlAttributeTitles() {
-    if (xmlTitles == null || xmlTitles.length < attributes.size()) {
 
-      List newTitles = new ArrayList();
+    String[] newTitles = new String[xmlTitles.size()];
+    xmlTitles.toArray(newTitles);
 
-      if (xmlTitles != null) {
-        for (int i = 0, n = xmlTitles.length; i < n; i++) {
-          newTitles.add(xmlTitles[i]);
-        }
-      }
-
-      for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
-        String title = (String) iter.next();
-        if (!newTitles.contains(title))
-          newTitles.add(title);
-      }
-
-      xmlTitles = new String[newTitles.size()];
-      newTitles.toArray(xmlTitles);
-    }
-
-    return xmlTitles;
+    return newTitles;
   }
 
   /**
@@ -117,12 +107,13 @@ public abstract class BaseConfigurationObject {
     StringBuffer buf = new StringBuffer();
 
     int i = 0;
-    for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
+    for (Iterator iter = xmlTitles.iterator(); iter.hasNext();) {
       if (i > 0)
         buf.append(",");
 
       String key = (String) iter.next();
       buf.append(" ").append(key).append("=").append(attributes.getProperty(key));
+      i++;
     }
 
     return buf.toString();

@@ -52,6 +52,8 @@ public class PushAction extends BaseNamedConfigurationObject {
    */
   public PushAction() {
     super();
+    
+    setAttribute(refKey, null);
   }
   
 	/**

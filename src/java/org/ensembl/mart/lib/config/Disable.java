@@ -34,7 +34,7 @@ public class Disable extends BaseConfigurationObject {
 	 * @param d Disable Object to copy.
 	 */
 	public Disable(Disable d) {
-    super(d); 
+    super(d);
 	}
 	
   /**
@@ -42,6 +42,9 @@ public class Disable extends BaseConfigurationObject {
    */
   public Disable() {
   	super();
+    
+    setAttribute(refKey, null);
+    setAttribute(valueConditionKey, null);
   }
   
 	/**

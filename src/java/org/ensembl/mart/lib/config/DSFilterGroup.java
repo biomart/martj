@@ -44,6 +44,8 @@ public class DSFilterGroup extends BaseNamedConfigurationObject {
    */
   public DSFilterGroup() {
   	super();
+    
+    setAttribute(handlerKey, null);
   }
   
   /**

@@ -138,6 +138,8 @@ public class DatasetView extends BaseNamedConfigurationObject {
 	 */
 	public DatasetView() {
 		super();
+    
+    setAttribute(datasetKey, null);
 	}
 
 	/**

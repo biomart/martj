@@ -39,6 +39,9 @@ public class Enable extends BaseConfigurationObject {
   
   public Enable() {
   	super();
+    
+    setAttribute(refKey, null);
+    setAttribute(valueConditionKey, null);
   }
   
   /**

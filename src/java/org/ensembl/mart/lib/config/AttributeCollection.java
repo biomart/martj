@@ -69,6 +69,8 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
    */
   public AttributeCollection() {
     super();
+    
+    setAttribute(maxSelectKey, null);
   }
   
 	/**
@@ -94,15 +96,14 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
 	 */
 	public AttributeCollection(String internalName, String maxSelect, String displayName, String description) throws ConfigurationException {
     super( internalName, displayName, description);
-		setMaxSelect(maxSelect);
+    setAttribute(maxSelectKey, maxSelect);
 	}
 
   /**
    * Set the maxSelect value for this AttributeCollection
    * @param maxSelect -- String value to limit selections of Attributes in groups. 0 means no limit.
-   * @throws ConfigurationException for underlying Integer.parseInt() NumberFormatException
    */
-  public void setMaxSelect(String maxSelect) throws ConfigurationException {
+  public void setMaxSelect(String maxSelect){
   	setAttribute(maxSelectKey, maxSelect);
   }
   

@@ -62,6 +62,13 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription() {
     super();
+    
+    setAttribute(fieldKey, null);
+    setAttribute(maxLengthKey, null);
+    setAttribute(tableConstraintKey, null);
+    setAttribute(sourceKey, null);
+    setAttribute(homepageURLKey, null);
+    setAttribute(linkoutURLKey, null);
   }
 
   /**
@@ -107,8 +114,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
       throw new ConfigurationException("UIAttributeDescriptions require a field");
 
     setAttribute(fieldKey, field);
-
-    setMaxLength(maxLength);
+    setAttribute(maxLengthKey, maxLength);
     setAttribute(tableConstraintKey, tableConstraint);
     setAttribute(sourceKey, source);
     setAttribute(homepageURLKey, homePageURL);
@@ -163,9 +169,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 
   /**
    * @param maxLength - String maximum length of the table field
-   * @throws ConfigurationException for underlying numberFormatException when maxLength is parsed to an integer
    */
-  public void setMaxLength(String maxLength) throws ConfigurationException {
+  public void setMaxLength(String maxLength){
     setAttribute(maxLengthKey, maxLength);
   }
 
@@ -181,8 +186,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     try {
       return Integer.parseInt(getAttribute(maxLengthKey));
     } catch (NumberFormatException e) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning(
+      if (logger.isLoggable(Level.INFO))
+        logger.info(
           "Could not parse maxLength value to integer: " + e.getMessage());
       return DEFAULTMAXLENGTH;
     }

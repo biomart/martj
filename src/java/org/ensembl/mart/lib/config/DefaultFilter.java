@@ -45,7 +45,9 @@ public class DefaultFilter extends BaseConfigurationObject {
     * Empty Constructor.  Should really only be used by the DatasetViewEditor
     */
    public DefaultFilter() {
-   	super();  
+   	super();
+    
+    setAttribute(valueKey, null);  
    }
    
    /**
