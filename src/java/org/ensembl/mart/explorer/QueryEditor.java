@@ -350,10 +350,6 @@ public class QueryEditor extends JPanel {
       //"ensro",
   "anonymous", null, 10, "com.mysql.jdbc.Driver");
 
-    for (int i = 0, n = views.length; i < n; i++) {
-      views[i].setDatasource(ds);
-    }
-
     return adaptor;
   }
 

@@ -469,7 +469,6 @@ public class DatabaseDatasetViewUtils {
 
       DatasetView dsv = new DatasetView(iname, dname, dprefix, description);
       dsv.setMessageDigest(digest);
-      dsv.setDatasource(dsource);
       return dsv;
     } catch (SQLException e) {
       throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);
@@ -567,7 +566,6 @@ public class DatabaseDatasetViewUtils {
 
       DatasetView dsv = new DatasetView(iname, dname, dprefix, description);
       dsv.setMessageDigest(digest);
-      dsv.setDatasource(dsource);
       return dsv;
     } catch (SQLException e) {
       throw new ConfigurationException("Caught SQL Exception during fetch of requested digest: " + e.getMessage(), e);

@@ -49,9 +49,9 @@ import org.ensembl.mart.lib.DetailedDataSource;
  */
 public class DatasetView extends BaseNamedConfigurationObject {
 
+//TODO: remove dataSource from DatasetView, use getAdaptor().getDataSource() instead
 	private final String datasetKey = "dataset";
 	private DSViewAdaptor adaptor = null;
-	private DetailedDataSource datasource = null;
 	private byte[] digest = null;
 
 	private List attributePages = new ArrayList();
@@ -1127,22 +1127,6 @@ public class DatasetView extends BaseNamedConfigurationObject {
 	}
 
 	/**
-	 * Returns the DataSource for this DatasetView, or null.
-	 * @return DataSource datasource
-	 */
-	public DetailedDataSource getDatasource() {
-		return datasource;
-	}
-
-	/**
-	 * Set the DataSource and user for this DatasetView.
-	 * @param source -- DataSource
-	 */
-	public void setDatasource(DetailedDataSource source) {
-		datasource = source;
-	}
-
-	/**
 	 * Returns a digest suitable for comparison with a digest computed on another version
 	 * of the XML underlying this DatasetView. 
 	 * @return byte[] digest
@@ -1205,7 +1189,6 @@ public class DatasetView extends BaseNamedConfigurationObject {
 		buf.append(", defaultFilters=").append(defaultFilters);
 		buf.append(", filterPages=").append(filterPages);
 		buf.append(", attributePages=").append(attributePages);
-		buf.append(", datasource=").append(datasource);
 		buf.append("]");
 
 		return buf.toString();

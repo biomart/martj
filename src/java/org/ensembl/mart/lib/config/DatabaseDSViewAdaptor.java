@@ -168,7 +168,6 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public void addDatasetView(DatasetView dsv) throws ConfigurationException {
     if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
       datasetNameMap.add( dsv.getDataset() );
-      dsv.setDatasource(dataSource);
       dsv.setDSViewAdaptor(this);
 
       inameMap.put(dsv.getInternalName(), dsv);
