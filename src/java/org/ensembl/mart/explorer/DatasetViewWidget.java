@@ -92,7 +92,7 @@ public class DatasetViewWidget
 		//Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
 
     AdaptorManager am = QueryEditor.testDatasetViewSettings();
-    am.setOptionalDatasetViewsEnabled( true );
+    am.setAdvancedOptionsEnabled( true );
 		Query q = new Query();
 		DatasetViewWidget dvm =
 			new DatasetViewWidget(q, am, null);

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +57,8 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.util.LoggingUtil;
+
+import sun.awt.font.AdvanceCache;
 
 /**
  * MartExplorer is a graphical application that enables a 
@@ -119,7 +122,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private DatabaseSettingsDialog databaseDialog;
 
   /** Persistent preferences object used to hold user history. */
-  private Preferences prefs;
+  private Preferences prefs  = Preferences.userNodeForPackage(this.getClass());
 
   private Feedback feedback = new Feedback(this);
 
@@ -338,16 +341,31 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
     });
 
-    final JCheckBox views = new JCheckBox("Enable Optional Views");
-    views.setSelected( adaptorManager.isOptionalDatasetViewsEnabled() );
-    settings.add( views );
-    views.addItemListener(new ItemListener() {
+    final JCheckBox advanced = new JCheckBox("Enable Advanced Optional");    // TODO possible: could make advanced be a listener for
+    advanced.setToolTipText("Enables optional DatasetViews, ability to change dataset name and datasource.");
+    advanced.setSelected( adaptorManager.isAdvancedOptionsEnabled() );
+    settings.add( advanced );
+    advanced.addItemListener(new ItemListener() {
       public void itemStateChanged(ItemEvent e) {
-        adaptorManager.setOptionalDatasetViewsEnabled( views.isSelected() );       
-        logger.warning( "state="+views.isSelected());
+        adaptorManager.setAdvancedOptionsEnabled( advanced.isSelected() );       
       }
     });
-
+    
+    JMenuItem reset = new JMenuItem("Reset");
+    reset.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        try {
+          adaptorManager.reset();          
+					prefs.clear();
+          loadDefaultAdaptors();
+          advanced.setSelected( adaptorManager.isAdvancedOptionsEnabled() );
+				} catch (BackingStoreException e1) {
+					feedback.warning(e1);
+				}
+      }
+    });
+    settings.add( reset );
+    
     JMenu query = new JMenu("Query");
 
     JMenuItem execute = new JMenuItem(executeAction);

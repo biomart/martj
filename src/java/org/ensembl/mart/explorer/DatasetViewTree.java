@@ -67,7 +67,7 @@ public class DatasetViewTree extends PopUpTreeCombo {
 	 */
 	public void update() {
 
-		boolean optional = manager.isOptionalDatasetViewsEnabled();
+		boolean optional = manager.isAdvancedOptionsEnabled();
 		rootNode.removeAllChildren();
 		logger.fine("optional=" + optional);
 
@@ -177,7 +177,7 @@ public class DatasetViewTree extends PopUpTreeCombo {
 
 		AdaptorManager am = new AdaptorManager();
 		//QueryEditor.testDatasetViewSettings();
-		am.setOptionalDatasetViewsEnabled(true);
+		am.setAdvancedOptionsEnabled(true);
 
 		final DatasetViewTree pu = new DatasetViewTree(am);
 		// test the listener support

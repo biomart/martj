@@ -47,6 +47,8 @@ public class InputPageContainer
   private DatasetView datasetView;
   private CardLayout cardLayout = new CardLayout();
 
+	private AdaptorManager adaptorManager;
+
   public InputPageContainer(
     Query query,
     QueryTreeView tree,
@@ -54,6 +56,7 @@ public class InputPageContainer
 
     super();
     this.query = query;
+    this.adaptorManager = adaptorManager;
 
     if (tree != null)
       tree.addTreeSelectionListener(this);
@@ -93,6 +96,8 @@ public class InputPageContainer
     if (e.getNewLeadSelectionPath() != null
       && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
 
+      boolean advanced = adaptorManager.isAdvancedOptionsEnabled();
+      
       DefaultMutableTreeNode node =
         (DefaultMutableTreeNode) e
           .getNewLeadSelectionPath()
@@ -106,6 +111,8 @@ public class InputPageContainer
           toFront(TreeNodeData.ATTRIBUTES);
         else if (tnd.getFilter() != null)
           toFront(TreeNodeData.FILTERS);
+        else if (!advanced && tnd==TreeNodeData.DATASOURCE); 
+        else if (!advanced && tnd==TreeNodeData.DATASET); 
         else
           toFront(tnd);
       }
