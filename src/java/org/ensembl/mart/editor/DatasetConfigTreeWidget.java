@@ -44,6 +44,7 @@ import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.SimpleDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 /**
  * DatasetConfigTreeWidget extends internal frame.
@@ -80,6 +81,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	if (user == null){
             	  if (database == null){	
                     config = new DatasetConfig("new", "new", "new");
+                    config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
                     config.addFilterPage(new FilterPage("new"));
                     config.addAttributePage(new AttributePage("new"));
             	  }
