@@ -3,6 +3,11 @@
 
 # copyright EBI, GRL 2003
 
+# TODO fix thread support (only use java classes)
+
+# TODO impl all updateQuery(), updatePage(), clear() methods. add
+# stubs to InputPage
+
 # TODO 1 - complete kaka dummy query sets all gui values
 
 # TODO 2 - implement execute query.
@@ -20,6 +25,8 @@
 # TODO strand = -1, Unstranded +1
 # TODO fetch chromosomes from db and load into drop down list.
 
+
+import thread
 from jarray import array
 from java.lang import System, String, ClassLoader, RuntimeException
 from java.lang import Thread
@@ -50,7 +57,7 @@ def validate( value, name ):
     if not value or value=="" or String("").equals(value):
         raise InvalidQueryException(name + " must be set")
 
-class InputPage(Box, ChangeListener):
+class Page(Box, ChangeListener):
 
     """ Implements a Box container that can listen for change events
     and rebroadcast to attached listeners."""
@@ -89,9 +96,9 @@ class InputPage(Box, ChangeListener):
 
 
 
-class DummyInputPage(InputPage):
+class DummyPage(Page):
     def __init__(self, message):
-	InputPage.__init__(self)
+	Page.__init__(self)
         self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
 
     def addChangeListener( self, listener ):
@@ -176,13 +183,13 @@ class LabelledComboBox(Box, ActionListener):
 
 
 
-class SpeciesInputPage(InputPage):
+class SpeciesPage(Page):
 
     """ Input component manages display and communication between
     "species" drop down list <-> query.species."""
 
     def __init__(self):
-        InputPage.__init__(self)
+        Page.__init__(self)
         self.speciesBox = LabelledComboBox("Species", self)
         self.add( self.speciesBox )
 
@@ -202,13 +209,13 @@ class SpeciesInputPage(InputPage):
 	return desc
 
 
-class FocusInputPage(InputPage):
+class FocusPage(Page):
 
     """ Input component manages display and communication between
     "focus" drop down list <-> query.focus."""
 
     def __init__(self):
-        InputPage.__init__(self)
+        Page.__init__(self)
         self.box = LabelledComboBox("Focus", self)
         self.add( self.box )
 
@@ -229,10 +236,10 @@ class FocusInputPage(InputPage):
 
 
 
-class DatabaseInputPage(InputPage):
+class DatabasePage(Page):
 
     def __init__(self):
-        InputPage.__init__(self)
+        Page.__init__(self)
 
         self.host = LabelledComboBox("Host", self)
         self.port = LabelledComboBox("Port", self)
@@ -301,10 +308,10 @@ class DatabaseInputPage(InputPage):
 
     
 
-class DestinationPage(InputPage):
+class DestinationPage(Page):
 
     def __init__(self):
-        InputPage.__init__(self)
+        Page.__init__(self)
         group = ButtonGroup()
         
         self.file = LabelledComboBox("File", self, group)
@@ -337,10 +344,10 @@ class DestinationPage(InputPage):
         else:
             raise InvalidQueryException("output destination not set.")
 
-class FormatPage(InputPage):
+class FormatPage(Page):
 
     def __init__(self):
-        InputPage.__init__(self)
+        Page.__init__(self)
         
         self.tabulated = JRadioButton( "Tabulated Format", 0, actionPerformed=self.actionPerformed )
 	self.tab = JRadioButton( "tabs", 1, actionPerformed=self.actionPerformed )
@@ -419,17 +426,17 @@ class FormatPage(InputPage):
             raise InvalidQueryException("Format not set")
 
 
-class OutputPage(InputPage):
+class OutputPage(Page):
     def htmlSummary(self):
 	return "<html><b>Output</b></html>"
 
 
 
-class SimpleAttributePage(InputPage):
+class SimpleAttributePage(Page):
 
 
     def __init__(self, attributeManager, field):
-        InputPage.__init__(self)
+        Page.__init__(self)
         self.attributeManager = attributeManager
         self.field = field
         self.add( JLabel( self.field ) )
@@ -445,7 +452,7 @@ class SimpleAttributePage(InputPage):
 
 
 
-class AttributeManagerPage(InputPage):
+class AttributeManagerPage(Page):
 
     """ Manages the attributes by supporting selecting and deselecting
     atributes. A list of available attributes is maintained and this
@@ -456,8 +463,8 @@ class AttributeManagerPage(InputPage):
 
 
     def __init__(self):
-        InputPage.__init__(self)
-        self.selected = []
+        Page.__init__(self)
+        self.selected = Vector()
         self.available = toVector(["gene_stable_id", "chr_name", "end", "strand"])
         self.availableWidget = JList( self.available,
                                       valueChanged=self.valueChanged,
@@ -491,7 +498,7 @@ class AttributeManagerPage(InputPage):
         if value in self.selected:
             return
 
-        self.selected.append( value )
+        self.selected.add( value )
         self.available.remove( value )
 
         attributePage = SimpleAttributePage(self, value)
@@ -533,7 +540,7 @@ class AttributeManagerPage(InputPage):
     def updatePage(self, query):
         for attribute in query.attributes:
             if isinstance( attribute, FieldAttribute ):
-                self.selected( attribute.name )
+                self.selected.add( attribute.name )
             # todo handle sequence attributes
 
     def updateQuery(self, query):
@@ -545,14 +552,14 @@ class AttributeManagerPage(InputPage):
         print "clear attribute pages"
 
 
-class FilterPage(InputPage):
+class FilterPage(Page):
     def htmlSummary(self):
 	return "<html><b>Filters</b></html>"
 
-class RegionPage(InputPage):
+class RegionPage(Page):
 
     def __init__(self):
-	InputPage.__init__(self)
+	Page.__init__(self)
 	self.chr = LabelledComboBox("Chromosome", self)
 	self.start = LabelledComboBox("Start", self)
 	self.end = LabelledComboBox("End", self)
@@ -606,10 +613,10 @@ class RegionPage(InputPage):
 
 
 
-class GeneTypeFilterPage(InputPage):
+class GeneTypeFilterPage(Page):
 
     def __init__(self):
-	InputPage.__init__(self)
+	Page.__init__(self)
 	self.id = LabelledComboBox("Gene Type", self)
 	self.add( self.id )
 	
@@ -656,7 +663,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
 	self.cardContainer = cardContainer
 	self.targetComponent = targetComponent
         if targetComponent==None:
-            self.targetComponent = DummyInputPage( targetCardName )
+            self.targetComponent = DummyPage( targetCardName )
 	self.targetCardName = targetCardName
         self.tree = tree
         self.tree.addTreeSelectionListener( self )
@@ -692,16 +699,16 @@ class QueryEditor(JPanel):
         tree = JTree( treeModel )
         cardContainer = CardContainer()
 
-        self.databasePage = DatabaseInputPage()
+        self.databasePage = DatabasePage()
 	self.formatPage = FormatPage()
 	self.destinationPage = DestinationPage()
 	
         dbNode = QueryTreeNode( tree, self.rootNode, 0, cardContainer,
 				self.databasePage, "DATABASE" )
         speciesNode = QueryTreeNode( tree, self.rootNode, 1, cardContainer,
-				     SpeciesInputPage(),"SPECIES" )
+				     SpeciesPage(),"SPECIES" )
         focusNode = QueryTreeNode( tree, self.rootNode, 2, cardContainer,
-				   FocusInputPage(),"focus" )
+				   FocusPage(),"focus" )
         filtersNode = QueryTreeNode( tree, self.rootNode, 3, cardContainer,
 				     FilterPage(),"filter" )
         regionNode = QueryTreeNode( tree, filtersNode, 0, cardContainer,
@@ -870,7 +877,7 @@ class MartGUIApplication(JFrame):
 
 
 
-    def executeQuery( self ):
+    def executeQuery( self, dummy=None ):
 
         host = self.editor.getHost()
         port = self.editor.getPort()
@@ -906,9 +913,7 @@ class MartGUIApplication(JFrame):
 
 
     def doExecute(self, event=None):
-        # todo fix thread support
-        ThreadWrapper(self.executeQuery).start()
-
+        thread.start_new_thread( self.executeQuery, (self,) )
 
     def doAbout(self, event=None):
         AboutDialog( visible=1 )
@@ -919,14 +924,6 @@ class MartGUIApplication(JFrame):
         self.editor.clear()
 
 
-
-def ThreadWrapper(Thread):
-
-    def __init__(self, function):
-        self.function = function
-    
-    def run(self):
-        self.function
 
 def main(args, quitOnExit):
     usage = "Usage: MartExplorerGUIApplication [ [-h] [-v] [-l LOGGING_FILE_URL] ]"
