@@ -180,7 +180,12 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
                 FilterCollection fc = (FilterCollection) parentNode.getUserObject();
                 fc.insertFilterDescription(index, (FilterDescription) editingNode.getUserObject());
-            } else {
+            } else if (child instanceof org.ensembl.mart.lib.config.Option) {
+			    FilterCollection fc = (FilterCollection) parentNode.getUserObject();
+			    FilterDescription fdConvert = new FilterDescription((Option) editingNode.getUserObject());
+			    fc.insertFilterDescription(index, fdConvert );
+			    editingNode.setUserObject(fdConvert);
+		    } else {
                 String error_string = "Error: " + childName + " cannot be inserted in a FilterCollection.";
                 return error_string;
             }
@@ -191,14 +196,18 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             } else if (child instanceof org.ensembl.mart.lib.config.Disable) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
                 fd.insertDisable(index,(Disable) editingNode.getUserObject());
-            } else if (child instanceof org.ensembl.mart.lib.config.Option) {
+            } else if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
+			    FilterDescription fd = (FilterDescription) parentNode.getUserObject();
+			    Option opConvert = new Option((FilterDescription) editingNode.getUserObject());
+			    fd.insertOption(index, opConvert );
+				editingNode.setUserObject(opConvert);
+		    }else if (child instanceof org.ensembl.mart.lib.config.Option) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
                 fd.insertOption(index, (Option) editingNode.getUserObject());
             } else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
 			    FilterDescription fd = (FilterDescription) parentNode.getUserObject();
 			    //fd.insertPushAction(index, (PushAction) editingNode.getUserObject());
-		    }
-		    else {
+		    } else {
                 String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
                 return error_string;
             }
@@ -251,7 +260,6 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
     public void removeNodeFromParent(DatasetViewTreeNode node) {
         Object child = node.getUserObject();
         Object parent = ((DatasetViewTreeNode) node.getParent()).getUserObject();
-
         if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
             if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
                 view = (DatasetView) ((DatasetViewTreeNode) node.getParent()).getUserObject();
@@ -282,13 +290,11 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 FilterDescription fd = (FilterDescription) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 fd.removeEnable((Enable) node.getUserObject());
             }
-        } else if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
-            if (child instanceof org.ensembl.mart.lib.config.Disable) {
+            else if (child instanceof org.ensembl.mart.lib.config.Disable) {
                 FilterDescription fd = (FilterDescription) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 fd.removeDisable((Disable) node.getUserObject());
             }
-        } else if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
-            if (child instanceof org.ensembl.mart.lib.config.Option) {
+            else if (child instanceof org.ensembl.mart.lib.config.Option) {
                 FilterDescription fd = (FilterDescription) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 fd.removeOption((Option) node.getUserObject());
             }

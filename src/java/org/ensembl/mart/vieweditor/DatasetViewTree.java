@@ -395,7 +395,12 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                             selnodeParent = (DatasetViewTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
-                            result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
+                            
+                            if (selnode.getUserObject() instanceof org.ensembl.mart.lib.config.FilterDescription){
+                              // can convert FD to Option and insert into another FD
+							  result = treemodel.insertNodeInto(selnode, dropnode, 0);
+                            } else
+                              result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
                         } else {
                             selnodeParent = (DatasetViewTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
@@ -579,13 +584,13 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
 	public void addPushAction()
 	    throws ConfigurationException, SQLException {
-	    	
-		String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
-	    String[] filterTokens = filter2.split(":");
-	    
+		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");		
+		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
+	    //String[] filterTokens = filter2.split(":");
+        //		FilterDescription fd2 = dsView.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
 		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-		//FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
-		FilterDescription fd2 = dsView.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
+		FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+		
         fd2.setType("drop_down_basic_filter");
         
         // set FilterDescription fd1 = to current node
@@ -640,6 +645,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 				JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			  }
+			  
 			}
 	    }
         
