@@ -63,7 +63,7 @@ public class DNAAdaptor {
 			  cachedSeqStart = tmp - (tmp % chunkSize) + 1;
 
         try {
-			    sql = "select sequence from "+species+"_sgp_chunks where chr_start between ? and ? and chr_name = ?";
+			    sql = "select sequence from "+species+"_dna_chunks_support where chr_start between ? and ? and chr_name = ?";
 		 	    PreparedStatement ps = conn.prepareStatement( sql );
 			    ps.setInt(1, cachedSeqStart);
 			    ps.setInt(2, end);

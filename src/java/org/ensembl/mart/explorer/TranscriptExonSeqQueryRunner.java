@@ -77,7 +77,7 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 		String[] mainTables = query.getStarBases();
 
 		for (int i = 0; i < mainTables.length; i++) {
-			if (Pattern.matches("gene", mainTables[i]))
+			if (Pattern.matches(".*gene", mainTables[i]))
 				dataset = mainTables[i];
 		}
 
@@ -130,7 +130,7 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
     try {
 		  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 		  String sqlbase = csql.toSQL();
-		  String structure_table = dataset+"_structure";
+		  String structure_table = dataset+"_structure_dm";
 		  sqlbase += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
 
      while (moreRows) {
@@ -298,7 +298,6 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
         if (rows < batchLength)
           moreRows = false;
      }	      
-	   osr.close();
 		} catch (SQLException e) {
 			logger.warn(e.getMessage());
 			throw new InvalidQueryException(e);

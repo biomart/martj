@@ -78,7 +78,7 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 		  String[] mainTables = query.getStarBases();
 
 		  for (int i = 0; i < mainTables.length; i++) {
-			  if (Pattern.matches("gene", mainTables[i]))
+			  if (Pattern.matches(".*gene", mainTables[i]))
 				  dataset = mainTables[i];
 		  }
 
@@ -278,7 +278,6 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 		    if (rows < batchLength)
 		      moreRows = false; // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.	      	      
        }
-	     osr.close();
 		} catch (IOException e) {
 		  logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
 		  throw new SequenceException(e);
