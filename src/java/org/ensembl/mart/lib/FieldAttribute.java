@@ -101,5 +101,25 @@ public class FieldAttribute implements Attribute {
 
 		private final String tableConstraint;
     private final String field;
-    private int hashcode = 0; //hashcode for immutable object
+    private int hashcode = 0;
+
+
+  /**
+   * @see org.ensembl.mart.lib.Attribute#sameFieldTableConstraint(org.ensembl.mart.lib.Attribute)
+   */
+		public boolean sameFieldTableConstraint(Attribute attribute) {
+			
+      String f = getField();
+      String f2 = attribute.getField();
+      String tc = getTableConstraint();
+      String tc2 = attribute.getTableConstraint();
+    
+    
+      return f.equals(attribute.getField())
+        && ((tc == tc2) || (tc != null && tc.equals(tc2)));
+
+		} 
+    
+    
+    
 }

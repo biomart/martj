@@ -28,5 +28,12 @@ package org.ensembl.mart.lib;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public interface Attribute extends Field {
+
+	/**
+	 * @param attribute attribute to compare to.
+	 * @return true if field and tableconstraint are the same as the
+   * attribute.
+	 */
+	boolean sameFieldTableConstraint(Attribute attribute);
 	
 }

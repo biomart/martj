@@ -44,153 +44,153 @@ import org.ensembl.mart.lib.config.AttributeDescription;
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class AttributeDescriptionWidget
-  extends InputPage
-  implements TreeSelectionListener {
+	extends InputPage
+	implements TreeSelectionListener {
 
-  private final static Logger logger =
-    Logger.getLogger(AttributeDescriptionWidget.class.getName());
-  private AttributeDescription attributeDescription;
-  private Query query;
-  private Attribute attribute;
-  private JCheckBox button;
+	private final static Logger logger =
+		Logger.getLogger(AttributeDescriptionWidget.class.getName());
+	private AttributeDescription attributeDescription;
+	private Query query;
+	private Attribute attribute;
+	private JCheckBox button;
 
-  /**
-   * BooleanFilter containing an InputPage, this page is used by the QueryEditor
-   * when it detects the filter has been added or removed from the query.
-   */
-  private class InputPageAwareAttribute
-    extends FieldAttribute
-    implements InputPageAware {
+	/**
+	 * BooleanFilter containing an InputPage, this page is used by the QueryEditor
+	 * when it detects the filter has been added or removed from the query.
+	 */
+	private class InputPageAwareAttribute
+		extends FieldAttribute
+		implements InputPageAware {
 
-    private InputPage inputPage;
+		private InputPage inputPage;
 
-    public InputPageAwareAttribute(
-      String field,
-      String tableConstraint,
-      InputPage inputPage) {
-      super(field, tableConstraint);
-      this.inputPage = inputPage;
-    }
+		public InputPageAwareAttribute(
+			String field,
+			String tableConstraint,
+			InputPage inputPage) {
+			super(field, tableConstraint);
+			this.inputPage = inputPage;
+		}
 
-    public InputPage getInputPage() {
-      return inputPage;
-    }
-  }
+		public InputPage getInputPage() {
+			return inputPage;
+		}
+	}
 
-  /**
-   * @param query
-   * @param name
-   */
-  public AttributeDescriptionWidget(
-    final Query query,
-    AttributeDescription attributeDescription,
-    QueryTreeView tree) {
+	/**
+	 * @param query
+	 * @param name
+	 */
+	public AttributeDescriptionWidget(
+		final Query query,
+		AttributeDescription attributeDescription,
+		QueryTreeView tree) {
 
-    super(query, attributeDescription.getDisplayName(), tree);
-    if (tree != null)
-      tree.addTreeSelectionListener(this);
-    this.attributeDescription = attributeDescription;
-    this.query = query;
+		super(query, attributeDescription.getDisplayName(), tree);
+		if (tree != null)
+			tree.addTreeSelectionListener(this);
+		this.attributeDescription = attributeDescription;
+		this.query = query;
 
-    attribute =
-      new InputPageAwareAttribute(
-        attributeDescription.getField(),
-        attributeDescription.getTableConstraint(),
-        this);
-    setField(attribute);
+		attribute =
+			new InputPageAwareAttribute(
+				attributeDescription.getField(),
+				attributeDescription.getTableConstraint(),
+				this);
+		setField(attribute);
 
-    button = new JCheckBox(attributeDescription.getDisplayName());
-    button.addActionListener(new ActionListener() {
+		button = new JCheckBox(attributeDescription.getDisplayName());
+		button.addActionListener(new ActionListener() {
 
-      public void actionPerformed(ActionEvent event) {
+			public void actionPerformed(ActionEvent event) {
 
-        if (button.isSelected())
-          query.addAttribute(attribute);
-        else
-          query.removeAttribute(attribute);
+				if (button.isSelected())
+					query.addAttribute(attribute);
+				else
+					query.removeAttribute(attribute);
 
-      }
-    });
+			}
+		});
 
-    query.addQueryChangeListener(this);
+		query.addQueryChangeListener(this);
 
-    add(button);
-  }
+		add(button);
+	}
 
-  public Attribute getAttribute() {
-    return attribute;
-  }
+	public Attribute getAttribute() {
+		return attribute;
+	}
 
-  /** 
-   * If the attribute added corresponds to this widget then show it is
-   * selected.
-   * @see org.ensembl.mart.lib.QueryChangeListener#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
-   */
-  public void attributeAdded(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
+	/** 
+	 * If the attribute added corresponds to this widget then show it is
+	 * selected.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+	 */
+	public void attributeAdded(
+		Query sourceQuery,
+		int index,
+		Attribute attribute) {
 
-    if (this.attribute.getField().equals(attribute.getField()))
+    if ( this.attribute.sameFieldTableConstraint(attribute) )
       button.setSelected(true);
 
-  }
+	}
 
-  /**
-   * If removed attribute corresponds to this widget then show 
-   * it is not selected.
-   * @see org.ensembl.mart.lib.QueryChangeListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
-   */
-  public void attributeRemoved(
-    Query sourceQuery,
-    int index,
-    Attribute attribute) {
+	/**
+	 * If removed attribute corresponds to this widget then show 
+	 * it is not selected.
+	 * @see org.ensembl.mart.lib.QueryChangeListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+	 */
+	public void attributeRemoved(
+		Query sourceQuery,
+		int index,
+		Attribute attribute) {
 
-    if (this.attribute.getField().equals(attribute.getField()))
-      button.setSelected(false);
-  }
+		if ( this.attribute.sameFieldTableConstraint(attribute) )
+			button.setSelected(false);
+	}
 
-  /**
-   * Callback method called when an item in the tree is selected.
-   * Brings this widget to the front if the selecte node corresponds to this widget this
-   * TODO get scrolling to a selected attribute working properly
-   * @see javax.swing.event.TreeSelectionListener#valueChanged(javax.swing.event.TreeSelectionEvent)
-   */
-  public void valueChanged(TreeSelectionEvent e) {
+	/**
+	 * Callback method called when an item in the tree is selected.
+	 * Brings this widget to the front if the selecte node corresponds to this widget this
+	 * TODO get scrolling to a selected attribute working properly
+	 * @see javax.swing.event.TreeSelectionListener#valueChanged(javax.swing.event.TreeSelectionEvent)
+	 */
+	public void valueChanged(TreeSelectionEvent e) {
 
-    if (button.isSelected()) {
+		if (button.isSelected()) {
 
-      if (e.getNewLeadSelectionPath() != null
-        && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
+			if (e.getNewLeadSelectionPath() != null
+				&& e.getNewLeadSelectionPath().getLastPathComponent() != null) {
 
-        DefaultMutableTreeNode node =
-          (DefaultMutableTreeNode) e
-            .getNewLeadSelectionPath()
-            .getLastPathComponent();
+				DefaultMutableTreeNode node =
+					(DefaultMutableTreeNode) e
+						.getNewLeadSelectionPath()
+						.getLastPathComponent();
 
-        if (node != null) {
+				if (node != null) {
 
-          TreeNodeData tnd = (TreeNodeData) node.getUserObject();
-          Attribute a = tnd.getAttribute();
-          if (a != null && a == attribute) {
-            for (Component p, c = this; c != null; c = p) {
-              p = c.getParent();
-              if (p instanceof JTabbedPane)
-                 ((JTabbedPane) p).setSelectedComponent(c);
-              else if (p instanceof JScrollPane) {
-                // not sure if this is being used
-                Point pt = c.getLocation();
-                Rectangle r = new Rectangle( pt );
-                ((JScrollPane) p).scrollRectToVisible(r);
-              }
+					TreeNodeData tnd = (TreeNodeData) node.getUserObject();
+					Attribute a = tnd.getAttribute();
+					if (a != null && a == attribute) {
+						for (Component p, c = this; c != null; c = p) {
+							p = c.getParent();
+							if (p instanceof JTabbedPane)
+								 ((JTabbedPane) p).setSelectedComponent(c);
+							else if (p instanceof JScrollPane) {
+								// not sure if this is being used
+								Point pt = c.getLocation();
+								Rectangle r = new Rectangle(pt);
+								((JScrollPane) p).scrollRectToVisible(r);
+							}
 
-            }
+						}
 
-          }
-        }
-      }
-    }
+					}
+				}
+			}
+		}
 
-  }
+	}
 
 }
