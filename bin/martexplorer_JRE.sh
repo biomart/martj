@@ -41,4 +41,4 @@ case "$PLATFORM" in
 esac
 
 echo "This is a DEMO of MartExplorer (development version) "
-$JAVA -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
+$JAVA -Djava.util.logging.config.file=none -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
