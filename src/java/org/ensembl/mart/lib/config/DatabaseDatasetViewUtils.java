@@ -107,6 +107,7 @@ public class DatabaseDatasetViewUtils {
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
   private static final String MAINTABLESUFFIX = "main";
   private static final String DIMENSIONTABLESUFFIX = "dm";
+  private static final String LOOKUPTABLESUFFIX = "look";
 
   private static final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
 
@@ -2211,6 +2212,83 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
+   * Returns a String[] of potential lookup tables from a given Mart Compliant database, hosted on a
+   * given RDBMS, constrained to an (optional) dataset.
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance to search for potential tables
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
+   * @return String[] of potential lookup table names
+   * @throws SQLException
+   */
+  public static String[] getNaiveLookupTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
+	throws SQLException {
+	//want sorted entries, dont need to worry about duplicates
+	Set potentials = new TreeSet();
+
+	Connection conn = dsource.getConnection();
+
+	DatabaseMetaData dmd = conn.getMetaData();
+
+	//Note: currently this isnt cross platform,
+	//as some RDBMS capitalize all names of tables
+	//Either need to find a capitalization scheme general
+	//to all RDBMS, or search for both MAIN and main
+	//and force intermart consistency of capitalization for
+	//those RDBMS which allow users freedom to capitalize as
+	//they see fit. Currently does the latter.
+	//String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+	
+	String tablePattern = "%";
+	
+	tablePattern += LOOKUPTABLESUFFIX;
+	String capTablePattern = tablePattern.toUpperCase();
+
+	//get all lookup tables
+	//first search for tablePattern    
+	ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
+
+	while (rsTab.next()) {
+	  String tableName = rsTab.getString(3);
+	  potentials.add(tableName);
+	}
+	rsTab.close();
+
+	//now try capitals, should NOT get mixed results
+	rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
+	while (rsTab.next()) {
+	  String tableName = rsTab.getString(3);
+
+	  if (!potentials.contains(tableName))
+		potentials.add(tableName);
+	}
+	rsTab.close();
+	conn.close();
+
+	// String tablePattern = (datasetName != null) ? datasetName + "%" : "%"; 
+
+    String[] potList = new String[potentials.size()];
+	potentials.toArray(potList);
+
+	Set finals = new TreeSet();
+
+    for (int k = 0; k < potList.length; k++){
+    	
+    	String pat = potList[k].split("__")[0];
+    	if (pat.equals("global") || datasetName.matches(pat + ".*")){
+    		finals.add(potList[k]);
+    	}
+    	
+    }
+
+
+	String[] retList = new String[finals.size()];
+	finals.toArray(retList);
+	return retList;
+  }
+
+
+
+  /**
    * Returns a TableDescription object describing a particular table in a given database,
    * hosted on a given RDBMS.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
@@ -2323,18 +2401,25 @@ public class DatabaseDatasetViewUtils {
 	List allTables = new ArrayList();
 	allTables.addAll(starbases);
 	allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(dsource, databaseName, datasetName)));
-
+    allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(dsource, databaseName, datasetName)));
     List allCols = new ArrayList();
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
 	  String content = null;
 	  String fullTableName = tableName;
-      AttributeCollection ac = new AttributeCollection();
-      String[] tableTokenizer = tableName.split("__");
-      content = tableTokenizer[1];
-      ac.setInternalName(content);
-      ac.setDisplayName(content.replaceAll("_"," "));
+	  
+	  String[] tableTokenizer = tableName.split("__");
+	  content = tableTokenizer[1];
+	  
+	  AttributeCollection ac = null;
+      if (!isLookupTable(tableName)){
+        ac = new AttributeCollection();
+	    ac.setInternalName(content);
+	    ac.setDisplayName(content.replaceAll("_"," "));
+      }
+      
+      
 
       FilterCollection fc = null;
       if (isMainTable(tableName)) {
@@ -2391,13 +2476,26 @@ public class DatabaseDatasetViewUtils {
           if (!cname.endsWith("_bool"))
             ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize, joinKey));
           
-        } else {
+        }
+        else if (isLookupTable(tableName)){     	
+        	if (cname.startsWith("g_") || cname.startsWith("gs_")){
+        		if (fc == null){
+  				  fc = new FilterCollection();
+				  fc.setInternalName(content);
+				  fc.setDisplayName(content.replaceAll("_"," "));
+        	    }
+        	   	fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName));
+        		
+        	}
+        }
+        
+        else {
           if (logger.isLoggable(Level.INFO))
             logger.info("Skipping " + tableName + "\n");
         }
       }
-
-      ag.addAttributeCollection(ac);
+      if (ac != null)
+        ag.addAttributeCollection(ac);
 
       if (fc != null)
         fg.addFilterCollection(fc);
@@ -2425,6 +2523,12 @@ public class DatabaseDatasetViewUtils {
     return false;
   }
 
+  private static boolean isLookupTable(String tableName) {
+	if (tableName.toLowerCase().endsWith(LOOKUPTABLESUFFIX.toLowerCase()))
+	  return true;
+	return false;
+  }
+
   private static AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize, String joinKey)
     throws ConfigurationException {
     AttributeDescription att = new AttributeDescription();
@@ -2443,30 +2547,35 @@ public class DatabaseDatasetViewUtils {
     FilterDescription filt = new FilterDescription();
 	filt.setField(columnName);
 	String descriptiveName = columnName;
-	if (columnName.endsWith("_bool")){
-	  descriptiveName = columnName.replaceFirst("_bool", "");
-	  filt.setType("boolean");
-	  filt.setQualifier("only");
-	  filt.setLegalQualifiers("only,excluded");
+	System.out.println(columnName + "\n" + tableName + "\n" + fullTableName);
+	if (tableName.endsWith("look")){
+		
+		filt.setInternalName(columnName);
+		filt.setHandler("org.ensembl.mart.lib.GenericHandler");
+		filt.setTableConstraint(tableName);
+		filt.setType("text");
+		
 	}
-	//else if (columnName.endsWith("_list")){
-    //  descriptiveName = columnName.replaceFirst("_list", "");
-    //  filt.setType("list");
-    //  filt.setQualifier("=");
-    //  filt.setLegalQualifiers("=");
-      // add an option for each distinct value
-    //  filt.addOptions(getOptions(columnName, fullTableName, dsource));
-	//}
 	else{
-	  filt.setType(DEFAULTTYPE);
-	  filt.setQualifier(DEFAULTQUALIFIER);
-	  filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);  
+	  if (columnName.endsWith("_bool")){
+	    descriptiveName = columnName.replaceFirst("_bool", "");
+	    filt.setType("boolean");
+	    filt.setQualifier("only");
+	    filt.setLegalQualifiers("only,excluded");
+	  }
+	
+	  else{
+	    filt.setType(DEFAULTTYPE);
+	    filt.setQualifier(DEFAULTQUALIFIER);
+	    filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);  
+	  }
+      filt.setInternalName(descriptiveName.toLowerCase());
+      filt.setDisplayName(descriptiveName.replaceAll("_"," "));
+      filt.setTableConstraint(tableName);
+      filt.setKey(joinKey); 
+      
 	}
-    filt.setInternalName(descriptiveName.toLowerCase());
-    filt.setDisplayName(descriptiveName.replaceAll("_"," "));
-    filt.setTableConstraint(tableName);
-    filt.setKey(joinKey); 
-    //this is just to debug possibility of using java.sql.Types values to determine suitable filter types
+    //	this is just to debug possibility of using java.sql.Types values to determine suitable filter types
     if (logger.isLoggable(Level.INFO)) {
       if (columnType == java.sql.Types.TINYINT) {
         logger.info("Recieved TINYINT type, probably boolean or boolean_num\n");
@@ -2493,7 +2602,7 @@ public class DatabaseDatasetViewUtils {
 	  }
 	  
 	  Connection conn = dsource.getConnection();
-      String sql = "SELECT DISTINCT " + columnName + " FROM " + tableName+ " ORDER BY " + columnName;
+      String sql = "SELECT DISTINCT " + columnName + " FROM " + tableName+ " WHERE " + columnName + " IS NOT NULL ORDER BY " + columnName;
 	  PreparedStatement ps = conn.prepareStatement(sql);
 	  ResultSet rs = ps.executeQuery();
 	  String value;
@@ -2503,7 +2612,8 @@ public class DatabaseDatasetViewUtils {
 	    op = new Option();
 	    op.setDisplayName(value);
 		op.setInternalName(value);
-		op.setValue(value);
+		if (!columnName.startsWith("gs_"))
+		  op.setValue(value);
 		op.setSelectable("true");
 		options.add(op);
 	  }
@@ -2518,7 +2628,7 @@ public class DatabaseDatasetViewUtils {
 	  
 		List options = new ArrayList();
 		Connection conn = dsource.getConnection();
-		String sql = "SELECT " + columnName + " FROM " + tableName+ " WHERE " + whereName + "='" + whereValue + "' ORDER BY " + columnName;
+		String sql = "SELECT " + columnName + " FROM " + tableName+ " WHERE " + whereName + "=\"" + whereValue + "\" ORDER BY " + columnName;
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ResultSet rs = ps.executeQuery();
 		String value;
