@@ -27,6 +27,8 @@ package org.ensembl.mart.explorer;
  * @author <a href="maito:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class FieldAttribute implements Attribute {
+
+
 	/**
 	 * constructs a FieldAttribute with the given field name
 	 * 
@@ -34,8 +36,20 @@ public class FieldAttribute implements Attribute {
 	 * corresponds to a field of a table in the mart database).
 	 */
     public FieldAttribute(String field) {
-      this.field = field;
+      this(field, null);
     }
+    
+    
+	/**
+	 * constructs a FieldAttribute with the given field name
+	 * 
+	 * @param field - String name of attribute to retrieve (roughly
+	 * corresponds to a field of a table in the mart database).
+	 */
+		public FieldAttribute(String field, String tableConstraint) {
+			this.field = field;
+			this.tableConstraint = tableConstraint;
+		}
     
     public int hashCode() {
     		int result = 17;
