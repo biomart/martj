@@ -318,7 +318,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 				String port = dbloc.getPort();
 				String password = dbloc.getPassword();
 				String databaseType = dbloc.getDatabaseType();
-				String jdbcDriverClassName = dbloc.getJDBCDriverClassName();
+				String jdbcDriverClassName = DetailedDataSource.getJDBCDriverClassNameFor(databaseType);
 				String name = dbloc.getName();
 
 				// apply defaults only if both dbtype and jdbcdriver are null
