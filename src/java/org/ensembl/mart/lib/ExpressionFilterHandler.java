@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -71,11 +72,14 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 				dataset = mainTables[i];
 		}
 
+		if (dataset == null) {
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Could not determine dataset for query, perhaps it is a snp query " + newQuery);
+			throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
+		}
+			
 		StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
 		species = tokens.nextToken();
-
-		if (dataset == null)
-			throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query " + newQuery);
 
 		String trans_lib_table = null;
 		StringBuffer idSQL = new StringBuffer(); // set on first_table, append lidBuf later
@@ -137,7 +141,7 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 				terms++;
 			}
 
-			String sql = selectBuf.toString() + fromBuf.toString() + whereBuf.toString();
+			String sql = selectBuf.append(fromBuf).append(whereBuf).toString();
 
 			logger.info("Getting lib_ids with " + sql);
 
@@ -184,7 +188,7 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			return newQuery;
 		} catch (SQLException e) {
 			throw new InvalidQueryException(
-				"Recieved SQL Exception processing request for Expression Filter " + e.getMessage());
+				"Recieved SQL Exception processing request for Expression Filter " + e.getMessage(), e);
 		}
 	}
 
