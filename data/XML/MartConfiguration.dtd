@@ -40,8 +40,7 @@
 <!ELEMENT FilterCollection (FilterDescription|MapFilterDescription|MapFilterDescription|FilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
-                   filterSetName       CDATA #IMPLIED
-                   type                CDATA #REQUIRED>
+                   filterSetName       CDATA #IMPLIED>
                     
 <!ELEMENT FilterDescription (Option)*>
 <!ATTLIST FilterDescription

@@ -19,7 +19,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage description="" displayName="Filter" internalName="default_page">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
-        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
+        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome">
           <FilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list">
             <Option displayName="1" internalName="1" isSelectable="true" value="1">
               <OptionPush internalName="band_start_push_chr1" ref="band_start">
@@ -47,24 +47,24 @@
             </Option>
           </FilterDescription>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
+        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
           <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
+        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="band_start" handler="Marker" internalName="marker_start" type="select"/>
           <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="band_end" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
+        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
           <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
           <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
-        <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
+        <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="GENE:" internalName="gene">
-        <FilterCollection internalName="id_limit" type="boolean">
+        <FilterCollection internalName="id_limit">
           <FilterDescription description="Filter to include/exclude Known Genes" displayName="Known Genes" fieldName="known_gene" internalName="known_genes" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter to include/exclude Disease Genes" displayName="Disease Genes" fieldName="disease_gene" internalName="disease_genes" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes mapping to AFFY-HG-U133 IDs" displayName="with AFFY-HG-U133 ID(s)" fieldName="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" tableConstraint="main" type="boolean"/>
@@ -84,7 +84,7 @@
           <FilterDescription description="filter to include/exclude genes associated with Sanger-Hver1-2-1 ID(s)" displayName="with Sanger-Hver1-2-1 ID(s)" fieldName="Sanger_Hver1_2_1" internalName="sanger_hver1_2_1_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes associated with UMCU Hsapiens 19Kv1 ID(s)" displayName="with UMCU Hsapiens 19Kv1 ID(s)" fieldName="UMCU_Hsapiens_19Kv1" internalName="umcu_hsapiens_19kv1_id_xrefs" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit" type="list-text-file">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
           <FilterDescription description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" fieldName="display_id" internalName="affy_hg_u133_id" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" fieldName="display_id" internalName="affy_hg_u95_id" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of EMBL ID(s)" displayName="EMBL ID(s):" fieldName="display_id" internalName="embl_id" qualifier="in" tableConstraint="gene_xref_EMBL_dm" type="list"/>
@@ -111,24 +111,24 @@
           <FilterSetDescription description="Filter for Expression Patterns based on the eGenetics/SANBI Dataset." displayName="eGenetics/SANBI data" fieldNameModifier="est" internalName="sanbi_est" tableConstraintModifier="na"/>
           <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="gnf" internalName="gnf" tableConstraintModifier="na"/>
         </FilterSet>
-        <FilterCollection filterSetName="expression_type" internalName="expression" type="text-entry">
+        <FilterCollection filterSetName="expression_type" internalName="expression">
           <MapFilterDescription description="" displayName="" fieldName="expression_profile" filterSetReq="field" handler="Expression" internalName="expression_profile" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTISPECIES" internalName="multispecies">
-        <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs" type="boolean">
+        <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs">
           <FilterDescription description="Filter for Genes having mouse homologous Genes" displayName="Entries associated with homologous mouse genes" fieldName="mmusculus_homolog" internalName="mouse_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having rat homologous Genes" displayName="Entries associated with homologous rat genes" fieldName="rat_homolog" internalName="rat_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having fugu homologous Genes" displayName="Entries associated with homologous fugu genes" fieldName="frubripes_homolog" internalName="fugu_rubripes_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having zebrafish homologous Genes" displayName="Entries associated with homologous zebrafish genes" fieldName="drerio_homolog" internalName="danio_rerio_homologs" qualifier="" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="filter for genes having upstream conserved regions with other species" displayName="Upstream conserved regions" internalName="upstream_conserved_regions" type="boolean">
+        <FilterCollection description="filter for genes having upstream conserved regions with other species" displayName="Upstream conserved regions" internalName="upstream_conserved_regions">
           <FilterDescription description="filter for genes having upstream conserved regions mapped onto the mouse genome" displayName="Entries associated with upstream matches in mouse genome" fieldName="mmusculus_upstreamcr" internalName="mouse_upstream_conserved_regions" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter for genes having upstream conserved regions mapped onto the rat genome" displayName="Entries associated with upstream matches in rat genome" fieldName="rnorvegicus_upstream_conserved_regions" internalName="rattus_norvegicu_upstream_conserved_regions" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Protein data" displayName=" PROTEIN" internalName="protein">
-        <FilterCollection description="Limit to genes with these family or domain IDs:" displayName="Limit to genes with these family or domain IDs:" internalName="family_domain_id_list" type="list">
+        <FilterCollection description="Limit to genes with these family or domain IDs:" displayName="Limit to genes with these family or domain IDs:" internalName="family_domain_id_list">
           <FilterDescription description="Filter for Genes mapped to a list of Interpro ID(s)" displayName="Interpro ID(s):" fieldName="interpro" internalName="Interpro_ids" qualifier="in" tableConstraint="gene_prot_interpro_dm" type="list"/>
           <FilterDescription description="Filter for Genes mapped to a list of PFAM ID(s)" displayName="PFAM ID(s):" fieldName="pfam" internalName="pfam_ids" qualifier="in" tableConstraint="gene_prot_pfam_dm" type="list"/>
           <FilterDescription description="Filter for Genes mapped to a list of PRINTS ID(s)" displayName="PRINTS ID(s):" fieldName="prints" internalName="prints_ids" qualifier="in" tableConstraint="gene_prot_prints_dm" type="list"/>
@@ -136,15 +136,15 @@
           <FilterDescription description="Filter for Genes mapped to a list of Prosite ID(s)" displayName="Prosite ID(s):" fieldName="prosite" internalName="prosite_ids" qualifier="in" tableConstraint="gene_prot_prosite_dm" type="list"/>
           <FilterDescription description="Filter for Genes having mapped to a list of Ensembl family ID(s)" displayName="Ensembl family ID(s):" fieldName="family" internalName="ensembl_family_ids" qualifier="in" tableConstraint="main" type="list"/>
         </FilterCollection>
-        <FilterCollection internalName="transmembrane" type="boolean">
+        <FilterCollection internalName="transmembrane">
           <FilterDescription description="Filter for genes including/exluding Transmembrane Domains" displayName="Transmembrane Domains:" fieldName="transmembrane" internalName="transmembrane_domains" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="signaldomain" type="boolean">
+        <FilterCollection internalName="signaldomain">
           <FilterDescription description="Filter for genes including/excluding Signal Domains" displayName="Signal Domains:" fieldName="signal_peptide" internalName="signal_domains" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP" internalName="snp">
-        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype" type="radio">
+        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype">
           <FilterDescription description="Include/exclude genes with coding SNPs" displayName="coding SNPs" fieldName="coding" internalName="coding_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" fieldName="intronic" internalName="intronic_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" fieldName="5utr" internalName="5utr_snps" qualifier="" tableConstraint="main" type="boolean"/>
@@ -152,22 +152,22 @@
           <FilterDescription description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" fieldName="5upstream" internalName="5upstream_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" fieldName="3downstream" internalName="3downstream_snps" qualifier="" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="synonomy" type="boolean">
+        <FilterCollection internalName="synonomy">
           <FilterDescription description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" internalName="synonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" internalName="nonsynonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" internalName="stop_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
         </FilterCollection>
-        <FilterCollection internalName="ka_ks_ratio" type="text">
+        <FilterCollection internalName="ka_ks_ratio">
           <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" fieldName="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifier="&gt;" tableConstraint="transcript_main" type="text_entry"/>
         </FilterCollection>
-        <FilterCollection internalName="snpid" type="boolean">
+        <FilterCollection internalName="snpid">
           <FilterDescription description="filter for Genes Assocatied With SNPS having TSC IDs" displayName="SNPs with TSC IDs" fieldName="tscid" internalName="tsc_snp_ids" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter for Genes Assocatied With SNPS having HGBASE IDs" displayName="SNPs with HGBASE IDs" fieldName="hgbaseid" internalName="hgbase_snp_ids" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="validated_snp" type="boolean">
+        <FilterCollection internalName="validated_snp">
           <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" fieldName="validated" internalName="validated_snps" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="snp_frequency" type="boolean">
+        <FilterCollection internalName="snp_frequency">
           <FilterDescription description="Include/exclude entries associated with SNPs with frequency data" displayName="Entries associated with SNPs with frequency data" fieldName="freq" internalName="snp_frequency_data" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
@@ -474,7 +474,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -494,27 +494,27 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage description="" displayName="Filter" internalName="default_page">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
-        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
+        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome">
           <FilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
+        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
           <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
+        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
           <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
+        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
           <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
           <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
-        <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
+        <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
-        <FilterCollection internalName="idLimit" type="boolean">
+        <FilterCollection internalName="idLimit">
           <FilterDescription description="Filter to include/exclude Known Genes" displayName="Known Genes" fieldName="known_gene" internalName="known_genes" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter to include/exclude Disease Genes" displayName="Disease Genes" fieldName="disease_gene" internalName="disease_genes" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude AFFY-HG-U133 ID(s)" displayName="with AFFY-HG-U133 ID(s)" fieldName="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" tableConstraint="main" type="boolean"/>
@@ -525,7 +525,7 @@
           <FilterDescription description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" fieldName="RefSeq" internalName="refseq_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="swissprot_id_xrefs" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list-text-file">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit">
           <FilterDescription description="filter to include genes with supplied list of AFFY-HG-U133 ID(s)" displayName="AFFY-HG-U133 ID(s):" fieldName="display_id" internalName="affy_hg_u133_id" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U133_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of AFFY-HG-U95 ID(s)" displayName="AFFY-HG-U95 ID(s):" fieldName="display_id" internalName="affy_hg_u95_id" qualifier="in" tableConstraint="gene_xref_AFFY_HG_U95_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of HUGO ID(s)" displayName="HUGO ID(s):" fieldName="display_id" internalName="hugo_id" qualifier="in" tableConstraint="gene_xref_HUGO_dm" type="list"/>
@@ -540,7 +540,7 @@
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP:" internalName="snp">
-        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snp_type" type="radio">
+        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snp_type">
           <FilterDescription description="Include/exclude genes associated with coding SNPs" displayName="coding SNPs" fieldName="coding" internalName="coding_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes associated with Intronic SNPs" displayName="Intronic SNPs" fieldName="intronic" internalName="intronic_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes associated with 5' UTR SNPs" displayName="5' UTR SNPs" fieldName="5utr" internalName="5utr_snps" qualifier="" tableConstraint="main" type="boolean"/>
@@ -548,22 +548,22 @@
           <FilterDescription description="limit to Genes associated only with 5' Upstream sequence" displayName="5' Upstream only" fieldName="5upstream" internalName="5upstream_snps" qualifier="is not null" tableConstraint="main" type="exclusive"/>
           <FilterDescription description="Include/exclude genes associated with 3' Downstream SNPs" displayName="3' Downstream SNPs" fieldName="3downstream" internalName="3downstream_snps" qualifier="" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="synonomy" type="boolean">
+        <FilterCollection internalName="synonomy">
           <FilterDescription description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" internalName="synonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" internalName="nonsynonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" internalName="stop_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
         </FilterCollection>
-        <FilterCollection internalName="ka_ks_ratio" type="text">
+        <FilterCollection internalName="ka_ks_ratio">
           <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" fieldName="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifier="&gt;" tableConstraint="transcript_main" type="text_entry"/>
         </FilterCollection>
-        <FilterCollection internalName="snpid" type="boolean">
+        <FilterCollection internalName="snpid">
           <FilterDescription description="filter for Genes Assocatied With SNPS having TSC IDs" displayName="SNPs with TSC IDs" fieldName="tscid" internalName="tsc_snp_ids" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter for Genes Assocatied With SNPS having HGBASE IDs" displayName="SNPs with HGBASE IDs" fieldName="hgbaseid" internalName="hgbase_snp_ids" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="validated_snp" type="boolean">
+        <FilterCollection internalName="validated_snp">
           <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" fieldName="validated" internalName="validated_snps" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="snp_frequency" type="boolean">
+        <FilterCollection internalName="snp_frequency">
           <FilterDescription description="Include/exclude entries associated with SNPs with frequency data" displayName="Entries associated with SNPs with frequency data" fieldName="freq" internalName="snp_frequency_data" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
@@ -765,34 +765,34 @@
     <PrimaryKey>snp_id</PrimaryKey>
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
-        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
+        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome">
           <FilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
+        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
           <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
+        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
           <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
+        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
           <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
           <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
-        <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
+        <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup displayName="GENERAL SNP FILTERS:" internalName="snpfilters">
-        <FilterCollection internalName="snpfilters" type="list-text-file">
+        <FilterCollection internalName="snpfilters">
           <FilterDescription description="SNP RefSNP ID" displayName="RefSNP ID(s):" fieldName="external_id" internalName="refsnp_id" qualifier="in" tableConstraint="snp_main" type="list"/>
         </FilterCollection>
-        <FilterCollection internalName="idlimit" type="boolean chooser">
+        <FilterCollection internalName="idlimit">
           <FilterDescription description="Limit to SNPs having TSC IDs" displayName="SNPs with TSC IDs" fieldName="tscid" internalName="tsc_id" tableConstraint="snp_main" type="boolean"/>
           <FilterDescription description="Limit to SNPs having HGBASE IDs" displayName="SNPs with HGBASE IDs" fieldName="hgbaseid" internalName="hgbase_id" tableConstraint="snp_main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="validate_snp" type="boolean">
+        <FilterCollection internalName="validate_snp">
           <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" fieldName="validated" internalName="validated_snps" tableConstraint="snp_main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
@@ -801,7 +801,7 @@
           <FilterSetDescription description="Filter for SNPs with Relationships to Ensembl Genes" displayName="Ensembl genes" fieldNameModifier="ensembl" internalName="ensemblgene" tableConstraintModifier="ensemblgene"/>
           <FilterSetDescription description="Filter for SNPs with Relationships to Vega Genes" displayName="Vega genes" fieldNameModifier="vega" internalName="vegagene" tableConstraintModifier="vegagene"/>
         </FilterSet>
-        <FilterCollection displayName="Entries with gene associations" filterSetName="genetype" internalName="genetypefilters" type="radio">
+        <FilterCollection displayName="Entries with gene associations" filterSetName="genetype" internalName="genetypefilters">
           <FilterDescription description="Snps associated with Coding Sequence" displayName="coding Only" fieldName="coding" filterSetReq="field" internalName="coding_snps" tableConstraint="snp_main" type="boolean"/>
           <FilterDescription description="Snps associated with  Intronic Sequence" displayName="Intronic only" fieldName="intronic" filterSetReq="field" internalName="intronic_snps" tableConstraint="snp_main" type="boolean"/>
           <FilterDescription description="Snps associated with  5&quot; Sequence" displayName="5&quot; UTR only" fieldName="5utr" filterSetReq="field" internalName="5utr_snps" tableConstraint="snp_main" type="boolean"/>
@@ -809,7 +809,7 @@
           <FilterDescription description="Snps associated with 5&quot; Upstream Sequence" displayName="5&quot; Upstream Only" fieldName="5upstream" filterSetReq="field" internalName="5upstream_snps" tableConstraint="snp_main" type="boolean"/>
           <FilterDescription description="Snps associated with 3&quot; Downstream Sequence" displayName="3&quot; Downstream Only" fieldName="3downstream" filterSetReq="field" internalName="3downstream_snps" tableConstraint="snp_main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="snpeffect" type="boolean">
+        <FilterCollection internalName="snpeffect">
           <FilterDescription description="Filter only Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" filterSetReq="table" internalName="synonymous_snps" tableConstraint="_dm" type="boolean_num"/>
           <FilterDescription description="Filter only Non-synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" filterSetReq="table" internalName="nonsynonymous_snps" tableConstraint="_dm" type="boolean_num"/>
           <FilterDescription description="Filter only for Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" filterSetReq="table" internalName="stop_snps" tableConstraint="_dm" type="boolean_num"/>
@@ -935,24 +935,24 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
-        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
+        <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome">
           <FilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
+        <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
           <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
+        <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
           <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
-        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
+        <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
           <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
           <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup internalName="gene">
-        <FilterCollection internalName="idLimit" type="boolean">
+        <FilterCollection internalName="idLimit">
           <FilterDescription description="Filter to include/exclude Known Genes" displayName="Known Genes" fieldName="known_gene" internalName="known_genes" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude AFFY-MG-U74 ID(s)" displayName="with AFFY-MG-U74 ID(s)" fieldName="AFFY_MG_U74" internalName="affy_mg_u74_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude AFFY-MG-U74v2 ID(s)" displayName="with AFFY-MG-U74v2 ID(s)" fieldName="AFFY_MG_U74v2" internalName="affy_mg_u74v2_id_xrefs" tableConstraint="main" type="boolean"/>
@@ -969,7 +969,7 @@
           <FilterDescription description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" fieldName="SWISSPROT" internalName="swissprot_id_xrefs" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter to include/exclude Sanger-Mver1-1-1 ID(s)" displayName="with Sanger-Mver1-1-1 ID(s)" fieldName="Sanger_Mver1_1_1" internalName="sanger_mver1_1_1_id_xrefs" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit" type="list-text-file">
+        <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="idListLimit">
           <FilterDescription description="filter to include genes with supplied list of AFFY-MG-U74 ID(s)" displayName="FG_AFFY-MG-U74 ID(s)" fieldName="display_id" internalName="affy_mg_u74_id" qualifier="in" tableConstraint="gene_xref_AFFY_MG-U74_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of AFFY-MG-U74v2 ID(s)" displayName="FG_AFFY-MG-U74v2 ID(s)" fieldName="display_id" internalName="affy_mg_u74v2_id" qualifier="in" tableConstraint="gene_xref_AFFY_MG-U74v2_dm" type="list"/>
           <FilterDescription description="filter to include genes with supplied list of AFFY-MOE430 ID(s)" displayName="FG_AFFY-MOE430 ID(s)" fieldName="display_id" internalName="affy_moe430_id" qualifier="in" tableConstraint="gene_xref_AFFY_MOE430_dm" type="list"/>
@@ -990,19 +990,19 @@
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multispecies">
-        <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs" type="boolean">
+        <FilterCollection description="Filter on Genes having homologous gene relationships with other species" displayName="Homologous genes" internalName="Homologs">
           <FilterDescription description="Filter for Genes having Human homologous Genes" displayName="Entries associated with homologous human genes" fieldName="hsapiens_homolog" internalName="human_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having rat homologous Genes" displayName="Entries associated with homologous rat genes" fieldName="rat_homolog" internalName="rat_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having fugu homologous Genes" displayName="Entries associated with homologous fugu genes" fieldName="frubripes_homolog" internalName="fugu_rubripes_homologs" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Filter for Genes having zebrafish homologous Genes" displayName="Entries associated with homologous zebrafish genes" fieldName="drerio_homolog" internalName="danio_rerio_homologs" qualifier="" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection description="filter for genes having upstream conserved regions with other species" displayName="Upstream conserved regions" internalName="upstreamCR" type="boolean">
+        <FilterCollection description="filter for genes having upstream conserved regions with other species" displayName="Upstream conserved regions" internalName="upstreamCR">
           <FilterDescription description="filter for genes having upstream conserved regions mapped onto the human genome" displayName="Entries associated with upstream matches in human genome" fieldName="hsapiens_upstreamcr" internalName="human_upstream_conserved_regions" tableConstraint="main" type="boolean"/>
           <FilterDescription description="filter for genes having upstream conserved regions mapped onto the rat genome" displayName="Entries associated with upstream matches in rat genome" fieldName="rat_upstream_conserved_regions" internalName="rat_upstream_conserved_regions" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Protein data" displayName=" PROTEIN:" internalName="protein">
-        <FilterCollection description="Limit to genes with these family or domain IDs:" displayName="Limit to genes with these family or domain IDs:" internalName="fam_domain_id_list" type="list">
+        <FilterCollection description="Limit to genes with these family or domain IDs:" displayName="Limit to genes with these family or domain IDs:" internalName="fam_domain_id_list">
           <FilterDescription description="Filter for Genes having mapped to a list of Interpro ID(s)" displayName="Interpro ID(s):" fieldName="interpro" internalName="interpro_ids" qualifier="in" tableConstraint="gene_prot_interpro_dm" type="list"/>
           <FilterDescription description="Filter for Genes having mapped to a list of PFAM ID(s)" displayName="PFAM ID(s):" fieldName="pfam" internalName="pfam_ids" qualifier="in" tableConstraint="gene_prot_pfam_dm" type="list"/>
           <FilterDescription description="Filter for Genes having mapped to a list of PRINTS ID(s)" displayName="PRINTS ID(s):" fieldName="prints" internalName="prints_ids" qualifier="in" tableConstraint="gene_prot_prints_dm" type="list"/>
@@ -1010,15 +1010,15 @@
           <FilterDescription description="Filter for Genes having mapped to a list of Prosite ID(s)" displayName="Prosite ID(s):" fieldName="prosite" internalName="prosite_ids" qualifier="in" tableConstraint="gene_prot_prosite_dm" type="list"/>
           <FilterDescription description="Filter for Genes having mapped to a list of Ensembl family ID(s)" displayName="Ensembl family ID(s):" fieldName="family" internalName="ensembl_family_ids" qualifier="in" tableConstraint="main" type="list"/>
         </FilterCollection>
-        <FilterCollection internalName="transmembrane" type="boolean">
+        <FilterCollection internalName="transmembrane">
           <FilterDescription description="Filter for genes including/exluding Transmembrane Domains" displayName="Transmembrane Domains:" fieldName="transmembrane" internalName="transmembrane_domains" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="signaldomain" type="boolean">
+        <FilterCollection internalName="signaldomain">
           <FilterDescription description="Filter for genes including/excluding Signal Domains" displayName="Signal Domains:" fieldName="signal_peptide" internalName="signal_domains" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP:" internalName="snp">
-        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype" type="radio">
+        <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype">
           <FilterDescription description="Include/exclude genes with coding SNPs" displayName="coding SNPs" fieldName="coding" internalName="coding_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" fieldName="intronic" internalName="intronic_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" fieldName="5utr" internalName="5utr_snps" qualifier="" tableConstraint="main" type="boolean"/>
@@ -1026,15 +1026,15 @@
           <FilterDescription description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" fieldName="5upstream" internalName="5upstream_snps" qualifier="" tableConstraint="main" type="boolean"/>
           <FilterDescription description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" fieldName="3downstream" internalName="3downstream_snps" qualifier="" tableConstraint="main" type="boolean"/>
         </FilterCollection>
-        <FilterCollection internalName="synonomy" type="boolean">
+        <FilterCollection internalName="synonomy">
           <FilterDescription description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" fieldName="is_synonymous" internalName="synonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" fieldName="is_nonsynonymous" internalName="nonsynonymous_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
           <FilterDescription description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" fieldName="is_stop" internalName="stop_snps" tableConstraint="gene_snp_dm" type="boolean_num"/>
         </FilterCollection>
-        <FilterCollection internalName="ka_ks_ratio" type="text">
+        <FilterCollection internalName="ka_ks_ratio">
           <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" fieldName="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifier="&gt;" tableConstraint="transcript_main" type="text_entry"/>
         </FilterCollection>
-        <FilterCollection internalName="validate_snp" type="boolean">
+        <FilterCollection internalName="validate_snp">
           <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" fieldName="validated" internalName="validated_snps" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
@@ -1288,7 +1288,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1306,7 +1306,7 @@
     <PrimaryKey>snp_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1326,7 +1326,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1346,7 +1346,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1364,7 +1364,7 @@
     <PrimaryKey>snp_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1384,7 +1384,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1404,7 +1404,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1424,7 +1424,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1442,7 +1442,7 @@
     <PrimaryKey>snp_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1462,7 +1462,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1482,7 +1482,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1502,7 +1502,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1522,7 +1522,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1542,7 +1542,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
@@ -1562,7 +1562,7 @@
     <PrimaryKey>transcript_id</PrimaryKey>
     <FilterPage internalName="dummy">
       <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
+        <FilterCollection internalName="dummy">
           <FilterDescription fieldName="dummy" internalName="dummy" type="list"/>
         </FilterCollection>
       </FilterGroup>
