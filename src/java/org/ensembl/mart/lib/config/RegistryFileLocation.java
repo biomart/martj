@@ -17,7 +17,6 @@
  */
 package org.ensembl.mart.lib.config;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
