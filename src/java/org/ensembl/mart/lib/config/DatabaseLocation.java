@@ -171,7 +171,7 @@ public class DatabaseLocation extends MartLocationBase {
   
   
 	/**
-   * @return "name" if set, otherwise uses default connection string
+   * @return "name" if set, otherwise uses DetailedDataSource.simpleRepresentation( getHost(), getPort(), getInstanceName() )
 	 * @see org.ensembl.mart.lib.config.MartLocation#getName()
 	 */
 	public String getName() {
