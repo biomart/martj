@@ -1078,16 +1078,19 @@ public class MartShell {
 	}
 
 	private String[] listProcedures() {
+    if (mainLogger.isLoggable(Level.INFO))
+      mainLogger.info("Listing Procedures\n");
+      
 		if (msl.getStoredMQLCommandKeys().size() == 0)
 			return new String[] { "No Procedures Stored\n" };
 
-		Set names = martMap.keySet();
+		Set names = msl.getStoredMQLCommandKeys();
 		String[] ret = new String[names.size()];
 
 		int i = 0;
 		for (Iterator iter = names.iterator(); iter.hasNext();) {
-			String sourceName = (String) iter.next();
-			ret[i] = sourceName + "\n";
+			String name = (String) iter.next();
+			ret[i] = name + "\n";
 			i++;
 		}
 		Arrays.sort(ret);
@@ -1095,6 +1098,9 @@ public class MartShell {
 	}
 
 	private String[] listMarts() {
+    if (mainLogger.isLoggable(Level.INFO))
+      mainLogger.info("Listing Marts\n");
+      
 		if (martMap.keySet().size() == 0)
 			return new String[] { "No Marts have been loaded\n" };
 
