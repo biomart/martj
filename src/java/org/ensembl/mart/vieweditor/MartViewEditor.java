@@ -45,6 +45,7 @@ import javax.swing.JOptionPane;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * Class MartViewEditor extends JFrame..
@@ -366,7 +367,7 @@ public class MartViewEditor extends JFrame {
     //Create a new internal frame.
     protected void createFrame(File file) {
 
-            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this,null,null,null);
+            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this,null,null,null,null);
             frame.setVisible(true);
             desktop.add(frame);
             try {
@@ -555,7 +556,7 @@ public class MartViewEditor extends JFrame {
 				   datasets, datasets[0]);		
 		  if (dataset == null)
 		    return;	
-		  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,user,dataset,null);
+		  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,user,dataset,null);
 		  frame.setVisible(true);
 		  desktop.add(frame);
 		  try {
@@ -600,7 +601,7 @@ public class MartViewEditor extends JFrame {
 				   datasets, datasets[0]);
 		if (dataset == null)
 					return;	
-		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,dataset,database);
+		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,null,dataset,database);
 		frame.setVisible(true);
 		desktop.add(frame);
 		try {
@@ -613,10 +614,25 @@ public class MartViewEditor extends JFrame {
 	}
 	
 	public void updateDatasetView() {
+	  try{	
 		if (ds == null){
 			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
 			return;
-		}		
+		}	
+		
+		//DatabaseDatasetViewUtils.getValidatedDatasetView(ds,((DatasetViewTreeWidget)desktop.getSelectedFrame()).getDatasetView());
+		
+		DatasetView dsv = DatabaseDatasetViewUtils.getValidatedDatasetView(ds,((DatasetViewTreeWidget)desktop.getSelectedFrame()).getDatasetView());
+		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,dsv,null,null,database);
+		frame.setVisible(true);
+		desktop.add(frame);
+		try {
+			frame.setSelected(true);
+		} catch (java.beans.PropertyVetoException e) {
+		}	  
+	  }
+	  catch (SQLException e){
+	  }		
 	}
 		
     public void save() {

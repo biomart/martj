@@ -60,7 +60,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     private File file = null;
     private MartViewEditor editor;
 
-    public DatasetViewTreeWidget(File file, MartViewEditor editor, String user, String dataset, String database) {
+    public DatasetViewTreeWidget(File file, MartViewEditor editor, DatasetView dsv, String user, String dataset, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -69,8 +69,10 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                 true);//iconifiable
         this.editor = editor;
         try {
+		  DatasetView view = null;	
+          if (dsv == null){	
 	   //  this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
-            DatasetView view = new DatasetView();
+            
             if (file == null) {
             	if (user == null){
             	  if (database == null){	
@@ -100,6 +102,10 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                 // only view one in the file so get that one
                 view = adaptor.getDatasetViews()[0];
             }
+          }
+          else{
+          	view = new DatasetView(dsv);
+          }
             this.setTitle(view.getInternalName());
 
             JFrame.setDefaultLookAndFeelDecorated(true);
@@ -108,6 +114,9 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                     view, this);
             tree = new DatasetViewTree(view,
                     this, attrTable);
+            // for update         
+            setDatasetView(view);
+            
             JScrollPane treeScrollPane = new JScrollPane(tree);
             JScrollPane tableScrollPane = new JScrollPane(attrTable);
             JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
