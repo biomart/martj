@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jdom.Attribute;
+import org.jdom.DocType;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -55,6 +56,7 @@ public class DatasetViewXMLUtils {
 	public static String DEFAULTDIGESTALGORITHM = "MD5";
 
 	// element names
+	private static final String DATASETVIEWDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
 	private static final String DATASETVIEW = "DatasetView";
 	private static final String STARBASE = "StarBase";
 	private static final String PRIMARYKEY = "PrimaryKey";
@@ -535,7 +537,10 @@ public class DatasetViewXMLUtils {
 		for (int i = 0, n = apages.length; i < n; i++)
 			root.addContent(getAttributePageElement(apages[i]));
 
-		return new Document(root);
+    Document thisDoc = new Document(root);
+    thisDoc.setDocType( new DocType(DATASETVIEW, DATASETVIEWDOCTYPEURL) );
+    
+		return thisDoc;
 	}
 
 	private static Element getAttributePageElement(AttributePage apage) {

@@ -26,13 +26,17 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
@@ -40,6 +44,8 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.sql.DataSource;
 
+import org.ensembl.mart.util.ColumnDescription;
+import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 
@@ -77,9 +83,17 @@ public class DatabaseDatasetViewUtils {
   private static final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private static final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
-  private static final String MAINTABLESUFFIX = "__MAIN";
+  private static final String MAINTABLESUFFIX = "main";
+  private static final String DIMENSIONTABLESUFFIX = "dm";
+
   private static final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
-  
+
+  private static String DEFAULTLEGALQUALIFIERS = "in,=,>,<,>=,<=";
+  private static String DEFAULTQUALIFIER = "in";
+  private static String DEFAULTTYPE = "list";
+  private static final String DEFAULTGROUP = "defaultGroup";
+  private static final String DEFAULTPAGE = "defaultPage";
+
   private static Logger logger = Logger.getLogger(DatabaseDatasetViewUtils.class.getName());
 
   /**
@@ -854,296 +868,304 @@ public class DatabaseDatasetViewUtils {
   }
 
   public static DatasetView getValidatedDatasetView(DataSource dsource, DatasetView dsv) throws SQLException {
-		String schema = null;
-		String catalog = null;
+    String schema = null;
+    String catalog = null;
 
-		ResultSet schemas = dsource.getConnection().getMetaData().getSchemas();
-		while (schemas.next()) {
-			schema = schemas.getString(1);
-			catalog = schemas.getString(2);
+    ResultSet schemas = dsource.getConnection().getMetaData().getSchemas();
+    while (schemas.next()) {
+      schema = schemas.getString(1);
+      catalog = schemas.getString(2);
 
-			if (logger.isLoggable(Level.INFO))
-				logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
-		}
-		
-  	DatasetView validatedDatasetView = new DatasetView(dsv);
-  	
-  	boolean hasBrokenStars = false;
-  	String[] starbases = dsv.getStarBases();
-  	String[] validatedStars = new String[ starbases.length ];
-  	
-  	for (int i = 0, n = starbases.length; i < n; i++) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
+    }
+
+    DatasetView validatedDatasetView = new DatasetView(dsv);
+
+    boolean hasBrokenStars = false;
+    String[] starbases = dsv.getStarBases();
+    String[] validatedStars = new String[starbases.length];
+
+    for (int i = 0, n = starbases.length; i < n; i++) {
       String starbase = starbases[i];
       String validatedStar = getValidatedStarBase(dsource, schema, catalog, starbase);
-      
-      if (! validatedStar.equals(starbase)) {
+
+      if (!validatedStar.equals(starbase)) {
         hasBrokenStars = true;
-        validatedDatasetView.removeStarBase( starbase );
+        validatedDatasetView.removeStarBase(starbase);
       }
-      
+
       validatedStars[i] = validatedStar;
     }
 
     if (hasBrokenStars) {
-    	validatedDatasetView.setStarsBroken();
-    	validatedDatasetView.addStarBases( validatedStars );
+      validatedDatasetView.setStarsBroken();
+      validatedDatasetView.addStarBases(validatedStars);
     }
-    
-		boolean hasBrokenPKeys = false;
-		String[] pkeys = dsv.getPrimaryKeys();
-		String[] validatedKeys = new String[ pkeys.length ];
-		
-		for (int i = 0, n = pkeys.length; i < n; i++) {
+
+    boolean hasBrokenPKeys = false;
+    String[] pkeys = dsv.getPrimaryKeys();
+    String[] validatedKeys = new String[pkeys.length];
+
+    for (int i = 0, n = pkeys.length; i < n; i++) {
       String pkey = pkeys[i];
       String validatedKey = getValidatedPrimaryKey(dsource, schema, catalog, pkey);
-      
-      if (! validatedKey.equals(pkey)) {
+
+      if (!validatedKey.equals(pkey)) {
         hasBrokenPKeys = true;
-        validatedDatasetView.removePrimaryKey( pkey );
+        validatedDatasetView.removePrimaryKey(pkey);
       }
-      
+
       validatedKeys[i] = validatedKey;
     }
-		
-		if (hasBrokenPKeys) {
-			validatedDatasetView.setPrimaryKeysBroken();
-		  validatedDatasetView.addPrimaryKeys( validatedKeys );
-		}
-		
-		boolean hasBrokenDefaultFilters = false;
-		DefaultFilter[] defaultFilters = dsv.getDefaultFilters();
-		List brokenFilters = new ArrayList();
-		
-		//defaultFilter objects are not position sensitive
-		for (int i = 0, n = defaultFilters.length; i < n; i++) {
-			DefaultFilter dfilter = defaultFilters[i];
+
+    if (hasBrokenPKeys) {
+      validatedDatasetView.setPrimaryKeysBroken();
+      validatedDatasetView.addPrimaryKeys(validatedKeys);
+    }
+
+    boolean hasBrokenDefaultFilters = false;
+    DefaultFilter[] defaultFilters = dsv.getDefaultFilters();
+    List brokenFilters = new ArrayList();
+
+    //defaultFilter objects are not position sensitive
+    for (int i = 0, n = defaultFilters.length; i < n; i++) {
+      DefaultFilter dfilter = defaultFilters[i];
       DefaultFilter validatedDefaultFilter = getValidatedDefaultFilter(dsource, schema, catalog, dfilter);
-      
-      if (validatedDefaultFilter.isBroken()){
-      	hasBrokenDefaultFilters = true;
-      	validatedDatasetView.removeDefaultFilter( dfilter );
-      	brokenFilters.add( validatedDefaultFilter );
-      }      
+
+      if (validatedDefaultFilter.isBroken()) {
+        hasBrokenDefaultFilters = true;
+        validatedDatasetView.removeDefaultFilter(dfilter);
+        brokenFilters.add(validatedDefaultFilter);
+      }
     }
-    
+
     if (hasBrokenDefaultFilters) {
-    	validatedDatasetView.setDefaultFiltersBroken();
-    	
-    	for (int i = 0, n = brokenFilters.size(); i < n; i++) {
+      validatedDatasetView.setDefaultFiltersBroken();
+
+      for (int i = 0, n = brokenFilters.size(); i < n; i++) {
         DefaultFilter brokenFilter = (DefaultFilter) brokenFilters.get(i);
-        validatedDatasetView.addDefaultFilter( brokenFilter );
+        validatedDatasetView.addDefaultFilter(brokenFilter);
       }
     }
-		
-		boolean hasBrokenOptions = false;
-		Option[] options = dsv.getOptions();
-		HashMap brokenOptions = new HashMap();
-		
-		for (int i = 0, n = options.length; i < n; i++) {
+
+    boolean hasBrokenOptions = false;
+    Option[] options = dsv.getOptions();
+    HashMap brokenOptions = new HashMap();
+
+    for (int i = 0, n = options.length; i < n; i++) {
       Option validatedOption = getValidatedOption(dsource, schema, catalog, options[i]);
-      
+
       if (validatedOption.isBroken()) {
-      	hasBrokenOptions = true;
-      	brokenOptions.put( new Integer(i), validatedOption);
+        hasBrokenOptions = true;
+        brokenOptions.put(new Integer(i), validatedOption);
       }
     }
-    
+
     if (hasBrokenOptions) {
-    	validatedDatasetView.setOptionsBroken();
-    	
-    	for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {
+      validatedDatasetView.setOptionsBroken();
+
+      for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
-        Option brokenOption = (Option) brokenOptions.get( position );
-        
-        validatedDatasetView.removeOption( options[ position.intValue() ]);
-        validatedDatasetView.insertOption( position.intValue(), brokenOption );
+        Option brokenOption = (Option) brokenOptions.get(position);
+
+        validatedDatasetView.removeOption(options[position.intValue()]);
+        validatedDatasetView.insertOption(position.intValue(), brokenOption);
       }
     }
-		
-		boolean hasBrokenAttributePages = false;
-		AttributePage[] apages = dsv.getAttributePages();
-		HashMap brokenAPages = new HashMap();
-		
-		for (int i = 0, n = apages.length; i < n; i++) {
+
+    boolean hasBrokenAttributePages = false;
+    AttributePage[] apages = dsv.getAttributePages();
+    HashMap brokenAPages = new HashMap();
+
+    for (int i = 0, n = apages.length; i < n; i++) {
       AttributePage validatedPage = getValidatedAttributePage(dsource, apages[i]);
-      
-      if(validatedPage.isBroken()) {
-      	hasBrokenAttributePages = true;
-      	brokenAPages.put( new Integer(i), validatedPage);
-      }      
-    }
-    
-    if (hasBrokenAttributePages) {
-    	validatedDatasetView.setAttributePagesBroken();
-    	
-    	for (Iterator iter = brokenAPages.keySet().iterator(); iter.hasNext();) {
-        Integer position = (Integer) iter.next();
-        AttributePage brokenAPage = (AttributePage) brokenAPages.get( position );
-        
-        validatedDatasetView.removeAttributePage( apages[ position.intValue() ] );
-        validatedDatasetView.insertAttributePage( position.intValue(), brokenAPage);
+
+      if (validatedPage.isBroken()) {
+        hasBrokenAttributePages = true;
+        brokenAPages.put(new Integer(i), validatedPage);
       }
     }
-    
-		boolean hasBrokenFilterPages = false;
-		HashMap brokenFPages = new HashMap();
-		FilterPage[] allPages = dsv.getFilterPages();
-		for (int i = 0, n = allPages.length; i < n; i++) {
-			FilterPage validatedPage = getValidatedFilterPage(dsource, allPages[i]);
-			
-			if (validatedPage.isBroken()) {
-				hasBrokenFilterPages = true;
-				brokenFPages.put(new Integer(i), validatedPage);
-			}
-		}
-		
-		if (hasBrokenFilterPages) {
-			validatedDatasetView.setFilterPagesBroken();
-			
-			for (Iterator iter = brokenFPages.keySet().iterator(); iter.hasNext();) {
-				Integer position = (Integer) iter.next();
-				FilterPage brokenPage = ( FilterPage ) brokenFPages.get( position );
-				
-				validatedDatasetView.removeFilterPage( allPages[ position.intValue() ] );
-				validatedDatasetView.insertFilterPage( position.intValue(), brokenPage );
-			}
-		}
-		
-  	return validatedDatasetView;
+
+    if (hasBrokenAttributePages) {
+      validatedDatasetView.setAttributePagesBroken();
+
+      for (Iterator iter = brokenAPages.keySet().iterator(); iter.hasNext();) {
+        Integer position = (Integer) iter.next();
+        AttributePage brokenAPage = (AttributePage) brokenAPages.get(position);
+
+        validatedDatasetView.removeAttributePage(apages[position.intValue()]);
+        validatedDatasetView.insertAttributePage(position.intValue(), brokenAPage);
+      }
+    }
+
+    boolean hasBrokenFilterPages = false;
+    HashMap brokenFPages = new HashMap();
+    FilterPage[] allPages = dsv.getFilterPages();
+    for (int i = 0, n = allPages.length; i < n; i++) {
+      FilterPage validatedPage = getValidatedFilterPage(dsource, allPages[i]);
+
+      if (validatedPage.isBroken()) {
+        hasBrokenFilterPages = true;
+        brokenFPages.put(new Integer(i), validatedPage);
+      }
+    }
+
+    if (hasBrokenFilterPages) {
+      validatedDatasetView.setFilterPagesBroken();
+
+      for (Iterator iter = brokenFPages.keySet().iterator(); iter.hasNext();) {
+        Integer position = (Integer) iter.next();
+        FilterPage brokenPage = (FilterPage) brokenFPages.get(position);
+
+        validatedDatasetView.removeFilterPage(allPages[position.intValue()]);
+        validatedDatasetView.insertFilterPage(position.intValue(), brokenPage);
+      }
+    }
+
+    return validatedDatasetView;
   }
 
-	private static DefaultFilter getValidatedDefaultFilter(DataSource dsource, String schema, String catalog, DefaultFilter dfilter) throws SQLException {
-		DefaultFilter validatedDefaultFilter = new DefaultFilter( dfilter );
-		
-		FilterDescription validatedFilterDescription = getValidatedFilterDescription(dsource, schema, catalog, dfilter.getFilterDescription());
-		
-		if (validatedFilterDescription.isBroken()) {
-			validatedDefaultFilter.setFilterBroken();
-			
-			validatedDefaultFilter.setFilterDescription( validatedFilterDescription );
-		}
-		
-		return validatedDefaultFilter;
-	}
+  private static DefaultFilter getValidatedDefaultFilter(
+    DataSource dsource,
+    String schema,
+    String catalog,
+    DefaultFilter dfilter)
+    throws SQLException {
+    DefaultFilter validatedDefaultFilter = new DefaultFilter(dfilter);
 
-	public static String getValidatedStarBase(DataSource dsource, String schema, String catalog, String starbase) throws SQLException {
-      String validatedStarBase = new String(starbase);
-      
-      String table = starbase + "%" + MAINTABLESUFFIX; 
-      boolean isBroken = true;
-      
-      ResultSet rs = dsource.getConnection().getMetaData().getTables(catalog, schema, table, null);
-      while (rs.next()) {
-      	String thisTable = rs.getString(3);
-      	if (thisTable.toLowerCase().startsWith(starbase.toLowerCase())) {
-      	  isBroken = false;
-      	  break;
-      	} else {
-      		if (logger.isLoggable(Level.INFO))
-      		  logger.info("Recieved table " + thisTable + " when querying for " + table + "\n");
-      	}
+    FilterDescription validatedFilterDescription =
+      getValidatedFilterDescription(dsource, schema, catalog, dfilter.getFilterDescription());
+
+    if (validatedFilterDescription.isBroken()) {
+      validatedDefaultFilter.setFilterBroken();
+
+      validatedDefaultFilter.setFilterDescription(validatedFilterDescription);
+    }
+
+    return validatedDefaultFilter;
+  }
+
+  public static String getValidatedStarBase(DataSource dsource, String schema, String catalog, String starbase)
+    throws SQLException {
+    String validatedStarBase = new String(starbase);
+
+    String table = starbase + "%" + MAINTABLESUFFIX;
+    boolean isBroken = true;
+
+    ResultSet rs = dsource.getConnection().getMetaData().getTables(catalog, schema, table, null);
+    while (rs.next()) {
+      String thisTable = rs.getString(3);
+      if (thisTable.toLowerCase().startsWith(starbase.toLowerCase())) {
+        isBroken = false;
+        break;
+      } else {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Recieved table " + thisTable + " when querying for " + table + "\n");
       }
-      
-      if (isBroken)
-      	validatedStarBase += DOESNTEXISTSUFFIX;
+    }
 
-      return validatedStarBase;
-	}
+    if (isBroken)
+      validatedStarBase += DOESNTEXISTSUFFIX;
 
-	public static String getValidatedPrimaryKey(DataSource dsource, String schema, String catalog, String primaryKey) throws SQLException {
-			String validatedPrimaryKey = new String(primaryKey);
-      
-       String tablePattern = "%"+MAINTABLESUFFIX;
-       boolean isBroken = true;
-       
-       ResultSet columns = dsource.getConnection().getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
-      while (columns.next()) {
-      	String thisColumn = columns.getString(4);
-      	
-      	if (thisColumn.toLowerCase().equals( primaryKey.toLowerCase() )) {
-      		isBroken = false;
-      		break;
-      	} else {
-      		if (logger.isLoggable(Level.INFO))
-      		  logger.info("Recieved column " + thisColumn + " during query for primary key " + primaryKey + "\n");
-      	}
+    return validatedStarBase;
+  }
+
+  public static String getValidatedPrimaryKey(DataSource dsource, String schema, String catalog, String primaryKey)
+    throws SQLException {
+    String validatedPrimaryKey = new String(primaryKey);
+
+    String tablePattern = "%" + MAINTABLESUFFIX;
+    boolean isBroken = true;
+
+    ResultSet columns = dsource.getConnection().getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
+    while (columns.next()) {
+      String thisColumn = columns.getString(4);
+
+      if (thisColumn.toLowerCase().equals(primaryKey.toLowerCase())) {
+        isBroken = false;
+        break;
+      } else {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Recieved column " + thisColumn + " during query for primary key " + primaryKey + "\n");
       }
-      
-      if (isBroken)
-        validatedPrimaryKey += DOESNTEXISTSUFFIX;
-        
-			return validatedPrimaryKey;
-	}
-	
-	public static FilterPage getValidatedFilterPage(DataSource dsource, FilterPage page) throws SQLException {
-  	FilterPage validatedPage = new FilterPage( page );
-  	
-  	boolean hasBrokenGroups = false;
-  	HashMap brokenGroups = new HashMap();
-  	
-  	List allGroups = page.getFilterGroups();
-  	for (int i = 0, n = allGroups.size(); i < n; i++) {
-      Object group =  allGroups.get(i);
-      
+    }
+
+    if (isBroken)
+      validatedPrimaryKey += DOESNTEXISTSUFFIX;
+
+    return validatedPrimaryKey;
+  }
+
+  public static FilterPage getValidatedFilterPage(DataSource dsource, FilterPage page) throws SQLException {
+    FilterPage validatedPage = new FilterPage(page);
+
+    boolean hasBrokenGroups = false;
+    HashMap brokenGroups = new HashMap();
+
+    List allGroups = page.getFilterGroups();
+    for (int i = 0, n = allGroups.size(); i < n; i++) {
+      Object group = allGroups.get(i);
+
       if (group instanceof FilterGroup) {
-      	FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group);
-      	
-      	if (validatedGroup.isBroken()) {
-      		hasBrokenGroups = true;
-      		brokenGroups.put( new Integer(i), validatedGroup);
-      	}
+        FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group);
+
+        if (validatedGroup.isBroken()) {
+          hasBrokenGroups = true;
+          brokenGroups.put(new Integer(i), validatedGroup);
+        }
       } // else not needed yet
-      
+
       if (hasBrokenGroups) {
-      	validatedPage.setGroupsBroken();
-      	
-      	for (Iterator iter = brokenGroups.keySet().iterator(); iter.hasNext();) {
+        validatedPage.setGroupsBroken();
+
+        for (Iterator iter = brokenGroups.keySet().iterator(); iter.hasNext();) {
           Integer position = (Integer) iter.next();
-          Object brokenGroup = brokenGroups.get( position );
-          
+          Object brokenGroup = brokenGroups.get(position);
+
           if (brokenGroup instanceof FilterGroup) {
-          	validatedPage.removeFilterGroup( (FilterGroup) allGroups.get( position.intValue() ));
-          	validatedPage.insertFilterGroup( position.intValue(), (FilterGroup) brokenGroup);
+            validatedPage.removeFilterGroup((FilterGroup) allGroups.get(position.intValue()));
+            validatedPage.insertFilterGroup(position.intValue(), (FilterGroup) brokenGroup);
           } //else not needed yet
         }
       }
     }
-    
-  	return validatedPage;
+
+    return validatedPage;
   }
-  
+
   public static FilterGroup getValidatedFilterGroup(DataSource dsource, FilterGroup group) throws SQLException {
-  	FilterGroup validatedGroup = new FilterGroup(group);
-  	
-  	FilterCollection[] collections = group.getFilterCollections();
-  	
-  	boolean hasBrokenCollections = false;
-  	HashMap brokenCollections = new HashMap();
-  	
-  	for (int i = 0, n = collections.length; i < n; i++) {
+    FilterGroup validatedGroup = new FilterGroup(group);
+
+    FilterCollection[] collections = group.getFilterCollections();
+
+    boolean hasBrokenCollections = false;
+    HashMap brokenCollections = new HashMap();
+
+    for (int i = 0, n = collections.length; i < n; i++) {
       FilterCollection validatedCollection = getValidatedFilterCollection(dsource, collections[i]);
-      
+
       if (validatedCollection.isBroken()) {
-      	hasBrokenCollections = true;
-      	brokenCollections.put( new Integer( i ), validatedCollection);
-      }      
+        hasBrokenCollections = true;
+        brokenCollections.put(new Integer(i), validatedCollection);
+      }
     }
-    
+
     if (hasBrokenCollections) {
-    	validatedGroup.setCollectionsBroken();
-    	
-    	for (Iterator iter = brokenCollections.keySet().iterator(); iter.hasNext();) {
+      validatedGroup.setCollectionsBroken();
+
+      for (Iterator iter = brokenCollections.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
-        FilterCollection brokenCollection = (FilterCollection) brokenCollections.get( position );
-        
-  			validatedGroup.removeFilterCollection( collections[ position.intValue() ] );
-  			validatedGroup.insertFilterCollection( position.intValue(), brokenCollection );
-      }    	
+        FilterCollection brokenCollection = (FilterCollection) brokenCollections.get(position);
+
+        validatedGroup.removeFilterCollection(collections[position.intValue()]);
+        validatedGroup.insertFilterCollection(position.intValue(), brokenCollection);
+      }
     }
-  	
-  	return validatedGroup;
+
+    return validatedGroup;
   }
-  
+
   /**
    * Runs through the FilterDescription objects within a FilterCollection and checks whether the field and,
    * if present, tableConstraint is present in the given mart hosted by the DataSource provided, or, for FilterDescription
@@ -1193,7 +1215,7 @@ public class DatabaseDatasetViewUtils {
 
         if (brokenFilter instanceof FilterDescription) {
           validatedFilterCollection.removeFilterDescription((FilterDescription) allFilts.get(position.intValue()));
-          validatedFilterCollection.insertFilterDescription( position.intValue(), (FilterDescription) brokenFilter );
+          validatedFilterCollection.insertFilterDescription(position.intValue(), (FilterDescription) brokenFilter);
         } //else not needed yet
       }
     }
@@ -1391,73 +1413,73 @@ public class DatabaseDatasetViewUtils {
   }
 
   public static AttributePage getValidatedAttributePage(DataSource dsource, AttributePage page) throws SQLException {
-  	AttributePage validatedPage = new AttributePage( page );
-  	
-  	boolean hasBrokenGroups = false;
-  	HashMap brokenGroups = new HashMap();
+    AttributePage validatedPage = new AttributePage(page);
+
+    boolean hasBrokenGroups = false;
+    HashMap brokenGroups = new HashMap();
 
     List allGroups = page.getAttributeGroups();
     for (int i = 0, n = allGroups.size(); i < n; i++) {
       Object group = allGroups.get(i);
-      
+
       if (group instanceof AttributeGroup) {
-      	AttributeGroup validatedGroup = getValidatedAttributeGroup(dsource, (AttributeGroup) group);
-      	
-      	if (validatedGroup.isBroken()) {
-      		hasBrokenGroups = true;
-      		brokenGroups.put( new Integer(i), group);
-      	}
+        AttributeGroup validatedGroup = getValidatedAttributeGroup(dsource, (AttributeGroup) group);
+
+        if (validatedGroup.isBroken()) {
+          hasBrokenGroups = true;
+          brokenGroups.put(new Integer(i), group);
+        }
       } //else not needed yet      
-    }  	
-  	
-  	if (hasBrokenGroups) {
-  		validatedPage.setGroupsBroken();
-  		
-  		for (Iterator iter = brokenGroups.keySet().iterator(); iter.hasNext();) {
+    }
+
+    if (hasBrokenGroups) {
+      validatedPage.setGroupsBroken();
+
+      for (Iterator iter = brokenGroups.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
-        
+
         Object brokenGroup = brokenGroups.get(position);
         if (brokenGroup instanceof AttributeGroup) {
-        	validatedPage.removeAttributeGroup( (AttributeGroup) allGroups.get( position.intValue() ) );
-        	validatedPage.insertAttributeGroup( position.intValue(), (AttributeGroup) brokenGroup);
+          validatedPage.removeAttributeGroup((AttributeGroup) allGroups.get(position.intValue()));
+          validatedPage.insertAttributeGroup(position.intValue(), (AttributeGroup) brokenGroup);
         } //else not needed
       }
-  	}
-  	
-  	return validatedPage;
-  }
-  
-  public static AttributeGroup getValidatedAttributeGroup(DataSource dsource, AttributeGroup group) throws SQLException {
-  	AttributeGroup validatedGroup = new AttributeGroup( group );
-  	
-  	boolean hasBrokenCollections = false;
-  	HashMap brokenCollections = new HashMap();
-  	
-  	AttributeCollection[] collections = group.getAttributeCollections();
-  	for (int i = 0, n = collections.length; i < n; i++) {
-      AttributeCollection validatedCollection = getValidatedAttributeCollection(dsource, collections[i]);
-      
-      if (validatedCollection.isBroken()) {
-      	hasBrokenCollections = true;
-      	brokenCollections.put( new Integer(i), validatedCollection );
-      }      
     }
-  	
-  	if (hasBrokenCollections) {
-  		validatedGroup.setCollectionsBroken();
-  		
-  		for (Iterator iter = brokenCollections.keySet().iterator(); iter.hasNext();) {
+
+    return validatedPage;
+  }
+
+  public static AttributeGroup getValidatedAttributeGroup(DataSource dsource, AttributeGroup group) throws SQLException {
+    AttributeGroup validatedGroup = new AttributeGroup(group);
+
+    boolean hasBrokenCollections = false;
+    HashMap brokenCollections = new HashMap();
+
+    AttributeCollection[] collections = group.getAttributeCollections();
+    for (int i = 0, n = collections.length; i < n; i++) {
+      AttributeCollection validatedCollection = getValidatedAttributeCollection(dsource, collections[i]);
+
+      if (validatedCollection.isBroken()) {
+        hasBrokenCollections = true;
+        brokenCollections.put(new Integer(i), validatedCollection);
+      }
+    }
+
+    if (hasBrokenCollections) {
+      validatedGroup.setCollectionsBroken();
+
+      for (Iterator iter = brokenCollections.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         AttributeCollection brokenCollection = (AttributeCollection) brokenCollections.get(position);
-        
-        validatedGroup.removeAttributeCollection( collections[ position.intValue() ] );
-        validatedGroup.insertAttributeCollection( position.intValue(), brokenCollection );
+
+        validatedGroup.removeAttributeCollection(collections[position.intValue()]);
+        validatedGroup.insertAttributeCollection(position.intValue(), brokenCollection);
       }
-  	}
-  	
-  	return validatedGroup;
+    }
+
+    return validatedGroup;
   }
-  
+
   public static AttributeCollection getValidatedAttributeCollection(DataSource dsource, AttributeCollection collection)
     throws SQLException {
     String schema = null;
@@ -1472,9 +1494,9 @@ public class DatabaseDatasetViewUtils {
         logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
     }
 
-    AttributeCollection validatedAttributeCollection = new AttributeCollection( collection );
+    AttributeCollection validatedAttributeCollection = new AttributeCollection(collection);
     boolean hasBrokenAttributes = false;
-		HashMap brokenAtts = new HashMap();
+    HashMap brokenAtts = new HashMap();
 
     List allAtts = collection.getAttributeDescriptions();
     for (int i = 0, n = allAtts.size(); i < n; i++) {
@@ -1484,26 +1506,27 @@ public class DatabaseDatasetViewUtils {
           getValidatedAttributeDescription(dsource, schema, catalog, (AttributeDescription) attribute);
 
         if (validatedAttributeDescription.isBroken()) {
-        	hasBrokenAttributes = true;
-          brokenAtts.put( new Integer(i), validatedAttributeDescription);
+          hasBrokenAttributes = true;
+          brokenAtts.put(new Integer(i), validatedAttributeDescription);
         }
       } //else not needed yet
     }
 
     if (hasBrokenAttributes) {
-    	validatedAttributeCollection.setAttributesBroken();
-    	
-    	for (Iterator iter = brokenAtts.keySet().iterator(); iter.hasNext();) {
+      validatedAttributeCollection.setAttributesBroken();
+
+      for (Iterator iter = brokenAtts.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
-        Object brokenAtt = brokenAtts.get( position );
-        
+        Object brokenAtt = brokenAtts.get(position);
+
         if (brokenAtt instanceof AttributeDescription) {
-        	validatedAttributeCollection.removeAttributeDescription( (AttributeDescription) allAtts.get( position.intValue() ) );
-        	validatedAttributeCollection.insertAttributeDescription( position.intValue(), (AttributeDescription) brokenAtt );
+          validatedAttributeCollection.removeAttributeDescription(
+            (AttributeDescription) allAtts.get(position.intValue()));
+          validatedAttributeCollection.insertAttributeDescription(position.intValue(), (AttributeDescription) brokenAtt);
         } //else not needed yet
       }
     }
-    
+
     return validatedAttributeCollection;
   }
 
@@ -1585,5 +1608,339 @@ public class DatabaseDatasetViewUtils {
     }
 
     return validFlags;
+  }
+
+  /**
+   * Returns a list of potential (nieve) dataset names from a given Mart compliant database hosted on a given DataSource.
+   * These names can be used as an argument to getNieveMainTablesFor, getNieveDimensionTablesFor and getNieveDatasetViewFor.
+   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance to search for potential datasets
+   * @return String[] of potential dataset names
+   * @throws SQLException
+   */
+  public static String[] getNieveDatasetNamesFor(DataSource dsource, String databaseName) throws SQLException {
+    String[] potentials = getNieveMainTablesFor(dsource, databaseName, null);
+    
+    //now weed them to a subset, attempting to unionize conformed dimension names
+    List retList = new ArrayList();
+
+    for (int i = 0, n = potentials.length; i < n; i++) {
+      String curval = potentials[i];
+
+      retList.add( curval.replaceFirst("_[Mm][Aa][Ii][Nn]", "") );
+    }
+
+    String[] dsList = new String[retList.size()];
+    retList.toArray(dsList);
+    return dsList;
+  }
+
+  /**
+   * Retruns a String[] of possible main tables for a given Mart Compliant database, hosted on a given 
+   * RDBMS, with an (optional) datasetName to key upon.  With no datasetName, all possible main tables from 
+   * the database are returned.
+   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance to search for potential tables
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @return String[] of potential main table names
+   * @throws SQLException
+   */
+  public static String[] getNieveMainTablesFor(DataSource dsource, String databaseName, String datasetName)
+    throws SQLException {
+    //want sorted entries, dont need to worry about duplicates
+    Set potentials = new TreeSet();
+
+    Connection conn = dsource.getConnection();
+
+    DatabaseMetaData dmd = conn.getMetaData();
+
+    //Note: currently this isnt cross platform,
+    //as some RDBMS capitalize all names of tables
+    //Either need to find a capitalization scheme general
+    //to all RDBMS, or search for both MAIN and main
+    //and force intermart consistency of capitalization for
+    //those RDBMS which allow users freedom to capitalize as
+    //they see fit. Currently does the latter.
+    String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+    tablePattern += MAINTABLESUFFIX;
+    String capTablePattern = tablePattern.toUpperCase();
+
+    //get all main tables
+    //first search for tablePattern    
+    ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
+
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      potentials.add(tableName);
+    }
+    rsTab.close();
+
+    //now try capitals, should NOT get mixed results
+    rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+
+      if (!potentials.contains(tableName))
+        potentials.add(tableName);
+    }
+    rsTab.close();
+    conn.close();
+    
+    String[] retList = new String[potentials.size()];
+    potentials.toArray(retList);
+    return retList;
+  }
+
+  /**
+   * Returns a String[] of potential dimension tables from a given Mart Compliant database, hosted on a
+   * given RDBMS, constrained to an (optional) dataset.
+   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance to search for potential tables
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @return String[] of potential dimension table names
+   * @throws SQLException
+   */
+  public static String[] getNieveDimensionTablesFor(DataSource dsource, String databaseName, String datasetName)
+    throws SQLException {
+    //want sorted entries, dont need to worry about duplicates
+    Set potentials = new TreeSet();
+
+    Connection conn = dsource.getConnection();
+
+    DatabaseMetaData dmd = conn.getMetaData();
+
+    //Note: currently this isnt cross platform,
+    //as some RDBMS capitalize all names of tables
+    //Either need to find a capitalization scheme general
+    //to all RDBMS, or search for both MAIN and main
+    //and force intermart consistency of capitalization for
+    //those RDBMS which allow users freedom to capitalize as
+    //they see fit. Currently does the latter.
+    String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+    tablePattern += DIMENSIONTABLESUFFIX;
+    String capTablePattern = tablePattern.toUpperCase();
+
+    //get all dimension tables
+    //first search for tablePattern    
+    ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
+
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      potentials.add(tableName);
+    }
+    rsTab.close();
+
+    //now try capitals, should NOT get mixed results
+    rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+
+      if (!potentials.contains(tableName))
+        potentials.add(tableName);
+    }
+    rsTab.close();
+    conn.close();
+    
+    String[] retList = new String[potentials.size()];
+    potentials.toArray(retList);
+    return retList;
+  }
+
+  /**
+   * Returns a TableDescription object describing a particular table in a given database,
+   * hosted on a given RDBMS.
+   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance housing the requested table
+   * @param tableName -- name of the desired table, as might be returned by a call to getXXXTablesFor
+   * @return TableDescription object describing the table
+   * @throws SQLException
+   */
+  public static TableDescription getTableDescriptionFor(DataSource dsource, String databaseName, String tableName)
+    throws SQLException {
+    Connection conn = dsource.getConnection();
+    DatabaseMetaData dmd = conn.getMetaData();
+
+    List columns = new ArrayList();
+    ResultSet rset = dmd.getColumns(null, databaseName, tableName, null);
+    while (rset.next()) {
+      if (rset.getString(3).toLowerCase().equals(tableName.toLowerCase())) {
+        String cname = rset.getString(4);
+        int javaType = rset.getInt(5);
+        String dbType = rset.getString(6);
+        int maxLength = rset.getInt(7);
+
+        ColumnDescription column = new ColumnDescription(cname, dbType, javaType, maxLength);
+        columns.add(column);
+      }
+    }
+    rset.close();
+    conn.close();
+    
+    ColumnDescription[] cols = new ColumnDescription[columns.size()];
+    columns.toArray(cols);
+
+    TableDescription table = new TableDescription(tableName, cols);
+    return table;
+  }
+
+  //TODO: change this when Mart Compliant Schema is fully optimized
+  /**
+   * Returns a nieve DatasetView for a given dataset within a given Mart Compliant database, hosted on a given
+   * RDBMS.  This will consist of an unordered set of starbases, no primary keys, and one FilterPage and AttributePage
+   * containing one group with Collections for each table containing descriptions for each field.  Filters are only
+   * described for main tables, and no Option grouping is attempted.  All Descriptions are fully constrained to
+   * a tableConstraint.  Note, this method is likely to undergo extensive revisions as we optimize the Mart Compliant
+   * Schema.
+   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param databaseName -- name of the RDBMS instance to search for potential tables
+   * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
+   * @return
+   * @throws ConfigurationException
+   * @throws SQLException
+   */
+  public static DatasetView getNieveDatasetViewFor(DataSource dsource, String databaseName, String datasetName)
+    throws ConfigurationException, SQLException {
+    DatasetView dsv = new DatasetView();
+
+    List starbases = new ArrayList();
+    String[] primaryKeys = new String[] { "!!! MUST ADD PRIMARY KEYS MANUALLY !!!"};
+
+    dsv.setInternalName(datasetName);
+    dsv.setDisplayName(datasetName + " ( " + databaseName + " )");
+    dsv.setDataset(datasetName);
+    dsv.addPrimaryKeys(primaryKeys);
+    
+    AttributePage ap = new AttributePage();
+    ap.setInternalName(DEFAULTPAGE);
+    ap.setDisplayName(DEFAULTPAGE);
+
+    FilterPage fp = new FilterPage();
+    fp.setInternalName(DEFAULTPAGE);
+    fp.setDisplayName(DEFAULTPAGE);
+
+    AttributeGroup ag = new AttributeGroup();
+    ag.setInternalName(DEFAULTGROUP);
+    ag.setDisplayName(DEFAULTGROUP);
+
+    FilterGroup fg = new FilterGroup();
+    fg.setInternalName(DEFAULTGROUP);
+    fg.setDisplayName(DEFAULTGROUP);
+
+    List allTables = new ArrayList();
+    allTables.addAll(Arrays.asList(getNieveMainTablesFor(dsource, databaseName, datasetName)));
+    allTables.addAll(Arrays.asList(getNieveDimensionTablesFor(dsource, databaseName, datasetName)));
+
+    for (int i = 0, n = allTables.size(); i < n; i++) {
+      String tableName = (String) allTables.get(i);
+
+      AttributeCollection ac = new AttributeCollection();
+      ac.setInternalName(tableName);
+      ac.setDisplayName(tableName);
+
+      FilterCollection fc = null;
+      if (isMainTable(tableName)) {
+        String starbase = tableName;
+        starbase = starbase.replaceAll("_[Mm][Aa][Ii][Nn]", "");
+        // replace _MAIN or _main or _MaIn, etc with the empty string
+
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Starbase " + starbase + "\n");
+
+        if (!starbases.contains(starbase))
+          starbases.add(starbase);
+
+        fc = new FilterCollection();
+        fc.setInternalName(tableName);
+        fc.setDisplayName(tableName);
+      }
+
+      TableDescription table = getTableDescriptionFor(dsource, databaseName, tableName);
+
+      for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
+        ColumnDescription column = table.columnDescriptions[j];
+
+        String cname = column.name;
+        int ctype = column.javaType; // java generalized type across all JDBC instances
+        //String ctype = column.dbType; //as in RDBMS table definition
+        int csize = column.maxLength;
+
+        if (logger.isLoggable(Level.INFO))
+          logger.info(tableName + ": " + cname + "-- type : " + ctype + "\n");
+
+        if (isMainTable(tableName) || isDimensionTable(tableName)) {
+          ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize));
+
+          if (isMainTable(tableName)) {
+            fc.addFilterDescription(getFilterDescription(cname, tableName, ctype));
+          }
+        } else {
+          if (logger.isLoggable(Level.INFO))
+            logger.info("Skipping " + tableName + "\n");
+        }
+      }
+
+      ag.addAttributeCollection(ac);
+
+      if (fc != null)
+        fg.addFilterCollection(fc);
+    }
+
+    ap.addAttributeGroup(ag);
+    fp.addFilterGroup(fg);
+
+    dsv.addAttributePage(ap);
+    dsv.addFilterPage(fp);
+
+    String[] sbases = new String[starbases.size()];
+    starbases.toArray(sbases);
+
+    dsv.addStarBases(sbases);
+    return dsv;
+  }
+
+  private static boolean isDimensionTable(String tableName) {
+    if (tableName.toLowerCase().endsWith(DIMENSIONTABLESUFFIX))
+      return true;
+    return false;
+  }
+
+  private static boolean isMainTable(String tableName) {
+    if (tableName.toLowerCase().endsWith(MAINTABLESUFFIX.toLowerCase()))
+      return true;
+    return false;
+  }
+
+  private static AttributeDescription getAttributeDescription(String columnName, String tableName, int maxSize)
+    throws ConfigurationException {
+    AttributeDescription att = new AttributeDescription();
+    att.setInternalName(columnName.toLowerCase());
+    att.setDisplayName(columnName);
+    att.setField(columnName);
+    att.setTableConstraint(tableName);
+    att.setMaxLength(String.valueOf(maxSize));
+
+    return att;
+  }
+
+  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType) {
+    FilterDescription filt = new FilterDescription();
+    filt.setInternalName(columnName.toLowerCase());
+    filt.setDisplayName(columnName);
+    filt.setField(columnName);
+    filt.setTableConstraint(tableName);
+
+    //this is just to debug possibility of using java.sql.Types values to determine suitable filter types
+    if (logger.isLoggable(Level.INFO)) {
+      if (columnType == java.sql.Types.TINYINT) {
+        logger.info("Recieved TINYINT type, probably boolean or boolean_num\n");
+      } else {
+        logger.info("Recieved type " + columnType + " defaulting to list\n");
+      }
+    }
+
+    filt.setType(DEFAULTTYPE);
+    filt.setQualifier(DEFAULTQUALIFIER);
+    filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
+    return filt;
   }
 }
