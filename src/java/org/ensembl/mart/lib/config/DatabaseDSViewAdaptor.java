@@ -403,13 +403,13 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
    */
   public boolean supportsDataset(String dataset) throws ConfigurationException {
-    return getDatasetViewByDataset(dataset).length > 0;
+    return getDatasetViewsByDataset(dataset).length > 0;
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset) throws ConfigurationException {
+  public DatasetView[] getDatasetViewsByDataset(String dataset) throws ConfigurationException {
 
     ArrayList l = new ArrayList();
 
@@ -503,7 +503,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException {
     List names = new ArrayList();
-    DatasetView[] views = getDatasetViewByDataset(dataset);
+    DatasetView[] views = getDatasetViewsByDataset(dataset);
 
     for (int i = 0, n = views.length; i < n; i++) {
       DatasetView dsv = (DatasetView) views[i];
@@ -520,7 +520,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException {
     List names = new ArrayList();
-    DatasetView[] views = getDatasetViewByDataset(dataset);
+    DatasetView[] views = getDatasetViewsByDataset(dataset);
 
     for (int i = 0, n = views.length; i < n; i++) {
       DatasetView dsv = (DatasetView) views[i];
