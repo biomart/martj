@@ -57,10 +57,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
-import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.util.SystemUtil;
 
 /**
  * MartExplorer is a graphical application that enables a 
