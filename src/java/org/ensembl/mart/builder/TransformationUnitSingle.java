@@ -25,8 +25,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public String toSQL (){
 		
-		String sql = "CREATE TABLE "+ temp_end.getName()+" SELECT DISTINCT("+ temp_start.key+") " +
-		"FROM "+ ref_table.getName()+";";
+		String sql = "CREATE TABLE "+ temp_end.getName()+" SELECT DISTINCT "+ temp_start.key+
+		" FROM "+ ref_table.getName()+" WHERE "+ ref_table.key+ " IS NOT NULL;";
 
 		return sql;
 		
@@ -39,7 +39,6 @@ public class TransformationUnitSingle extends TransformationUnit {
 		Table new_ref=convertTable(ref_table);
 		Table temp_end = copyTable(new_ref);
 		temp_end.final_table=false;
-		//this.setRef_table(new_ref);
 		this.setTemp_end(temp_end);
 		this.setTemp_start(temp_start);
 		
