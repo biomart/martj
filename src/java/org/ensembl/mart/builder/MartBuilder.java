@@ -18,14 +18,18 @@ import java.util.*;
 
 public class MartBuilder {
 	
-	private static SourceSchema source_schema;
+	
 	private static String config ="data/builder_connection_mysql.properties";
-	private static String dataset;
+	private static ArrayList schemas = new ArrayList();
+	private static TargetSchema target_schema = null;
+	
+	
+	
 	
 	
 	public static void main(String[] args) {
 		
-		source_schema = new SourceSchema(config);
+		
 		
 		
 		String config_info= "";
@@ -34,15 +38,22 @@ public class MartBuilder {
 			config_info=getUserInput("Configuration Create [C] Read [R]: ");
 		}
 		
-		String user_dataset = getUserInput("DATASET: ");
-		dataset=user_dataset;
-		source_schema.dataset=user_dataset;
-		
-		
 		if (config_info.equals("C")){
 			String output_file=getUserInput("OUTPUT CONFIG FILE: ");
-			output_file = "data/"+output_file;	
-			createConfiguration(output_file);
+			output_file = "data/"+output_file;
+			
+			File f = new File(output_file);
+			f.delete();
+			
+			String user_dataset = getUserInput("NEW DATASET: ");
+			
+			while (!(user_dataset == null || user_dataset.equals(""))){
+				
+				createConfiguration(user_dataset,output_file);
+				user_dataset = getUserInput("NEW DATASET: ");
+				
+			} 
+			
 			readConfiguration(output_file);
 			
 		} else {
@@ -52,120 +63,127 @@ public class MartBuilder {
 		}
 		
 		
-		// Create Target schema and transformations	
-		TargetSchema target_schema = new TargetSchema(source_schema);
-		Transformation [] transformations = target_schema.getTransformations();
 		
-		/**		
-		 
-		// final key
-		String key = getUserInput("Final KEY: ");
-		
-		for (int i=0;i<transformations.length; i++){
+		for (int m=0;m<schemas.size();m++){
 			
-			Column [] columns = transformations[i].getFinalUnit().getTemp_end().getColumns();
+			target_schema = (TargetSchema) schemas.get(m);
 			
-			for (int j=0;j<columns.length;j++){
-				if(columns[j].name.equals(key)){
-					columns[j].setAlias(columns[j].name +"_key");
-					System.out.println("resetting "+ columns[j].name);
+			
+			/**	
+			
+			// final key
+			String key = getUserInput("Final KEY: ");
+			
+			for (int i=0;i<transformations.length; i++){
+				
+				Column [] columns = transformations[i].getFinalUnit().getTemp_end().getColumns();
+				
+				for (int j=0;j<columns.length;j++){
+					if(columns[j].name.equals(key)){
+						columns[j].setAlias(columns[j].name +"_key");
+						System.out.println("resetting "+ columns[j].name);
+						
+					}	
+				}
+			}
+			
+			// Include extensions
+			LinkedTables [] extlinked = s_schema.getLinkedTables();
+			
+			for (int i=0;i<extlinked.length;i++){
+				String name = extlinked[i].final_table_name;
+				String input = getUserInput("ADD EXTENSION: "+name+" [Y|N]: " );
+				if (input.equals("Y")){
 					
-				}	
+					String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
+					
+					String final_table_key = getUserInput(name+ " KEY: ");
+					String final_table_extension = getUserInput(name+ " EXTENSION: ");
+					String new_table_name = getUserInput("EXTENSION TABLE NAME: ");
+					String new_table_key = getUserInput("EXTENSION TABLE KEY: ");
+					String new_table_extension = getUserInput("EXTENSION TABLE EXTENSION: ");
+					String new_table_cardinality = getUserInput(name+": "+new_table_name + card_string);
+					
+					target_schema.addTransformationUnit(name, new_table_name,final_table_key,final_table_extension,
+							new_table_key, new_table_extension, new_table_cardinality);
+					
+				}
 			}
-		}
-		
-		*/
-		
-		
-		// Include extensions
-		LinkedTables [] extlinked = source_schema.getLinkedTables();
-		
-		for (int i=0;i<extlinked.length;i++){
-			String name = extlinked[i].final_table_name;
-			String input = getUserInput("ADD EXTENSION: "+name+" [Y|N]: " );
-			if (input.equals("Y")){
-				
-				String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
-				
-				String final_table_key = getUserInput(name+ " KEY: ");
-				String final_table_extension = getUserInput(name+ " EXTENSION: ");
-				String new_table_name = getUserInput("EXTENSION TABLE NAME: ");
-				String new_table_key = getUserInput("EXTENSION TABLE KEY: ");
-				String new_table_extension = getUserInput("EXTENSION TABLE EXTENSION: ");
-				String new_table_cardinality = getUserInput(name+": "+new_table_name + card_string);
-				
-				target_schema.addTransformationUnit(name, new_table_name,final_table_key,final_table_extension,
-						new_table_key, new_table_extension, new_table_cardinality);
-				
-			}
-		}
-		
-		
-		// Reset final table names if you want to
-		for (int i=0;i<transformations.length;i++){
+			*/
 			
-			String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].final_table_name+" TO: " );
-			if (newname != null && ! newname.equals("\n") && !newname.equals(""))
-				transformations[i].setFinalName(newname);
-		}
-		
-		
-		
-		// Add central filters
-		Transformation [] tran = target_schema.getTransformationsByFinalTableType("DM");
-		
-		for (int i=0;i<tran.length;i++){
-			String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
-			if (input.equals("Y")){
-				tran[i].central=true;		
+			
+			// Reset final table names if you want to
+			
+			Transformation [] transformations = target_schema.getTransformations();
+			
+			for (int i=0;i<transformations.length;i++){
 				
-				//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
-				//tran[i].getFinalUnit().getTemp_end().central_extension=extension;
+				String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].final_table_name+" TO: " );
+				if (newname != null && ! newname.equals("\n") && !newname.equals(""))
+					transformations[i].setFinalName(newname);
 			}
 			
+			
+			
+			// Add central filters
+			Transformation [] tran = target_schema.getTransformationsByFinalTableType("DM");
+			
+			for (int i=0;i<tran.length;i++){
+				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
+				if (input.equals("Y")){
+					tran[i].central=true;		
+					
+					//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
+					//tran[i].getFinalUnit().getTemp_end().central_extension=extension;
+				}
+				
+			}
+			
+			target_schema.createTransformationsForCentralFilters();
+			
+			
+			Transformation [] final_transformations = target_schema.getTransformations();
+			
+			
+			// Dump to SQL
+			for (int i=0;i<final_transformations.length;i++){
+				
+				TransformationUnit [] units = final_transformations[i].getUnits();
+				
+				System.out.println("");
+				for (int j=0;j<units.length;j++){
+					System.out.println(units[j].toSQL());
+					System.out.println(units[j].addIndex());
+				}
+				for (int j=0;j<units.length;j++){
+					System.out.println(units[j].dropTempTable());	    	
+				}
+			}
 		}
 		
-		target_schema.createTransformationsForCentralFilters();
-		
-		
-		Transformation [] final_transformations = target_schema.getTransformations();
-		
-		
-		// Dump to SQL
-		for (int i=0;i<final_transformations.length;i++){
-			
-			TransformationUnit [] units = final_transformations[i].getUnits();
-			
-			System.out.println("");
-			for (int j=0;j<units.length;j++){
-				System.out.println(units[j].toSQL());
-				System.out.println(units[j].addIndex());
-			}
-			for (int j=0;j<units.length;j++){
-				System.out.println(units[j].dropTempTable());	    	
-			}
-		}
-	}
+	}		
 	
 	
 	
-	private static void createConfiguration(String output_file){
+	
+	
+	
+	
+	private static void createConfiguration(String user_dataset,String output_file){
 		
-		File f = new File(output_file);
-		f.delete();
 		
 		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
-		String output;
+		String table_type;
 		
 		do
-			output=getUserInput(prompt);
-		while (!(output.equals("M") || output.equals("D") || output.equals("E")));
+			table_type=getUserInput(prompt);
+		while (!(table_type.equals("M") || table_type.equals("D") || table_type.equals("E")));
 		
-		while (output.equals("M") || output.equals("D")){
+		while (table_type.equals("M") || table_type.equals("D")){
 			String table_name = getUserInput("TABLE NAME: ");
 			
-			writeConfigFile(output_file,table_name,output);
-			output=getUserInput(prompt);
+			writeConfigFile(output_file,user_dataset,table_name,table_type);
+			table_type=getUserInput(prompt);
 		}	
 	}
 	
@@ -178,23 +196,54 @@ public class MartBuilder {
 			String line;
 			String last_table = null;
 			String last_type = null;
+			String last_dataset = null;
 			Table [] referenced_tables = null;
 			ArrayList list = new ArrayList();
-			int counter =0;
+			int lines =0;
+			int dataset_counter =0;
+			
+			SourceSchema source_schema = new SourceSchema(config);
 			
 			while((line = in.readLine()) != null){
 				
 				String [] items = line.split("\t");
 				
-				if (!items[2].equals(last_table)){
+				if (lines ==0) source_schema.dataset=items[0];
+				
+				
+				if (!items[2].equals(last_table) || !items[0].equals(last_dataset)){
 					
 					referenced_tables = source_schema.getReferencedTables(items[2]);
 					
-					if (counter !=0){
-						createLinkedTables(list,last_type,last_table);
+					if (lines !=0){
+						createLinkedTables(source_schema,list,last_type,last_table);
 						list.clear();
 					}
 				}
+				
+				
+				
+				if (!items[0].equals(last_dataset)){
+					
+					lines=0;
+					
+					
+					last_table = null;
+					last_type = null;
+					
+					if(dataset_counter !=0){
+						
+						target_schema = new TargetSchema(source_schema);
+						schemas.add(target_schema);	
+						source_schema = new SourceSchema(config);
+						
+						source_schema.dataset=items[0];
+						
+					}
+					
+					dataset_counter++;
+				}
+				
 				
 				for (int i=0; i<referenced_tables.length;i++){
 					
@@ -213,31 +262,32 @@ public class MartBuilder {
 				
 				last_table=items[2];
 				last_type=items[1];
-				counter++;
-			}
+				last_dataset=items[0];
+				lines++;
+			}	
+			
 			
 			in.close();
-			createLinkedTables(list,last_type,last_table);
+			createLinkedTables(source_schema,list,last_type,last_table);
+			target_schema = new TargetSchema(source_schema);
+			schemas.add(target_schema);
+			
 			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}	
-		
-		
-		
-		
+		}		
 	}
 	
 	
 	
-	private static void createLinkedTables(ArrayList list,String last_type, String last_table){
+	private static void createLinkedTables(SourceSchema source_schema,ArrayList list,String last_type, String last_table){
 		
 		Table [] b = new Table [list.size()];	
 		LinkedTables linked_tables= source_schema.createLinkedTables(last_table,(Table []) list.toArray(b));
 		
-		StringBuffer final_table = new StringBuffer(dataset + "__"+last_table+"__");
+		StringBuffer final_table = new StringBuffer(source_schema.dataset + "__"+last_table+"__");
 		if (last_type.equals("M")){
 			linked_tables.final_table_type ="MAIN";
 			linked_tables.final_table_name= final_table.append("main").toString();
@@ -245,7 +295,7 @@ public class MartBuilder {
 			linked_tables.final_table_type = "DM";
 			linked_tables.final_table_name= final_table.append("dm").toString();
 		}
-		linked_tables.dataset=dataset;	
+		linked_tables.dataset=source_schema.dataset;	
 		source_schema.addLinkedTables(linked_tables);
 	}
 	
@@ -253,8 +303,9 @@ public class MartBuilder {
 	
 	
 	
-	private static void writeConfigFile (String output_file,String table_name, String output){
+	private static void writeConfigFile (String output_file,String dataset,String table_name, String table_type){
 		
+		SourceSchema source_schema = new SourceSchema(config);
 		Table [] referenced_tables = source_schema.getReferencedTables(table_name);
 		
 		BufferedWriter out =null;
@@ -278,7 +329,7 @@ public class MartBuilder {
 			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
 			try {
-				out.write(dataset+"\t"+ output+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
@@ -287,7 +338,6 @@ public class MartBuilder {
 		try {
 			out.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}
