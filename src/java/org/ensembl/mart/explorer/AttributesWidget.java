@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 
 /**
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -28,7 +29,7 @@ public class AttributesWidget extends InputPage {
   /**
    * @param query
    */
-  public AttributesWidget(Query query) {
+  public AttributesWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
     super(query);
     // TODO Auto-generated constructor stub
   }

@@ -22,8 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -36,8 +34,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -45,18 +45,23 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import org.ensembl.mart.lib.Attribute;
+import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
- * TODO change update mechanism to be based on setting the datasetName / 
- * internalName.
- * 
- * Widget representing dataset views available to user as a tree. 
+ * Widget representing the currently selected dataset view
+ * and enabling the user to select another.  
  * 
  * The tree is constructed from all of the datasetNames 
- * (datasetView.internalName). 
- * "__" is used as the separator for menu names and leaf items in the tree.
+ * displayNames. They are arranged as a tree of options.
+ * Where "__" appears in the displayName it is used as a
+ * branch point in a tree menu.
  * For example an array of datasetViews with these datasetNames:
  * <pre>
  * AAA
@@ -88,30 +93,26 @@ import org.ensembl.mart.lib.config.DatasetView;
  * A single dataset could be represented by multiple datasetViews, in this 
  * case the widget cannot choose which view to select.  
  */
-public class DatasetWidget
-  extends InputPage
-  implements PropertyChangeListener {
+public class DatasetWidget extends InputPage implements QueryChangeListener {
+
+  private DatasetView datasetView;
 
   private Logger logger = Logger.getLogger(DatasetWidget.class.getName());
+  
+  private Feedback feedback = new Feedback(this);
 
+  private DSViewAdaptor datasetViewAdaptor;
+
+  // Used to find and remove separators in datasetView.displayNames
   private Matcher separatorMatcher = Pattern.compile("__").matcher("");
 
   // --- state
 
-  private DatasetView selectedDatasetView = null;
-  private String lastSelectedDisplayName = null;
-
-  private DatasetView[] availableDatasetViews = null;
-  private Set availableDatasetNames = new HashSet();
-  private Set availableDisplayNames = new HashSet();
-  private Map displayNameToDatasetView = new HashMap();
-  private Map displayNameToShortName = new HashMap();
   private Map datasetNameToDatasetView = new HashMap();
 
   // --- GUI components
   private JMenuBar treeMenu = new JMenuBar();
   private JMenu treeTopMenu = new JMenu();
-  private JLabel label = new JLabel("Dataset");
   private JTextField currentSelectedText = new JTextField(30);
   private JButton button = new JButton("change");
   private JMenuItem clearDatasetMenuItem = new JMenuItem("Clear Dataset");
@@ -122,9 +123,12 @@ public class DatasetWidget
    * and the query is the Model.
    * @param query underlying model for this widget.
    */
-  public DatasetWidget(Query query) {
+  public DatasetWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
 
     super(query, "Dataset");
+
+    this.datasetViewAdaptor = datasetViewAdaptor;
+    query.addQueryChangeListener(this);
 
     clearDatasetMenuItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
@@ -148,7 +152,7 @@ public class DatasetWidget
 
     Box box = Box.createHorizontalBox();
     box.add(treeMenu);
-    box.add(label);
+    box.add(new JLabel("Dataset"));
     box.add(Box.createHorizontalStrut(5));
     box.add(button);
     box.add(Box.createHorizontalStrut(5));
@@ -160,62 +164,18 @@ public class DatasetWidget
   }
 
   public void showTree() {
-    treeTopMenu.doClick();
-  }
+    try {
+      if (datasetViewAdaptor != null) {
 
-  /**
-   * Selects datasetView with specified displayName. 
-   * @param displayName display name of the datasetView to be selected. 
-   * Current selection is cleared if null. If no datasetView with that
-   * name is available nothing happens.
-   */
-  public void setDatasetViewByDisplayName(String displayName) {
-
-    if (same(displayName, lastSelectedDisplayName))
-      return;
-
-    if (displayName != null) {
-
-      DatasetView dsv = (DatasetView) displayNameToDatasetView.get(displayName);
-
-      // ignore unkown displayName
-      if (dsv == null)
-        return;
-
-      this.selectedDatasetView = dsv;
-
-      String label = removeSeparators(displayName);
-      currentSelectedText.setText(label);
-      setNodeLabel("Dataset", label);
-
-    } else {
-
-      currentSelectedText.setText("");
-      selectedDatasetView = null;
-      setNodeLabel("Dataset", "");
-      this.selectedDatasetView = null;
-
+        updateMenu(datasetViewAdaptor.getDatasetViews());
+        treeTopMenu.doClick();
+      }
+    } catch (ConfigurationException e) {
+      feedback.warn(e);
     }
 
-    String datasetViewInternalName =
-      (selectedDatasetView != null)
-        ? selectedDatasetView.getInternalName()
-        : null;
-
-    updateQueryDatasetName(datasetViewInternalName);
-
-    lastSelectedDisplayName = displayName;
   }
 
-  /**
-   * @param displayName
-   * @return
-   */
-  private String removeSeparators(String name) {
-
-    return separatorMatcher.reset(name).replaceAll(" ");
-
-  }
 
   /**
    * If query has attributes or filters then set a "confirm" dialog box
@@ -224,9 +184,6 @@ public class DatasetWidget
    */
   private void doUserSelectDatasetView(String displayName) {
 
-    if (same(displayName, lastSelectedDisplayName))
-      return;
-
     //  Confirm user really wants to change dataset
     if (query.getAttributes().length > 0 || query.getFilters().length > 0) {
 
@@ -234,142 +191,42 @@ public class DatasetWidget
         JOptionPane.showConfirmDialog(
           this,
           new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-          "Change Attributes",
+          "Delete current Change Attributes",
           JOptionPane.YES_NO_OPTION);
 
       // undo if user changes mind
-      if (o != JOptionPane.OK_OPTION) {
-
-        currentSelectedText.setText(removeSeparators(displayName));
+      if (o != JOptionPane.OK_OPTION)
         return;
-      }
-    }
-
-    setDatasetViewByDisplayName(displayName);
-  }
-
-  /**
-   * @param value1 String to compare with value2, can be null.
-   * @param value2 String to comare with value1, can be null.
-   * @return true if value1 and value2 are equal, otherwise false.
-   */
-  private boolean same(String value1, String value2) {
-    return value1 == value2 || (value1 != null && value1.equals(value2));
-
-  }
-
-  /**
-     * Sets query.datasetName to datasetName.
-     */
-  private void updateQueryDatasetName(String datasetName) {
-
-    query.removePropertyChangeListener(this);
-    query.setDatasetInternalName(datasetName);
-
-    if (datasetName == null) {
-      query.setStarBases(null);
-      query.setPrimaryKeys(null);
-      query.setDataSource(null);
-
-    } else {
-
-      DatasetView view =
-        (DatasetView) datasetNameToDatasetView.get(datasetName);
-      query.setStarBases(view.getStarBases());
-      query.setPrimaryKeys(view.getPrimaryKeys());
-      query.setDataSource(view.getDatasource());
-    }
-    query.addPropertyChangeListener(this);
-  }
-
-  /**
-     * Responds to a change in dataset on the query. Updates the state of
-     * this widget by changing the currently selected item in the list.
-     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-     */
-  public void propertyChange(PropertyChangeEvent evt) {
-
-    if (evt.getSource() == query && evt.getPropertyName().equals("datasetInternalName")) {
-
-      String datasetName = (String) evt.getNewValue();
-
-      if (datasetName == null) {
-        setDatasetViewByDisplayName(null);
-      } else if (
-        selectedDatasetView != null
-          && datasetName.equals(selectedDatasetView.getInternalName())) {
-        // do nothing because datasetName is unchanged       
-      }
-
-      // update selection if unique
-      else {
-
-        Object o = datasetNameToDatasetView.get(datasetName);
-        if (o == null) {
-          JOptionPane.showMessageDialog(
-            this,
-            "No DatasetView available for the datasetName "
-              + "on the current query: ",
-            "Dataset View problem",
-            JOptionPane.WARNING_MESSAGE);
-
-        } else if (o instanceof List) {
-
-          // dataSetName maps to more than one datasetView, user must choose
-          // which one to use
-          List l = (List) o;
-          Object[] possibleValues = new Object[l.size()];
-          for (int i = 0; i < l.size(); ++i) {
-            DatasetView dsv = (DatasetView) l.get(i);
-            possibleValues[i] = dsv.getDisplayName();
-          }
-          Object displayName =
-            JOptionPane.showInputDialog(
-              this,
-              "Choose DatasetView",
-              "Several datasetViews are availble for the dataset"
-                + "set on the query, which do you want to use?",
-              JOptionPane.INFORMATION_MESSAGE,
-              null,
-              possibleValues,
-              possibleValues[0]);
-
-          currentSelectedText.setText(
-            (String) displayNameToShortName.get(displayName));
-        }
-
-      }
 
     }
 
-  }
+    // TODO add DatasetView.supports(Query) and use to decide whether to
+    // clear query or leave unchanged.
 
-  /**
-   * @return
-   */
-  public DatasetView[] getDatasetViews() {
-    return availableDatasetViews;
-  }
+    // Currently changing the dataset view requires us to reset the query 
+    // because existing attributes and filters (or there combination) 
+    // *might* not be valid for the new dataset view
+    query.clear();
 
-  /**
-   * Resets the widget clearing the previous selected DatasetView.
-   * @param datasetViews
-   */
-  public void setDatasetViews(DatasetView[] datasetViews) {
-    this.availableDatasetViews = datasetViews;
+    if (displayName != null) {
 
-    unpack(datasetViews);
+      try {
+        DatasetView dsv =
+          datasetViewAdaptor.getDatasetViewByDisplayName(displayName);
 
-    lastSelectedDisplayName = null;
-    selectedDatasetView = null;
+        // initialise the query with settings from the datasetview.
+        query.setDatasetInternalName(dsv.getDataset());
+        query.setDataSource(dsv.getDatasource());
+        query.setPrimaryKeys(dsv.getPrimaryKeys());
+        query.setStarBases(dsv.getStarBases());
 
-    updateQueryDatasetName(null);
-
-    currentSelectedText.setText("");
-
-    updateMenu(datasetViews);
+      } catch (ConfigurationException e) {
+        feedback.warn(e);
+      }
+    }
 
   }
+
 
   /**
    * Unpacks the datasetViews into several sets and maps that enable
@@ -383,9 +240,10 @@ public class DatasetWidget
    */
   private void unpack(DatasetView[] datasetViews) {
 
-    availableDisplayNames.clear();
-    availableDatasetNames.clear();
-    displayNameToShortName.clear();
+    Set availableDisplayNames = new HashSet();
+    Set availableDatasetNames = new HashSet();
+    Map displayNameToDatasetView = new HashMap();
+    Map displayNameToShortName = new HashMap();
 
     if (datasetViews == null)
       return;
@@ -413,9 +271,6 @@ public class DatasetWidget
       String shortName = elements[elements.length - 1];
       displayNameToShortName.put(displayName, shortName);
     }
-
-    datasetNameToDatasetView.clear();
-    displayNameToDatasetView.clear();
 
     for (int i = 0; i < datasetViews.length; i++) {
 
@@ -472,7 +327,8 @@ public class DatasetWidget
       }
     });
 
-    treeTopMenu.add(clearDatasetMenuItem);
+    if (query.getDatasetInternalName() != null)
+      treeTopMenu.add(clearDatasetMenuItem);
 
     String[][] tree = new String[][] {
     };
@@ -521,65 +377,113 @@ public class DatasetWidget
 
   }
 
-  /**
-   * Adds menu items and submenus to menu based on contents of _options_. A submenu is added 
-   * when an option contains
-   * sub options. If an option has no sub options it is added as a leaf node. This method calls
-   * itself recursively to build up the menu tree.
-   * @param menu menu to add options to
-   * @param options options to be added, method does nothing if null.
-   * @param prefix prepended to option.getDisplayName() to create internal name for menu item 
-   * created for each option.
-   */
-  //  private void addOptions(JMenu menu, Option[] options, String prefix) {
-  //
-  //    for (int i = 0; options != null && i < options.length; i++) {
-  //
-  //      final Option option = options[i];
-  //
-  //      String displayName = option.getDisplayName();
-  //      String qualifiedName = prefix + " " + displayName;
-  //
-  //      if (option.getOptions().length == 0) {
-  //
-  //        // add menu item
-  //        JMenuItem item = new JMenuItem(displayName);
-  //        item.setName(qualifiedName);
-  //        menu.add(item);
-  //        item.addActionListener(new ActionListener() {
-  //          public void actionPerformed(ActionEvent event) {
-  //            setOption(option);
-  //          }
-  //        });
-  //
-  //        valueToOption.put(option.getValue(), option);
-  //
-  //      } else {
-  //
-  //        // Add sub menu
-  //        JMenu subMenu = new JMenu(displayName);
-  //        menu.add(subMenu);
-  //        addOptions(subMenu, option.getOptions(), qualifiedName);
-  //
-  //      }
-  //    }
-  //
-  //  }
 
+  public void queryNameChanged(
+    Query sourceQuery,
+    String oldName,
+    String newName) {
+  }
+
+  /**
+   * Responds to a change in dataset on the query. Updates the state of
+   * this widget by changing the currently selected item in the list.
+   */
+  public void queryDatasetInternalNameChanged(
+    Query sourceQuery,
+    String oldDatasetInternalName,
+    String newDatasetInternalName) {
+
+    if (newDatasetInternalName == null) {
+
+      currentSelectedText.setText("");
+
+    } else {
+
+      try {
+        DatasetView[] dsvs =
+          datasetViewAdaptor.getDatasetViewByDataset(newDatasetInternalName);
+        // TODO Handle >1 dsv for dataset
+        datasetView = dsvs[0];
+        String dn = datasetView.getDisplayName(); 
+        dn = separatorMatcher.reset( dn ).replaceAll(" ");
+        currentSelectedText.setText( dn );
+      } catch (ConfigurationException e) {
+        feedback.warn(e);
+        // show the raw dataset name by default
+        currentSelectedText.setText(newDatasetInternalName);
+      }
+
+    }
+  }
+
+  public void queryDatasourceChanged(
+    Query sourceQuery,
+    DataSource oldDatasource,
+    DataSource newDatasource) {
+  }
+
+  public void queryAttributeAdded(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
+  }
+
+  public void queryAttributeRemoved(
+    Query sourceQuery,
+    int index,
+    Attribute attribute) {
+  }
+
+  public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
+  }
+
+  public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
+  }
+
+  public void queryFilterChanged(
+    Query sourceQuery,
+    Filter oldFilter,
+    Filter newFilter) {
+  }
+
+  public void querySequenceDescriptionChanged(
+    Query sourceQuery,
+    SequenceDescription oldSequenceDescription,
+    SequenceDescription newSequenceDescription) {
+  }
+
+  public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
+  }
+
+  public void queryStarBasesChanged(
+    Query sourceQuery,
+    String[] oldStarBases,
+    String[] newStarBases) {
+  }
+
+  public void queryPrimaryKeysChanged(
+    Query sourceQuery,
+    String[] oldPrimaryKeys,
+    String[] newPrimaryKeys) {
+  }
+
+  /**
+   * Runs a test; an instance of this class is shown in a Frame.
+   */
+  public static void main(String[] args) throws Exception {
+    JFrame f = new JFrame("Dataset Chooser (Test Frame)");
+    Box p = Box.createVerticalBox();
+    p.add(new DatasetWidget(new Query(), QueryEditor.testDSViewAdaptor()));
+    f.getContentPane().add(p);
+    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    f.setSize(950, 750);
+    f.setVisible(true);
+  }
   /**
    * @return
    */
   public DatasetView getDatasetView() {
-    return selectedDatasetView;
+    return datasetView;
   }
-
-	/**
-	 * 
-	 */
-	public void setDatasetViewByInternalName(String internalName) {
-		// TODO Auto-generated method stub
-		DatasetView dsv = (DatasetView)datasetNameToDatasetView.get( internalName);
-		setDatasetViewByInternalName( dsv.getDisplayName() );
-	}
 
 }

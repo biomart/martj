@@ -29,6 +29,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
@@ -47,13 +48,13 @@ public class InputPageContainer
   private DatasetView datasetView;
   private CardLayout cardLayout = new CardLayout();
 
-  public InputPageContainer(Query query) {
+  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor) {
     super();
     setLayout(cardLayout);
-    add(new DatasetWidget(query), TreeNodeData.DATASET_VIEW.getLabel());
+    add(new DatasetWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
     add(new DatasourceWidget(query), TreeNodeData.DATASOURCE.getLabel());
-    add(new AttributesWidget(query), TreeNodeData.ATTRIBUTES.getLabel());
-    add(new FiltersWidget(query), TreeNodeData.FILTERS.getLabel());
+    add(new AttributesWidget(query, datasetViewAdaptor), TreeNodeData.ATTRIBUTES.getLabel());
+    add(new FiltersWidget(query, datasetViewAdaptor), TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(), TreeNodeData.FORMAT.getLabel());
   }
 
