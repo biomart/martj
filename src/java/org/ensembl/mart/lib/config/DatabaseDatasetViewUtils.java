@@ -59,6 +59,19 @@ public class DatabaseDatasetViewUtils {
 
   private static final String BASEMETATABLE = "_meta_DatasetView"; // append user if necessary
 
+  /*
+   * _meta_DatasetView<_username>
+   * -----------------------
+   * internalName   varchar(100)
+   * displayName    varchar(100)
+   * dataset        varchar(100)
+   * description    varchar(200)
+   * xml            longblob
+   * compressed_xml longblob
+   * MessageDigest  blob
+   */  
+
+
   private static final String GETALLNAMESQL =
     "select internalname, displayName, dataset, description, MessageDigest from ";
   private static final String GETINTNAMESQL = "select internalName from "; //append table after user test
