@@ -2495,10 +2495,12 @@ public class MartShell {
 				// will throw an exception if GetHistoryLines requirements are not satisfied
 				for (int i = 0, n = lines.length; i < n; i++) {
 					String thisline = lines[i];
-
+					
 					if (historyOn)
 						Readline.addToHistory(thisline);
-					parse(thisline);
+				
+					while (thisline != null)
+					  thisline = parseForCommands(thisline);
 				}
 			}
 		} catch (Exception e) {
@@ -2605,7 +2607,6 @@ public class MartShell {
 
 	private void parse(String line)
 		throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
-
 		if (line.indexOf(LINEEND) >= 0) {
 			String residual = parseForCommands(conline.append(" ").append(line).toString().trim());
 			if (residual != null) {
