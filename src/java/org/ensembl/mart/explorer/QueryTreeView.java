@@ -17,23 +17,29 @@
 */
 
 package org.ensembl.mart.explorer;
-
+ 
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
+import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Attribute;
@@ -49,10 +55,30 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
  * Tree view showing the current state of the query.
  * 
  * <p>TODO use DSV to correctly render nodes 
- * <p>TODO delete key delete node
  * <p>TODO support dnd reordering of attribute nodes
  */
 public class QueryTreeView extends JPanel implements QueryChangeListener {
+
+  /**
+   * If an attribute or filter is currently selected delete it.
+   */
+  private final class DeleteAction extends AbstractAction {
+    public void actionPerformed(ActionEvent e) {
+
+      TreePath path = jTree.getSelectionModel().getSelectionPath();
+      if ( path==null ) return;
+      
+      DefaultMutableTreeNode child = (DefaultMutableTreeNode) path.getLastPathComponent();
+      TreeNode parent = child.getParent();
+      int index = parent.getIndex( child );      
+
+      if ( parent==attributesNode )
+        query.removeAttribute( query.getAttributes()[index] );
+      else if ( parent==filtersNode )
+        query.removeFilter( query.getFilters()[index] );
+
+    }
+  }
 
   /**
    * Object with a toString() implementation that generates a small
@@ -145,7 +171,12 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
     jTree.makeVisible(path);
 
-    add(jTree);
+    jTree.getInputMap().put(
+      KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),
+      "doDelete");
+    jTree.getActionMap().put("doDelete", new DeleteAction());
+
+    add(new JScrollPane(jTree) );
   }
 
   /**
@@ -156,31 +187,31 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
     final Query query = new Query();
     DSViewAdaptor adaptor = QueryEditor.testDSViewAdaptor();
-    QueryTreeView qtv = new QueryTreeView(query, adaptor);
+    final QueryTreeView qtv = new QueryTreeView(query, adaptor);
+    qtv.setSize(300, 500);
 
-    JPanel c = new JPanel();
-    JFrame f = new JFrame("QueryTreeView unit test");
-    f.setSize(300, 500);
-    f.getContentPane().add(c);
-    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-    int x = screen.width / 2 - f.getWidth() / 2;
-    int y = screen.height / 2 - f.getHeight() / 2;
-    f.setLocation(x, y);
-    f.setVisible(true);
+    Box c = Box.createVerticalBox();
 
     qtv.addTreeSelectionListener(new TreeSelectionListener() {
       public void valueChanged(TreeSelectionEvent e) {
         if (e != null && e.getNewLeadSelectionPath() != null)
           logger.info(
-            "Selected:"
-              + e.getNewLeadSelectionPath().getLastPathComponent());
+            "Selected:" + e.getNewLeadSelectionPath().getLastPathComponent());
       }
     });
 
+    //    qtv.addKeyListener(new KeyAdapter() {
+    //      public void keyPressed(KeyEvent e) {
+    //        if (e.getKeyCode() == KeyEvent.VK_DELETE)
+    //          qtv.delete();
+    //      }
+    //    });
+
+    c.add(new JLabel("Delete key should work for attributes+filters"));
+
     JButton b;
     Box box;
-    
+
     box = Box.createHorizontalBox();
     c.add(box);
     b = new JButton("Add attribute");
@@ -205,8 +236,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
         }
       }
     });
-    
-    
+
     // ---------
     box = Box.createHorizontalBox();
     c.add(box);
@@ -232,12 +262,21 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
         }
       }
     });
-    
-    
+
     c.add(qtv);
 
     query.setDatasetInternalName("Some dataset");
     query.addAttribute(new FieldAttribute("ensembl_gene_id"));
+
+    JFrame f = new JFrame("QueryTreeView unit test");
+    f.getContentPane().add(c);
+    f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+    int x = screen.width / 2 - f.getWidth() / 2;
+    int y = screen.height / 2 - f.getHeight() / 2;
+    f.setLocation(x, y);
+    f.setVisible(true);
+    f.pack();
 
   }
 
@@ -246,35 +285,13 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
   }
 
   /**
-   * @param filter
-   */
-  public void removeFilter(Filter filter) {
-    // TODO Auto-generated method stub
-    //  treeModel.removeNodeFromParent(
-    //    ((InputPageAware) oldValue).getInputPage().getNode());
-
-  }
-
-  /**
-   * @param attribute
-   */
-  public void removeAttribute(Attribute attribute) {
-    // TODO Auto-generated method stub
-    //  {
-    //    treeModel.removeNodeFromParent(
-    //      ((InputPageAware) oldValue).getInputPage().getNode());
-    //  }
-  }
-
-  /* (non-Javadoc)
+   * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
   public void queryNameChanged(
     Query sourceQuery,
     String oldName,
     String newName) {
-    // TODO Auto-generated method stub
-
   }
 
   /**
@@ -291,14 +308,14 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     treeModel.reload();
   }
 
-  /* (non-Javadoc)
+  /**
+   * TODO Set the Datasource node with the newDatasource.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
    */
   public void queryDatasourceChanged(
     Query sourceQuery,
     DataSource oldDatasource,
     DataSource newDatasource) {
-    // TODO Auto-generated method stub
 
   }
 
@@ -317,7 +334,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
     attributesNode.insert(treeNode, index);
     treeModel.reload(attributesNode);
-    select(attributesNode, index);
+    select(attributesNode, index, false);
 
   }
 
@@ -327,7 +344,8 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
    */
   private void select(
     DefaultMutableTreeNode parentNode,
-    int selectedChildIndex) {
+    int selectedChildIndex,
+    boolean select) {
 
     DefaultMutableTreeNode next = parentNode;
     int nChildren = parentNode.getChildCount();
@@ -340,7 +358,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
     TreePath path = new TreePath(next.getPath());
     jTree.scrollPathToVisible(path);
-    jTree.setSelectionPath(path);
+    if ( select ) jTree.setSelectionPath(path);
 
   }
 
@@ -356,7 +374,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
     attributesNode.remove(index);
     treeModel.reload(attributesNode);
-    select(attributesNode, index);
+    select(attributesNode, index, true);
 
   }
 
@@ -372,7 +390,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
     filtersNode.insert(treeNode, index);
     treeModel.reload(filtersNode);
-    select(filtersNode, index);
+    select(filtersNode, index, false);
 
   }
 
@@ -380,10 +398,10 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
    * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
    */
   public void queryFilterRemoved(Query sourceQuery, int index, Filter filter) {
-  
+
     filtersNode.remove(index);
     treeModel.reload(filtersNode);
-    select(filtersNode, index);
+    select(filtersNode, index, true);
 
   }
 
@@ -398,45 +416,41 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
   }
 
-  /* (non-Javadoc)
+  /**
+   * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
    */
   public void querySequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
-    // TODO Auto-generated method stub
-
   }
 
-  /* (non-Javadoc)
+  /**
+   * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryLimitChanged(org.ensembl.mart.lib.Query, int, int)
    */
   public void queryLimitChanged(Query query, int oldLimit, int newLimit) {
-    // TODO Auto-generated method stub
-
   }
 
-  /* (non-Javadoc)
+  /**
+   * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryStarBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
   public void queryStarBasesChanged(
     Query sourceQuery,
     String[] oldStarBases,
     String[] newStarBases) {
-    // TODO Auto-generated method stub
-
   }
 
-  /* (non-Javadoc)
+  /**
+   * Do nothing.
    * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
   public void queryPrimaryKeysChanged(
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys) {
-    // TODO Auto-generated method stub
-
   }
 
 }
