@@ -27,6 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.net.URL;
+import java.util.prefs.Preferences;
+import java.sql.SQLException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -38,6 +40,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
+import javax.swing.JOptionPane;
+
+import org.ensembl.mart.lib.DetailedDataSource;
+import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
+import org.ensembl.mart.lib.config.ConfigurationException;
 
 /**
  * Class MartViewEditor extends JFrame..
@@ -66,7 +73,15 @@ public class MartViewEditor extends JFrame {
     static final private String REDO = "Redo";
     static final private String HELP = "Copy";
     private File file = null;
-
+	
+	static private DetailedDataSource ds;
+	static private String user;
+	private String database;
+	/** Persistent preferences object used to hold user history. */
+	private Preferences prefs  = Preferences.userNodeForPackage(this.getClass());
+	private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
+	
+	
     public MartViewEditor() {
         super("Mart Editor (Development version)");
         JFrame.setDefaultLookAndFeelDecorated(true);
@@ -187,8 +202,37 @@ public class MartViewEditor extends JFrame {
 
         //a group of JMenuItems
         ImageIcon icon = createImageIcon(IMAGE_DIR+"new.gif");
+        
+		
+		menuItem = new JMenuItem("Database Connection");
+		MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_D);
+		menu.add(menuItem);  
+		
+		menuItem = new JMenuItem("Import XML from database");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem);       
+		
+		menuItem = new JMenuItem("Export XML to database");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem);       
+		
+		menuItem = new JMenuItem("Naive XML from database");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem);       
+		
+		menuItem = new JMenuItem("Update XML");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem);            								
+        
+		menu.addSeparator();
         menuItem = new JMenuItem("New Dataset View", icon);
-        MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
+        
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         // menuItem.setAccelerator(KeyStroke.getKeyStroke(
@@ -220,6 +264,7 @@ public class MartViewEditor extends JFrame {
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_P);
         menu.add(menuItem);
+        
 
         //a group of check box menu items
         menu.addSeparator();
@@ -321,7 +366,7 @@ public class MartViewEditor extends JFrame {
     //Create a new internal frame.
     protected void createFrame(File file) {
 
-            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this);
+            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this,null,null,null);
             frame.setVisible(true);
             desktop.add(frame);
             try {
@@ -382,7 +427,7 @@ public class MartViewEditor extends JFrame {
 
 // Inner class that handles Menu Action Events
     protected class MenuActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent e){
             if (e.getActionCommand().equals("Cut"))
                 cut();
             else if (e.getActionCommand().equals("Copy"))
@@ -407,6 +452,17 @@ public class MartViewEditor extends JFrame {
                 undo();
             else if (e.getActionCommand().startsWith("Redo"))
                 redo();
+			else if (e.getActionCommand().startsWith("Database"))
+				databaseConnection();  
+			else if (e.getActionCommand().startsWith("Import"))
+				importDatasetView();  
+			else if (e.getActionCommand().startsWith("Export"))
+				exportDatasetView();  				  
+			else if (e.getActionCommand().startsWith("Naive"))
+				naiveDatasetView();  				  
+			else if (e.getActionCommand().startsWith("Update"))
+				updateDatasetView();
+                	  				  				  																				  
         }
     }
 
@@ -441,6 +497,33 @@ public class MartViewEditor extends JFrame {
     public File getFileChooserPath(){
         return file;
     }
+
+	public static DetailedDataSource getDetailedDataSource(){
+		return ds;
+	}
+	
+	public static String getUser(){
+			return user;
+	}
+    
+    public void databaseConnection(){
+    	
+		databaseDialog.showDialog(this);
+		String defaultSourceName = DetailedDataSource.defaultName(databaseDialog.getHost(), databaseDialog.getPort(), databaseDialog.getDatabase(), databaseDialog.getUser());
+		ds =
+	        new DetailedDataSource(
+		    databaseDialog.getDatabaseType(),
+			databaseDialog.getHost(),
+			databaseDialog.getPort(),
+			databaseDialog.getDatabase(),
+			databaseDialog.getUser(),
+			databaseDialog.getPassword(),
+			10,
+			databaseDialog.getDriver(), defaultSourceName);
+    	user = databaseDialog.getUser();
+    	database = databaseDialog.getDatabase();
+    }
+
     public void openDatasetView() {
 
         XMLFileFilter filter = new XMLFileFilter();
@@ -458,6 +541,72 @@ public class MartViewEditor extends JFrame {
 
     }
 
+	public void importDatasetView() {
+		try{
+		  if (ds == null){
+		    JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
+		    return;
+		  }
+		
+		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
+		  String dataset = (String) JOptionPane.showInputDialog(null,
+				   "Choose one", "Dataset",
+				   JOptionPane.INFORMATION_MESSAGE, null,
+				   datasets, datasets[0]);		
+			
+		  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,user,dataset,null);
+		  frame.setVisible(true);
+		  desktop.add(frame);
+		  try {
+		    	frame.setSelected(true);
+		  } catch (java.beans.PropertyVetoException e) {
+		  }
+		}
+		catch (ConfigurationException e){
+		}
+	}
+
+	public void exportDatasetView() {
+		if (ds == null){
+			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
+			return;
+		}
+		
+		((DatasetViewTreeWidget)desktop.getSelectedFrame()).export();
+	}
+
+	public void naiveDatasetView(){
+	  try{
+		if (ds == null){
+			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
+			return;
+		}	
+		
+		String[] datasets = DatabaseDatasetViewUtils.getNaiveDatasetNamesFor(ds,database);
+		String dataset = (String) JOptionPane.showInputDialog(null,
+				   "Choose one", "Dataset",
+				   JOptionPane.INFORMATION_MESSAGE, null,
+				   datasets, datasets[0]);
+	    
+		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,dataset,database);
+		frame.setVisible(true);
+		desktop.add(frame);
+		try {
+			frame.setSelected(true);
+		} catch (java.beans.PropertyVetoException e) {
+		}
+	  }
+	  catch (SQLException e){
+	  }			
+	}
+	
+	public void updateDatasetView() {
+		if (ds == null){
+			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
+			return;
+		}		
+	}
+		
     public void save() {
         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
     }
