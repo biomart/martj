@@ -19,6 +19,10 @@
 package org.ensembl.mart.lib;
 
 import java.io.OutputStream;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -26,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.sql.DataSource;
 
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
@@ -38,104 +44,202 @@ import java.util.logging.Logger;
 //TODO: implement broad(transcript based) versus narrow(gene based) filtering of resultsets
 
 public class Engine {
-	private static Logger logger = Logger.getLogger(Engine.class.getName());
+  private static Logger logger = Logger.getLogger(Engine.class.getName());
 
-	/**
-	 * Attempts to load the database drivers normally shipped with 
-	 * martlib distribution.
-	 */
-	private static void loadFallbackDatabaseDrivers() {
-		String[] driverNames = new String[] { "org.gjt.mm.mysql.Driver" };
-		for (int i = 0; i < driverNames.length; i++) {
-			try {
-				Class.forName(driverNames[i]).newInstance();
-			} catch (Exception e) {
-				if (logger.isLoggable(Level.WARNING))
-					logger.warning("Failed to load driver" + driverNames[i]);
-				throw new RuntimeException(e.getMessage(), e);
-			}
-		}
-	}
+  /**
+   * Attempts to load the database drivers normally shipped with 
+   * martlib distribution.
+   */
+  private static void loadFallbackDatabaseDrivers() {
+    String[] driverNames = new String[] { "org.gjt.mm.mysql.Driver" };
+    for (int i = 0; i < driverNames.length; i++) {
+      try {
+        Class.forName(driverNames[i]).newInstance();
+      } catch (Exception e) {
+        if (logger.isLoggable(Level.WARNING))
+          logger.warning("Failed to load driver" + driverNames[i]);
+        throw new RuntimeException(e.getMessage(), e);
+      }
+    }
+  }
 
-	/** 
-	 * Load drivers normally distributed with mart lib. These will be
-	 * available if no other drivers are previously loaded.
-	 */
-	{
-		loadFallbackDatabaseDrivers();
-	}
+  /** 
+   * Load drivers normally distributed with mart lib. These will be
+   * available if no other drivers are previously loaded.
+   */
+  {
+    loadFallbackDatabaseDrivers();
+  }
 
+  public Engine() {
+  }
 
-	public Engine() {
-	}
+  public void countFocus(OutputStream os, Query oquery) throws InvalidQueryException, SQLException {
+    PrintStream pstream = new PrintStream(os, true); //autoflush true
+    //ensure that we are using a copy of the Query
+    Query query = new Query(oquery);
 
+    //TODO: this may be removed
+    //remove any attributes present, so that they do not affect the count
+    if (query.getAttributes().length > 0)
+      query.removeAllAttributes();
 
-	public int countFocus(Query query) {
-		throw new RuntimeException();
-	}
+    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
+      pstream.print("0\n");
+    } else {
+      //process any unprocessed filters
+      Hashtable needsHandler = new Hashtable();
 
-	public int countRows(Query query) {
-		throw new RuntimeException();
-	}
+      Filter[] filters = query.getFilters();
+      for (int i = 0, n = filters.length; i < n; i++) {
+        Filter filter = filters[i];
+        if (filter.getHandler() != null) {
+          String handler = filter.getHandler();
+          if (!needsHandler.containsKey(handler))
+            needsHandler.put(handler, new ArrayList());
 
-	/**
-	 * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
-	 * system to modify the Query accordingly, if present.
-	 * Constructs a QueryRunner object for the given Query, and format using 
-	 * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
-	 * with the mySQL connection of this Engine, and write the results to 
-	 * a specified OutputStream.
-	 * 
-	 * @param query - A Query Object
-	 * @param formatspec - A FormatSpec Object
-	 * @param os - An OutputStream
-	 * @throws FormatException - unsupported Format supplied to the QueryRunnerFactory
-	 * @throws SequenceException - general Exception thrown for a variety of reasons that the SeqQueryRunners cannot write out sequence data
-	 * @throws InvalidQueryException - general Exception thrown when invalid query parameters have been presented, and the resulting SQL will not work.
-	 * @see Query
-	 * @see FormatSpec
-	 * @see QueryRunnerFactory
-	 * @see QueryRunner
-	 * @see DSFilterHandler
-	 * @see DSFilterHandlerFactory
-	 */
-	public void execute(Query query, FormatSpec formatspec, OutputStream os)
-		throws SequenceException, FormatException, InvalidQueryException, SQLException {
+          List unhandledFilters = (ArrayList) needsHandler.get(handler);
+          if (!unhandledFilters.contains(filter))
+            unhandledFilters.add(filter);
+          needsHandler.put(handler, unhandledFilters);
+        }
+      }
 
-		if (query.hasLimit())
-			execute(query, formatspec, os, query.getLimit());
-		else
-			execute(query, formatspec, os, 0);
+      for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+        String handler = (String) iter.next();
+        List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+        UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+        query = idhandler.ModifyQuery(this, unprocessedFilters, query);
+      }
 
-	}
+      CompiledSQLQuery csql = new CompiledSQLQuery(query);
+      String fcountSQL = csql.toFocusCountSQL();
+      writeSQLResults(pstream, query.getDataSource(), fcountSQL);
+    }
+  }
 
-	/**
-	 * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
-	 * system to modify the Query accordingly, if present.
-	 * Constructs a QueryRunner object for the given Query, and format using 
-	 * a QueryRunnerFactory.  Applies a limit clause to the SQL.
-	 * Uses the QueryRunner to execute the Query with the mySQL connection of 
-	 * this Engine, and write the results to a specified OutputStream.
-	 * 
-	 * @param query A Query Object
-	 * @param formatspec A FormatSpec Object
-	 * @param os An OutputStream
-	 * @param limit limits the number of records returned by the query
-	 * @throws SequenceException
-	 * @throws FormatException
-	 * @throws InvalidQueryException
-	 * @see Query
-	 * @see FormatSpec
-	 * @see QueryRunnerFactory
-	 * @see QueryRunner
-	 * @see DSFilterHandler
-	 * @see DSFilterHandlerFactory
-	 */
-	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit)
-		throws SequenceException, FormatException, InvalidQueryException, SQLException {
+  public void countRows(OutputStream os, Query oquery) throws InvalidQueryException, SQLException {
+    PrintStream pstream = new PrintStream(os, true); //autoflush true
+    //ensure that we are using a copy of the Query
+    Query query = new Query(oquery);
+
+    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
+      pstream.print("0\n");
+      return;
+    } else {
+      //process any unprocessed filters
+      Hashtable needsHandler = new Hashtable();
+
+      Filter[] filters = query.getFilters();
+      for (int i = 0, n = filters.length; i < n; i++) {
+        Filter filter = filters[i];
+        if (filter.getHandler() != null) {
+          String handler = filter.getHandler();
+          if (!needsHandler.containsKey(handler))
+            needsHandler.put(handler, new ArrayList());
+
+          List unhandledFilters = (ArrayList) needsHandler.get(handler);
+          if (!unhandledFilters.contains(filter))
+            unhandledFilters.add(filter);
+          needsHandler.put(handler, unhandledFilters);
+        }
+      }
+
+      for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
+        String handler = (String) iter.next();
+        List unprocessedFilters = (ArrayList) needsHandler.get(handler);
+        UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
+        query = idhandler.ModifyQuery(this, unprocessedFilters, query);
+      }
+
+      CompiledSQLQuery csql = new CompiledSQLQuery(query);
+      String rcountSQL = csql.toRowCountSQL();
+      writeSQLResults(pstream, query.getDataSource(), rcountSQL);
+    }
+  }
+
+  private void writeSQLResults(PrintStream pstream, DataSource dsource, String sql) throws InvalidQueryException {
+    if (dsource == null)
+      throw new InvalidQueryException("Query must have a DataSource to execute against\n");
+
+    Connection conn = null;
+    try {
+      conn = dsource.getConnection();
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next())
+        pstream.print(rs.getString(1) + "\n");
+      else
+        pstream.print("0\n");
+    } catch (SQLException e) {
+      if (logger.isLoggable(Level.WARNING))
+        logger.warning(e.getMessage());
+      throw new InvalidQueryException(e);
+    } finally {
+      DetailedDataSource.close(conn);
+    }
+
+  }
+
+  /**
+   * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+   * system to modify the Query accordingly, if present.
+   * Constructs a QueryRunner object for the given Query, and format using 
+   * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
+   * with the mySQL connection of this Engine, and write the results to 
+   * a specified OutputStream.
+   * 
+   * @param query - A Query Object
+   * @param formatspec - A FormatSpec Object
+   * @param os - An OutputStream
+   * @throws FormatException - unsupported Format supplied to the QueryRunnerFactory
+   * @throws SequenceException - general Exception thrown for a variety of reasons that the SeqQueryRunners cannot write out sequence data
+   * @throws InvalidQueryException - general Exception thrown when invalid query parameters have been presented, and the resulting SQL will not work.
+   * @see Query
+   * @see FormatSpec
+   * @see QueryRunnerFactory
+   * @see QueryRunner
+   * @see DSFilterHandler
+   * @see DSFilterHandlerFactory
+   */
+  public void execute(Query query, FormatSpec formatspec, OutputStream os)
+    throws SequenceException, FormatException, InvalidQueryException, SQLException {
+
+    if (query.hasLimit())
+      execute(query, formatspec, os, query.getLimit());
+    else
+      execute(query, formatspec, os, 0);
+
+  }
+
+  /**
+   * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+   * system to modify the Query accordingly, if present.
+   * Constructs a QueryRunner object for the given Query, and format using 
+   * a QueryRunnerFactory.  Applies a limit clause to the SQL.
+   * Uses the QueryRunner to execute the Query with the mySQL connection of 
+   * this Engine, and write the results to a specified OutputStream.
+   * 
+   * @param query A Query Object
+   * @param formatspec A FormatSpec Object
+   * @param os An OutputStream
+   * @param limit limits the number of records returned by the query
+   * @throws SequenceException
+   * @throws FormatException
+   * @throws InvalidQueryException
+   * @see Query
+   * @see FormatSpec
+   * @see QueryRunnerFactory
+   * @see QueryRunner
+   * @see DSFilterHandler
+   * @see DSFilterHandlerFactory
+   */
+  public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit)
+    throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
     execute(query, formatspec, os, limit, false);
-	}
+  }
 
   public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit, boolean isSubQuery)
     throws SequenceException, FormatException, InvalidQueryException, SQLException {
@@ -170,10 +274,8 @@ public class Engine {
     qr.execute(limit, isSubQuery);
   }
 
-
-  
-	public String sql(Query query) {
-		throw new RuntimeException();
-	}
+  public String sql(Query query) {
+    throw new RuntimeException();
+  }
 
 }

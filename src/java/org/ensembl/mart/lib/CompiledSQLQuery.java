@@ -29,8 +29,6 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
 /**
  * Compiles a Query object into SQL.
  * 
@@ -94,53 +92,83 @@ public class CompiledSQLQuery {
     return pksql;
   }
 
+  /**
+   * creates a String SQL statement suitable for preparing in
+   * a PreparedStatement using a JDBC Connection, whereby the
+   * select clause is select count(distinct highKey) where highKey
+   * is the first primary key listed in the DatasetConfig XML primary keys.
+   * This counts all distinct focus objects returned by the filters.
+   * 
+   * @return String SQL - SQL to be executed
+   * @throws InvalidQueryException
+   */
+  public String toFocusCountSQL() throws InvalidQueryException {
+    if (fcountSQL == null)
+      compileFocusCountSQL();
+    return fcountSQL;
+  }
+
+  /**
+   * creates a String SQL statement suitable for preparing in
+   * a PreparedStatement using a JDBC Connection, whereby the
+   * select clause is select count(*), eg counts all rows returned
+   * by the filters.
+   * 
+   * @return String SQL - SQL to be executed
+   * @throws InvalidQueryException
+   */
+  public String toRowCountSQL() throws InvalidQueryException {
+    if (rcountSQL == null)
+      compileRowCountSQL();
+    return rcountSQL;
+  }
   
   /**
-	 * Returns the lowest level key
-	 * @return String lowest level key used in join clauses
-	 * @throws InvalidQueryException same as getPrimaryKey
-	 */
+   * Returns the lowest level key
+   * @return String lowest level key used in join clauses
+   * @throws InvalidQueryException same as getPrimaryKey
+   */
   public String getLowestLevelKey() throws InvalidQueryException {
     if (sql == null)
       compileSQL();
     return lowestLevelKey;
   }
-  
+
   /**
-	 * Returns the lowest level key, qualified with the mainTable.
-	 * @return String mainTable+"."+lowestLevelKey
-	 * @throws InvalidQueryException same as getPrimaryKey
-	 */
+   * Returns the lowest level key, qualified with the mainTable.
+   * @return String mainTable+"."+lowestLevelKey
+   * @throws InvalidQueryException same as getPrimaryKey
+   */
   public String getQualifiedLowestLevelKey() throws InvalidQueryException {
-  if (sql == null)
-    compileSQL();
+    if (sql == null)
+      compileSQL();
     return qualifiedLowestLevelKey;
   }
 
   private void compileSQL() throws InvalidQueryException {
 
-      boolean success = false;
-      StringBuffer buf = new StringBuffer();
-      mainTable = null;
-    
-      success = selectClause(buf);
+    boolean success = false;
+    StringBuffer buf = new StringBuffer();
+    mainTable = null;
 
-      if (success) {
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("select clause:" + buf.toString());
+    success = selectClause(buf);
 
-        success = fromClause(buf);
-      }
+    if (success) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("select clause:" + buf.toString());
 
-      if (success) {
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("select + from clauses:" + buf.toString());
+      success = fromClause(buf);
+    }
 
-        success = whereClause(buf);
-      }
+    if (success) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("select + from clauses:" + buf.toString());
 
-      if (success && logger.isLoggable(Level.FINE))
-        logger.fine("select + from + where clauses:" + buf.toString());
+      success = whereClause(buf);
+    }
+
+    if (success && logger.isLoggable(Level.FINE))
+      logger.fine("select + from + where clauses:" + buf.toString());
 
     //}
     if (!success)
@@ -159,6 +187,63 @@ public class CompiledSQLQuery {
       logger.info("MainTable: " + mainTable + "\n");
       logger.info("LowestLevelKey: " + lowestLevelKey + "\n");
     }
+  }
+
+  private void compileFocusCountSQL() throws InvalidQueryException {
+    boolean success = false;
+    StringBuffer buf = new StringBuffer();
+    mainTable = null;
+
+    success = fromClause(buf);
+
+    if (success) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("from clause:" + buf.toString());
+
+      success = whereClause(buf);
+    }
+
+    if (success && logger.isLoggable(Level.FINE))
+      logger.fine("from + where clauses:" + buf.toString());
+
+    //}
+    if (!success)
+      throw new InvalidQueryException("Failed to compile query :" + query);
+
+    StringBuffer sbuf = new StringBuffer(SELECT);
+    sbuf.append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(buf);
+    fcountSQL = sbuf.toString();
+
+    if (logger.isLoggable(Level.INFO))
+      logger.info("fcountSQL: " + fcountSQL + "\n");
+  }
+
+  private void compileRowCountSQL() throws InvalidQueryException {
+    boolean success = false;
+    StringBuffer buf = new StringBuffer(SELECT);
+    buf.append(" count(*)");
+    mainTable = null;
+
+    success = fromClause(buf);
+
+    if (success) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("from clause:" + buf.toString());
+
+      success = whereClause(buf);
+    }
+
+    if (success && logger.isLoggable(Level.FINE))
+      logger.fine("from + where clauses:" + buf.toString());
+
+    //}
+    if (!success)
+      throw new InvalidQueryException("Failed to compile query :" + query);
+
+    rcountSQL = buf.toString();
+
+    if (logger.isLoggable(Level.INFO))
+      logger.info("rcountSQL: " + rcountSQL + "\n");
   }
 
   /**
@@ -197,52 +282,52 @@ public class CompiledSQLQuery {
 
     HashSet relevantTables = new HashSet();
     joinTables = new HashMap();
-	String[] starNames = query.getMainTables();
-	String[] primaryKeys = query.getPrimaryKeys();
+    String[] starNames = query.getMainTables();
+    String[] primaryKeys = query.getPrimaryKeys();
     // reverse cycle through primaryKeys
-	for (int k = primaryKeys.length - 1; k > -1 && (lowestLevelKey == null); k--) {
-    // if an attribute or filter key = this primaryKey
-    // then store lowestLevelKey and mainTable and break out
-	  for (int i = 0; i < query.getAttributes().length; ++i) {
-	    Attribute attribute = query.getAttributes()[i];
-        if (attribute.getKey().equals(primaryKeys[k])){
+    for (int k = primaryKeys.length - 1; k > -1 && (lowestLevelKey == null); k--) {
+      // if an attribute or filter key = this primaryKey
+      // then store lowestLevelKey and mainTable and break out
+      for (int i = 0; i < query.getAttributes().length; ++i) {
+        Attribute attribute = query.getAttributes()[i];
+        if (attribute.getKey().equals(primaryKeys[k])) {
           lowestLevelKey = primaryKeys[k];
-          mainTable = starNames[k];	
-		  StringBuffer qualBuf = new StringBuffer("main");
-		  qualBuf.append(".").append(lowestLevelKey);	  
-		  qualifiedLowestLevelKey = qualBuf.toString();	  
+          mainTable = starNames[k];
+          StringBuffer qualBuf = new StringBuffer("main");
+          qualBuf.append(".").append(lowestLevelKey);
+          qualifiedLowestLevelKey = qualBuf.toString();
         }
-	  }
+      }
       for (int i = 0; i < query.getFilters().length; ++i) {
         Filter filter = query.getFilters()[i];
-		if (filter.getKey().equals(primaryKeys[k])){
-		  lowestLevelKey = primaryKeys[k];
-		  mainTable = starNames[k];	
-		  StringBuffer qualBuf = new StringBuffer("main");
-		  qualBuf.append(".").append(lowestLevelKey);	  
-		  qualifiedLowestLevelKey = qualBuf.toString();
-		}
-	  }
+        if (filter.getKey().equals(primaryKeys[k])) {
+          lowestLevelKey = primaryKeys[k];
+          mainTable = starNames[k];
+          StringBuffer qualBuf = new StringBuffer("main");
+          qualBuf.append(".").append(lowestLevelKey);
+          qualifiedLowestLevelKey = qualBuf.toString();
+        }
+      }
     }
     // add main.lowestLevelKey to SELECT clause
     //buf.append(", main.").append(lowestLevelKey);
-    
+
     // cycle through all filter and atts adding tableConstraint
     // to fromTables where != main or already in there
     for (int i = 0; i < query.getAttributes().length; ++i) {
       Attribute attribute = query.getAttributes()[i];
-      if (!attribute.getTableConstraint().equals("main")){
+      if (!attribute.getTableConstraint().equals("main")) {
         relevantTables.add(attribute.getTableConstraint());
-        joinTables.put(attribute.getTableConstraint(),attribute.getKey());
+        joinTables.put(attribute.getTableConstraint(), attribute.getKey());
       }
     }
 
     for (int i = 0; i < query.getFilters().length; ++i) {
       Filter filter = query.getFilters()[i];
-	  if (!filter.getTableConstraint().equals("main")){
+      if (!filter.getTableConstraint().equals("main")) {
         relevantTables.add(filter.getTableConstraint());
-		joinTables.put(filter.getTableConstraint(),filter.getKey());
-	  }
+        joinTables.put(filter.getTableConstraint(), filter.getKey());
+      }
     }
 
     fromTables = new String[relevantTables.size()];
@@ -282,31 +367,31 @@ public class CompiledSQLQuery {
       for (int i = 0; i < nFilters; ++i) {
 
         Filter f = query.getFilters()[i];
-        
+
         if (and)
           buf.append(" AND ");
-        buf.append(f.getTableConstraint()).append(".").append(f.getField()).append(" ").append(f.getRightHandClause()).append(" ");
+        buf.append(f.getTableConstraint()).append(".").append(f.getField()).append(" ").append(
+          f.getRightHandClause()).append(
+          " ");
         and = true;
       }
     }
 
     // Add joins to where clause
-    
-      Set tables = joinTables.entrySet();
-      Iterator iterator = tables.iterator();
-      while(iterator.hasNext()){
-      	  Map.Entry mapentry = (Map.Entry) iterator.next();
-          if (and)
-            buf.append(" AND ");
-          and = true;
-          buf.append("main.").append(mapentry.getValue()).append("=").append(mapentry.getKey()).append(".").append(
-            mapentry.getValue());
-      }
+
+    Set tables = joinTables.entrySet();
+    Iterator iterator = tables.iterator();
+    while (iterator.hasNext()) {
+      Map.Entry mapentry = (Map.Entry) iterator.next();
+      if (and)
+        buf.append(" AND ");
+      and = true;
+      buf.append("main.").append(mapentry.getValue()).append("=").append(mapentry.getKey()).append(".").append(
+        mapentry.getValue());
+    }
 
     return true;
   }
-
-  
 
   //	private String[] toStringArray(List list) {
   //		return (String[]) list.toArray(new String[list.size()]);
@@ -314,6 +399,8 @@ public class CompiledSQLQuery {
 
   private String sql = null;
   private String pksql = null;
+  private String fcountSQL = null;
+  private String rcountSQL = null;
   private Query query = null;
   private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
   private String mainTable = null; // either the _main table, or the single dimension table when that is chosen
