@@ -22,8 +22,8 @@ public class DBAdaptor {
 	
 	public String username;
 	public String catalog;
+	public String rdbms;
 	
-	private String rdbms;
 	private String host;
 	private String port;
     private String instance;
@@ -42,9 +42,13 @@ public class DBAdaptor {
 	public DBAdaptor(String config) {
 		super();
 		setConfig(config);
+		initialiseConnections();
 		// TODO Auto-generated constructor stub
 	}
-	public Connection initialiseConnections (){
+	
+	
+	
+	private Connection initialiseConnections (){
 		
 		
 		try {
@@ -82,6 +86,8 @@ public class DBAdaptor {
 			else System.err.println("not supported rdbms type: "+ rdbms);
 			Connection con = DriverManager.getConnection (url, username,password);
 			setCon(con);
+			
+			
 		}
 		catch(SQLException ex) {
 			System.err.print("SQLException: ");
@@ -118,6 +124,10 @@ public class DBAdaptor {
 	public void setConfig(String config) {
 		this.config = config;
 	}
+
+
+
+
 }
 
 

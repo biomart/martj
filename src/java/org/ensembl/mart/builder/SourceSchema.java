@@ -18,13 +18,21 @@ public class SourceSchema {
 
 	ArrayList linked_tables = new ArrayList();
 	DBAdaptor adaptor;
-	MetaDataResolverMySQL resolver;
+	MetaDataResolver resolver;
 	String dataset;
 	
 	public SourceSchema (String config){
 		
 		DBAdaptor adaptor = new DBAdaptor(config);
-		MetaDataResolverMySQL resolver = new MetaDataResolverMySQL(adaptor);
+		MetaDataResolver resolver = null;
+		
+		System.out.println("adaptor "+adaptor.rdbms);
+		
+		if (adaptor.rdbms.equals("mysql")){
+		resolver = new MetaDataResolverMySQL(adaptor);
+		} if (adaptor.rdbms.equals("oracle")){
+		resolver = new MetaDataResolverOracle(adaptor);
+		}
 		this.adaptor=adaptor;
 		this.resolver=resolver;
 		

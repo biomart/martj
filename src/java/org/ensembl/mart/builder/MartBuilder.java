@@ -175,7 +175,7 @@ public class MartBuilder {
 		for (int i=0;i<reftables.length;i++){
 			Column [] columns = reftables[i].getColumns();
 			for (int j=0;j<columns.length;j++){
-				columns[i].final_table_name=linked.final_table_name;
+
 			}
 		}
 		return linked;

@@ -28,10 +28,9 @@ public abstract class MetaDataResolver {
 	public MetaDataResolver(DBAdaptor adaptor){
 		
 		try {		
-			Connection con = adaptor.initialiseConnections();
 			setAdaptor(adaptor);
-			setConnection(con);
-			dmd = con.getMetaData();
+			setConnection(adaptor.getCon());
+			dmd = adaptor.getCon().getMetaData();
 			
 		}
 		catch(SQLException ex) {
