@@ -38,8 +38,6 @@ from jarray import *
 from org.apache.log4j import *
 from java.beans import *
 
-HORIZONTAL_GAP = 10
-VERTICAL_GAP = 5
 GAP = 5
 
 class DummyInputPage(QueryInputPage, JPanel):
@@ -70,7 +68,7 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
         Box.__init__(self, BoxLayout.X_AXIS)
 
         self.add( JLabel( label ) ) 
-        self.add( Box.createHorizontalStrut( HORIZONTAL_GAP ))
+        self.add( Box.createHorizontalStrut( GAP*2 ))
         self.box = JComboBox()
         self.box.editable = 1
         self.add( self.box )
