@@ -2,6 +2,7 @@ package org.ensembl.mart.lib.test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -20,6 +21,9 @@ import org.ensembl.util.PropertiesUtil;
  * @testsetup Default TestSuite
  * @testpackage org.ensembl.mart.explorer.test*/
 public class CompiledSQLQueryTest extends Base {
+
+  private Logger logger =
+		Logger.getLogger(CompiledSQLQueryTest.class.getName());
 
 	public final String STABLE_ID_REL = "data/gene_stable_id.test";
 	private StatOutputStream stats = new StatOutputStream();
@@ -95,7 +99,7 @@ public class CompiledSQLQueryTest extends Base {
 
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		URL stableidurl = org.apache.log4j.helpers.Loader.getResource(STABLE_ID_REL);
+		URL stableidurl = CompiledSQLQueryTest.class.getClassLoader().getResource(STABLE_ID_REL);
 		q.addFilter(new IDListFilter("gene_stable_id", stableidurl));
 		executeQuery(q);
 	}
