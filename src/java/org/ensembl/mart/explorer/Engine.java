@@ -48,10 +48,11 @@ public class Engine {
     public Connection createConnection(Query query) {
         StringBuffer connStr = new StringBuffer();
         connStr.append("jdbc:mysql://");
-        connStr.append( query.getHost() ).append("/");
+        connStr.append( query.getHost() );
         String p = query.getPort();
         if ( p != null && !"".equals(p) )
             connStr.append(":").append( p );
+        connStr.append("/");
         String db = query.getDatabase();
         if ( db != null && !db.equals(""))
             connStr.append( db );
