@@ -2,7 +2,10 @@
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
 
-  <RegistryDBLocation name="pointer" databaseType="mysql"
-    host="web26.ebi.ac.uk" port="3326" instanceName="registry_DB" user="martro"/>
+<RegistryDBLocation name="pointer" databaseType="mysql"
+    host="martdb.ebi.ac.uk" port="3306" instanceName="central_registry" user="anonymous"/>
+
+<DatabaseLocation name="Ensembl 27@web26" databaseType="mysql"
+    host="web26" port="3326" instanceName="ensembl_mart_27_1" user="martro"/>
 
 </MartRegistry>
