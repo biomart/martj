@@ -155,7 +155,7 @@ public class DatasetViewXMLUtils {
     try {
       SAXBuilder builder = new SAXBuilder();
       // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the Classpath.
-      builder.setEntityResolver(new MartDTDEntityResolver());
+      builder.setEntityResolver(new ClasspathDTDEntityResolver());
       builder.setValidation(validate);
       
       InputSource is = new InputSource(xmlinput);

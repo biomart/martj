@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.xml.sax.EntityResolver;
@@ -35,29 +36,29 @@ import org.xml.sax.SAXException;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartDTDEntityResolver implements EntityResolver {
+public class ClasspathDTDEntityResolver implements EntityResolver {
 
-   private final String MARTJARPROTOCAL = "martjar";
+   private final String MARTJARPROTOCAL = "classpath";
    private final String DATASETVIEW = "DatasetView\\.dtd";
    private final String MARTREGISTRY = "MartRegistry\\.dtd";
    private final String MARTJARDATASETVIEWDTD = "data/XML/DatasetView.dtd";
    private final String MARTJARMARTREGISTRYDTD = "data/XML/MartRegistry.dtd";
    
-   private Logger logger = Logger.getLogger(MartDTDEntityResolver.class.getName());
+   private Logger logger = Logger.getLogger(ClasspathDTDEntityResolver.class.getName());
    
    /**
     * Constructs a MartDTDEntityResolver object to add to an XML (SAX, DOM) Parser for MartConfiguration.xml
     * to allow it to pull the DTD from a different source than that specified in the DOCTYPE declaration.
     */
-   public MartDTDEntityResolver() {     
+   public ClasspathDTDEntityResolver() {     
    }
    
 	/**
    * Implements the resolveEntity method, but overrides systemIDs containing the protocal
-   * 'martjar:' to get the entity represented in the path component of the URL from the martj.jar file. 
-   * If the systemID does not contain martjar: as the protocal, then it returns
+   * 'classpath:' to get the entity represented in the path component of the URL from the martj.jar file. 
+   * If the systemID does not contain classpath: as the protocal, then it returns
    * a null InputSource, allowing JDOM to locate the requested Entity in its default manner.
-   * (eg. if you want the system to fetch DatasetView.dtd from the martj.jar use 'martjar:DatasetView.dtd', 
+   * (eg. if you want the system to fetch DatasetView.dtd from the martj.jar use 'classpath:DatasetView.dtd', 
    * but if you want it to fetch 'DatasetView.dtd' from the file system, or some other URL, 
    * use 'file:DatasetView.dtd', 'DatasetView.dtd', 
    * or 'http://url_to_DatasetView.dtd'). 
@@ -65,25 +66,18 @@ public class MartDTDEntityResolver implements EntityResolver {
 	 * @see org.xml.sax.EntityResolver#resolveEntity(java.lang.String, java.lang.String)
 	 */
 	public InputSource resolveEntity(String publicID, String systemID) throws SAXException, IOException {
-		
-		if (systemID.indexOf(MARTJARPROTOCAL) > 0) {
+		    
+		if (systemID.indexOf(MARTJARPROTOCAL) >= 0) {
       if (logger.isLoggable(Level.INFO))
-			  logger.info("Getting DTD " + systemID + " from martj.jar\n");
+      logger.info("Getting DTD " + systemID + " from martj.jar\n");
         
       StringTokenizer tokens = new StringTokenizer(systemID, ":");
       tokens.nextToken();
-      systemID = tokens.nextToken();
-      InputStream is = null;
-      
-      if (systemID.matches(DATASETVIEW))
-        is = MartDTDEntityResolver.class.getClassLoader().getResourceAsStream(MARTJARDATASETVIEWDTD);
-      else if (systemID.matches(MARTREGISTRY))
-        is = MartDTDEntityResolver.class.getClassLoader().getResourceAsStream(MARTJARMARTREGISTRYDTD);
-      else
-        throw new SAXException(systemID + " does not match a known martjar format\n");
-      
+      String path = tokens.nextToken();
+      InputStream is = ClasspathDTDEntityResolver.class.getClassLoader().getResourceAsStream( path );
+
       if (is == null)
-        throw new SAXException("martjar protocal systemID " + systemID + " recieved, but ClassLoader could not find the corresponding dtd in the jar file\n");
+        throw new SAXException("classpath protocal systemID " + systemID + " recieved, but ClassLoader could not find the corresponding dtd in the jar file\n");
           
       return new InputSource(is);           
 		}

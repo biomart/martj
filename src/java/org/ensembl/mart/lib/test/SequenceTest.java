@@ -2,10 +2,13 @@ package org.ensembl.mart.lib.test;
 
 import java.io.ByteArrayOutputStream;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
+
 
 import org.ensembl.datamodel.AssemblyLocation;
 import org.ensembl.datamodel.Exon;
@@ -20,6 +23,10 @@ import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 
+import org.ensembl.driver.ConfigurationException;
+import org.ensembl.driver.Driver;
+import org.ensembl.driver.DriverManager;
+
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
  * 
@@ -27,7 +34,15 @@ import org.ensembl.mart.lib.SequenceDescription;
  *
  */
 public class SequenceTest extends Base {
+  
+  private Logger logger = Logger.getLogger(SequenceTest.class.getName());
+  
+	private Driver ensjDriver = null;
 	
+  
+  private final static String ENSJ_DB_CONFIG_URL =
+      "data/test_connection_ensj.properties";
+  
 	 public static void main(String[] args){
 		if (args.length > 0)
 		    TestRunner.run( TestClass(args[0]) );
@@ -38,6 +53,9 @@ public class SequenceTest extends Base {
 	public static Test suite() {
 		return new TestSuite( SequenceTest.class );
 	}
+
+
+  
 
     public static Test TestClass(String testclass) {
     	TestSuite suite = new TestSuite();
@@ -353,4 +371,17 @@ public class SequenceTest extends Base {
 			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
 		}
 	}	
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.test.Base#init()
+	 */
+	public void init() {
+		
+		super.init();
+    try {
+          ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
+        } catch (ConfigurationException e) {
+          logger.log(Level.WARNING, "", e);
+        }
+	}
+
 }

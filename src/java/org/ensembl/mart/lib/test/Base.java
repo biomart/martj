@@ -5,7 +5,6 @@ package org.ensembl.mart.lib.test;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -15,9 +14,7 @@ import javax.sql.DataSource;
 
 import junit.framework.TestCase;
 
-import org.ensembl.driver.ConfigurationException;
-import org.ensembl.driver.Driver;
-import org.ensembl.driver.DriverManager;
+
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.Query;
@@ -27,7 +24,8 @@ import org.ensembl.mart.lib.Query;
  * 
  * <ol>Loads these configuration files from classpath:
  *   <li>data/test_logging.conf - loads if it exists,otherwise
- * the logging level defaults to WARNING for all classes.
+ * the logging level defaults to WARNING for all classes. Can be overridden
+ * by setting the JVM parameter "java.util.logging.config.file".
  *   <li>data/test_connection.properties - mart db connection settings. 
  * Defaults to latest ensmart db on kaka.sanger.ac.uk if file unavailable.
  *   <li>data/test_connection_ensj.properties - database connection settings
@@ -43,8 +41,7 @@ public abstract class Base extends TestCase {
 	private final static String MARTJ_DB_CONFIG_URL =
 		"data/test_connection.properties";
 
-	private final static String ENSJ_DB_CONFIG_URL =
-		"data/test_connection_ensj.properties";
+	
 
 	private final static String LOGGING_CONFIG_URL =
 		"data/test_logging.properties";
@@ -68,7 +65,6 @@ public abstract class Base extends TestCase {
 	private Properties p = new Properties();
 	private URL connectionconf;
 
-	protected Driver ensjDriver = null;
 	protected Engine engine;
 	protected Query genequery = new Query();
 	protected Query snpquery = new Query();
@@ -124,11 +120,7 @@ public abstract class Base extends TestCase {
 			user = DEFAULTUSER;
 		}
 
-		try {
-			ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
-		} catch (ConfigurationException e) {
-			logger.log(Level.WARNING, "", e);
-		}
+		
 
 	}
 
@@ -159,6 +151,11 @@ public abstract class Base extends TestCase {
 
 	public Base(String name) {
 		super(name);
+    String envVar = System.getProperty("java.util.logging.config.file"); 
+    if ( envVar!=null ) {
+      return;
+    }
+    
 		URL loggingConfig =
 			Base.class.getClassLoader().getResource(LOGGING_CONFIG_URL);
 		if (loggingConfig != null) {
