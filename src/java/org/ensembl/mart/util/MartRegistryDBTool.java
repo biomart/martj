@@ -21,65 +21,247 @@
 
 package org.ensembl.mart.util;
 
+import gnu.getopt.Getopt;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Hashtable;
+import java.util.Iterator;
 
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.InputSourceUtil;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.MartRegistryXMLUtils;
-import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
 
 /**
  * @author dlondon@ebi.ac.uk
  */
 public class MartRegistryDBTool {
 
-    private static final String FETCH = "-f";
-    private static final String LOAD = "-l";
-    private static final String NOCOMPRESS = "-nc";
-	private static String toolSwitch; //0
-	private static String registryPath; //1
-	private static String host; //2
-	private static String port; //3
-	private static String type; //4
-	private static String instance; //5
-	private static String user; //6
-	private static String password; //7
-	private static String registryName = null; //8
-    private static boolean compress = true; //9
+	private static String[] harvestArguments(String[] oargs) throws Exception {
+		Hashtable argtable = new Hashtable();
+		String key = null;
+
+		for (int i = 0, n = oargs.length; i < n; i++) {
+			String arg = oargs[i];
+
+			if (arg.startsWith("-")) {
+				String thisArg = arg;
+				key = null;
+				String value = null;
+
+				if (thisArg.length() > 2) {
+					key = thisArg.substring(0, 2);
+					value = thisArg.substring(2);
+				} else
+					key = thisArg;
+
+				if (!argtable.containsKey(key)) {
+					StringBuffer buf = new StringBuffer();
+
+					if (value != null) {
+						//strip leading and trailing quotes
+						if (value.startsWith("'"))
+							value = value.substring(1);
+						if (value.startsWith("\""))
+							value = value.substring(1);
+
+						if (value.endsWith("'"))
+							value = value.substring(0, value.lastIndexOf("'"));
+						if (value.endsWith("\""))
+							value = value.substring(0, value.lastIndexOf("\""));
+
+						buf.append(value);
+					}
+
+					argtable.put(key, buf);
+				}
+			} else {
+				if (key == null)
+					throw new Exception("Invalid Arguments Passed to MartRegistryDBTool\n");
+				StringBuffer value = (StringBuffer) argtable.get(key);
+				if (value.length() > 0)
+					value.append(" ");
+
+				//strip leading and trailing quotes
+				if (arg.startsWith("'"))
+					arg = arg.substring(1);
+				if (arg.startsWith("\""))
+					arg = arg.substring(1);
+
+				if (arg.endsWith("'"))
+					arg = arg.substring(0, arg.lastIndexOf("'"));
+				if (arg.endsWith("\""))
+					arg = arg.substring(0, arg.lastIndexOf("\""));
+
+				value.append(arg);
+				argtable.put(key, value);
+			}
+		}
+
+		String[] ret = new String[argtable.size() * 2];
+		// one slot for each key, and one slot for each non null or non empty value
+		int argnum = 0;
+
+		for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
+			String thiskey = (String) iter.next();
+			String thisvalue = ((StringBuffer) argtable.get(thiskey)).toString();
+
+			ret[argnum] = thiskey;
+			argnum++;
+
+			// getOpt wants an empty string for switches
+			if (thisvalue.length() < 1)
+				thisvalue = "";
+
+			ret[argnum] = thisvalue;
+			argnum++;
+		}
+
+		return ret;
+	}
+
+	private static boolean load = false; //-l
+	private static boolean fetch = false; //-f
+	private static String registryPath; //-r
+	private static String host; //-H
+	private static String port; //-P
+	private static String type; //-T
+	private static String instance; //-I
+	private static String user; //-U
+	private static String password; //-p
+	private static String registryName = null; //
+	private static boolean compress = true; //-X means do NOT compress
+	private static boolean help = false; //-h
+
+	private static String COMMAND_LINE_SWITCHES = "hXl:f:H:P:T:I:U:p:";
 
 	private static String usage() {
-		return "\nusage: MartRegistryDBTool [-l -f] registryPath dbHost dbPort dbType dbInstanceName dbUser dbPass <registryName> <-nc>"
-			+ "\n -l loads MartRegistry file at registryPath into the Database"
-			+ "\n -f fetches MartRegistry in database into registryPath\n"
-            + "\n\n -nc do not compress the XML in the Database (default is to compress) use with -l"
-			+ "\n\n-h for this message\n";
+		return "\nusage: MartRegistryDBTool "
+			+ "\n -l registryPath. loads MartRegistry file at registryPath into the Database"
+			+ "\n -f registryPath. Fetches MartRegistry in database into registryPath"
+			+ "\n  ***  one of -l or -f is required"
+			+ "\n -H DB Host. REQUIRED"
+			+ "\n -P DB Port. OPTIONAL"
+			+ "\n -T Database Type (OPTIONAL, defaults to mysql, also supports oracle:thin)"
+			+ "\n -I name of Database Instance to load to or fetch from. REQUIRED"
+			+ "\n -U DB User REQUIRED"
+			+ "\n -p DB Password OPTIONAL"
+			+ "\n -X if loading (-l) do not compress the XML in the Database (default is to compress)"
+			+ "\n -h print this message\n";
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 8) {
+
+		String[] nargs = null;
+		if (args.length > 0) {
+			try {
+				nargs = harvestArguments(args);
+			} catch (Exception e1) {
+				System.err.println(e1.getMessage());
+				e1.printStackTrace();
+				System.exit(1);
+			}
+
+			Getopt g = new Getopt("MartRegistryDBTool", nargs, COMMAND_LINE_SWITCHES);
+			int c;
+
+			while ((c = g.getopt()) != -1) {
+
+				switch (c) {
+
+					case 'h' :
+						help = true;
+						break;
+
+					case 'l' :
+						load = true;
+						registryPath = g.getOptarg();
+						break;
+
+					case 'f' :
+						fetch = true;
+						registryPath = g.getOptarg();
+						break;
+
+					case 'X' :
+						compress = false;
+						break;
+
+					case 'H' :
+						host = g.getOptarg();
+						break;
+
+					case 'P' :
+						port = g.getOptarg();
+						break;
+
+					case 'T' :
+						type = g.getOptarg();
+						break;
+
+					case 'I' :
+						instance = g.getOptarg();
+						break;
+
+					case 'U' :
+						user = g.getOptarg();
+						break;
+
+					case 'p' :
+						password = g.getOptarg();
+						break;
+				}
+			}
+		} else {
 			System.err.println(usage());
 			System.exit(1);
 		}
 
-		toolSwitch = args[0];
-		registryPath = args[1];
-		host = args[2];
-		port = args[3];
-		type = args[4];
-		instance = args[5];
-		user = args[6];
-		password = args[7];
+		if (help) {
+			System.out.println(usage());
+			System.exit(0);
+		}
 
-		if (args.length >= 9)
-			registryName = args[8];
-        if (args.length == 10)
-            compress = (args[9].equals(NOCOMPRESS));
+		if (load && fetch) {
+			System.err.println("Specify only one of -l or -f, not both\n");
+			System.err.println(usage());
+			System.exit(1);
+		}
 
+		if (!(load || fetch)) {
+			System.err.println("Specify one of -l or -f\n");
+			System.err.println(usage());
+			System.exit(1);
+		}
+
+        if (registryPath == null || registryPath.equals("")) {
+          System.err.println("No registryPath specified with -l or -f switch.\n");
+          System.err.println(usage());
+          System.exit(1);
+        }
+         
+        if (host == null) {
+          System.err.println("No Host specified with -H switch.\n");
+          System.err.println(usage());
+          System.exit(1);
+        } 
+        
+        if (instance == null) {
+          System.err.println("No instance specified with -I switch.\n");
+          System.err.println(usage());
+          System.exit(1);
+        }
+        
+        if (user == null) {
+          System.err.println("No user specified with -U switch.\n");
+          System.err.println(usage());
+          System.exit(1);
+        } 
+        
 		String jdbcClass = DetailedDataSource.getJDBCDriverClassNameFor(type);
 
 		// apply defaults only if both dbtype and jdbcdriver are null
@@ -91,8 +273,7 @@ public class MartRegistryDBTool {
 		String connectionString = DetailedDataSource.connectionURL(type, host, port, instance);
 
 		// use default name
-		if (registryName == null)
-			registryName = connectionString;
+     	registryName = connectionString;
 
 		//use the default poolsize of 10        
 		DetailedDataSource dsource =
@@ -109,10 +290,13 @@ public class MartRegistryDBTool {
 				registryName);
 
 		MartRegistry martreg = null;
-		if (toolSwitch.equals(LOAD)) {
+		if (load) {
 			try {
 				martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(InputSourceUtil.getStreamForString(registryPath));
-				MartRegistryXMLUtils.storeMartRegistryDocumentToDataSource(dsource, MartRegistryXMLUtils.MartRegistryToDocument(martreg), compress);
+				MartRegistryXMLUtils.storeMartRegistryDocumentToDataSource(
+					dsource,
+					MartRegistryXMLUtils.MartRegistryToDocument(martreg),
+					compress);
 			} catch (MalformedURLException e) {
 				System.err.println("Recieved invalid URL " + registryPath + ": " + e.getMessage() + "\n");
 				e.printStackTrace();
@@ -126,18 +310,15 @@ public class MartRegistryDBTool {
 				System.err.println("Could not load Registry " + registryPath + ": " + e.getMessage() + "\n");
 				e.printStackTrace();
 			}
-		} else if (toolSwitch.equals(FETCH)){
+		} else if (fetch) {
 			try {
 				martreg = MartRegistryXMLUtils.DataSourceToMartRegistry(dsource);
 				MartRegistryXMLUtils.MartRegistryToFile(martreg, new File(registryPath));
 			} catch (ConfigurationException e) {
-               System.err.println("Could not fetch Registry from " + dsource.getName() + ": " + e.getMessage() + "\n");
+				System.err.println("Could not fetch Registry from " + dsource.getName() + ": " + e.getMessage() + "\n");
 				e.printStackTrace();
 			}
-		} else {
-          System.err.println("Recieved invalid switch, must be one of -f or -l\n");
-          System.exit(1);
-		}
+		} // else not needed
 
 		System.err.println("All Complete");
 		System.exit(0);
