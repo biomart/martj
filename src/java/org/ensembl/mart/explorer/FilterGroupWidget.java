@@ -131,6 +131,10 @@ public class FilterGroupWidget extends PageWidget {
       
       w = new ListFilterWidget( this, query, filterDescription );
       
+    } else if ("tree".equals(type)) {
+      
+      w = new TreeFilterWidget( this, query, filterDescription );
+      
     } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
     
       w = new BooleanFilterWidget( this, query, filterDescription );
