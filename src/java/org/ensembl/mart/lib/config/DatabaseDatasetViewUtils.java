@@ -1278,12 +1278,12 @@ public class DatabaseDatasetViewUtils {
 
     return metatable;
   }
-
+  
   public static DatasetView getValidatedDatasetView(DetailedDataSource dsource, DatasetView dsv) throws SQLException {
     String schema = null;
     String catalog = null;
-
-    ResultSet schemas = dsource.getConnection().getMetaData().getSchemas();
+	Connection conn = dsource.getConnection();
+    ResultSet schemas = conn.getMetaData().getSchemas();
     while (schemas.next()) {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
@@ -1291,9 +1291,9 @@ public class DatabaseDatasetViewUtils {
       if (logger.isLoggable(Level.INFO))
         logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
     }
-
+    conn.close();
     DatasetView validatedDatasetView = new DatasetView(dsv);
-
+    String dset = validatedDatasetView.getDataset();
     boolean hasBrokenStars = false;
     String[] starbases = dsv.getStarBases();
     String[] validatedStars = new String[starbases.length];
@@ -1343,7 +1343,7 @@ public class DatabaseDatasetViewUtils {
     //defaultFilter objects are not position sensitive
     for (int i = 0, n = defaultFilters.length; i < n; i++) {
       DefaultFilter dfilter = defaultFilters[i];
-      DefaultFilter validatedDefaultFilter = getValidatedDefaultFilter(dsource, schema, catalog, dfilter);
+      DefaultFilter validatedDefaultFilter = getValidatedDefaultFilter(dsource, schema, catalog, dfilter, dset);
 
       if (validatedDefaultFilter.isBroken()) {
         hasBrokenDefaultFilters = true;
@@ -1366,7 +1366,7 @@ public class DatabaseDatasetViewUtils {
     HashMap brokenOptions = new HashMap();
 
     for (int i = 0, n = options.length; i < n; i++) {
-      Option validatedOption = getValidatedOption(dsource, schema, catalog, options[i]);
+      Option validatedOption = getValidatedOption(dsource, schema, catalog, options[i], dset);
 
       if (validatedOption.isBroken()) {
         hasBrokenOptions = true;
@@ -1391,7 +1391,7 @@ public class DatabaseDatasetViewUtils {
     HashMap brokenAPages = new HashMap();
 
     for (int i = 0, n = apages.length; i < n; i++) {
-      AttributePage validatedPage = getValidatedAttributePage(dsource, apages[i]);
+      AttributePage validatedPage = getValidatedAttributePage(dsource, apages[i],dset);
 
       if (validatedPage.isBroken()) {
         hasBrokenAttributePages = true;
@@ -1415,7 +1415,7 @@ public class DatabaseDatasetViewUtils {
     HashMap brokenFPages = new HashMap();
     FilterPage[] allPages = dsv.getFilterPages();
     for (int i = 0, n = allPages.length; i < n; i++) {
-      FilterPage validatedPage = getValidatedFilterPage(dsource, allPages[i]);
+      FilterPage validatedPage = getValidatedFilterPage(dsource, allPages[i], dset);
 
       if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
@@ -1442,12 +1442,13 @@ public class DatabaseDatasetViewUtils {
     DetailedDataSource dsource,
     String schema,
     String catalog,
-    DefaultFilter dfilter)
+    DefaultFilter dfilter,
+    String dset)
     throws SQLException {
     DefaultFilter validatedDefaultFilter = new DefaultFilter(dfilter);
 
     FilterDescription validatedFilterDescription =
-      getValidatedFilterDescription(dsource, schema, catalog, dfilter.getFilterDescription());
+      getValidatedFilterDescription(dsource, schema, catalog, dfilter.getFilterDescription(),dset);
 
     if (validatedFilterDescription.isBroken()) {
       validatedDefaultFilter.setFilterBroken();
@@ -1462,10 +1463,11 @@ public class DatabaseDatasetViewUtils {
     throws SQLException {
     String validatedStarBase = new String(starbase);
 
-    String table = starbase + "%" + MAINTABLESUFFIX;
+    //String table = starbase + "%" + MAINTABLESUFFIX;
+    String table = starbase;
     boolean isBroken = true;
-
-    ResultSet rs = dsource.getConnection().getMetaData().getTables(catalog, schema, table, null);
+	Connection conn = dsource.getConnection();
+    ResultSet rs = conn.getMetaData().getTables(catalog, schema, table, null);
     while (rs.next()) {
       String thisTable = rs.getString(3);
       if (thisTable.toLowerCase().startsWith(starbase.toLowerCase())) {
@@ -1476,10 +1478,10 @@ public class DatabaseDatasetViewUtils {
           logger.info("Recieved table " + thisTable + " when querying for " + table + "\n");
       }
     }
-
-    if (isBroken)
+    conn.close();
+    if (isBroken){	
       validatedStarBase += DOESNTEXISTSUFFIX;
-
+    }
     return validatedStarBase;
   }
 
@@ -1493,8 +1495,8 @@ public class DatabaseDatasetViewUtils {
 
     String tablePattern = "%" + MAINTABLESUFFIX;
     boolean isBroken = true;
-
-    ResultSet columns = dsource.getConnection().getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
+	Connection conn = dsource.getConnection();
+    ResultSet columns = conn.getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
     while (columns.next()) {
       String thisColumn = columns.getString(4);
 
@@ -1506,14 +1508,14 @@ public class DatabaseDatasetViewUtils {
           logger.info("Recieved column " + thisColumn + " during query for primary key " + primaryKey + "\n");
       }
     }
-
+    conn.close();
     if (isBroken)
       validatedPrimaryKey += DOESNTEXISTSUFFIX;
 
     return validatedPrimaryKey;
   }
 
-  public static FilterPage getValidatedFilterPage(DetailedDataSource dsource, FilterPage page) throws SQLException {
+  public static FilterPage getValidatedFilterPage(DetailedDataSource dsource, FilterPage page, String dset) throws SQLException {
     FilterPage validatedPage = new FilterPage(page);
 
     boolean hasBrokenGroups = false;
@@ -1524,7 +1526,7 @@ public class DatabaseDatasetViewUtils {
       Object group = allGroups.get(i);
 
       if (group instanceof FilterGroup) {
-        FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group);
+        FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group, dset);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -1541,6 +1543,7 @@ public class DatabaseDatasetViewUtils {
 
           if (brokenGroup instanceof FilterGroup) {
             validatedPage.removeFilterGroup((FilterGroup) allGroups.get(position.intValue()));
+            System.out.println("!!!!!!!!FP\t" + brokenGroup + "\n\n\n");
             validatedPage.insertFilterGroup(position.intValue(), (FilterGroup) brokenGroup);
           } //else not needed yet
         }
@@ -1550,7 +1553,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPage;
   }
 
-  public static FilterGroup getValidatedFilterGroup(DetailedDataSource dsource, FilterGroup group) throws SQLException {
+  public static FilterGroup getValidatedFilterGroup(DetailedDataSource dsource, FilterGroup group, String dset) throws SQLException {
     FilterGroup validatedGroup = new FilterGroup(group);
 
     FilterCollection[] collections = group.getFilterCollections();
@@ -1559,7 +1562,7 @@ public class DatabaseDatasetViewUtils {
     HashMap brokenCollections = new HashMap();
 
     for (int i = 0, n = collections.length; i < n; i++) {
-      FilterCollection validatedCollection = getValidatedFilterCollection(dsource, collections[i]);
+      FilterCollection validatedCollection = getValidatedFilterCollection(dsource, collections[i], dset);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -1575,6 +1578,7 @@ public class DatabaseDatasetViewUtils {
         FilterCollection brokenCollection = (FilterCollection) brokenCollections.get(position);
 
         validatedGroup.removeFilterCollection(collections[position.intValue()]);
+		System.out.println("!!!!!!!!FP\t" + brokenCollection + "\n\n\n");
         validatedGroup.insertFilterCollection(position.intValue(), brokenCollection);
       }
     }
@@ -1590,12 +1594,12 @@ public class DatabaseDatasetViewUtils {
    * @param collection - FilterCollection to validate
    * @return Copy of given FilterCollection with validated FilterDescription Objects 
    */
-  public static FilterCollection getValidatedFilterCollection(DetailedDataSource dsource, FilterCollection collection)
+  public static FilterCollection getValidatedFilterCollection(DetailedDataSource dsource, FilterCollection collection, String dset)
     throws SQLException {
     String schema = null;
     String catalog = null;
-
-    ResultSet schemas = dsource.getConnection().getMetaData().getSchemas();
+	Connection conn = dsource.getConnection();
+    ResultSet schemas = conn.getMetaData().getSchemas();
     while (schemas.next()) {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
@@ -1603,7 +1607,7 @@ public class DatabaseDatasetViewUtils {
       if (logger.isLoggable(Level.INFO))
         logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
     }
-
+    conn.close(); 
     FilterCollection validatedFilterCollection = new FilterCollection(collection);
 
     List allFilts = collection.getFilterDescriptions();
@@ -1616,9 +1620,12 @@ public class DatabaseDatasetViewUtils {
 
       if (element instanceof FilterDescription) {
         FilterDescription validatedFilter =
-          getValidatedFilterDescription(dsource, schema, catalog, (FilterDescription) element);
-        if (validatedFilter.isBroken())
+          getValidatedFilterDescription(dsource, schema, catalog, (FilterDescription) element, dset);
+        if (validatedFilter.isBroken()){
+          System.out.println("FILTER IS BROKEN");
+          filtersValid = false;
           brokenFilts.put(new Integer(i), validatedFilter);
+        }
       } //else not needed yet
     }
 
@@ -1631,6 +1638,7 @@ public class DatabaseDatasetViewUtils {
 
         if (brokenFilter instanceof FilterDescription) {
           validatedFilterCollection.removeFilterDescription((FilterDescription) allFilts.get(position.intValue()));
+		  System.out.println("!!!!!!!!FP\t" + brokenFilter + "\n\n\n");
           validatedFilterCollection.insertFilterDescription(position.intValue(), (FilterDescription) brokenFilter);
         } //else not needed yet
       }
@@ -1643,10 +1651,11 @@ public class DatabaseDatasetViewUtils {
     DetailedDataSource dsource,
     String schema,
     String catalog,
-    FilterDescription filter)
+    FilterDescription filter,
+    String dset)
     throws SQLException {
     FilterDescription validatedFilter = new FilterDescription(filter);
-
+	//System.out.println("CHecking FILTER\t" + validatedFilter);
     if (filter.getField() != null) {
       //test
       boolean fieldValid = false;
@@ -1656,9 +1665,10 @@ public class DatabaseDatasetViewUtils {
       String tableConstraint = filter.getTableConstraint();
 
       // if the tableConstraint is null, this field must be available in one of the main tables
-      String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
-
-      ResultSet rs = dsource.getConnection().getMetaData().getColumns(catalog, schema, table, field);
+	  String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+      //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
+	  Connection conn = dsource.getConnection();
+      ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
         String tableName = rs.getString(3);
@@ -1666,11 +1676,20 @@ public class DatabaseDatasetViewUtils {
         boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
         fieldValid = valid[0];
         tableValid = valid[1];
+		
+		
 
         if (valid[0] && valid[1])
           break;
       }
-
+      conn.close();
+      
+	  if (!(fieldValid) || !(tableValid)){
+		validatedFilter.setHidden("true");
+		
+		System.out.println("CHNAGING FILTER\t" + validatedFilter);
+	  }
+       
       if (!(fieldValid && tableValid)) {
         validatedFilter.setFieldBroken();
         validatedFilter.setTableConstraintBroken();
@@ -1682,7 +1701,7 @@ public class DatabaseDatasetViewUtils {
 
       Option[] options = filter.getOptions();
       for (int j = 0, m = options.length; j < m; j++) {
-        Option validatedOption = getValidatedOption(dsource, schema, catalog, options[j]);
+        Option validatedOption = getValidatedOption(dsource, schema, catalog, options[j], dset);
         if (validatedOption.isBroken()) {
           optionsValid = false;
           brokenOptions.put(new Integer(j), validatedOption);
@@ -1707,7 +1726,7 @@ public class DatabaseDatasetViewUtils {
     return validatedFilter;
   }
 
-  public static Option getValidatedOption(DetailedDataSource dsource, String schema, String catalog, Option option)
+  public static Option getValidatedOption(DetailedDataSource dsource, String schema, String catalog, Option option, String dset)
     throws SQLException {
     Option validatedOption = new Option(option);
 
@@ -1720,9 +1739,10 @@ public class DatabaseDatasetViewUtils {
       String tableConstraint = option.getTableConstraint();
 
       // if the tableConstraint is null, this field must be available in one of the main tables
-      String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
-
-      ResultSet rs = dsource.getConnection().getMetaData().getColumns(catalog, schema, table, field);
+	  String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+      //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
+	  Connection conn = dsource.getConnection();
+      ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
         String tableName = rs.getString(3);
@@ -1734,7 +1754,14 @@ public class DatabaseDatasetViewUtils {
         if (valid[0] && valid[1])
           break;
       }
-
+      conn.close();
+      
+	  if (!(fieldValid) || !(tableValid)){
+		  System.out.println("CHNAGING OPTION\t" + validatedOption);
+		  validatedOption.setHidden("true");
+		
+	  }               
+      
       if (!(fieldValid && tableValid)) {
         validatedOption.setFieldBroken(); //eg. if field is valid, Option.hasBrokenField will return false
         validatedOption.setTableConstraintBroken();
@@ -1747,7 +1774,7 @@ public class DatabaseDatasetViewUtils {
 
       Option[] options = option.getOptions();
       for (int j = 0, m = options.length; j < m; j++) {
-        Option validatedSubOption = getValidatedOption(dsource, schema, catalog, options[j]);
+        Option validatedSubOption = getValidatedOption(dsource, schema, catalog, options[j], dset);
         if (validatedSubOption.isBroken()) {
           optionsValid = false;
           brokenOptions.put(new Integer(j), validatedSubOption);
@@ -1773,7 +1800,7 @@ public class DatabaseDatasetViewUtils {
       HashMap brokenPushActions = new HashMap();
       PushAction[] pas = option.getPushActions();
       for (int j = 0, m = pas.length; j < m; j++) {
-        PushAction validatedAction = getValidatedPushAction(dsource, schema, catalog, pas[j]);
+        PushAction validatedAction = getValidatedPushAction(dsource, schema, catalog, pas[j], dset);
         if (validatedAction.isBroken()) {
           pushActionsValid = false;
           brokenPushActions.put(new Integer(j), validatedAction);
@@ -1801,7 +1828,8 @@ public class DatabaseDatasetViewUtils {
     DetailedDataSource dsource,
     String schema,
     String catalog,
-    PushAction action)
+    PushAction action,
+    String dset)
     throws SQLException {
     PushAction validatedPushAction = new PushAction(action);
 
@@ -1810,7 +1838,7 @@ public class DatabaseDatasetViewUtils {
 
     Option[] options = action.getOptions();
     for (int j = 0, m = options.length; j < m; j++) {
-      Option validatedSubOption = getValidatedOption(dsource, schema, catalog, options[j]);
+      Option validatedSubOption = getValidatedOption(dsource, schema, catalog, options[j], dset);
       if (validatedSubOption.isBroken()) {
         optionsValid = false;
         brokenOptions.put(new Integer(j), validatedSubOption);
@@ -1832,7 +1860,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPushAction;
   }
 
-  public static AttributePage getValidatedAttributePage(DetailedDataSource dsource, AttributePage page)
+  public static AttributePage getValidatedAttributePage(DetailedDataSource dsource, AttributePage page, String dset)
     throws SQLException {
     AttributePage validatedPage = new AttributePage(page);
 
@@ -1844,11 +1872,12 @@ public class DatabaseDatasetViewUtils {
       Object group = allGroups.get(i);
 
       if (group instanceof AttributeGroup) {
-        AttributeGroup validatedGroup = getValidatedAttributeGroup(dsource, (AttributeGroup) group);
+        AttributeGroup validatedGroup = getValidatedAttributeGroup(dsource, (AttributeGroup) group, dset);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
-          brokenGroups.put(new Integer(i), group);
+          //brokenGroups.put(new Integer(i), group);
+		  brokenGroups.put(new Integer(i), validatedGroup);
         }
       } //else not needed yet      
     }
@@ -1861,6 +1890,7 @@ public class DatabaseDatasetViewUtils {
 
         Object brokenGroup = brokenGroups.get(position);
         if (brokenGroup instanceof AttributeGroup) {
+				 
           validatedPage.removeAttributeGroup((AttributeGroup) allGroups.get(position.intValue()));
           validatedPage.insertAttributeGroup(position.intValue(), (AttributeGroup) brokenGroup);
         } //else not needed
@@ -1870,7 +1900,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPage;
   }
 
-  public static AttributeGroup getValidatedAttributeGroup(DetailedDataSource dsource, AttributeGroup group)
+  public static AttributeGroup getValidatedAttributeGroup(DetailedDataSource dsource, AttributeGroup group, String dset)
     throws SQLException {
     AttributeGroup validatedGroup = new AttributeGroup(group);
 
@@ -1879,7 +1909,7 @@ public class DatabaseDatasetViewUtils {
 
     AttributeCollection[] collections = group.getAttributeCollections();
     for (int i = 0, n = collections.length; i < n; i++) {
-      AttributeCollection validatedCollection = getValidatedAttributeCollection(dsource, collections[i]);
+      AttributeCollection validatedCollection = getValidatedAttributeCollection(dsource, collections[i], dset);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -1893,7 +1923,7 @@ public class DatabaseDatasetViewUtils {
       for (Iterator iter = brokenCollections.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         AttributeCollection brokenCollection = (AttributeCollection) brokenCollections.get(position);
-
+		
         validatedGroup.removeAttributeCollection(collections[position.intValue()]);
         validatedGroup.insertAttributeCollection(position.intValue(), brokenCollection);
       }
@@ -1904,12 +1934,13 @@ public class DatabaseDatasetViewUtils {
 
   public static AttributeCollection getValidatedAttributeCollection(
     DetailedDataSource dsource,
-    AttributeCollection collection)
+    AttributeCollection collection, String dset)
     throws SQLException {
     String schema = null;
     String catalog = null;
-
-    ResultSet schemas = dsource.getConnection().getMetaData().getSchemas();
+ 
+	Connection conn = dsource.getConnection();
+    ResultSet schemas = conn.getMetaData().getSchemas();
     while (schemas.next()) {
       schema = schemas.getString(1);
       catalog = schemas.getString(2);
@@ -1917,7 +1948,8 @@ public class DatabaseDatasetViewUtils {
       if (logger.isLoggable(Level.INFO))
         logger.info("schema: " + schema + " - catalog: " + catalog + "\n");
     }
-
+    conn.close();
+    
     AttributeCollection validatedAttributeCollection = new AttributeCollection(collection);
     boolean hasBrokenAttributes = false;
     HashMap brokenAtts = new HashMap();
@@ -1925,17 +1957,18 @@ public class DatabaseDatasetViewUtils {
     List allAtts = collection.getAttributeDescriptions();
     for (int i = 0, n = allAtts.size(); i < n; i++) {
       Object attribute = allAtts.get(i);
+      
       if (attribute instanceof AttributeDescription) {
         AttributeDescription validatedAttributeDescription =
-          getValidatedAttributeDescription(dsource, schema, catalog, (AttributeDescription) attribute);
-
+          getValidatedAttributeDescription(dsource, schema, catalog, (AttributeDescription) attribute, dset);
+     
         if (validatedAttributeDescription.isBroken()) {
           hasBrokenAttributes = true;
           brokenAtts.put(new Integer(i), validatedAttributeDescription);
         }
       } //else not needed yet
     }
-
+     
     if (hasBrokenAttributes) {
       validatedAttributeCollection.setAttributesBroken();
 
@@ -1944,6 +1977,7 @@ public class DatabaseDatasetViewUtils {
         Object brokenAtt = brokenAtts.get(position);
 
         if (brokenAtt instanceof AttributeDescription) {
+          
           validatedAttributeCollection.removeAttributeDescription(
             (AttributeDescription) allAtts.get(position.intValue()));
           validatedAttributeCollection.insertAttributeDescription(position.intValue(), (AttributeDescription) brokenAtt);
@@ -1958,7 +1992,8 @@ public class DatabaseDatasetViewUtils {
     DetailedDataSource dsource,
     String schema,
     String catalog,
-    AttributeDescription description)
+    AttributeDescription description,
+    String dset)
     throws SQLException {
     AttributeDescription validatedAttribute = new AttributeDescription(description);
 
@@ -1967,11 +2002,15 @@ public class DatabaseDatasetViewUtils {
 
     String field = description.getField();
     String tableConstraint = description.getTableConstraint();
-
+    
+    
     // if the tableConstraint is null, this field must be available in one of the main tables
-    String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
-
-    ResultSet rs = dsource.getConnection().getMetaData().getColumns(catalog, schema, table, field);
+    //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+	String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+	
+	
+	Connection conn = dsource.getConnection();
+    ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     while (rs.next()) {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
@@ -1980,11 +2019,22 @@ public class DatabaseDatasetViewUtils {
       fieldValid = valid[0];
       tableValid = valid[1];
 
-      if (valid[0] && valid[1])
+      if (valid[0] && valid[1]){
+        
         break;
+      }
     }
-
+    
+	conn.close();
+	
+	if (!(fieldValid) || !(tableValid)){
+		validatedAttribute.setHidden("true");
+		
+	}
+	  
+	
     if (!(fieldValid && tableValid)) {
+      
       validatedAttribute.setFieldBroken();
       validatedAttribute.setTableConstraintBroken();
     }
@@ -2489,13 +2539,16 @@ public class DatabaseDatasetViewUtils {
 			  fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv));
 		    else{
 		      FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
+		      
 		      Option opBool = new Option(fdBool);
 		      fdBools.addOption(opBool);
 		      
 		    }
 		  }
           if (!cname.endsWith("_bool")){
-            ac.addAttributeDescription(getAttributeDescription(cname, tableName, csize, joinKey));
+          	AttributeDescription ad = getAttributeDescription(cname, tableName, csize, joinKey);
+          	//ad.setHidden("false");
+            ac.addAttributeDescription(ad);
             if (cname.endsWith("_list")){
             	
 				FilterDescription fdList = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
