@@ -33,6 +33,11 @@ public interface Filter extends Field {
     String getValue();
 
     /**
+     * Returns TableConstraint for the Filter
+     */
+    String getTableConstraint();
+    
+    /**
      * String to be included in where clause.
      * TODO: remove this?
      */
