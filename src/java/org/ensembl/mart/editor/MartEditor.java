@@ -19,6 +19,7 @@
 package org.ensembl.mart.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -119,9 +120,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
     //Make dragging a little faster but perhaps uglier.
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
-    
-	clipboardEditor = new Clipboard("editor_clipboard");
-    
+
+    clipboardEditor = new Clipboard("editor_clipboard");
+
   }
 
   protected void addButtons(JToolBar toolBar) {
@@ -213,10 +214,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
-	menuItem = new JMenuItem("Delete ");
-	menuItem.addActionListener(menuActionListener);
-	menuItem.setMnemonic(KeyEvent.VK_I);
-	menu.add(menuItem);
+    menuItem = new JMenuItem("Delete ");
+    menuItem.addActionListener(menuActionListener);
+    menuItem.setMnemonic(KeyEvent.VK_I);
+    menu.add(menuItem);
 
     menuItem = new JMenuItem("Naive ");
     menuItem.addActionListener(menuActionListener);
@@ -227,8 +228,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem.addActionListener(menuActionListener);
     menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
-
-
 
     menu.addSeparator();
     menuItem = new JMenuItem("New", icon);
@@ -521,47 +520,53 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
     boolean valid = false;
 
-    while (!valid) {
-      if (!databaseDialog.showDialog(this))
-        break;
-      
-      String defaultSourceName = databaseDialog.getConnectionName();
-      
-      if (defaultSourceName == null || defaultSourceName.length() < 1)
-        defaultSourceName = defaultSourceName =
-            DetailedDataSource.defaultName(
-              databaseDialog.getHost(),
-              databaseDialog.getPort(),
-              databaseDialog.getDatabase(),
-              databaseDialog.getUser());
+    try {
+      disableCursor();
+      while (!valid) {
+        if (!databaseDialog.showDialog(this))
+          break;
 
-      ds =
-        new DetailedDataSource(
-          databaseDialog.getDatabaseType(),
-          databaseDialog.getHost(),
-          databaseDialog.getPort(),
-          databaseDialog.getDatabase(),
-          databaseDialog.getUser(),
-          databaseDialog.getPassword(),
-          10,
-          databaseDialog.getDriver(),
-          defaultSourceName);
-      user = databaseDialog.getUser();
-      database = databaseDialog.getDatabase();
+        String defaultSourceName = databaseDialog.getConnectionName();
 
-      Connection conn = null;
-      try {
-        conn = ds.getConnection();
-        dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
-        valid = true;
-      } catch (SQLException e) {
-        //warning dialog then retry
-        Feedback f = new Feedback(this);
-        f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-        valid = false;
-      } finally {
-        DetailedDataSource.close(conn);
+        if (defaultSourceName == null || defaultSourceName.length() < 1)
+          defaultSourceName =
+            defaultSourceName =
+              DetailedDataSource.defaultName(
+                databaseDialog.getHost(),
+                databaseDialog.getPort(),
+                databaseDialog.getDatabase(),
+                databaseDialog.getUser());
+
+        ds =
+          new DetailedDataSource(
+            databaseDialog.getDatabaseType(),
+            databaseDialog.getHost(),
+            databaseDialog.getPort(),
+            databaseDialog.getDatabase(),
+            databaseDialog.getUser(),
+            databaseDialog.getPassword(),
+            10,
+            databaseDialog.getDriver(),
+            defaultSourceName);
+        user = databaseDialog.getUser();
+        database = databaseDialog.getDatabase();
+
+        Connection conn = null;
+        try {
+          conn = ds.getConnection();
+          dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+          valid = true;
+        } catch (SQLException e) {
+          //warning dialog then retry
+          Feedback f = new Feedback(this);
+          f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+          valid = false;
+        } finally {
+          DetailedDataSource.close(conn);
+        }
       }
+    } finally {
+      enableCursor();
     }
   }
 
@@ -589,6 +594,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
       }
 
+      disableCursor();
+
       String[] datasets = dbutils.getAllDatasetNames(user);
       String dataset =
         (String) JOptionPane.showInputDialog(
@@ -599,27 +606,29 @@ public class MartEditor extends JFrame implements ClipboardOwner {
           null,
           datasets,
           datasets[0]);
+
       if (dataset == null)
         return;
-        
-      String[] internalNames = dbutils.getAllInternalNamesForDataset(user,dataset);  
-	  String intName;
-	  if (internalNames.length == 1)
-	     intName = internalNames[0];
-	  else{ 
-	    intName =
-		(String) JOptionPane.showInputDialog(
-		  null,
-		  "Choose one",
-		  "Internal name",
-		  JOptionPane.INFORMATION_MESSAGE,
-		  null,
-		  internalNames,
-		  internalNames[0]);
-	  }
-	  if (intName == null)
-		return;
-		        
+
+      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+      String intName;
+      if (internalNames.length == 1)
+        intName = internalNames[0];
+      else {
+        intName =
+          (String) JOptionPane.showInputDialog(
+            null,
+            "Choose one",
+            "Internal name",
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            internalNames,
+            internalNames[0]);
+      }
+
+      if (intName == null)
+        return;
+
       DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, intName, null);
       frame.setVisible(true);
       desktop.add(frame);
@@ -628,6 +637,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       } catch (java.beans.PropertyVetoException e) {
       }
     } catch (ConfigurationException e) {
+    } finally {
+      enableCursor();
     }
   }
 
@@ -637,38 +648,43 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       return;
     }
 
-   DatasetConfig dsConfig =	((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
-   String dset = dsConfig.getDataset();
-   String intName = dsConfig.getInternalName();
- 
-   String dataset =
-	 (String) JOptionPane.showInputDialog(
-	   null,
-	   "Choose one",
-	   "Dataset config",
-	   JOptionPane.INFORMATION_MESSAGE,
-	   null,
-	   null,
-	   dset);
-   if (dataset == null)
-	 return;
-        
-   String internalName =
-	 (String) JOptionPane.showInputDialog(
-	   null,
-	   "Choose one",
-	   "Internal name",
-	   JOptionPane.INFORMATION_MESSAGE,
-	   null,
-	   null,
-	   intName);
-   if (internalName == null)
-	 return;
-	     
-    dsConfig.setInternalName(internalName);
-    dsConfig.setDataset(dataset);
+    try {
+    } finally {
+      disableCursor();
+      DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
+      String dset = dsConfig.getDataset();
+      String intName = dsConfig.getInternalName();
 
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
+      String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "Dataset config",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          null,
+          dset);
+      if (dataset == null)
+        return;
+
+      String internalName =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "Internal name",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          null,
+          intName);
+      if (internalName == null)
+        return;
+
+      dsConfig.setInternalName(internalName);
+      dsConfig.setDataset(dataset);
+
+      ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
+      enableCursor();
+    }
   }
 
   public void naiveDatasetConfig() {
@@ -678,39 +694,42 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
       }
 
-      String[] datasets = dbutils.getNaiveDatasetNamesFor(database);
-      String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "Dataset",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          datasets,
-          datasets[0]);
-      if (dataset == null)
-        return;
-
-      // for oracle. arrayexpress: needs user, not instance
-      String dbtype = databaseDialog.getDatabaseType();
-      String qdb;
-
-      System.out.println(dataset + ":" + database + ":" + user + ":" + dbtype);
-
-      if (dbtype.startsWith("oracle"))
-        qdb = user.toUpperCase(); // not sure why needs uppercase
-      else
-        qdb = database;
-
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
-
-      frame.setVisible(true);
-      desktop.add(frame);
       try {
-        frame.setSelected(true);
-      } catch (java.beans.PropertyVetoException e) {
+        disableCursor();
+        String[] datasets = dbutils.getNaiveDatasetNamesFor(database);
+        String dataset =
+          (String) JOptionPane.showInputDialog(
+            null,
+            "Choose one",
+            "Dataset",
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            datasets,
+            datasets[0]);
+        if (dataset == null)
+          return;
+
+        // for oracle. arrayexpress: needs user, not instance
+        String dbtype = databaseDialog.getDatabaseType();
+        String qdb;
+
+        if (dbtype.startsWith("oracle"))
+          qdb = user.toUpperCase(); // not sure why needs uppercase
+        else
+          qdb = database;
+
+        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
+
+        frame.setVisible(true);
+        desktop.add(frame);
+        try {
+          frame.setSelected(true);
+        } catch (java.beans.PropertyVetoException e) {
+        }
+      } catch (SQLException e) {
       }
-    } catch (SQLException e) {
+    } finally {
+      enableCursor();
     }
   }
 
@@ -721,21 +740,39 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
       }
 
-      // check whether existing filters and atts are still in database
-      DatasetConfig dsv =
-        dbutils.getValidatedDatasetConfig(((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig());
-      // check for new tables and cols
-      dsv = dbutils.getNewFiltsAtts(database, dsv);
-
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
-      frame.setVisible(true);
-      desktop.add(frame);
       try {
-        frame.setSelected(true);
-      } catch (java.beans.PropertyVetoException e) {
+        disableCursor();
+        // check whether existing filters and atts are still in database
+        Object selectedFrame = desktop.getSelectedFrame();
+
+        if (selectedFrame == null) {
+          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+          return;
+        }
+
+        DatasetConfig odsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
+
+        if (odsv == null) {
+          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+          return;
+        }
+
+        DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+        // check for new tables and cols
+        dsv = dbutils.getNewFiltsAtts(database, dsv);
+
+        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+        frame.setVisible(true);
+        desktop.add(frame);
+        try {
+          frame.setSelected(true);
+        } catch (java.beans.PropertyVetoException e) {
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
       }
-    } catch (Exception e) {
-      e.printStackTrace();
+    } finally {
+      enableCursor();
     }
   }
 
@@ -747,38 +784,43 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
       }
 
-      String[] datasets = dbutils.getAllDatasetNames(user);
-      String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "Dataset Config",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          datasets,
-          datasets[0]);
-      if (dataset == null)
-        return;
-		String[] internalNames = dbutils.getAllInternalNamesForDataset(user,dataset);  
-		String intName;
-		if (internalNames.length == 1)
-		   intName = internalNames[0];
-		else{ 
-		  intName =
-		  (String) JOptionPane.showInputDialog(
-			null,
-			"Choose one",
-			"Internal name",
-			JOptionPane.INFORMATION_MESSAGE,
-			null,
-			internalNames,
-			internalNames[0]);
-		}
-		if (intName == null)
-		  return;
-        dbutils.deleteDatasetConfigsForDatasetIntName(dataset,intName);
+      try {
+        disableCursor();
+        String[] datasets = dbutils.getAllDatasetNames(user);
+        String dataset =
+          (String) JOptionPane.showInputDialog(
+            null,
+            "Choose one",
+            "Dataset Config",
+            JOptionPane.INFORMATION_MESSAGE,
+            null,
+            datasets,
+            datasets[0]);
+        if (dataset == null)
+          return;
+        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+        String intName;
+        if (internalNames.length == 1)
+          intName = internalNames[0];
+        else {
+          intName =
+            (String) JOptionPane.showInputDialog(
+              null,
+              "Choose one",
+              "Internal name",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              internalNames,
+              internalNames[0]);
+        }
+        if (intName == null)
+          return;
+        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
 
-    } catch (ConfigurationException e) {
+      } catch (ConfigurationException e) {
+      }
+    } finally {
+      enableCursor();
     }
   }
 
@@ -800,5 +842,15 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
   public void redo() {
 
+  }
+
+  private void enableCursor() {
+    setCursor(Cursor.getDefaultCursor());
+    getGlassPane().setVisible(false);
+  }
+
+  private void disableCursor() {
+    getGlassPane().setVisible(true);
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
   }
 }
