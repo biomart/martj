@@ -1,0 +1,85 @@
+<!ENTITY % desc_data 
+                  "internalName CDATA #REQUIRED  
+                   displayName CDATA #IMPLIED    
+                   description CDATA #IMPLIED"
+>
+
+<!-- Ensembl Source, Homepage, and LinkoutURL for AttributeDescriptions -->
+
+<!-- Top-level Objects --> 
+<!ELEMENT MartConfiguration (Dataset+)>
+<!ATTLIST MartConfiguration %desc_data;>
+                   
+<!ELEMENT Dataset (StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
+<!ATTLIST Dataset %desc_data;>
+
+<!ELEMENT StarBase (#PCDATA)>
+
+<!ELEMENT PrimaryKey (#PCDATA)>
+
+<!ELEMENT FilterPage (FilterGroup|DSFilterGroup|DSFilterGroup|FilterGroup)+>
+<!ATTLIST FilterPage %desc_data;>
+
+<!ELEMENT FilterGroup (FilterSet*, FilterCollection+)>
+<!ATTLIST FilterGroup %desc_data;>
+
+<!ELEMENT DSFilterGroup EMPTY>
+<!ATTLIST DSFilterGroup %desc_data;
+                        objectCode  CDATA #IMPLIED>
+
+<!ELEMENT FilterSet (FilterSetDescription+)>
+<!ATTLIST FilterSet 
+                       %desc_data;                       
+                       type   CDATA #REQUIRED>
+
+<!ELEMENT FilterSetDescription EMPTY>
+<!ATTLIST FilterSetDescription %desc_data;
+                       tableConstraintModifier CDATA #IMPLIED
+                       fieldNameModifier CDATA #IMPLIED> 
+
+<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
+<!ATTLIST FilterCollection
+                   %desc_data;
+                   filterSetName       CDATA #IMPLIED
+                   type                CDATA #REQUIRED>
+                    
+<!ELEMENT UIFilterDescription EMPTY>
+<!ATTLIST UIFilterDescription
+                   %desc_data;
+                   type               CDATA #REQUIRED
+                   fieldName          CDATA #REQUIRED
+                   qualifier          CDATA #IMPLIED
+                   filterSetReq       CDATA #IMPLIED
+                   tableConstraint    CDATA #IMPLIED>
+
+<!ELEMENT UIDSFilterDescription EMPTY>
+<!ATTLIST UIDSFilterDescription
+                   %desc_data;
+                   type               CDATA #REQUIRED
+                   filterSetReq       CDATA #IMPLIED
+                   objectCode         CDATA #REQUIRED>
+                   
+<!ELEMENT AttributePage (AttributeGroup|DSAttributeGroup|DSAttributeGroup|AttributeGroup)+>
+<!ATTLIST AttributePage %desc_data;>
+
+<!ELEMENT AttributeGroup (AttributeCollection+)>
+<!ATTLIST AttributeGroup %desc_data;>
+
+<!ELEMENT DSAttributeGroup EMPTY>
+<!ATTLIST DSAttributeGroup %desc_data;
+                           objectCode CDATA #IMPLIED>
+
+<!ELEMENT AttributeCollection (UIAttributeDescription+)>
+<!ATTLIST AttributeCollection
+                  %desc_data;
+                   maxSelect    CDATA #IMPLIED>
+
+<!ELEMENT UIAttributeDescription EMPTY>
+<!ATTLIST UIAttributeDescription
+                    %desc_data;
+                    fieldName          CDATA #REQUIRED
+                    tableConstraint  CDATA #IMPLIED
+                    maxLength         NMTOKEN #IMPLIED
+                    source                CDATA #IMPLIED
+                    homepageURL  CDATA #IMPLIED
+                    linkoutURL          CDATA #IMPLIED>
