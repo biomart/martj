@@ -21,6 +21,8 @@ package org.ensembl.mart.explorer;
 
 /**
  * The interface for a class that manages query editors.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public interface QueryEditorContext {
 

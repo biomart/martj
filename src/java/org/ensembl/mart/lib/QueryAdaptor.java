@@ -31,6 +31,8 @@ import org.ensembl.mart.lib.config.DatasetView;
  * and override the methods for the events of interest.
  * </P>
  * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * 
  * @see org.ensembl.mart.lib.QueryChangeListener
  */
 public abstract class QueryAdaptor implements QueryListener {

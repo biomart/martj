@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.ensembl.util.StringUtil;
+
 /**
  * A composite DSViewAdaptor that combines the datasets from all contained 
  * DSViewAdaptors.
@@ -302,5 +304,28 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 	public String getDisplayName() {
 		return "Composite";
 	}
+
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetInternalName(
+    String dataset,
+    String internalName)
+    throws ConfigurationException {
+
+    DatasetView view = null;
+    DatasetView[] dsviews = getDatasetViews();
+    for (int i = 0; i < dsviews.length; ++i) {
+
+      DatasetView dsv = dsviews[i];
+      if (StringUtil.compare(dataset, dsv.getDataset()) == 0
+        && StringUtil.compare(internalName, dsv.getInternalName()) == 0)
+        view = dsv;
+    }
+
+    return view;
+  }
+      
 
 }

@@ -35,6 +35,7 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import java.util.Iterator;
 import org.ensembl.mart.util.BigPreferences;
+import org.ensembl.util.StringUtil;
 
 /**
  * DSViewAdaptor implimentation that retrieves DatasetView objects from
@@ -47,9 +48,10 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   private final String DIGESTKEY = "MD5";
   private final String XMLKEY = "XML";
   Preferences xmlCache = null;
-  
+
   private String dbpassword;
-  private Logger logger = Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
+  private Logger logger =
+    Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
   private List dsviews = new ArrayList();
   private int inameIndex = 0;
   private HashMap inameMap = new HashMap();
@@ -70,7 +72,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
    * @throws ConfigurationException if DataSource or user is null
    */
-  public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
+  public DatabaseDSViewAdaptor(DataSource ds, String user)
+    throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
 
@@ -79,22 +82,37 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
     try {
       //get info for hashcode, and MartLocation reconstruction
-      String dbURL = dsvsource.getConnection().getMetaData().getURL(); // actual Database Server URL String
+      String dbURL = dsvsource.getConnection().getMetaData().getURL();
+      // actual Database Server URL String
       els = DatabaseUtil.decompose(dbURL);
-      
+
       //set up the preferences node with the datasource information as the root node
-      xmlCache = BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node( els.host + "/" + els.port + "/" + els.databaseName );
+      xmlCache =
+        BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(
+          els.host + "/" + els.port + "/" + els.databaseName);
     } catch (IllegalArgumentException e) {
-      throw new ConfigurationException("Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),e);
+      throw new ConfigurationException(
+        "Caught IllegalArgumentException during parse of Connection for Connection Parameters "
+          + e.getMessage(),
+        e);
     } catch (SQLException e) {
-      throw new ConfigurationException("Caught SQLException during parse of Connection for Connection Parameters " + e.getMessage(),e);
+      throw new ConfigurationException(
+        "Caught SQLException during parse of Connection for Connection Parameters "
+          + e.getMessage(),
+        e);
     }
 
     int tmp = user.hashCode();
     tmp = (31 * tmp) + els.host.hashCode();
     tmp = (els.port != null) ? (31 * tmp) + els.port.hashCode() : tmp;
-    tmp = (els.databaseType != null) ? (31 * tmp) + els.databaseType.hashCode() : tmp;
-    tmp = (els.databaseName != null) ? (31 * tmp) + els.databaseName.hashCode() : tmp;
+    tmp =
+      (els.databaseType != null)
+        ? (31 * tmp) + els.databaseType.hashCode()
+        : tmp;
+    tmp =
+      (els.databaseName != null)
+        ? (31 * tmp) + els.databaseName.hashCode()
+        : tmp;
     tmp = (31 * tmp) + els.jdbcDriverClassName.hashCode();
     hashcode = tmp;
     update();
@@ -148,7 +166,8 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
    */
-  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
+  public DatasetView getDatasetViewByDisplayName(String name)
+    throws ConfigurationException {
     return (DatasetView) dnameMap.get(name);
   }
 
@@ -162,12 +181,14 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
    */
-  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
+  public DatasetView getDatasetViewByInternalName(String name)
+    throws ConfigurationException {
     return (DatasetView) inameMap.get(name);
   }
 
   public void addDatasetView(DatasetView dsv) throws ConfigurationException {
-    if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
+    if (!(inameMap.containsKey(dsv.getInternalName())
+      && dnameMap.containsKey(dsv.getDisplayName()))) {
       dsv.setDatasource(dsvsource);
       dsv.setDSViewAdaptor(this);
 
@@ -176,21 +197,22 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       dsv.setDSViewAdaptor(this);
       dsviews.add(dsv);
     }
-    
+
     updateXMLCache();
   }
 
-  private void updateXMLCache()throws ConfigurationException {
+  private void updateXMLCache() throws ConfigurationException {
     String iname = null;
-    
+
     try {
       for (Iterator iter = inameMap.keySet().iterator(); iter.hasNext();) {
         iname = (String) iter.next();
         DatasetView dsv = (DatasetView) inameMap.get(iname);
-        
+
         if (xmlCache.nodeExists(iname)) {
-          byte[] md5 = xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
-          
+          byte[] md5 =
+            xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
+
           if (!MessageDigest.isEqual(md5, dsv.getMessageDigest()))
             addToXMLCache(dsv);
         } else
@@ -198,7 +220,13 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       }
       xmlCache.flush();
     } catch (BackingStoreException e) {
-        throw new ConfigurationException("Caught BackingStoreException checking for Preferences node " + iname + " " + e.getMessage() + "\nAssuming it doesnt exist\n", e);
+      throw new ConfigurationException(
+        "Caught BackingStoreException checking for Preferences node "
+          + iname
+          + " "
+          + e.getMessage()
+          + "\nAssuming it doesnt exist\n",
+        e);
     } catch (ConfigurationException e) {
       throw e;
     }
@@ -207,34 +235,48 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   private void addToXMLCache(DatasetView dsv) throws ConfigurationException {
     String iname = dsv.getInternalName();
     xmlCache.node(iname).putByteArray(DIGESTKEY, dsv.getMessageDigest());
-    xmlCache.node(iname).putByteArray(XMLKEY, DatasetViewXMLUtils.DatasetViewToByteArray(dsv));
-    
+    xmlCache.node(iname).putByteArray(
+      XMLKEY,
+      DatasetViewXMLUtils.DatasetViewToByteArray(dsv));
+
     try {
       xmlCache.flush();
     } catch (BackingStoreException e) {
-      throw new ConfigurationException("Caught BackingStoreException adding new DatasetView to preferences node " + iname + " " + e.getMessage() + "\nAssuming it doesnt exist\n");
+      throw new ConfigurationException(
+        "Caught BackingStoreException adding new DatasetView to preferences node "
+          + iname
+          + " "
+          + e.getMessage()
+          + "\nAssuming it doesnt exist\n");
     }
   }
-  
-  private void removeFromXMLCache(DatasetView dsv) throws ConfigurationException {
+
+  private void removeFromXMLCache(DatasetView dsv)
+    throws ConfigurationException {
     String iname = dsv.getInternalName();
     xmlCache.node(iname).remove(iname); //removes this node entirely
     try {
       xmlCache.flush();
     } catch (BackingStoreException e) {
-      throw new ConfigurationException("Caught BackingStoreException removing DatasetView from preferences node " + iname + " " + e.getMessage() + "\nAssuming it doesnt exist\n");
-    } 
+      throw new ConfigurationException(
+        "Caught BackingStoreException removing DatasetView from preferences node "
+          + iname
+          + " "
+          + e.getMessage()
+          + "\nAssuming it doesnt exist\n");
+    }
   }
-  
+
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.MultiDSViewAdaptor#removeDatasetView(org.ensembl.mart.lib.config.DatasetView)
    */
-  public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException {
+  public boolean removeDatasetView(DatasetView dsv)
+    throws ConfigurationException {
     if (inameMap.containsKey(dsv.getInternalName())) {
       inameMap.remove(dsv.getInternalName());
       dnameMap.remove(dsv.getDisplayName());
       dsviews.remove(dsv);
-      dsv.setDSViewAdaptor(null);      
+      dsv.setDSViewAdaptor(null);
       removeFromXMLCache(dsv);
       return true;
     } else
@@ -245,51 +287,83 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
    */
   public void update() throws ConfigurationException {
-    String[] inms = DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
+    String[] inms =
+      DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
     for (int i = 0, n = inms.length; i < n; i++) {
       String iname = inms[i];
       boolean cacheExists = false;
-      
+
       try {
         cacheExists = xmlCache.nodeExists(iname);
       } catch (BackingStoreException e) {
         if (logger.isLoggable(Level.INFO))
-          logger.info("Caught BackingStoreException checking for Preferences node " + iname + " " + e.getMessage() + "\nAssuming it doesnt exist\n");
-          cacheExists = false;
+          logger.info(
+            "Caught BackingStoreException checking for Preferences node "
+              + iname
+              + " "
+              + e.getMessage()
+              + "\nAssuming it doesnt exist\n");
+        cacheExists = false;
       }
-      
+
       if (inameMap.containsKey(iname)) {
-        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
+        byte[] nDigest =
+          DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(
+            dsvsource,
+            user,
+            iname);
         byte[] oDigest = ((DatasetView) inameMap.get(iname)).getMessageDigest();
 
         if (!MessageDigest.isEqual(oDigest, nDigest)) {
           removeDatasetView((DatasetView) inameMap.get(iname));
-          addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname));
+          addDatasetView(
+            DatabaseDatasetViewUtils.getDatasetViewByInternalName(
+              dsvsource,
+              user,
+              iname));
         }
       } else if (cacheExists) {
-        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
-        byte[] oDigest = xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
+        byte[] nDigest =
+          DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(
+            dsvsource,
+            user,
+            iname);
+        byte[] oDigest =
+          xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
         //if the cache cannot return the digest for some reason, it should return null
 
-        if ( MessageDigest.isEqual(oDigest, nDigest) ) {
+        if (MessageDigest.isEqual(oDigest, nDigest)) {
           byte[] cachedXML = xmlCache.node(iname).getByteArray(XMLKEY, null);
           // should return a null if it cant load for some reason
 
           if (cachedXML != null) {
-            DatasetView newDSV = DatasetViewXMLUtils.ByteArrayToDatasetView(cachedXML);
+            DatasetView newDSV =
+              DatasetViewXMLUtils.ByteArrayToDatasetView(cachedXML);
             newDSV.setMessageDigest(oDigest);
             addDatasetView(newDSV);
           } else {
             //get it from the database
-            DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+            DatasetView newDSV =
+              DatabaseDatasetViewUtils.getDatasetViewByInternalName(
+                dsvsource,
+                user,
+                iname);
             addDatasetView(newDSV);
           }
         } else {
-          DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+          DatasetView newDSV =
+            DatabaseDatasetViewUtils.getDatasetViewByInternalName(
+              dsvsource,
+              user,
+              iname);
           addDatasetView(newDSV);
         }
       } else {
-        DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+        DatasetView newDSV =
+          DatabaseDatasetViewUtils.getDatasetViewByInternalName(
+            dsvsource,
+            user,
+            iname);
         addDatasetView(newDSV);
       }
     }
@@ -304,7 +378,12 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress) throws ConfigurationException {
+  public static void storeDatasetView(
+    DataSource ds,
+    String user,
+    DatasetView dsv,
+    boolean compress)
+    throws ConfigurationException {
     DatabaseDatasetViewUtils.storeConfiguration(
       ds,
       user,
@@ -320,7 +399,12 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetView)
    */
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
-    DatasetViewXMLUtils.LoadDatasetViewWithDocument(dsv, DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(dsvsource, user, dsv.getInternalName()));
+    DatasetViewXMLUtils.LoadDatasetViewWithDocument(
+      dsv,
+      DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(
+        dsvsource,
+        user,
+        dsv.getInternalName()));
   }
 
   /**
@@ -334,7 +418,15 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
    */
   public MartLocation[] getMartLocations() throws ConfigurationException {
-		MartLocation dbloc = new DatabaseLocation(els.host, els.port, els.databaseType, els.databaseName, user, dbpassword, els.jdbcDriverClassName);
+    MartLocation dbloc =
+      new DatabaseLocation(
+        els.host,
+        els.port,
+        els.databaseType,
+        els.databaseName,
+        user,
+        dbpassword,
+        els.jdbcDriverClassName);
     return new MartLocation[] { dbloc };
   }
 
@@ -399,8 +491,28 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
    */
   public String getDisplayName() {
-    
-    return (dsvsource==null) ? "No Database" : dsvsource.toString();
+
+    return (dsvsource == null) ? "No Database" : dsvsource.toString();
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetInternalName(
+    String dataset,
+    String internalName)
+    throws ConfigurationException {
+
+    DatasetView view = null;
+    for (int i = 0; i < dsviews.size(); ++i) {
+
+      DatasetView dsv = (DatasetView) dsviews.get(i);
+      if (StringUtil.compare(dataset, dsv.getDataset()) == 0
+        && StringUtil.compare(internalName, dsv.getInternalName()) == 0)
+        view = dsv;
+    }
+
+    return view;
   }
 
 }

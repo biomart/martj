@@ -198,8 +198,6 @@ public class QueryEditor extends JPanel {
 
   private QueryEditorContext editorManager;
 
-  private LabelledComboBox datasetViewCombo;
-
   private static final Logger logger =
     Logger.getLogger(QueryEditor.class.getName());
 
@@ -294,11 +292,7 @@ public class QueryEditor extends JPanel {
     
     Box toolBar = Box.createHorizontalBox();
     
-    datasetViewCombo = new LabelledComboBox("DatasetView", new ChangeListener() {
-      public void stateChanged(ChangeEvent e) {
-        doDatasetViewChanged();
-      }
-    });
+    LabelledComboBox datasetViewCombo = new DatasetViewChooser(query);
     datasetViewCombo.setEditable( false );
     Dimension s = new Dimension(250, 40);
     datasetViewCombo.setPreferredSize( s );

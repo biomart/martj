@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.InputSourceUtil;
+import org.ensembl.util.StringUtil;
 
 /**
  * DSViewAdaptor implimenting object designed to provide a DatasetView object from
@@ -238,5 +239,22 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
 	public String getDisplayName() {
 		return "URL";
 	}
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetInternalName(
+    String dataset,
+    String internalName)
+    throws ConfigurationException {
+    
+    boolean same = StringUtil.compare(dataset, dsv.getDataset()) == 0;
+    same = same && StringUtil.compare(internalName, dsv.getInternalName()) == 0;
+
+    if (same)
+      return dsv;
+    else
+      return null;
+    }
 
 }

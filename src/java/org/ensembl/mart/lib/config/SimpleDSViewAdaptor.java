@@ -18,6 +18,8 @@
 
 package org.ensembl.mart.lib.config;
 
+import org.ensembl.util.StringUtil;
+
 /**
  * DSViewAdaptor implimenting object designed to store a single
  * DatasetView object.
@@ -191,12 +193,29 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
       return new DatasetView[0];
   }
 
-	/**
+  /**
    * @return "Simple" 
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
-	 */
-	public String getDisplayName() {
-		return "Simple";
-	}
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+   */
+  public String getDisplayName() {
+    return "Simple";
+  }
+
+  /**
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetInternalName(
+    String dataset,
+    String internalName)
+    throws ConfigurationException {
+    
+    boolean same = StringUtil.compare(dataset, dsv.getDataset()) == 0;
+    same = same && StringUtil.compare(internalName, dsv.getInternalName()) == 0;
+
+    if (same)
+      return dsv;
+    else
+      return null;
+    }
 
 }

@@ -90,6 +90,22 @@ public interface DSViewAdaptor {
   public DatasetView getDatasetViewByInternalName(String name)
     throws ConfigurationException;
 
+
+  /**
+   * Returns a specific DatasetView object, named by the given dataset
+   * and internalName.
+   * @param dataset
+   * @param internalName
+   * @return DatasetView named by the given dataset
+   * and internalName.
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public DatasetView getDatasetViewByDatasetInternalName(
+    String dataset,
+    String internalName)
+    throws ConfigurationException;
+
+
   /**
    * Determine if the DSViewAdaptor contains a DatasetView with the given
    * dataset name.
@@ -133,10 +149,11 @@ public interface DSViewAdaptor {
    */
   public MartLocation[] getMartLocations() throws ConfigurationException;
 
-	/**
+  /**
    * All implementations should provide a display name.
-	 * @return display name for this adaptor.
-	 */
-	public String getDisplayName();
+   * @return display name for this adaptor.
+   */
+  public String getDisplayName();
+
 
 }
