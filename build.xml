@@ -213,7 +213,7 @@
       <formatter type="xml" />
 
       <classpath>
-        <fileset dir="${build.classes}" />
+        <pathelement path="${build.classes}" />
         <fileset refid="lib.classpath" />
       </classpath>
 
