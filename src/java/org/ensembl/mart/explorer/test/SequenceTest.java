@@ -10,6 +10,7 @@ import org.ensembl.datamodel.AssemblyLocation;
 import org.ensembl.datamodel.Gene;
 import org.ensembl.datamodel.Transcript;
 import org.ensembl.driver.GeneAdaptor;
+import org.ensembl.driver.TranscriptAdaptor;
 
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
@@ -48,6 +49,10 @@ public class SequenceTest extends Base {
 			}
 		}
 
+
+		TranscriptAdaptor ta = ensjDriver.getTranscriptAdaptor();
+		Transcript transcript = ta.fetch("ENST00000303221");
+		System.out.println(transcript);
 	}
 	
 }
