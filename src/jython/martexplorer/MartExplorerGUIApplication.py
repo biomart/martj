@@ -4,7 +4,7 @@
 # copyright EBI, GRL 2003
 
 
-# TODO 4 - Add Sequence attribute support: "sequence" label -> SequencePage
+# TODO implement SequencePage.updateXXXX() / clear()
 
 # editor.queryChanged / only execute if queryChanged or db settings changed.
 
@@ -560,12 +560,93 @@ class SimpleAttributePage(Page):
         self.add( JButton("remove", actionPerformed=self.actionPerformed) )
 	self.name = field + "_attribute_page"
 
+        
     def actionPerformed( self, event=None ):
         self.attributeManager.deselect( self )
 
 
     def htmlSummary(self):
         return self.field
+
+
+
+
+class SequencePage(Page):
+
+    def __init__(self, attributeManager):
+        Page.__init__(self)
+        self.attributeManager = attributeManager
+        self.field = "sequence"
+        self.name = self.field + "_attribute_page"
+        self.remove = JButton("Remove", actionPerformed=self.removeAction)
+
+        self.transcript = JRadioButton( "Transcripts/proteins"
+                                        ,actionPerformed=self.actionPerformed)
+        self.gene = JRadioButton( "Genes - transcript information ignored (one output per gene)"
+                                  ,actionPerformed=self.actionPerformed)
+
+        self.geneSequence = JRadioButton( "Gene sequence only")
+        self.geneSequence_5_3 = JRadioButton( "Gene plus 5' and 3' flanks" )
+        self.geneSequence_5 = JRadioButton( "Gene plus 5' flank" )
+        self.geneSequence_3 = JRadioButton( "Gene plus 3' flank" )
+        self.upstream = JRadioButton( "5' upstream only" )
+        self.downStream = JRadioButton( "3' downstream only" )
+        self.upStreamUTROnly = JRadioButton( "5' UTR only" )
+        self.upStreamAndUTR = JRadioButton( "5' upstream and UTR" )
+        self.downStreamUTROnly = JRadioButton( "3' UTR only" )
+        self.downStreamAndUTR = JRadioButton( "3' UTR and downstream" )
+        self.exonSequence = JRadioButton( "Exon sequences" )
+        self.cDNASequence = JRadioButton( "cDNA sequence only" )
+        self.codingSequence = JRadioButton( "Coding sequence only" ) 					
+        self.peptide = JRadioButton( "Peptide" )
+
+        sequenceButtons = (self.geneSequence
+                           ,self.geneSequence_5_3
+                           ,self.geneSequence_5
+                           ,self.upstream
+                           ,self.upStreamUTROnly
+                           ,self.upStreamAndUTR
+                           ,self.geneSequence_3
+                           ,self.downStream
+                           ,self.downStreamUTROnly
+                           ,self.downStreamAndUTR
+                           ,self.exonSequence
+                           ,self.cDNASequence
+                           ,self.codingSequence
+                           ,self.peptide)
+
+        self.geneButtons = (self.geneSequence
+                            ,self.geneSequence_5_3
+                            ,self.geneSequence_5
+                            ,self.geneSequence_3
+                            ,self.upstream
+                            ,self.downStream
+                            ,self.exonSequence )
+        
+        map( ButtonGroup().add, ( self.transcript, self.gene ) )
+        map( ButtonGroup().add, sequenceButtons )
+
+        map( self.add, (self.remove, self.gene, self.transcript)
+             + sequenceButtons)
+        self.dependencies()
+
+
+    def dependencies( self ):
+        for b in self.geneButtons:
+            b.enabled = self.transcript.selected
+        
+
+    def actionPerformed(self, event=None):
+        self.dependencies()
+
+    def removeAction( self, event=None ):
+            print "remove"
+            self.attributeManager.deselect( self )    
+
+    def htmlSummary(self):
+        return self.field
+
+
 
 
 
@@ -583,7 +664,8 @@ class AttributeManagerPage(Page):
     def __init__(self):
         Page.__init__(self)
         self.selected = Vector()
-        self.available = toVector(["gene_stable_id", "chr_name", "end", "strand"])
+        self.available = toVector(["gene_stable_id", "chr_name", "end", "strand"
+                                   , "sequence"])
         self.availableWidget = JList( self.available,
                                       valueChanged=self.valueChanged,
                                       selectionMode=ListSelectionModel.SINGLE_SELECTION)
@@ -619,7 +701,11 @@ class AttributeManagerPage(Page):
         self.selected.add( value )
         self.available.remove( value )
 
-        attributePage = SimpleAttributePage(self, value)
+        if value=="sequence":
+            attributePage = SequencePage( self )
+        else:
+            attributePage = SimpleAttributePage(self, value)
+
         node = QueryTreeNode( self.tree,
                               self.node,
                               self.node.childCount,
