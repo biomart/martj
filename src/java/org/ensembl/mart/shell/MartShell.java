@@ -91,7 +91,7 @@ public class MartShell {
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
    */
-  private final static String DEFAULT_REGISTRY_URL = "data/default_adaptors.xml";
+  private final static String DEFAULT_REGISTRY_URL = "data/MartRegistry.xml";
   private static final String INITSCRIPT = "initScript";
 
   private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
