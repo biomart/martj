@@ -97,7 +97,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
    */  
-  private final static String DEFAULT_REGISTRY_URL = "data"+File.separator+"default_adaptors.xml";
+  private final static String DEFAULT_REGISTRY_URL = "data/default_adaptors.xml";
   
   private static final String IMAGE_DIR = "data/image";
 
