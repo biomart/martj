@@ -13,8 +13,13 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 
     protected String name;
 
-    public DatasetViewTreeNode(String name){
+     public DatasetViewTreeNode(String name){
         this.name = name;
+    }
+
+    public DatasetViewTreeNode(String name, Object obj){
+        this.name = name;
+        this.setUserObject(obj);
     }
 
     public void setName(String newName){

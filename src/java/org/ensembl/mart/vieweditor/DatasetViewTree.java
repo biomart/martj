@@ -11,6 +11,7 @@ package org.ensembl.mart.vieweditor;
 import org.ensembl.mart.lib.config.*;
 
 import javax.swing.*;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -33,13 +34,21 @@ public class DatasetViewTree extends JTree implements Autoscroll {
     protected Insets scrollInsets = defaultScrollInsets;
     protected DatasetView dsView = null;
     protected DatasetViewTreeNode lastSelectedNode = null;
+    protected DatasetViewTreeNode editingNode = null;
+    protected DatasetViewTreeNode clickedNode = null;
+    protected DatasetViewTreeNode editingNodeParent = null;
     protected DatasetViewTreeNode rootNode = null;
     protected TreePath clickedPath = null;
     protected DatasetViewTreeModel treemodel = null;
+    protected DatasetViewTreeWidget frame;
+    protected int CUT_INITIATED, COPY_INITIATED, editingNodeIndex;
+    protected DatasetViewAttributesTable attrTable = null;
 
-    public DatasetViewTree(DatasetView dsView) {
+    public DatasetViewTree(DatasetView dsView, DatasetViewTreeWidget frame, DatasetViewAttributesTable attrTable) {
         super((TreeModel) null);
         this.dsView = dsView;
+        this.frame = frame;
+        this.attrTable = attrTable;
         addMouseListener(new DatasetViewTreeMouseListener());
         addTreeSelectionListener(new DatasetViewTreeSelectionListener());
         // Use horizontal and vertical lines
@@ -49,8 +58,9 @@ public class DatasetViewTree extends JTree implements Autoscroll {
         rootNode = new DatasetViewTreeNode(dsView.getDisplayName());
         rootNode.setUserObject(dsView);
         populateTree();
-        treemodel = new DatasetViewTreeModel(rootNode);
+        treemodel = new DatasetViewTreeModel(rootNode, dsView);
         setModel(treemodel);
+        this.setSelectionInterval(0,0);
         DatasetViewTreeDnDListener dndListener = new DatasetViewTreeDnDListener(this);
 
     }
@@ -116,7 +126,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
                     atNode.add(grNode);
                     AttributeCollection[] collections = atGroup.getAttributeCollections();
                     for (int z = 0; z < collections.length; z++) {
-                        AttributeCollection atCollection = (AttributeCollection) collections[z];
+                        AttributeCollection atCollection = collections[z];
                         String colName = atCollection.getInternalName();
                         DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
                         grNode.add(colNode);
@@ -133,6 +143,15 @@ public class DatasetViewTree extends JTree implements Autoscroll {
                 }
             }
         }
+    }
+
+    public DatasetView getDatasetView() {
+        dsView = (DatasetView) rootNode.getUserObject();
+        AttributePage[] oldAttributePages = dsView.getAttributePages();
+        FilterPage[] oldFilterPages = dsView.getFilterPages();
+        int pagesCount = rootNode.getChildCount();
+
+        return dsView;
     }
 
     // Autoscrolling support
@@ -203,16 +222,35 @@ public class DatasetViewTree extends JTree implements Autoscroll {
     // Inner class that handles Menu Action Events
     protected class MenuActionListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
+            try{
             if (e.getActionCommand().equals("cut"))
                 cut();
             else if (e.getActionCommand().equals("copy"))
                 copy();
             else if (e.getActionCommand().equals("paste"))
                 paste();
-            else if (e.getActionCommand().equals("insert"))
-                insert();
+            else if (e.getActionCommand().equals("insert filter page"))
+                insert(new FilterPage("new"), "FilterPage:");
+            else if (e.getActionCommand().equals("insert attribute page"))
+                insert(new AttributePage("new"),"AttributePage:");
+            else if (e.getActionCommand().equals("insert filter group"))
+                insert(new FilterGroup("new"),"FilterGroup:");
+            else if (e.getActionCommand().equals("insert attribute group"))
+                insert(new AttributeGroup("new"),"AttributeGroup:");
+            else if (e.getActionCommand().equals("insert filter collection"))
+                insert(new FilterCollection("new"),"FilterCollection:");
+            else if (e.getActionCommand().equals("insert attribute collection"))
+                insert(new AttributeCollection("new"),"AttributeCollection:");
+           /* else if (e.getActionCommand().equals("insert filter description"))
+                insert(new FilterDescription("mew"));
+            else if (e.getActionCommand().equals("insert attribute description"))
+                insert(new AttributeDescription("new")); */
             else if (e.getActionCommand().equals("delete"))
                 delete();
+            }
+            catch (Exception ex){
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -223,47 +261,116 @@ public class DatasetViewTree extends JTree implements Autoscroll {
         }
     }
 
-    private void doOnSelection(){
-         lastSelectedNode = (DatasetViewTreeNode)
-                    this.getLastSelectedPathComponent();
-            if (lastSelectedNode == null) return;
+    private void doOnSelection() {
+        lastSelectedNode = (DatasetViewTreeNode) this.getLastSelectedPathComponent();
+        if (lastSelectedNode == null) return;
+        Object[][] data = null;
+        Object nodeInfo = lastSelectedNode.getUserObject();
+        if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.DatasetView")) {
+            data = new Object [] []{
+                {"Description", ((DatasetView) nodeInfo).getDescription()},
+                {"DisplayName", ((DatasetView) nodeInfo).getDisplayName()},
+                {"InternalName", ((DatasetView) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.FilterPage")) {
+            data =  new Object [] []{
+                {"Description", ((FilterPage) nodeInfo).getDescription()},
+                {"DisplayName", ((FilterPage) nodeInfo).getDisplayName()},
+                {"InternalName", ((FilterPage) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage")) {
+            data =  new Object [] []{
+                {"Description", ((AttributePage) nodeInfo).getDescription()},
+                {"DisplayName", ((AttributePage) nodeInfo).getDisplayName()},
+                {"InternalName", ((AttributePage) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
+            data =  new Object [] []{
+                {"Description", ((FilterGroup) nodeInfo).getDescription()},
+                {"DisplayName", ((FilterGroup) nodeInfo).getDisplayName()},
+                {"InternalName", ((FilterGroup) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributeGroup")) {
+            data =  new Object [] []{
+                {"Description", ((AttributeGroup) nodeInfo).getDescription()},
+                {"DisplayName", ((AttributeGroup) nodeInfo).getDisplayName()},
+                {"InternalName", ((AttributeGroup) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.FilterCollection")) {
+            data =  new Object [] []{
+                {"Description", ((FilterCollection) nodeInfo).getDescription()},
+                {"DisplayName", ((FilterCollection) nodeInfo).getDisplayName()},
+                {"InternalName", ((FilterCollection) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributeCollection")) {
+            data =  new Object [] []{
+                {"Description", ((AttributeCollection) nodeInfo).getDescription()},
+                {"DisplayName", ((AttributeCollection) nodeInfo).getDisplayName()},
+                {"InternalName", ((AttributeCollection) nodeInfo).getInternalName()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.FilterDescription")) {
+            data =  new Object [] []{
+                {"Description", ((FilterDescription) nodeInfo).getDescription()},
+                {"DisplayName", ((FilterDescription) nodeInfo).getDisplayName()},
+                {"InternalName", ((FilterDescription) nodeInfo).getInternalName()},
+                //{"isSelectable", ((FilterDescription) nodeInfo).getIsSelectable()},
+                {"Legal Qualifiers", ((FilterDescription) nodeInfo).getLegalQualifiers()},
+                {"Qualifier", ((FilterDescription) nodeInfo).getQualifier()},
+                {"Table Constraint", ((FilterDescription) nodeInfo).getTableConstraint()},
+                {"Type", ((FilterDescription) nodeInfo).getType()}
+            };
+        }else if(nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+            data =  new Object [] []{
+                {"Description", ((AttributeDescription) nodeInfo).getDescription()},
+                {"DisplayName", ((AttributeDescription) nodeInfo).getDisplayName()},
+                {"InternalName", ((AttributeDescription) nodeInfo).getInternalName()},
+                {"Field", ((AttributeDescription) nodeInfo).getField()},
+                {"Table Constraint", ((AttributeDescription) nodeInfo).getTableConstraint()},
+                {"Max Length", new Long(((AttributeDescription) nodeInfo).getMaxLength())},
+                {"Source",((AttributeDescription) nodeInfo).getSource()},
+                //{"Homepage URL",((AttributeDescription) nodeInfo).getHomepageURL()},
+                {"Linkout URL",((AttributeDescription) nodeInfo).getLinkoutURL()}
+            };
+        }
 
-            Object nodeInfo = lastSelectedNode.getUserObject();
+        DatasetViewAttributeTableModel model = new DatasetViewAttributeTableModel();
 
-            System.out.println(nodeInfo.getClass());
+        model.setData(data);
+        attrTable.setModel(model);
+
     }
 
     // Inner class that handles Tree Model Events
     protected class DatasetViewTreeModelListener implements TreeModelListener {
-         public void treeNodesChanged(TreeModelEvent e) {
-        System.out.println("treeNodesChanged");
+        public void treeNodesChanged(TreeModelEvent e) {
+            System.out.println("treeNodesChanged");
 
-          /* if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
-            ((AttributePage)nodeInfo).setInternalName();
-           else if nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
-            ((AttributePage)nodeInfo).setInternalName();
-            */
-      /*  Object[] children = e.getChildren();
-        int[] childIndices = e.getChildIndices();
-        for (int i = 0; i < children.length; i++) {
-            System.out.println("Index " + childIndices[i] + ",changed value: " + children[0]);
-        }  */
-    }
+            /* if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+              ((AttributePage)nodeInfo).setInternalName();
+             else if nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+              ((AttributePage)nodeInfo).setInternalName();
+              */
+            /*  Object[] children = e.getChildren();
+              int[] childIndices = e.getChildIndices();
+              for (int i = 0; i < children.length; i++) {
+                  System.out.println("Index " + childIndices[i] + ",changed value: " + children[0]);
+              }  */
+        }
 
 
-    public void treeStructureChanged(TreeModelEvent e) {
-           System.out.println("tree structure changed");
-    }
+        public void treeStructureChanged(TreeModelEvent e) {
+            System.out.println("tree structure changed");
+        }
 
-    public void treeNodesInserted(TreeModelEvent e) {
-        TreePath tPath = e.getTreePath();
-        System.out.println("tree nodes inserted");
-        //tPath.getPathComponent();
-    }
+        public void treeNodesInserted(TreeModelEvent e) {
+            TreePath tPath = e.getTreePath();
+            System.out.println("tree nodes inserted");
+            //tPath.getPathComponent();
+        }
 
-    public void treeNodesRemoved(TreeModelEvent e) {
-        System.out.println("tree nodes removed");
-    }
+        public void treeNodesRemoved(TreeModelEvent e) {
+            System.out.println("tree nodes removed");
+        }
 
     }
 
@@ -274,7 +381,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
         protected DatasetViewTreeNode selnode = null;
         protected DatasetViewTreeNode dropnode = null;
 
-        public DatasetViewTreeDnDListener(DatasetViewTree tree){
+        public DatasetViewTreeDnDListener(DatasetViewTree tree) {
             dropTarget = new DropTarget(tree, this);
             dragSource = new DragSource();
             dragSource.createDefaultDragGestureRecognizer(tree, DnDConstants.ACTION_MOVE, this);
@@ -316,11 +423,11 @@ public class DatasetViewTree extends JTree implements Autoscroll {
             }
         }
 
-        /** Internally implemented, Do not override!*/
+
         public void dropActionChanged(DropTargetDragEvent event) {
         }
 
-        /** Internally implemented, Do not override!*/
+
         public void dragGestureRecognized(DragGestureEvent event) {
             selnode = null;
             dropnode = null;
@@ -334,9 +441,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
             }
         }
 
-        /** Internally implemented, Do not override!.
-         * throws IllegalArgumentException.
-         */
+
         public void dragDropEnd(DragSourceDropEvent event) {
             if (event.getDropSuccess()) {
                 try {
@@ -394,9 +499,30 @@ public class DatasetViewTree extends JTree implements Autoscroll {
 
     private void loungePopupMenu(MouseEvent e) {
         JPopupMenu popup = new JPopupMenu();
-        String[] menuItems = { "copy", "cut", "paste", "insert", "delete" };
-        for( int i =0; i<menuItems.length; i++ ) {
-           JMenuItem menuItem = new JMenuItem( menuItems[i] );
+        clickedPath = this.getClosestPathForLocation(e.getX(), e.getY());
+        clickedNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+        String[] menuItems = null;
+        if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.DatasetView"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert filter page", "insert attribute page", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.FilterPage"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert filter group", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.AttributePage"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert attribute group", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.FilterGroup"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert filter collection", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.AttributeGroup"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert attribute collection", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.FilterCollection"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert filter description", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.AttributeCollection"))
+            menuItems = new String[] {"copy", "cut", "paste", "insert attribute description", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.FilterDescription"))
+            menuItems = new String[] {"copy", "cut", "paste", "delete"};
+        else if ((clickedNode.getUserObject().getClass().getName()).equals("org.ensembl.mart.lib.config.AttributeDescription"))
+            menuItems = new String[] {"copy", "cut", "paste", "delete"};
+
+        for (int i = 0; i < menuItems.length; i++) {
+            JMenuItem menuItem = new JMenuItem(menuItems[i]);
             MenuActionListener menuActionListener = new MenuActionListener();
             menuItem.addActionListener(menuActionListener);
             popup.add(menuItem);
@@ -404,31 +530,72 @@ public class DatasetViewTree extends JTree implements Autoscroll {
         popup.show(e.getComponent(),
                 e.getX(), e.getY());
 
-        clickedPath = this.getClosestPathForLocation(e.getX(), e.getY());
-        System.out.println("here" + ((DatasetViewTreeNode) clickedPath.getLastPathComponent()).getUserObject().getClass());
+
     }
 
     private void cut() {
+        CUT_INITIATED = 1;
+        COPY_INITIATED = 0;
+        editingNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+
+        editingNodeParent = (DatasetViewTreeNode) editingNode.getParent();
+        editingNodeIndex = editingNodeParent.getIndex(editingNode);
+        treemodel.removeNodeFromParent(editingNode);
     }
 
     private void copy() {
+        CUT_INITIATED = 0;
+        COPY_INITIATED = 1;
+        editingNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
     }
 
+    public DatasetViewTreeNode getEditingNode(){
+        return editingNode;
+    }
     private void paste() {
+        if (CUT_INITIATED == 0 && COPY_INITIATED == 0) {
+            String result = "Sorry nothing to paste.\nPlease copy or cut before pasting";
+            JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+        String result = treemodel.insertNodeInto(editingNode, parentNode, parentNode.getChildCount());
+
+        if (result.startsWith("Error")) {
+            JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
+            if (CUT_INITIATED == 1) {
+                //editingNodeParent.add(editingNode);
+                treemodel.insertNodeInto(editingNode, editingNodeParent, editingNodeIndex);
+                CUT_INITIATED = 0;
+            }
+            return;
+        }
+
+        CUT_INITIATED = 0;
+        COPY_INITIATED = 0;
+
+        DatasetView view = (DatasetView) rootNode.getUserObject();
+        FilterPage fp [] = view.getFilterPages();
+        List fg = fp[0].getFilterGroups();
+        FilterGroup f = (FilterGroup) fg.get(0);
+        FilterCollection fc [] = f.getFilterCollections();
     }
 
-    private void insert() {
-        System.out.println("I'm inserting...");
-        DatasetViewTreeNode node = new DatasetViewTreeNode("newNode");
-        treemodel.insertNodeInto(node, (DatasetViewTreeNode) clickedPath.getLastPathComponent(), clickedPath.getPathCount() + 1);
+    private void insert(BaseConfigurationObject obj,String name) {
+
+        DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+
+        DatasetViewTreeNode newNode = new DatasetViewTreeNode(name+"newNode",obj);
+
+        String result = treemodel.insertNodeInto(newNode, parentNode, parentNode.getChildCount());
+        if (result.startsWith("Error")) {
+            JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
     }
 
     private void delete() {
-        System.out.println("I'm deleting...");
         DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
         treemodel.removeNodeFromParent(node);
-        //node.removeFromParent();
     }
-
-
 }
