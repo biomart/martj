@@ -24,10 +24,11 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Exportable extends BaseConfigurationObject {
+public class Exportable extends BaseNamedConfigurationObject {
   private final String linkNameKey = "linkName";
   private final String nameKey = "name";
   private final String attributesKey = "attributes";
+  private final String orderByKey = "orderBy";
   private final String defaultKey = "default";
   
 	/**
@@ -45,7 +46,12 @@ public class Exportable extends BaseConfigurationObject {
     setAttribute(linkNameKey, null);
     setAttribute(nameKey, null);
 	setAttribute(attributesKey, null);
+    setAttribute(orderByKey, null);
 	setAttribute(defaultKey, null);
+  }
+  
+  public Exportable(String linkName)  throws ConfigurationException {
+    this(linkName, null, null, linkName, null, null, null, null);
   }
   
   /**
@@ -53,8 +59,8 @@ public class Exportable extends BaseConfigurationObject {
    * @param ref - String internalName of the FilterDescription to Importable.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String linkName) throws ConfigurationException {
-  	this(linkName, null, null, null);
+  public Exportable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
+  	this(internalName, displayName, description, linkName, null, null, null, null);
   }
   
   /**
@@ -63,8 +69,8 @@ public class Exportable extends BaseConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Exportable(String linkName, String moduleName, String attributes, String d) throws ConfigurationException {
-  	super();
+  public Exportable(String internalName, String displayName, String description, String linkName, String moduleName, String attributes, String orderBy, String d) throws ConfigurationException {
+  	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
   	  throw new ConfigurationException("Importable objects must have a linkName.\n");
@@ -72,6 +78,7 @@ public class Exportable extends BaseConfigurationObject {
   	setAttribute(linkNameKey, linkName);
   	setAttribute(nameKey, moduleName);
 	setAttribute(attributesKey, attributes);
+    setAttribute(orderByKey, orderBy);
 	setAttribute(defaultKey, d);
   }
 
@@ -107,6 +114,10 @@ public class Exportable extends BaseConfigurationObject {
 		return getAttribute(attributesKey);
 	}
 
+    public String getOrderBy() {
+      return getAttribute(orderByKey);
+    }
+    
   /**
    * Set the internalName of the Filter to Importable when this Filter is used
    * @param ref -- internalName of the filter to Importable
@@ -138,7 +149,11 @@ public class Exportable extends BaseConfigurationObject {
   public void setAttributes(String valueCondition) {
 		setAttribute(attributesKey, valueCondition);
   }
-	  
+
+  public void setOrderBy(String orderBy) {
+    setAttribute(orderByKey, orderBy);	  
+  }
+  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
