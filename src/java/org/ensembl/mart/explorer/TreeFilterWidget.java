@@ -25,6 +25,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -48,6 +49,8 @@ import org.ensembl.mart.lib.config.FilterDescription;
  */
 public class TreeFilterWidget extends FilterWidget {
 
+	private HashSet allOptions;
+
 	private JMenuItem nullItem;
 
 	private Option nullOption;
@@ -63,7 +66,6 @@ public class TreeFilterWidget extends FilterWidget {
 	private JTextField currentSelectedText = new JTextField(30);
 	private JButton button = new JButton("change");
 	private String propertyName;
-	private Map optionToName = new HashMap();
 	private Map valueToOption = new HashMap();
 	private Option option = null;
 	private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
@@ -144,11 +146,15 @@ public class TreeFilterWidget extends FilterWidget {
 		for (int i = 0; options != null && i < options.length; i++) {
 
 			final Option option = options[i];
-
+      
+      String displayName = option.getDisplayName();
+      String qualifiedName = prefix + " " + displayName;
+        
 			if (option.getOptions().length == 0) {
 
 				// add menu item
-				JMenuItem item = new JMenuItem(option.getDisplayName());
+				JMenuItem item = new JMenuItem( displayName );
+        item.setName( qualifiedName );
 				menu.add(item);
 				item.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent event) {
@@ -156,16 +162,14 @@ public class TreeFilterWidget extends FilterWidget {
 					}
 				});
 
-				optionToName.put(option, prefix + " " + option.getDisplayName());
 				valueToOption.put(option.getValue(), option);
 
 			} else {
 
 				// Add sub menu
-				String name = option.getDisplayName();
-				JMenu subMenu = new JMenu(name);
+				JMenu subMenu = new JMenu( displayName );
 				menu.add(subMenu);
-				addOptions(subMenu, option.getOptions(), prefix + " " + name);
+				addOptions(subMenu, option.getOptions(), qualifiedName );
 
 			}
 		}
@@ -176,13 +180,11 @@ public class TreeFilterWidget extends FilterWidget {
 	 * Sets the currentlySelectedText and node label based on
 	 * the option. If option is null these values are cleared.
 	 * @param option
-   * @throws IllegalArgumentException if option unavailable in filter.
 	 */
 	private void updateDisplay(Option option) {
 		String name = "";
-    if (option!=null && option != nullOption ) name = (String) optionToName.get(option);
-    if ( name==null ) throw new IllegalArgumentException("Option unavailable in filter: "+option);
-		currentSelectedText.setText(name);
+    if (option!=null && option != nullOption ) name = option.getDisplayName();
+    currentSelectedText.setText(name);
 		setNodeLabel(null, name);
 	}
 
@@ -236,7 +238,6 @@ public class TreeFilterWidget extends FilterWidget {
 		setFilter(null);
 
 		// reset the maps so we can can find things later
-		optionToName.clear();
 		valueToOption.clear();
 
 		treeMenu.removeAll();
@@ -247,11 +248,12 @@ public class TreeFilterWidget extends FilterWidget {
 		//  add the nullItem to the top of the list, user selects this to clear
 		// choice.
 		treeTopOptions.add(nullItem);
-		optionToName.put(nullOption, nullItem.getText());
 		valueToOption.put(nullOption.getValue(), nullOption);
 		
 
 		addOptions(treeTopOptions, options, "");
+    
+    allOptions = new HashSet( valueToOption.values() );
 	}
 
 	private void showTree() {
@@ -288,6 +290,9 @@ public class TreeFilterWidget extends FilterWidget {
    * @throws IllegalArgumentException if option unavailable in filter.
    */
 	public void setOption(Option option) {
+
+    if ( !allOptions.contains( option ) )
+      throw new IllegalArgumentException("Option is unailable in filter: " + option);
 
     if (option == lastSelectedOption)
       return;
