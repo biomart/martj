@@ -1421,7 +1421,7 @@ public class ConfigurationTest extends Base {
 		
 		String FieldByIName = f.getField(testINameGetByName);
 		String TableConstraintByIName = f.getTableConstraint(testINameGetByName);
-		String QualifiersByIName = f.getQualifiers(testINameGetByName);
+		String QualifiersByIName = f.getLegalQualifiers(testINameGetByName);
 		String TypeByIName = f.getType(testINameGetByName);
 		
 		assertEquals("PushOptionFilterOption getField By InternalName incorrect\n", testField, FieldByIName);
