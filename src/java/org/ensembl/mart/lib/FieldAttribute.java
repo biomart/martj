@@ -55,14 +55,6 @@ public class FieldAttribute implements Attribute {
       hashcode = 37*hashcode + ((tableConstraint == null) ? 0 : tableConstraint.hashCode());
 		}
     
-    /**
-     * Copy constructor.
-     * @param a - a FieldAttribute object to copy
-     */
-    public FieldAttribute(FieldAttribute a) {
-    	this(a.getField(), a.getTableConstraint());
-    }
-
   /**
    * returns the field name
    * 

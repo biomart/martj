@@ -50,45 +50,6 @@ public class IDListFilter implements Filter {
 	public static final int SUBQUERY = 4;
 
 	/**
-	 * Copy constructor.
-	 * 
-	 * @param o - an IDListFilter object
-	 */
-	public IDListFilter(IDListFilter o) {
-		field = o.getField();
-		tableConstraint = o.getTableConstraint();
-    type = o.getType();
-    
-    File thisFile = null;
-    Query thisSubQ = null;
-    URL thisUrl = null;
-    
-    switch (type) {
-    	case STRING:
-    	  identifiers = new ArrayList( Arrays.asList( o.getIdentifiers() ) );
-    	  break;
-    	  
-    	case FILE:
-    	  thisFile = o.getFile();
-    	  break;
-    	  
-    	case URL:
-    	  thisUrl = o.getUrl();
-    	  break;    	 
-    	
-    	case SUBQUERY:
-    	  thisSubQ = o.getSubQuery();
-    	  break;    	
-    }
-    
-    file = thisFile;
-    subQuery = thisSubQ;
-    url = thisUrl;
-    
-    setHashCode();
-	}
-
-	/**
 	 * Construct an STRING type IDListFilter object of a given field name on a String[] List of 
 	 * identifiers.
 	 * 

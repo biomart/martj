@@ -58,22 +58,6 @@ public class BasicFilter implements Filter {
     hashcode = (31 * hashcode) + ( (this.value == null) ? 0 : this.value.hashCode() );
     hashcode = (31 * hashcode) + ( (this.tableConstraint == null) ? 0 : this.tableConstraint.hashCode() );
 	}
-
-  /**
-   * Copy constructor.
-   * @param o - a BasicFilter object to copy
-   */
-  public BasicFilter(BasicFilter o) {
-  	field = o.getField();
-  	tableConstraint = o.getTableConstraint();
-  	condition = o.getCondition();
-  	value = o.getValue();
-    
-    hashcode = (field == null) ? 0 : field.hashCode();
-    hashcode = (31 * hashcode) + ( (condition == null) ? 0 : condition.hashCode() );
-    hashcode = (31 * hashcode) + ( (value == null) ? 0 : value.hashCode() );
-    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
-  }
   
 	/**
 	 * returns the condition for the filter

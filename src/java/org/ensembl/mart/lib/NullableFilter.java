@@ -63,16 +63,6 @@ public class NullableFilter implements Filter {
     hashcode = (31 * hashcode) + ( (this.condition == null) ? 0 : this.condition.hashCode() );		
 	}
 	
-	public NullableFilter(NullableFilter o) {
-		field = o.getField();
-    tableConstraint = o.getTableConstraint();
-		condition = o.getRightHandClause();
-    
-    hashcode = (field == null) ? 0 : field.hashCode();
-    hashcode = (31 * hashcode) + ( (tableConstraint == null) ? 0 : tableConstraint.hashCode() );
-    hashcode = (31 * hashcode) + ( (condition == null) ? 0 : condition.hashCode() );
-	}
-	
 	/**
 	 * returns the field specified
 	 * 
