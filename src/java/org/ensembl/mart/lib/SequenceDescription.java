@@ -219,25 +219,25 @@ public final class SequenceDescription {
 		switch(type) {
 			case TRANSCRIPTCODING:
 				this.seqt = type;
-				this.seqtype = (String) SEQS.get(TRANSCRIPTCODING);
+				this.seqtype = (String) SEQS.get(type);
 				this.description = "coding sequence of transcript";
 				break;
 				
 			case TRANSCRIPTPEPTIDE:
 				this.seqt = type;
-				this.seqtype = (String) SEQS.get(TRANSCRIPTPEPTIDE);
+      this.seqtype = (String) SEQS.get(type);
 				this.description = "peptide sequence";
 				break;
 			    
 			case TRANSCRIPTCDNA:
 				this.seqt = type;
-				this.seqtype = (String) SEQS.get(TRANSCRIPTCDNA);
+      this.seqtype = (String) SEQS.get(type);
 				this.description = "cdna sequence";
 				break;
 				
 			case TRANSCRIPTEXONS:
 					this.seqt = type;
-					this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+      this.seqtype = (String) SEQS.get(type);
 					this.description = "exon";
 					this.leftflank = lflank;
 					this.rightflank = rflank;
@@ -249,7 +249,7 @@ public final class SequenceDescription {
 			
 				case TRANSCRIPTEXONINTRON:
 						this.seqt = type;
-						this.seqtype = (String) SEQS.get(TRANSCRIPTEXONINTRON);
+            this.seqtype = (String) SEQS.get(type);
 						this.description = "exon and intron sequence for transcript";
 						this.leftflank = lflank;
 						this.rightflank = rflank;
@@ -261,7 +261,7 @@ public final class SequenceDescription {
 		        
 			case TRANSCRIPTFLANKS:
 					this.seqt = type;
-					this.seqtype = (String) SEQS.get(TRANSCRIPTFLANKS);
+          this.seqtype = (String) SEQS.get(type);
 					this.description = "flanking sequence of transcript only";
 					this.leftflank = lflank;
 					this.rightflank = rflank;
@@ -273,7 +273,7 @@ public final class SequenceDescription {
 
 				case GENEEXONS:
 					this.seqt = type;
-					this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+          this.seqtype = (String) SEQS.get(type);
 					this.description = "exon";
 					this.leftflank = lflank;
 					this.rightflank = rflank;
@@ -285,7 +285,7 @@ public final class SequenceDescription {
 		
 				case GENEEXONINTRON:
 					this.seqt = type;
-					this.seqtype = (String) SEQS.get(GENEEXONINTRON);
+          this.seqtype = (String) SEQS.get(type);
 					this.description = "exon and intron sequence for gene";
 					this.leftflank = lflank;
 					this.rightflank = rflank;		        
@@ -297,7 +297,7 @@ public final class SequenceDescription {
 
 			case GENEFLANKS:
 					this.seqt = type;
-					this.seqtype = (String) SEQS.get(GENEFLANKS);
+          this.seqtype = (String) SEQS.get(type);
 					this.description = "flanking sequence of gene only";
 					this.leftflank = lflank;
 					this.rightflank = rflank;
@@ -309,7 +309,7 @@ public final class SequenceDescription {
 				  
 			case DOWNSTREAMUTR:
 					this.seqt = type;
-					this.seqtype = (String)	SEQS.get(DOWNSTREAMUTR);
+          this.seqtype = (String) SEQS.get(type);
 					this.description = "downstream UTR";
 					this.leftflank = lflank;
 					this.rightflank = rflank;
@@ -320,7 +320,7 @@ public final class SequenceDescription {
 			    
 			case UPSTREAMUTR:
 				this.seqt = type;
-				this.seqtype = (String)	SEQS.get(UPSTREAMUTR);
+        this.seqtype = (String) SEQS.get(type);
 				this.description = "upstream UTR";
 				this.leftflank = lflank;
 				this.rightflank = rflank;
