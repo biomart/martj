@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
+<!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
 <MartConfiguration description="First Mart Created from version 14 Ensembl Datasources" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
   <Dataset description="For Testing Purposes Only" displayName="Test of a Dataset" internalName="test_dataset">
     <StarBase>test_starbase</StarBase>

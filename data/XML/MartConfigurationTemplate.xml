@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
+
+<!-- note the martdatabase: protocal in the DOCTYPE is special, forcing the MartConfiguration System to load the dtd stored in the path component from the RDBMS serving the mart.  Thus, if you want to tell it to fetch myConfiguration.dtd from your own personal mart database, use martdatabase:myConfiguration.dtd.  Conversely, if you want it to fetch a dtd from the file system, dont use the martdatabase: protocal -->
+
+<!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
 <MartConfiguration description="First Ensembl Mart Built upon Ensembl version 15 datasets" displayName="Ensembl Mart version 15.1" internalName="ensembl_mart_15_1">
   <Dataset description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Homo sapiens (NCBI 31) -- Ensembl Genes" internalName="homo_sapiens_ensembl_genes">
     <StarBase>hsapiens_ensemblgene</StarBase>
