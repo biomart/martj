@@ -532,6 +532,7 @@ public class Query {
 
 		filters.remove(index);
 		filters.add(index, newFilter);
+    log();
 
 		for (int i = 0; i < listeners.size(); ++i)
 			((QueryListener) listeners.get(i)).filterChanged(
