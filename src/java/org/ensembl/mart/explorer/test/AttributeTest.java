@@ -41,9 +41,8 @@ public class AttributeTest extends Base {
 	}
 
 	public void testKakaQuery()  throws Exception {
-		Query q = new Query();
-		q.setStarBases(
-			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+		Query q = new Query(genequery);
+		
 		q.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		q.addAttribute(new FieldAttribute("chr_name"));
 		q.addAttribute(new FieldAttribute("gene_chrom_start"));
@@ -60,9 +59,8 @@ public class AttributeTest extends Base {
 	}
 
 	public void testSimpleQueries() throws Exception {
-		Query q = new Query();
-		q.setStarBases(
-			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+		Query q = new Query(genequery);
+		
 		q.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(new BasicFilter("chr_name", "=", "22"));
@@ -75,9 +73,8 @@ public class AttributeTest extends Base {
 	}
 
 	public void testSimpleSNPQueries() throws Exception {
-		Query q = new Query();
-		q.setStarBases(new String[] { "hsapiens_snp" });
-		q.setPrimaryKeys(new String[] { "snp_id" });
+		Query q = new Query(snpquery);
+
 		q.addAttribute(new FieldAttribute("external_id"));
 		q.addAttribute(new FieldAttribute("allele"));
 		q.addFilter(new BasicFilter("chr_name", "=", "21"));
@@ -91,10 +88,8 @@ public class AttributeTest extends Base {
 	public void testDisambiguationQueries() throws Exception {
 		String geneID = "ENSG00000079974";
 		String expectedDiseaseID = "RB2B_HUMAN";
-		Query q = new Query();
-		q.setStarBases(
-			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
-		q.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+		Query q = new Query(genequery);
+		
 		q.addAttribute(new FieldAttribute("display_id", "xref_SWISSPROT"));
 		q.addFilter(new BasicFilter("gene_stable_id", "=", geneID));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

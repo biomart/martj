@@ -17,6 +17,7 @@ import org.ensembl.driver.SequenceAdaptor;
 import org.ensembl.driver.TranscriptAdaptor;
 import org.ensembl.mart.explorer.FormatSpec;
 import org.ensembl.mart.explorer.IDListFilter;
+import org.ensembl.mart.explorer.Query;
 import org.ensembl.mart.explorer.SequenceDescription;
 
 /**
@@ -50,13 +51,15 @@ public class SequenceTest extends Base {
 
 
 	public void testCodingSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCODING));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCODING));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -77,13 +80,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testPeptideSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTPEPTIDE));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTPEPTIDE));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -104,13 +109,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testCdnaSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCDNA));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCDNA));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -131,13 +138,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testTranscriptExonSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -158,13 +167,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testTranscriptExonIntronSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONINTRON));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONINTRON));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -192,14 +203,16 @@ public class SequenceTest extends Base {
 	}
 
 	public void testTranscriptFlankSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
 		int rightflank = 1000;
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTFLANKS, 0, rightflank));
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTFLANKS, 0, rightflank));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -231,13 +244,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testGeneExonIntronSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONINTRON));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONINTRON));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -265,14 +280,16 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testGeneFlankSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
 		int leftflank = 1000;
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEFLANKS, leftflank, 0));
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEFLANKS, leftflank, 0));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		
@@ -304,13 +321,15 @@ public class SequenceTest extends Base {
 	}
 	
 	public void testGeneExonSequence() throws Exception {
+		Query q = new Query(genequery);
+		
 		//test one forward strand gene and one revearse strand gene
-		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
-		query.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONS));
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONS));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		
-		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		engine.execute(q, new FormatSpec(FormatSpec.FASTA), out);
 		String results = out.toString();
 		out.close();
 		

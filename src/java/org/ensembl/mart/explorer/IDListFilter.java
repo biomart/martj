@@ -17,7 +17,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.explorer;
 import java.io.*;
 import java.net.*;
@@ -26,7 +26,10 @@ import java.util.*;
 /**
  * IDListFilter object for storing a list of IDs of a particular
  * type to restrict Queries on.  IDListFilter objects can be
- * created on a String[] of ids, a File of ids, a URL of ids, or
+ * created on a single id (if you are only going to add one id,
+ * you should just use a BasicFilter object instead, this one is more
+ * useful for the MartExplorerTool to add multiple ids in succession),
+ * a String[] of ids, a File of ids, a URL of ids, or
  * an InputStream of ids.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -34,236 +37,223 @@ import java.util.*;
  */
 public class IDListFilter implements Filter {
 
-  /**
-   * enum over modes of id list input. extend as necessary
-   */
-  public final static int STRING_MODE = 0;
-  public final static int FILE_MODE = 1;
-  public final static int URL_MODE = 2;
-  public final static int STREAM_MODE = 3;
+	/**
+	 * Copy constructor.  Doesnt actually read the input that was originally provided,
+	 * as this has already been parsed. Creates a 
+	 * new IDListFilter(String Field, String[] identifiers) using the identifiers 
+	 * provided by the original input.
+	 * 
+	 * @param o - an IDListFilter object
+	 */
+	public IDListFilter(IDListFilter o) {
+		if (o.getName() != null)
+			name = o.getName();
 
+		int olen = o.getIdentifiers().length;
+		String[] nvalues = new String[olen];
 
-    /**
-     * returns the Mode of this IDListFilter (STRING_MODE, FILE_MODE, URL_MODE, or STREAM_MODE)
-     * @return int
-     */
-    public int getMode() {
-        return mode;
-    }
+		if (olen > 0) {
+			String[] ovalues = o.getIdentifiers();
+			for (int i = 0; i < olen; i++) {
+				identifiers.add(ovalues[i]);
+			}
+		}
+	}
 
-    /**
-     * Construct an IDListFilter object of a given type on a String[] List of 
-     * identifiers. Sets the mode to STRING_MODE.
-     * 
-     * @param String field
-     * @param String[] identifiers
-     */
-    public IDListFilter(String field, String[] identifiers) {
-      this.type = field;
-      this.identifiers = identifiers;
-      mode = STRING_MODE;
-    }
+	/**
+	 * Constructor for an IDListFilter object of a given field name
+	 * with a single identifier.
+	 * Other identifiers can be added later with addIdentifier.
+	 *  
+	 * @param String name = field name
+	 * @param String identifier
+	 */
+	public IDListFilter(String name, String identifier) {
+		this.name = name;
+		identifiers.add(identifier);
+	}
 
-    /**
-     * Construct an IDListFilter object of a given type from a file
-     * containing identifiers. Expect one identifier per line.
-     * Sets mode to FILE_MODE.
-     * 
-     * @param String field
-     * @param File file
-     * @throws IOException
-     */
-    public IDListFilter(String field, File file) throws IOException {
-      this( field, file.toURL() );
-      this.file = file;
-      mode = FILE_MODE;
-    }
+	/**
+	 * Construct an IDListFilter object of a given field name on a String[] List of 
+	 * identifiers.
+	 * 
+	 * @param String name - field name
+	 * @param String[] identifiers
+	 */
+	public IDListFilter(String name, String[] identifiers) {
+		this.name = name;
+		this.identifiers = Arrays.asList(identifiers);
+	}
 
-    /**
-     * Construct an IDListFilter object of a given type 
-     * from a specified URL object containing identifiers. 
-     * Expect one identifier per line of file.
-     * Sets mode to URL_MODE
-     * 
-     * @param String field
-     * @param URL url
-     * @throws IOException
-     */
-    public IDListFilter(String field, URL url) throws IOException {
-      this.type = field;
-      this.url = url;
-      mode = URL_MODE;
-      // load entries from file into identifiers array
-      BufferedReader in = new BufferedReader( new InputStreamReader( url.openStream() ) );
-      List lines = new ArrayList();
-      for( String line = in.readLine(); line!=null; line = in.readLine() )
-        lines.add( line );
-      identifiers = new String[ lines.size() ];
-      lines.toArray( identifiers );
-    }
+	/**
+	 * Construct an IDListFilter object of a given field name from a file
+	 * containing identifiers. Expect one identifier per line.
+	 * 
+	 * @param String name - field name
+	 * @param File file
+	 * @throws IOException
+	 */
+	public IDListFilter(String name, File file) throws IOException {
+		this(name, new InputStreamReader(file.toURL().openStream()));
+	}
 
-    /**
-     * Construct an IDListFilter of a given type from an InputStreamReader
-     * containing identifiers. Expect one identifier per line of Stream.
-     * Useful for piping martexplorer output into a new martexplorer as a filter
-     * sets mode to STREAM_MODE
-     * 
-     * @param String field
-     * @param InputStreamReader instream
-     * @throws IOException
-     */
-    public IDListFilter(String field, InputStreamReader instream) throws IOException {
-      this.type = field;
-      this.instream = instream;
-      mode = STREAM_MODE;
+	/**
+	 * Construct an IDListFilter object of a given field name 
+	 * from a specified URL object containing identifiers. 
+	 * Expect one identifier per line of file.
+	 * 
+	 * @param String name - field name
+	 * @param URL url
+	 * @throws IOException
+	 */
+	public IDListFilter(String name, URL url) throws IOException {
+		this(name, new InputStreamReader(url.openStream()));
+	}
 
-      // load entries from instream into identifiers array
-      BufferedReader in = new BufferedReader( instream );
-      List lines = new ArrayList();
-      for( String line = in.readLine(); line!=null; line = in.readLine() )
-        lines.add( line );
-      identifiers = new String[ lines.size() ];
-      lines.toArray( identifiers );
-    }
+	/**
+	 * Construct an IDListFilter of a given field name from an InputStreamReader
+	 * containing identifiers. Expect one identifier per line of Stream.
+	 * Useful for piping martexplorer output into a new martexplorer as a filter
+	 * 
+	 * @param String name - field name
+	 * @param InputStreamReader instream
+	 * @throws IOException
+	 */
+	public IDListFilter(String name, InputStreamReader instream) throws IOException {
+		this.name = name;
 
-    public IDListFilter() {
-    }
+		// load entries from instream into identifiers array
+		BufferedReader in = new BufferedReader(instream);
 
-    /**
-     * add an identifier to the IDListFilter
-     * 
-     * @param String identifier
-     */
-    public void addIdentifier(String identifier) {
-        String[] tmp = identifiers;
-        identifiers = new String[ tmp.length+1 ];
-        System.arraycopy(tmp, 0, identifiers, 0, tmp.length);
-        identifiers[ tmp.length ] = identifier;
-    }
+		for (String line = in.readLine(); line != null; line = in.readLine())
+			identifiers.add(line);
+	}
 
-    /**
-     * returns a description of the object useful for logging systems.
-     * 
-     * @return String description(field=field,identifiers=list of identifiers)
-     */
-    public String toString() {
-        StringBuffer buf = new StringBuffer();
+	/**
+	  * add an identifier to the IDListFilter
+	  * 
+	  * @param String identifier
+	  */
+	public void addIdentifier(String identifier) {
+		if (!identifiers.contains(identifier))
+			identifiers.add(identifier);
+	}
 
-	    buf.append("[");
-        buf.append(" field=").append( type);
-        buf.append(", #identifiers=").append( identifiers.length);
-        buf.append("]");
+	/**
+	 * returns the Where Clause for the SQL
+	 * 
+	 * @return String where clause 'IN (quoted list of identifiers)'
+	 */
+	public String getWhereClause() {
+		StringBuffer buf = new StringBuffer();
+		buf.append(name).append(" IN (");
+		for (int i = 0, n = identifiers.size(); i < n; i++) {
+			String element = (String) identifiers.get(i);
+			if (i > 0)
+				buf.append(", ");
+			buf.append("\"").append(element).append("\"");
+		}
 
-        return buf.toString();
-    }
+		buf.append(" ) ");
+		return buf.toString();
+	}
 
-    /**
-     * returns the Where Clause for the SQL
-     * 
-     * @return String where clause 'IN (quoted list of identifiers)'
-     */
-    public String getWhereClause(){
-      StringBuffer buf = new StringBuffer();
-      buf.append( type).append( " IN (");
-      for(int i=0; i<identifiers.length; ++i ) {
-        if ( i>0 ) buf.append( ", " );
-        buf.append("\"").append( identifiers[i] ).append("\"");
-      }
-      buf.append( " ) " );
-      return buf.toString();
-    }
+	/**
+	 * same as getWhereClause()
+	 */
+	public String getRightHandClause() {
+		StringBuffer buf = new StringBuffer();
+		buf.append(" IN (");
+		for (int i = 0, n = identifiers.size(); i < n; i++) {
+			String element = (String) identifiers.get(i);
+			if (i > 0)
+				buf.append(", ");
+			buf.append("\"").append(element).append("\"");
+		}
+		buf.append(" ) ");
+		return buf.toString();
+	}
 
-    /**
-     * same as getWhereClause()
-     */
-    public String getRightHandClause() {
-        StringBuffer buf = new StringBuffer();
-        buf.append( " IN (");
-        for(int i=0; i<identifiers.length; ++i ) {
-            if ( i>0 ) buf.append( ", " );
-                buf.append("\"").append( identifiers[i] ).append("\"");
-        }
-        buf.append( " ) " );
-        return buf.toString();
-    }
+	/**
+	 * get the String[] List of identifiers
+	 * 
+	 * @return String[] identifiers
+	 */
+	public String[] getIdentifiers() {
+		String[] ret = new String[identifiers.size()];
+		identifiers.toArray(ret);
+		return ret;
+	}
 
+	/**
+	 * get the Name of the IDListFilter
+	 * 
+	 * @return String name
+	 */
+	public String getName() {
+		return name;
+	}
 
-    /**
-     * get the String[] List of identifiers
-     * 
-     * @return String[] identifiers
-     */
-    public String[] getIdentifiers(){ return identifiers; }
+	/**
+	 * set the Name of the IDListFilter
+	 * 
+	 * @param String name of the filter
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    /**
-     * get the type of the IDListFilter
-     * 
-     * @return String type
-     */
-    public String getName(){
-        return type;
-    }
+	public String getValue() {
+		return null;
+	}
 
-    /**
-     * set the type of the IDListFilter
-     * 
-     * @param String type
-     */
-    public void setType(String type){ this.type = type; }
-
-    /**
-     * get the File with the IDListFilter identifiers
-     * 
-     * @return File file
-     */
-    public File getFile(){
-        return file;
-    }
-
-    /**
-     * set the File with the IDListFilter identifiers
-     * 
-     * @param File file
-     */
-    public void setFile(File file){ this.file = file; }
-  
-    /**
-     * get the URL with the IDListFilter identifiers
-     * 
-     * @return URL url
-     */
-    public URL getUrl(){
-        return url;
-    }
-
-    /**
-     * set the URL with the IDListFilter identifiers
-     * 
-     * @param URL url
-     */
-    public void setUrl(URL url){ this.url = url; }
-
-    public String getValue() {
-      return null;
-    }
-    
-    
-	
 	public void setTableConstraint(String tableConstraint) {
 		this.tableConstraint = tableConstraint;
 	}
-	
-	
-	
+
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
-	 
-	private String tableConstraint;
-     private String type;
-    private String[] identifiers = new String[0];
-    private File file;
-    private URL url;
-    private InputStreamReader instream;
-    private int mode;
+
+	/**
+	 * returns a description of the object useful for logging systems.
+	 * 
+	 * @return String description(field=field,identifiers=list of identifiers)
+	 */
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+		buf.append(" field=").append(name);
+		buf.append(", tableConstraint=").append(tableConstraint);
+		buf.append(", identifiers=").append(identifiers);
+		buf.append("]");
+
+		return buf.toString();
+	}
+
+	/**
+	 * Allows Equality Comparisons manipulation of IDListFilter objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof IDListFilter && hashCode() == ((IDListFilter) o).hashCode();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+		int tmp = name.hashCode();
+		tmp = (31 * tmp) + tableConstraint.hashCode();
+
+		for (int i = 0, n = identifiers.size(); i < n; i++) {
+			String element = (String) identifiers.get(i);
+			tmp = (31 * tmp) + element.hashCode();
+		}
+
+		return tmp;
+	}
+
+	private String name, tableConstraint;
+	private List identifiers = new ArrayList();
 }

@@ -40,20 +40,27 @@ public class CompiledSQLQueryTest extends Base {
         assertTrue( "No lines returned from query", stats.getLineCount()>0 );
     } 
 
+    public void testQueryCopy() throws Exception {
+    	Query q = new Query(genequery);
+    	assertTrue("Query Copy Constructor not creating a equal copy\n", genequery.equals(q));
+    }
+    
     public void testChrQuery() throws Exception {
-
-	    query.addAttribute( new FieldAttribute("gene_stable_id") );
-        query.addFilter( new BasicFilter( "chromosome_id", "=", "3") );
+      Query q = new Query(genequery);
+      
+	    q.addAttribute( new FieldAttribute("gene_stable_id") );
+      q.addFilter( new BasicFilter( "chromosome_id", "=", "3") );
    
-	    executeQuery( query );
+	    executeQuery( q );
     }
 
 
     public void testStableIDQuery() throws Exception {
-
-      query.addAttribute( new FieldAttribute("gene_stable_id") );
-      query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000005175"}) );
-      executeQuery( query );
+      Query q = new Query(genequery);
+      
+      q.addAttribute( new FieldAttribute("gene_stable_id") );
+      q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000005175"}) );
+      executeQuery( q );
     }
 
 
@@ -61,11 +68,11 @@ public class CompiledSQLQueryTest extends Base {
      * Test filtering on stable ids from a file.
      */
     public void testStableIDsFromFileQuery() throws Exception {
+      Query q = new Query(genequery);
       
-      query.addAttribute( new FieldAttribute("gene_stable_id") );
-
-      query.addFilter( new IDListFilter("gene_stable_id", new File ( org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL ).getFile() ) ) );
-      executeQuery( query );
+      q.addAttribute( new FieldAttribute("gene_stable_id") );
+      q.addFilter( new IDListFilter("gene_stable_id", new File ( org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL ).getFile() ) ) );
+      executeQuery( q );
     }
 
 
@@ -74,19 +81,22 @@ public class CompiledSQLQueryTest extends Base {
       // in practice this is effectively the same as testStableIDsFromFile because
       // the implementation converts the file to a url. We include this test incase future
       // implementations work differently.
-
-      query.addAttribute( new FieldAttribute("gene_stable_id") );
+      Query q = new Query(genequery);
+      
+      q.addAttribute( new FieldAttribute("gene_stable_id") );
 
       URL stableidurl = org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL );
-      query.addFilter( new IDListFilter("gene_stable_id", stableidurl ) );
-      executeQuery( query );
+      q.addFilter( new IDListFilter("gene_stable_id", stableidurl ) );
+      executeQuery( q );
     }
 
 
   public void testJoinToPFAM() throws Exception {
-    query.addAttribute( new FieldAttribute("gene_stable_id") );
-    query.addAttribute( new FieldAttribute("pfam") );
-    executeQuery( query );
+  	Query q = new Query(genequery);
+  	
+    q.addAttribute( new FieldAttribute("gene_stable_id") );
+    q.addAttribute( new FieldAttribute("pfam") );
+    executeQuery( q );
   }
 
 

@@ -67,6 +67,7 @@ public class MartExplorerTool {
 	private static List attributes = new ArrayList();
 	private static List filters = new ArrayList();
 
+  private static String IDListFilterName = null;
 	private static IDListFilter idFilter = null;
 
 	private static String COMMAND_LINE_SWITCHES =
@@ -471,8 +472,11 @@ public class MartExplorerTool {
 	 */
 	public static void addIdFilter(String identifier) {
 		if (idFilter == null)
-			idFilter = new IDListFilter();
-		idFilter.addIdentifier(identifier);
+			idFilter = new IDListFilter(null, identifier);
+	  else
+		  idFilter.addIdentifier(identifier);
+	  if (IDListFilterName != null)
+			idFilter.setName(IDListFilterName);
 	}
 
 	/**
@@ -484,22 +488,23 @@ public class MartExplorerTool {
 	 * @see Query
 	 * @see IDListFilter
 	 */
-	public static void addIdFilterURL(String url) {
-
+	public static void addIdFilterURL(String url) {	
 		if (url.equals("-")) {
 			addIdFilterStream(System.in);
-		} else {
-			try {
-
-				// retain current filterType if set
-				String filterType = (idFilter != null) ? idFilter.getName() : null;
-
-				idFilter = new IDListFilter(filterType, new URL(url));
-
-			} catch (Exception e) {
-				validationError(
-					"Problem loading from url: " + url + " : " + e.getMessage());
-			}
+		} 
+		else {
+			if ( idFilter == null ) {
+			  try {
+				  idFilter = new IDListFilter(null, new URL(url));
+				  if (IDListFilterName != null)
+					  idFilter.setName(IDListFilterName);
+			  } catch (Exception e) {
+				  validationError(
+					  "Problem loading from url: " + url + " : " + e.getMessage());
+			  }
+			} 
+			else
+			  validationError("Cannot add an IDListFilter more than once");
 		}
 	}
 
@@ -511,35 +516,34 @@ public class MartExplorerTool {
 	 * @see IDListFilter
 	 */
 	public static void addIdFilterStream(InputStream instream) {
-
-		try {
-
-			// retain current filterType if set
-			String filterType = (idFilter != null) ? idFilter.getName() : null;
-
-			idFilter = new IDListFilter(filterType, new InputStreamReader(instream));
-
-		} catch (Exception e) {
-			validationError("Problem loading from STDIN: " + e.getMessage());
-		}
+    if ( idFilter == null ) {
+		  try {
+			  idFilter = new IDListFilter(null, new InputStreamReader(instream));
+			  if (IDListFilterName != null)
+				  idFilter.setName(IDListFilterName);
+		  } catch (Exception e) {
+			  validationError("Problem loading from STDIN: " + e.getMessage());
+		  }
+    }
+    else
+      validationError("Cannot add an IDListFilter more than once");
 	}
 
 	/**
 	 * Sets the filter type to use for IDFilters set by any of the addIdFilter methods.
 	 * 
-	 * @param type -- String name of identifier
+	 * @param name -- String name of identifier
 	 * @see Query
 	 * @see IDListFilter
 	 */
-	public static void identifierType(String type) {
-		if (idFilter == null)
-			idFilter = new IDListFilter();
-
-		if (idFilter.getName() == null)
-			idFilter.setType(type);
-		else
-			validationError(
-				"ID Filter type already set, can't set it again: " + type);
+	public static void identifierType(String name) {
+		if (IDListFilterName != null)
+		  validationError("ID Filter type already set, can't set it again: " + name);
+		else {
+		  IDListFilterName = name;
+		  if (idFilter != null)
+			  idFilter.setName(IDListFilterName);
+		}
 	}
 
 	public static void addSequenceDescription(String seqrequest) {

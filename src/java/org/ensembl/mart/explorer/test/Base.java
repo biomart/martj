@@ -36,7 +36,8 @@ public abstract class Base extends TestCase {
 
 	protected Driver ensjDriver = null;
 	protected Engine engine;
-	protected Query query = new Query();
+	protected Query genequery = new Query();
+	protected Query snpquery = new Query();
 
 	public void init() {
 		connectionconf = org.apache.log4j.helpers.Loader.getResource(connprops);
@@ -74,8 +75,10 @@ public abstract class Base extends TestCase {
 		init();
 
 		engine = new Engine(host, port, user, password, database);
-		query.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
-		query.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+		genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+		snpquery.setStarBases(new String[] { "hsapiens_snp" });
+		snpquery.setPrimaryKeys(new String[] { "snp_id" });
 	}
 
 	public Base(String name) {

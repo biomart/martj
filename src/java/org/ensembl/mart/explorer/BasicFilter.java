@@ -54,6 +54,17 @@ public class BasicFilter implements Filter {
 		this.value = value;
 	}
 
+  /**
+   * Copy constructor.
+   * @param o - a BasicFilter object to copy
+   */
+  public BasicFilter(BasicFilter o) {
+  	name = o.getName();
+  	tableConstraint = o.getTableConstraint();
+  	condition = o.getCondition();
+  	value = o.getValue();
+  }
+  
 	/**
 	 * sets the condition for the filter.  Conditions can be =,<, or >.
 	 * 
@@ -62,8 +73,6 @@ public class BasicFilter implements Filter {
 	public void setCondition(String condition) {
 		this.condition = condition;
 	}
-
-	private String condition;
 
 	/**
 	 * returns the condition for the filter
@@ -82,8 +91,6 @@ public class BasicFilter implements Filter {
 	public void setValue(String value) {
 		this.value = value;
 	}
-
-	private String value;
 
 	/**
 	 * returns the value set for the query filter
@@ -111,10 +118,7 @@ public class BasicFilter implements Filter {
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
-	
-	private String tableConstraint;
-	
-	
+
 	/**
 	 * prints information about the filter, for logging purposes
 	 *
@@ -124,13 +128,15 @@ public class BasicFilter implements Filter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" field=").append(name);
+		buf.append(" name=").append(name);
 		buf.append(" ,condition=").append(condition);
 		buf.append(" ,value=").append(value);
+		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append("]");
 
 		return buf.toString();
 	}
+	
 	/**
 	 * returns a where clause with the type, condition, and a bind parameter 
 	 * for the value, suitable for inclusion in a SQL PreparedStatement
@@ -158,5 +164,20 @@ public class BasicFilter implements Filter {
 		return value;
 	}
 
-	private String name;
+  /**
+	 * Allows Equality Comparisons manipulation of BasicFilter objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof BasicFilter && hashCode() == ((BasicFilter) o).hashCode();
+	}
+	
+  public int hashCode() {
+  	int tmp = name.hashCode();
+  	tmp = (31 * tmp) + condition.hashCode();
+		tmp = (31 * tmp) + value.hashCode();
+		tmp = (31 * tmp) + tableConstraint.hashCode();
+		return tmp;
+  }
+  
+	private String name, condition, value, tableConstraint;
 }

@@ -204,6 +204,133 @@ public final class SequenceDescription {
 		}
 	}
 	
+	/**
+	 * Copy constructor.
+	 * @param o - a SequenceDescription object
+	 */
+	public SequenceDescription(SequenceDescription o) {
+		// since we are dealing with a previously constructed object, we dont need to do parameter checking.
+		// so we wont need to throw any exceptions.
+		
+		int type = o.getType();
+		int lflank = o.getLeftFlank();
+		int rflank = o.getRightFlank();
+		
+		switch(type) {
+			case TRANSCRIPTCODING:
+				this.seqt = type;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTCODING);
+				this.description = "coding sequence of transcript";
+				break;
+				
+			case TRANSCRIPTPEPTIDE:
+				this.seqt = type;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTPEPTIDE);
+				this.description = "peptide sequence";
+				break;
+			    
+			case TRANSCRIPTCDNA:
+				this.seqt = type;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTCDNA);
+				this.description = "cdna sequence";
+				break;
+				
+			case TRANSCRIPTEXONS:
+					this.seqt = type;
+					this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+					this.description = "exon";
+					this.leftflank = lflank;
+					this.rightflank = rflank;
+					if (lflank > 0)
+							this.description = "upstream flanking sequence plus "+this.description;
+					if (rflank > 0)
+							this.description += " plus downstream flanking sequence";
+					break;
+			
+				case TRANSCRIPTEXONINTRON:
+						this.seqt = type;
+						this.seqtype = (String) SEQS.get(TRANSCRIPTEXONINTRON);
+						this.description = "exon and intron sequence for transcript";
+						this.leftflank = lflank;
+						this.rightflank = rflank;
+						if (lflank > 0)
+							this.description = "upstream flanking sequence plus "+this.description;
+						if (rflank > 0)
+							this.description += " plus downstream flanking sequence";		        
+						break;
+		        
+			case TRANSCRIPTFLANKS:
+					this.seqt = type;
+					this.seqtype = (String) SEQS.get(TRANSCRIPTFLANKS);
+					this.description = "flanking sequence of transcript only";
+					this.leftflank = lflank;
+					this.rightflank = rflank;
+					if (lflank > 0)
+						this.description = "upstream "+this.description;
+					else
+						this.description = "downstream "+this.description;
+					break;
+
+				case GENEEXONS:
+					this.seqt = type;
+					this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+					this.description = "exon";
+					this.leftflank = lflank;
+					this.rightflank = rflank;
+					if (lflank > 0)
+						this.description = "upstream flanking sequence plus "+this.description;
+					if (rflank > 0)
+						this.description += " plus downstream flanking sequence";
+					break;
+		
+				case GENEEXONINTRON:
+					this.seqt = type;
+					this.seqtype = (String) SEQS.get(GENEEXONINTRON);
+					this.description = "exon and intron sequence for gene";
+					this.leftflank = lflank;
+					this.rightflank = rflank;		        
+					if (lflank > 0)
+						this.description = "upstream flanking sequence plus "+this.description;
+					if (rflank > 0)
+						this.description += " plus downstream flanking sequence";
+					break;
+
+			case GENEFLANKS:
+					this.seqt = type;
+					this.seqtype = (String) SEQS.get(GENEFLANKS);
+					this.description = "flanking sequence of gene only";
+					this.leftflank = lflank;
+					this.rightflank = rflank;
+					if (lflank > 0)
+					this.description = "upstream "+this.description;
+					else
+					this.description = "downstream "+this.description;
+					break;
+				  
+			case DOWNSTREAMUTR:
+					this.seqt = type;
+					this.seqtype = (String)	SEQS.get(DOWNSTREAMUTR);
+					this.description = "downstream UTR";
+					this.leftflank = lflank;
+					this.rightflank = rflank;
+			    
+					if (rflank > 0)
+						this.description += " plus downstream flanking region"; 
+					break;
+			    
+			case UPSTREAMUTR:
+				this.seqt = type;
+				this.seqtype = (String)	SEQS.get(UPSTREAMUTR);
+				this.description = "upstream UTR";
+				this.leftflank = lflank;
+				this.rightflank = rflank;
+			    
+				if (lflank > 0)
+					this.description = "upstream flanking region "+this.description; 
+				break;
+		}		
+	}
+	
     /**
 	 * Returns the string representation of the sequence type, 
 	 *  
@@ -248,13 +375,35 @@ public final class SequenceDescription {
 	public String toString() {
         StringBuffer buf = new StringBuffer();
         buf.append("[");
-        buf.append(" type=").append(seqtype);
+        buf.append(" type=").append(seqt);
+        buf.append(", seqtype=").append(seqtype);
         buf.append(", leftflank=").append(leftflank);
         buf.append(", rightflank=").append(rightflank);
+        buf.append(", description=").append(description);
         buf.append("]");
         
         return buf.toString();		
 	}
+	
+	/**
+	 * Allows Equality Comparison manipulation of SequenceDescription objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof SequenceDescription && hashCode() == ((SequenceDescription) o).hashCode();
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+		int tmp = seqt;
+		tmp = (31 * tmp) + seqtype.hashCode();
+		tmp = (31 * tmp) + leftflank;
+		tmp = (31 * tmp) + rightflank;
+		tmp = (31 * tmp) + description.hashCode();
+	  return tmp;	
+	}
+
 	/**
 	 * class method that returns a string with all implemented
 	 * sequences.  Used by the UI to print information on

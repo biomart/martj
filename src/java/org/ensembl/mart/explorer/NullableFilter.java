@@ -50,6 +50,12 @@ public class NullableFilter implements Filter {
 		this.type = type;
 		this.condition = "is" + condition + "null ";
 	}
+	
+	public NullableFilter(NullableFilter o) {
+		type = o.getName();
+		condition = o.getRightHandClause();
+	}
+	
 	/**
 	 * returns the type specified
 	 * 
@@ -106,6 +112,35 @@ public class NullableFilter implements Filter {
 
 	public String getTableConstraint() {
 		return tableConstraint;
+	}
+
+  public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+		buf.append("field=").append(type);
+		buf.append(", tableConstraint=").append(tableConstraint);
+		buf.append(", condition=").append(condition);
+		buf.append("]");
+
+		return buf.toString();
+	}
+	
+	/**
+	 * Allows Equality Comparisons manipulation of NullableFilter objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof NullableFilter && hashCode() == ((NullableFilter) o).hashCode();
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+    int tmp = type.hashCode();
+    tmp = (31 * tmp) + tableConstraint.hashCode();
+		tmp = (31 * tmp) + condition.hashCode();
+    return tmp;
 	}
 
 	private String tableConstraint;

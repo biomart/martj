@@ -51,6 +51,14 @@ public class FieldAttribute implements Attribute {
 			this.tableConstraint = tableConstraint;
 		}
     
+    /**
+     * Copy constructor.
+     * @param a - a FieldAttribute object to copy
+     */
+    public FieldAttribute(FieldAttribute a) {
+    	this(a.getName(), a.getTableConstraint());
+    }
+    
     public int hashCode() {
     		int result = 17;
     		result = 37*result + ((field == null) ? 0 : field.hashCode()); 
@@ -58,9 +66,12 @@ public class FieldAttribute implements Attribute {
         return result;
     }
 
-    public boolean equals(Object obj) {
-        return hashCode() == obj.hashCode() && obj instanceof FieldAttribute;
-    }
+    /**
+		 * Allows Equality Comparisons manipulation of FieldAttribute objects
+		 */
+		public boolean equals(Object o) {
+			return o instanceof FieldAttribute && hashCode() == ((FieldAttribute) o).hashCode();
+		}
 
     /**
      * returns a description of the attribute, for use by logging systems
