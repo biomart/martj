@@ -290,7 +290,8 @@ public class BooleanFilterWidget
         "test boolean",
         "someTableConstraint",
         "someKey",
-        "someDescription");
+        "someDescription",
+        "");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
     FilterDescription fd2 =
@@ -303,7 +304,8 @@ public class BooleanFilterWidget
         "test boolean_num ",
         "someTableConstraint",
         "someKey",
-        "someDescription");
+        "someDescription",
+        "");
     BooleanFilterWidget bfw2 = new BooleanFilterWidget(fgw, q, fd2, null);
 
     FilterDescription fd3 =
@@ -316,7 +318,8 @@ public class BooleanFilterWidget
         "test boolean_list Onfd3 ",
         "someTableConstraint Onfd3",
         "someKey Onfd3",
-        "someDescription");
+        "someDescription",
+        "");
     Option o = new Option("fred_id", "true");
     o.setParent(fd3);
     o.setDisplayName("Fred");

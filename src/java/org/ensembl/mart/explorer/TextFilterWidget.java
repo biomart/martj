@@ -72,7 +72,8 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         "someDisplayName",
         "someTableConstraint",
         "someKey",
-        "someDescription");
+        "someDescription",
+        "");
 
     TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd, null);
 

@@ -263,7 +263,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "someDisplayName",
         "someTableConstraint",
         "someKey",
-        "someDescription");
+        "someDescription",
+        "");
     fd.addOption(
       new Option(
         "optionInternalName1",
@@ -277,7 +278,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "ref1",
         "type1",
         "qualifier1",
-        "legalQualifiers1"));
+        "legalQualifiers1",
+        ""));
     fd.addOption(
       new Option(
         "optionInternalName2",
@@ -291,7 +293,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "ref2",
         "type2",
         "qualifier2",
-        "legalQualifiers2"));
+        "legalQualifiers2",
+        ""));
     // TODO handle "simple" Options. 
     // Either throw an exception in the following case OR
     // use internalID>displayName?

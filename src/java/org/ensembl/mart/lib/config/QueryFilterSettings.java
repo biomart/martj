@@ -27,6 +27,7 @@ package org.ensembl.mart.lib.config;
  */
 public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
+	protected final String otherFiltersKey = "otherFilters";
 	protected final String fieldKey = "field";
 	protected final String valueKey = "value";
   protected final String tableConstraintKey = "tableConstraint";
@@ -43,7 +44,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  typeKey,
                                                  qualifierKey,
                                                  legalQualifiersKey,
-                                                 //hiddenKey
+                                                 otherFiltersKey
   };
 
 	/**
@@ -81,10 +82,10 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     setAttribute(fieldKey, field);
@@ -94,6 +95,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(typeKey, type);
 		setAttribute(qualifierKey, qualifier);
 		setAttribute(legalQualifiersKey, legalQualifiers);
+	setAttribute(otherFiltersKey, otherFilters);
   }
   
 	public void setField(String field) {
@@ -102,6 +104,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	
 	public String getField() {
 		return getAttribute(fieldKey);
+	}
+
+	public void setOtherFilters(String otherFilters) {
+		setAttribute(otherFiltersKey, otherFilters);
+	}
+	
+	public String getOtherFilters() {
+		return getAttribute(otherFiltersKey);
 	}
 
 	public abstract String getFieldFromContext();

@@ -109,7 +109,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public FilterDescription(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
-		this(internalName, field, type, "", legalQualifiers, "", "", null, "");
+		this(internalName, field, type, "", legalQualifiers, "", "", null, "", "");
 	}
 
 	/**
@@ -137,10 +137,11 @@ public class FilterDescription extends QueryFilterSettings {
 		String displayName,
 		String tableConstraint,
 		String key,
-		String description)
+		String description,
+		String otherFilters)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, null, tableConstraint, key, type, qualifier, legalQualifiers);
+		super(internalName, displayName, description, field, null, tableConstraint, key, type, qualifier, legalQualifiers, otherFilters);
 
 		if (type == null || type.equals(""))
 			throw new ConfigurationException("FilterDescription requires a type.");
@@ -816,9 +817,10 @@ public class FilterDescription extends QueryFilterSettings {
 				String targetName = pushOption.getRef();
 				QueryFilterSettings parent = dataset.getFilterDescriptionByInternalName(targetName);
                 
-				if (parent == null)
-					throw new ConfigurationException(
-						"OptionPush.ref = " + targetName + " Refers to a FilterDescription that is not in dataset " + dataset.getInternalName());
+                // not relevant anymore
+				//if (parent == null)
+				//	throw new ConfigurationException(
+				//		"OptionPush.ref = " + targetName + " Refers to a FilterDescription that is not in dataset " + dataset.getInternalName());
 
 				// Assign the target FilterDescription to each option.
 				Option[] options2 = pushOption.getOptions();

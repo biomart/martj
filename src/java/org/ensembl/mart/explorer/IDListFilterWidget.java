@@ -372,7 +372,8 @@ public class IDListFilterWidget
         "id_list test",
         "someTableConstraint",
         "someKey",
-        "someDescription");
+        "someDescription",
+        "");
 
     Option o = new Option("fred_id", "true");
     o.setParent(fd);
