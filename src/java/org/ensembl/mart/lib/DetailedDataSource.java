@@ -83,7 +83,7 @@ public class DetailedDataSource implements DataSource {
   public static final String DEFAULTPORT = "3306";
 
   private static final String ORACLEAT = "@";
-  public static final String ORACLETHIN = "oracle";
+  public static final String ORACLE = "oracle";
   public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
   private static final String SYBASE = "sybase:Tds";
 
@@ -294,7 +294,7 @@ public class DetailedDataSource implements DataSource {
     String port,
     String databaseName) {
 
-    if (dbType.equals(ORACLETHIN)) {
+    if (dbType.equals(ORACLE)) {
       host = ORACLEAT + host;
       databaseName = ":" + databaseName;
     } else if (dbType.equals(SYBASE)) {
@@ -323,7 +323,7 @@ public class DetailedDataSource implements DataSource {
       return null;
     else if (databaseType.equals(DEFAULTDATABASETYPE))
       return DEFAULTDRIVER;
-    else if (databaseType.equals(ORACLETHIN))
+    else if (databaseType.equals(ORACLE))
       return ORACLEDRIVER;
     else
       return null; //add new ones as needed
