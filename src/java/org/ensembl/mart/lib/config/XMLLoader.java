@@ -41,7 +41,7 @@ import org.jdom.input.SAXBuilder;
  */
 public class XMLLoader {
 	
-	private static final String conf = System.getProperty("user.home") + "/.martexplorer";
+	private static final String conf = System.getProperty("user.home") + "/.martshell";
 	private static String confinUse = null;
 	private static Connection conn = null;
 	private static String host = null;
@@ -61,7 +61,7 @@ public class XMLLoader {
 			if (new File(conf).exists())
 						getConnProperties(conf);
 			else {
-				System.err.println("Please create a .martexplorer file in your home directory.\nIt should match the file pathTomart-explorerDistributeDirectory/data/testconnection.conf\n");
+				System.err.println("Please create a .martshell file in your home directory.\nIt should match the file pathTomart-explorerDistributeDirectory/data/testconnection.conf\n");
 				System.exit(1);			
 			}
 			
