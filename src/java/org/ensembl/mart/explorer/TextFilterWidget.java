@@ -72,7 +72,6 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         "someDisplayName",
         "someTableConstraint",
         "someKey",
-        null,
         "someDescription");
 
     TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd, null);
@@ -172,8 +171,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
           filterDescription.getTableConstraint(),
 		  filterDescription.getKey(),          
           filterDescription.getLegalQualifiers(),
-          value,
-          filterDescription.getHandlerFromContext());
+          value);
       query.addFilter(filter);
     }
   }

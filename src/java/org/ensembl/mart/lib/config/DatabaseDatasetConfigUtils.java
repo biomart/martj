@@ -2971,7 +2971,7 @@ public class DatabaseDatasetConfigUtils {
       filt.setDisplayName(descriptiveName.replaceAll("_", " "));
       filt.setTableConstraint(tableName);
       if (!columnName.startsWith("silent_")) {
-        filt.setHandler("org.ensembl.mart.lib.GenericHandler");
+        //filt.setHandler("org.ensembl.mart.lib.GenericHandler");//handlers now removed from XML
         filt.setType("text");
       } else {
         filt.setType("list");

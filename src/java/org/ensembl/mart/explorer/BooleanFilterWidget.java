@@ -207,8 +207,7 @@ public class BooleanFilterWidget
       settings.getFieldFromContext(),
       settings.getTableConstraintFromContext(),
       settings.getKeyFromContext(),
-      filterType,
-      settings.getHandlerFromContext());
+      filterType);
   }
 
   public void setOptions(Option[] options) {
@@ -291,7 +290,6 @@ public class BooleanFilterWidget
         "test boolean",
         "someTableConstraint",
         "someKey",
-        null,
         "someDescription");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
@@ -305,7 +303,6 @@ public class BooleanFilterWidget
         "test boolean_num ",
         "someTableConstraint",
         "someKey",
-        null,
         "someDescription");
     BooleanFilterWidget bfw2 = new BooleanFilterWidget(fgw, q, fd2, null);
 
@@ -319,7 +316,6 @@ public class BooleanFilterWidget
         "test boolean_list Onfd3 ",
         "someTableConstraint Onfd3",
         "someKey Onfd3",
-        null,
         "someDescription");
     Option o = new Option("fred_id", "true");
     o.setParent(fd3);

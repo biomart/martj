@@ -205,8 +205,7 @@ public abstract class FilterWidget
         option.getTableConstraintFromContext(),
         option.getKeyFromContext(),
         option.getQualifierFromContext(),
-        option.getValueFromContext(),
-        option.getHandlerFromContext());
+        option.getValueFromContext());
       this.inputPage = inputPage;
     }
 

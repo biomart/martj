@@ -120,7 +120,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public FilterDescription(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
-		this(internalName, field, type, "", legalQualifiers, "", "", "", null, "");
+		this(internalName, field, type, "", legalQualifiers, "", "", null, "");
 	}
 
 	/**
@@ -134,7 +134,6 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL field
 	 * @param key String join field key
-	 * @param handler String, specifying the handler to use for a FilterDescription
 	 * @param description String description of the Filter
 	 * 
 	 * @throws ConfigurationException when required values are null or empty
@@ -149,11 +148,10 @@ public class FilterDescription extends QueryFilterSettings {
 		String displayName,
 		String tableConstraint,
 		String key,
-		String handler,
 		String description)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, null, tableConstraint, key, handler, type, qualifier, legalQualifiers);
+		super(internalName, displayName, description, field, null, tableConstraint, key, type, qualifier, legalQualifiers);
 
 		if (type == null || type.equals(""))
 			throw new ConfigurationException("FilterDescription requires a type.");
@@ -328,34 +326,6 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 
-
-	/**
-	 * Returns the handler, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
-	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
-	 * @return String handler
-	 */
-	public String getHandler(String internalName) {
-		if ( getAttribute(internalNameKey).equals(internalName))
-			return  getAttribute(handlerKey);
-		else {
-			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptionNameMap.get(internalName)).getHandler();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
-				// pushOption option
-				String[] names = internalName.split("\\.");
-				String optionIname = names[0];
-				String refIname = names[1];
-
-				if ( getAttribute(internalNameKey).equals(refIname))
-					return  getAttribute(handlerKey);
-				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptionNameMap.get(optionIname)).getHandler(refIname);
-				else
-					return null; // nothing found
-			} else
-				return null; // nothing found
-		}
-	}
 
 	/**
 	 * Gets the legalQualifiers for the FilterDescription/Option named by internalName, which may be this particular FilterDescription,
@@ -990,14 +960,6 @@ public class FilterDescription extends QueryFilterSettings {
 		return getType();
 	}
 
-	/**
-	 * Same as getHandler(). Included to make FilterDescription implement QueryFilterSettings
-	 * interface.
-	 * @return handler
-	 */
-	public String getHandlerFromContext() {
-		return getHandler();
-	}
 
 	/**
 	 * Same as getQualifier.  Included to make FilterDescription impliment QueryFilterSettings

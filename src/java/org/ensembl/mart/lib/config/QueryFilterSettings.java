@@ -29,7 +29,6 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 
 	protected final String fieldKey = "field";
 	protected final String valueKey = "value";
-	protected final String handlerKey = "handler";
   protected final String tableConstraintKey = "tableConstraint";
 	protected final String keyKey = "key";
 	protected final String typeKey = "type";
@@ -39,7 +38,6 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
     
   private final String[] titles = new String[] { fieldKey, 
                                                  valueKey,
-                                                 handlerKey,
                                                  tableConstraintKey,
                                                  keyKey,
                                                  typeKey,
@@ -83,15 +81,14 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", "", null, "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key,String handler, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     setAttribute(fieldKey, field);
     setAttribute(valueKey, value);
-		setAttribute(handlerKey, handler);
 		setAttribute(tableConstraintKey, tableConstraint);
 	    setAttribute(keyKey, key);
 		setAttribute(typeKey, type);
@@ -108,16 +105,6 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	}
 
 	public abstract String getFieldFromContext();
-
-	public void setHandler(String handler) {
-		setAttribute(handlerKey, handler);
-	}
-
-	public String getHandler() {
-		return getAttribute(handlerKey);
-	}
-
-	public abstract String getHandlerFromContext();
 
 	public void setTableConstraint(String tableConstraint) {
 		setAttribute(tableConstraintKey, tableConstraint);

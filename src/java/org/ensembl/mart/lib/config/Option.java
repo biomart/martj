@@ -98,7 +98,7 @@ public class Option extends QueryFilterSettings {
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", null);
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", null);
 	}
 
 	public Option(
@@ -113,11 +113,10 @@ public class Option extends QueryFilterSettings {
 		String ref,
 		String type,
 		String qualifier,
-		String legalQualifiers,
-		String handler)
+		String legalQualifiers)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, value, tableConstraint, key, handler, type, qualifier, legalQualifiers);
+		super(internalName, displayName, description, field, value, tableConstraint, key, type, qualifier, legalQualifiers);
 
     setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);
@@ -357,28 +356,6 @@ public class Option extends QueryFilterSettings {
 			}
 		}
 
-	/**
-	 * Get the Handler for this Option, or a child Option (possibly within a PushAction),
-	 * named by refIname.
-	 * @param refIname -- String name Option for which Handler is desired.
-	 * @return String handler
-	 */
-	public String getHandler(String refIname) {
-		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getHandler(refIname);
-		else {
-			if (pushActions.size() < 1)
-				return null;
-			else {
-				for (int i = 0, n = pushActions.size(); i < n; i++) {
-					PushAction element = (PushAction) pushActions.get(i);
-					if (element.containsOption(refIname))
-						return element.getOptionByInternalName(refIname).getHandler();
-				}
-				return null; // nothing found
-			}
-		}
-	}
 
 	/**
 	 * Searches each PushAction for potential completer names.  If it contains Options acting as Filters 
@@ -709,16 +686,6 @@ public class Option extends QueryFilterSettings {
       return getParent().getLegalQualifiersFromContext();
   }
 
-	/**
-	 * Returns handler based on context. 
-	 * @return handler if set otherwise getParent().getHandlerFromContext().
-	 */
-	public String getHandlerFromContext() {
-		if (valid( getAttribute(handlerKey) ))
-			return  getAttribute(handlerKey) ;
-		else
-			return getParent().getHandlerFromContext();
-	}
 
 	/**
 	 * Returns tableContraint based on context. 

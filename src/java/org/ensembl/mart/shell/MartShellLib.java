@@ -2058,7 +2058,6 @@ public class MartShellLib {
     String fieldName,
     String tableConstraint,
     String key,
-    String handler,
     String storedCommandName)
     throws InvalidQueryException {
 
@@ -2121,9 +2120,9 @@ public class MartShellLib {
     subQuery.setQueryName(storedCommandName);
 
     Filter f = null;
-    if (handler != null)
-      f = new IDListFilter(fieldName, tableConstraint, key, subQuery, handler);
-    else
+    //if (handler != null)
+    //  f = new IDListFilter(fieldName, tableConstraint, key, subQuery, handler);
+    //else
       f = new IDListFilter(fieldName, tableConstraint, key, subQuery);
 
     nestedLevel--;
@@ -2273,7 +2272,7 @@ public class MartShellLib {
     else
       thisCondition = BOOLEAN_CONDITIONS[BOOLEANQUALIFIERS.indexOf(filterCondition)];
 
-    String handler = fdesc.getHandler(filterName);
+    //String handler = fdesc.getHandler(filterName);
 
     Query newQuery = new Query(inquery);
     newQuery.addFilter(
@@ -2281,8 +2280,9 @@ public class MartShellLib {
         fdesc.getField(filterName),
         fdesc.getTableConstraint(filterName),
         fdesc.getKey(filterName),
-        thisCondition,
-        handler));
+        thisCondition
+        //handler)
+        ));
     return newQuery;
   }
 
@@ -2298,16 +2298,16 @@ public class MartShellLib {
     FilterDescription fdesc = dset.getFilterDescriptionByInternalName(filterName);
 
     Query newQuery = new Query(inquery);
-    if (fdesc.getHandler(filterName) != null) {
-      newQuery.addFilter(
-        new BasicFilter(
-          fdesc.getField(filterName),
-          fdesc.getTableConstraint(filterName),
-          fdesc.getKey(filterName),
-          filterCondition,
-          filterValue,
-          fdesc.getHandler(filterName)));
-    } else {
+    //if (fdesc.getHandler(filterName) != null) {
+    //  newQuery.addFilter(
+    //    new BasicFilter(
+    //      fdesc.getField(filterName),
+    //      fdesc.getTableConstraint(filterName),
+    //      fdesc.getKey(filterName),
+    //      filterCondition,
+    //      filterValue,
+    //      fdesc.getHandler(filterName)));
+    //} else {
       newQuery.addFilter(
         new BasicFilter(
           fdesc.getField(filterName),
@@ -2315,7 +2315,7 @@ public class MartShellLib {
           fdesc.getKey(filterName),
           filterCondition,
           filterValue));
-    }
+    //}
     return newQuery;
   }
 
@@ -2327,15 +2327,15 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
 
-    if (fdesc.getHandler(filterName) != null)
-      newQuery.addFilter(
-        new IDListFilter(
-          fdesc.getField(filterName),
-          fdesc.getTableConstraint(filterName),
-          fdesc.getKey(filterName),
-          (String[]) filterValues.toArray(new String[filterValues.size()]),
-          fdesc.getHandler(filterName)));
-    else
+    //if (fdesc.getHandler(filterName) != null)
+    //  newQuery.addFilter(
+    //    new IDListFilter(
+    //      fdesc.getField(filterName),
+    //      fdesc.getTableConstraint(filterName),
+     //     fdesc.getKey(filterName),
+     //     (String[]) filterValues.toArray(new String[filterValues.size()]),
+     //     fdesc.getHandler(filterName)));
+    //else
       newQuery.addFilter(
         new IDListFilter(
           fdesc.getField(filterName),
@@ -2354,15 +2354,15 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
 
-    if (fdesc.getHandler(filterName) != null)
-      newQuery.addFilter(
-        new IDListFilter(
-          fdesc.getField(filterName),
-          fdesc.getTableConstraint(filterName),
-          fdesc.getKey(filterName),
-          fileloc,
-          fdesc.getHandler(filterName)));
-    else
+    //if (fdesc.getHandler(filterName) != null)
+    //  newQuery.addFilter(
+    //    new IDListFilter(
+    //      fdesc.getField(filterName),
+    //      fdesc.getTableConstraint(filterName),
+    //      fdesc.getKey(filterName),
+    //      fileloc,
+    //      fdesc.getHandler(filterName)));
+    //else
       newQuery.addFilter(
         new IDListFilter(
           fdesc.getField(filterName),
@@ -2381,15 +2381,15 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
 
-    if (fdesc.getHandler(filterName) != null)
-      newQuery.addFilter(
-        new IDListFilter(
-          fdesc.getField(filterName),
-          fdesc.getTableConstraint(filterName),
-          fdesc.getKey(filterName),
-          urlLoc,
-          fdesc.getHandler(filterName)));
-    else
+    //if (fdesc.getHandler(filterName) != null)
+    //  newQuery.addFilter(
+    //    new IDListFilter(
+    //      fdesc.getField(filterName),
+    //      fdesc.getTableConstraint(filterName),
+    //      fdesc.getKey(filterName),
+    //      urlLoc,
+    //      fdesc.getHandler(filterName)));
+    //else
       newQuery.addFilter(
         new IDListFilter(
           fdesc.getField(filterName),
@@ -2419,7 +2419,7 @@ public class MartShellLib {
         fdesc.getField(filterName),
         fdesc.getTableConstraint(filterName),
         fdesc.getKey(filterName),
-        fdesc.getHandler(filterName),
+        //fdesc.getHandler(filterName),
         storedQueryName));
 
     currentApage = bakApage;

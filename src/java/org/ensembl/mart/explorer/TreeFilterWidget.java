@@ -77,7 +77,6 @@ public class TreeFilterWidget extends FilterWidget {
         "someDisplayName",
         "someTableConstraint",
         "someKey",
-        null,
         "someDescription");
 
     TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd, null);
@@ -360,9 +359,9 @@ public class TreeFilterWidget extends FilterWidget {
           setOption(nullOption);
 
         } else {
-          String handler = option.getHandlerFromContext();
+          //String handler = option.getHandlerFromContext();
           filter =
-            new BasicFilter( fieldName, option.getTableConstraintFromContext(), option.getKeyFromContext(), "=", value, handler);
+            new BasicFilter( fieldName, option.getTableConstraintFromContext(), option.getKeyFromContext(), "=", value);
           query.addFilter(filter);
         }
       }

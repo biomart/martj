@@ -372,7 +372,6 @@ public class IDListFilterWidget
         "id_list test",
         "someTableConstraint",
         "someKey",
-        null,
         "someDescription");
 
     Option o = new Option("fred_id", "true");
