@@ -46,14 +46,18 @@ import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
- * MartExplorer Graphical User Interface provides a graphical interface
- * to Mart databases.
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * MartExplorer is a graphical application that enables a 
+ * user to construct queries and execute them against Mart databases.
  */
 public class MartExplorer extends JFrame {
+
+  // TODO add database -> datasource
+  // TODO remove datatabase
+  // TODO set queryBuilder.dataSource -> q.dataSource
+  // TODO exec query, results to file.
+  // TODO display results file
+  // TODO load registry file
+  // TODO bind view and database
 
   private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -64,6 +68,9 @@ public class MartExplorer extends JFrame {
   /** Currently available datasets. */
   private List datasetViews = new ArrayList();
 
+  /** Currently available databases. */
+  private List databases = new ArrayList();
+
   /** Currently visible QueryEditors **/
   private List queryEditors = new ArrayList();
 
@@ -71,7 +78,7 @@ public class MartExplorer extends JFrame {
 
   private JTabbedPane queryEditorTabbedPane = new JTabbedPane();
 
-  private DatabaseSettingsDialog databaseSettings;
+  private DatabaseSettingsDialog databaseDialog;
 
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs;
@@ -85,16 +92,16 @@ public class MartExplorer extends JFrame {
     MartExplorer me = new MartExplorer();
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);
-    
+
     // test mode preloads datasets and sets up a query ready to use.
-    if ( true ) {
-      
+    if (true) {
+
       DatasetView[] dsViews = QueryEditor.testDSViews();
-      me.resolveAndAddDatasetVies( dsViews );
-//      QueryEditor qe = new QueryEditor();
-//      qe.setDatasetViews( dsViews );
-//      qe.sel)
-//      me.addQueryEditor( qe );
+      me.resolveAndAddDatasetVies(dsViews);
+      //      QueryEditor qe = new QueryEditor();
+      //      qe.setDatasetViews( dsViews );
+      //      qe.sel)
+      //      me.addQueryEditor( qe );
       me.doNewQuery();
     }
   }
@@ -118,13 +125,6 @@ public class MartExplorer extends JFrame {
 
   }
 
-  public void doLoadDatasetsFromDatabase() {
-    if (databaseSettings.showDialog(this)) {
-
-      System.out.println("todo - use db settings");
-    }
-  }
-
   /**
    * Adds QueryEditor to application as a tabbed pane. The tab's
    * name id queryEditor.getName(). If no name is supplied a new name
@@ -140,28 +140,27 @@ public class MartExplorer extends JFrame {
     queryEditorTabbedPane.add(name, queryEditor);
   }
 
-
   /**
    * 
    * @return "Query_INDEX" where INDEX is the next highest
    * unique number used in the tab names.
    */
   private String nextQueryBuilderTabLabel() {
-    
+
     int next = 1;
-    
+
     int n = queryEditorTabbedPane.getTabCount();
     Pattern p = Pattern.compile("Query_(\\d+)");
     for (int i = 0; i < n; i++) {
-      String title = queryEditorTabbedPane.getTitleAt( i );
-      Matcher  m = p.matcher( title );
-      if ( m.matches() ) {
-        int tmp = Integer.parseInt( m.group(1) ) + 1;
-        if ( tmp > next ) 
+      String title = queryEditorTabbedPane.getTitleAt(i);
+      Matcher m = p.matcher(title);
+      if (m.matches()) {
+        int tmp = Integer.parseInt(m.group(1)) + 1;
+        if (tmp > next)
           next = tmp;
-      }       
+      }
     }
-    
+
     return "Query_" + next;
   }
 
@@ -172,6 +171,15 @@ public class MartExplorer extends JFrame {
 
     JMenu file = new JMenu("File");
 
+    JMenuItem loadRegistry = new JMenuItem("Load registry file");
+    loadRegistry.setEnabled(false);
+    file.add(loadRegistry);
+    loadRegistry.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doLoadRegistry();
+      }
+    });
+
     JMenuItem exit = new JMenuItem("Exit");
     exit.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
@@ -180,34 +188,6 @@ public class MartExplorer extends JFrame {
 
     });
     file.add(exit);
-
-    JMenu dataset = new JMenu("Datasets");
-
-    JMenuItem loadDB = new JMenuItem("Load from database");
-    dataset.add(loadDB);
-    loadDB.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doLoadDatasetsFromDatabase();
-      }
-
-    });
-
-    JMenuItem loadConfig = new JMenuItem("Load config from file");
-    dataset.add(loadConfig);
-    loadConfig.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doLoadDatasetsFromFile();
-      }
-    });
-
-    JMenuItem loadRegistry = new JMenuItem("Load config from registry file");
-    dataset.add(loadRegistry);
-    loadRegistry.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doLoadDatasetsFromRegistry();
-      }
-
-    });
 
     JMenu query = new JMenu("Query");
     JMenuItem newQuery = new JMenuItem("New");
@@ -218,15 +198,16 @@ public class MartExplorer extends JFrame {
     });
     query.add(newQuery);
 
-    JMenuItem deleteQuery = new JMenuItem("Delete");
-    deleteQuery.addActionListener(new ActionListener() {
+    JMenuItem removeQuery = new JMenuItem("Remove");
+    removeQuery.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
-        doDeleteQuery();
+        doRemoveQuery();
       }
     });
-    query.add(deleteQuery);
+    query.add(removeQuery);
 
     JMenuItem execute = new JMenuItem("Execute");
+    execute.setEnabled(false);
     execute.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doExecuteQuery();
@@ -235,6 +216,7 @@ public class MartExplorer extends JFrame {
     });
     query.add(execute);
     JMenuItem save = new JMenuItem("Save Results");
+    save.setEnabled(false);
     save.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doSave();
@@ -243,6 +225,7 @@ public class MartExplorer extends JFrame {
     });
     query.add(save);
     JMenuItem saveAs = new JMenuItem("Save Results as");
+    saveAs.setEnabled(false);
     saveAs.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doSaveAs();
@@ -251,8 +234,51 @@ public class MartExplorer extends JFrame {
     });
     query.add(saveAs);
 
+    JMenu settings = new JMenu("Settings");
+
+    JMenu databases = new JMenu("Databases");
+    settings.add(databases);
+
+    JMenuItem addDatabase = new JMenuItem("Add");
+    databases.add(addDatabase);
+    addDatabase.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doAddDatabase();
+      }
+    });
+
+    JMenuItem removeDatabase = new JMenuItem("Remove");
+    removeDatabase.setEnabled(false);
+    databases.add(removeDatabase);
+    removeDatabase.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doRemoveDatabase();
+      }
+    });
+
+    JMenu views = new JMenu("Views");
+    settings.add(views);
+
+    JMenuItem loadViewFromFile = new JMenuItem("Load from local file");
+    views.add(loadViewFromFile);
+    loadViewFromFile.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doLoadDatasetsFromFile();
+      }
+    });
+
+    JMenuItem bind = new JMenuItem("Bind to Databases");
+    bind.setEnabled(false);
+    views.add(bind);
+    bind.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doBindViewsAndDatabases();
+      }
+    });
+
     JMenu help = new JMenu("Help");
     JMenuItem about = new JMenuItem("About");
+    about.setEnabled(false);
     about.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doAbout();
@@ -263,21 +289,53 @@ public class MartExplorer extends JFrame {
 
     JMenuBar all = new JMenuBar();
     all.add(file);
-    all.add(dataset);
     all.add(query);
+    all.add(settings);
     all.add(help);
     return all;
   }
 
   /**
+   * 
+   */
+  protected void doBindViewsAndDatabases() {
+    // TODO Auto-generated method stub
+
+  }
+
+  /**
+   * 
+   */
+  protected void doConfigureDatabases() {
+    // TODO Auto-generated method stub
+
+  }
+
+  /**
+   * 
+   */
+  protected void doRemoveDatabase() {
+    // TODO Auto-generated method stub
+
+  }
+
+  /**
+   * 
+   */
+  protected void doAddDatabase() {
+    // TODO use this dialog to get settings.
+    databaseDialog.showDialog(this);
+    }
+
+  /**
    * Delete currently selected QueryBuilder from tabbed pane if one is 
    * selected.
    */
-  protected void doDeleteQuery() {
-    
+  protected void doRemoveQuery() {
+
     int index = queryEditorTabbedPane.getSelectedIndex();
-    if ( index > -1 ) {
-      queryEditorTabbedPane.remove( index );
+    if (index > -1) {
+      queryEditorTabbedPane.remove(index);
     }
   }
 
@@ -320,17 +378,17 @@ public class MartExplorer extends JFrame {
   }
 
   private void initDatabaseSettings() {
-    databaseSettings = new DatabaseSettingsDialog();
+    databaseDialog = new DatabaseSettingsDialog();
 
     // load supported database types into preferences. We do this rather than just 
     // loading them directly because if there are more than one wee don't want to 
     // override the last selected one.
-    String key = databaseSettings.getDatabaseType().getPreferenceKey();
+    String key = databaseDialog.getDatabaseType().getPreferenceKey();
     String current = prefs.get(key, null);
     if (current == null || current.length() == 0) {
       prefs.put(key, "mysql");
     }
-    databaseSettings.setPrefs(prefs);
+    databaseDialog.setPrefs(prefs);
   }
 
   /**
@@ -382,7 +440,7 @@ public class MartExplorer extends JFrame {
     datasetViews.addAll(Arrays.asList(newViews));
   }
 
-  private void doLoadDatasetsFromRegistry() {
+  private void doLoadRegistry() {
     // TODO Auto-generated method stub
     logger.warning("TODO");
   }
