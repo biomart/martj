@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
-<MartConfiguration description="First Ensembl Mart Built upon Ensembl version 16 datasets" displayName="Ensembl Mart version 16.1" internalName="ensembl_mart_16_1">
+<MartConfiguration description="First Ensembl Mart Built upon Ensembl version 17 datasets" displayName="Ensembl Mart version 17.1" internalName="ensembl_mart_17_1">
   <FilterDescription description="All available datasets" displayName="Datasets" field="none" internalName="dataset_layout" type="tree">
     <Option displayName="Homo sapiens (NCBI 31) " internalName="homo_sapiens" isSelectable="false">
       <Option displayName="Ensembl Genes" internalName="homo_sapiens_ensembl_genes" isSelectable="true" ref="homo_sapiens_ensembl_genes"/>
