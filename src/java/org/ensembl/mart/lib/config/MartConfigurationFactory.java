@@ -382,8 +382,10 @@ public class MartConfigurationFactory {
 		boolean isSelectable = Boolean.valueOf(isSelectableString).booleanValue();
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+    String field = thisElement.getAttributeValue(FIELDNAME, "");
+    String tableConstraint = thisElement.getAttributeValue(TABLECONSTRAINT, "");
 
-		Option o = new Option(intName, isSelectable, dispname, desc, "", "");
+		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint );
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();
