@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -40,24 +41,23 @@ import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 
-import sun.awt.HorizBagLayout;
-
 /**
- * Widget for selecting sequence attributes.
+ * Widget for selecting sequence information for inclusion in query.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  *
- * TODO selecting button -> change preview image
- * TODO layout component
- * TODO selecting button -> add/change filter on query
- * TODO enable / disable flank boxes
- * TODO listen to flank changes
- * 
+  * TODO selecting button -> add/change filter on query
+  * 
  * TODO listen to changes in query e.g. deleted filter.
  */
 public class SequenceGroupWidget
   extends GroupWidget
   implements ActionListener {
+
+  private  final int IMAGE_WIDTH = 248;
+
+  private  final int IMAGE_HEIGHT = 69;
+
 
   private DSAttributeGroup attributeGroup;
 
@@ -192,94 +192,96 @@ public class SequenceGroupWidget
     Query query,
     QueryTreeView tree,
     DSAttributeGroup attributeGroup) {
+
     super(name, query, tree);
+
     this.attributeGroup = attributeGroup;
 
-    clearButton.setSelected(true);
-
     loadSchematicSequenceImages();
+    buildGUI();
+    configureWidgets();
+    reset();
+  }
 
-    Box b = Box.createVerticalBox();
-
-    Box types = Box.createHorizontalBox();
+  private void configureWidgets() {
+    
+    clearButton.setSelected(true);
     ButtonGroup bg = new ButtonGroup();
     for (int i = 0; i < typeButtons.length; i++) {
-
       bg.add(typeButtons[i]);
-      types.add(typeButtons[i]);
       typeButtons[i].addActionListener(this);
-
     }
-    b.add(types);
-    
-    Box schemaBox = Box.createHorizontalBox();
-    schemaBox.add(schematicSequenceImageHolder);
-    schemaBox.add(Box.createHorizontalGlue());
-    b.add(schemaBox);
 
     bg = new ButtonGroup();
     for (int i = 0; i < includeButtons.length; i++) {
-
       bg.add(includeButtons[i]);
       includeButtons[i].addActionListener(this);
-
     }
     bg.add(includeNone);
 
+    flank5.addActionListener(this);
+    flank3.addActionListener(this);
+    
+  }
+
+
+  private void buildGUI() {
+    
+    Box b = Box.createVerticalBox();
+
+    b.add(addAll(Box.createHorizontalBox(), typeButtons, true));
+
+    b.add(
+      addAll(
+        Box.createHorizontalBox(),
+        new JComponent[] { schematicSequenceImageHolder },
+        true));
+
     Box columns = Box.createHorizontalBox();
-    Box left = Box.createVerticalBox();
-    for (int i = 0; i < leftColumn.length; i++) {
-      left.add(leftColumn[i]);
-    }
-    columns.add(left);
-
-    Box right = Box.createVerticalBox();
-    for (int i = 0; i < rightColumn.length; i++) {
-      right.add(rightColumn[i]);
-    }
-    right.add(Box.createVerticalGlue());
-    columns.add(right);
+    columns.add(addAll(Box.createVerticalBox(), leftColumn, false));
+    columns.add(addAll(Box.createVerticalBox(), rightColumn, true));
     columns.add(Box.createHorizontalGlue());
-
     b.add(columns);
 
-    Box flanks = Box.createHorizontalBox();
     Dimension d = new Dimension(100, 24);
     flank5.setPreferredSize(d);
     flank5.setMaximumSize(d);
-    flanks.add(new JLabel("5' Flank (bp)"));
-    flanks.add(flank5);
-
-    flanks.add(Box.createHorizontalStrut(50));
-
     flank3.setPreferredSize(d);
     flank3.setMaximumSize(d);
-    flanks.add(new JLabel("3' Flank (bp)"));
-    flanks.add(flank3);
-
-    b.add(flanks);
-
-    // TODO listen to changes in the flank text fields
+    b.add(
+      addAll(
+        Box.createHorizontalBox(),
+        new Component[] {
+          new JLabel("5' Flank (bp)"),
+          flank5,
+          Box.createHorizontalStrut(50),
+          new JLabel("3' Flank (bp)"),
+          flank3},
+        false));
 
     add(b);
 
-    reset();
+    BufferedImage blank = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g = blank.createGraphics();
+    g.setBackground(Color.WHITE);
+    g.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
+    blankIcon = new ImageIcon(blank);
+
+  }
+
+  private Box addAll(
+    Box container,
+    Component[] components,
+    boolean addGlueAtEnd) {
+    for (int i = 0; i < components.length; i++)
+      container.add(components[i]);
+    if (addGlueAtEnd)
+      container.add(Box.createGlue());
+    return container;
   }
 
   private void loadSchematicSequenceImages() {
 
-    ImageIcon transcript3Flank =
-      loadIcon("data/image/gene_schematic_3_only.gif");
-
-    // create the blankIcon
-    int w = transcript3Flank.getIconWidth();
-    int h = transcript3Flank.getIconHeight();
-    BufferedImage blank = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-    Graphics2D g = blank.createGraphics();
-    g.setBackground(Color.WHITE);
-    g.fillRect(0, 0, w, h);
-    blankIcon = new ImageIcon(blank);
-    schematicSequenceImageHolder.setIcon(blankIcon);
 
   }
 
@@ -405,12 +407,12 @@ public class SequenceGroupWidget
 
         updateState("data/image/gene_schematic_exons_3.gif");
         flank3.setEnabled(true);
-        
+
       } else if (includeExonsPlus5Flanks.isSelected()) {
 
         updateState("data/image/gene_schematic_exons_5.gif");
         flank5.setEnabled(true);
-        
+
       }
 
     } else if (gene.isSelected()) {
@@ -429,17 +431,17 @@ public class SequenceGroupWidget
         updateState("data/image/gene_schematic_extent_gene_5_3.gif");
         flank5.setEnabled(true);
         flank3.setEnabled(true);
-      
+
       } else if (includeGeneSequence_5.isSelected()) {
 
         updateState("data/image/gene_schematic_extent_gene_5.gif");
         flank5.setEnabled(true);
-        
+
       } else if (includeGeneSequence_3.isSelected()) {
 
         updateState("data/image/gene_schematic_extent_gene_3.gif");
         flank3.setEnabled(true);
-        
+
       } else if (includeUpstream.isSelected()) {
 
         updateState("data/image/gene_schematic_extent_5_only.gif");
@@ -479,8 +481,6 @@ public class SequenceGroupWidget
     }
 
   }
-
-
 
   private void disableFlanks() {
     flank5.setEnabled(false);
