@@ -68,7 +68,7 @@ public class MartViewEditor extends JFrame {
     private File file = null;
 
     public MartViewEditor() {
-        super("Mart View Editor");
+        super("Mart Editor");
         JFrame.setDefaultLookAndFeelDecorated(true);
         fc = new JFileChooser();
 
