@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -70,7 +71,11 @@ public class DetailedDataSource implements DataSource {
 
     //reset stdout
     System.setOut(o);
+
   }
+
+  private final static Logger logger =
+    Logger.getLogger(DetailedDataSource.class.getName());
 
   public static final String DEFAULTDATABASETYPE = "mysql";
   public static final String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
@@ -118,14 +123,16 @@ public class DetailedDataSource implements DataSource {
     int maxPoolSize,
     String jdbcDriverClassName) {
 
-    assert dbType != null;
-    assert host != null;
-    assert port != null;
-    assert connectionString != null;
-    assert databaseName == null || connectionString.indexOf(databaseName) != -1;
-    assert user != null;
-    assert maxPoolSize >= 0;
-    assert jdbcDriverClassName != null;
+    assert dbType != null : "dbType is null";
+    assert host != null : "host is null";
+    assert port != null : "port is null";
+    assert connectionString != null : "connectionString is null";
+    assert databaseName == null
+      || connectionString.indexOf(databaseName)
+        != -1 : "database is null or is not in connection string";
+    assert user != null : "user is null";
+    assert maxPoolSize >= 0 : "maxPoolSize should be>=0";
+    assert jdbcDriverClassName != null : "jdbcDriver is null";
 
     this.databaseType = dbType;
     this.host = host;
@@ -137,6 +144,8 @@ public class DetailedDataSource implements DataSource {
     this.maxPoolSize = maxPoolSize;
     this.jdbcDriverClassName = jdbcDriverClassName;
     this.displayName = user + "@" + host + ":" + port + "/" + databaseName;
+
+    //logger.warning(this.toString());
   }
 
   /**
