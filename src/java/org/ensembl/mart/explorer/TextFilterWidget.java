@@ -16,8 +16,6 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-// TODO bring this page to front if node selected
-
 package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
@@ -137,13 +135,6 @@ public class TextFilterWidget
 
   }
 
-  /**
-   * @param filter
-   */
-  private void addFilterToQuery(BasicFilter filter) {
-    // TODO Auto-generated method stub
-    
-  }
 
   /**
    * Update text field when relevant Filter is added or

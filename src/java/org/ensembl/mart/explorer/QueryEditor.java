@@ -443,7 +443,6 @@ public class QueryEditor
 			new FilterPageSetWidget(
 				query,
 				dataset);
-		// TODO :2 create maps like for attributes
 		addPage(filtersPage);
 	}
 

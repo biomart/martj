@@ -34,7 +34,6 @@ public class GroupWidget extends InputPage {
    */
   public GroupWidget(String name, Query query) {
     super(query, name);
-    // TODO Auto-generated constructor stub
   }
 
 }

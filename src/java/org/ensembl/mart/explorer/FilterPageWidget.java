@@ -29,7 +29,6 @@ public class FilterPageWidget extends PageWidget {
    */
   public FilterPageWidget(Query query, String name, FilterPage filterPage) {
     super(query, name);
-    // TODO :1 create and filter group widgets. see AttributeFilterPage
     
     List filterGroups = filterPage.getFilterGroups();
         for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
