@@ -101,8 +101,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   public static void main(String[] args) throws ConfigurationException {
 
     // enable logging messages
-    LoggingUtil.setAllRootHandlerLevelsToFinest();
-    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
+//    LoggingUtil.setAllRootHandlerLevelsToFinest();
+//    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
 
     if (!LoggingUtil.isLoggingConfigFileSet())
       Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
