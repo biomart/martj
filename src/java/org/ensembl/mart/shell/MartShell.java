@@ -91,7 +91,7 @@ public class MartShell {
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
    */
-  private final static String DEFAULT_REGISTRY_URL = "data/MartRegistry.xml";
+  private final static String DEFAULT_REGISTRY_URL = "data/defaultRegistry.xml";
   private static final String INITSCRIPT = "initScript";
 
   private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
@@ -391,9 +391,9 @@ public class MartShell {
     //if user has specified -R flag, use the Registry that they specify, else, load defaults
     if (mainRegistry == null) {
       mainRegistry = DEFAULT_REGISTRY_URL;
-      
+
       //if user has placed .martj_adaptors in home, use it over DEFAULT_REGISTRY_URL
-      String path = System.getProperty("user.home") + File.separator + REGISTRY_FILE_NAME;        
+      String path = System.getProperty("user.home") + File.separator + REGISTRY_FILE_NAME;
       File file = new File(path);
       if (file.exists())
         mainRegistry = path;
@@ -402,11 +402,11 @@ public class MartShell {
     try {
       ms.addMartRegistry(mainRegistry);
     } catch (MalformedURLException e1) {
-      System.err.println("Could not set default Registry file " + mainRegistry + "\n"+ e1.getMessage());
+      System.err.println("Could not set default Registry file " + mainRegistry + "\n" + e1.getMessage());
       e1.printStackTrace();
       System.err.println("\n\nContinuing to load\n");
     } catch (ConfigurationException e1) {
-      System.err.println("Could not set default Registry file " + mainRegistry + "\n" +  e1.getMessage());
+      System.err.println("Could not set default Registry file " + mainRegistry + "\n" + e1.getMessage());
       e1.printStackTrace();
       System.err.println("\n\nContinuing to load\n");
     }
@@ -1060,40 +1060,13 @@ public class MartShell {
         if (name == null)
           throw new InvalidQueryException("Invalid Describe filter request " + command + "\n" + Help(DESCC));
 
-        if (msl.getEnvDataset() == null)
-          throw new InvalidQueryException("Must set environmental Dataset with a 'use' or 'set' command for describe attribute to work\n");
-
-        if (msl.getEnvDataset() == null)
-          throw new InvalidQueryException("Must set environmental Mart with a 'use' or 'set' command for describe attribute to work\n");
-
-        if (!msl.getEnvDataset().containsAttributeDescription(name))
-          throw new InvalidQueryException(
-            "Filter "
-              + name
-              + " is not supported by environmental Dataset "
-              + msl.getEnvDataset().getInternalName()
-              + "\n");
-        String tmp = msl.DescribeFilter(name, msl.getEnvDataset().getFilterDescriptionByInternalName(name));
+        String tmp = msl.DescribeFilter(name);
         System.out.println(tmp + "\n");
       } else if (request.equalsIgnoreCase(ATTRIBUTEREQ)) {
         if (name == null)
           throw new InvalidQueryException("Invalid Describe attribute request " + command + "\n" + Help(DESCC));
 
-        if (msl.getEnvDataset() == null)
-          throw new InvalidQueryException("Must set environmental Dataset with a 'use' or 'set' command for describe attribute to work\n");
-
-        if (msl.getEnvDataset() == null)
-          throw new InvalidQueryException("Must set environmental Mart with a 'use' or 'set' command for describe attribute to work\n");
-
-        if (!msl.getEnvDataset().containsAttributeDescription(name))
-          throw new InvalidQueryException(
-            "Attribute "
-              + name
-              + " is not supported by environmental Dataset "
-              + msl.getEnvDataset().getInternalName()
-              + "\n");
-
-        String tmp = msl.DescribeAttribute(msl.getEnvDataset().getAttributeDescriptionByInternalName(name));
+        String tmp = msl.DescribeAttribute(name);
         System.out.println(tmp + "\n");
       } else if (request.equalsIgnoreCase(PROCREQ)) {
         String out = msl.describeStoredMQLCommand(name);
@@ -1123,13 +1096,7 @@ public class MartShell {
     } else
       throw new InvalidQueryException("Invalid Add request recieved " + command + "\n" + Help(ADDC) + "\n");
 
-    if (completionOn) {
-      try {
-        updateCompleter();
-      } catch (ConfigurationException e) {
-        throw new InvalidQueryException("Could not get internalNames from adaptorManager " + e.getMessage(), e);
-      }
-    }
+    updateCompleter();
   }
 
   private void addMart(StringTokenizer toks) throws InvalidQueryException {
@@ -1302,54 +1269,55 @@ public class MartShell {
     } else
       throw new InvalidQueryException("Invalid remove request recieved " + command + "\n" + Help(REMOVEC) + "\n");
 
-    if (completionOn) {
-      try {
-        updateCompleter();
-      } catch (ConfigurationException e) {
-        throw new InvalidQueryException(
-          "Caught ConfigurationException updating DatasetView internalNames " + e.getMessage(),
-          e);
-      }
-    }
+    updateCompleter();
   }
 
-  private void updateCompleter() throws ConfigurationException {
-    List martNames = new ArrayList();
-    DSViewAdaptor[] adaptorNames = msl.getAdaptorManager().getAdaptors();
-    for (int i = 0, n = adaptorNames.length; i < n; i++) {
-      DSViewAdaptor adaptor = adaptorNames[i];
-      if (!(adaptor instanceof URLDSViewAdaptor))
-        martNames.add(adaptor.getName());
-    }
-    mcl.setMartNames(martNames);
-
-    mcl.setAdaptorLocations(Arrays.asList(msl.getAdaptorManager().getAdaptorNames()));
-    mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
-    mcl.setEnvDataset(msl.getEnvDataset());
-
-    List datasetInames = new ArrayList();
-    if (msl.getEnvMart() != null) {
-      //get all datasets relative to envMart
-      DSViewAdaptor adaptor = msl.getAdaptorManager().getAdaptorByName(msl.getEnvMart().getName());
-
-      String[] datasets = adaptor.getDatasetNames();
-      for (int i = 0, n = datasets.length; i < n; i++) {
-        datasetInames.add(datasets[i]);
-      }
-    } else {
-      //dump absolute path names for all Datasets (not views)
-      String[] adaptors = msl.getAdaptorManager().getAdaptorNames();
-      for (int i = 0, n = adaptors.length; i < n; i++) {
-        String adaptor = adaptors[i];
-
-        String[] datasets = msl.getAdaptorManager().getAdaptorByName(adaptor).getDatasetNames();
-        for (int j = 0, m = datasets.length; j < m; j++) {
-          String dataset = datasets[j];
-          datasetInames.add(adaptor + "." + dataset);
+  private void updateCompleter() {
+    if (completionOn) {
+      try {
+        List martNames = new ArrayList();
+        DSViewAdaptor[] adaptorNames = msl.getAdaptorManager().getAdaptors();
+        for (int i = 0, n = adaptorNames.length; i < n; i++) {
+          DSViewAdaptor adaptor = adaptorNames[i];
+          if (!(adaptor instanceof URLDSViewAdaptor))
+            martNames.add(adaptor.getName());
         }
+        mcl.setMartNames(martNames);
+
+        mcl.setAdaptorLocations(Arrays.asList(msl.getAdaptorManager().getAdaptorNames()));
+        mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
+
+        mcl.setEnvMart(msl.getEnvMart());
+        mcl.setEnvDataset(msl.getEnvDataset());
+
+        List datasetInames = new ArrayList();
+        if (msl.getEnvMart() != null) {
+          //get all datasets relative to envMart
+          DSViewAdaptor adaptor = msl.getAdaptorManager().getAdaptorByName(msl.getEnvMart().getName());
+
+          String[] datasets = adaptor.getDatasetNames();
+          for (int i = 0, n = datasets.length; i < n; i++) {
+            datasetInames.add(datasets[i]);
+          }
+        } else {
+          //dump absolute path names for all Datasets (not views)
+          String[] adaptors = msl.getAdaptorManager().getAdaptorNames();
+          for (int i = 0, n = adaptors.length; i < n; i++) {
+            String adaptor = adaptors[i];
+
+            String[] datasets = msl.getAdaptorManager().getAdaptorByName(adaptor).getDatasetNames();
+            for (int j = 0, m = datasets.length; j < m; j++) {
+              String dataset = datasets[j];
+              datasetInames.add(adaptor + "." + dataset);
+            }
+          }
+        }
+        mcl.setDatasetViewInternalNames(datasetInames);
+      } catch (ConfigurationException e) {
+        if (mainLogger.isLoggable(Level.INFO))
+          mainLogger.info("Caught ConfigurationException updating the completion system\n");
       }
     }
-    mcl.setDatasetViewInternalNames(datasetInames);
   }
 
   private void updateRequest(String command) throws InvalidQueryException {
@@ -1366,6 +1334,8 @@ public class MartShell {
         throw new InvalidQueryException("Invalid update request recieved " + command + "\n" + Help(UPDATEC) + "\n");
     } else
       throw new InvalidQueryException("Invalid update request recieved " + command + "\n" + Help(UPDATEC) + "\n");
+    
+    updateCompleter();
   }
 
   private void unsetRequest(String command) throws InvalidQueryException {
@@ -1394,6 +1364,8 @@ public class MartShell {
         }
     } else
       throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
+
+    updateCompleter();
   }
 
   private void unsetPrompt() throws InvalidQueryException {
@@ -1474,6 +1446,8 @@ public class MartShell {
       }
     } else
       throw new InvalidQueryException("Recieved invalid set command " + command + "\n" + Help(SETC));
+    
+    updateCompleter();
   }
 
   private void setPrompt(StringTokenizer toks) throws InvalidQueryException {
@@ -1722,6 +1696,8 @@ public class MartShell {
     toks.nextToken(); //skip use
 
     msl.setEnvDataset(toks.nextToken());
+    
+    updateCompleter();
   }
 
   private void WriteHistory(String command) throws InvalidQueryException {
@@ -2269,7 +2245,7 @@ public class MartShell {
   private final String DATASETVIEWSREQ = "datasetviews";
   private final String DATASETVIEWREQ = "datasetview";
   private final String FILTERSREQ = "filters";
-  private final String FILTERREQ = "vilter";
+  private final String FILTERREQ = "filter";
   private final String ATTRIBUTESREQ = "attributes";
   private final String ATTRIBUTEREQ = "attribute";
   private final String PROCREQ = "procedure";
@@ -2280,7 +2256,7 @@ public class MartShell {
 
   //lists to set for completion of add, remove, list, set, update, describe, environment, execute
   private final List addRequests =
-    Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETREQ, DATASETVIEWREQ })));
+    Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETSREQ, DATASETVIEWREQ })));
 
   private final List removeRequests =
     Collections.unmodifiableList(

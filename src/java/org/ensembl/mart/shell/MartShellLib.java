@@ -567,7 +567,7 @@ public class MartShellLib {
           String[] views = adaptor.getDatasetViewInternalNamesByDataset(datasets[j]);
 
           for (int k = 0, l = views.length; k < l; k++) {
-            retList.add(reqName + "." + datasets[j] + "." + views[l] + "\n");
+            retList.add(reqName + "." + datasets[j] + "." + views[k] + "\n");
           }
         }
 
@@ -784,9 +784,7 @@ public class MartShellLib {
         throw new InvalidQueryException("Invalid describe dataset command, please set the environmental Dataset and Mart with either 'use' or 'set'\n");
       dset = envDataset;
     } else {
-      if (!adaptorManager.supportsInternalName(dsetname))
-        throw new InvalidQueryException("Dataset" + dsetname + " has not been loaded\n");
-      dset = adaptorManager.getDatasetViewByInternalName(dsetname);
+      dset = getDatasetViewFor(dsetname);
     }
 
     List lines = new ArrayList();
@@ -802,7 +800,7 @@ public class MartShellLib {
       for (int j = 0, m = names.size(); j < m; j++) {
         String name = (String) names.get(j);
 
-        lines.add(DescribeFilter(name, page.getFilterDescriptionByInternalName(name)));
+        lines.add(DescribeFilter(page.getFilterDescriptionByInternalName(name)));
         lines.add("\n");
       }
     }
@@ -851,7 +849,7 @@ public class MartShellLib {
     return ret;
   }
 
-  public String DescribeFilter(String name, FilterDescription desc) throws InvalidQueryException {
+  public String DescribeFilter(String name) throws InvalidQueryException {
     if (envMart == null)
       throw new InvalidQueryException("Must set environmental Mart with a 'use' or 'set' command for describe filter to work\n");
 
@@ -860,9 +858,15 @@ public class MartShellLib {
 
     if (!(envDataset.containsFilterDescription(name)))
       throw new InvalidQueryException(
-        "Filter " + name + " is not supported by DatasetView" + envDataset.getInternalName() + "\n");
+        "Filter " + name + " is not supported by Environmental Dataset " + envDataset.getDataset() + "\n");
+    
+    return DescribeFilter(envDataset.getFilterDescriptionByInternalName(name));
+  }
+  
+  private String DescribeFilter(FilterDescription desc) throws InvalidQueryException {
+    String name = desc.getInternalName();
 
-    List quals = envDataset.getFilterCompleterQualifiersByInternalName(name);
+    List quals = desc.getCompleterQualifiers(name);
     StringBuffer qual = new StringBuffer();
     for (int k = 0, l = quals.size(); k < l; k++) {
       if (k > 0)
@@ -877,7 +881,26 @@ public class MartShellLib {
     return name + " - " + displayName + " (" + qualifiers + ")";
   }
 
-  public String DescribeAttribute(Object attributeo) {
+  public String DescribeAttribute(String name) throws InvalidQueryException {
+    if (envDataset == null)
+      throw new InvalidQueryException("Must set environmental Dataset with a 'use' or 'set' command for describe attribute to work\n");
+
+    if (envMart == null)
+      throw new InvalidQueryException("Must set environmental Mart with a 'use' or 'set' command for describe attribute to work\n");
+
+    if (!envDataset.containsAttributeDescription(name))
+      throw new InvalidQueryException(
+        "Attribute "
+          + name
+          + " is not supported by environmental Dataset "
+          + envDataset.getInternalName()
+          + "\n");
+
+    String tmp = DescribeAttribute(envDataset.getAttributeDescriptionByInternalName(name));
+    return tmp;
+  }
+  
+  private String DescribeAttribute(Object attributeo) {
     if (attributeo instanceof AttributeDescription) {
       AttributeDescription desc = (AttributeDescription) attributeo;
 
@@ -1263,7 +1286,7 @@ public class MartShellLib {
               + name
               + "\n");
 
-        ret = adaptor.getDatasetViewByDatasetInternalName(toks[2], toks[3]);
+        ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], toks[2]);
       } else if (toks.length == 2) {
         //either sourcename.datasetname or datasetname.viewname relative to envMart
         if (adaptorManager.supportsAdaptor(toks[0])) {
@@ -2511,7 +2534,7 @@ public class MartShellLib {
   private final String SEQDELIMITER = "+";
   public static final String FILTERDELIMITER = "and";
   private final String DEFAULTURLADAPTORNAME = "userfiles";
-  private final String DEFAULTDATASETVIEWNAME = "default";
+  public static final String DEFAULTDATASETVIEWNAME = "default";
   private final String LISTALLREQ = "all";
   private final String MARTREQ = "Mart";
 
