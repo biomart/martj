@@ -38,16 +38,16 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	}
 	
 	/**
-	 * Constructor for a minimal UIDSFilterDescription, with internalName, type, and objectCode set.
+	 * Constructor for a minimal UIDSFilterDescription, with internalName, type, and handler set.
 	 * 
 	 * @param internalName - String name to internally reference this Description
 	 * @param type - String type of UI Display
-	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this Filter
+	 * @param handler - String type of DomainSpecificFilterHandler to use to resolve this Filter
 	 * 
-	 * @throws ConfigurationException when internalName or type are null, or when the objectCode == 0
+	 * @throws ConfigurationException when internalName or type are null, or when the handler == 0
 	 */
-	public UIDSFilterDescription(String internalName, String type, String objectCode) throws ConfigurationException {
-	  this(internalName, type, objectCode, "", "", "", "");	
+	public UIDSFilterDescription(String internalName, String type, String handler) throws ConfigurationException {
+	  this(internalName, type, handler, "", "", "", "");	
 	}
 
   /**
@@ -55,24 +55,24 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
    * 
 	 * @param internalName - String name to internally reference this FilterDescription
 	 * @param type - String type of UI Display
-	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription
+	 * @param handler - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription
 	 * @param filterSetReq - String FilterSet Modification Requirement.  If this is not null, inFilterSet is set to true.
    * @param displayName - String name to display in a UI for this FilterDescription
    * @param description - String descriptive information for this FilterDescription
    * @param optionName String name represention an Option that holds Options for this UIDSFilterDescription
    * 
-   * @throws ConfigurationException when internalName, type, or objectCode are null
+   * @throws ConfigurationException when internalName, type, or handler are null
    */
-  public UIDSFilterDescription(String internalName, String type, String objectCode, String filterSetReq, String displayName, String description, String optionName) throws ConfigurationException {
+  public UIDSFilterDescription(String internalName, String type, String handler, String filterSetReq, String displayName, String description, String optionName) throws ConfigurationException {
   	
     super( internalName, displayName, description );
     
     if ( type == null || type.equals("")
-  	  || objectCode == null || objectCode.equals(""))
-  	  throw new ConfigurationException("UIDSFilterDescription object must have a type and objectCode");
+  	  || handler == null || handler.equals(""))
+  	  throw new ConfigurationException("UIDSFilterDescription object must have a type and handler");
   	  
   	this.type = type;
-  	this.objectCode = objectCode;
+  	this.handler = handler;
   	
   	if (! ( filterSetReq == null || filterSetReq.equals("")  ) )
   	  inFilterSet = true;
@@ -82,22 +82,22 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
   	
   	//generate hashcode for immutable object
   	hshcode = inFilterSet ? 1 : 0;
-		hshcode = (31 * hshcode) + internalName.hashCode();
-		hshcode = (31 * hshcode) + displayName.hashCode();
-		hshcode = (31 * hshcode) + type.hashCode();
-	  hshcode = (31 * hshcode) + description.hashCode();
-	  hshcode = (31 * hshcode) + objectCode.hashCode();
-	  hshcode = (31 * hshcode) + filterSetReq.hashCode();
-		hshcode = (31 * hshcode) + optionName.hashCode();
+		hshcode = (31 * hshcode) + this.internalName.hashCode();
+		hshcode = (31 * hshcode) + this.displayName.hashCode();
+		hshcode = (31 * hshcode) + this.type.hashCode();
+	  hshcode = (31 * hshcode) + this.description.hashCode();
+	  hshcode = (31 * hshcode) + this.handler.hashCode();
+	  hshcode = (31 * hshcode) + this.filterSetReq.hashCode();
+		hshcode = (31 * hshcode) + this.optionName.hashCode();
   }  
   
 	/**
-	 * Returns the objectCode of this UIDSFilterDescription
+	 * Returns the handler of this UIDSFilterDescription
 	 * 
-	 * @return String objectCode
+	 * @return String handler
 	 */
-	public String getObjectCode() {
-		return objectCode;
+	public String getHandler() {
+		return handler;
 	}
 
 	/**
@@ -142,7 +142,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 		buf.append("[ UIDSFilterDescription:");
 		buf.append( super.toString() );
 		buf.append(", type=").append(type);
-		buf.append(", objectCode=").append(objectCode);
+		buf.append(", handler=").append(handler);
 		
 		if (inFilterSet)
 		  buf.append(", filterSetReq=").append(filterSetReq);
@@ -169,7 +169,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	}
 	
   private String type;
-  private String objectCode;
+  private String handler;
   private String filterSetReq;
   private String optionName;
   private boolean inFilterSet = false;

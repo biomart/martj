@@ -50,26 +50,26 @@ public class DSFilterGroup extends BaseConfigurationObject {
    * @param internalName - String name to internally represent the object.
    * @param displayName - String name to display in a UI
    * @param description - String description of the DSFilterGroup
-   * @param objectCode - String signal to the UI to determine a rendering module
+   * @param handler - String signal to the UI to determine a rendering module
    * @throws ConfigurationException when internalName is null or empty
    */
-  public DSFilterGroup(String internalName, String displayName, String description, String objectCode) throws ConfigurationException {
+  public DSFilterGroup(String internalName, String displayName, String description, String handler) throws ConfigurationException {
   	
     super( internalName, displayName, description );
-    this.objectCode = objectCode;
+    this.handler = handler;
     
-    hashcode = internalName.hashCode();
-  	hashcode = (31 * hashcode) + displayName.hashCode();
-  	hashcode = (31 * hashcode) + description.hashCode();
-  	hashcode = (31 * hashcode) + objectCode.hashCode();
+    hashcode = this.internalName.hashCode();
+  	hashcode = (31 * hashcode) + this.displayName.hashCode();
+  	hashcode = (31 * hashcode) + this.description.hashCode();
+  	hashcode = (31 * hashcode) + this.handler.hashCode();
   }
  
 	/**
-	 * Returns the objectCode
-	 * @return Sring objectCode
+	 * Returns the handler
+	 * @return Sring handler
 	 */
-	public String getObjectCode() {
-		return objectCode;
+	public String getHandler() {
+		return handler;
 	}
 
   public String toString() {
@@ -77,7 +77,7 @@ public class DSFilterGroup extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append( super.toString() );
-		buf.append(", objectCode=").append(objectCode);
+		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -98,6 +98,6 @@ public class DSFilterGroup extends BaseConfigurationObject {
 	}
 
  
-  private String objectCode;
+  private String handler;
 	private int hashcode = 0;
 }

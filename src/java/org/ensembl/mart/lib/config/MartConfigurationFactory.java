@@ -81,7 +81,7 @@ public class MartConfigurationFactory {
 	private final String FIELDNAMEMODIFIER = "fieldNameModifier";
 	private final String FILTERSETNAME = "filterSetName";
 	private final String FILTERSETREQ = "filterSetReq";
-	private final String OBJECTCODE = "objectCode";
+	private final String HANDLER = "handler";
 	private final String ISSELECTABLE = "isSelectable";
 	private final String OPTIONNAME = "optionName";
   private final String VALUE = "value";
@@ -254,7 +254,7 @@ public class MartConfigurationFactory {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		String objCode = thisElement.getAttributeValue(HANDLER, "");
 		
 		DSFilterGroup fg = new DSFilterGroup(intName, dispname, desc, objCode);
 
@@ -336,7 +336,7 @@ public class MartConfigurationFactory {
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		String typeval = thisElement.getAttributeValue(TYPE, "");
-		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		String objCode = thisElement.getAttributeValue(HANDLER, "");
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 		String optionName = thisElement.getAttributeValue(OPTIONNAME, "");
 
@@ -399,7 +399,7 @@ public class MartConfigurationFactory {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
-		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		String objCode = thisElement.getAttributeValue(HANDLER, "");
 		
 		DSAttributeGroup ag = new DSAttributeGroup(intName, dispname, desc, objCode);
 

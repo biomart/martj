@@ -49,13 +49,13 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 	 * @param internalName - String name to internally represent the object.
 	 * @param displayName - String name to display in a UI
 	 * @param description - String description of the DSAttributeGroup
-	 * @param objectCode - String signal to the UI to determine a rendering module
+	 * @param handler - String signal to the UI to determine a rendering module
 	 * @throws ConfigurationException when internalName is null or empty
 	 */
 	public DSAttributeGroup(String internalName, String displayName, String description, String objectCode) throws ConfigurationException {
 		
     super( internalName, displayName, description );
-		this.objectCode = objectCode;
+		this.handler = objectCode;
     
     hashcode = internalName.hashCode();
 		hashcode = (31 * hashcode) + displayName.hashCode();
@@ -64,11 +64,11 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 	}
 	
 	/**
-	 * Returns the objectCode
-	 * @return Sring objectCode
+	 * Returns the handler
+	 * @return Sring handler
 	 */
-	public String getObjectCode() {
-		return objectCode;
+	public String getHandler() {
+		return handler;
 	}
 
 	public String toString() {
@@ -76,7 +76,7 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 
 		buf.append("[");
 		buf.append( super.toString() );
-		buf.append(", objectCode=").append(objectCode);
+		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -96,6 +96,6 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 		return hashcode;
 	}
 	
- private String objectCode;
+ private String handler;
   private int hashcode = 0;
 }

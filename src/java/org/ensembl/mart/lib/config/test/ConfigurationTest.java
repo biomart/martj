@@ -299,12 +299,12 @@ public class ConfigurationTest extends Base {
 		String testDName = "Test A DSFilterGroup:";
 		String DName = dsfg.getDisplayName();
 		String Desc = dsfg.getDescription();
-		String ObjectCode = dsfg.getObjectCode();
+		String Handler = dsfg.getHandler();
 
 		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
 		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
-		assertEquals("Warning, ObjectCode not set correctly for DSFilterGroup\n", TESTOBJECTCODE, ObjectCode);
+		assertEquals("Warning, Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 
 		// contains/get for FilterPage-FilterGroup
 		boolean containsTest = fp.containsFilterGroup(testIName);
@@ -327,12 +327,12 @@ public class ConfigurationTest extends Base {
 		String testDName = "test of an DSAttribute Group:";
 		String DName = dsag.getDisplayName();
 		String Desc = dsag.getDescription();
-		String ObjectCode = dsag.getObjectCode();
+		String Handler = dsag.getHandler();
 
 		assertEquals("Warning, Internal Name not correctly set for DSFilterGroup\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for DSFilterGroup\n", testDName, DName);
 		assertEquals("Warning, Description not correctly set for DSFilterGroup\n", TESTDESC, Desc);
-		assertEquals("Warning, ObjectCode not set correctly for DSFilterGroup\n", TESTOBJECTCODE, ObjectCode);
+		assertEquals("Warning, Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 	}
 
 	private void secondFilterGroupTest(Dataset d, FilterPage fp, Object group) throws Exception {
@@ -664,13 +664,13 @@ public class ConfigurationTest extends Base {
 		String Desc = dsf.getDescription();
 		String Type = dsf.getType();
 		String testFieldName = "test_id";
-		String ObjectCode = dsf.getObjectCode();
+		String Handler = dsf.getHandler();
 
 		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
 		assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", TESTDESC, Desc);
 		assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", TESTTYPE, Type);
-		assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", TESTOBJECTCODE, ObjectCode);
+		assertEquals("Warning, Handler not set correctly for UIDSFilterDescription\n", TESTHANDLER, Handler);
 
 		//  contains/get for FilterCollection-UIFilterDescription
 		boolean containsTest = fc.containsUIFilterDescription(testIName);
@@ -788,14 +788,14 @@ public class ConfigurationTest extends Base {
 		String Type = dsfTable.getType();
 		String testFilterSetReq = "table";
 		String FilterSetReq = dsfTable.getFilterSetReq();
-		String ObjectCode = dsfTable.getObjectCode();
+		String Handler = dsfTable.getHandler();
 
 		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
 		assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", TESTDESC, Desc);
 		assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", TESTTYPE, Type);
 		assertEquals("Warning, filterSetReq not set correctly for UIDSFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
-		assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", TESTOBJECTCODE, ObjectCode);
+		assertEquals("Warning, Handler not set correctly for UIDSFilterDescription\n", TESTHANDLER, Handler);
 		assertTrue("Warning, third UIDSFilterDescription should be in a FilterSet\n", dsfTable.IsInFilterSet());
 	}
 
@@ -915,7 +915,7 @@ public class ConfigurationTest extends Base {
     String DName = dsf.getDisplayName();
     String Desc = dsf.getDescription();
     String Type = dsf.getType();
-    String ObjectCode = dsf.getObjectCode();
+    String Handler = dsf.getHandler();
     String testOptionName = "testOptionWithOption";
     String OptionName = dsf.getOptionName();
 
@@ -923,7 +923,7 @@ public class ConfigurationTest extends Base {
     assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
     assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", TESTDESC, Desc);
     assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", TESTTYPE, Type);
-    assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", TESTOBJECTCODE, ObjectCode);
+    assertEquals("Warning, Handler not set correctly for UIDSFilterDescription\n", TESTHANDLER, Handler);
     assertEquals("Warning, optionName not set correctly for UIDSFilterDescription\n", testOptionName, OptionName);
     assertTrue("Warning, Third FilterColletion should contain option refereced by UIDSFilterDescription but doesnt\n", fc.containsOption(OptionName));
   }
@@ -998,7 +998,7 @@ public class ConfigurationTest extends Base {
 
 	private final String XMLTESTID = "test.xml";
 	private final String TESTDESC = "For Testing Purposes Only";
-	private final String TESTOBJECTCODE = "testObjectCode";
+	private final String TESTHANDLER = "testHandler";
 	private final String TESTTYPE = "list";
 	private final String TESTQUALIFIER = "in";
 }
