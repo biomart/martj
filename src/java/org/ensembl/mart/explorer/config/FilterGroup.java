@@ -315,64 +315,11 @@ public class FilterGroup {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof FilterGroup))
-			return false;
-
-		FilterGroup otype = (FilterGroup) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;				
-		
-		//other FilterGroup must contain all FilterCollections contained by this FilterGroup
-		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
-			FilterCollection element = (FilterCollection) iter.next();
-			if (! ( otype.containsFilterCollection(element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getFilterCollectionByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-		
-		//this FilterGroup must contain all FilterCollections contained by other FilterGroup
-		FilterCollection[] fcollections = otype.getFilterCollections();
-		for (int i = 0, n = fcollections.length; i < n; i++) {
-			FilterCollection fcollection = fcollections[i];
-			if (! ( filterCollections.containsValue( fcollection ) ) )
-			  return false;
-		}
-		
-		if (hasFilterSets) {
-			//other FilterGroup must contain all FilterSets contained in this FilterGroup
-			if (! otype.hasFilterSets())
-			  return false;
-			for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
-				FilterSet element = (FilterSet) iter.next();
-				if (! ( otype.containsFilterSet( element.getInternalName() ) ) )
-				  return false;
-				if (! ( element.equals( otype.getFilterSetByName( element.getInternalName() ) ) ) )
-				  return false;	
-			}
-		}
-		
-		if (otype.hasFilterSets()) {
-			//this FilterGroup must contain all FilterSets contained by other FilterGroup
-			if (! hasFilterSets)
-			  return false;
-			FilterSet[] fsets = otype.getFilterSets();
-			for (int i = 0, n = fsets.length; i < n; i++) {
-				FilterSet set = fsets[i];
-				if (! ( filterSets.containsValue( set ) ) )
-				  return false;
-			}
-		}
-		
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of FilterGroup objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof FilterGroup && hashCode() == ((FilterGroup) o).hashCode();
 	}
 
   public int hashCode() {

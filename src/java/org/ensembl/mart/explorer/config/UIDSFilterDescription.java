@@ -34,7 +34,7 @@ public class UIDSFilterDescription {
 	 * @throws ConfigurationException
 	 */
 	public UIDSFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "");
+		this("", "", "", "", "", "");
 	}
 	
 	/**
@@ -48,7 +48,7 @@ public class UIDSFilterDescription {
 	 * @see DomainSpecificFilterHandler
 	 */
 	public UIDSFilterDescription(String internalName, String type, String objectCode) throws ConfigurationException {
-	  this(internalName, type, objectCode, "", "");	
+	  this(internalName, type, objectCode, "", "", "");	
 	}
 
   /**
@@ -57,12 +57,13 @@ public class UIDSFilterDescription {
 	 * @param internalName - String name to internally reference this FilterDescription
 	 * @param type - String type of UI Display
 	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription
+	 * @param filterSetReq - String FilterSet Modification Requirement.  If this is not null, inFilterSet is set to true.
    * @param displayName - String name to display in a UI for this FilterDescription
    * @param description - String descriptive information for this FilterDescription
    * 
    * @throws ConfigurationException when internalName, type, or objectCode are null
    */
-  public UIDSFilterDescription(String internalName, String type, String objectCode, String displayName, String description) throws ConfigurationException {
+  public UIDSFilterDescription(String internalName, String type, String objectCode, String filterSetReq, String displayName, String description) throws ConfigurationException {
   	if (internalName == null || internalName.equals("")
   	  || type == null || type.equals("")
   	  || objectCode == null || objectCode.equals(""))
@@ -71,15 +72,22 @@ public class UIDSFilterDescription {
   	this.internalName = internalName;
   	this.type = type;
   	this.objectCode = objectCode;
+  	
+  	if (! ( filterSetReq == null || filterSetReq.equals("")  ) )
+  	  inFilterSet = true;
+  	  
+  	this.filterSetReq = filterSetReq;
   	this.displayName = displayName;
   	this.description = description;
   	
   	//generate hashcode for immutable object
-		hshcode = internalName.hashCode();
+  	hshcode = inFilterSet ? 1 : 0;
+		hshcode = (31 * hshcode) + internalName.hashCode();
 		hshcode = (31 * hshcode) + displayName.hashCode();
 		hshcode = (31 * hshcode) + type.hashCode();
 	  hshcode = (31 * hshcode) + description.hashCode();
 	  hshcode = (31 * hshcode) + objectCode.hashCode();
+	  hshcode = (31 * hshcode) + filterSetReq.hashCode();
   }  
   
 	/**
@@ -126,6 +134,22 @@ public class UIDSFilterDescription {
 	public String getType() {
 		return type;
 	}
+
+	/**
+	 * Returns filterSetReq
+	 * @return String filterSetReq
+	 */
+	public String getFilterSetReq() {
+		return filterSetReq;
+	}
+
+	/**
+	 * Check if this UIDSFilterDescription is in a FilterSet.
+	 * @return boolean, true if filterSetReq is set, false if null or empty.
+	 */
+	public boolean IsInFilterSet() {
+		return inFilterSet;
+	}
   
   /**
    * Used for debugging output.
@@ -139,6 +163,10 @@ public class UIDSFilterDescription {
 		buf.append(", description=").append(description);
 		buf.append(", type=").append(type);
 		buf.append(", objectCode=").append(objectCode);
+		
+		if (inFilterSet)
+		  buf.append(", filterSetReq=").append(filterSetReq);
+		  
 		buf.append("]");
 
 		return buf.toString();
@@ -148,29 +176,9 @@ public class UIDSFilterDescription {
 	 * Allows equality comparisons of UIDSFilterDescription objects
 	 */
 	public boolean equals(Object o) {
-		if (!(o instanceof UIDSFilterDescription))
-			return false;
-
-		UIDSFilterDescription otype = (UIDSFilterDescription) o;
-
-    if (! internalName.equals(otype.getInternalName()))
-      return false;
-    
-    if (! displayName.equals(otype.getDisplayName()))
-      return false;
-      
-    if (! description.equals(otype.getDescription()))
-      return false;
-      
-    if (! type.equals(otype.getType()))
-      return false;
-      
-    if (! objectCode.equals( otype.getObjectCode() ) )
-      return false;
-      
-		return true;
+    return o instanceof UIDSFilterDescription && hashCode() == ( (UIDSFilterDescription) o).hashCode(); 
 	}
-	
+
 	/**
 	 * Allows Collections manipulation of UIDSFIlterDescription objects
 	 */
@@ -178,6 +186,7 @@ public class UIDSFilterDescription {
 		 return hshcode;
 	}
 	
-  private final String internalName, displayName, description, type, objectCode;
+  private final String internalName, displayName, description, type, objectCode, filterSetReq;
+  private boolean inFilterSet = false;
   private int hshcode = 0;
 }

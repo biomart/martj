@@ -238,66 +238,16 @@ public class FilterCollection {
 		return buf.toString();
 	}
 
+  /**
+	 * Allows Equality Comparisons manipulation of FilterCollection objects
+	 */
 	public boolean equals(Object o) {
-		if (!(o instanceof FilterCollection))
-			return false;
-
-		FilterCollection otype = (FilterCollection) o;
-
-		if (!(internalName.equals(otype.getInternalName())))
-			return false;
-
-		if (!(displayName.equals(otype.getDisplayName())))
-			return false;
-
-		if (!(description.equals(otype.getDescription())))
-			return false;
-
-		if (!(type.equals(otype.getType())))
-			return false;
-
-		if (inFilterSet) {
-			if (!otype.inFilterSet())
-				return false;
-			if (!(filterSetName.equals(otype.getFilterSetName())))
-				return false;
-		}
-
-		if (otype.inFilterSet()) {
-			if (!inFilterSet)
-				return false;
-
-			if (!(otype.getFilterSetName().equals(filterSetName)))
-				return false;
-		}
-
-		//other FilterCollection must contain all FilterDescriptions that this FilterCollection contains
-		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
-			Object ob = iter.next();
-			
-			if (ob instanceof UIFilterDescription) {
-				UIFilterDescription element = (UIFilterDescription) ob;
-				if (!(otype.containsUIFilterDescription(element.getInternalName())))
-					return false;
-				if (! ( element.equals(otype.getUIFilterDescriptionByName(element.getInternalName() ) ) ) )
-					return false;				
-			}
-			else if (ob instanceof UIDSFilterDescription) {
-				UIDSFilterDescription element = (UIDSFilterDescription) ob;
-				if (!(otype.containsUIFilterDescription(element.getInternalName())))
-					return false;
-				if (! ( element.equals(otype.getUIFilterDescriptionByName(element.getInternalName() ) ) ) )
-					return false;				
-			}
-			else
-			  return false; // shouldnt get here
-		}
-
-		return true;
+		return o instanceof FilterCollection && hashCode() == ((FilterCollection) o).hashCode();
 	}
 
 	public int hashCode() {
-		int tmp = internalName.hashCode();
+		int tmp = inFilterSet ? 1 : 0;
+		tmp = (31 * tmp) + internalName.hashCode();
 		tmp = (31 * tmp) + displayName.hashCode();
 		tmp = (31 * tmp) + filterSetName.hashCode();
 		tmp = (31 * tmp) + description.hashCode();

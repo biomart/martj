@@ -286,13 +286,14 @@ public class MartConfigurationFactory {
 		String dispname = element.getAttributeValue(displayName, "");
 		String desc = element.getAttributeValue(description, "");
 		String typeval = element.getAttributeValue(type, "");
-    String objCode = element.getAttributeValue(objectCode, "");
-
-		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, dispname, desc);
+		String objCode = element.getAttributeValue(objectCode, "");
+		String filterSetReq = element.getAttributeValue(filterSetReqA, "");
+		
+		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc);
 
 		return f;
 	}
-
+	
 	private UIFilterDescription getUIFilterDescription(Element thisElement) throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(internalName, "");
 		String dispname = thisElement.getAttributeValue(displayName, "");

@@ -517,86 +517,11 @@ public class Dataset {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof Dataset))
-			return false;
-
-		Dataset otype = (Dataset) o;
-
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;
-		
-		// other dataset must contain all starBases that this dataset contains	
-		for (int i = 0; i < starBases.size(); i++) {
-			String element = (String) starBases.get(i);
-			if (! (otype.containsStarBase(element)) )
-			  return false;
-		}
-		
-		// this dataset must contain all starBases that other dataset contains
-		String[] stars = otype.getStarBases();
-    for (int i = 0, n = stars.length; i < n; i++) {
-			if (! (starBases.contains(stars[i])) )
-			  return false;
-		}
-		
-		// other dataset must contain all primary keys that this dataset contains	
-    for (int i = 0; i < primaryKeys.size(); i++) {
-			String element = (String) primaryKeys.get(i);
-			if (! ( otype.containsPrimaryKey(element) ) )
-			  return false;
-		}
-
-    // this dataset must contain all primary keys that other dataset contains
-    String[] pkeys = otype.getPrimaryKeys();
-    for (int i = 0, n = pkeys.length; i < n; i++) {
-			if (! (primaryKeys.contains(pkeys[i])) )
-			  return false;
-		}
-		
-		//other dataset must contain all FilterPages that this dataset contains
-		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
-			FilterPage element = (FilterPage) iter.next();
-			
-			if (! ( otype.containsFilterPage( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getFilterPageByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-		
-		// this dataset must contain all FilterPages that other dataset contains
-		FilterPage[] fpages = otype.getFilterPages();
-		for (int i = 0, n = fpages.length; i < n; i++) {
-			FilterPage page = fpages[i];
-			if (! (filterPages.containsValue(page) ) )
-			  return false;
-		}
-		
-		//other dataset must contain all AttributePages that this dataset contains
-    for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
-			AttributePage element = (AttributePage) iter.next();
-			
-			if (! ( otype.containsAttributePage(element.getInternalName() ) ) )
-			  return false;
-			if(! ( element.equals( otype.getAttributePageByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-
-    // this dataset must contain all AttributePages that other dataset contains
-    AttributePage[] apages = otype.getAttributePages();
-    for (int i = 0, n = apages.length; i < n; i++) {
-			AttributePage page = apages[i];
-			if (! attributePages.containsValue(page) )
-			  return false;
-		}
-
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of Dataset objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof Dataset && hashCode() == ((Dataset) o).hashCode();
 	}
 	
   public int hashCode() {

@@ -15,7 +15,7 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.explorer.config;
 
 /**
@@ -26,202 +26,183 @@ package org.ensembl.mart.explorer.config;
  */
 public class UIAttributeDescription {
 
-/*
- * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
- */
-private UIAttributeDescription() throws ConfigurationException {
-	this("", "", "", 0, "", "", "", "", ""); // this will never happen
-}
+	/*
+	 * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
+	 */
+	private UIAttributeDescription() throws ConfigurationException {
+		this("", "", "", 0, "", "", "", "", ""); // this will never happen
+	}
 
-/**
- * Constructs a UIAttributeDescription with just the internalName and fieldName.
- * 
- * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty
- * @param fieldName String name of the field in the mart for this Attribute. Must not be null or empty.
- * @throws ConfigurationException when values are null or empty.
- */
-public UIAttributeDescription(String internalName, String fieldName) throws ConfigurationException {
-	this(internalName, fieldName,"", 0, "", "", "", "", "");
-}
-/**
- * Constructor for a UIAttributeDescription.
- * 
- * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty.
- * @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
- * @param displayName String name of the UIAttributeDescription.
- * @param maxLength Int maximum possible length of the field in the mart.
- * @param tableConstraint String base name of a specific table containing this UIAttribute.
- * @param description String description of this UIAttribute.
- * @param source String source for the data for this UIAttribute.
- * @param homePageURL String Web Homepage for the source.
- * @param linkoutURL String Base for a link to a specific entry in a source website.
- * @throws ConfigurationException when required parameters are null or empty
- */
-public UIAttributeDescription(String internalName, String fieldName, String displayName, int maxLength, String tableConstraint, String description, String source, String homePageURL, String linkoutURL) throws ConfigurationException {
-	if(internalName == null || internalName.equals("") || fieldName == null || fieldName.equals(""))
-	  throw new ConfigurationException("UIAttributeDescriptions require a displayName, and fieldName");
-	  
-	this.internalName = internalName;
-	this.displayName = displayName;
-	this.fieldName = fieldName;
-	this.maxLength = maxLength;
-	this.tableConstraint = tableConstraint;
-	this.description = description;
-	this.source = source;
-	this.homepageURL = homePageURL;
-	this.linkoutURL = linkoutURL;
-	
-	hshcode = internalName.hashCode();
-	hshcode = (31 * hshcode) + displayName.hashCode();
-	hshcode = (31 * hshcode) + fieldName.hashCode();
-	hshcode = (31 * hshcode) + maxLength;
-	hshcode = (31 * hshcode) + tableConstraint.hashCode();
-	hshcode = (31 * hshcode) + description.hashCode();
-	hshcode = (31 * hshcode) + source.hashCode();
-	hshcode = (31 * hshcode) + homepageURL.hashCode();
-	hshcode = (31 * hshcode) + linkoutURL.hashCode();
-}
+	/**
+	 * Constructs a UIAttributeDescription with just the internalName and fieldName.
+	 * 
+	 * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty
+	 * @param fieldName String name of the field in the mart for this Attribute. Must not be null or empty.
+	 * @throws ConfigurationException when values are null or empty.
+	 */
+	public UIAttributeDescription(String internalName, String fieldName) throws ConfigurationException {
+		this(internalName, fieldName, "", 0, "", "", "", "", "");
+	}
+	/**
+	 * Constructor for a UIAttributeDescription.
+	 * 
+	 * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty.
+	 * @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
+	 * @param displayName String name of the UIAttributeDescription.
+	 * @param maxLength Int maximum possible length of the field in the mart.
+	 * @param tableConstraint String base name of a specific table containing this UIAttribute.
+	 * @param description String description of this UIAttribute.
+	 * @param source String source for the data for this UIAttribute.
+	 * @param homePageURL String Web Homepage for the source.
+	 * @param linkoutURL String Base for a link to a specific entry in a source website.
+	 * @throws ConfigurationException when required parameters are null or empty
+	 */
+	public UIAttributeDescription(
+		String internalName,
+		String fieldName,
+		String displayName,
+		int maxLength,
+		String tableConstraint,
+		String description,
+		String source,
+		String homePageURL,
+		String linkoutURL)
+		throws ConfigurationException {
+		if (internalName == null || internalName.equals("") || fieldName == null || fieldName.equals(""))
+			throw new ConfigurationException("UIAttributeDescriptions require a displayName, and fieldName");
 
-/**
- * Returns the internalName.
- * 
- * @return String internalName
- */
-public String getInternalName() {
-	return internalName;
-}
+		this.internalName = internalName;
+		this.displayName = displayName;
+		this.fieldName = fieldName;
+		this.maxLength = maxLength;
+		this.tableConstraint = tableConstraint;
+		this.description = description;
+		this.source = source;
+		this.homepageURL = homePageURL;
+		this.linkoutURL = linkoutURL;
 
-/**
- * Returns the displayName.
- * 
- * @return String displayName
- */
-public String getDisplayName() {
-	return displayName;
-}
+		hshcode = internalName.hashCode();
+		hshcode = (31 * hshcode) + displayName.hashCode();
+		hshcode = (31 * hshcode) + fieldName.hashCode();
+		hshcode = (31 * hshcode) + maxLength;
+		hshcode = (31 * hshcode) + tableConstraint.hashCode();
+		hshcode = (31 * hshcode) + description.hashCode();
+		hshcode = (31 * hshcode) + source.hashCode();
+		hshcode = (31 * hshcode) + homepageURL.hashCode();
+		hshcode = (31 * hshcode) + linkoutURL.hashCode();
+	}
 
-/**
- * Returns the fieldName.
- * 
- * @return String fieldName
- */
-public String getFieldName() {
-	return fieldName;
-}
+	/**
+	 * Returns the internalName.
+	 * 
+	 * @return String internalName
+	 */
+	public String getInternalName() {
+		return internalName;
+	}
 
-/**
- * Returns the maxLength.
- * 
- * @return int MaxLength.
- */
-public int getMaxLength() {
-	return maxLength;
-}
+	/**
+	 * Returns the displayName.
+	 * 
+	 * @return String displayName
+	 */
+	public String getDisplayName() {
+		return displayName;
+	}
 
-/**
- * Returns the TableConstraint.
- * 
- * @return String tableConstraint.
- */
-public String getTableConstraint() {
-	return tableConstraint;
-}
+	/**
+	 * Returns the fieldName.
+	 * 
+	 * @return String fieldName
+	 */
+	public String getFieldName() {
+		return fieldName;
+	}
 
-/**
- * Returns the Description.
- * 
- * @return String description.
- */
-public String getDescription() {
-	return description;
-}
+	/**
+	 * Returns the maxLength.
+	 * 
+	 * @return int MaxLength.
+	 */
+	public int getMaxLength() {
+		return maxLength;
+	}
 
-/**
- * Returns the source.
- * 
- * @return String source
- */
-public String getSource() {
-	return source;
-}
+	/**
+	 * Returns the TableConstraint.
+	 * 
+	 * @return String tableConstraint.
+	 */
+	public String getTableConstraint() {
+		return tableConstraint;
+	}
 
-/**
- * Returns the homePageURL.
- * 
- * @return String homePageURL.
- */
-public String getHomePageURL() {
-	return homepageURL;
-}
+	/**
+	 * Returns the Description.
+	 * 
+	 * @return String description.
+	 */
+	public String getDescription() {
+		return description;
+	}
 
-/**
- * Returns the linkoutURL.
- * @return String linkoutURL.
- */
-public String getLinkoutURL() {
-	return linkoutURL;
-}
+	/**
+	 * Returns the source.
+	 * 
+	 * @return String source
+	 */
+	public String getSource() {
+		return source;
+	}
 
-public String toString() {
-	StringBuffer buf = new StringBuffer();
-	
-	buf.append("[");
-	buf.append(" internalName=").append(internalName);
-	buf.append(", displayName=").append(displayName);
-	buf.append(", fieldName=").append(fieldName);
-	buf.append(", maxLength=").append(maxLength);
-	buf.append(", tableConstraint=").append(tableConstraint);
-	buf.append(", description=").append(description);
-	buf.append(", source=").append(source);
-	buf.append(", homePageURL=").append(homepageURL);
-	buf.append(", linkoutURL=").append(linkoutURL);
-	buf.append("]");
-	
-	return buf.toString();
-}
+	/**
+	 * Returns the homePageURL.
+	 * 
+	 * @return String homePageURL.
+	 */
+	public String getHomePageURL() {
+		return homepageURL;
+	}
 
-public boolean equals(Object o) {
-	if (!(o instanceof UIAttributeDescription))
-		return false;
+	/**
+	 * Returns the linkoutURL.
+	 * @return String linkoutURL.
+	 */
+	public String getLinkoutURL() {
+		return linkoutURL;
+	}
 
-	UIAttributeDescription otype = (UIAttributeDescription) o;
-	
-	if (! (internalName.equals(otype.getInternalName()) ) )
-		return false;
-	  
-	if (! (displayName.equals(otype.getDisplayName()) ) )
-		return false;
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
 
-	if (! ( fieldName.equals(otype.getFieldName() ) ) )
-				return false;
-				
-  if (! (maxLength == otype.getMaxLength() ) )
-    return false;
-    
-	if (! ( tableConstraint.equals(otype.getTableConstraint() ) ) )
-				return false;
-											  
-	if (! (description.equals(otype.getDescription()) ) )
-		return false;
+		buf.append("[");
+		buf.append(" internalName=").append(internalName);
+		buf.append(", displayName=").append(displayName);
+		buf.append(", fieldName=").append(fieldName);
+		buf.append(", maxLength=").append(maxLength);
+		buf.append(", tableConstraint=").append(tableConstraint);
+		buf.append(", description=").append(description);
+		buf.append(", source=").append(source);
+		buf.append(", homePageURL=").append(homepageURL);
+		buf.append(", linkoutURL=").append(linkoutURL);
+		buf.append("]");
 
-	if (! (source.equals(otype.getSource()) ) )
-			return false;
-	
-	if (! (homepageURL.equals(otype.getHomePageURL()) ) )
-			return false;
-	
-	if (! (linkoutURL.equals(otype.getLinkoutURL()) ) )
-			return false;
-					
-	return true;
-}
+		return buf.toString();
+	}
 
-public int hashCode() {
-	return hshcode;
-}
+	/**
+	 * Allows Equality Comparisons of UIAttributeDescription objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof UIAttributeDescription && hashCode() == ((UIAttributeDescription) o).hashCode();
+	}
 
-private final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
-private final int maxLength;
-private int hshcode = 0;
- 
+	public int hashCode() {
+		return hshcode;
+	}
+
+	private final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
+	private final int maxLength;
+	private int hshcode = 0;
+
 }

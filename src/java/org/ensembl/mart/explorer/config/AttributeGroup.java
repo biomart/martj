@@ -228,31 +228,11 @@ public final class AttributeGroup {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof AttributeGroup))
-			return false;
-
-		AttributeGroup otype = (AttributeGroup) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;				
-		
-		//other AttributeGroup must contain all AttributeCollections contained in this AttributeGroup
-		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
-			AttributeCollection element = (AttributeCollection) iter.next();
-			if (! ( otype.containsAttributeCollection( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getAttributeCollectionByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-		
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of AttributeGroup objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof AttributeGroup && hashCode() == ((AttributeGroup) o).hashCode();
 	}
 
   public int hashCode() {

@@ -138,31 +138,11 @@ public class FilterSetDescription {
 		return buf.toString();
 	}
 	
-	/**
-	 * equals method for direct configuration object comparisons, and list operations.
+  /**
+	 * Allows Equality Comparisons manipulation of FilterSetDescription objects
 	 */
 	public boolean equals(Object o) {
-		if (!(o instanceof FilterSetDescription))
-			return false;
-
-		FilterSetDescription otype = (FilterSetDescription) o;
-		
-		if (! ( internalName.equals( otype.getInternalName() ) ) )
-		  return false;
-		  
-		if (! ( displayName.equals( otype.getDisplayName() ) ) )
-		  return false;
-		  
-		if (! ( tableConstraintModifier.equals( otype.getTableConstraintModifier() ) ) )
-      return false;
-    
-    if (! ( fieldNameModifier.equals( otype.getFieldNameModifier() ) ) )
-      return false;
-    
-    if (! ( description.equals( otype.getDescription() ) ) )
-      return false;
-      
-		return true;
+		return o instanceof FilterSetDescription && hashCode() == ((FilterSetDescription) o).hashCode();
 	}
 	
 	/**

@@ -229,42 +229,13 @@ public class AttributePage {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof AttributePage))
-			return false;
-
-		AttributePage otype = (AttributePage) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;				
-		
-		//other AttributePage must contain all AttributeGroups contained by this AttributePage
-    for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
-			AttributeGroup element = (AttributeGroup) iter.next();
-			
-			if (! ( otype.containsAttributeGroup( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getAttributeGroupByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-
-		//this AttributePage must contain all AttributeGroups contained by other AttributePage
-		AttributeGroup[] apages = otype.getAttributeGroups();
-		for (int i = 0, n = apages.length; i < n; i++) {
-			AttributeGroup group = apages[i];
-			if (! ( attributeGroups.containsValue(group) ) )
-			  return false;
-		}
-		
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of AttributePage objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof AttributePage && hashCode() == ((AttributePage) o).hashCode();
 	}
-  
+	
   public int hashCode() {
   	int tmp = internalName.hashCode();
 		tmp = (31 * tmp) + displayName.hashCode();

@@ -177,41 +177,11 @@ public class FilterSet {
 		return buf.toString();
 	}
 	
-  public boolean equals(Object o) {
-		if (!(o instanceof FilterSet))
-			return false;
-
-		FilterSet otype = (FilterSet) o;
-		
-		if (! ( internalName.equals(otype.getInternalName() ) ) )
-			return false;
-	  
-		if (! ( displayName.equals(otype.getDisplayName() ) ) )
-			return false;
-	  
-		if (! ( description.equals(otype.getDescription() ) ) )
-			return false;
-			
-	  if (! ( type.equals( otype.getType() ) ) )
-	    return false;		
-
-    //other FilterSet must contain all FilterSetDescription objects contained in this FilterSet
-    for (Iterator iter = filterSetDescriptions.values().iterator(); iter.hasNext();) {
-			FilterSetDescription element = (FilterSetDescription) iter.next();
-			if (! ( otype.containsFilterSetDescription( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getFilterSetDescriptionByName( element.getInternalName() ) ) ) )
-			  return false;
-    }
-    
-    //this FilterSet must contain all FilterSetDescription objects contained in the other FilterSet
-		FilterSetDescription[] fd = otype.getFilterSetDescriptions();
-		for (int i = 0, n = fd.length; i < n; i++) {
-			FilterSetDescription description = fd[i];
-			if (! ( filterSetDescriptions.containsValue( description ) ) )
-			  return false;
-		}
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of FilterSet objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof FilterSet && hashCode() == ((FilterSet) o).hashCode();
 	}
 	
   public int hashCode() {

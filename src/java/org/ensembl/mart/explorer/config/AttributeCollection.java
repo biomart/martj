@@ -180,35 +180,11 @@ public class AttributeCollection {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof AttributeCollection))
-			return false;
-
-		AttributeCollection otype = (AttributeCollection) o;
-
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;				
-
-    if (! ( maxSelect == otype.getMaxSelect() ) )
-      return false;
-
-    //other AttributeCollection must contain all UIAttributeDescriptions that this AttributeCollection contains
-    for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
-			UIAttributeDescription element = (UIAttributeDescription) iter.next();
-			
-			if (! ( otype.containsUIAttributeDescription( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getUIAttributeDescriptionByName( element.getInternalName() ) ) ) )
-			  return false;
-		}  
-		
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of AttributeCollection objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof AttributeCollection && hashCode() == ((AttributeCollection) o).hashCode();
 	}
 
 	public int hashCode() {

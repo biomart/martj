@@ -34,19 +34,19 @@ public class UIFilterDescription {
 		this("", "", "", "", "", "", "", "");
 	}
 
-/**
- * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
- * 
- * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
- * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
- * @param type String type of filter.  Must not be null or empty.
- * @param qualifier String qualifier to use in a SQL where clause.
- * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
- */
-  public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier) throws ConfigurationException {
-  	this(internalName, fieldName, type, qualifier, "", "", "", "");
-  }
-  
+	/**
+	 * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
+	 * 
+	 * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
+	 * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
+	 * @param type String type of filter.  Must not be null or empty.
+	 * @param qualifier String qualifier to use in a SQL where clause.
+	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
+	 */
+	public UIFilterDescription(String internalName, String fieldName, String type, String qualifier) throws ConfigurationException {
+		this(internalName, fieldName, type, qualifier, "", "", "", "");
+	}
+
 	/**
 	 * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
 	 * 
@@ -62,75 +62,83 @@ public class UIFilterDescription {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 * @see FilterSet, FilterDescription
 	 */
-	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	String filterSetReq, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals("") 
-		  || fieldName == null || fieldName.equals("")
-			|| type == null || type.equals("")) 
+	public UIFilterDescription(
+		String internalName,
+		String fieldName,
+		String type,
+		String qualifier,
+		String displayName,
+		String tableConstraint,
+		String filterSetReq,
+		String description)
+		throws ConfigurationException {
+		if (internalName == null || internalName.equals("") || fieldName == null || fieldName.equals("") || type == null || type.equals(""))
 			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
-      
-        this.internalName = internalName;
+
+		this.internalName = internalName;
 		this.displayName = displayName;
 		this.fieldName = fieldName;
 		this.type = type;
 		this.qualifier = qualifier;
 		this.tableConstraint = tableConstraint;
 		this.filterSetReq = filterSetReq;
-		
-		if (! ( filterSetReq == null || filterSetReq.equals("") ) )
-		  inFilterSet = true;
-		  
+
+		if (!(filterSetReq == null || filterSetReq.equals("")))
+			inFilterSet = true;
+
 		this.description = description;
-		
-		hshcode = internalName.hashCode();
+
+		hshcode = inFilterSet ? 1 : 0;
+		hshcode = (31 * hshcode) + internalName.hashCode();
 		hshcode = (31 * hshcode) + displayName.hashCode();
 		hshcode = (31 * hshcode) + fieldName.hashCode();
 		hshcode = (31 * hshcode) + type.hashCode();
 		hshcode = (31 * hshcode) + qualifier.hashCode();
 		hshcode = (31 * hshcode) + tableConstraint.hashCode();
 		hshcode = (31 * hshcode) + filterSetReq.hashCode();
-        hshcode = (31 * hshcode) + description.hashCode();
+		hshcode = (31 * hshcode) + description.hashCode();
 	}
 
-/**
- * Returns the InternalName of the UIFilterDescription.
- * 
- * @return String internalName
- */
+	/**
+	 * Returns the InternalName of the UIFilterDescription.
+	 * 
+	 * @return String internalName
+	 */
 	public String getInternalName() {
 		return internalName;
 	}
 
-/**
- * Returns the displayName of the UIFilterDescription.
- * 
- * @return String displayName
- */
-  public String getDisplayName() {
-  	return displayName;
-  }
-  
-  /**
-   * returns the fieldName.
-   * @return String fieldName
-   */
+	/**
+	 * Returns the displayName of the UIFilterDescription.
+	 * 
+	 * @return String displayName
+	 */
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	/**
+	 * returns the fieldName.
+	 * @return String fieldName
+	 */
 	public String getFieldName() {
 		return fieldName;
 	}
 
-/**
- * Returns the type.
- * 
- * @return String type.
- */
+	/**
+	 * Returns the type.
+	 * 
+	 * @return String type.
+	 */
 	public String getType() {
 		return type;
 	}
 
-  /**
-   * Returns the qualifier to use SQL where clause.
-   * 
-   * @return String qualifier
-   */
+	/**
+	 * Returns the qualifier to use SQL where clause.
+	 * 
+	 * @return String qualifier
+	 */
 	public String getQualifier() {
 		return qualifier;
 	}
@@ -143,32 +151,32 @@ public class UIFilterDescription {
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
-  
-  /**
-   * Returns a value to determine which UIFilterDescription SQL specifier (tableConstraint or fieldName) to modify
-   * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
-   * 
-   * @return String filterSetReq
-   * @see FilterSetDescription
-   */
-  public String getFilterSetReq() {
-  	return filterSetReq;
-  }
-  
-  /**
-   * Check to see if ths UIFilterDescription is in a FilterSet
-   * 
-   * @return true if it is in a FilterSet, false if not
-   */
-  public boolean inFilterSet() {
-  	return inFilterSet;
-  }
-  
-/**
- * Returns the description.
- * 
- * @return String description
- */
+
+	/**
+	 * Returns a value to determine which UIFilterDescription SQL specifier (tableConstraint or fieldName) to modify
+	 * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
+	 * 
+	 * @return String filterSetReq
+	 * @see FilterSetDescription
+	 */
+	public String getFilterSetReq() {
+		return filterSetReq;
+	}
+
+	/**
+	 * Check to see if ths UIFilterDescription is in a FilterSet
+	 * 
+	 * @return true if it is in a FilterSet, false if not
+	 */
+	public boolean inFilterSet() {
+		return inFilterSet;
+	}
+
+	/**
+	 * Returns the description.
+	 * 
+	 * @return String description
+	 */
 	public String getDescription() {
 		return description;
 	}
@@ -183,60 +191,28 @@ public class UIFilterDescription {
 		buf.append(", type=").append(type);
 		buf.append(", qualifier=").append(qualifier);
 		buf.append(", tableConstraint=").append(tableConstraint);
-		
+
 		if (inFilterSet)
-		  buf.append(", filterSetReq=").append(filterSetReq);
-		  
+			buf.append(", filterSetReq=").append(filterSetReq);
+
 		buf.append(", description=").append(description);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof UIFilterDescription))
-			return false;
-
-		UIFilterDescription otype = (UIFilterDescription) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-
-		if (! ( fieldName.equals(otype.getFieldName() ) ) )
-					return false;
-
-		if (! ( type.equals(otype.getType() ) ) )
-					return false;
-
-		if (! ( qualifier.equals(otype.getQualifier() ) ) )
-					return false;
-
-		if (! ( tableConstraint.equals(otype.getTableConstraint() ) ) )
-					return false;
-		
-		if (! ( filterSetReq.equals( otype.getFilterSetReq() ) ) )
-		  return false;
-		  									  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;
-
-        if (inFilterSet && ! (otype.inFilterSet()) )
-          return false;
-          
-        if (otype.inFilterSet() && ! ( inFilterSet ) )
-          return false;
-          
-		return true;
+  /**
+	 * Allows Collections manipulation of UIFilterDescription objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof UIFilterDescription && hashCode() == ((UIFilterDescription) o).hashCode();
 	}
 	
 	public int hashCode() {
-     return hshcode;
+		return hshcode;
 	}
-	
-	private final String internalName, displayName,	fieldName,	type,	qualifier, filterSetReq, tableConstraint, description;
+
+	private final String internalName, displayName, fieldName, type, qualifier, filterSetReq, tableConstraint, description;
 	private boolean inFilterSet = false;
 	private int hshcode = 0;
 }

@@ -237,39 +237,11 @@ public class FilterPage {
 		return buf.toString();
 	}
 
-  public boolean equals(Object o) {
-		if (!(o instanceof FilterPage))
-			return false;
-
-		FilterPage otype = (FilterPage) o;
-		
-		if (! (internalName.equals(otype.getInternalName()) ) )
-			return false;
-	  
-		if (! (displayName.equals(otype.getDisplayName()) ) )
-			return false;
-	  
-		if (! (description.equals(otype.getDescription()) ) )
-			return false;		
-
-    // other FilterPage must contain all FilterGroups that this FilterPage contains
-    for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
-			FilterGroup element = (FilterGroup) iter.next();
-			if (! ( otype.containsFilterGroup( element.getInternalName() ) ) )
-			  return false;
-			if (! ( element.equals( otype.getFilterGroupByName( element.getInternalName() ) ) ) )
-			  return false;
-		}
-		
-		// this FilterPage must contain all FilterGroups that the other FilterPage contains
-		FilterGroup[] gpages = otype.getFilterGroups();
-		for (int i = 0, n = gpages.length; i < n; i++) {
-			FilterGroup group = gpages[i];
-			if (! ( filterGroups.containsValue(group) ) )
-			  return false;
-		}
-		
-		return true;
+  /**
+	 * Allows Equality Comparisons manipulation of FilterPage objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof FilterPage && hashCode() == ((FilterPage) o).hashCode();
 	}
 	
 	public int hashCode() {
