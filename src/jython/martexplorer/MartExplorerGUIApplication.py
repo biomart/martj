@@ -65,6 +65,7 @@ DEFAULT_PASSWORD = ""
 
 APPLICATION_SIZE = (1000,700)
 ATTRIBUTE_WIDGET_SIZE = (170, 30)
+DEFAULT_FLANKING_SIZE = "1000"
 GAP = 5
 SPACE=" &nbsp;"
 
@@ -177,6 +178,8 @@ class AttributeManager(ChangeListener ):
                  group=None):
 
         self.attributePage = attributePage
+        # TODO update this to contain columnName and maybe partialTableName
+        self.attribute = FieldAttribute( label )
 
         self.__widget = JPanel( BorderLayout() )
         self.__widget.preferredSize = ATTRIBUTE_WIDGET_SIZE
@@ -201,8 +204,17 @@ class AttributeManager(ChangeListener ):
 	return self.__node
 
 
-    def deselect( self ):
+    def clear( self, event=None ):
         self.button.selected = 0
+
+
+    def updateQuery(self, query):
+        if not query.hasAttribute( self.attribute ):
+            query.addAttribute( self.attribute )
+
+    def updatePage(self, query):
+        self.button.selected = query.hasAttribute( self.attribute )
+        
 
     def stateChanged( self, event=None):
 
@@ -211,12 +223,10 @@ class AttributeManager(ChangeListener ):
 	
 	 if self.button.selected : 
 	     if not self.nodeInTree: # prevents trying to add node to tree several times per "click"
-		 print "selected", self.button.text
 		 self.attributePage.addNode( self.node )
 		 self.nodeInTree = 1
 	 else : 
 	     if self.nodeInTree:
-		 print "deselected", self.button.text
 		 self.attributePage.removeNode( self.node )
 		 self.nodeInTree = None
 		 
@@ -839,13 +849,15 @@ class SequencePage(Page):
 	max = (100,25)
 
         self.flank5Label = JLabel("5' Flanking region")
-        self.flank5 = JTextField(10)
+        self.flank5 = JTextField(DEFAULT_FLANKING_SIZE)
 	self.flank5.maximumSize=max
+        self.flank5.preferredSize=max
         flank5Panel = ColumnContainer(2,(self.flank5Label, self.flank5))
 
 	self.flank3Label = JLabel("3' Flanking region")
-        self.flank3 = JTextField(10)
+        self.flank3 = JTextField(DEFAULT_FLANKING_SIZE)
         self.flank3.maximumSize=max
+        self.flank3.preferredSize=max
         flank3Panel = ColumnContainer(2,(self.flank3Label, self.flank3))
         
         self.typeGroup = ButtonGroup()
@@ -921,20 +933,19 @@ class SequencePage(Page):
 		
 	self.dependencies()
 	if not self.nodeInTree:
-	    self.attributePage.addNode( self.node )
-	    self.nodeInTree = 1
+            self.add( node )
 	else:
 	    self.attributePage.refreshView()
-        #self.stateChanged( self.changeEvent ) # ?
 
 
     def clear( self, event=None ):
 	self.noInclude.selected = 1
 	self.noType.selected = 1
-        if self.nodeInTree:
-	    self.attributePage.removeNode( self.node )    
-	    self.nodeInTree = None
+        self.removeNode()
+        self.flank3.text = DEFAULT_FLANKING_SIZE
+        self.flank5.text = DEFAULT_FLANKING_SIZE
 	self.dependencies()
+
 
     def toString(self):
 	""" Provides label to tree node. """
@@ -959,32 +970,51 @@ class SequencePage(Page):
     def updateQuery(self, query):
         sd = None
         if self.transcript.selected and self.includeCodingSequence.selected:
-            sd = SequenceDescription("coding") 
+            sd = SequenceDescription( SequenceDescription.TRANSCRIPTCODING ) 
         elif self.transcript.selected and self.includePeptide.selected:
-            sd = SequenceDescription("peptide")
+            sd = SequenceDescription( SequenceDescription.TRANSCRIPTPEPTIDE )
         else:
             raise InvalidQueryException("Unsupported sequence configuration")
 
-        query.addSequenceDescription( sd )
+        query.sequenceDescription = sd
 
 
         
     def updatePage(self, query):
 
-        if query.sequenceDescription.type=="coding":
-            self.transcript.selected = 1
-            self.dependencies()
-            self.includeCodingSequence.selected = 1
-        elif query.sequenceDescription.type=="peptide":
-            self.transcript.selected = 1
-            self.dependencies()
-            self.includePeptide.selected = 1
-        else:
-            raise InvalidQueryException("Unsupported sequence description")
+        sd = query.sequenceDescription
+        if sd:
+            # must bring to front BEFORE add sequence to avoid it
+            # being wiped by a callback to clear()
+            self.attributePage.toFront( self )
 
+            if sd.type==SequenceDescription.TRANSCRIPTCODING:
+                self.transcript.selected = 1
+                self.dependencies()
+                self.includeCodingSequence.selected = 1
 
+            elif sd.type==SequenceDescription.TRANSCRIPTPEPTIDE:
+                self.transcript.selected = 1
+                self.dependencies()
+                self.includePeptide.selected = 1
 
+            else:
+                raise InvalidQueryException("Unsupported sequence description")
 
+        self.addNode()
+
+        
+
+    def addNode( self ):
+        if not self.nodeInTree:
+            self.attributePage.addNode( self.node )
+            self.nodeInTree = 1
+
+    def removeNode( self ):
+        if self.nodeInTree:
+            self.attributePage.removeNode( self.node )
+            self.nodeInTree = 0
+        
 
 class AttributeSubPage(Page):
 
@@ -1046,7 +1076,17 @@ class AttributeSubPage(Page):
         for b in self.noneButtons:
             b.selected = 1
         for am in self.attributeManagers:
-            am.deselect()
+            am.clear()
+
+
+    def updateQuery(self, query):
+        for am in self.attributeManagers:
+            am.updateQuery( query )
+
+    def updatePage(self, query):
+        for am in self.attributeManagers:
+            am.updatePage( query )
+
 
 
 class AttributePage(Page):
@@ -1057,15 +1097,22 @@ class AttributePage(Page):
 	Page.__init__(self)
 	self.cardContainer = cardContainer
         self.tabs = []
-	tp = JTabbedPane( stateChanged=self.clear)
-	self.add( tp )
-	self.addTabs(tp, defaultAttributeConfiguration)
+	self.tabbedPane = JTabbedPane( stateChanged=self.clear)
+	self.add( self.tabbedPane )
+	self.addTabs(self.tabbedPane, defaultAttributeConfiguration)
 
 	# these must be set before add/removeNode() is called.
         self.tree = None
         self.attributesNode = None
         self.attributesNodePath = None
 
+        self.sequencePage = SequencePage(self)
+	self.tabbedPane.add( self.sequencePage, self.sequencePage.name )
+        self.tabs.append(self.sequencePage)
+
+
+    def toFront(self, tab):
+        self.tabbedPane.setSelectedComponent( tab )
 
 
     def addTabs(self, tabbedPane, configuration):
@@ -1083,20 +1130,24 @@ class AttributePage(Page):
             tabbedPane.add( tab, tab.name )
             self.tabs.append( tab )
             
-        sp = SequencePage(self)
-	tabbedPane.add( sp, sp.name )
-        self.tabs.append(sp)
     
 
     def updateQuery(self, query):
-	print "todo updateQ"
+        for tab in self.tabs:
+            tab.updateQuery( query )
+
+
 
     def updatePage(self, query):
-	print "todo updatePage"
+        for tab in self.tabs:
+            tab.updatePage( query )
+
+
 
     def clear( self, event=None):
         for tab in self.tabs:
             tab.clear()
+
         
 
     def addNode(self, node):
@@ -1281,7 +1332,6 @@ class QueryEditor(JPanel):
         outputNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
 				    OutputPage())
         attributePage = AttributePage(self.cardContainer)
-	print "attributePage", attributePage
         attributesNode = QueryTreeNode( tree, outputNode, 0, self.cardContainer,
 					attributePage)
         formatNode = QueryTreeNode( tree, outputNode, 1, self.cardContainer,
@@ -1532,8 +1582,12 @@ class MartGUIApplication(JFrame):
 	    # scroll to top of results
 	    self.resultsPage.scrollToTop()
         except (InvalidQueryException), ex:
+            message = ex.message
+            if len(message)>80:
+                message = message[:80] + "..."
             JOptionPane.showMessageDialog( self,
-                                           "Failed to execute query: " + ex.message,
+                                           "Failed to execute query: "
+                                           + message,
                                           "Error",
                                           JOptionPane.ERROR_MESSAGE)
 	    ex.printStackTrace()
@@ -1544,7 +1598,7 @@ class MartGUIApplication(JFrame):
 
     def doAbout(self, event=None):
         JOptionPane.showMessageDialog(self,
-                                      "MartExplorer development version. Copyright EBI and GRL.",
+                                      "MartExplorer (development version). Copyright EBI and GRL.",
                                       "About MartExplorer",
                                       JOptionPane.OK_OPTION )
 
