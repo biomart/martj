@@ -1412,8 +1412,8 @@ class MartGUIApplication(JFrame):
         # TODO need a result window
         #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") )
 
-        sd = SequenceDescription( "coding" )
-        q.addSequenceDescription( sd )
+        sd = SequenceDescription( SequenceDescription.TRANSCRIPTCODING  )
+        q.sequenceDescription = sd 
         self.editor.updatePage( q )
 
 
