@@ -141,10 +141,6 @@ public class TransformationUnit {
 	
 	
 	
-	
-	
-	
-	
 	public String dropTempTable (){
 		
 		String sql="";
@@ -156,14 +152,46 @@ public class TransformationUnit {
 	
 	
 	
-	private static String simpleJoin(Table temp_start, Table ref_table, String temp){
+	private String simpleJoin(Table temp_start, Table ref_table, String temp){
+		
+		StringBuffer temp_start_col = getStartColumns(temp_start);
+		StringBuffer ref_table_col = getRefColumns(ref_table);
+		
+		String sql = getSQL(" , ", " WHERE ", temp, temp_start_col, ref_table_col);
+		return sql;				
+		
+	}
+	
+	
+	private String leftJoin(Table temp_start, Table ref_table, String temp){
+		
+		StringBuffer temp_start_col = getStartColumns(temp_start);
+		StringBuffer ref_table_col = getRefColumns(ref_table);
+		
+		String sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
+		return sql;
+		
+	}
+	
+	
+	
+	
+	private  StringBuffer getStartColumns (Table temp_start){
 		
 		StringBuffer temp_start_col = new StringBuffer("");
-		StringBuffer ref_table_col = new StringBuffer("");
 		
 		for (int j=0; j<temp_start.getColumns().length;j++){			
 			temp_start_col.append(temp_start.getName()+"."+temp_start.getColumns()[j].getName()+",");
 		}
+		
+		return temp_start_col;
+			
+	}
+	
+	private StringBuffer getRefColumns (Table ref_table){
+		
+		StringBuffer ref_table_col = new StringBuffer("");
+		
 		for (int j=0; j<ref_table.getColumns().length;j++){
 			if (ref_table.getColumns()[j].hasAlias()){		
 				ref_table_col.append(ref_table.getName()+"."+ref_table.getColumns()[j].getName()+
@@ -174,12 +202,18 @@ public class TransformationUnit {
 		}
 		
 		ref_table_col.delete(ref_table_col.length()-1,ref_table_col.length());
-		
+	
+		return ref_table_col;
+	
+	}
+	
+	
+	private String getSQL (String ONE, String TWO, String temp,StringBuffer temp_start_col, StringBuffer ref_table_col){
 		
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE ");
 		
 		tempsql.append(temp+ "  SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
-				temp_start.getName()+	", "+ref_table.getName()+ " WHERE " +ref_table.getName()+"."+
+				temp_start.getName()+ ONE +ref_table.getName()+ TWO +ref_table.getName()+"."+
 				ref_table.getKey()+" = "+ temp_start.getName()+"."+temp_start.getKey());
 		if (ref_table.hasExtension()){
 			tempsql.append(" AND "+ref_table.getName()+"."+ref_table.getExtension());	
@@ -189,18 +223,10 @@ public class TransformationUnit {
 		} 
 		tempsql.append(";");
 		
-		return tempsql.toString();				
+		return tempsql.toString();
+		
 		
 	}
-	
-	
-	private static String leftJoin(Table temp_start, Table ref_table, String temp){
-		
-		String sql= "left join sql";
-		return sql;
-		
-	}
-	
 	
 	
 	
