@@ -524,7 +524,9 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	}
 
 	/**
-	 * Adds a representation of the attribute to the tree in the correct
+	 * Adds a child node to attributesNode at the specified index. 
+   * If dsv->attributeDescription->displayName is available that is used for the
+   * label, otherwise attribute.fieldName is used.
 	 * position in the list of attributes.
 	 * @see org.ensembl.mart.lib.QueryChangeListener#queryAttributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
 	 */
@@ -533,35 +535,21 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		int index,
 		Attribute attribute) {
 
-		if (dsv == null) {
-			feedback.warn(
-				"Error: can not represent attribute because no dataset view loaded.");
-			return;
-		}
-
 		// TODO disambiguate: one attribute.getField()-> N*AttributeDescription
-		AttributeDescription ad =
-			dsv.getAttributeDescriptionByInternalName(attribute.getField());
 
-		if (ad == null) {
-			feedback.warn(
-				"Error: no attribute description for field '"
-					+ attribute.getField()
-					+ "' in dataset view in current '"
-					+ dsvInternalName
-					+ "'.");
-			return;
-		}
+		// Try to get a user friendly labelName, 
+		// otherwise use the raw one from attribute
 
-		if (dsv == null) {
-			feedback.warn(
-				"Error: can not represent attribute because dataset view unavailable for:"
-					+ dsvInternalName);
-			return;
-		}
+		AttributeDescription ad = null;
+		if (dsv != null)
+			ad =
+				dsv.getAttributeDescriptionByFieldNameTableConstraint(
+					attribute.getField(),
+					attribute.getTableConstraint());
 
-		NodeUserObject userObject =
-			new NodeUserObject(null, null, ad.getDisplayName());
+		String nodeLabel =
+			(ad != null) ? ad.getDisplayName() : attribute.getField();
+		NodeUserObject userObject = new NodeUserObject(null, null, nodeLabel);
 		DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
 		attributesNode.insert(treeNode, index);
 		treeModel.reload(attributesNode);
@@ -618,12 +606,14 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	 */
 	public void queryFilterAdded(Query sourceQuery, int index, Filter filter) {
 
-    // Try to get a user friendly fieldName, 
-    // otherwise use the raw one from filter
-		FilterDescription fd =
-			dsv.getFilterDescriptionByFieldNameTableConstraint(
-				filter.getField(),
-				filter.getTableConstraint());
+		// Try to get a user friendly fieldName, 
+		// otherwise use the raw one from filter
+		FilterDescription fd = null;
+		if (dsv != null)
+			fd =
+				dsv.getFilterDescriptionByFieldNameTableConstraint(
+					filter.getField(),
+					filter.getTableConstraint());
 		String fieldName = (fd != null) ? fd.getDisplayName() : filter.getField();
 
 		String nodeLabel = fieldName + filter.getCondition() + filter.getValue();
