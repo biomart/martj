@@ -128,7 +128,7 @@ public class MartExplorer
 
   private Feedback feedback = new Feedback(this);
 
-  final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
+  final JCheckBox advanced = new JCheckBox("Optional Dataset Configuration");
 
   final JCheckBox logging = new JCheckBox("Logging");
 
@@ -429,7 +429,7 @@ public class MartExplorer
     
     settings.add(addDB);
    
-    
+ /**   
     JMenuItem adaptors = new JMenuItem("Add File");
     settings.add(adaptors).setAccelerator(
     		KeyStroke.getKeyStroke(KeyEvent.VK_F, Event.CTRL_MASK));
@@ -439,13 +439,13 @@ public class MartExplorer
     		adaptorManager.showDialog(parent);
     	}
     });
+    */
     
-    
-    JMenu advancedMenu = new JMenu("Advanced");
+    JMenu advancedMenu = new JMenu("Enable");
     settings.add(advancedMenu);
 
-    advanced.setToolTipText(
-      "Enables optional DatasetConfigs, ability to change dataset name and datasource.");
+    //advanced.setToolTipText(
+     // "Enables optional DatasetConfigs.");
     advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
     advancedMenu.add(advanced);
     advanced.addItemListener(new ItemListener() {
@@ -566,8 +566,7 @@ public class MartExplorer
       if (getNumDatasetConfigsAvailable() == 0) {
 
         feedback.warning(
-          "You need to add an "
-            + "adaptor containing dataset configs before you can create a query.");
+          "No datasets available please check your db connection details");
 
       } else {
 
