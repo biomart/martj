@@ -94,12 +94,16 @@ public class SequenceTest extends Base {
 		
 		TranscriptAdaptor ta = ensjDriver.getTranscriptAdaptor();
 		StringTokenizer sequences = new StringTokenizer(results, ">", false);
-		
+		    
 		while (sequences.hasMoreTokens()) {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
 			String martseq = lines.nextToken();
+      //for purposes of testing against ensj, the stop codon must be removed
+      if (martseq.endsWith("*"))
+        martseq = martseq.substring(0, martseq.indexOf("*"));
+        
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			String ensjseq = transcript.getTranslation().getPeptide();
