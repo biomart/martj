@@ -97,6 +97,7 @@ public class DatabaseDatasetViewUtils {
   private static final String EXISTWHERE = " where internalName = ? and displayName = ? and dataset = ?";
   private static final String DELETEOLDXML = "delete from "; //append table after user test
   private static final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ? and dataset = ?";
+    private static final String DELETEDATASETVIEW = " where dataset = ?";
   private static final String INSERTXMLSQLA = "insert into "; //append table after user test
   private static final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
@@ -1253,6 +1254,39 @@ public class DatabaseDatasetViewUtils {
       throw new ConfigurationException(
         "Did not delete old XML data rows for " + internalName + ", " + displayName + "\n");
   }
+
+
+
+
+ /**
+   * Removes all records in a given metatable for the given dataset   
+   * @param dsrc - DetailedDataSource for Mart Database
+   * @param dataset - dataset for DatasetView entries to delete from metatable
+   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSViewEntryCountFor()
+   */
+
+  public static void deleteDatasetView(
+    DetailedDataSource dsrc,
+    String dataset)
+    throws ConfigurationException {
+    String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETVIEW;
+
+    try {
+      Connection conn = dsrc.getConnection();
+      PreparedStatement ds = conn.prepareStatement(deleteSQL);
+      ds.setString(1, dataset);
+      ds.executeUpdate();
+      ds.close();
+      conn.close();
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQLException during delete\n");
+   }
+  }
+
+
+
+
 
   /**
    * Get the correct DatasetView table for a given user in the Mart Database

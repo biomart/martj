@@ -225,12 +225,20 @@ public class MartViewEditor extends JFrame {
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_M);
 		menu.add(menuItem);       
-		
+
+                menuItem = new JMenuItem("Delete XML from database");
+		menuItem.addActionListener(menuActionListener);
+		menuItem.setMnemonic(KeyEvent.VK_I);
+		menu.add(menuItem);  		
+
+
 		menuItem = new JMenuItem("Update XML");
 		menuItem.addActionListener(menuActionListener);
 		menuItem.setMnemonic(KeyEvent.VK_I);
-		menu.add(menuItem);            								
-        
+		menu.add(menuItem);
+
+		          								
+      
 		menu.addSeparator();
         menuItem = new JMenuItem("New Dataset View", icon);
         
@@ -463,6 +471,8 @@ public class MartViewEditor extends JFrame {
 				naiveDatasetView();  				  
 			else if (e.getActionCommand().startsWith("Update"))
 				updateDatasetView();
+	                else if (e.getActionCommand().startsWith("Delete"))
+				deleteDatasetView();
 			else if (e.getActionCommand().startsWith("Hidden"))
 				makeHidden();	
                 	  				  				  																				  
@@ -549,6 +559,9 @@ public class MartViewEditor extends JFrame {
 
     }
 
+
+
+
 	public void importDatasetView() {
 		try{
 		  if (ds == null){
@@ -574,6 +587,8 @@ public class MartViewEditor extends JFrame {
 		catch (ConfigurationException e){
 		}
 	}
+
+
 
 	public void exportDatasetView() {
 		if (ds == null){
@@ -655,6 +670,33 @@ public class MartViewEditor extends JFrame {
 	  catch (Exception e){
 	  }		
 	}
+
+
+	public void deleteDatasetView() {
+	 
+		try{
+		  if (ds == null){
+		    JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
+		    return;
+		  }
+		
+		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
+		  String dataset = (String) JOptionPane.showInputDialog(null,
+				   "Choose one", "Dataset",
+				   JOptionPane.INFORMATION_MESSAGE, null,
+				   datasets, datasets[0]);		
+		  if (dataset == null)
+		    return;	
+		  
+               DatabaseDatasetViewUtils.deleteDatasetView(ds,dataset);
+
+		  
+		}
+		catch (ConfigurationException e){
+		}
+	}
+	
+
 		
     public void save() {
         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
