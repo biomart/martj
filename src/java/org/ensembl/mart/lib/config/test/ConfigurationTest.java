@@ -41,6 +41,7 @@ import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartDTDEntityResolver;
 import org.ensembl.mart.lib.config.MartXMLutils;
+import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.UIAttributeDescription;
 import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
@@ -302,7 +303,7 @@ public class ConfigurationTest extends Base {
 
 		//FilterCollection data correct
 		FilterCollection[] fcs = fg.getFilterCollections();
-		assertEquals("Warning, should get two filter collections\n", 2, fcs.length);
+		assertEquals("Warning, should get three filter collections\n", 3, fcs.length);
 
 		// first FilterCollection is not in a FilterSet
 		FilterCollection fc = fcs[0];
@@ -545,6 +546,154 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", testObjectCode, ObjectCode);
 		assertTrue("Warning, third UIDSFilterDescription should be in a FilterSet\n", dsfTable.IsInFilterSet());
 		
+		// third FilterCollection has Options
+		fc = fcs[2];
+		testIName = "testOptionCollection";
+		IName = fc.getInternalName();
+		testDName = "A TEST OF Options";
+		DName = fc.getDisplayName();
+		Desc = fc.getDescription();
+		testType = "list";
+		Type = fc.getType();
+
+		assertEquals("Warning, Internal Name not correctly set for FilterCollection\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for FilterCollection\n", testDesc, Desc);
+		assertEquals("Warning, Type not correctly set for FilterCollection\n", testType, Type);
+		assertTrue("Third FilterCollection should have Options\n", fc.hasOptions());
+		
+		//	contains/get for FilterGroup-FilterCollection
+		containsTest = fg.containsFilterCollection(testIName);
+		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt\n", containsTest);
+		if (containsTest) {
+			testGetByName = fg.getFilterCollectionByName(testIName).getInternalName();
+			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
+		}		
+		
+		// Option data correct
+		Option[] options = fc.getOptions();
+		assertEquals("Warning, should get two Options in Third FilterCollection\n", 2, options.length);
+		
+		// first option does not contain options, and isSelectable is true
+		Option option = options[0];
+		testIName = "testOption";
+		IName = option.getInternalName();
+		testDName = "A Test Option";
+		DName = option.getDisplayName();
+		Desc = option.getDescription();
+	  
+		assertEquals("Warning, Internal Name not correctly set for Option\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for Option\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for Option\n", testDesc, Desc);
+		assertTrue("First Option " + option + " should be selectable\n", option.isSelectable());
+		assertTrue("First Option " + option + "should not have Options\n", ! option.hasOptions());
+		
+		//contains/get for FilterCollection-Option
+		containsTest = fc.containsOption(testIName);
+		assertTrue("Warning, Third FilterCollection should contain testOption, but doesnt\n", containsTest);
+		if(containsTest) {
+			testGetByName = fc.getOptionByName(testIName).getInternalName();
+			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);		
+		}
+		
+		// Second option contains one option, and isSelectable is false
+		option = options[1];
+		testIName = "testOptionWithOption";
+		IName = option.getInternalName();
+		testDName = "A Test Option With an Option";
+		DName = option.getDisplayName();
+		Desc = option.getDescription();
+	  
+		assertEquals("Warning, Internal Name not correctly set for Option\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for Option\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for Option\n", testDesc, Desc);
+		assertTrue("Second Option" + option + " should not be selectable\n", ! option.isSelectable());
+		assertTrue("Second Option" + option + " should have Options\n", option.hasOptions());
+		
+		//contains/get for FilterCollection-Option
+		containsTest = fc.containsOption(testIName);
+		assertTrue("Warning, Third FilterCollection should contain testOptionWithOption, but doesnt\n", containsTest);
+		if(containsTest) {
+			testGetByName = fc.getOptionByName(testIName).getInternalName();
+			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);		
+		}
+
+    Option[] subOptions = option.getOptions();
+    assertEquals("Warning, second option should only contain one Option\n", 1, subOptions.length);
+    
+		// sub option does not contain options, and isSelectable is true
+		Option suboption = subOptions[0];
+		testIName = "testOptionInOption";
+		IName = suboption.getInternalName();
+		testDName = "A Test Option In an Option";
+		DName = suboption.getDisplayName();
+		Desc = suboption.getDescription();
+	  
+		assertEquals("Warning, Internal Name not correctly set for Sub Option\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for Sub Option\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for Sub Option\n", testDesc, Desc);
+		assertTrue("Sub Option should be selectable\n", suboption.isSelectable());
+		assertTrue("Sub Option should not have Options\n", ! suboption.hasOptions());
+		
+		//contains/get for Option-Option
+		containsTest = option.containsOption(testIName);
+		assertTrue("Warning, Second Option should contain testOptionInOption, but doesnt\n", containsTest);
+		if(containsTest) {
+			testGetByName = option.getOptionByName(testIName).getInternalName();
+			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);		
+		}
+		
+		//UIFilterDescription data correct
+		fs = fc.getUIFilterDescriptions();
+		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
+
+		// first FilterDescription of this FilterCollection is a UIFilterDescription, and has Options in first Option
+		assertTrue("Warning, First FilterDescription in OptionFilterCollection should be a UIFilterDescription", fs.get(0) instanceof UIFilterDescription);		
+		fField = (UIFilterDescription) fs.get(0);
+		testIName = "OptionFilterDescription";
+		IName = fField.getInternalName();
+		testDName = "A FilterDescription With An Option";
+		DName = fField.getDisplayName();
+		Desc = fField.getDescription();
+		Type = fField.getType();
+		testFieldName = "test_id";
+		FieldName = fField.getFieldName();
+		testQualifier = "in";
+		Qualifier = fField.getQualifier();
+    String testOptionName = "testOption";
+    String OptionName = fField.getOptionName();
+    
+		assertEquals("Warning, Internal Name not correctly set for UIFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIFilterDescription\n", testType, Type);
+		assertEquals("Warning, FieldName not set correctly for UIFilterDescription\n", testFieldName, FieldName);
+		assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", testQualifier, Qualifier);
+		assertEquals("Warning, optionName not correctly set for UIFilterDescription\n", testOptionName, OptionName);
+		assertTrue("Warning, Third FilterColletion should contain option refereced by UIFilterDescription but doesnt\n", fc.containsOption(OptionName) );
+		
+		//second FilterDescription is a UIDSFilterDescription, and has Options in Second Option
+		assertTrue("Warning, second FilterDescription in optionFilterCollection should be a UIDSFilterDescription\n", fs.get(1) instanceof UIDSFilterDescription);
+    dsf = (UIDSFilterDescription) fs.get(1);
+		testIName = "optionUIDSFilterDescription";
+		IName = dsf.getInternalName();
+		testDName = "A TEST ID, DOESNT EXIST";
+		DName = dsf.getDisplayName();
+		Desc = dsf.getDescription();
+		Type = dsf.getType();
+		ObjectCode = dsf.getObjectCode();
+		testOptionName = "testOptionWithOption";
+		OptionName = dsf.getOptionName();
+		
+		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", testType, Type);
+		assertEquals("Warning, filterSetReq not set correctly for UIDSFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
+		assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", testObjectCode, ObjectCode);
+		assertEquals("Warning, optionName not set correctly for UIDSFilterDescription\n", testOptionName, OptionName);
+		assertTrue("Warning, Third FilterColletion should contain option refereced by UIDSFilterDescription but doesnt\n", fc.containsOption(OptionName));
+    
 		// AttributePage data correct
 		AttributePage[] aps = d.getAttributePages();
 		assertEquals("Warning, should only get one filter page\n", 1, aps.length);
