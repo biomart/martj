@@ -89,7 +89,7 @@ public class DatabaseDatasetConfigUtils {
   private final String DELETEINTERNALNAME = " and internalName = ?";
   private final String INSERTXMLSQLA = "insert into "; //append table after user test
   private final String INSERTXMLSQLB =
-    " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
+    " (internalName, displayName, dataset, description, xml, MessageDigest,type, visible, version) values (?, ?, ?, ?, ?, ?,?,?,?)";
   private final String SELECTXMLFORUPDATE = "select xml from ";
   private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
@@ -424,7 +424,7 @@ public class DatabaseDatasetConfigUtils {
     String version)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible);
+      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible, version);
 
     Connection conn = null;
     try {
@@ -494,7 +494,8 @@ public class DatabaseDatasetConfigUtils {
     String description,
     Document doc,
     String type,
-    String visible)
+    String visible,
+	String version)
     throws ConfigurationException {
 
     Connection conn = null;
@@ -544,7 +545,8 @@ public class DatabaseDatasetConfigUtils {
       ps.setBytes(6, md5);
 	  ps.setString(7,type);
 	  ps.setString(8,visible);
-
+	  ps.setString(9,version);
+	  
       int ret = ps.executeUpdate();
 
       ResultSet rs = ohack.executeQuery();
