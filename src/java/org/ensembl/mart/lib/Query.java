@@ -145,10 +145,9 @@ public class Query {
   }
 
   /**
-   * add an Attribute object to the list of Attributes
-   * for the Query.
-   * 
-   * @param Attribute attribute
+   * Adds attribute to the end of the attributes array. Does nothing if attribute is 
+   * null or already added.
+   * @param attribute item to be added.
    */
   public void addAttribute(Attribute attribute) {
     addAttribute(attributes.size(), attribute);
@@ -170,7 +169,7 @@ public class Query {
           index,
           filter);
     }
-    
+
   }
 
   /**
@@ -211,7 +210,8 @@ public class Query {
   }
 
   /**
-   * Add filter to end of filter list.
+   * Add filter to end of filter list. Does nothing if filter is null
+   * or already added.
    * 
    * @param Filter filter to be added.
    */
@@ -220,12 +220,17 @@ public class Query {
   }
 
   /**
-   * Add filter to end of filter list.
+   * Add filter to end of filter list. Does nothing if filter is null
+   * or already added.
    * 
-   * @param index index at which the specified element is to be inserted.
-   * @param Filter filter to be added.
+   * @param index position where to insert the filter in the filters array.
+   * @param filter filter to be added
    */
   public void addFilter(int index, Filter filter) {
+    
+    if (filter == null || filters.contains( filter ))
+      return;
+      
     filters.add(index, filter);
     log();
     for (int i = 0; i < listeners.size(); ++i)
@@ -258,9 +263,9 @@ public class Query {
     SequenceDescription oldSequenceDescription = this.sequenceDescription;
     this.sequenceDescription = s;
     this.querytype = Query.SEQUENCE;
-    
+
     log();
-    
+
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).sequenceDescriptionChanged(
         this,
@@ -315,9 +320,9 @@ public class Query {
   public void setStarBases(String[] starBases) {
     String[] old = this.starBases;
     this.starBases = starBases;
-    
+
     log();
-    
+
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).starBasesChanged(
         this,
@@ -580,15 +585,15 @@ public class Query {
    * @param string -- String name to apply to this Query.
    */
   public void setQueryName(String queryName) {
-    
-    if (this.queryName.equals( queryName ) )
+
+    if (this.queryName.equals(queryName))
       return;
-    
+
     String old = this.queryName;
     this.queryName = queryName;
-    
+
     log();
-    
+
     for (int i = 0; i < listeners.size(); ++i)
       ((QueryChangeListener) listeners.get(i)).queryNameChanged(
         this,
@@ -603,17 +608,25 @@ public class Query {
     listeners.add(listener);
   }
 
+
+  /**
+   * Adds attribute at the specified index. Does nothing if attribute is 
+   * null or already added.
+   * @param index position in array to add attribute.
+   * @param attribute item to be added to attributes array.
+   */
   public void addAttribute(int index, Attribute attribute) {
 
-    if (!attributes.contains(attribute)) {
-      attributes.add(index, attribute);
-      log();
-      for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).attributeAdded(
-          this,
-          index,
-          attribute);
-    }
+    if (attribute == null || attributes.contains(attribute))
+      return;
+
+    attributes.add(index, attribute);
+    log();
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).attributeAdded(
+        this,
+        index,
+        attribute);
 
   }
 
@@ -624,7 +637,7 @@ public class Query {
    * methods such as addFilter(...) and setDataset(...).
    */
   public void log() {
-    if ( logger.isLoggable( Level.FINE ))
+    if (logger.isLoggable(Level.FINE))
       logger.fine(this.toString());
   }
 
