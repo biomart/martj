@@ -36,6 +36,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+//import org.ensembl.util.NotImplementedYetException;
 
 /**
  * CommandLine Tool for extraction of data from a mart database.
@@ -326,7 +327,7 @@ public class MartExplorerTool {
 
     q.setFilters( (Filter[])filters.toArray( new Filter[]{}) );
     
-    if (seqDescription!=null ) q.addSequenceDescription(seqDescription);
+    if (seqDescription!=null ) q.setSequenceDescription(seqDescription);
 
     Engine e = new Engine(host, port, user, password, database);
     try {
@@ -528,16 +529,20 @@ public class MartExplorerTool {
 	  	     break;
 	  	 case 3:
 	  	     // left+type || type+right
-	  	     String tmp = tokens.nextToken();
-	  	     if (SequenceDescription.isValidType(tmp)) {
-	  	         type =  tmp;
-	  	         tokens.nextToken();
-	  	         right = Integer.parseInt(tokens.nextToken());
+	  	     String tmpl = tokens.nextToken();
+	  	     tokens.nextToken();
+	  	     String tmpr = tokens.nextToken();
+	  	     
+	  	     if (SequenceDescription.SEQS.contains(tmpl)) {
+	  	         type =  tmpl;
+	  	         right = Integer.parseInt(tmpr);
+	  	     }
+	  	     else if (SequenceDescription.SEQS.contains(tmpr)) {
+	  	         left = Integer.parseInt(tmpl);
+	  	         type = tmpr;
 	  	     }
 	  	     else {
-	  	         left = Integer.parseInt(tmp);
-	  	         tokens.nextToken();
-	  	         type = tokens.nextToken();
+	  	        throw new RuntimeException("Couldnt parse sequence request "+seqrequest );
 	  	     }
 	  	     break;
 	  	 case 1:
@@ -545,10 +550,23 @@ public class MartExplorerTool {
 	  	     type = seqrequest;
 	  	     break;
 	  }
+	  
+	  int typecode = 0;
+	  if (type.equals(SequenceDescription.CODINGSEQ))
+	      typecode = SequenceDescription.TRANSCRIPTCODING;
+	  else if (type.equals(SequenceDescription.PEPTIDESEQ))
+	      typecode = SequenceDescription.TRANSCRIPTPEPTIDE;
+	  else if (type.equals(SequenceDescription.CDNASEQ))
+	      typecode = SequenceDescription.TRANSCRIPTCDNA;
+	  else if (type.equals(SequenceDescription.TRANSCRIPTEXONSEQ))
+	      typecode = SequenceDescription.TRANSCRIPTEXONS;
+	  else
+	      throw new RuntimeException(type+" is not a supported sequence type\n"+usage());
+	          
   	  try {
-  	  	seqDescription = new SequenceDescription(type, left, right);
-  	  } catch (SequenceException e) {
-  	  	logger.info("Couldnt add Sequence Description"+e.getMessage());
+  	  	seqDescription = new SequenceDescription(typecode, left, right);
+  	  } catch (InvalidQueryException e) {
+  	  	throw new RuntimeException("Couldnt add Sequence Description "+e.getMessage());
   	  }
   }
 }

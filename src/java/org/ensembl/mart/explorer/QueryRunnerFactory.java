@@ -17,6 +17,10 @@
  */
 package org.ensembl.mart.explorer;
 
+import java.sql.*;
+import java.io.*;
+
+import org.ensembl.util.NotImplementedYetException;
 
 /**
  * Factory class for generating QueryRunner implimenting objects 
@@ -38,13 +42,13 @@ public class QueryRunnerFactory {
      *  @see Query
      *  @see FormatSpec
      */
-    public static QueryRunner createQueryRunner(Query q, FormatSpec f) throws FormatException {
+    public static QueryRunner createQueryRunner(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException, NotImplementedYetException {
     	QueryRunner thisQueryRunner = null;
 		switch (q.getType()) {
  
 		case Query.ATTRIBUTE:
             if (f.getFormat() == FormatSpec.TABULATED) {
-				thisQueryRunner = new TabulatedQueryRunner(q,f);
+				thisQueryRunner = new TabulatedAttributeQueryRunner(q,f,conn,out);
 				break;
             }
             else 
@@ -52,12 +56,75 @@ public class QueryRunnerFactory {
 
         case Query.SEQUENCE:
             if (f.getFormat() == FormatSpec.TABULATED) {
-				thisQueryRunner = new TabulatedSeqQueryRunner(q,f);
+				switch (q.getSequenceDescription().getSeqCode()) {
+					case SequenceDescription.TRANSCRIPTCODING:
+					    thisQueryRunner = new TabulatedCodingSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+					case SequenceDescription.TRANSCRIPTPEPTIDE:
+                       thisQueryRunner = new TabulatedPeptideSeqQueryRunner(q,f,conn,out);
+					   break;
+					    
+					case SequenceDescription.TRANSCRIPTCDNA:
+                        thisQueryRunner = new TabulatedCdnaSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+					case SequenceDescription.TRANSCRIPTEXONS:
+					    thisQueryRunner = new TabulatedTExonSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+					case SequenceDescription.TRANSCRIPTEXONINTRON:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+//					thisQueryRunner = new TabulatedTranscriptEISeqQueryRunner(q,f,conn,out);
+					    //break;
+					    
+					case SequenceDescription.GENEEXONINTRON:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+//					thisQueryRunner = new TabulatedGeneEISeqQueryRunner(q,f,conn,out);
+					    //break;
+					    					
+					case SequenceDescription.GENEEXONS:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+//					thisQueryRunner = new TabulatedGeneExonSeqQueryRunner(q,f,conn,out);
+					    //break;					
+				}
 				break;
             }
-            else 
-               thisQueryRunner = new FastaSeqQueryRunner(q,f);
-               break;
+            else {
+				switch (q.getSequenceDescription().getSeqCode()) {
+					case SequenceDescription.TRANSCRIPTCODING:
+					    thisQueryRunner = new FastaCodingSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+					case SequenceDescription.TRANSCRIPTPEPTIDE:
+					    thisQueryRunner = new FastaPeptideSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+				    case SequenceDescription.TRANSCRIPTCDNA:
+					    thisQueryRunner = new FastaCdnaSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+				    case SequenceDescription.TRANSCRIPTEXONS:
+					    thisQueryRunner = new FastaTExonSeqQueryRunner(q,f,conn,out);
+					    break;
+					    
+				    case SequenceDescription.TRANSCRIPTEXONINTRON:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+                        //thisQueryRunner = new FastaTranscriptEISeqQueryRunner(q,f,conn,out);
+					    //break;
+					    
+				    case SequenceDescription.GENEEXONINTRON:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    //thisQueryRunner = new FastaGeneEISeqQueryRunner(q,f,conn,out);
+					    //break;
+					    					
+				    case SequenceDescription.GENEEXONS:
+					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    //thisQueryRunner = new FastaGeneExonSeqQueryRunner(q,f,conn,out);
+					    //break;
+				}            	
+            }   
+            break;
 		}
 		return thisQueryRunner;
 	}

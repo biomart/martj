@@ -63,7 +63,7 @@ public class FormatSpec {
       * Constructor for when you just want to set FASTA, or 
       * you want to set the separator later.
       * 
-      * @param int format
+      * @param format int
       */
      public FormatSpec(int format) {
      	this.format = format;
@@ -73,7 +73,7 @@ public class FormatSpec {
       * Formats can be set with explicit use of the static TABULATED and FASTA
       * variables.
       * 
-      * @param format -- int
+      * @param format int
       */
      public void setFormat(int format) {
          this.format = format;

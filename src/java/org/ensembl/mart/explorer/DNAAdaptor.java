@@ -131,7 +131,7 @@ public class DNAAdaptor {
 	private int cachedSeqEnd = 0;
 	private String cachedSeq = ""; // will cache a sequence after calls to CacheSequence for use by getSequence
 	
-	private Logger logger = Logger.getLogger(TabulatedQueryRunner.class.getName());	
+	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());	
     private Connection conn;
     private String sql = null;
     private int chunkSize = 100000; // Size of dna chunks in sgp_chunks table

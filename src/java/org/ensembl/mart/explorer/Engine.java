@@ -21,6 +21,7 @@ package org.ensembl.mart.explorer;
 import java.io.*;
 import java.sql.*;
 import org.apache.log4j.*;
+import org.ensembl.util.NotImplementedYetException;
 
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
@@ -118,11 +119,11 @@ public class Engine {
      * @see TabulatedQueryRunner
      */
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
-        throws SQLException, IOException, FormatException, InvalidQueryException {
+        throws SQLException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
     
           Connection conn = getDatabaseConnection();
-	      QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec);
-          qr.execute(conn, os, 0);
+	      QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec, conn, os);
+          qr.execute(0);
     }
     
 	/**
@@ -146,11 +147,11 @@ public class Engine {
 	 * @see TabulatedQueryRunner
 	 */
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
-		throws SQLException, IOException, FormatException, InvalidQueryException {
+		throws SQLException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
     
 		  Connection conn = getDatabaseConnection();
-		  QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec);
-		  qr.execute(conn, os, limit);
+		  QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec, conn, os);
+		  qr.execute(limit);
 	}
 
     public int countRows(Query query) {

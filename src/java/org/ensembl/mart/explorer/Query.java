@@ -132,42 +132,12 @@ public class Query {
      }
 
     /**
-     * Adds a SequenceDescription to the Query, and sets querytype = 2.
-     * Adds the SequenceDesciption QueryID and DisplayID attributes to
-     * the front of the attribute list.
-     * Warns if more than one SequenceDescription is added. 
-	 * @param s
+     * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
+	 * @param s A SequenceDescription object.
 	 */
-    public void addSequenceDescription(SequenceDescription s) {
+    public void setSequenceDescription(SequenceDescription s) {
         this.seqd = s;
-        this.querytype = 2;
-
-        /*
-         *  add the DisplayIDAttributes to the beginning of the attributes List,
-         *  and then add the QueryIDAttribute to the beginning of the new List.
-         *  Finally, push the descriptionAttributes onto the end of the List.
-         *  While adding the displayIDAttributes, keep track of their final
-         *  position in an int array to set the SequenceDescription displayIDAttributeindices
-         *  with (they will ultimately start at the position in the attributes List
-         *  after the QueryIDAttribute.
-         */
-        List d = seqd.getDisplayIDAttributes();
-        int[] indices = new int[d.size()];
-        int thisindex = 2;
-        
-        for (int i = 0; i < d.size(); i++) {
-        	attributes.add(i, (Attribute) d.get(i));
-        	indices[i] = thisindex++;
-        }
-        
-		attributes.add(0, seqd.getQueryIDAttribute());
-		d = seqd.getDescriptionAttributes();
-		for (int i = 0; i < d.size(); i++) {
-			this.addAttribute((Attribute) d.get(i));
-		}
-		
-		// set the displayIDAttributeindices in the sequence description
-		seqd.setDisplayIDAttributeIndices(indices);
+        this.querytype = Query.SEQUENCE;
     }
      
     /**
@@ -187,11 +157,15 @@ public class Query {
          StringBuffer buf = new StringBuffer();
 
 		 buf.append("[");
-         buf.append(" ,species=").append(species);
-         buf.append(" ,focus=").append(focus);
-         buf.append(" , querytype=").append(stringquerytype);
-         buf.append(" ,attributes=").append(attributes);
-         buf.append(" ,filters=").append(filters);
+         buf.append(", species=").append(species);
+         buf.append(", focus=").append(focus);
+         buf.append(", querytype=").append(stringquerytype);
+         buf.append(", attributes=").append(attributes);
+         buf.append(", filters=").append(filters);
+         
+         if ( seqd != null)
+             buf.append(", sequencedescription=").append(seqd);
+             
          buf.append("]");
 
          return buf.toString();
@@ -240,7 +214,7 @@ public class Query {
 
   /*# Filter lnkFilter; */
   
-  private int querytype = 1;
+  private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
   private SequenceDescription seqd;
   private String species;
   private String focus;

@@ -89,7 +89,7 @@ public class BasicFilter implements Filter {
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
-			buf.append("[");
+      buf.append("[");
       buf.append(" field=").append(type);
       buf.append(" ,condition=").append(condition);
       buf.append(" ,value=").append(value);

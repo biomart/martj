@@ -28,23 +28,26 @@ package org.ensembl.mart.explorer;
  */
 public class SequenceLocation {
 
-     private String chr = null;
-     private int start = 0;
-     private int end = 0;
-     private int strand = 0; // -1 is revearse, 1 is forward
+     private final String chr;
+     private final int start;
+     private final int end;
+     private final int strand; // -1 is revearse, 1 is forward
+     private final int hashcode; // cache the hashcode once it is calculated
 
 	public SequenceLocation(String chr, int start, int end, int strand) {
      	this.chr = chr;
      	this.start = start;
      	this.end = end;
      	this.strand = strand;
+     	
+        int tmp = chr.hashCode();
+        tmp = (31 * tmp) + start;
+        tmp = (31 * tmp) + end;
+        tmp = (31 * tmp) + strand;
+        
+        hashcode = tmp;
      }
 
-
-	public void updateStart(int start) {
-		this.start = start;
-	}
-	
 	/**
 	 * Returns the start position.
 	 * 
@@ -53,11 +56,7 @@ public class SequenceLocation {
 	public int getStart() {
 		return start;
 	}
-    
-	public void updateEnd(int end) {
-	    this.end = end;
-	}
-	    
+       
 	/**
 	 * Returns the end position.
 	 * 
@@ -86,34 +85,91 @@ public class SequenceLocation {
 	}
     
 	/**
-	 * Extends the RightFlank coordinate by length, according 
-	 * to the strand.
+	 * Returns a new SequenceLocation object with extended RightFlank 
+	 * coordinate according to strand.
 	 * 
 	 * @param int length
+	 * @return SequenceLocation
 	 */
-	public void extendRightFlank(int length) {
+	public SequenceLocation extendRightFlank(int length) {
+		// one of these will get updated
+		int newstart = start;
+		int newend = end;
+		
 		if (strand == -1) {
-			start = start - length;
+			newstart = start - length;
 			if (start < 1)
-				start = 1; // sometimes requested flank length exceeds available sequence.
+				newstart = 1; // sometimes requested flank length exceeds available sequence.
 		}
 		else
-			end = end + length;
+			newend = end + length;
+	    
+	    return new SequenceLocation(this.chr, newstart, newend, this.strand);
 	}
     
 	/**
-	 * Extends the LeftFlank coordinate by length, according
-	 * to the strand.
+	 * Returns a new SequenceLocation with extended LeftFlank coordinate by length, 
+	 * according to the strand.
 	 * 
 	 * @param int length
+	 * @return SequenceLocation
 	 */
-	public void extendLeftFlank(int length) {
+	public SequenceLocation extendLeftFlank(int length) {
+		int newstart = start;
+		int newend = end;
+		
 		if (strand == -1)
-			end = end + length;
+			newend = end + length;
 		else {
-			start = start - length;
+			newstart = start - length;
 			if (start < 1)
-				start = 1;
+				newstart = 1;
 		}
-	}     
+		return new SequenceLocation(this.chr, newstart, newend, this.strand);
+	}
+	
+	public boolean equals(Object o) {
+		// test object
+		if (! (o instanceof SequenceLocation) )
+		   return false;
+		
+		SequenceLocation l = (SequenceLocation) o;
+		
+		// test chr
+		if (! (this.chr.equals(l.getChr()) ) )
+		    return false;
+		    
+		// test start
+		if (! (this.start == l.getStart()))
+		    return false;
+		    
+		// test end
+		if (! (this.end == l.getEnd()))
+			return false;
+			
+	    // test strand
+		if (! (this.strand == l.getStrand()))
+		    return false;
+		
+		return true;
+	}
+	
+	public int hashCode() {
+		
+		return hashcode;
+	}
+	
+	/**
+	 * Prints out a descriptive representation for debugging.
+	 */
+	public String toString() {
+		 StringBuffer location = new StringBuffer();
+		 
+		 location.append("chr="+getChr());
+		 location.append(" "+"start="+getStart());
+		 location.append(" "+"end="+getEnd());
+		 location.append(" "+"strand="+getStrand());
+		 
+		 return location.toString();    
+	}
 }

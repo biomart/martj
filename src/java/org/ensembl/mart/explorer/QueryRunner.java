@@ -40,5 +40,5 @@ public interface QueryRunner {
 	 * @throws IOException
 	 * @throws InvalidQueryException
 	 */
-	public void execute(Connection conn, OutputStream os, int limit) throws SQLException, IOException, InvalidQueryException;
+	public void execute(int limit) throws SQLException, IOException, InvalidQueryException;
 }
