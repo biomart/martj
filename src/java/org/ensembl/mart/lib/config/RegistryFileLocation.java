@@ -17,6 +17,7 @@
  */
 package org.ensembl.mart.lib.config;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
@@ -27,23 +28,23 @@ import java.util.logging.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class RegistryLocation extends MartLocationBase {
+public class RegistryFileLocation extends MartLocationBase {
   private Logger logger = Logger.getLogger(URLLocation.class.getName());
   private final String URL_KEY = "url";
   private URL url;
 
-  public RegistryLocation() {
+  public RegistryFileLocation() {
     super();
-    type = MartLocationBase.REGISTRY;
+    type = MartLocationBase.REGISTRYFILE;
   }
   
-  public RegistryLocation(String url, String name) throws ConfigurationException {
-    super(name, MartLocationBase.REGISTRY);
+  public RegistryFileLocation(String url, String name) throws ConfigurationException {
+    super(name, MartLocationBase.REGISTRYFILE);
     setURL(url);
   }
   
-  public RegistryLocation(URL url, String name) {
-    super(name, MartLocationBase.REGISTRY);
+  public RegistryFileLocation(URL url, String name) {
+    super(name, MartLocationBase.REGISTRYFILE);
     setURL(url);
   }
 
@@ -95,7 +96,7 @@ public class RegistryLocation extends MartLocationBase {
    * Allows Equality Comparisons manipulation of RegistryLocation objects
    */
   public boolean equals(Object o) {
-    return o instanceof RegistryLocation && hashCode() == o.hashCode();
+    return o instanceof RegistryFileLocation && hashCode() == o.hashCode();
   }
 
   /* (non-Javadoc)

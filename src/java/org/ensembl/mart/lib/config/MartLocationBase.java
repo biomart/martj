@@ -27,7 +27,8 @@ public class MartLocationBase extends BaseConfigurationObject implements MartLoc
 
   public static final String DATABASE = "database";
   public static final String URL = "url";
-  public static final String REGISTRY = "registry";
+  public static final String REGISTRYFILE = "registryFile";
+  public static final String REGISTRYDB = "registryDB";
   
   protected final String NAME_KEY = "name";
   protected String type;

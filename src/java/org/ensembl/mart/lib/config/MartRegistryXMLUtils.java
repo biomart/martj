@@ -25,11 +25,22 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import oracle.sql.BLOB;
+import oracle.sql.CLOB;
+
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.jdom.Attribute;
 import org.jdom.DocType;
 import org.jdom.Document;
@@ -47,26 +58,332 @@ import org.xml.sax.InputSource;
  */
 public class MartRegistryXMLUtils {
 
-	private Logger logger = Logger.getLogger(MartRegistryXMLUtils.class.getName());
+	private static Logger logger = Logger.getLogger(MartRegistryXMLUtils.class.getName());
 
 	//element names
 	private static final String MARTREGISTRY = "MartRegistry";
 	private static final String URLLOCATION = "URLLocation";
 	private static final String DATABASELOCATION = "DatabaseLocation";
 	private static final String REGISTRYLOCATION = "RegistryLocation";
-  private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
-  
-	//attribute names
-//  private static final String NAME = "name";
-//	private static final String HOST = "host";
-//	private static final String PORT = "port";
-//	private static final String DATABASETYPE = "databaseType";
-//	private static final String INSTANCENAME = "instanceName";
-//	private static final String USER = "user";
-//	private static final String PASSWORD = "password";
-//	private static final String URL = "url";
-//  private static final String JDBCDRIVER = "jdbcDriverClassName";
+	private static final String REGISTRYDBLOCATION = "RegistryDBLocation";
+	private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
 
+	/*
+	 * meta_registry
+	   * ------------------------
+	 * xml            longblob
+	 * compressed_xml longblob
+	 */
+
+	//TODO maybe make a user registry?
+	private static final String SELECTXMLFORUPDATE = "select xml from meta_registry FOR UPDATE";
+	private static final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from meta_registry FOR UPDATE";
+	private static final String UPDATECOMPRESSEDREGISTRYXML = "insert into meta_registry(compressed_xml) values(?)";
+	private static final String UPDATEREGISTRYXML = "insert into meta_registry(xml) values(?)";
+	private static final String CLEANREGISTRYTABLE = "delete from meta_registry";
+	private static final String GETREGISTRYSQL = "select xml, compressed_xml from meta_registry limit 1";
+
+	/**
+	 * @param dsource
+	 * @return
+	 */
+	public static MartRegistry DataSourceToMartRegistry(DetailedDataSource dsource) throws ConfigurationException {
+		return (DocumentToMartRegistry(DataSourceToRegistryDocument(dsource)));
+	}
+
+	private static Document DataSourceToRegistryDocument(DetailedDataSource dsource) throws ConfigurationException {
+		if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+			return DataSourceToRegistryDocumentOracle(dsource);
+
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.FINE))
+				logger.fine("Using " + GETREGISTRYSQL + " to get Registry\n");
+
+			conn = dsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GETREGISTRYSQL);
+
+			ResultSet rs = ps.executeQuery();
+			if (!rs.next()) {
+				// will only get one result
+				rs.close();
+				DetailedDataSource.close(conn);
+				return null;
+			}
+
+			byte[] stream = rs.getBytes(1);
+			byte[] cstream = rs.getBytes(2);
+
+			rs.close();
+
+			InputStream rstream = null;
+			if (cstream != null)
+				rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+			else
+				rstream = new ByteArrayInputStream(stream);
+
+			return XMLStreamToDocument(rstream, false);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQL Exception during fetch of registry: " + e.getMessage(), e);
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException during fetch of registry: " + e.getMessage(), e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
+
+	private static Document DataSourceToRegistryDocumentOracle(DetailedDataSource dsource)
+		throws ConfigurationException {
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.FINE))
+				logger.fine("Using " + GETREGISTRYSQL + " to get Registry\n");
+
+			conn = dsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GETREGISTRYSQL);
+
+			ResultSet rs = ps.executeQuery();
+			if (!rs.next()) {
+				// will only get one result
+				rs.close();
+				conn.close();
+				return null;
+			}
+
+			CLOB stream = (CLOB) rs.getClob(1);
+			BLOB cstream = (BLOB) rs.getBlob(2);
+
+			InputStream rstream = null;
+			if (cstream != null) {
+				rstream = new GZIPInputStream(cstream.getBinaryStream());
+			} else
+				rstream = stream.getAsciiStream();
+
+			Document ret = XMLStreamToDocument(rstream, false);
+			rstream.close();
+			rs.close();
+			return ret;
+		} catch (SQLException e) {
+			throw new ConfigurationException(
+				"Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
+				e);
+		} catch (IOException e) {
+			throw new ConfigurationException(
+				"Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(),
+				e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
+
+	public static void cleanRegistryTable(DetailedDataSource dsource) throws ConfigurationException {
+		Connection conn = null;
+
+		if (logger.isLoggable(Level.WARNING))
+			logger.warning("Deleting old RegistryXML with " + CLEANREGISTRYTABLE + "\n");
+
+		try {
+			conn = dsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(CLEANREGISTRYTABLE);
+
+			ps.executeUpdate();
+			ps.close();
+		} catch (SQLException e) {
+			throw new ConfigurationException("Couldnt clean old Registry: " + e.getMessage() + "\n", e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+
+	}
+
+	public static void storeMartRegistryDocumentToDataSource(DetailedDataSource dsource, Document doc, boolean compress)
+		throws ConfigurationException {
+		int rowsupdated = 0;
+
+		cleanRegistryTable(dsource);
+		if (compress)
+			rowsupdated = storeCompressedRegistryXML(dsource, doc);
+		else
+			rowsupdated = storeUncompressedRegistryXML(dsource, doc);
+
+		if (rowsupdated < 1)
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("Warning, registry xml not stored"); //throw an exception?  
+	}
+
+	private static int storeCompressedRegistryXML(DetailedDataSource dsource, Document doc)
+		throws ConfigurationException {
+		if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+			return storeCompressedRegistryXMLOracle(dsource, doc);
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.WARNING))
+				logger.warning("\nupdating with SQL " + UPDATECOMPRESSEDREGISTRYXML + "\n");
+
+			conn = dsource.getConnection();
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+			GZIPOutputStream gout = new GZIPOutputStream(bout);
+
+			xout.output(doc, gout);
+			gout.finish();
+
+			byte[] xml = bout.toByteArray();
+			bout.close();
+			gout.close();
+
+			PreparedStatement ps = conn.prepareStatement(UPDATECOMPRESSEDREGISTRYXML);
+			ps.setBinaryStream(1, new ByteArrayInputStream(xml), xml.length);
+
+			int ret = ps.executeUpdate();
+			ps.close();
+
+			return ret;
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating Registry xml: " + e.getMessage(), e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
+
+	private static int storeCompressedRegistryXMLOracle(DetailedDataSource dsource, Document doc)
+		throws ConfigurationException {
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.FINE))
+				logger.fine("\ninserting with SQL " + UPDATECOMPRESSEDREGISTRYXML + "\n");
+
+			conn = dsource.getConnection();
+			conn.setAutoCommit(false);
+
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+			GZIPOutputStream gout = new GZIPOutputStream(bout);
+
+			xout.output(doc, gout);
+			gout.finish();
+
+			byte[] xml = bout.toByteArray();
+
+			bout.close();
+			gout.close();
+
+			PreparedStatement ps = conn.prepareStatement(UPDATECOMPRESSEDREGISTRYXML);
+			PreparedStatement ohack = conn.prepareStatement(SELECTCOMPRESSEDXMLFORUPDATE);
+
+			int ret = ps.executeUpdate();
+
+			ResultSet rs = ohack.executeQuery();
+
+			if (rs.next()) {
+				CLOB clob = (CLOB) rs.getClob(1);
+
+				OutputStream clobout = clob.getAsciiOutputStream();
+				clobout.write(xml);
+				clobout.close();
+			}
+
+			conn.commit();
+			rs.close();
+			ohack.close();
+			ps.close();
+
+			return ret;
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating registry xml: " + e.getMessage(), e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
+
+	private static int storeUncompressedRegistryXML(DetailedDataSource dsource, Document doc)
+		throws ConfigurationException {
+		if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+			return storeUncompressedRegistryXMLORacle(dsource, doc);
+
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.FINE))
+				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
+
+			conn = dsource.getConnection();
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+			xout.output(doc, bout);
+
+			byte[] xml = bout.toByteArray();
+			bout.close();
+
+			PreparedStatement ps = conn.prepareStatement(UPDATEREGISTRYXML);
+			ps.setBinaryStream(1, new ByteArrayInputStream(xml), xml.length);
+
+			int ret = ps.executeUpdate();
+			ps.close();
+
+			return ret;
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating Registry xml: " + e.getMessage(), e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
+
+	private static int storeUncompressedRegistryXMLORacle(DetailedDataSource dsource, Document doc)
+		throws ConfigurationException {
+		Connection conn = null;
+		try {
+			if (logger.isLoggable(Level.FINE))
+				logger.fine("\ninserting with SQL " + UPDATEREGISTRYXML + "\n");
+
+			conn = dsource.getConnection();
+			conn.setAutoCommit(false);
+
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+			xout.output(doc, bout);
+
+			byte[] xml = bout.toByteArray();
+
+			bout.close();
+
+			PreparedStatement ps = conn.prepareStatement(UPDATEREGISTRYXML);
+			PreparedStatement ohack = conn.prepareStatement(SELECTXMLFORUPDATE);
+
+			int ret = ps.executeUpdate();
+
+			ResultSet rs = ohack.executeQuery();
+
+			if (rs.next()) {
+				CLOB clob = (CLOB) rs.getClob(1);
+
+				OutputStream clobout = clob.getAsciiOutputStream();
+				clobout.write(xml);
+				clobout.close();
+			}
+
+			conn.commit();
+			rs.close();
+			ohack.close();
+			ps.close();
+
+			return ret;
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQLException updating registry xml: " + e.getMessage(), e);
+		} finally {
+			DetailedDataSource.close(conn);
+		}
+	}
 	public static MartRegistry XMLStreamToMartRegistry(InputStream in) throws ConfigurationException {
 		return XMLStreamToMartRegistry(in, false);
 	}
@@ -79,7 +396,7 @@ public class MartRegistryXMLUtils {
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			// set the EntityResolver to a allow it to get the DTD from the Classpath.
-			 builder.setEntityResolver(new ClasspathDTDEntityResolver());
+			builder.setEntityResolver(new ClasspathDTDEntityResolver());
 			builder.setValidation(validate);
 
 			InputSource is = new InputSource(in);
@@ -112,121 +429,137 @@ public class MartRegistryXMLUtils {
 			martreg.addMartLocation(getRegLocation(regloc));
 		}
 
+		for (Iterator iter = thisElement.getChildElements(REGISTRYDBLOCATION).iterator(); iter.hasNext();) {
+			Element regloc = (Element) iter.next();
+			martreg.addMartLocation(getRegDBLocation(regloc));
+		}
 		return martreg;
 	}
-  
-  public static MartRegistry ByteArrayToMartRegistry(byte[] b) throws ConfigurationException {
-    ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return XMLStreamToMartRegistry(bin);
-  }
-  
+
+	public static MartRegistry ByteArrayToMartRegistry(byte[] b) throws ConfigurationException {
+		ByteArrayInputStream bin = new ByteArrayInputStream(b);
+		return XMLStreamToMartRegistry(bin);
+	}
+
 	// private static ElementToObject methods 
 	private static MartLocation getURLLocation(Element urlloc) throws ConfigurationException {
-    URLLocation loc = new URLLocation();
-    loadAttributesFromElement(urlloc, loc);
-    
-    //fail now if the url string is not valid
+		URLLocation loc = new URLLocation();
+		loadAttributesFromElement(urlloc, loc);
+
+		//fail now if the url string is not valid
 		loc.getUrl();
-    
-    return loc;
+
+		return loc;
 	}
 
 	private static MartLocation getDBLocation(Element dbloc) throws ConfigurationException {
-    DatabaseLocation loc = new DatabaseLocation();
-    loadAttributesFromElement(dbloc, loc);
-    return loc;
+		DatabaseLocation loc = new DatabaseLocation();
+		loadAttributesFromElement(dbloc, loc);
+		return loc;
 	}
 
 	private static MartLocation getRegLocation(Element regloc) throws ConfigurationException {
-    RegistryLocation loc = new RegistryLocation();
-    loadAttributesFromElement(regloc, loc);
-    
-    //fail now if the url string is not valid
-    loc.getUrl();
-    
-    return loc;
+		RegistryFileLocation loc = new RegistryFileLocation();
+		loadAttributesFromElement(regloc, loc);
+
+		//fail now if the url string is not valid
+		loc.getUrl();
+
+		return loc;
 	}
 
-  private static void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
-    List attributes = thisElement.getAttributes();
-    
-    for (int i = 0, n = attributes.size(); i < n; i++) {
-      Attribute att = (Attribute) attributes.get(i);
-      String name = att.getName();
-      
-      obj.setAttribute(name, thisElement.getAttributeValue(name));
-    }
-  }
-  
-  /**
-   * Writes a MartRegistry object as XML to the given File.  Handles opening and closing of the OutputStream.
-   * @param dsv -- MartRegistry object
-   * @param file -- File to write XML
-   * @throws ConfigurationException for underlying Exceptions
-   */
-  public static void MartRegistryToFile(MartRegistry mr, File file) throws ConfigurationException {
-    DocumentToFile(MartRegistryToDocument(mr), file);
-  }
-  
-  /**
-   * Writes a MartRegistry object as XML to the given OutputStream.  Does not close the OutputStream after writing.
-   * If you wish to write a Document to a File, use MartRegistryToFile instead, as it handles opening and closing the OutputStream.
-   * @param dsv -- MartRegistry object to write as XML
-   * @param out -- OutputStream to write, not closed after writing
-   * @throws ConfigurationException for underlying Exceptions
-   */
-  public static void MartRegistryToOutputStream(MartRegistry dsv, OutputStream out) throws ConfigurationException {
-    DocumentToOutputStream(MartRegistryToDocument(dsv), out);
-  }
-  
-  /**
-   * Writes a JDOM Document as XML to a given File.  Handles opening and closing of the OutputStream.
-   * @param doc -- Document representing a MartRegistry.dtd compliant XML document
-   * @param file -- File to write.
-   * @throws ConfigurationException for underlying Exceptions.
-   */
-  public static void DocumentToFile(Document doc, File file) throws ConfigurationException {
-    try {
-      FileOutputStream out = new FileOutputStream(file);
-      DocumentToOutputStream(doc, out);
-      out.close();
-    } catch (FileNotFoundException e) {
-      throw new ConfigurationException("Caught FileNotFoundException writing Document to File provided " + e.getMessage(), e);
-    } catch (ConfigurationException e) {
-      throw e;
-    } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException creating FileOutputStream " + e.getMessage(), e);
-    }
-  }
-  
-  /**
-   * Takes a JDOM Document and writes it as MartRegistry.dtd compliant XML to a given OutputStream.
-   * Does NOT close the OutputStream after writing.  If you wish to write a Document to a File,
-   * use DocumentToFile instead, as it handles opening and closing the OutputStream. 
-   * @param doc -- Document representing a MartRegistry.dtd compliant XML document
-   * @param out -- OutputStream to write to, not closed after writing
-   * @throws ConfigurationException for underlying IOException
-   */
-  public static void DocumentToOutputStream(Document doc, OutputStream out) throws ConfigurationException {
-    XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
-      
-    try {
-      xout.output(doc, out);
-    } catch (IOException e) {
-       throw new ConfigurationException("Caught IOException writing XML to OutputStream " + e.getMessage(), e);
-    }
-  }
-  
-  public static byte[] DocumentToByteArray(Document doc) throws ConfigurationException {
-    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    DocumentToOutputStream(doc, bout);
-    return bout.toByteArray(); 
-  }
-  
-  public static byte[] MartRegistryToByteArray(MartRegistry martreg) throws ConfigurationException {
-    return DocumentToByteArray(MartRegistryToDocument(martreg));
-  }
-  
+	private static MartLocation getRegDBLocation(Element regloc) throws ConfigurationException {
+		RegistryDBLocation loc = new RegistryDBLocation();
+		loadAttributesFromElement(regloc, loc);
+
+		//fail now if the DataSource connection information is not valid
+		loc.getDetailedDataSource();
+
+		return loc;
+	}
+
+	private static void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
+		List attributes = thisElement.getAttributes();
+
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+
+			obj.setAttribute(name, thisElement.getAttributeValue(name));
+		}
+	}
+
+	/**
+	 * Writes a MartRegistry object as XML to the given File.  Handles opening and closing of the OutputStream.
+	 * @param dsv -- MartRegistry object
+	 * @param file -- File to write XML
+	 * @throws ConfigurationException for underlying Exceptions
+	 */
+	public static void MartRegistryToFile(MartRegistry mr, File file) throws ConfigurationException {
+		DocumentToFile(MartRegistryToDocument(mr), file);
+	}
+
+	/**
+	 * Writes a MartRegistry object as XML to the given OutputStream.  Does not close the OutputStream after writing.
+	 * If you wish to write a Document to a File, use MartRegistryToFile instead, as it handles opening and closing the OutputStream.
+	 * @param dsv -- MartRegistry object to write as XML
+	 * @param out -- OutputStream to write, not closed after writing
+	 * @throws ConfigurationException for underlying Exceptions
+	 */
+	public static void MartRegistryToOutputStream(MartRegistry dsv, OutputStream out) throws ConfigurationException {
+		DocumentToOutputStream(MartRegistryToDocument(dsv), out);
+	}
+
+	/**
+	 * Writes a JDOM Document as XML to a given File.  Handles opening and closing of the OutputStream.
+	 * @param doc -- Document representing a MartRegistry.dtd compliant XML document
+	 * @param file -- File to write.
+	 * @throws ConfigurationException for underlying Exceptions.
+	 */
+	public static void DocumentToFile(Document doc, File file) throws ConfigurationException {
+		try {
+			FileOutputStream out = new FileOutputStream(file);
+			DocumentToOutputStream(doc, out);
+			out.close();
+		} catch (FileNotFoundException e) {
+			throw new ConfigurationException(
+				"Caught FileNotFoundException writing Document to File provided " + e.getMessage(),
+				e);
+		} catch (ConfigurationException e) {
+			throw e;
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException creating FileOutputStream " + e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Takes a JDOM Document and writes it as MartRegistry.dtd compliant XML to a given OutputStream.
+	 * Does NOT close the OutputStream after writing.  If you wish to write a Document to a File,
+	 * use DocumentToFile instead, as it handles opening and closing the OutputStream. 
+	 * @param doc -- Document representing a MartRegistry.dtd compliant XML document
+	 * @param out -- OutputStream to write to, not closed after writing
+	 * @throws ConfigurationException for underlying IOException
+	 */
+	public static void DocumentToOutputStream(Document doc, OutputStream out) throws ConfigurationException {
+		XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+		try {
+			xout.output(doc, out);
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException writing XML to OutputStream " + e.getMessage(), e);
+		}
+	}
+
+	public static byte[] DocumentToByteArray(Document doc) throws ConfigurationException {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		DocumentToOutputStream(doc, bout);
+		return bout.toByteArray();
+	}
+
+	public static byte[] MartRegistryToByteArray(MartRegistry martreg) throws ConfigurationException {
+		return DocumentToByteArray(MartRegistryToDocument(martreg));
+	}
+
 	public static Document MartRegistryToDocument(MartRegistry martreg) throws ConfigurationException {
 		Element root = new Element(MARTREGISTRY);
 
@@ -238,50 +571,50 @@ public class MartRegistryXMLUtils {
 				root.addContent(getURLLocationElement((URLLocation) location));
 			else if (location.getType().equals(MartLocationBase.DATABASE))
 				root.addContent(getDatabaseLocationElement((DatabaseLocation) location));
-			else if (location.getType().equals(MartLocationBase.REGISTRY))
-				root.addContent(getRegistryLocationElement((RegistryLocation) location));
+			else if (location.getType().equals(MartLocationBase.REGISTRYFILE))
+				root.addContent(getRegistryLocationElement((RegistryFileLocation) location));
 			//else not needed, but may need to add other else ifs in future
 		}
 
-    Document thisDoc = new Document(root);
-    thisDoc.setDocType( new DocType(MARTREGISTRY, REGISTRYDOCTYPEURL));
+		Document thisDoc = new Document(root);
+		thisDoc.setDocType(new DocType(MARTREGISTRY, REGISTRYDOCTYPEURL));
 		return thisDoc;
 	}
 
 	//private static ObjectToElement methods
 	private static Element getURLLocationElement(URLLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
-    loadElementAttributesFromObject(loc, location);
+		loadElementAttributesFromObject(loc, location);
 		return location;
 	}
 
 	private static Element getDatabaseLocationElement(DatabaseLocation loc) throws ConfigurationException {
 		Element location = new Element(DATABASELOCATION);
-    loadElementAttributesFromObject(loc, location);
+		loadElementAttributesFromObject(loc, location);
 		return location;
 	}
 
-	private static Element getRegistryLocationElement(RegistryLocation loc) throws ConfigurationException {
+	private static Element getRegistryLocationElement(RegistryFileLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
-    loadElementAttributesFromObject(loc, location);
+		loadElementAttributesFromObject(loc, location);
 		return location;
 	}
-  
-  private static void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
-    String[] titles = obj.getXmlAttributeTitles();
-    
-    //sort the attribute titles before writing them out, so that MD5SUM is supported
-    Arrays.sort(titles);
-    
-    for (int i = 0, n = titles.length; i < n; i++) {
-      String key = titles[i];
-      
-      if (validString( obj.getAttribute(key) ))
-        thisElement.setAttribute(key, obj.getAttribute(key));
-    }
-  }
-  
-  private static boolean validString(String test) {
-    return (test != null && test.length() > 0);
-  }
+
+	private static void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
+		String[] titles = obj.getXmlAttributeTitles();
+
+		//sort the attribute titles before writing them out, so that MD5SUM is supported
+		Arrays.sort(titles);
+
+		for (int i = 0, n = titles.length; i < n; i++) {
+			String key = titles[i];
+
+			if (validString(obj.getAttribute(key)))
+				thisElement.setAttribute(key, obj.getAttribute(key));
+		}
+	}
+
+	private static boolean validString(String test) {
+		return (test != null && test.length() > 0);
+	}
 }

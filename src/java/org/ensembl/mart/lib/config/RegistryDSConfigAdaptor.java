@@ -37,47 +37,63 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 
 	private MartRegistry martreg; // single, underlying MartRegistry for this Adaptor
 	private URL url;
+	private DetailedDataSource dsource;
 	private Set martRegs = new TreeSet(); // keep a list of MartRegistry Objects pulled from RegistryLocation elements
-  private boolean validate = false;
-  private boolean ignoreCache = false;
-  private boolean includeHiddenMembers = false; 
+	private boolean validate = false;
+	private boolean ignoreCache = false;
+	private boolean includeHiddenMembers = false;
 
 	/**
 	 * Constructs an empty RegistryDSConfigAdaptor.  A URL for
 	 * an existing MartRegistry document can be set later, using setExistingRegistryURL.
-   * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
-   * will be validated.
-   * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
-   * objects in the given MartRegistry
-   * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
-   * hidden members.
+	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
+	 * will be validated.
+	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
+	 * objects in the given MartRegistry
+	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
+	 * hidden members.
 	 */
 	public RegistryDSConfigAdaptor(boolean validate, boolean ignoreCache, boolean includeHiddenMembers) {
 		super();
-    this.validate = validate;
-    this.ignoreCache = ignoreCache;
-    this.includeHiddenMembers = includeHiddenMembers;
+		this.validate = validate;
+		this.ignoreCache = ignoreCache;
+		this.includeHiddenMembers = includeHiddenMembers;
 	}
 
 	/**
 	 * Constructs a RegistryDSConfigAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
 	 * @param url -- URL pointing to MartRegistry.dtd compliant XML Document
-   * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
-   * will be validated.
-   * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
-   * objects in the given MartRegistry
-   * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
-   * hidden members.
+	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
+	 * will be validated.
+	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
+	 * objects in the given MartRegistry
+	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
+	 * hidden members.
 	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
 	 */
-	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean includeHiddenMembers) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean includeHiddenMembers)
+		throws ConfigurationException {
 		super();
 		setRegistryURL(url);
-    this.validate = validate;
-    this.ignoreCache = ignoreCache;
-    this.includeHiddenMembers = includeHiddenMembers;
-    
-    adaptorName = url.toString();
+		this.validate = validate;
+		this.ignoreCache = ignoreCache;
+		this.includeHiddenMembers = includeHiddenMembers;
+
+		adaptorName = url.toString();
+	}
+
+	public RegistryDSConfigAdaptor(
+		DetailedDataSource dsource,
+		boolean validate,
+		boolean ignoreCache,
+		boolean includeHiddenMembers)
+		throws ConfigurationException {
+		super();
+		setRegistryDatasource(dsource);
+		this.validate = validate;
+		this.ignoreCache = ignoreCache;
+		this.includeHiddenMembers = includeHiddenMembers;
+		adaptorName = dsource.getName();
 	}
 
 	/**
@@ -87,7 +103,9 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
 	public RegistryDSConfigAdaptor(MartRegistry martreg) throws ConfigurationException {
-		this(martreg, null);
+		super();
+		this.martreg = martreg;
+		loadAdaptorsFromRegistry();
 	}
 
 	/**
@@ -97,12 +115,23 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
 	public RegistryDSConfigAdaptor(MartRegistry martreg, URL url) throws ConfigurationException {
+		super();
 		this.martreg = martreg;
 
 		if (url != null) {
 			this.url = url;
-      adaptorName = url.toString();
-    }
+			adaptorName = url.toString();
+		}
+
+		loadAdaptorsFromRegistry();
+	}
+
+	public RegistryDSConfigAdaptor(MartRegistry martreg, DetailedDataSource dsource) throws ConfigurationException {
+		this.martreg = martreg;
+		if (dsource != null) {
+			this.dsource = dsource;
+			adaptorName = dsource.getName();
+		}
 
 		loadAdaptorsFromRegistry();
 	}
@@ -113,7 +142,9 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @param adaptor -- adaptor to initialize this RegistryAdaptor with.
 	 */
 	public RegistryDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
-		this(adaptor, null);
+		super();
+		adaptors.add(adaptor);
+		martreg = getMartRegistry();
 	}
 
 	/**
@@ -122,11 +153,23 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @param url -- url to refer to this MartRegistry object
 	 */
 	public RegistryDSConfigAdaptor(DSConfigAdaptor adaptor, URL url) throws ConfigurationException {
+		super();
 		adaptors.add(adaptor);
 		if (url != null) {
 			this.url = url;
-      adaptorName = url.toString();
-    }
+			adaptorName = url.toString();
+		}
+
+		martreg = getMartRegistry();
+	}
+
+	public RegistryDSConfigAdaptor(DSConfigAdaptor adaptor, DetailedDataSource dsource) throws ConfigurationException {
+		super();
+		adaptors.add(adaptor);
+		if (dsource != null) {
+			this.dsource = dsource;
+			adaptorName = dsource.getName();
+		}
 
 		martreg = getMartRegistry();
 	}
@@ -142,7 +185,10 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	public void setRegistryURL(URL url) throws ConfigurationException {
 		if (url == null)
 			throw new ConfigurationException("Attempt to set url with a null URL\n");
-      
+
+		if (this.dsource != null)
+			throw new ConfigurationException("A RegistryAdaptor can work with only one MartRegistry document, either from a URL, or from a Database\n");
+
 		if (this.url != null)
 			throw new ConfigurationException("A RegistryAdaptor can only work with one MartRegistry document URL\n");
 
@@ -156,14 +202,14 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 				loadAdaptorsFromRegistry();
 			}
 		}
-    
-    if (adaptorName == null)
-      adaptorName = url.toString();
+
+		if (adaptorName == null)
+			adaptorName = url.toString();
 	}
 
 	private void loadMartRegistryFromURL() throws ConfigurationException {
 		try {
-			martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry( InputSourceUtil.getStreamForURL( url ) );
+			martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(InputSourceUtil.getStreamForURL(url));
 		} catch (ConfigurationException e) {
 			throw e;
 		} catch (IOException e) {
@@ -177,6 +223,39 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 */
 	public URL getURL() {
 		return url;
+	}
+
+	public void setRegistryDatasource(DetailedDataSource dsource) throws ConfigurationException {
+		if (dsource == null)
+			throw new ConfigurationException("Attempt to set Datasource with a null DetailedDataSource\n");
+
+		if (this.url != null)
+			throw new ConfigurationException("A RegistryAdaptor can work with only one MartRegistry document, either from a URL, or from a Database\n");
+
+		if (this.dsource != null)
+			throw new ConfigurationException("A RegistryAdaptor can only work with one MartRegistry document DataSource\n");
+
+		this.dsource = dsource;
+
+		if (martreg == null) {
+			if (adaptors.size() > 0)
+				martreg = getMartRegistry();
+			else {
+				loadMartRegistryFromDatasource();
+				loadAdaptorsFromRegistry();
+			}
+		}
+
+		if (adaptorName == null)
+			adaptorName = dsource.getName();
+	}
+
+	private void loadMartRegistryFromDatasource() throws ConfigurationException {
+		martreg = MartRegistryXMLUtils.DataSourceToMartRegistry(dsource);
+	}
+
+	public DetailedDataSource getDatasource() {
+		return dsource;
 	}
 
 	/*
@@ -193,32 +272,44 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 		for (int i = 0, n = locs.length; i < n; i++) {
 			MartLocation location = locs[i];
 
-			if (location.getType().equals(MartLocationBase.REGISTRY)) {
+			if (location.getType().equals(MartLocationBase.REGISTRYFILE)) {
 				//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
 
 				MartRegistry subreg = null;
 
 				try {
-					subreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(  InputSourceUtil.getStreamForURL( ( (RegistryLocation) location).getUrl() ) );
+					subreg =
+						MartRegistryXMLUtils.XMLStreamToMartRegistry(
+							InputSourceUtil.getStreamForURL(((RegistryFileLocation) location).getUrl()));
 				} catch (ConfigurationException e) {
 					throw e;
 				} catch (IOException e) {
-					throw new ConfigurationException("Caught IOException working with MartRegistryLocation Element URL: " + e.getMessage(), e);
+					throw new ConfigurationException(
+						"Caught IOException working with MartRegistryLocation Element URL: " + e.getMessage(),
+						e);
 				}
-
 
 				RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url);
 				adaptor.setName(location.getName());
 				add(adaptor);
 				martRegs.add(subreg);
 
-			} else if (location.getType().equals(MartLocationBase.URL)) {
-			
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, validate, includeHiddenMembers);
-        adaptor.setName(location.getName());
+			} else if (location.getType().equals(MartLocationBase.REGISTRYDB)) {
+				//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
+				MartRegistry subreg = MartRegistryXMLUtils.DataSourceToMartRegistry( ( (RegistryDBLocation) location).getDetailedDataSource() );
+
+				RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, dsource);
+				adaptor.setName(location.getName());
 				add(adaptor);
-			
-      } else if (location.getType().equals(MartLocationBase.DATABASE)) {
+				martRegs.add(subreg);
+			} else if (location.getType().equals(MartLocationBase.URL)) {
+
+				URLDSConfigAdaptor adaptor =
+					new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, validate, includeHiddenMembers);
+				adaptor.setName(location.getName());
+				add(adaptor);
+
+			} else if (location.getType().equals(MartLocationBase.DATABASE)) {
 				DatabaseLocation dbloc = (DatabaseLocation) location;
 
 				String host = dbloc.getHost();
@@ -227,8 +318,8 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 				String port = dbloc.getPort();
 				String password = dbloc.getPassword();
 				String databaseType = dbloc.getDatabaseType();
-        String jdbcDriverClassName = dbloc.getJDBCDriverClassName();
-        String name = dbloc.getName();
+				String jdbcDriverClassName = dbloc.getJDBCDriverClassName();
+				String name = dbloc.getName();
 
 				// apply defaults only if both dbtype and jdbcdriver are null
 				if (databaseType == null && jdbcDriverClassName == null) {
@@ -236,36 +327,45 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 					jdbcDriverClassName = DetailedDataSource.DEFAULTDRIVER;
 				}
 
+				String connectionString = DetailedDataSource.connectionURL(databaseType, host, port, instanceName);
+				// use default name
+				if (name == null || "".equals(name))
+					name = connectionString;
 
-        String connectionString = DetailedDataSource.connectionURL(databaseType, host, port, instanceName);
-        // use default name
-        if ( name==null || "".equals(name))
-          name = connectionString;
+				//use the default poolsize of 10        
+				DetailedDataSource dsource =
+					new DetailedDataSource(
+						databaseType,
+						host,
+						port,
+						instanceName,
+						connectionString,
+						user,
+						password,
+						DetailedDataSource.DEFAULTPOOLSIZE,
+						jdbcDriverClassName,
+						name);
 
-        
-        //use the default poolsize of 10        
-        DetailedDataSource dsource =
-					new DetailedDataSource(databaseType, host, port, instanceName, connectionString, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName, name);
-
-				DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, validate, includeHiddenMembers);
-        adaptor.setName(location.getName());
+				DatabaseDSConfigAdaptor adaptor =
+					new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, validate, includeHiddenMembers);
+				adaptor.setName(location.getName());
 				add(adaptor);
- 
-      
+
 			} else
-				throw new ConfigurationException("Recieved unsupported MartLocation element of type : " + location.getType() + " in MartRegistry Document\n");
+				throw new ConfigurationException(
+					"Recieved unsupported MartLocation element of type : " + location.getType() + " in MartRegistry Document\n");
 		}
 	}
 
-//	/**
-//	 * Adds adaptor.  
-//	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSConfigAdaptor
-//	 * to this instance or you will cause circular references when the getXXX() methods are called.
-//	 */
-//	public void add(DSConfigAdaptor adaptor) {
-//		if (!adaptors.contains(adaptor))
-//			adaptors.add(adaptor);
-//	}
+	//	/**
+	//	 * Adds adaptor.  
+	//	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSConfigAdaptor
+	//	 * to this instance or you will cause circular references when the getXXX() methods are called.
+	//	 */
+	//	public void add(DSConfigAdaptor adaptor) {
+	//		if (!adaptors.contains(adaptor))
+	//			adaptors.add(adaptor);
+	//	}
 
 	/**
 	 * Returns a new MartRegistry object, with MartLocations for all of the adaptors present.
@@ -297,12 +397,22 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 		MartRegistryXMLUtils.MartRegistryToFile(mr, file);
 	}
 
-  /**
-   * Allows Equality Comparisons manipulation of DSConfigAdaptor objects.  Although
-   * any DSConfigAdaptor object can be compared with any other DSConfigAdaptor object, to provide
-   * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
-   * implimentations to equal.
-   *
+    /**
+     * Writes a MartRegistry object as a MartRegistry.dtd compliant XML to a DataBase
+     * @param mr -- MartRegistry object to store to the Database
+     * @param dsource -- DetailedDataSource containing connection to Database
+     * @throws ConfigurationException for all underlying exceptions
+     */
+    public static void StoreMartRegistry(MartRegistry mr, DetailedDataSource dsource) throws ConfigurationException {
+      MartRegistryXMLUtils.storeMartRegistryDocumentToDataSource(dsource, MartRegistryXMLUtils.MartRegistryToDocument(mr), true);
+    }
+
+	/**
+	 * Allows Equality Comparisons manipulation of DSConfigAdaptor objects.  Although
+	 * any DSConfigAdaptor object can be compared with any other DSConfigAdaptor object, to provide
+	 * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
+	 * implimentations to equal.
+	 *
 	 * Equality is based on the CompositeViewAdaptor hashCode, so that two URL
 	 * sources specifying the same MartRegistry will equal.
 	 */
@@ -320,12 +430,12 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	public int hashCode() {
 		return super.hashCode();
 	}
-  
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getName()
-   */
-  public String getName() {
-      return super.getName();
-  }
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getName()
+	 */
+	public String getName() {
+		return super.getName();
+	}
 
 }
