@@ -311,7 +311,7 @@ public class LabelledComboBox extends Box implements ActionListener {
 	 * @param item
 	 * @return index of item or -1 if not found
 	 */
-	private int indexOfItem(Object item) {
+	public int indexOfItem(Object item) {
     int index = -1;
     ComboBoxModel model = combo.getModel();
     for (int i = 0; index==-1 && i < model.getSize(); i++) {

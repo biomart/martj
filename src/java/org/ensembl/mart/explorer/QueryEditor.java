@@ -259,7 +259,7 @@ public class QueryEditor extends JPanel {
     this.query.addQueryChangeListener(resultsStatus);
 
     JComponent toolBar = createToolbar();
-    QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getAdaptor());
+    QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getRootAdaptor());
     InputPageContainer inputPanelContainer =
       new InputPageContainer(
         query,
@@ -395,7 +395,7 @@ public class QueryEditor extends JPanel {
 
       logger.fine("Loaded MQL: " + buf.toString());
 
-      MartShellLib msl = new MartShellLib(datasetViewSettings.getAdaptor());
+      MartShellLib msl = new MartShellLib(datasetViewSettings.getRootAdaptor());
       setQuery(msl.MQLtoQuery(buf.toString()));
       logger.fine("Loaded Query:" + getQuery());
 
@@ -502,15 +502,6 @@ public class QueryEditor extends JPanel {
 
   }
 
-  /**
-   * Opens the dataset option tree if it is available, otherwise does
-   * nothing. Calling this methid saves the user having to open the 
-   * option list manually.
-   */
-  public void showDatasetOptions() {
-    if (datasetPage != null)
-      datasetPage.showTree();
-  }
 
   /**
    * Loads dataset views from files in classpath for test
@@ -596,7 +587,7 @@ public class QueryEditor extends JPanel {
     f.setVisible(true);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetView(dvs.getAdaptor().getDatasetViews()[0]);
+    editor.getQuery().setDatasetView(dvs.getRootAdaptor().getDatasetViews()[0]);
 
   }
 

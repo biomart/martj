@@ -56,7 +56,7 @@ public class DatasetViewWidget
 
 	private Map optionToView = new HashMap();
 
-	private AdaptorManager datasetViewSettings;
+	private AdaptorManager adaptorManager;
 
 	private static final Logger logger =
 		Logger.getLogger(DatasetViewWidget.class.getName());
@@ -79,7 +79,7 @@ public class DatasetViewWidget
 
 		super(query, "Dataset View");
 
-		this.datasetViewSettings = datasetViewSettings;
+		this.adaptorManager = datasetViewSettings;
 
 		chooser.setEditable(false);
 		chooser.addChangeListener(this);
@@ -94,7 +94,7 @@ public class DatasetViewWidget
 	private void initOptions() {
 
 		try {
-			DatasetView[] views = datasetViewSettings.getAdaptor().getDatasetViews();
+			DatasetView[] views = adaptorManager.getRootAdaptor().getDatasetViews();
 
 			// only update if datasetViews changed.
 			if (Arrays.equals(views, oldViews))
@@ -140,12 +140,12 @@ public class DatasetViewWidget
 
 		DatasetView oldDsv = query.getDatasetView();
 
-		datasetViewSettings.setSelected(oldDsv);
+		//adaptorManager.setSelected(oldDsv);
 
 		DatasetView dsv = null;
-		if (datasetViewSettings.showDialog(this)) {
+		if (adaptorManager.showDialog(this)) {
 
-			dsv = datasetViewSettings.getSelected();
+			//dsv = adaptorManager.getSelected();
 
 			if (oldDsv != dsv
 				&& (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
@@ -208,21 +208,12 @@ public class DatasetViewWidget
 		DatasetView newDatasetView) {
 
 		if (newDatasetView != null
-			&& !datasetViewSettings.contains(newDatasetView))
+			&& !adaptorManager.contains(newDatasetView))
 			try {
-				datasetViewSettings.add(newDatasetView);
+				adaptorManager.add(newDatasetView.getAdaptor());
 			} catch (ConfigurationException e) {
 				feedback.warning(e);
 			}
-
-		// add dsv to datasetViewSettings if not present
-		try {
-			if (newDatasetView != null
-				&& !datasetViewSettings.contains(newDatasetView))
-				datasetViewSettings.add(newDatasetView);
-		} catch (ConfigurationException e1) {
-			feedback.warning(e1);
-		}
 
 		initOptions();
 

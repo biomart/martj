@@ -111,7 +111,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       //				.setDatasetView(dsv);
     }
 
-    if (me.datasetViewSettings.getAdaptor().getDatasetViews().length > 0)
+    if (me.datasetViewSettings.getRootAdaptor().getDatasetViews().length > 0)
       me.doNewQuery();
 
   }
@@ -305,7 +305,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     try {
 
-      if (datasetViewSettings.getAdaptor().getDatasetViews().length == 0) {
+      if (datasetViewSettings.getRootAdaptor().getDatasetViews().length == 0) {
         feedback.warning(
           "No dataset views available. You need load one or more "
             + "datasets before you can create a query.");
