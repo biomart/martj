@@ -33,18 +33,19 @@ import javax.swing.JInternalFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeCellRenderer;
 
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
-import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
-import org.ensembl.mart.lib.config.BaseConfigurationObject;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 /**
  * DatasetConfigTreeWidget extends internal frame.
  *
@@ -89,10 +90,11 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	}
             	else{
 					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user);
-					DatasetConfig configs[] = adaptor.getDatasetConfigs();
-					for (int k =0; k < configs.length;k++){
-					  if (configs[k].getDataset().equals(dataset)){
-					    config = configs[k];
+					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+					while (configs.hasNext()){
+            DatasetConfig lconfig = (DatasetConfig) configs.next();
+					  if (lconfig.getDataset().equals(dataset)){
+					    config = lconfig;
 					    break;
 					  }
 					}
@@ -103,7 +105,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
                 DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url, true);
 
                 // only config one in the file so get that one
-                config = adaptor.getDatasetConfigs()[0];
+                config = (DatasetConfig) adaptor.getDatasetConfigs().next();
             }
           }
           else{
