@@ -49,6 +49,9 @@ public class IDListFilter implements Filter {
 		if (o.getName() != null)
 			name = o.getName();
 
+    if (o.getTableConstraint() != null)
+      tableConstraint = o.getTableConstraint();
+      
 		int olen = o.getIdentifiers().length;
 		String[] nvalues = new String[olen];
 
