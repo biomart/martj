@@ -45,10 +45,12 @@ import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -126,6 +128,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private Preferences prefs  = Preferences.userNodeForPackage(this.getClass());
 
   private Feedback feedback = new Feedback(this);
+  
+  private Help help = new Help();
 
   public static void main(String[] args) throws ConfigurationException {
 
@@ -400,7 +404,18 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     });
     help.add(about);
+    
+    
+    JMenuItem docs = new JMenuItem("Documentation");
+    docs.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        doDocumentation();
+      }
 
+    });
+    help.add(docs);
+    
+    
     JMenuBar all = new JMenuBar();
     all.add(file);
     all.add(settings);
@@ -409,7 +424,14 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     return all;
   }
 
-  protected void doSave() {
+  /**
+ * 
+ */
+protected void doDocumentation() {
+	help.showDialog(this);
+}
+
+protected void doSave() {
     if (isQueryEditorSelected())
       getSelectedQueryEditor().doSaveQuery();
 
