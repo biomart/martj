@@ -25,6 +25,20 @@ package org.ensembl.mart.explorer;
  */
 public class Constants {
 
+
+  /**
+   * Maximum width of list components.
+   */
+  public static final int LIST_MAX_PIXEL_WIDTH = 190;
+
+  /**
+   * Maximum height of list components.
+   */
+  public static final int LIST_MAX_PIXEL_HEIGHT = 25;
+
+  /**
+   * Maximum number of characters displayed in labels.
+   */
   public static final int LABEL_WIDTH_IN_CHARS = 24;
    
 }

@@ -28,6 +28,7 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JRadioButton;
 
 import org.ensembl.mart.guiutils.QuickFrame;
@@ -86,13 +87,27 @@ public class BooleanFilterWidget
 
     super(filterGroupWidget, query, fd, tree);
 
-    if ("boolean".equals(fd.getType())
-      || "boolean_list".equals(fd.getType())) {
+    if ("boolean".equals(fd.getType())) {
+
       requireFilterType = BooleanFilter.isNotNULL;
       excludeFilterType = BooleanFilter.isNULL;
+
     } else if ("boolean_num".equals(fd.getType())) {
+
       requireFilterType = BooleanFilter.isNotNULL_NUM;
       excludeFilterType = BooleanFilter.isNULL_NUM;
+
+    } else if ("boolean_list".equals(fd.getType())) {
+
+      requireFilterType = BooleanFilter.isNotNULL;
+      excludeFilterType = BooleanFilter.isNULL;
+      list = new JComboBox();
+      list.setMaximumSize(
+        new Dimension(
+          Constants.LIST_MAX_PIXEL_WIDTH,
+          Constants.LIST_MAX_PIXEL_HEIGHT));
+
+      setOptions(fd.getOptions());
     } else
       new RuntimeException(
         "BooleanFilterWidget does not support filter description: "
@@ -112,17 +127,21 @@ public class BooleanFilterWidget
     exclude.addActionListener(this);
     irrelevant.addActionListener(this);
 
-    panel.add(createLabel());
-    if (list != null)
-      panel.add(list);
+    if (list != null) {
+      Box left = Box.createVerticalBox();
+      left.add(createLabel());
+      left.add(list);
+      panel.add(left);
+    } else {
+      panel.add(createLabel());
+    }
+
     panel.add(Box.createHorizontalGlue());
     panel.add(require);
     panel.add(exclude);
     panel.add(irrelevant);
-    add(panel);
 
-    // adds list component if necessary  
-    setOptions(fd.getOptions());
+    add(panel);
 
   }
 
@@ -158,8 +177,10 @@ public class BooleanFilterWidget
 
     if (src == require || require.isSelected())
       filter = createFilter(requireFilterType);
+
     else if (src == exclude || exclude.isSelected())
       filter = createFilter(excludeFilterType);
+
     else if (src == irrelevant || irrelevant.isSelected())
       filter = null;
 
@@ -193,44 +214,22 @@ public class BooleanFilterWidget
 
   public void setOptions(Option[] options) {
 
-    if (list != null) {
-      list.removeAll();
-      //list.removeActionListener(listSelectionListener);
-      list.removeActionListener(this);
+    if (list == null)
+      return;
+
+    list.removeActionListener(this);
+    list.removeAllItems();
+
+    // add items
+    for (int i = 0; i < options.length; i++) {
+      Option o = options[i];
+      if (o.isSelectable())
+        list.addItem(new OptionToStringProxy(o));
     }
 
-    if (options != null) {
-
-      if (options.length > 0) {
-
-        // create and add list and listener if necessary
-        if (list == null) {
-
-          list = new JComboBox();
-          list.setMaximumSize(new Dimension(100, 25));
-          panel.add(list, 1);
-
-          //          listSelectionListener = new ActionListener() {
-          //            public void actionPerformed(ActionEvent event) {
-          //              doSelectIListtem(event);
-          //            }
-          //          };
-        }
-
-        // add items
-        for (int i = 0; i < options.length; i++) {
-          Option o = options[i];
-          if (o.isSelectable())
-            list.addItem(new OptionToStringProxy(o));
-        }
-      }
-    }
+    list.addActionListener(this);
 
     panel.validate();
-    if (list != null) {
-      //list.addActionListener(listSelectionListener);
-      list.addActionListener(this);
-    }
   }
 
   /**
