@@ -17,7 +17,7 @@ import org.ensembl.mart.lib.Query;
 /**
  * Base class for user input pages. Uses a BorderLayout by default.
  */
-public abstract class InputPage extends JPanel {
+public class InputPage extends JPanel {
 
   protected Query query;
   
@@ -50,8 +50,17 @@ public abstract class InputPage extends JPanel {
   }
 
   public void setNodeLabel(String title, String description) {
-    if ( description==null ) description = "?";
-    nodeLabel = "<html><b>" + title + ":</b> " + description + "</html>";
+    StringBuffer buf = new StringBuffer();
+    buf.append("<html>");
+    if ( title!=null ) {
+      buf.append("<b>").append(title);
+      if ( description!=null ) buf.append(":");
+      buf.append("</b> ");
+    } 
+    
+    if ( description!=null ) buf.append(description);
+    buf.append( "</html>" );
+    nodeLabel =  buf.toString();
   }
 
 	/**
