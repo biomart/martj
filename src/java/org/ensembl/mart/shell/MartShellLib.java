@@ -1014,14 +1014,17 @@ public class MartShellLib {
         URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
 
         if (userName == null) {
+          CompositeDSViewAdaptor fileAdaptor = null;
           if (adaptorManager.supportsAdaptor(DEFAULTURLADAPTORNAME)) {
-            CompositeDSViewAdaptor fileAdaptor =
-              (CompositeDSViewAdaptor) adaptorManager.getAdaptorByName(DEFAULTURLADAPTORNAME);
-
+            fileAdaptor = (CompositeDSViewAdaptor) adaptorManager.getAdaptorByName(DEFAULTURLADAPTORNAME);
             adaptorManager.remove(fileAdaptor);
-            fileAdaptor.add(adaptor);
-            adaptorManager.add(fileAdaptor);
+          } else {
+            fileAdaptor = new CompositeDSViewAdaptor();
+            fileAdaptor.setName(DEFAULTURLADAPTORNAME);
           }
+            
+          fileAdaptor.add(adaptor);
+          adaptorManager.add(fileAdaptor);
         } else {
           adaptor.setName(userName);
           adaptorManager.add(adaptor);
