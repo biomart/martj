@@ -159,6 +159,10 @@ public class DatasetViewTreeWidget extends JInternalFrame {
         tree.save();
     }
 
+    public void save_as(){
+           tree.save_as();
+       }
+
     public void cut(){
         tree.cut();
     }

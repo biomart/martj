@@ -87,46 +87,45 @@ public class MartViewEditor extends JFrame {
         JButton button = null;
 
         //first button
-        button = makeNavigationButton("NEW", NEW,
+        button = makeNavigationButton("new", NEW,
                 "Create a new dataset view",
-                "New");
+                "new");
         toolBar.add(button);
 
         //second button
-        button = makeNavigationButton("OPEN", OPEN,
+        button = makeNavigationButton("open", OPEN,
                 "Open a dataset view",
-                "Open");
+                "open");
         toolBar.add(button);
 
         //third button
-        button = makeNavigationButton("SAVE", SAVE,
+        button = makeNavigationButton("save", SAVE,
                 "Save dataset view",
-                "Next");
+                "save");
         toolBar.add(button);
 
-        button = makeNavigationButton("COPY", COPY,
+        button = makeNavigationButton("copy", COPY,
                 "Copy a tree node",
-                "Copy");
+                "copy");
         toolBar.add(button);
 
-        button = makeNavigationButton("CUT", CUT,
-                "Cut a tree node",
-                "Cut");
+        button = makeNavigationButton("cut", CUT,
+                "Cut a tree node","cut");
         toolBar.add(button);
 
-        button = makeNavigationButton("PASTE", PASTE,
+        button = makeNavigationButton("paste", PASTE,
                 "Paste tree node",
-                "Paste");
+                "paste");
         toolBar.add(button);
 
         button = makeNavigationButton("undo", UNDO,
                 "Undo",
-                "Undo");
+                "undo");
         toolBar.add(button);
 
         button = makeNavigationButton("redo", REDO,
                 "Redo",
-                "Redo");
+                "redo");
         toolBar.add(button);
 
     }
@@ -174,7 +173,7 @@ public class MartViewEditor extends JFrame {
         menuBar.add(menu);
 
         //a group of JMenuItems
-        ImageIcon icon = createImageIcon("NEW.gif");
+        ImageIcon icon = createImageIcon("new.gif");
         menuItem = new JMenuItem("New Dataset View", icon);
         MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
         menuItem.addActionListener(menuActionListener);
@@ -185,13 +184,13 @@ public class MartViewEditor extends JFrame {
                 "Creates a new file");
         menu.add(menuItem);
 
-        icon = createImageIcon("OPEN.gif");
+        icon = createImageIcon("open.gif");
         menuItem = new JMenuItem("Open Dataset View", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_O);
         menu.add(menuItem);
 
-        icon = createImageIcon("SAVE.gif");
+        icon = createImageIcon("save.gif");
         menuItem = new JMenuItem("Save", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_S);
@@ -237,21 +236,21 @@ public class MartViewEditor extends JFrame {
                 "redo");
         menu.add(menuItem);
         menu.addSeparator();
-        icon = createImageIcon("CUT.gif");
+        icon = createImageIcon("cut.gif");
         menuItem = new JMenuItem("Cut", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "cuts to clipboard");
         menu.add(menuItem);
-        icon = createImageIcon("COPY.gif");
+        icon = createImageIcon("copy.gif");
         menuItem = new JMenuItem("Copy", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "copies to clipboard");
         menu.add(menuItem);
-        icon = createImageIcon("PASTE.gif");
+        icon = createImageIcon("paste.gif");
         menuItem = new JMenuItem("Paste", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -436,7 +435,7 @@ public class MartViewEditor extends JFrame {
         int returnVal = fc.showOpenDialog(this.getContentPane());
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File file = fc.getSelectedFile();
+            file = fc.getSelectedFile();
             createFrame(file);
             //This is where a real application would open the file.
             System.out.println("Opening: " + file.getName() + "." + newline);
@@ -447,11 +446,11 @@ public class MartViewEditor extends JFrame {
     }
 
     public void save() {
-         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
+        ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
     }
 
     public void save_as() {
-
+       ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save_as();
     }
 
     public void exit() {

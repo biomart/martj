@@ -19,6 +19,7 @@
 package org.ensembl.mart.vieweditor;
 
 import org.ensembl.mart.lib.config.*;
+
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import javax.swing.tree.*;
@@ -190,14 +191,20 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     insert(new FilterCollection("new"), "FilterCollection:");
                 else if (e.getActionCommand().equals("insert attribute collection"))
                     insert(new AttributeCollection("new"), "AttributeCollection:");
-                else if (e.getActionCommand().equals("insert filter description"))
-                    insert(new FilterDescription(), "FilterDescription");
-                else if (e.getActionCommand().equals("insert attribute description"))
-                    insert(new AttributeDescription(), "AttributeDescription");
-                else if (e.getActionCommand().equals("delete"))
+                else if (e.getActionCommand().equals("insert filter description")) {
+                    FilterDescription fd = new FilterDescription();
+                    fd.setAttribute("internalName", "new");
+                    insert(fd, "FilterDescription");
+                } else if (e.getActionCommand().equals("insert attribute description")) {
+                    AttributeDescription ad = new AttributeDescription();
+                    ad.setAttribute("internalName", "new");
+                    insert(ad, "AttributeDescription");
+                } else if (e.getActionCommand().equals("delete"))
                     delete();
                 else if (e.getActionCommand().equals("save"))
                     save();
+                else if (e.getActionCommand().equals("save"))
+                    save_as();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -212,8 +219,8 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     private void doOnSelection() {
-        if(attrTable != null)
-                if (attrTable.getEditorComponent() != null) {
+        if (attrTable != null)
+            if (attrTable.getEditorComponent() != null) {
                 TableCellEditor attrTableEditor = attrTable.getCellEditor();
                 attrTableEditor.stopCellEditing();
             }
@@ -334,12 +341,12 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                         DatasetViewTreeNode selnodeParent;
                         int selnodeIndex;
                         if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
-                            selnodeParent = (DatasetViewTreeNode)selnode.getParent();
+                            selnodeParent = (DatasetViewTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
-                        } else  {
-                            selnodeParent = (DatasetViewTreeNode)selnode.getParent();
+                        } else {
+                            selnodeParent = (DatasetViewTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, dropnode, 0);
@@ -371,11 +378,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     protected class DatasetViewTreeMouseListener implements MouseListener {
         public void mousePressed(MouseEvent e) {
-            if(attrTable != null)
+            if (attrTable != null)
                 if (attrTable.getEditorComponent() != null) {
-                TableCellEditor attrTableEditor = attrTable.getCellEditor();
-                attrTableEditor.stopCellEditing();
-            }
+                    TableCellEditor attrTableEditor = attrTable.getCellEditor();
+                    attrTableEditor.stopCellEditing();
+                }
         }
 
         public void mouseReleased(MouseEvent e) {
@@ -402,23 +409,23 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         String[] menuItems = null;
         String clickedNodeClass = editingNode.getUserObject().getClass().getName();
         if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetView"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter page", "insert attribute page", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert filter page", "insert attribute page", "delete", "save","save as"};
         else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter group", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert filter group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute group", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert attribute group", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter collection", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert filter collection", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute collection", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert attribute collection", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert filter description", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert filter description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "delete", "save"};
+            menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
 
         for (int i = 0; i < menuItems.length; i++) {
             JMenuItem menuItem = new JMenuItem(menuItems[i]);
@@ -519,11 +526,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         treemodel.removeNodeFromParent(node);
     }
 
-    public void save() {
+    public void save_as() {
         dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
         JFileChooser fc;
-        if(frame.getFileChooserPath() != null)
+        if (frame.getFileChooserPath() != null)  {
             fc = new JFileChooser(frame.getFileChooserPath());
+            fc.setDragEnabled(true);
+            fc.setSelectedFile(frame.getFileChooserPath());
+        }
         else
             fc = new JFileChooser();
         XMLFileFilter filter = new XMLFileFilter();
@@ -536,6 +546,17 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void save() {
+        dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+        try {
+            if(frame.getFileChooserPath() != null)
+                DatasetViewXMLUtils.DatasetViewToFile(dsView, frame.getFileChooserPath());
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
