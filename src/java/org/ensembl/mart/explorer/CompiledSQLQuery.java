@@ -76,9 +76,21 @@ public class CompiledSQLQuery {
 
         for(int m=0; m<mappers.length && !success; ++m) {
             buf.delete(0, buf.length());
+
             success = selectClause( buf, mappers[m] );
+            if ( logger.isDebugEnabled() ) 
+              logger.debug( "select clause:" +
+                            buf.toString() );
+
             if ( success ) success = fromClause( buf, mappers[m] );
+            if ( success && logger.isDebugEnabled() ) 
+              logger.debug( "select + from clauses:" +
+                            buf.toString() );
+
             if ( success ) success = whereClause( buf, mappers[m] );        
+            if ( success && logger.isDebugEnabled() ) 
+              logger.debug( "select + from + where clauses:" +
+                            buf.toString() );
 		}
       
         if ( !success ) throw new InvalidQueryException("Failed to compile query :" + query);
