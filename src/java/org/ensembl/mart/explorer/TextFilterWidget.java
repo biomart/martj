@@ -61,20 +61,35 @@ implements ChangeListener, PropertyChangeListener  {
 
   
     /**
-     * Update query when text filter change.
+     * Update query when text filter change. Adds filter to query
+     * when text entered first time, changes filter if text changed, 
+     * removes filter if text cleared.
      * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
      */
     public void stateChanged(ChangeEvent e) {
       
       String value = combo.getSelectedItem().toString();
       
-      if ( value==null || "".equals( value ) ) return;
+      // remove filter
+      if ( value==null || "".equals( value ) ) {
+        if ( filter!=null ) {
+          query.removeFilter( filter );
+          filter = null;
+          setField( null );
+        }
+        return;
+      } 
       
+      // Add / change filter
       BasicFilter old = filter;
       filter = new BasicFilter( filterDescription.getFieldName(),
                                 filterDescription.getTableConstraint(),
                                 filterDescription.getQualifier(), 
                                 value);
+      setNodeLabel( null,
+        filterDescription.getDisplayName()
+          + filterDescription.getQualifier()
+          + value);
       // Must do this BEFORE adding the filter
       // to the query because the QueryEditor, which reponds
       // to Query property changes, uses the field as a key 
