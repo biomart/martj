@@ -85,7 +85,7 @@ public final class AttributeQueryRunner implements QueryRunner {
           newQuery.removeFilter(bigListFilter);
 
           IDListFilter newFilter =
-            new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), idBatch);
+            new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), bigListFilter.getKey(), idBatch);
           newQuery.addFilter(newFilter);
 
           executeQuery(newQuery, hardLimit);
@@ -121,7 +121,7 @@ public final class AttributeQueryRunner implements QueryRunner {
         Query newQuery = new Query(query);
         newQuery.removeFilter(bigListFilter);
 
-        IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), lbatch);
+        IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), bigListFilter.getKey(),lbatch);
         newQuery.addFilter(newFilter);
 
         executeQuery(newQuery, hardLimit);
@@ -142,9 +142,10 @@ public final class AttributeQueryRunner implements QueryRunner {
     try {
       csql = new CompiledSQLQuery(curQuery);
       String sqlbase = csql.toSQLWithKey();
-      String primaryKey = csql.getQualifiedPrimaryKey();
-      queryID = csql.getPrimaryKey();
-
+      String primaryKey = csql.getQualifiedLowestLevelKey();
+      //queryID = csql.getPrimaryKey();
+	  queryID = csql.getLowestLevelKey();
+	  
       DataSource ds = curQuery.getDataSource();
       if (ds == null)
         throw new RuntimeException("curQuery.DataSource is null");
