@@ -65,6 +65,7 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.IDListFilter;
+import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
@@ -379,6 +380,32 @@ public class QueryTreeView extends JTree implements QueryListener {
           query.removeAttribute(a[index]);
         }
       }
+    });
+
+    // ---------
+    
+    box = Box.createHorizontalBox();
+    c.add(box);
+    b = new JButton("Add sequence attribute");
+    box.add(b);
+    b.addActionListener(new ActionListener() {
+      private int count = 0;
+      public void actionPerformed(ActionEvent e) {
+        int index = (int) (query.getAttributes().length * Math.random());
+        Attribute a = new FieldAttribute("attribute" + count++);
+        try {
+          query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
+        } catch (InvalidQueryException e1) {
+          e1.printStackTrace();
+        }
+      }
+    });
+    b = new JButton("Remove sequence attribute");
+    box.add(b);
+    b.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+          query.setSequenceDescription(null);
+        }
     });
 
     // ---------
