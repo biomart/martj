@@ -2911,12 +2911,12 @@ public class DatabaseDatasetConfigUtils {
               FilterDescription currFilt = null;
               if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName, null) != null)
 
-              	System.out.println("cname "+ cname+ " tableName " + tableName);
+              	//System.out.println("cname "+ cname+ " tableName " + tableName);
               	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
 
               if (currFilt == null) {
                 fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv));
-System.out.println("Going to null ");
+//System.out.println("Going to null ");
               }
               else { // update options if has any
 
@@ -3060,7 +3060,7 @@ System.out.println("Going to null ");
 
     Option[] ops = fd1.getOptions();
     
-    System.out.println("options size " + ops.length);
+    //System.out.println("options size " + ops.length);
     
     if (ops[0].getTableConstraint() != null)
       return;
@@ -3369,7 +3369,7 @@ System.out.println("Going to null ");
         conn.close();
         return false;
       } else {
-        System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
+        //System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
         rs.close();
         conn.close();
         return true;
