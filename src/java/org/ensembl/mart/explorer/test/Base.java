@@ -7,21 +7,29 @@ import java.util.*;
 import org.apache.log4j.*;
 import junit.framework.*;
 import org.ensembl.mart.explorer.*;
+import org.ensembl.driver.ConfigurationException;
+import org.ensembl.driver.Driver;
+import org.ensembl.driver.DriverManager;
 
 /**
  * Base class for tests that sets up the logging system if necessary. 
  */
 public abstract class Base extends TestCase {
 
+
+	private final static Logger logger = Logger.getLogger(Base.class.getClass());
+	private final static String connprops = "data/testconnection.conf";
+	private final static String connpropsEnsj = "data/testconnection_ensj.conf"; 
+    
     private String host = null;
     private String port = null;
     private String database = null;
     private String user = null;
     private String password = null;
     private Properties p = new Properties();
-    private String connprops = "data/testconnection.conf"; 
     private URL connectionconf;
 
+    protected Driver ensjDriver = null;
   	protected Engine engine;
     protected Query query = new Query();
 
@@ -49,6 +57,13 @@ public abstract class Base extends TestCase {
             database = "ensembl_mart_11_1";
             user = "anonymous";
 		}
+		
+		try {
+			ensjDriver = DriverManager.load( connpropsEnsj );
+		}catch(ConfigurationException e) {
+			logger.warn("",e);
+		}
+		
 	}
 
     public void setUp() {
