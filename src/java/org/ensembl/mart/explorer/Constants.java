@@ -29,7 +29,7 @@ public class Constants {
   /**
    * Maximum width of list components.
    */
-  public static final int LIST_MAX_PIXEL_WIDTH = 190;
+  public static final int LIST_MAX_PIXEL_WIDTH = 170;
 
   /**
    * Maximum height of list components.

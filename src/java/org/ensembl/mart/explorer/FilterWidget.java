@@ -279,7 +279,7 @@ public abstract class FilterWidget
   protected JLabel createLabel() {
     String label = filterDescription.getDisplayName();
     if (label == null)
-      label = "";
+      label = " ";
     else
       label =
         StringUtil.wrapLinesAsHTML(

@@ -101,11 +101,19 @@ public class BooleanFilterWidget
 
       requireFilterType = BooleanFilter.isNotNULL;
       excludeFilterType = BooleanFilter.isNULL;
-      list = new JComboBox();
-      list.setMaximumSize(
-        new Dimension(
-          Constants.LIST_MAX_PIXEL_WIDTH,
-          Constants.LIST_MAX_PIXEL_HEIGHT));
+      list = new JComboBox() {
+        public Dimension getMaximumSize() {
+            return super.getMaximumSize();
+        }
+      
+      };
+      
+      Dimension s = new Dimension(
+      Constants.LIST_MAX_PIXEL_WIDTH,
+      Constants.LIST_MAX_PIXEL_HEIGHT); 
+      list.setMaximumSize(s);
+      //    we need to set preferred because maximum is ignored by Box@linux JVM
+      list.setPreferredSize(s); 
 
       setOptions(fd.getOptions());
     } else
@@ -128,10 +136,11 @@ public class BooleanFilterWidget
     irrelevant.addActionListener(this);
 
     if (list != null) {
-      Box left = Box.createVerticalBox();
-      left.add(createLabel());
-      left.add(list);
-      panel.add(left);
+//      Box left = Box.createVerticalBox();
+//      left.add(createLabel());
+//      left.add(list);
+//      panel.add(left);
+      panel.add(list);
     } else {
       panel.add(createLabel());
     }
@@ -230,6 +239,7 @@ public class BooleanFilterWidget
     list.addActionListener(this);
 
     panel.validate();
+    
   }
 
   /**
@@ -391,5 +401,7 @@ public class BooleanFilterWidget
 
     return -1;
   }
+
+
 
 }
