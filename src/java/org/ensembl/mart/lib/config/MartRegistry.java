@@ -27,13 +27,13 @@ import java.util.List;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class MartRegistry {
-  private List datasetViewLocations = new ArrayList();
+  private List martLocations = new ArrayList();
   
-  public void addDatasetViewLocation(DatasetViewLocation dsvl) {
-    datasetViewLocations.add(dsvl);
+  public void addDatasetViewLocation(MartLocation dsvl) {
+    martLocations.add(dsvl);
   }
   
-  public DatasetViewLocation[] getDatasetViewLocations() {
-    return (DatasetViewLocation[]) datasetViewLocations.toArray(new DatasetViewLocation[datasetViewLocations.size()]);
+  public MartLocation[] getMartLocations() {
+    return (MartLocation[]) martLocations.toArray(new MartLocation[martLocations.size()]);
   }
 }

@@ -27,10 +27,11 @@ import java.net.URL;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class URLLocation {
+public class URLLocation extends MartLocationBase {
 
   private final URL url;
   private final int hashcode;
+  private final String type = MartLocationBase.URL;
   
 	public URLLocation(URL url) {
     this.url = url;
@@ -50,6 +51,7 @@ public class URLLocation {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
+		buf.append("Location Type=").append(type);
 		buf.append("url=").append(url);
 		buf.append("]");
 
@@ -68,6 +70,13 @@ public class URLLocation {
 	 */
 	public int hashCode() {
      return hashcode;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
+	 */
+	public String getType() {
+    return type;
 	}
 
 }
