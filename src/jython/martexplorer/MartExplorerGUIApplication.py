@@ -31,7 +31,9 @@
 
 # Toggleable auto-update
 
+# TODO Feature group boxes list collapsable
 
+# TODO add sequence images (see wills email)
 
 import thread
 from jarray import array
@@ -74,92 +76,92 @@ defaultAttributeConfiguration = (
     ( "Features",
       ( "REGION",
         ( ("Chromosome Attributes", None),
-          ( "Chromosome Name",
-            "Start Position (bp)",
-            "End Position (bp)",
-            "Band",
-            "Strand"
+          ( ("Chromosome Name","chr_name"),
+            ("Start Position (bp)","gene_chrom_start"),
+            ("End Position (bp)","gene_chrom_end"),
+            ("Band","band"),
+            ("Strand","chrom_strand")
             )
           )
         ), # REGION
       
       ( "GENE",
         ( ("Ensembl Attributes", None),
-          ( "Ensembl Gene ID",
-            "Ensembl Transcript ID",
-            "External Gene ID",
-            "Description",
-            "Ensembl Peptide ID",
-            "External Gene DB"
+          ( ("Ensembl Gene ID","gene_stable_id"),
+            ("Ensembl Transcript ID","transcript_stable_id"),
+            ("External Gene ID","display_id"),
+            ("Description","description"),
+            ("Ensembl Peptide ID","translation_stable_id_v"),
+            ("External Gene DB","db_name")
             )
           ),
 
         ( ("External Reference Attributes (max 3)", 3 ),
-          ( "Protein ID",
-            "GO ID",
-            "SPTrEMBL ID",
-            "SWISSPROT ID",
-            "MIM ID",
-            "LocusLink ID",
-            "HUGO ID",
-            "GO Description",
-            "EMBL ID",
-            "PDB ID",
-            "RefSeq ID",
-            "GKB ID",
-            )
+          ( ("Protein ID","display_id", "xref_protein_id"),
+            ("GO ID","display_id", "xref_GO"),
+            ("SPTrEMBL ID","display_id", "xref_SPTREMBL"),
+            ("SWISSPROT ID","display_id", "xref_SWISSPROT"),
+            ("MIM ID","display_id", "xref_MIM"),
+            ("LocusLink ID","","xref_LocusLink"),
+            ("HUGO ID","display_id","xref_HUGO"),
+            ("GO Description","description","xref_GO"),
+            ("EMBL ID","display_id","xref_EMBL"),
+            ("PDB ID","display_id","xref_PDB"),
+            ("RefSeq ID","display_id","xref_RefSeq"),
+            ("GKB ID","display_id","xref_GKB")
+             )
           ),
 
-        ( ("Microarray Attributes", 1),
-          ( "AFFY HG U9",
-            "Sanger HVER 1 2 1",
-            "AFFY HG U133",
-            "UMCU 19Kv1",
-            )
-          ),
+##         ( ("Microarray Attributes", 1),
+##           ( "AFFY HG U9",
+##             "Sanger HVER 1 2 1",
+##             "AFFY HG U133",
+##             "UMCU 19Kv1",
+##             )
+##           ),
         
-        ( ("Disease Attributes", None),
-          ( "Disease OMIM ID",
-            "Disease Description"
-            )
-          ),
+##         ( ("Disease Attributes", None),
+##           ( "Disease OMIM ID",
+##             "Disease Description"
+##             )
+##           ),
         
-        ), # GENE
+         ), # GENE
 
-      # TODO EXPRESSION
+##       # TODO EXPRESSION
 
-      # TODO MULTI SPECIES COMPARISON
+##       # TODO MULTI SPECIES COMPARISON
 
-      # PROTEIN
+##       PROTEIN
 
-      ), # FEATURES
+##       ), FEATURES
     
     
-    ( "SNPs",
-      ( "REGION",
-        ( ( "Chromosome Attributes",  None),
-          ( "Chromosome Name",
-            "Start Position (bp)",
-            "End Position (bp)",
-            "Band",
-            "Strand"
-            )
-          )
-        ) # REGION
-      ), # SNPS
+##     ( "SNPs",
+##       ( "REGION",
+##         ( ( "Chromosome Attributes",  None),
+##           ( "Chromosome Name",
+##             "Start Position (bp)",
+##             "End Position (bp)",
+##             "Band",
+##             "Strand"
+##             )
+##           )
+##         ) # REGION
+##       ), # SNPS
 
 
-    ( "Structures",
-      ( "REGION",
-        ( ( "Chromosome Attributes",  None),
-          ( "Chromosome Name",
-            "Start Position (bp)",
-            "End Position (bp)",
-            "Band",
-            "Strand"
-            )
-          )
-        ) # REGION
+##     ( "Structures",
+##       ( "REGION",
+##         ( ( "Chromosome Attributes",  None),
+##           ( "Chromosome Name",
+##             "Start Position (bp)",
+##             "End Position (bp)",
+##             "Band",
+##             "Strand"
+##             )
+##           )
+##         ) # REGION
       ),
 
     )
@@ -173,14 +175,19 @@ class AttributeManager(ChangeListener ):
     this option to be added to the tree and conversely, deselection
     causes it to be removed. """
 
-    def __init__(self, label,
+    def __init__(self,
+                 label,
+                 columnName,
+                 tableConstraint,
                  attributePage,
                  group=None):
 
         self.attributePage = attributePage
-        # TODO update this to contain columnName and maybe partialTableName
-        self.attribute = FieldAttribute( label )
-
+        self.attribute = FieldAttribute( columnName )
+        
+        if tableConstraint:
+            self.attribute.tableConstraint =  tableConstraint 
+        
         self.__widget = JPanel( BorderLayout() )
         self.__widget.preferredSize = ATTRIBUTE_WIDGET_SIZE
         self.name = str(self)
@@ -209,10 +216,11 @@ class AttributeManager(ChangeListener ):
 
 
     def updateQuery(self, query):
-        if not query.hasAttribute( self.attribute ):
+        if self.button.selected and not query.hasAttribute( self.attribute ):
             query.addAttribute( self.attribute )
 
     def updatePage(self, query):
+
         self.button.selected = query.hasAttribute( self.attribute )
         
 
@@ -927,13 +935,14 @@ class SequencePage(Page):
 		    # deselect invalid option
 		    self.noInclude.selected = 1
 		    JOptionPane.showMessageDialog(self.rootPane
-						  ,"Deselected \"" + b.text+ "\" because that option is unavailble when target is Genes."
+						  ,"Deselected \"" + b.text
+                                                  + "\" because that option is unavailble when target is Genes."
 						  ,"Invalid sequence combination."
 						  ,JOptionPane.WARNING_MESSAGE )
 		
 	self.dependencies()
 	if not self.nodeInTree:
-            self.add( node )
+            self.addNode()
 	else:
 	    self.attributePage.refreshView()
 
@@ -973,10 +982,9 @@ class SequencePage(Page):
             sd = SequenceDescription( SequenceDescription.TRANSCRIPTCODING ) 
         elif self.transcript.selected and self.includePeptide.selected:
             sd = SequenceDescription( SequenceDescription.TRANSCRIPTPEPTIDE )
-        else:
-            raise InvalidQueryException("Unsupported sequence configuration")
 
-        query.sequenceDescription = sd
+        if sd:
+            query.sequenceDescription = sd
 
 
         
@@ -1001,7 +1009,7 @@ class SequencePage(Page):
             else:
                 raise InvalidQueryException("Unsupported sequence description")
 
-        self.addNode()
+            self.addNode()
 
         
 
@@ -1054,7 +1062,10 @@ class AttributeSubPage(Page):
                     clearButton = None
                     
                 for attribute in subGroup[1]:
-                    am = AttributeManager( attribute, self, radioGroup )
+                    if len(attribute)==2:
+                        am = AttributeManager( attribute[0], attribute[1], None, self, radioGroup )
+                    elif len(attribute)==3:
+                        am = AttributeManager( attribute[0], attribute[1], attribute[2], self, radioGroup )
                     self.attributeManagers.append( am )
                     colPanel.add( am.getWidget() )
                     
@@ -1089,7 +1100,7 @@ class AttributeSubPage(Page):
 
 
 
-class AttributePage(Page):
+class AttributePage(Page, TreeSelectionListener):
 
     name = "attribute_manager_page"
 
@@ -1111,8 +1122,31 @@ class AttributePage(Page):
         self.tabs.append(self.sequencePage)
 
 
+
+    def configure(self, node, path, tree):
+        self.tree = tree
+        self.attributesNode = node
+        self.attributesNodePath = path
+        self.tree.addTreeSelectionListener( self )
+
+
+
+    def valueChanged(self, event):
+
+	""" Brings the attributePage to the front of the
+	cardContainer if this node or one of it's cheildren was selected."""
+        path = event.newLeadSelectionPath
+        if path:
+            lastNode = event.newLeadSelectionPath.lastPathComponent
+            for n in self.attributesNode.depthFirstEnumeration(): 
+                if n == lastNode:
+                    self.cardContainer.show( AttributePage.name )
+                    break
+
+
     def toFront(self, tab):
         self.tabbedPane.setSelectedComponent( tab )
+
 
 
     def addTabs(self, tabbedPane, configuration):
@@ -1345,9 +1379,7 @@ class QueryEditor(JPanel):
         path = path.pathByAddingChild( attributesNode )
 	tree.expandPath( path )
 
-        attributePage.attributesNode = attributesNode
-        attributePage.attributesNodePath = path
-        attributePage.tree = tree
+        attributePage.configure(attributesNode, path, tree)
 
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
@@ -1528,15 +1560,18 @@ class MartGUIApplication(JFrame):
         #q.addFilter( IDListFilter("gene_stable_id", url ) )
         #q.addFilter( IDListFilter("gene_stable_id",
         #                          array( ("ENSG00000177741"), String) ) )
-        #q.addAttribute( FieldAttribute("gene_stable_id") )
+        q.addAttribute( FieldAttribute("gene_stable_id") )
+        q.addAttribute( FieldAttribute("chr_name") )
+        q.addAttribute( FieldAttribute("gene_chrom_start") )
+        q.addAttribute( FieldAttribute("gene_chrom_end") )
 
         #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
         #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") )
         # TODO need a result window
         #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") )
 
-        sd = SequenceDescription( SequenceDescription.TRANSCRIPTCODING  )
-        q.sequenceDescription = sd 
+        #sd = SequenceDescription( SequenceDescription.TRANSCRIPTCODING  )
+        #q.sequenceDescription = sd 
         self.editor.updatePage( q )
 
 
@@ -1577,6 +1612,7 @@ class MartGUIApplication(JFrame):
                             user,
                             password,
                             database)
+            print query
             engine.execute( query, formatSpec, outputStream )
 	    
 	    # scroll to top of results
