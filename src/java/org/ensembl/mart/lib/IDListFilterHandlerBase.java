@@ -64,7 +64,7 @@ public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandle
 
 		String constellation_name = query_with_starbases.getStarBases()[0]; // get the first starBase, should be valid
 
-		boolean versioned_ids = true;
+		boolean versioned_ids = false;
 
 		try {
 			PreparedStatement ps = conn.prepareStatement(SQL);
@@ -79,20 +79,15 @@ public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandle
 		}
 
 		if (versioned_ids) {
-			String[] ret = new String[input.length];
-
 			// strip off the last .n from the id
-			for (int i = 0, n = ret.length; i < n; i++) {
+			for (int i = 0, n = input.length; i < n; i++) {
 				int versionIndex = input[i].lastIndexOf(".");
 				if (versionIndex >= 0)
-					ret[i] = input[i].substring(0, versionIndex);
-				else
-					ret[i] = input[i];
+					input[i] = input[i].substring(0, versionIndex);
 			}
-
-			return ret;
-		} else
-			return input;
+		}
+		
+    return input;
 	}
 
 	/**
