@@ -54,15 +54,21 @@ public class BooleanFilter implements Filter {
 	 * @param condition - String, one of isNULL or isNotNull
 	 */	
 	public BooleanFilter(String field, String tableConstraint, String condition) {
+		this(field, tableConstraint, condition, null);
+	}
+
+  public BooleanFilter(String field, String tableConstraint, String condition, String handler) {	
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.condition = condition;
+		this.handler = handler;
     
-    hashcode = (this.field == null) ? 0 : this.field.hashCode();
-    hashcode = (31 * hashcode) + ( (this.tableConstraint == null) ? 0 : this.tableConstraint.hashCode() );
-    hashcode = (31 * hashcode) + ( (this.condition == null) ? 0 : this.condition.hashCode() );		
-	}
-	
+		hashcode = (this.field == null) ? 0 : this.field.hashCode();
+		hashcode = (this.tableConstraint == null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
+		hashcode = (this.condition != null) ? (31 * hashcode) + this.condition.hashCode() : hashcode;
+		hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
+  }
+  
 	/**
 	 * returns the field specified
 	 * 
@@ -104,11 +110,11 @@ public class BooleanFilter implements Filter {
 		 return condition;
 	}
 
-	/**
-	 * Not applicable to this type of filter, returns null
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.Filter#getHandler()
 	 */
 	public String getHandler() {
-		return null;
+		return handler;
 	}
 	
   public String toString() {
@@ -118,6 +124,7 @@ public class BooleanFilter implements Filter {
 		buf.append("field=").append(field);
 		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append(", condition=").append(condition);
+		buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -137,6 +144,9 @@ public class BooleanFilter implements Filter {
     return hashcode;
 	}
 
-	private final String field, tableConstraint, condition;
+	private final String field;
+	private final String tableConstraint; 
+	private final String condition;
+	private final String handler;
   private int hashcode = 0; //hashcode for immutable object
 }
