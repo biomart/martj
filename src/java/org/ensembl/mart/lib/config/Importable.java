@@ -24,12 +24,10 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Importable extends BaseNamedConfigurationObject {
+public class Importable extends BaseConfigurationObject {
   private final String linkNameKey = "linkName";
   private final String nameKey = "name";
   private final String filtersKey = "filters";
-  private final String orderByKey = "orderBy";
-  
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
 	 * exact copy of an existing Importable.
@@ -45,11 +43,6 @@ public class Importable extends BaseNamedConfigurationObject {
     setAttribute(linkNameKey, null);
     setAttribute(nameKey, null);
 	setAttribute(filtersKey, null);
-    setAttribute(orderByKey, null);
-  }
-
-  public Importable(String linkName)  throws ConfigurationException {
-    this(linkName, null, null, linkName, null, null, null);
   }
   
   /**
@@ -57,8 +50,8 @@ public class Importable extends BaseNamedConfigurationObject {
    * @param ref - String internalName of the FilterDescription to Importable.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
-  	this(internalName, displayName, description, linkName, null, null, null);
+  public Importable(String linkName) throws ConfigurationException {
+  	this(linkName, null, null);
   }
   
   /**
@@ -67,8 +60,8 @@ public class Importable extends BaseNamedConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String internalName, String displayName, String description, String linkName, String moduleName, String filters, String orderBy) throws ConfigurationException {
-  	super(internalName, displayName, description);
+  public Importable(String linkName, String moduleName, String filters) throws ConfigurationException {
+  	super();
   	
   	if (linkName == null || "".equals(linkName))
   	  throw new ConfigurationException("Importable objects must have a linkName.\n");
@@ -76,7 +69,6 @@ public class Importable extends BaseNamedConfigurationObject {
   	setAttribute(linkNameKey, linkName);
   	setAttribute(nameKey, moduleName);
 	setAttribute(filtersKey, filters);
-    setAttribute(orderByKey, orderBy);
   }
 
 	/**
@@ -102,10 +94,6 @@ public class Importable extends BaseNamedConfigurationObject {
 	public String getFilters() {
 		return getAttribute(filtersKey);
 	}
-  
-  public String getOrderBy() {
-    return getAttribute(orderByKey);
-  }
 
   /**
    * Set the internalName of the Filter to Importable when this Filter is used
@@ -130,11 +118,7 @@ public class Importable extends BaseNamedConfigurationObject {
   public void setFilters(String valueCondition) {
 		setAttribute(filtersKey, valueCondition);
   }
-
-  public void setOrderBy(String orderBy) {
-    	setAttribute(orderByKey, orderBy);  
-  }
-  
+	  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
