@@ -128,8 +128,8 @@ public class MartShell {
 			+ "\n"
 			+ "\n-h <command>                            - this screen, or, if a command is provided, help for that command"
 			+ "\n-A                                      - Turn off Commandline Completion (faster startup, less helpful)"
-			+ "\n-C  MART_CONFIGURATION_FILE_URL         - URL to Alternate Mart XML Configuration File"
-			+ "\n-M  CONNECTION_CONFIGURATION_FILE_URL   - URL to mysql connection configuration file"
+			+ "\n-C MART_CONFIGURATION_FILE_URL         - URL to Alternate Mart XML Configuration File"
+			+ "\n-M CONNECTION_CONFIGURATION_FILE_URL   - URL to mysql connection configuration file"
 			+ "\n-H HOST                                 - database host"
 			+ "\n-T DATABASE_TYPE                        - type of Relational Database Management System holing the mart (default mysql)"
 			+ "\n-P PORT                                 - database port"
@@ -491,10 +491,31 @@ public class MartShell {
 			}
 		});
 
-		String thisline = null;
+		try {
+			// load help file
+			LoadHelpFile();
+			  
+			//display startup information
+			String startupMessage = Help(STARTUP);
+			  
+			if (historyOn)
+			  startupMessage = startupMessage.replaceAll(HISTORYQ, Help(HISTORYQ));
+      else
+        startupMessage = startupMessage.replaceAll(HISTORYQ, "");
+			  
+      if (completionOn)
+			  startupMessage = startupMessage.replaceAll(COMPLETIONQ, Help(COMPLETIONQ));
+			else
+        startupMessage = startupMessage.replaceAll(COMPLETIONQ, "");
+          
+			System.out.println(startupMessage);
+		} catch (InvalidQueryException e2) {
+			System.out.println("Couldnt display startup information\n" + e2.getMessage());
+			e2.printStackTrace();
+		}
 
 		try {
-			if (martHost == null || martHost.length() < 5)
+ 			if (martHost == null || martHost.length() < 5)
 				setConnectionSettings(SETCONSETSC);
 			Initialize();
 
@@ -567,11 +588,16 @@ public class MartShell {
 
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
+        if (helpLoaded)
+          mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
+          
 				mcl.SetCommandMode();
 
 				Readline.setCompleter(mcl);
 			}
 
+      mainLogger.info("Completer set\n");
+      
 			if (readlineLoaded && historyOn) {
 				File histFile = new File(history_file);
 				if (!histFile.exists())
@@ -580,15 +606,13 @@ public class MartShell {
 					LoadScriptFromFile(history_file);
 			}
 
-			// load help, this loads the help, and, if completionOn, adds them to Help Mode in the MartCompleter
-			LoadHelpFile();
-
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 
 			System.exit(1);
 		}
-
+    
+    String thisline = null;
 		while (true) {
 			try {
 				thisline = Prompt();
@@ -941,14 +965,18 @@ public class MartShell {
 		try {
 			commandHelp.load(help.openStream());
 			commandHelp.load(dshelp.openStream());
+      
+      if (! historyOn)
+        commandHelp.remove(HISTORYQ);
+      
+      if (! completionOn)
+        commandHelp.remove(COMPLETIONQ);
+          
 		} catch (IOException e) {
 			helpLoaded = false;
 			throw new InvalidQueryException("Could not load Help File " + e.getMessage());
 		}
 		helpLoaded = true;
-
-		if (completionOn)
-			mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
 	}
 
 	private String[] ColumnIze(String input) {
@@ -2667,7 +2695,7 @@ public class MartShell {
 	private final String HELPFILE = "data/help.properties"; //contains help general to the shell
 	private final String DSHELPFILE = "data/dshelp.properties"; // contains help for domain specific aspects
 
-	private final Pattern[] dsCommands = new Pattern[] { Pattern.compile("(.+)DOMAINSPECIFIC\\s(\\w+)(.+)", Pattern.DOTALL)};
+	private final Pattern[] dsCommands = new Pattern[] { Pattern.compile("(.*)DOMAINSPECIFIC\\s(\\w+)(.+)", Pattern.DOTALL)};
 
 	private final List dsHelpItems = Collections.unmodifiableList(Arrays.asList(new String[] { "selectSequence" }));
 
@@ -2744,6 +2772,11 @@ public class MartShell {
 	private final String DATABASETYPE = "databaseType";
 	private final String ALTCONFFILE = "alternateConfigurationFile";
 
+  //startup message variables
+  private final String STARTUP = "startUp";
+  private final String HISTORYQ = "CommandHistoryHelp";
+  private final String COMPLETIONQ = "CommandCompletionHelp";
+  
 	// variables for subquery
 	private ByteArrayOutputStream subqueryOutput = null;
 	private int nestedLevel = 0;
