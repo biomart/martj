@@ -22,6 +22,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -37,7 +39,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.InvalidQueryException;
@@ -59,7 +66,7 @@ import org.ensembl.mart.util.*;
  */
 public class SequenceGroupWidget
   extends GroupWidget
-  implements ActionListener {
+  implements ActionListener, TreeSelectionListener {
 
   private static final Logger logger =
     Logger.getLogger(SequenceGroupWidget.class.getName());
@@ -223,6 +230,8 @@ public class SequenceGroupWidget
     DSAttributeGroup attributeGroup) {
 
     super(name, query, tree);
+    if (tree != null)
+      tree.addTreeSelectionListener(this);
 
     this.attributeGroup = attributeGroup;
 
@@ -628,11 +637,11 @@ public class SequenceGroupWidget
    *
    */
   private void reset() {
-    
+
     // a bit of hack; use this image because the method requires one. The image on screen
     // will be replaced if necessary by other methods.
     updateState("data/image/gene_schematic_gene_only.gif", NONE, 0, 0);
-    
+
     includeNone.setSelected(true);
     disableButtons();
     schematicSequenceImageHolder.setIcon(blankIcon);
@@ -693,6 +702,46 @@ public class SequenceGroupWidget
   private void disableButtons() {
     for (int i = 0; i < includeButtons.length; i++)
       includeButtons[i].setEnabled(false);
+  }
+
+  /**
+   * Callback method called when an item in the tree is selected.
+   * Brings this widget to the front if the selected node in the tree is a sequence description.
+   * TODO get scrolling to a selected attribute working properly
+   */
+  public void valueChanged(TreeSelectionEvent e) {
+
+    if (query.getSequenceDescription() != null) {
+
+      if (e.getNewLeadSelectionPath() != null
+        && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
+
+        DefaultMutableTreeNode node =
+          (DefaultMutableTreeNode) e
+            .getNewLeadSelectionPath()
+            .getLastPathComponent();
+
+        if (node != null) {
+
+          TreeNodeData tnd = (TreeNodeData) node.getUserObject();
+          if (tnd.getSequenceDescription() != null)
+            for (Component p, c = this; c != null; c = p) {
+              p = c.getParent();
+              if (p instanceof JTabbedPane)
+                 ((JTabbedPane) p).setSelectedComponent(c);
+              else if (p instanceof JScrollPane) {
+                // not sure if this is being used
+                Point pt = c.getLocation();
+                Rectangle r = new Rectangle(pt);
+                ((JScrollPane) p).scrollRectToVisible(r);
+
+              }
+
+            }
+        }
+      }
+    }
+
   }
 
 }

@@ -21,6 +21,7 @@ import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.FilterDescription;
 /**
  * Used to create the label on the TreeNode it added to and store optional
@@ -29,76 +30,85 @@ import org.ensembl.mart.lib.config.FilterDescription;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp </a>
  */
 public class TreeNodeData {
-	public static final class Type {
+  public static final class Type {
     private String label;
 
-		public Type(String label) {
-      assert label!=null;
-     this.label = label; 
+    public Type(String label) {
+      assert label != null;
+      this.label = label;
     }
-    
-		/**
-		 * @return Returns the label.
-		 */
-		public String getLabel() {
-			return label;
-		}
-	};
-	public static final Type DATASOURCE = new Type("Mart database");
-	public static final Type DATASET = new Type("Dataset");
-	public static final Type ATTRIBUTES = new Type("Attributes");
-	public static final Type FILTERS = new Type("Filters");
-	public static final Type FORMAT = new Type("Format");
-    
-	public static final TreeNodeData createDataSourceNode() {
-		return new TreeNodeData(DATASOURCE, ":", null);
-	};
-	public static final TreeNodeData createDatasetNode() {
-		return new TreeNodeData(DATASET, ":", null);
-	};
-	public static final TreeNodeData createAttributesNode() {
-		return new TreeNodeData(ATTRIBUTES, null, null);
-	};
-	public static final TreeNodeData createFilterNode() {
-		return new TreeNodeData(FILTERS, null, null);
-	}
-	public static final TreeNodeData createFormatNode() {
-		return new TreeNodeData(FORMAT, null, null);
-	}
-	private Type type;
-	private String separator;
-	private String rightText;
-	private Attribute attribute;
-	private Filter filter;
-	
-	private TreeNodeData(Type type, String separator,
-			String rightText, Attribute attribute, Filter filter) {
-		this.type = type;
-		this.separator = separator;
-		this.rightText = rightText;
-		this.attribute = attribute;
-		this.filter = filter;
-	}
-	
-  
-  public TreeNodeData(Type type, String separator,
-			String rightText, Attribute attribute) {
-		this(type, separator, rightText, attribute, null);
-	}
-	
-  
-  public TreeNodeData(Type type, String separator,
-			String rightText, Filter filter) {
-		this(type, separator, rightText, null, filter);
-	}
-	
-  
-  public TreeNodeData(Type type, String separator,
-			String rightText) {
-		this(type, separator, rightText, null, null);
-	}
-  
-  
+
+    /**
+     * @return Returns the label.
+     */
+    public String getLabel() {
+      return label;
+    }
+  }
+  private SequenceDescription sequenceDescription;
+  ;
+  public static final Type DATASOURCE = new Type("Mart database");
+  public static final Type DATASET = new Type("Dataset");
+  public static final Type ATTRIBUTES = new Type("Attributes");
+  public static final Type FILTERS = new Type("Filters");
+  public static final Type FORMAT = new Type("Format");
+
+  public static final TreeNodeData createDataSourceNode() {
+    return new TreeNodeData(DATASOURCE, ":", null);
+  };
+  public static final TreeNodeData createDatasetNode() {
+    return new TreeNodeData(DATASET, ":", null);
+  };
+  public static final TreeNodeData createAttributesNode() {
+    return new TreeNodeData(ATTRIBUTES, null, null);
+  };
+  public static final TreeNodeData createFilterNode() {
+    return new TreeNodeData(FILTERS, null, null);
+  }
+  public static final TreeNodeData createFormatNode() {
+    return new TreeNodeData(FORMAT, null, null);
+  }
+  private Type type;
+  private String separator;
+  private String rightText;
+  private Attribute attribute;
+  private Filter filter;
+
+  private boolean useLeftText = true;
+
+  private TreeNodeData(
+    Type type,
+    String separator,
+    String rightText,
+    Attribute attribute,
+    Filter filter) {
+    this.type = type;
+    this.separator = separator;
+    this.rightText = rightText;
+    this.attribute = attribute;
+    this.filter = filter;
+  }
+
+  public TreeNodeData(
+    Type type,
+    String separator,
+    String rightText,
+    Attribute attribute) {
+    this(type, separator, rightText, attribute, null);
+  }
+
+  public TreeNodeData(
+    Type type,
+    String separator,
+    String rightText,
+    Filter filter) {
+    this(type, separator, rightText, null, filter);
+  }
+
+  public TreeNodeData(Type type, String separator, String rightText) {
+    this(type, separator, rightText, null, null);
+  }
+
   /**
    * Creates a TreeNodeData instance containing the filter and
    * with a label derived from the query.datasetConfig and the filter.
@@ -106,9 +116,9 @@ public class TreeNodeData {
    * @param filter
    */
   public TreeNodeData(Query query, Filter filter) {
-    
+
     this.filter = filter;
-    
+
     // use rawfield as default for label
     String fieldName = filter.getField();
 
@@ -143,14 +153,17 @@ public class TreeNodeData {
       else if (qualifier.matches("\\s*is\\s+not\\s+null\\s*"))
         qualifier = "required";
     }
-    
+
     if (filter instanceof IDListFilter) {
       IDListFilter f = (IDListFilter) filter;
-      if ( f.getFile()!=null ) qualifier = "in " + f.getFile();
-      else if (f.getUrl()!=null) qualifier = "in " + f.getUrl();
-      else if (f.getIdentifiers()!=null && f.getIdentifiers().length!=0 )qualifier = "in list";
+      if (f.getFile() != null)
+        qualifier = "in " + f.getFile();
+      else if (f.getUrl() != null)
+        qualifier = "in " + f.getUrl();
+      else if (f.getIdentifiers() != null && f.getIdentifiers().length != 0)
+        qualifier = "in list";
     }
-    
+
     if (qualifier == null)
       qualifier = "";
 
@@ -163,65 +176,78 @@ public class TreeNodeData {
     this.rightText = tmp.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
   }
+
+  public TreeNodeData(SequenceDescription sequenceDescription) {
+    this.sequenceDescription = sequenceDescription;
+    this.rightText = sequenceDescription.getTypeAsString();
+    this.type = ATTRIBUTES;
+    this.separator = "";
+    useLeftText = false;
+  }
+
+
+  /**
+   * Generates a small piece of html that is appears as the label on
+   * tree nodes.
+   */
+  public String toString() {
+    
+    StringBuffer buf = new StringBuffer();
+    
+    buf.append("<html>");
+
+    if (useLeftText) {
+      buf.append("<b>");
+      if (type != null)
+        buf.append(type.label);
+      if (separator != null)
+        buf.append(separator);
+      buf.append("</b> ");
+    }
+    
+    if (rightText != null)
+      buf.append(rightText);
+    buf.append("</html>");
+    
+    return buf.toString();
+  }
   
-	/**
-	 * Generates a small piece of html that is used to create the "labels" for
-	 * tree nodes.
-	 */
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
-		buf.append("<html>");
-		buf.append("<b>");
-		if (type != null )
-			buf.append(type.label);
-		if (separator != null)
-			buf.append(separator);
-		buf.append("</b> ");
-		if (rightText != null)
-			buf.append(rightText);
-		buf.append("</html>");
-		return buf.toString();
-	}
-	/**
-	 * @return attribute if set, otherwise null
-	 */
-	public Attribute getAttribute() {
-		return attribute;
-	}
-	/**
-	 * @return filter if set, otherwise null
-	 */
-	public Filter getFilter() {
-		return filter;
-	}
-	/**
-	 * @return
-	 */
-	public String getLabel() {
-		return type.label;
-	}
-	/**
-	 * @return
-	 */
-	public String getRightText() {
-		return rightText;
-	}
-	/**
-	 * @return
-	 */
-	public String getSeparator() {
-		return separator;
-	}
-	/**
-	 * @param string
-	 */
-	public void setRightText(String string) {
-		rightText = string;
-	}
-	/**
-	 * @return
-	 */
-	public Type getType() {
-		return type;
-	}
+  
+  /**
+   * @return attribute if set, otherwise null
+   */
+  public Attribute getAttribute() {
+    return attribute;
+  }
+  /**
+   * @return filter if set, otherwise null
+   */
+  public Filter getFilter() {
+    return filter;
+  }
+
+  public String getLabel() {
+    return type.label;
+  }
+
+  public String getRightText() {
+    return rightText;
+  }
+
+  public String getSeparator() {
+    return separator;
+  }
+
+  public void setRightText(String string) {
+    rightText = string;
+  }
+
+  public Type getType() {
+    return type;
+  }
+
+  public SequenceDescription getSequenceDescription() {
+    return sequenceDescription;
+
+  }
 }

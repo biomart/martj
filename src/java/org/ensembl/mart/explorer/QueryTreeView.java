@@ -72,7 +72,6 @@ import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Tree config showing the current state of the query. Allows the user
@@ -242,8 +241,12 @@ public class QueryTreeView extends JTree implements QueryListener {
       TreeNode parent = child.getParent();
       int index = parent.getIndex(child);
 
-      if (parent == attributesNode)
-        query.removeAttribute(query.getAttributes()[index]);
+      if (parent == attributesNode) {
+        if (index<query.getAttributes().length)
+          query.removeAttribute(query.getAttributes()[index]);
+        else if (query.getSequenceDescription()!=null) 
+          query.setSequenceDescription(null);
+      }
       else if (parent == filtersNode)
         query.removeFilter(query.getFilters()[index]);
 
@@ -494,8 +497,6 @@ public class QueryTreeView extends JTree implements QueryListener {
     int index,
     Attribute attribute) {
 
-    // TODO disambiguate: one attribute.getField()-> N*AttributeDescription
-
     // Try to get a user friendly labelName, 
     // otherwise use the raw one from attribute
 
@@ -518,6 +519,7 @@ public class QueryTreeView extends JTree implements QueryListener {
     select(attributesNode, index, false);
 
   }
+
 
   /**
    * Select a node. 
@@ -602,21 +604,49 @@ public class QueryTreeView extends JTree implements QueryListener {
       new DefaultMutableTreeNode(
         new TreeNodeData(sourceQuery, newFilter));
     
-    filtersNode.remove(index);
-    filtersNode.insert(node, index);
-    treeModel.reload(filtersNode);
+      filtersNode.remove(index);
+      filtersNode.insert(node, index);
+      treeModel.reload(filtersNode);
     
-    select(filtersNode, index, false);
+      select(filtersNode, index, false);
   }
 
   /**
-   * Do nothing.
-   * @see org.ensembl.mart.lib.QueryChangeListener#querySequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
+   * Add / remove sequence attribute to / from end of attributes list.
+   * 
+   * The query tree view represents the sequence description as a single node at the end of the 
+   * attribute branch. If newSequenceDescription
+   * is null remove any existing tree node. If newSequenceDescription is not null then add
+   * a tree node representing the sequence description, replace any existing sequence description
+   * node.
+   * 
    */
   public void sequenceDescriptionChanged(
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
+
+      System.out.println("sd = " + newSequenceDescription);
+     
+      int index = Math.max(0, attributesNode.getChildCount()-1);
+      if (oldSequenceDescription!=null)
+        attributesNode.remove(index);
+    
+      if (newSequenceDescription!=null){
+
+        DefaultMutableTreeNode node =
+          new DefaultMutableTreeNode( new TreeNodeData(newSequenceDescription));
+        attributesNode.insert(node, index);
+
+      } else {
+
+        index--;
+
+      }
+
+      treeModel.reload(attributesNode);
+
+      select(attributesNode, index, false);
   }
 
   /**
