@@ -42,7 +42,11 @@ public final class AttributeQueryRunner implements QueryRunner {
   }
 
   public void execute(int hardLimit) throws SequenceException, InvalidQueryException {
-    //TODO: this should be moved into the Query object, so you can just do if (query.hasBigList())
+    if (hardLimit > 0)
+      hardLimit = Math.min(hardLimit, MAXTOTALROWS);
+    else
+      hardLimit = MAXTOTALROWS;
+        
     Filter[] filters = query.getFilters();
 
     Filter bigListFilter = null;
@@ -179,8 +183,8 @@ public final class AttributeQueryRunner implements QueryRunner {
               ? batchLimit * batchModifiers[modIter]
               : maxBatchLimit;
           modIter = (modIter == 0) ? 1 : 0;
-        } else
-          batchLimit += linearIncrease;
+        } //else
+          //batchLimit += linearIncrease;
 
         rs.close();
       }
@@ -266,12 +270,15 @@ public final class AttributeQueryRunner implements QueryRunner {
   private int batchLimit = 50000;
   private final int maxBatchLimit = 200000;
   
+  // total number of rows execute will ever return
+  private final int MAXTOTALROWS = 200000;
+  
 //allow batchLength to increase by this amount after maxBatchLength has been reached
 //this will result in slow response for queries where each id returns a resultset
 //larger than maxBatchLimit, but they will eventually finish
 //and the system will reset the limit back to the batch for each new id
 //this could, concievably, hit a memory limit, so test and tweak
-  private final int linearIncrease = 10; 
+//  private final int linearIncrease = 10; 
 
   //big list batching
   private final int listSizeMax = 1000;
