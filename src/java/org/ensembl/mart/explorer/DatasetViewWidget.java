@@ -20,8 +20,11 @@ package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -49,6 +52,8 @@ public class DatasetViewWidget
 	extends InputPage
 	implements QueryChangeListener, ChangeListener {
 
+	private DatasetView[] oldViews;
+
 	private Map optionToView = new HashMap();
 
 	private DatasetViewSettings datasetViewSettings;
@@ -59,8 +64,8 @@ public class DatasetViewWidget
 	private Feedback feedback = new Feedback(this);
 
 	private LabelledComboBox chooser = new LabelledComboBox("Dataset");
-  
-  private String noneOption = "None";
+
+	private String noneOption = "None";
 
 	//	private JTextField datasetViewName = new JTextField(30);
 	//	private JButton button = new JButton("change");
@@ -78,69 +83,58 @@ public class DatasetViewWidget
 
 		chooser.setEditable(false);
 		chooser.addChangeListener(this);
-
-		//
-
-		//		datasetViewName.setEditable(false);
-		//		setDatasetView(null);
-		//
-		//		JButton cb = new JButton("Change");
-		//		cb.addActionListener(new ActionListener() {
-		//			public void actionPerformed(ActionEvent e) {
-		//				doChange();
-		//
-		//			}
-		//		});
-		//
-		//		Box b = Box.createHorizontalBox();
-		//		b.add(new JLabel("Dataset "));
-		//		b.add(cb);
-		//		b.add(datasetViewName);
-		//	 add(b, BorderLayout.NORTH);
-
 		add(chooser, BorderLayout.NORTH);
 
-		initOptions();
+    initOptions();
 	}
 
 	/**
-	 * Construct list of options and add them to the chooser 
+	 * Construct list of options from the available datasetviews and add them to the chooser 
 	 */
 	private void initOptions() {
 
-		// Collect all dataset views and key by adaptor->dataset
-		optionToView.clear();
 		try {
 			DatasetView[] views = datasetViewSettings.getAdaptor().getDatasetViews();
+
+			// only update if datasetViews changed.
+			if (Arrays.equals(views, oldViews))
+				return;
+			oldViews = views;
+
+			// Collect all dataset views and key by adaptor->dataset
+			optionToView.clear();
 			for (int i = 0; i < views.length; i++) {
 				DatasetView view = views[i];
-				String option = toOption( view );
-				logger.fine( Integer.toString(i) + ": "+option + ", " + view.getDisplayName() );
-        // add novel options
-        if ( !optionToView.containsKey( option ))
-				  optionToView.put(option, view);
+				String option = toOption(view);
+
+				// add novel options
+				if (!optionToView.containsKey(option)) {
+					optionToView.put(option, view);
+				}
+
 			}
-		} catch (ConfigurationException e) {
 
-			feedback.warning(e);
+			// Sort options before adding to chooser
+			List options = new ArrayList();
+			options.addAll(optionToView.keySet());
+			Collections.sort(options);
+
+			// Add the "none" option at the beginning.
+			optionToView.put(noneOption, null);
+			options.add(0, noneOption);
+
+			chooser.removeAllItems();
+			chooser.addAll(options);
+
+		} catch (ConfigurationException e1) {
+			feedback.warning(e1);
 		}
-
-		// Sort options before adding to chooser
-		List options = new ArrayList();
-    options.addAll(optionToView.keySet());
-    Collections.sort(options);
-
-    // Add the "none" option at the beginning.
-    optionToView.put( noneOption, null );
-    options.add(0, noneOption); 
-    
-    chooser.removeAllItems();
-		chooser.addAll(options);
 
 	}
 
 	/**
-	 * Opens DatasetViewSettings dialog.
+	 * TODO move this test to drop down dsv chooser in QueryEditor.
+   * Opens DatasetViewSettings dialog.
 	 */
 	public void doChange() {
 
@@ -189,7 +183,7 @@ public class DatasetViewWidget
 
 		LoggingUtil.setAllRootHandlerLevelsToFinest();
 		logger.setLevel(Level.FINE);
-    //Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
+		//Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
 
 		Query q = new Query();
 		DatasetViewWidget dvm =
@@ -201,7 +195,6 @@ public class DatasetViewWidget
 		f.getContentPane().add(dvm);
 		f.pack();
 		f.setVisible(true);
-
 
 	}
 
@@ -224,35 +217,35 @@ public class DatasetViewWidget
 
 		// add dsv to datasetViewSettings if not present
 		try {
-			if (newDatasetView!=null && !datasetViewSettings.contains(newDatasetView))
+			if (newDatasetView != null
+				&& !datasetViewSettings.contains(newDatasetView))
 				datasetViewSettings.add(newDatasetView);
 		} catch (ConfigurationException e1) {
-      feedback.warning(e1);
+			feedback.warning(e1);
 		}
 
-    initOptions();
-
+		initOptions();
 
 		if (newDatasetView != null) {
-      chooser.setSelectedItem( toOption( newDatasetView ) );
-      // set these to default values
-      query.setPrimaryKeys(newDatasetView.getPrimaryKeys());
+			chooser.setSelectedItem(toOption(newDatasetView));
+			// set these to default values
+			query.setPrimaryKeys(newDatasetView.getPrimaryKeys());
 			query.setStarBases(newDatasetView.getStarBases());
 		} else {
-      chooser.setSelectedItem( noneOption );
+			chooser.setSelectedItem(noneOption);
 		}
 
 	}
 
 	/**
 	 * @param view DatasetView to convert to a string option name. 
-   * @return option name for the view
+	 * @return option name for the view
 	 */
 	private String toOption(DatasetView view) {
-    
-    DSViewAdaptor a = view.getAdaptor();
-    String aName = ( a!=null ) ? a.getDisplayName() : "Unkown";
-    return aName + " -> " + view.getDataset();
+
+		DSViewAdaptor a = view.getAdaptor();
+		String aName = (a != null) ? a.getDisplayName() : "Unkown";
+		return aName + " -> " + view.getDataset();
 	}
 
 	/**
@@ -261,7 +254,7 @@ public class DatasetViewWidget
 	 */
 	public void stateChanged(ChangeEvent e) {
 
-		DatasetView dsv = (DatasetView) optionToView.get(chooser.getSelectedItem());
+		DatasetView dsv = (DatasetView)optionToView.get(chooser.getSelectedItem());
 
 		query.clear();
 		query.setDatasetView(dsv);
@@ -275,15 +268,5 @@ public class DatasetViewWidget
 
 	}
 
-	//	/**
-	//	 * Update the label to show which dataset view is currently selected.
-	//	 * @param object
-	//	 */
-	//	private void setDatasetView(DatasetView datasetView) {
-	//		String s = "";
-	//		if (datasetView != null)
-	//			s = datasetView.getDisplayName();
-	//		datasetViewName.setText(s);
-	//	}
 
 }
