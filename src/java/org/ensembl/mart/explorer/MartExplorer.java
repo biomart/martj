@@ -60,6 +60,7 @@ import javax.swing.KeyStroke;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
+import org.ensembl.util.SimpleTimer;
 
 /**
  * MartExplorer is a graphical application that enables a 
@@ -140,9 +141,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     me.loadDefaultAdaptors();
 
-    if (me.adaptorManager.getRootAdaptor().getNumDatasetConfigs() > 0)
+    if (me.getNumDatasetConfigsAvailable() > 0)
       me.doNewQuery();
-
   }
 
   public MartExplorer() {
@@ -157,6 +157,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    * 
    */
   private void loadDefaultAdaptors() {
+
+    disableCursor();
+
     URL url = getClass().getClassLoader().getResource(DEFAULT_REGISTRY_URL);
 
     String path =
@@ -169,9 +172,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
         feedback.warning(e);
       }
     logger.fine("Loading default registry file: " + url);
-    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     adaptorManager.importRegistry(url);
-    setCursor(Cursor.getDefaultCursor());
+
+    enableCursor();
   }
 
   /**
@@ -507,29 +510,45 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     try {
 
-      if (adaptorManager.getRootAdaptor().getNumDatasetConfigs() == 0) {
+      if (getNumDatasetConfigsAvailable() == 0) {
+
         feedback.warning(
           "You need to add an "
             + "adaptor containing dataset configs before you can create a query.");
 
       } else {
 
-        disableCursor();
-
-        final QueryEditor qe = new QueryEditor(this, adaptorManager);
-        qe.setName(nextQueryBuilderTabLabel());
-        addQueryEditor(qe);
-        tabs.setSelectedComponent(qe);
-        qe.openDatasetConfigMenu();
-
-        enableCursor();
-        //getGlassPane().removeMouseListener(ml);
-
+        try {
+          disableCursor();
+          final QueryEditor qe = new QueryEditor(this, adaptorManager);
+          qe.setName(nextQueryBuilderTabLabel());
+          addQueryEditor(qe);
+          tabs.setSelectedComponent(qe);
+          qe.openDatasetConfigMenu();
+        } finally {
+          enableCursor();
+        }
       }
     } catch (IOException e) {
       feedback.warning(e);
     }
+  }
 
+  /**
+   * Disables the cursor whilst this runs.
+   * @return number of dataset configs currently available.
+   */
+  public int getNumDatasetConfigsAvailable() {
+
+    int n = 0;    
+    try{
+      disableCursor();
+      n = adaptorManager.getRootAdaptor().getNumDatasetConfigs();
+    } finally {
+      enableCursor();
+    }
+    
+    return n;
   }
 
   private void enableCursor() {
