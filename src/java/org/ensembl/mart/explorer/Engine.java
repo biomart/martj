@@ -35,6 +35,9 @@ import org.ensembl.mart.explorer.config.MartConfigurationFactory;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
+
+//TODO: implement broad(transcript based) versus narrow(gene based) filtering of resultsets
+
 public class Engine {
     private Logger logger = Logger.getLogger(Engine.class.getName());
     private Connection databaseConnection = null;
