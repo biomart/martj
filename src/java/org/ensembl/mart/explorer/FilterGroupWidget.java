@@ -127,7 +127,7 @@ public class FilterGroupWidget extends PageWidget {
     
       w = new TextFilterWidget( this, query, filterDescription, tree );
     
-    } else if ("list".equals(type)) {
+    } else if ("list".equals(type) || "boolean_list".equals(type) ) {
       
       w = new ListFilterWidget( this, query, filterDescription, tree );
       

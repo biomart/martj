@@ -77,13 +77,15 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
-          BooleanFilter.isNotNULL);
+          BooleanFilter.isNotNULL, 
+          fd.getHandlerFromContext());
 
       excludeFilter =
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
-          BooleanFilter.isNULL);
+          BooleanFilter.isNULL, 
+          fd.getHandlerFromContext());
 
     } else {
 
@@ -91,13 +93,15 @@ public class BooleanFilterWidget
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
-          BooleanFilter.isNotNULL_NUM);
+          BooleanFilter.isNotNULL_NUM, 
+          fd.getHandlerFromContext());
 
       excludeFilter =
         new BooleanFilter(
           fd.getField(),
           fd.getTableConstraint(),
-          BooleanFilter.isNULL_NUM);
+          BooleanFilter.isNULL_NUM, 
+          fd.getHandlerFromContext());
 
     }
 

@@ -38,6 +38,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JTabbedPane;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -55,7 +57,6 @@ public class MartExplorer extends JFrame {
 	  a+f+os
 	 */
 
-
 	// TODO test save/load query
 
 	// TODO chained queries
@@ -67,7 +68,7 @@ public class MartExplorer extends JFrame {
 	// TODO load registry file
 
 	private MartSettings martManager = new MartSettings();
-  private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
+	private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -92,7 +93,6 @@ public class MartExplorer extends JFrame {
 	/** Persistent preferences object used to hold user history. */
 	private Preferences prefs;
 
-
 	private Feedback feedback = new Feedback(this);
 
 	public static void main(String[] args) throws ConfigurationException {
@@ -105,11 +105,17 @@ public class MartExplorer extends JFrame {
 
 		// test mode preloads datasets and sets up a query ready to use.
 		if (true) {
-      me.datasetViewSettings.add(QueryEditor.testDSViewAdaptor());
-		} 
+			DSViewAdaptor a = QueryEditor.testDSViewAdaptor();
+			DatasetView dsv = a.getDatasetViews()[0];
 
-    me.doNewQuery();
-  }
+			me.datasetViewSettings.add(a);
+			me.doNewQuery();
+			((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
+				.getQuery()
+				.setDatasetView(dsv);
+		}
+
+	}
 
 	public MartExplorer() {
 
@@ -121,10 +127,10 @@ public class MartExplorer extends JFrame {
 
 	}
 
-  /**
-   * TODO Displays "about" dialog.
-   *
-   */
+	/**
+	 * TODO Displays "about" dialog.
+	 *
+	 */
 	public void doAbout() {
 	}
 
@@ -195,7 +201,7 @@ public class MartExplorer extends JFrame {
 		});
 
 		JMenuItem datasetviews = new JMenuItem("DatasetViews");
-    settings.add( datasetviews );
+		settings.add(datasetviews);
 		datasetviews.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				doDatasetViewSettings();
@@ -262,13 +268,12 @@ public class MartExplorer extends JFrame {
 	}
 
 	/**
-   * 
-   */
-  protected void doDatasetViewSettings() {
-    datasetViewSettings.showDialog(this);
-    
-  }
+	 * 
+	 */
+	protected void doDatasetViewSettings() {
+		datasetViewSettings.showDialog(this);
 
+	}
 
 	/**
 	 * 
@@ -278,7 +283,6 @@ public class MartExplorer extends JFrame {
 		martManager.showDialog(this);
 	}
 
-	
 	/**
 	 * Delete currently selected QueryBuilder from tabbed pane if one is 
 	 * selected.
@@ -314,8 +318,6 @@ public class MartExplorer extends JFrame {
 		System.exit(0);
 	}
 
-
-
 	/**
 		 * 
 		 */
@@ -350,6 +352,5 @@ public class MartExplorer extends JFrame {
 	public void doNewVirtualQuery() {
 
 	}
-
 
 }

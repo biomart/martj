@@ -359,9 +359,9 @@ public class TreeFilterWidget extends FilterWidget {
           setOption(nullOption);
 
         } else {
-
+          String handler = option.getHandlerFromContext();
           filter =
-            new BasicFilter( fieldName, option.getTableConstraintFromContext(), "=", value);
+            new BasicFilter( fieldName, option.getTableConstraintFromContext(), "=", value, handler);
           query.addFilter(filter);
         }
       }

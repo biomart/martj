@@ -153,6 +153,10 @@ public class DatasetWidget
     DatasetView oldDatasetView,
     DatasetView newDatasetView) {
 
+    // set dataset to default value
+    if ( query.getDataset()==null ) 
+      query.setDataset( newDatasetView.getDataset() );
+
     defaultButton.setEnabled(newDatasetView != null );
   }
 

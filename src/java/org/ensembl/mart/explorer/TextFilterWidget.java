@@ -170,7 +170,8 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
           filterDescription.getField(),
           filterDescription.getTableConstraint(),
           filterDescription.getLegalQualifiers(),
-          value);
+          value,
+          filterDescription.getHandlerFromContext());
       query.addFilter(filter);
     }
   }

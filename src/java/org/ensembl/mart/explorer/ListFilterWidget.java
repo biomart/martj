@@ -163,7 +163,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
               filterDescription.getField(),
               option.getTableConstraint(),
               "=",
-              value);
+              value,
+              filterDescription.getHandlerFromContext());
           query.addFilter(filter);
 
         }
