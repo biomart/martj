@@ -45,7 +45,7 @@ public final class DatasetRequest {
       if (request.indexOf(DATASOURCEDELIMITER) > 0) {
         String[] toks = request.split(DATASOURCEDELIMITER);
         datasetreq = toks[0];
-        mrt = toks[1];
+        mrt = msl.deCanonicalizeMartName( toks[1] );
 
           if (!msl.adaptorManager.supportsAdaptor(mrt))
             throw new InvalidQueryException("Mart " + mrt + " has not been added, use add Mart\n");
@@ -62,7 +62,7 @@ public final class DatasetRequest {
 
         //dont use toks[0] as mart if x>y parsed above
         if (mrt == null)
-          mrt = toks[0];
+          mrt = msl.deCanonicalizeMartName( toks[0] );
 
         if (!msl.adaptorManager.supportsAdaptor(mrt))
           throw new InvalidQueryException(
@@ -83,11 +83,11 @@ public final class DatasetRequest {
       } else if (toks.length == 2) {
         //either sourcename.datasetname or datasetname.configname relative to envMart
                 
-        if (msl.adaptorManager.supportsAdaptor(toks[0])) {
+        if (msl.adaptorManager.supportsAdaptor(msl.deCanonicalizeMartName( toks[0] ) ) ) {
           //assume it is sourcename.datasetname
           
           if (mrt == null)
-            mrt = toks[0];
+            mrt = msl.deCanonicalizeMartName( toks[0] );
             
           if (!msl.adaptorManager.supportsAdaptor(mrt))
             throw new InvalidQueryException(

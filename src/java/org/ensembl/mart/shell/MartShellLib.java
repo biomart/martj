@@ -473,15 +473,15 @@ public class MartShellLib {
 
           String[] datasets = adaptor.getDatasetNames();
           for (int j = 0, m = datasets.length; j < m; j++) {
-            retList.add(source + "." + datasets[j] + "\n");
+            retList.add( canonicalizeMartName( source ) + "." + datasets[j] + "\n");
           }
         }
       } else {
         //list datasets sourceName
-        if (!adaptorManager.supportsAdaptor(reqName))
+        if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( reqName ) ))
           throw new ConfigurationException(reqName + " is not a valid Mart Source to list Datasets\n");
 
-        String[] datasets = adaptorManager.getAdaptorByName(reqName).getDatasetNames();
+        String[] datasets = adaptorManager.getAdaptorByName( deCanonicalizeMartName( reqName ) ).getDatasetNames();
         for (int i = 0, n = datasets.length; i < n; i++) {
           retList.add(reqName + "." + datasets[i] + "\n");
         }
@@ -530,16 +530,16 @@ public class MartShellLib {
 
             for (int k = 0, l = configs.length; k < l; k++) {
               String config = configs[k];
-              retList.add(source + "." + dataset + "." + config + "\n");
+              retList.add( canonicalizeMartName( source ) + "." + dataset + "." + config + "\n");
             }
           }
         }
       } else {
         //list datasetconfigs sourcename
-        if (!adaptorManager.supportsAdaptor(reqName))
+        if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( reqName ) ))
           throw new ConfigurationException("Source " + reqName + " is not a valid Mart Source\n");
 
-        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(reqName);
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName( deCanonicalizeMartName( reqName ) );
 
         String[] datasets = adaptor.getDatasetNames();
         for (int j = 0, m = datasets.length; j < m; j++) {
@@ -594,10 +594,11 @@ public class MartShellLib {
     if (adaptorManager.getAdaptorNames().length == 0)
       throw new ConfigurationException("No Marts have been loaded\n");
 
-    String[] ret = adaptorManager.getAdaptorNames();
-
-    for (int i = 0, n = ret.length; i < n; i++) {
-      ret[i] += "\n";
+    String[] names = adaptorManager.getAdaptorNames();
+    String[] ret = new String[names.length];
+    
+    for (int i = 0, n = names.length; i < n; i++) {
+      ret[i] = canonicalizeMartName( names[i] ) + "\n";
     }
 
     Arrays.sort(ret);
@@ -727,10 +728,10 @@ public class MartShellLib {
 
         reqMart = envMart;
       } else {
-        if (!adaptorManager.supportsAdaptor(name))
+        if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( name ) ) )
           throw new InvalidQueryException(MARTREQ + " " + name + " has not been stored\n");
 
-        reqMart = adaptorManager.getAdaptorByName(name).getDataSource();
+        reqMart = adaptorManager.getAdaptorByName( deCanonicalizeMartName( name ) ).getDataSource();
 
         //this could (but probably wont) be a file sourcename
         if (reqMart == null)
@@ -1191,7 +1192,7 @@ public class MartShellLib {
         //special case where it does not allow remove dataset sourcename.datasetname (eg. must explicitly use sourcename.datasetname.default to remove default)
         String[] nametoks = name.split("\\.");
         if (nametoks.length == 2
-          && adaptorManager.supportsAdaptor(nametoks[0])
+          && adaptorManager.supportsAdaptor(deCanonicalizeMartName( nametoks[0] ))
           && adaptorManager.supportsDataset(nametoks[1]))
           throw new InvalidQueryException(
             "Cannot remove default datasetconfig for dataset with relative name: "
@@ -1216,8 +1217,8 @@ public class MartShellLib {
         toks.nextToken(); // skip from
         String source = toks.nextToken();
 
-        if (adaptorManager.supportsAdaptor(source))
-          adaptorManager.getAdaptorByName(source).update();
+        if (adaptorManager.supportsAdaptor( deCanonicalizeMartName( source ) ))
+          adaptorManager.getAdaptorByName( deCanonicalizeMartName( source ) ).update();
         else
           throw new InvalidQueryException("Invalid Mart Source " + source + " passed in update datasets request\n");
       } else {
@@ -1238,10 +1239,10 @@ public class MartShellLib {
         String[] nametoks = name.split("\\.");
         if (nametoks.length == 2) {
           //sourcename.datasetname
-          if (!adaptorManager.supportsAdaptor(nametoks[0]))
+          if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( nametoks[0] ) ))
             throw new InvalidQueryException("Source " + nametoks[0] + " is not a valid mart source\n");
 
-          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(nametoks[0]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName( deCanonicalizeMartName( nametoks[0] ) );
 
           if (!adaptor.supportsDataset(nametoks[1]))
             throw new InvalidQueryException(
@@ -1305,10 +1306,10 @@ public class MartShellLib {
       envMart = null;
     } else {
       try {
-        if (!adaptorManager.supportsAdaptor(name))
+        if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( name )))
           throw new InvalidQueryException("Invalid Mart name " + name + " recieved in set Mart command\n");
 
-        DetailedDataSource ds = adaptorManager.getAdaptorByName(name).getDataSource();
+        DetailedDataSource ds = adaptorManager.getAdaptorByName( deCanonicalizeMartName( name ) ).getDataSource();
 
         if (ds == null)
           throw new InvalidQueryException("Source " + name + " is a File Source\n");
@@ -2462,6 +2463,28 @@ public class MartShellLib {
     advancedFeaturesOn = toggle;
   }
 
+  /**
+   * Takes a canonicalized martName, and replaces each
+   * underscore with a single whitespace.
+   * 
+   * @param String Canonicalized Mart Name
+   * @return String deCanonicalized Mart Name
+   */
+  public String deCanonicalizeMartName(String cMartName) {
+    return cMartName.replaceAll("\\_", " ");
+  }
+  
+  /**
+   * Takes an uncanonicalized martName, and replaces each
+   * individual whitespace with a single underscore.
+   * 
+   * @param String uncanonicalized Mart Name
+   * @return String canonicalized Mart Name
+   */
+  public String canonicalizeMartName(String cMartName) {
+    return cMartName.replaceAll("\\s", "_");
+  }
+  
   private boolean advancedFeaturesOn = false;
   private int maxcharcount = 0;
 

@@ -544,7 +544,7 @@ public class MartCompleter implements ReadlineCompleter {
       try {
         if (toks[0].equals(SETC)) {
           if (toks[1].equalsIgnoreCase("mart")) {
-            if (toks.length == 3 && msl.adaptorManager.supportsAdaptor(toks[2]))
+            if (toks.length == 3 && msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName(toks[2]) ) )
               setEmptyMode();
             else
               setMartReqMode();
@@ -604,7 +604,7 @@ public class MartCompleter implements ReadlineCompleter {
           else
             setDatasetReqMode();
         } else if (request.equalsIgnoreCase("Mart")) {
-          if (toks.length == 3 && msl.adaptorManager.supportsAdaptor(toks[2]))
+          if (toks.length == 3 && msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( toks[2] ) ) )
             setEmptyMode();
           else
             setMartReqMode();
@@ -638,8 +638,8 @@ public class MartCompleter implements ReadlineCompleter {
   private void setDatasetReqMode(String martName) {
     currentSet = new TreeSet();
     try {
-      if (msl.adaptorManager.supportsAdaptor(martName))
-        currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorByName(martName).getDatasetNames()));
+      if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) ) )
+        currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames()));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
@@ -649,8 +649,8 @@ public class MartCompleter implements ReadlineCompleter {
   private void setUsingDatasetReqMode(String martName) {
     currentSet = new TreeSet();
     try {
-      if (msl.adaptorManager.supportsAdaptor(martName)) {
-        String[] dsets = msl.adaptorManager.getAdaptorByName(martName).getDatasetNames();
+      if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) )) {
+        String[] dsets = msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames();
         for (int i = 0, n = dsets.length; i < n; i++) {
           String dset = dsets[i];
           currentSet.add(martName+"."+dset); //martName.dataset
@@ -678,11 +678,11 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     
     try {
-      if (msl.adaptorManager.supportsAdaptor(martName)
-        && msl.adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName))
+      if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) )
+        && msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).supportsDataset(datasetName))
         currentSet.addAll(
           Arrays.asList(
-            msl.adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName)));
+            msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetConfigInternalNamesByDataset(datasetName)));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       if (logger.isLoggable(Level.INFO))
@@ -694,9 +694,9 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     
     try {
-      if (msl.adaptorManager.supportsAdaptor(martName) 
-          && msl.adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName)) {
-        String[] dnames = msl.adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName);
+      if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) ) 
+          && msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).supportsDataset(datasetName)) {
+        String[] dnames = msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName )).getDatasetConfigInternalNamesByDataset(datasetName);
         for (int i = 0, n = dnames.length; i < n; i++) {
           String dname = dnames[i];
           currentSet.add(martName+"."+datasetName+"."+dname);
@@ -1153,14 +1153,14 @@ public class MartCompleter implements ReadlineCompleter {
   }
   
   private boolean validMartAndDataset(String martName, String dataset) throws ConfigurationException {
-    return msl.adaptorManager.supportsAdaptor(martName) && msl.adaptorManager.supportsDataset(dataset);
+    return msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) ) && msl.adaptorManager.supportsDataset(dataset);
   }
   
   private boolean validDatasetForMart(String martName, String dataset) throws ConfigurationException {
-    return msl.adaptorManager.getAdaptorByName(martName).supportsDataset(dataset);
+    return msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).supportsDataset(dataset);
   }
   
   private boolean validMart(String martName) throws ConfigurationException {
-    return msl.adaptorManager.supportsAdaptor(martName);
+    return msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) );
   }
 }

@@ -1359,7 +1359,7 @@ public class MartShell {
         for (int i = 0, n = adaptorNames.length; i < n; i++) {
           DSConfigAdaptor adaptor = adaptorNames[i];
           if (!(adaptor instanceof URLDSConfigAdaptor))
-            martNames.add(adaptor.getName());
+            martNames.add( msl.canonicalizeMartName( adaptor.getName() ) );
         }
         mcl.setMartNames(martNames);
 
@@ -1369,7 +1369,7 @@ public class MartShell {
         List datasetInames = new ArrayList();
         if (msl.envMart != null) {
           //get all datasets relative to envMart
-          DSConfigAdaptor adaptor = msl.adaptorManager.getAdaptorByName(msl.envMart.getName());
+          DSConfigAdaptor adaptor = msl.adaptorManager.getAdaptorByName( msl.envMart.getName() );
 
           String[] datasets = adaptor.getDatasetNames();
           for (int i = 0, n = datasets.length; i < n; i++) {
@@ -1384,7 +1384,7 @@ public class MartShell {
             String[] datasets = msl.adaptorManager.getAdaptorByName(adaptor).getDatasetNames();
             for (int j = 0, m = datasets.length; j < m; j++) {
               String dataset = datasets[j];
-              datasetInames.add(adaptor + "." + dataset);
+              datasetInames.add(msl.canonicalizeMartName( adaptor ) + "." + dataset);
             }
           }
         }
@@ -1771,11 +1771,13 @@ public class MartShell {
   }
 
   private void useRequest(String command) throws InvalidQueryException {
+    
     StringTokenizer toks = new StringTokenizer(command, " ");
     toks.nextToken(); //skip use
 
     if (!toks.hasMoreTokens())
       throw new InvalidQueryException("Invalid Use Command Recieved: " + command + "\n");
+      
     msl.setEnvDataset(toks.nextToken());
 
     updateCompleter();
@@ -2237,7 +2239,7 @@ public class MartShell {
             DatasetRequest dsrq = validDatasetRequest(normalizeCommand(command));
             if (dsrq != null) {
               query = new Query();
-              query.setDataSource(msl.adaptorManager.getAdaptorByName(dsrq.mart).getDataSource());
+              query.setDataSource(msl.adaptorManager.getAdaptorByName( dsrq.mart ).getDataSource());
 
               DatasetConfig thisDatasetConfig =
                 msl.adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
