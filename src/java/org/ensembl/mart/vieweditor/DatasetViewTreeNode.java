@@ -19,7 +19,6 @@
 package org.ensembl.mart.vieweditor;
 
 import java.util.List;
-import java.util.ArrayList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
