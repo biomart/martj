@@ -28,7 +28,7 @@ public class MartExplorerTool {
 
   private static IDListFilter idFilter = null;
 
-  private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:hvs:c:g:";
+  private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:St:hvs:c:g:";
 
   public MartExplorerTool() {
   }
@@ -68,7 +68,8 @@ public class MartExplorerTool {
       + "\n-F OUTPUT_FORMAT               - output format, default is tab separated values"
       + "\n-i IDENTIFIER_FILTER           - zero or more identifiers "
       + "\n-I URL_CONTAINING_IDENTIFIERS  - url with one or more identifiers"
-      + "\n-t IDENTIFIER_TYPE             - type of identifiers (necessary if -i or -I)"
+      + "\n-S                             - if given, reads STDIN for list of ids (newline separated)"
+      + "\n-t IDENTIFIER_TYPE             - type of identifiers (necessary if -i, -I, or -S)"
       + "\n-v                             - verbose logging output"
       + "\n-l LOGGING_FILE_URL            - logging file, defaults to console if none specified"
       + "\n"
@@ -171,6 +172,10 @@ public class MartExplorerTool {
         case 'i':
           addIdFilter( g.getOptarg() ); 
           break;
+
+	    case 'S':
+		  addIdFilterStream(System.in);
+		  break;
         
         case 't':
           identifierType( g.getOptarg() );
@@ -341,6 +346,22 @@ public class MartExplorerTool {
 
     } catch ( Exception e ){
       validationError("Problem loading from url: " + url + " : " + e.getMessage());
+    }
+  }
+
+  /* Currently, this will be used to read from STDIN, but could be used in other ways
+   */ 
+  private static void addIdFilterStream( InputStream instream ) {
+    
+    try {
+
+      // retain current filterType if set
+      String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
+
+      idFilter = new IDListFilter(filterType, new InputStreamReader( instream ));
+
+    } catch ( Exception e ){
+      validationError("Problem loading from STDIN: " + e.getMessage());
     }
   }
 
