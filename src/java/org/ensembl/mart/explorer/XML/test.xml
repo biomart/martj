@@ -16,6 +16,7 @@
         <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF FILTER SETS" filterSetName="testFilterSet" internalName="testFilterSetCollection" type="list">
           <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST FIELD MODIFIER" fieldName="syn_exclusive" filterSetReq="field" internalName="filterSetUIFilterDescriptionField" qualifier="in" tableConstraint="gene_main" type="list"/>
           <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST TABLE MODIFIER" fieldName="gene_stable_id_v" filterSetReq="table" internalName="filterSetUIFilterDescriptionTable" qualifier="in" tableConstraint="_dm" type="list"/>
+          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" filterSetReq="table" internalName="filterSetUIDSFilterDescription" objectCode="testObjectCode" type="list"/>
         </FilterCollection>
       </FilterGroup>
     </FilterPage>

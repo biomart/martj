@@ -421,9 +421,10 @@ public class ConfigurationTest extends Base {
 
 		//UIFilterDescription data correct
 		fs = fc.getUIFilterDescriptions();
-		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
+		assertEquals("Warning, should get three filter descriptions\n", 3, fs.size());
 
-		// first UIFilterDescription of this Collection is part of the FilterSet, and requires a fieldNameModifier		
+		// first FilterDescription of this FilterCollection is a UIFilterDescription, is part of the FilterSet, and requires a tableConstraintModifier
+		assertTrue("Warning, First FilterDescription in FilterSetFilterCollection should be a UIFilterDescription", fs.get(0) instanceof UIFilterDescription);		
 		UIFilterDescription fField = (UIFilterDescription) fs.get(0);
 		testIName = "filterSetUIFilterDescriptionField";
 		IName = fField.getInternalName();
@@ -458,7 +459,8 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, modified Field Name not correct\n", testModifiedName, ModifiedName);
 		assertTrue("Warning, second FilterCollections UIFilterDescriptionField should be in a FilterSet\n", fField.inFilterSet());
 
-		//second UIFilterDescription of this FilterCollection is part of the FilterSet, and requires a tableConstraintModifier
+		//second FilterDescription of this FilterCollection is a UIFilterDescription, is part of the FilterSet, and requires a tableConstraintModifier
+		assertTrue("Warning, Second FilterDescription in FilterSetFilterCollection should be a UIFilterDescription", fs.get(1) instanceof UIFilterDescription);
 		UIFilterDescription fTable = (UIFilterDescription) fs.get(1);
 		testIName = "filterSetUIFilterDescriptionTable";
 		IName = fTable.getInternalName();
@@ -491,6 +493,28 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, Modified TableConstraint not correct\n", testModifiedName, ModifiedName);
 		assertTrue("Warning, second FilterCollection second UIFilterDescription should be in a FilterSet\n", fTable.inFilterSet());
 
+    //third FilterDescription is a UIDSFilterDescription, is part of a FilterSet, and requires a tableConstraintModifier
+    assertTrue("Warning, third FilterDescription in FilterSetFilterCollection should be a UIDSFilterDescription\n", fs.get(2) instanceof UIDSFilterDescription);
+    UIDSFilterDescription dsfTable = (UIDSFilterDescription) fs.get(2);
+    testIName = "filterSetUIDSFilterDescription";
+    IName = dsfTable.getInternalName();
+    testDName = "A TEST ID, DOESNT EXIST";
+    DName = dsfTable.getDisplayName();
+    Desc = dsfTable.getDescription();
+    Type = dsfTable.getType();
+    testFilterSetReq = "table";
+    FilterSetReq = dsfTable.getFilterSetReq();
+		testObjectCode = "testObjectCode";
+	  ObjectCode = dsf.getObjectCode();
+    
+		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
+		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
+		assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", testDesc, Desc);
+		assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", testType, Type);
+		assertEquals("Warning, filterSetReq not set correctly for UIDSFilterDescriptionField\n", testFilterSetReq, FilterSetReq);
+		assertEquals("Warning, ObjectCode not set correctly for UIDSFilterDescription\n", testObjectCode, ObjectCode);
+		assertTrue("Warning, third UIDSFilterDescription should be in a FilterSet\n", dsfTable.IsInFilterSet());
+		
 		// AttributePage data correct
 		AttributePage[] aps = d.getAttributePages();
 		assertEquals("Warning, should only get one filter page\n", 1, aps.length);

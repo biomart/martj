@@ -52,6 +52,7 @@
 <!ATTLIST UIDSFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
+                   filterSetReq       CDATA #IMPLIED
                    objectCode         CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
