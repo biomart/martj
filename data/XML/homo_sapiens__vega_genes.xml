@@ -82,15 +82,15 @@
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
         <FilterCollection internalName="id_limit">
           <FilterDescription internalName="id_limit_filters" type="boolean">
-            <Option description="Filter to include/exclude Known Genes" displayName="Known Genes" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="Filter to include/exclude Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-HG-U133 ID(s)" displayName="with AFFY-HG-U133 ID(s)" field="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude AFFY-HG-U95 ID(s)" displayName="with AFFY-HG-U95 ID(s)" field="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude HUGO ID(s)" displayName="with HUGO ID(s)" field="HUGO" internalName="hugo_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" field="RefSeq" internalName="refseq_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" field="SWISSPROT" internalName="swissprot_id_xrefs" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="Filter to include/exclude Known Genes" displayName="Known Genes" field="known_gene" internalName="known_genes" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="Filter to include/exclude Disease Genes" displayName="Disease Genes" field="disease_gene" internalName="disease_genes" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-HG-U133 ID(s)" displayName="with AFFY-HG-U133 ID(s)" field="AFFY_HG_U133" internalName="affy_hg_u133_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude AFFY-HG-U95 ID(s)" displayName="with AFFY-HG-U95 ID(s)" field="AFFY_HG_U95" internalName="affy_hg_u95_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude HUGO ID(s)" displayName="with HUGO ID(s)" field="HUGO" internalName="hugo_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude LocusLink ID(s)" displayName="with LocusLink ID(s)" field="LocusLink" internalName="locuslink_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude MIM ID(s)" displayName="with MIM ID(s)" field="MIM" internalName="mim_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude RefSeq ID(s)" displayName="with RefSeq ID(s)" field="RefSeq" internalName="refseq_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter to include/exclude genes with SWISSPROT id(s)" displayName="with SWISSPROT ID(s)" field="SWISSPROT" internalName="swissprot_id_xrefs" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
@@ -121,28 +121,28 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="transmembrane">
-          <FilterDescription description="Filter for genes including/exluding Transmembrane Domains" displayName="Transmembrane Domains:" field="transmembrane" internalName="transmembrane_domains" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="Filter for genes including/exluding Transmembrane Domains" displayName="Transmembrane Domains:" field="transmembrane" internalName="transmembrane_domains" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
         </FilterCollection>
         <FilterCollection internalName="signaldomain">
-          <FilterDescription description="Filter for genes including/excluding Signal Domains" displayName="Signal Domains:" field="signal_peptide" internalName="signal_domains" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="Filter for genes including/excluding Signal Domains" displayName="Signal Domains:" field="signal_peptide" internalName="signal_domains" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP" internalName="snp">
         <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype">
           <FilterDescription internalName="snptype_filters" type="boolean">
-            <Option description="Include/exclude genes with coding SNPs" displayName="coding SNPs" field="coding" internalName="coding_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" field="intronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" field="5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="Include/exclude genes with 3' UTR SNPs" displayName="3' UTR SNPS" field="3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" field="5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
-            <Option description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" field="3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="exclusive,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes with coding SNPs" displayName="coding SNPs" field="coding" internalName="coding_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" field="intronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" field="5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes with 3' UTR SNPs" displayName="3' UTR SNPS" field="3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" field="5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
+            <Option description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" field="3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="included,excluded" tableConstraint="main" type="boolean"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="synonomy">
           <FilterDescription internalName="synonomy_filters" type="boolean_num">
-            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="has_synsnp" internalName="synonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="has_nonsynsnp" internalName="nonsynonymous_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
-            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="has_stopsnp" internalName="stop_snps" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Synonymous SNPs" displayName="Synonymous SNPs" field="has_synsnp" internalName="synonymous_snps" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Non-Synonymous SNPs" displayName="Non-synonymous SNPs" field="has_nonsynsnp" internalName="nonsynonymous_snps" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="transcript_main" type="boolean_num"/>
+            <Option description="Filter for genes only associated with Stop SNPs" displayName="Stop SNPs" field="has_stopsnp" internalName="stop_snps" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="transcript_main" type="boolean_num"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
@@ -150,15 +150,15 @@
         </FilterCollection>
         <FilterCollection internalName="snpid">
           <FilterDescription internalName="snpid_filters" type="boolean">
-            <Option description="filter for Genes Assocatied With SNPS having TSC IDs" displayName="SNPs with TSC IDs" field="tscid" internalName="tsc_snp_ids" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
-            <Option description="filter for Genes Assocatied With SNPS having HGBASE IDs" displayName="SNPs with HGBASE IDs" field="hgbaseid" internalName="hgbase_snp_ids" isSelectable="true" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+            <Option description="filter for Genes Assocatied With SNPS having TSC IDs" displayName="SNPs with TSC IDs" field="tscid" internalName="tsc_snp_ids" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
+            <Option description="filter for Genes Assocatied With SNPS having HGBASE IDs" displayName="SNPs with HGBASE IDs" field="hgbaseid" internalName="hgbase_snp_ids" isSelectable="true" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="validated_snp">
-          <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" field="validated" internalName="validated_snps" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="Entries associated with SNPs that have been validated" displayName="Entries associated with SNPs that have been validated" field="validated" internalName="validated_snps" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
         </FilterCollection>
         <FilterCollection internalName="snp_frequency">
-          <FilterDescription description="Include/exclude entries associated with SNPs with frequency data" displayName="Entries associated with SNPs with frequency data" field="freq" internalName="snp_frequency_data_associated" legal_qualifiers="excluded,exclusive" tableConstraint="main" type="boolean"/>
+          <FilterDescription description="Include/exclude entries associated with SNPs with frequency data" displayName="Entries associated with SNPs with frequency data" field="freq" internalName="snp_frequency_data_associated" legal_qualifiers="excluded,included" tableConstraint="main" type="boolean"/>
         </FilterCollection>
       </FilterGroup>
     </FilterPage>
