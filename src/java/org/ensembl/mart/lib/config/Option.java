@@ -34,36 +34,41 @@ public class Option extends BaseConfigurationObject {
   private String tableConstraint;
   private String value;
   private String ref;
+  private String qualifier;
+  private String type;
+  private String filterSetReq;
+  private boolean inFilterSet = false;
+	private int hashcode = -1;
 
-  public Option() throws ConfigurationException {
-    this("", false, "", "", "", "", "", "");
+	private final boolean isSelectable;
+	private boolean hasOptions = false;
+
+	//options can contain options
+	private int oRank = 0;
+	private TreeMap uiOptions = new TreeMap();
+	private Hashtable uiOptionNameMap = new Hashtable();
+	private List uiOptionPushes = new ArrayList();
+
+  public Option(String internalName, boolean isSelectable) throws ConfigurationException {
+    this(internalName, isSelectable, "", "", "", "", "", "", "", "", "");
   }
 
-  public Option(String internalName, boolean isSelectable)
-    throws ConfigurationException {
-    this(internalName, isSelectable, "", "", "", "", "", "");
-  }
-
-  public Option(
-    String internalName,
-    boolean isSelectable,
-    String displayName,
-    String description,
-    String field,
-    String tableConstraint,
-    String value,
-    String ref)
-    throws ConfigurationException {
+  public Option(String internalName, boolean isSelectable, String displayName, String description, String field, String tableConstraint, String value, String ref, String type, String filterSetReq, String qualifier) throws ConfigurationException {
 
     super(internalName, displayName, description);
 
     this.isSelectable = isSelectable;
     this.field = field;
     this.tableConstraint = tableConstraint;
-
+    this.qualifier = qualifier;
+    this.type = type;
+    this.filterSetReq = filterSetReq;
+    
+		if (!(filterSetReq == null || filterSetReq.equals("")))
+			inFilterSet = true;
+			
     this.value = value;
     this.ref = ref;
-
   }
 
   /**
@@ -139,6 +144,14 @@ public class Option extends BaseConfigurationObject {
     return isSelectable;
   }
 
+ /**
+  * Determine if this Option is in a FilterSet.
+  * @return boolean, true if in filterset, false otherwise
+  */
+  public boolean inFilterSet() {
+  	return inFilterSet;
+  }
+  
   /**
    * Determine if this Option has underlying Options.
    * @return boolean, true if this Option has underlying options, false if not.
@@ -147,52 +160,7 @@ public class Option extends BaseConfigurationObject {
     return hasOptions;
   }
 
-  /**
-   * Debug output
-   */
-  public String toString() {
-    StringBuffer buf = new StringBuffer();
-
-    buf.append("[");
-    buf.append(super.toString());
-    buf.append(", isSelectable=").append(isSelectable);
-
-    if (hasOptions)
-      buf.append(", options=").append(uiOptions);
-    buf.append("]");
-
-    return buf.toString();
-  }
-  /**
-   * Allows Equality Comparisons manipulation of Option objects
-   */
-  public boolean equals(Object o) {
-    return o instanceof Option && hashCode() == ((Option) o).hashCode();
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
-  public int hashCode() {
-
-    if (hashcode == -1) {
-
-      hashcode = super.hashCode();
-
-      hashcode += (isSelectable) ? 1 : 0;
-
-      for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
-        hashcode = (31 * hashcode) + iter.next().hashCode();
-      }
-      
-      for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
-        hashcode = (31 * hashcode) + iter.next().hashCode();
-      }
-    }
-    return hashcode;
-  }
-
-  /**
+   /**
      * @return
      */
   public String getField() {
@@ -205,18 +173,7 @@ public class Option extends BaseConfigurationObject {
   public String getTableConstraint() {
     return tableConstraint;
   }
-
-  private int hashcode = -1;
-
-  private final boolean isSelectable;
-  private boolean hasOptions = false;
-
-  //options can contain options
-  private int oRank = 0;
-  private TreeMap uiOptions = new TreeMap();
-  private Hashtable uiOptionNameMap = new Hashtable();
-  private List uiOptionPushes = new ArrayList();
-
+  
   /**
    * @return
    */
@@ -249,4 +206,86 @@ public class Option extends BaseConfigurationObject {
     hashcode = -1;
   }
 
+	/**
+	 * @return
+	 */
+	public String getFilterSetReq() {
+		return filterSetReq;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getQualifier() {
+		return qualifier;
+	}
+
+	/**
+	 * @return
+	 */
+	public String getType() {
+		return type;
+	}
+
+	/**
+		* Debug output
+		*/
+	 public String toString() {
+		 StringBuffer buf = new StringBuffer();
+
+		 buf.append("[");
+		 buf.append(super.toString());
+		 buf.append(", isSelectable=").append(isSelectable);
+		 buf.append(", field=").append(field);
+		 buf.append(", tableConstraint=").append(tableConstraint);
+		 buf.append(", value=").append(value);
+		 buf.append(", ref=").append(ref);
+		 buf.append(", qualifier=").append(qualifier);
+		 buf.append(", type=").append(type);
+
+		 if (inFilterSet)
+			 buf.append(", filterSetReq=").append(filterSetReq);
+		
+		 if (hasOptions)
+			 buf.append(", options=").append(uiOptions);
+		 buf.append("]");
+
+		 return buf.toString();
+	 }
+	 /**
+		* Allows Equality Comparisons manipulation of Option objects
+		*/
+	 public boolean equals(Object o) {
+		 return o instanceof Option && hashCode() == ((Option) o).hashCode();
+	 }
+
+	 /* (non-Javadoc)
+		* @see java.lang.Object#hashCode()
+		*/
+	 public int hashCode() {
+
+		 if (hashcode == -1) {
+
+			 hashcode = super.hashCode();
+
+			 hashcode = (isSelectable) ? (31 * hashcode) + 1 : hashcode;
+			 hashcode = (inFilterSet) ? (31 * hashcode) + 1 : hashcode;
+			 hashcode = (31 * hashcode) + field.hashCode();
+			 hashcode = (31 * hashcode) + tableConstraint.hashCode();
+			 hashcode = (31 * hashcode) + value.hashCode();
+			 hashcode = (31 * hashcode) + ref.hashCode();
+			 hashcode = (31 * hashcode) + qualifier.hashCode();
+			 hashcode = (31 * hashcode) + type.hashCode();
+			 hashcode = (31 * hashcode) + filterSetReq.hashCode();
+			
+			 for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+				 hashcode = (31 * hashcode) + iter.next().hashCode();
+			 }
+      
+			 for (Iterator iter = uiOptionPushes.iterator(); iter.hasNext();) {
+				 hashcode = (31 * hashcode) + iter.next().hashCode();
+			 }
+		 }
+		 return hashcode;
+	 }
 }

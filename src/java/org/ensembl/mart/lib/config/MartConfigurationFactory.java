@@ -386,10 +386,13 @@ public class MartConfigurationFactory {
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
     String field = thisElement.getAttributeValue(FIELDNAME, "");
     String tableConstraint = thisElement.getAttributeValue(TABLECONSTRAINT, "");
+    String type = thisElement.getAttributeValue(TYPE, "");
+		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
+		String qual = thisElement.getAttributeValue(QUALIFIER, "");
     String value = thisElement.getAttributeValue(VALUE, "");
     String ref = thisElement.getAttributeValue(REF, "");
 
-		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref );
+		Option o = new Option(intName, isSelectable, dispname, desc, field, tableConstraint, value, ref, type, filterSetReq, qual );
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();
