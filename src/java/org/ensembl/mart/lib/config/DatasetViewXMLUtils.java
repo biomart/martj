@@ -19,8 +19,12 @@
 package org.ensembl.mart.lib.config;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -489,6 +493,66 @@ public class DatasetViewXMLUtils {
 		AttributeDescription a = new AttributeDescription(intName, fieldnm, dispname, maxl, tableconst, desc, src, hpage, link);
 		return a;
 	}
+  
+  /**
+   * Writes a DatasetView object as XML to the given File.  Handles opening and closing of the OutputStream.
+   * @param dsv -- DatasetView object
+   * @param file -- File to write XML
+   * @throws ConfigurationException for underlying Exceptions
+   */
+  public static void DatasetViewToFile(DatasetView dsv, File file) throws ConfigurationException {
+    DocumentToFile(DatasetViewToDocument(dsv), file);
+  }
+  
+  /**
+   * Writes a DatasetView object as XML to the given OutputStream.  Does not close the OutputStream after writing.
+   * If you wish to write a Document to a File, use DatasetViewToFile instead, as it handles opening and closing the OutputStream.
+   * @param dsv -- DatasetView object to write as XML
+   * @param out -- OutputStream to write, not closed after writing
+   * @throws ConfigurationException for underlying Exceptions
+   */
+  public static void DatasetViewToOutputStream(DatasetView dsv, OutputStream out) throws ConfigurationException {
+    DocumentToOutputStream(DatasetViewToDocument(dsv), out);
+  }
+  
+  /**
+   * Writes a JDOM Document as XML to a given File.  Handles opening and closing of the OutputStream.
+   * @param doc -- Document representing a DatasetView.dtd compliant XML document
+   * @param file -- File to write.
+   * @throws ConfigurationException for underlying Exceptions.
+   */
+  public static void DocumentToFile(Document doc, File file) throws ConfigurationException {
+		try {
+			FileOutputStream out = new FileOutputStream(file);
+			DocumentToOutputStream(doc, out);
+			out.close();
+		} catch (FileNotFoundException e) {
+      throw new ConfigurationException("Caught FileNotFoundException writing Document to File provided " + e.getMessage(), e);
+		} catch (ConfigurationException e) {
+      throw e;
+		} catch (IOException e) {
+      throw new ConfigurationException("Caught IOException creating FileOutputStream " + e.getMessage(), e);
+		}
+  }
+  
+  /**
+   * Takes a JDOM Document and writes it as DatasetView.dtd compliant XML to a given OutputStream.
+   * Does NOT close the OutputStream after writing.  If you wish to write a Document to a File,
+   * use DocumentToFile instead, as it handles opening and closing the OutputStream. 
+   * @param doc -- Document representing a DatasetView.dtd compliant XML document
+   * @param out -- OutputStream to write to, not closed after writing
+   * @throws ConfigurationException for underlying IOException
+   */
+  public static void DocumentToOutputStream(Document doc, OutputStream out) throws ConfigurationException {
+    XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+      
+    try {
+			xout.output(doc, out);
+		} catch (IOException e) {
+       throw new ConfigurationException("Caught IOException writing XML to OutputStream " + e.getMessage(), e);
+		}
+  }
+  
   
   /**
    * Takes a DatasetView object, and returns a JDOM Document representing the
