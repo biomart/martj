@@ -77,8 +77,6 @@ public class CompiledSQLQuery {
 
 	private String compileSQL() throws InvalidQueryException {
 
-		logger.info("");
-
 		boolean success = false;
 		StringBuffer buf = null;
 		buf = new StringBuffer();
@@ -104,7 +102,9 @@ public class CompiledSQLQuery {
 		if (!success)
 			throw new InvalidQueryException("Failed to compile query :" + query);
 
-		return buf.toString();
+		String tmp = buf.toString(); 
+		logger.info( tmp );
+		return tmp;
 	}
 
 	/**
@@ -226,9 +226,11 @@ public class CompiledSQLQuery {
 
 				buf
 					.append(centralTable)
+					.append(".")
 					.append(joinKey)
 					.append("=")
 					.append(fromTables[i])
+					.append(".")
 					.append(joinKey);
 			}
 		}
