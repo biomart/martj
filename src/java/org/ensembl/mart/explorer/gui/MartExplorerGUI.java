@@ -132,19 +132,30 @@ public class MartExplorerGUI extends JFrame {
 
   private void executeQuery() {
 
-    try {
+		final Query q = new Query();
+    final Component parent = this;
 
-      Query q = new Query();
+    try {
       queryPanel.updateQuery( q );
       logger.warn( "Executing query: " + q );
-      engine.execute( q );
-
-    } catch( Exception e ) {
-
+ 		} catch( Exception e ) {
       logger.warn( "Failed to execute query", e );
       JOptionPane.showMessageDialog( this, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 
     }
+
+    // execute the query on a separate thread so we don't
+    // slow down the main AWT thread if it takes a while to run.
+    new Thread() {
+      public void run() {
+        try {
+          engine.execute( q );
+        } catch( Exception e ) {
+      		logger.warn( "Failed to execute query", e );
+    			JOptionPane.showMessageDialog( parent, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+      }
+     }
+   }.start();
   }
 
 
