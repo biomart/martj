@@ -83,7 +83,6 @@ public class DatasetConfigCache {
    * @throws ConfigurationException for underlying exceptions
    */
   public void clearCache() throws ConfigurationException {
-    System.out.println("clearing cache");
     initCache();
     try {
       //find any xml files associated with this cache and delete them
