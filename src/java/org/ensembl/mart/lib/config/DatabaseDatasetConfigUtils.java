@@ -252,9 +252,7 @@ public class DatabaseDatasetConfigUtils {
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
-    System.out.println("Updating\t" + user);
-	configInfo = new HashMap();
-	initMartConfigForUser(user);
+    updateMartConfigForUser(user);
     if (rowsupdated < 1)
       if (logger.isLoggable(Level.WARNING))
         logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
@@ -565,6 +563,11 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
+  private void updateMartConfigForUser(String user) throws ConfigurationException {
+	configInfo = new HashMap();
+	initMartConfigForUser(user);
+  }
+  
   private void initMartConfigForUser(String user) throws ConfigurationException {
     if (!configInfo.containsKey(user)) {
       HashMap userMap = new HashMap();
@@ -1119,10 +1122,8 @@ public class DatabaseDatasetConfigUtils {
 	  ds.setString(2,internalName);
 	  ds.executeUpdate();
 	  ds.close();
-	  // update the config
-	  System.out.println("Updating\t" + user);
-	  configInfo = new HashMap();
-	  initMartConfigForUser(user);
+
+      updateMartConfigForUser(user);
 	  
 	} catch (SQLException e) {
 	  throw new ConfigurationException("Caught SQLException during delete\n");
