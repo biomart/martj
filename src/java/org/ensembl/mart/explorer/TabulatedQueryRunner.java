@@ -41,8 +41,8 @@ public class TabulatedQueryRunner implements QueryRunner {
         CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
         String sql = csql.toSQL();
 
-        logger.info( "QUERY : " + query );
-        logger.info( "SQL : " +sql );
+        logger.debug( "QUERY : " + query );
+        logger.debug( "SQL : " +sql );
 
         try {
             PreparedStatement ps = conn.prepareStatement( sql );
@@ -51,24 +51,26 @@ public class TabulatedQueryRunner implements QueryRunner {
                 Filter f = query.getFilters()[i];
                 String value = f.getValue();
                 if ( value!=null ) {
-                    logger.info("SQL (prepared statement value) : "+p+" = " + value);
-                    ps.setString( p++, value);
+                  if ( logger.isDebugEnabled()  )
+                    logger.debug("SQL (prepared statement value) : "+p+" = " + value);
+                  ps.setString( p++, value);
                 }
             }
-     
+            
             ResultSet rs = ps.executeQuery();
-
-		    while ( rs.next() ) {
-                int nColumns = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= nColumns; ++i) {
-                    if ( rs.getString(i) != null )
-                        osr.write( rs.getString(i) );
-                    osr.write( format.getSeparator() );
-			    }
-                osr.write("\n");
-		    }
-            osr.flush();
-		}
+            
+            while ( rs.next() ) {
+              int nColumns = rs.getMetaData().getColumnCount();
+              for (int i = 1; i <= nColumns; ++i) {
+                if (i>1) osr.write( format.getSeparator() );
+                String v = rs.getString(i);
+                if (  v!= null ) osr.write( v );
+                logger.debug( v );
+              }
+              osr.write("\n");
+            }
+            osr.close();
+        }
         catch (IOException e) {
             logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
             throw e;
