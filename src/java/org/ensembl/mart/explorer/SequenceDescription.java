@@ -92,6 +92,8 @@ public final class SequenceDescription {
 			    this.seqt = type;
 			    this.seqtype = TRANSCRIPTEXONSEQ;
 			    this.description = "exon";
+			    this.leftflank = lflank;
+			    this.rightflank = rflank;
 			    break;
 			      
 			default:
