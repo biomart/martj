@@ -52,6 +52,9 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 
 /**
@@ -230,6 +233,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menu.add(menuItem);
 
     menu.addSeparator();
+	menuItem = new JMenuItem("Update All");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);
+	menu.addSeparator();
+    
     menuItem = new JMenuItem("New", icon);
 
     menuItem.addActionListener(menuActionListener);
@@ -451,6 +459,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         exportDatasetConfig();
       else if (e.getActionCommand().startsWith("Naive"))
         naiveDatasetConfig();
+	  else if (e.getActionCommand().startsWith("Update All"))
+		updateAll();
       else if (e.getActionCommand().startsWith("Update"))
         updateDatasetConfig();
       else if (e.getActionCommand().startsWith("Delete"))
@@ -744,6 +754,73 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     }
   }
 
+  public void updateAll() {
+	  try {
+		if (ds == null) {
+		  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		  return;
+		}
+
+		try {
+		  disableCursor();
+		  
+		  // cycle through all datasets for the database
+		  String[] datasets = dbutils.getAllDatasetNames(user);
+		  for (int i = 0; i < datasets.length; i++){
+		  	String dataset = datasets[i];
+			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+			for (int j = 0; j < internalNames.length; j++){
+				String internalName = internalNames[j];
+				
+				DatasetConfig odsv = null;
+				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+				while (configs.hasNext()){
+					DatasetConfig lconfig = (DatasetConfig) configs.next();
+					if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+							odsv = lconfig;
+							break;
+					}
+				}
+				
+				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
+				// update it
+				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+				dsv = dbutils.getNewFiltsAtts(database, dsv);
+				// export it	
+				dbutils.storeDatasetConfiguration(
+							MartEditor.getUser(),
+							dsv.getInternalName(),
+							dsv.getDisplayName(),
+							dsv.getDataset(),
+							dsv.getDescription(),
+							MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+							true,
+							dsv.getType(),
+							dsv.getVisible(),
+							dsv.getVersion());
+					
+				// display it if new atts or filts for further editing	
+				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||
+				    (dsv.getFilterPageByName("new_filters") != null)){
+					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+					frame.setVisible(true);
+					desktop.add(frame);
+					try {
+						frame.setSelected(true);
+					} catch (java.beans.PropertyVetoException e) {
+					}
+				}			
+			}	
+		  } 
+		} catch (Exception e) {
+		  e.printStackTrace();
+		}
+	  } finally {
+		enableCursor();
+	  }
+  }
+  
   public void updateDatasetConfig() {
     try {
       if (ds == null) {
