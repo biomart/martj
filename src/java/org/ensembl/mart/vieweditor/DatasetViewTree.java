@@ -331,17 +331,22 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                         return;
                     } else {
                         String result = new String();
+                        DatasetViewTreeNode selnodeParent;
+                        int selnodeIndex;
                         if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
+                            selnodeParent = (DatasetViewTreeNode)selnode.getParent();
+                            selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
                         } else  {
-                            DatasetViewTreeNode parent = (DatasetViewTreeNode)selnode.getParent();
+                            selnodeParent = (DatasetViewTreeNode)selnode.getParent();
+                            selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, dropnode, 0);
                         }
                         if (result.startsWith("Error")) {
                             JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
-                            //treemodel.insertNodeInto(selnode, editingNodeParent, editingNodeIndex);
+                            treemodel.insertNodeInto(selnode, selnodeParent, selnodeIndex);
                         }
                     }
                 } catch (IllegalArgumentException iae) {
@@ -516,7 +521,11 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     public void save() {
         dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-        JFileChooser fc = new JFileChooser(frame.getFileChooserPath());
+        JFileChooser fc;
+        if(frame.getFileChooserPath() != null)
+            fc = new JFileChooser(frame.getFileChooserPath());
+        else
+            fc = new JFileChooser();
         XMLFileFilter filter = new XMLFileFilter();
         fc.addChoosableFileFilter(filter);
         int returnVal = fc.showSaveDialog(frame.getContentPane());

@@ -53,8 +53,6 @@ public class MartViewEditor extends JFrame {
     static final private String REDO = "Redo";
     static final private String HELP = "Copy";
     private File file = null;
-    //static final private String CUT = "cut";
-    //static final private String PASTE = "paste";
 
     public MartViewEditor() {
         super("Mart View Editor");
