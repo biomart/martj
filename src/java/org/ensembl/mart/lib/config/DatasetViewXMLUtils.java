@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -77,6 +78,11 @@ public class DatasetViewXMLUtils {
 
 	// attribute names needed by code
 	private static final String INTERNALNAME = "internalName";
+
+  public static DatasetView ByteArrayToDatasetView(byte[] b) throws ConfigurationException {
+    ByteArrayInputStream bin = new ByteArrayInputStream(b);
+    return XMLStreamToDatasetView(bin);
+  }
 
 	/**
 	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetView object.
@@ -826,4 +832,10 @@ public class DatasetViewXMLUtils {
 		return DatasetViewToMessageDigest(XMLStreamToDatasetView(is), digestAlgorithm);
 	}
 
+  public static byte[] DatasetViewToByteArray(DatasetView dsv) throws ConfigurationException {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    DatasetViewToOutputStream(dsv, bout);
+    return bout.toByteArray();
+  }
+  
 }
