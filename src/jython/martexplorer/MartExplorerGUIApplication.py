@@ -47,12 +47,11 @@ from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
 from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane
-from javax.swing import JFileChooser, JTextArea
+from javax.swing import JFileChooser, JTextArea, JTextField
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
-from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, BasicFilter
-from org.ensembl.mart.explorer import InvalidQueryException, Engine, FormatSpec
+from org.ensembl.mart.explorer import *
 from org.apache.log4j import Logger, Level, PropertyConfigurator
 
 # uncomment to use this logging conf file
@@ -585,68 +584,166 @@ class SequencePage(Page):
         self.gene = JRadioButton( "Genes - transcript information ignored (one output per gene)"
                                   ,actionPerformed=self.actionPerformed)
 
-        self.geneSequence = JRadioButton( "Gene sequence only")
-        self.geneSequence_5_3 = JRadioButton( "Gene plus 5' and 3' flanks" )
-        self.geneSequence_5 = JRadioButton( "Gene plus 5' flank" )
-        self.geneSequence_3 = JRadioButton( "Gene plus 3' flank" )
-        self.upstream = JRadioButton( "5' upstream only" )
-        self.downStream = JRadioButton( "3' downstream only" )
-        self.upStreamUTROnly = JRadioButton( "5' UTR only" )
-        self.upStreamAndUTR = JRadioButton( "5' upstream and UTR" )
-        self.downStreamUTROnly = JRadioButton( "3' UTR only" )
-        self.downStreamAndUTR = JRadioButton( "3' UTR and downstream" )
-        self.exonSequence = JRadioButton( "Exon sequences" )
-        self.cDNASequence = JRadioButton( "cDNA sequence only" )
-        self.codingSequence = JRadioButton( "Coding sequence only" ) 					
-        self.peptide = JRadioButton( "Peptide" )
+        self.includeGeneSequence = JRadioButton( "Gene sequence only"
+                                  ,actionPerformed=self.actionPerformed)
+        self.includeGeneSequence_5_3 = JRadioButton( "Gene plus 5' and 3' flanks"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeGeneSequence_5 = JRadioButton( "Gene plus 5' flank"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeGeneSequence_3 = JRadioButton( "Gene plus 3' flank"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeUpstream = JRadioButton( "5' upstream only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeDownStream = JRadioButton( "3' downstream only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeUpStreamUTROnly = JRadioButton( "5' UTR only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeUpStreamAndUTR = JRadioButton( "5' upstream and UTR"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeDownStreamUTROnly = JRadioButton( "3' UTR only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeDownStreamAndUTR = JRadioButton( "3' UTR and downstream"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeExonSequence = JRadioButton( "Exon sequences"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includecDNASequence = JRadioButton( "cDNA sequence only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includeCodingSequence = JRadioButton( "Coding sequence only"
+                                  ,actionPerformed=self.actionPerformed )
+        self.includePeptide = JRadioButton( "Peptide"
+                                  ,actionPerformed=self.actionPerformed )
 
-        sequenceButtons = (self.geneSequence
-                           ,self.geneSequence_5_3
-                           ,self.geneSequence_5
-                           ,self.upstream
-                           ,self.upStreamUTROnly
-                           ,self.upStreamAndUTR
-                           ,self.geneSequence_3
-                           ,self.downStream
-                           ,self.downStreamUTROnly
-                           ,self.downStreamAndUTR
-                           ,self.exonSequence
-                           ,self.cDNASequence
-                           ,self.codingSequence
-                           ,self.peptide)
-
-        self.geneButtons = (self.geneSequence
-                            ,self.geneSequence_5_3
-                            ,self.geneSequence_5
-                            ,self.geneSequence_3
-                            ,self.upstream
-                            ,self.downStream
-                            ,self.exonSequence )
+        self.includeButtons = (self.includeGeneSequence
+                                  ,self.includeGeneSequence_5_3
+                                  ,self.includeGeneSequence_5
+                                  ,self.includeUpstream
+                                  ,self.includeUpStreamUTROnly
+                                  ,self.includeUpStreamAndUTR
+                                  ,self.includeGeneSequence_3
+                                  ,self.includeDownStream
+                                  ,self.includeDownStreamUTROnly
+                                  ,self.includeDownStreamAndUTR
+                                  ,self.includeExonSequence
+                                  ,self.includecDNASequence
+                                  ,self.includeCodingSequence
+                                  ,self.includePeptide)
         
-        map( ButtonGroup().add, ( self.transcript, self.gene ) )
-        map( ButtonGroup().add, sequenceButtons )
+        self.geneButtons = (
+            self.includeGeneSequence
+            ,self.includeGeneSequence_5_3
+            ,self.includeGeneSequence_5
+            ,self.includeGeneSequence_3
+            ,self.includeUpstream
+            ,self.includeDownStream
+            ,self.includeExonSequence
+            )
 
-        map( self.add, (self.remove, self.gene, self.transcript)
-             + sequenceButtons)
+        self.flank5 = JTextField(10)
+        flank5Panel = JPanel()
+        self.flank5Label = JLabel("5' Flanking region")
+        map( flank5Panel.add, (self.flank5, self.flank5Label) )
+
+        self.flank3 = JTextField(10)
+        flank3Panel = JPanel()
+        self.flank3Label = JLabel("3' Flanking region")
+        map( flank3Panel.add, (self.flank3, self.flank3Label) )
+
+        self.typeGroup = ButtonGroup()
+        self.includeGroup = ButtonGroup()
+        self.__group__()
         self.dependencies()
+
+        # add components to panel
+        includePanel = Box.createVerticalBox()
+        from javax.swing import BorderFactory
+        includePanel.border = BorderFactory.createEmptyBorder(0, 30, 0, 0)
+        map( includePanel.add, self.includeButtons + ( flank5Panel, flank3Panel) )
+        map( self.add, (self.remove, self.gene, self.transcript, includePanel ) )
+
+
 
 
     def dependencies( self ):
-        for b in self.geneButtons:
-            b.enabled = self.transcript.selected
-        
+
+        """ Enables and disables input options based on the current
+        state of the page. """
+
+        if self.transcript.selected:
+            for b in self.includeButtons:
+                b.enabled = 1
+        elif self.gene.selected:
+            for b in self.includeButtons:
+                b.enabled = 0
+            for b in self.geneButtons:
+                b.enabled = 1
+        else:
+            for b in self.includeButtons:
+                b.enabled = 0
+
+        flank5Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_5.selected
+        self.flank5.enabled = flank5Enabled
+        self.flank5Label.enabled = flank5Enabled
+
+
+        flank3Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_3.selected
+        self.flank3.enabled = flank3Enabled
+        self.flank3Label.enabled = flank3Enabled
+
+
 
     def actionPerformed(self, event=None):
         self.dependencies()
+        # todo update tree - emit stateChange!
+
+
 
     def removeAction( self, event=None ):
-            print "remove"
-            self.attributeManager.deselect( self )    
+        self.attributeManager.deselect( self )    
+
+
 
     def htmlSummary(self):
-        return self.field
+        if self.gene.selected: focus = "gene"
+        elif self.transcript.selected: focus = "transcript"
+        else: focus = ""
+
+        if self.includeGeneSequence.selected: include="gene sequence"
+        else : include=""
+        
+        return sequence + " - "  + focus + " - "+ include
 
 
+
+    def __group__( self ):
+        map( self.includeGroup.add, self.includeButtons )
+        map( self.typeGroup.add, ( self.transcript, self.gene ) )
+
+
+
+    def __ungroup__( self ):
+        map( self.includeGroup.remove, self.transcriptButtons )
+        map( self.typeGroup.remove, ( self.transcript, self.gene ) )
+
+
+
+    def clear( self ):
+        # ungroup buttons in order to deselect all.
+        self.__ungroup__()
+        for b in self.includeButtons:
+            b.selected = 0
+        self.__group__()
+
+
+
+    def updateQuery(self, query):
+        # TODO
+        pass
+
+
+
+    def updatePage(self, query):
+        # TODO
+        pass
 
 
 
@@ -1134,7 +1231,10 @@ class MartGUIApplication(JFrame):
         #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
         #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") )
         # TODO need a result window
-        #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
+        #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") )
+
+        sd = SequenceDescription( "coding" )
+        q.addSequenceDescription( sd )
         self.editor.updatePage( q )
 
 
