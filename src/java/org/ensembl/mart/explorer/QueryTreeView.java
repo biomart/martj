@@ -52,10 +52,12 @@ import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 
 /**
- * Tree view showing the current state of the query.
+ * Tree view showing the current state of the query. Allows the user
+ * to select nodes and delete attributes and filters.
  * 
  * <p>TODO use DSV to correctly render nodes 
  * <p>TODO support dnd reordering of attribute nodes
+ * <p>TODO Finish documentation.
  */
 public class QueryTreeView extends JPanel implements QueryChangeListener {
 
@@ -199,13 +201,6 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
             "Selected:" + e.getNewLeadSelectionPath().getLastPathComponent());
       }
     });
-
-    //    qtv.addKeyListener(new KeyAdapter() {
-    //      public void keyPressed(KeyEvent e) {
-    //        if (e.getKeyCode() == KeyEvent.VK_DELETE)
-    //          qtv.delete();
-    //      }
-    //    });
 
     c.add(new JLabel("Delete key should work for attributes+filters"));
 
