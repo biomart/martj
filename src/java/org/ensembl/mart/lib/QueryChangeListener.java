@@ -83,7 +83,7 @@ public interface QueryChangeListener {
 
   void queryDatasetViewChanged(
     Query query,
-    DatasetView old,
-    DatasetView datasetView);
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView);
 
 }

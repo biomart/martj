@@ -185,6 +185,14 @@ public class QueryEditor extends JPanel {
 		public boolean isStale() {
 			return stale;
 		}
+
+    /* (non-Javadoc)
+     * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+     */
+    public void queryDatasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+      // TODO Auto-generated method stub
+      
+    }
 	}
 
 	/** DatasetViewAdaptor defines the "query space" of available dataset views. */
@@ -208,7 +216,7 @@ public class QueryEditor extends JPanel {
 
 	private JFileChooser mqlFileChooser = new JFileChooser();
 
-	private DatasetWidget datasetPage;
+	private DatasetViewWidget datasetPage;
 	private String currentDatasetName;
 	private OutputSettingsPage outputSettingsPage;
 

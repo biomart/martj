@@ -51,7 +51,7 @@ public class InputPageContainer
   public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor) {
     super();
     setLayout(cardLayout);
-    add(new DatasetWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
+    add(new DatasetViewWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
     add(new DatasourceWidget(query), TreeNodeData.DATASOURCE.getLabel());
     add(new AttributesWidget(query, datasetViewAdaptor), TreeNodeData.ATTRIBUTES.getLabel());
     add(new FiltersWidget(query, datasetViewAdaptor), TreeNodeData.FILTERS.getLabel());

@@ -93,11 +93,11 @@ import org.ensembl.mart.lib.config.DatasetView;
  * A single dataset could be represented by multiple datasetViews, in this 
  * case the widget cannot choose which view to select.  
  */
-public class DatasetWidget extends InputPage implements QueryChangeListener {
+public class DatasetViewWidget extends InputPage implements QueryChangeListener {
 
   private DatasetView datasetView;
 
-  private Logger logger = Logger.getLogger(DatasetWidget.class.getName());
+  private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
   
   private Feedback feedback = new Feedback(this);
 
@@ -123,7 +123,7 @@ public class DatasetWidget extends InputPage implements QueryChangeListener {
    * and the query is the Model.
    * @param query underlying model for this widget.
    */
-  public DatasetWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
+  public DatasetViewWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
 
     super(query, "Dataset");
 
@@ -215,6 +215,7 @@ public class DatasetWidget extends InputPage implements QueryChangeListener {
           datasetViewAdaptor.getDatasetViewByDisplayName(displayName);
 
         // initialise the query with settings from the datasetview.
+        query.setDatasetView( dsv );
         query.setDatasetInternalName(dsv.getDataset());
         query.setDataSource(dsv.getDatasource());
         query.setPrimaryKeys(dsv.getPrimaryKeys());
@@ -384,36 +385,11 @@ public class DatasetWidget extends InputPage implements QueryChangeListener {
     String newName) {
   }
 
-  /**
-   * Responds to a change in dataset on the query. Updates the state of
-   * this widget by changing the currently selected item in the list.
-   */
   public void queryDatasetInternalNameChanged(
     Query sourceQuery,
     String oldDatasetInternalName,
     String newDatasetInternalName) {
 
-    if (newDatasetInternalName == null) {
-
-      currentSelectedText.setText("");
-
-    } else {
-
-      try {
-        DatasetView[] dsvs =
-          datasetViewAdaptor.getDatasetViewByDataset(newDatasetInternalName);
-        // TODO Handle >1 dsv for dataset
-        datasetView = dsvs[0];
-        String dn = datasetView.getDisplayName(); 
-        dn = separatorMatcher.reset( dn ).replaceAll(" ");
-        currentSelectedText.setText( dn );
-      } catch (ConfigurationException e) {
-        feedback.warn(e);
-        // show the raw dataset name by default
-        currentSelectedText.setText(newDatasetInternalName);
-      }
-
-    }
   }
 
   public void queryDatasourceChanged(
@@ -473,7 +449,7 @@ public class DatasetWidget extends InputPage implements QueryChangeListener {
   public static void main(String[] args) throws Exception {
     JFrame f = new JFrame("Dataset Chooser (Test Frame)");
     Box p = Box.createVerticalBox();
-    p.add(new DatasetWidget(new Query(), QueryEditor.testDSViewAdaptor()));
+    p.add(new DatasetViewWidget(new Query(), QueryEditor.testDSViewAdaptor()));
     f.getContentPane().add(p);
     f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     f.setSize(950, 750);
@@ -484,6 +460,17 @@ public class DatasetWidget extends InputPage implements QueryChangeListener {
    */
   public DatasetView getDatasetView() {
     return datasetView;
+  }
+
+  /**
+   * Responds to a change in dataset view on the query. Updates the state of
+   * this widget by changing the currently selected item in the list.
+   */
+  public void queryDatasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+    String s = "";
+    if ( newDatasetView!=null )
+      s = newDatasetView.getDisplayName();
+    currentSelectedText.setText( s );
   }
 
 }

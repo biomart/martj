@@ -29,14 +29,21 @@ import org.ensembl.mart.lib.Filter;
  */
 public class TreeNodeData {
 
-  public static final TreeNodeData DATASET_VIEW =
-    new TreeNodeData("DatasetView", ":", null);
   public static final TreeNodeData DATASOURCE =
     new TreeNodeData("DataSource", ":", null);
+  
+  public static final TreeNodeData DATASET =
+    new TreeNodeData("Dataset", ":", null);
+  
+  public static final TreeNodeData DATASET_VIEW =
+    new TreeNodeData("DatasetView", ":", null);
+  
   public static final TreeNodeData ATTRIBUTES =
     new TreeNodeData("Attributes", null, null);
+  
   public static final TreeNodeData FILTERS =
     new TreeNodeData("Filters", null, null);
+  
   public static final TreeNodeData FORMAT =
     new TreeNodeData("Format", null, null);
 

@@ -258,11 +258,14 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
 
   private DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode();
 
-  private DefaultMutableTreeNode datasetViewNode =
-    new DefaultMutableTreeNode(TreeNodeData.DATASET_VIEW);
-
   private DefaultMutableTreeNode dataSourceNode =
     new DefaultMutableTreeNode(TreeNodeData.DATASOURCE);
+
+  private DefaultMutableTreeNode datasetNode =
+    new DefaultMutableTreeNode(TreeNodeData.DATASET);
+
+  private DefaultMutableTreeNode datasetViewNode =
+    new DefaultMutableTreeNode(TreeNodeData.DATASET_VIEW);
 
   private DefaultMutableTreeNode attributesNode =
     new DefaultMutableTreeNode(TreeNodeData.ATTRIBUTES);
@@ -301,8 +304,9 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     setModel(treeModel);
     setRootVisible(false);
 
-    rootNode.add(datasetViewNode);
     rootNode.add(dataSourceNode);
+    rootNode.add(datasetNode);
+    rootNode.add(datasetViewNode);
     rootNode.add(attributesNode);
     rootNode.add(filtersNode);
     rootNode.add(formatNode);
@@ -457,32 +461,8 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     String oldDatasetInternalName,
     String newDatasetInternalName) {
 
-    try {
-      
-      // TODO handle multiple dsvs with same dataset
-      dsv = dsvAdaptor.getDatasetViewByDataset(newDatasetInternalName)[0];
+    // TODO set dataset name
 
-      if (dsv == null){
-      
-        feedback.warn(
-          "Failed to load a Dataset "
-            + " with internalName='"
-            + newDatasetInternalName
-            + "'.");
-      
-      } else {
-      
-        String s = dsv.getDisplayName();
-        s = Pattern.compile("__").matcher(s).replaceAll(" ");
-        ((TreeNodeData) datasetViewNode.getUserObject()).setRightText(s);
-    
-      }
-    
-      treeModel.reload();
-    
-    } catch (ConfigurationException e) {
-      feedback.warn(e);
-    }
   }
 
   /**
@@ -655,6 +635,22 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     Query sourceQuery,
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys) {
+  }
+
+  public void queryDatasetViewChanged(
+    Query query,
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView) {
+  
+    String s = "";
+    if (newDatasetView != null) {
+      s = newDatasetView.getDisplayName();
+      // Remove separators before displaying
+      s = Pattern.compile("__").matcher(s).replaceAll(" ");
+    }
+
+    ((TreeNodeData) datasetViewNode.getUserObject()).setRightText(s);
+    treeModel.reload();
   }
 
 }
