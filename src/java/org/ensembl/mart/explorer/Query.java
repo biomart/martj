@@ -151,14 +151,14 @@ public class Query {
      /**
       * returns a description of the Query for logging purposes
       * 
-      * @return String description (species=species\nfocus=focus\nattributes=attributes\nfilters=filters)
+      * @return String description (primaryKeys=primaryKeys\nstarBases=starBases\nattributes=attributes\nfilters=filters)
       */
      public String toString() {
          StringBuffer buf = new StringBuffer();
 
 		 buf.append("[");
-         buf.append(", species=").append(species);
-         buf.append(", focus=").append(focus);
+         buf.append(", primaryKeys=").append(primaryKeys);
+         buf.append(", starBases=").append(starBases);
          buf.append(", querytype=").append(stringquerytype);
          buf.append(", attributes=").append(attributes);
          buf.append(", filters=").append(filters);
@@ -172,51 +172,44 @@ public class Query {
     }
 
     /**
-     * get the species of the Query
-     * @return String species
+     * get the primaryKeys of the Query
+     * @return String primaryKeys
      */
-    public String getSpecies(){
-            return species;
+    public String[] getPrimaryKeys(){
+            return primaryKeys;
 	}
 
     /**
-     * set the species for the Query
-     * @param String species
+     * set the primaryKeys for the Query
+     * @param String primaryKeys
      */
-    public void setSpecies(String species){
-            this.species = species;
+    public void setPrimaryKeys(String[] primaryKeys){
+            this.primaryKeys = primaryKeys;
 	}
 
     /**
-     * get the focus for the Query
-     * @return String focus
+     * get the starBases for the Query
+     * @return String starBases
      */
-    public String getFocus(){
-            return focus;
+    public String[] getStarBases(){
+            return starBases;
         }
 
     /**
-     * set the focus for the Query
-     * @param String focus
+     * set the starBases for the Query
+     * @param String starBases
      */
-    public void setFocus(String focus){
-            this.focus = focus;
+    public void setStarBases(String[] starBases){
+            this.starBases = starBases;
     }
 
     private List attributes = new Vector();
     private List filters = new Vector();
 
-    /** @link dependency */
-
-  /*# Attribute lnkAttribute; */
-
-    /** @link dependency */
-
-  /*# Filter lnkFilter; */
-  
+      
   private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
   private SequenceDescription seqd;
-  private String species;
-  private String focus;
+  private String[] primaryKeys;
+  private String[] starBases;
   private String stringquerytype;
 }
