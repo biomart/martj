@@ -132,6 +132,9 @@ public final class AttributeQueryRunner implements QueryRunner {
   }
 
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    
+    //System.out.println("HARD LIMIT IS\t" + hardLimit);
+    
     lastID = -1; // so nothing is skipped
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
@@ -146,11 +149,13 @@ public final class AttributeQueryRunner implements QueryRunner {
       //queryID = csql.getPrimaryKey();
 	  queryID = csql.getLowestLevelKey();
 	  
-      DataSource ds = curQuery.getDataSource();
+      DetailedDataSource ds = curQuery.getDataSource();
       if (ds == null)
         throw new RuntimeException("curQuery.DataSource is null");
       conn = ds.getConnection();
-
+	  
+	  String databaseType = ds.getDatabaseType();
+	  
       while (moreRows) {
         sql = sqlbase;
 
@@ -161,21 +166,31 @@ public final class AttributeQueryRunner implements QueryRunner {
 
         sql += " ORDER BY " + primaryKey;
 
+		int maxRows = 0;
+		if (hardLimit > 0)
+		  maxRows = Math.min(batchLimit, hardLimit - totalRows);
+		else
+		  maxRows = batchLimit;   
+		
+
+		
+	    // if mysql can use limit to avoid getting rows already processed for the current ID
+        if (databaseType.equals("mysql")){
+		    sql += " LIMIT " + lastIDRowsProcessed + "," + maxRows;//;(maxRows - lastIDRowsProcessed);    	
+        	//System.out.println("MYSQL SPECIFIC PROCESSING OF SQL\t" + sql);
+        }
+		
+		PreparedStatement ps = conn.prepareStatement(sql);
+        if (!databaseType.equals("mysql")){
+			ps.setMaxRows(maxRows);
+        }
+        
         if (logger.isLoggable(Level.INFO)) {
           logger.info("QUERY : " + curQuery);
           logger.info("SQL : " + sql);
         }
-
-        PreparedStatement ps = conn.prepareStatement(sql);
-
-        int maxRows = 0;
-        if (hardLimit > 0)
-          maxRows = Math.min(batchLimit, hardLimit - totalRows);
-        else
-          maxRows = batchLimit;        
-        
-        ps.setMaxRows(maxRows);
-
+	
+        //System.out.println("MAX ROWS\t" + maxRows); 
         int p = 1;
         for (int i = 0, n = filters.length; i < n; ++i) {
           Filter f = curQuery.getFilters()[i];
@@ -187,23 +202,28 @@ public final class AttributeQueryRunner implements QueryRunner {
         }
 
         ResultSet rs = ps.executeQuery();
-        resultSetRowsProcessed = 0;
-
-        processResultSet(conn, skipNewBatchRedundantRecords(rs));
-
+		if (databaseType.equals("mysql")){
+			resultSetRowsProcessed = lastIDRowsProcessed;
+			processResultSet(conn, rs);
+		} else{
+        	resultSetRowsProcessed = 0;
+	        processResultSet(conn, skipNewBatchRedundantRecords(rs));
+		}
         // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
-        if (resultSetRowsProcessed < batchLimit)
+        if (resultSetRowsProcessed < batchLimit){
+          // this is the last batch - hence set moreRows to false
           moreRows = false;
-
+        }
         if (batchLimit < maxBatchLimit) {
           batchLimit =
-            (batchLimit * batchModifiers[modIter] < maxBatchLimit)
+            (batchLimit * batchModifiers[modIter] < maxBatchLimit)                   
               ? batchLimit * batchModifiers[modIter]
               : maxBatchLimit;
           modIter = (modIter == 0) ? 1 : 0;
-        } //else
+        } 
+        //else          
           //batchLimit += linearIncrease;
-
+        
         rs.close();
       }
     } catch (IOException e) {
@@ -229,15 +249,18 @@ public final class AttributeQueryRunner implements QueryRunner {
         resultSetRowsProcessed++;
       }
     }
+    //System.out.println(resultSetRowsProcessed + "\t" + lastIDRowsProcessed);
 
-    return rs;
+     return rs;
   }
 
   private void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException {
     ResultSetMetaData rmeta = rs.getMetaData();
-
+    
     int queryIDindex = 0;
+    
 
+    
     // process columnNames for required attribute indices
     for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
       String column = rmeta.getColumnName(i);
@@ -245,10 +268,14 @@ public final class AttributeQueryRunner implements QueryRunner {
       if (column.toLowerCase().equals(queryID.toLowerCase()))
         queryIDindex = i;
     }
-
+   
+	if ((batchLimit == maxBatchLimit) && rs.isLast()){
+    	throw new SQLException("WARNING - MORE THAN 50000 ROWS FOR A SINGLE ID BREAKS THE CURRENT BATCHING SYSTEM");
+	}
+    
     while (rs.next()) {
       int currID = rs.getInt(queryIDindex);
-
+      //System.out.println("CURR ID" + currID + "\tlastID\t" + lastID);
       if (lastID > -1 && lastID != currID) {
         lastIDRowsProcessed = 0;
         
@@ -263,6 +290,7 @@ public final class AttributeQueryRunner implements QueryRunner {
           if (i > 1)
             osr.print(format.getSeparator());
           String v = rs.getString(i);
+        
           if (v != null)
             osr.print(v);
           //          else
@@ -284,11 +312,11 @@ public final class AttributeQueryRunner implements QueryRunner {
   //batching 
   private final int[] batchModifiers = { 2, 2 };
   private int modIter = 0; //start at 0 
-  private int batchLimit = 5000;
-  private final int maxBatchLimit = 50000;
+  private int batchLimit = 5000;//5000;
+  private final int maxBatchLimit = 50000;//50000;
   
   // total number of rows execute will ever return
-  private final int MAXTOTALROWS = 50000;
+  private final int MAXTOTALROWS = 100000000;//50000;
   
 //allow batchLength to increase by this amount after maxBatchLength has been reached
 //this will result in slow response for queries where each id returns a resultset
