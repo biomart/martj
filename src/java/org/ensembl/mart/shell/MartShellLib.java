@@ -167,7 +167,7 @@ public class MartShellLib {
    *         loading exceptions.
    * @throws MalformedURLException if confFile is a malformed URL.
    */
-  public void addMartRegistry(String confFile, boolean loadFully) throws ConfigurationException, MalformedURLException {
+  public synchronized void addMartRegistry(String confFile, boolean loadFully) throws ConfigurationException, MalformedURLException {
     URL confURL = InputSourceUtil.getURLForString(confFile);
 
     if (confURL == null)
@@ -418,9 +418,7 @@ public class MartShellLib {
    * @param key - String name to refer to this stored Command in later queries.
    * @param mql - String mql subquery.
    */
-  public void addStoredMQLCommand(String key, String mql) {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Storing command with key " + key + "\n");
+  public synchronized void addStoredMQLCommand(String key, String mql) {
     storedCommands.put(key, mql);
   }
 
@@ -428,11 +426,8 @@ public class MartShellLib {
    * Remove a stored MQL statement with its key.
    * @param key -- key for stored MQL command
    */
-  public void removeStoredMQLCommand(String key) {
+  public synchronized void removeStoredMQLCommand(String key) {
     if (storedCommands.containsKey(key)) {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Removing stored MQL command for key " + key + "\n");
-
       storedCommands.remove(key);
     }
   }
@@ -442,7 +437,7 @@ public class MartShellLib {
    * @param key -- key for a stored MQL command
    * @return String MQL command
    */
-  public String describeStoredMQLCommand(String key) {
+  public synchronized String describeStoredMQLCommand(String key) {
     return storedCommands.getProperty(key);
   }
 
@@ -453,7 +448,7 @@ public class MartShellLib {
    * @return Query parsed from stored MQL command
    * @throws InvalidQueryException for any query parsing Exceptions
    */
-  public Query StoredMQLCommandToQuery(String key) throws InvalidQueryException {
+  public synchronized Query StoredMQLCommandToQuery(String key) throws InvalidQueryException {
     return MQLtoQuery(describeStoredMQLCommand(key));
   }
 
@@ -461,7 +456,7 @@ public class MartShellLib {
    * Get a Set containing all stored MQL Procedure keys.
    * @return Set
    */
-  public Set getStoredMQLCommandKeys() {
+  public synchronized Set getStoredMQLCommandKeys() {
     return storedCommands.keySet();
   }
 
@@ -1393,7 +1388,7 @@ public class MartShellLib {
    * @return Query object
    * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, DatasetConfig/Attributes/Sequences/Filters not found, etc.)
    */
-  public Query MQLtoQuery(String newquery) throws InvalidQueryException {
+  public synchronized Query MQLtoQuery(String newquery) throws InvalidQueryException {
     try {
       //reset MartCompleter induced state, if any. Also reduces the number of DatasetConfig objects held in memory
       usingLocalDataset = false;
@@ -1416,8 +1411,8 @@ public class MartShellLib {
 
       DatasetConfig thisDatasetConfig = null;
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Recieved Query " + newquery + "\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Recieved Query " + newquery + "\n");
 
       Query query = new Query();
       currentFpage = null;
@@ -1485,10 +1480,10 @@ public class MartShellLib {
                 throw new InvalidQueryException("Could not set parse using request " + thisToken + "\n");
               }
 
-              if (logger.isLoggable(Level.INFO)) {
-                logger.info("setting local dataset to " + thisDatasetConfig.getDataset() + "\n");
+              if (logger.isLoggable(Level.FINE)) {
+                logger.fine("setting local dataset to " + thisDatasetConfig.getDataset() + "\n");
                 if (query.getDataSource() != null)
-                  logger.info("setting Mart to " + query.getDataSource().getName() + "\n");
+                  logger.fine("setting Mart to " + query.getDataSource().getName() + "\n");
               }
             }
 
@@ -1552,8 +1547,8 @@ public class MartShellLib {
             getClause = false;
             domainSpecificClause = true;
           } else if (thisToken.equalsIgnoreCase(QWHERE)) {
-            if (logger.isLoggable(Level.INFO))
-              logger.info("Recieved where clause after attributes, query is valid: " + validQuery + " \n");
+            if (logger.isLoggable(Level.FINE))
+              logger.fine("Recieved where clause after attributes, query is valid: " + validQuery + " \n");
 
             if (!validQuery)
               throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling comma\n");
@@ -1564,14 +1559,14 @@ public class MartShellLib {
             whereFilterName = true;
           } else {
             if (thisToken.endsWith(",")) {
-              if (logger.isLoggable(Level.INFO))
-                logger.info(thisToken + " Comma, setting validQuery to false\n");
+              if (logger.isLoggable(Level.FINE))
+                logger.fine(thisToken + " Comma, setting validQuery to false\n");
 
               thisToken = thisToken.substring(0, thisToken.length() - 1);
               validQuery = false;
             } else {
-              if (logger.isLoggable(Level.INFO))
-                logger.info(thisToken + " Not comma, setting validQuery to true\n");
+              if (logger.isLoggable(Level.FINE))
+                logger.fine(thisToken + " Not comma, setting validQuery to true\n");
               validQuery = true;
             }
 
@@ -1987,14 +1982,14 @@ public class MartShellLib {
             limitClause = true;
           } else {
             if (thisToken.endsWith(",")) {
-              if (logger.isLoggable(Level.INFO))
-                logger.info(thisToken + " Comma, setting validQuery to false\n");
+              if (logger.isLoggable(Level.FINE))
+                logger.fine(thisToken + " Comma, setting validQuery to false\n");
 
               thisToken = thisToken.substring(0, thisToken.length() - 1);
               validQuery = false;
             } else {
-              if (logger.isLoggable(Level.INFO))
-                logger.info(thisToken + " Not comma, setting validQuery to true\n");
+              if (logger.isLoggable(Level.FINE))
+                logger.fine(thisToken + " Not comma, setting validQuery to true\n");
               validQuery = true;
             }
 
@@ -2070,7 +2065,7 @@ public class MartShellLib {
     return !QSEQUENCE.equalsIgnoreCase(keyword);
   }
 
-  private Filter getIDFilterForSubQuery(
+  private synchronized Filter getIDFilterForSubQuery(
     String fieldName,
     String tableConstraint,
     String key,
