@@ -23,12 +23,15 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class Option extends QueryFilterSettings {
+
+  private Logger logger = Logger.getLogger(Option.class.getName());
 
   private String qualifier;
 	private QueryFilterSettings parent;
@@ -512,7 +515,7 @@ public class Option extends QueryFilterSettings {
    * @return field if set otherwise getParent().getFieldFromContext().
    */
   public String getFieldFromContext() {
-    if ( field!=null ) return field;
+    if ( valid( field) ) return field;
     else return getParent().getFieldFromContext();
   }
   
@@ -522,7 +525,7 @@ public class Option extends QueryFilterSettings {
    * @return value if set otherwise getParent().getValueFromContext().
    */
   public String getValueFromContext() {
-      if ( value!=null ) return value;
+      if ( valid(value) ) return value;
       else return getParent().getValueFromContext();
     }
     
@@ -532,7 +535,7 @@ public class Option extends QueryFilterSettings {
    * @return type if set otherwise getParent().getTypeFromContext().
    */
 	public String getTypeFromContext() {
-    if ( type!=null ) return type;
+    if ( valid(type) ) return type;
     else return getParent().getTypeFromContext();
 	}
   
@@ -541,7 +544,7 @@ public class Option extends QueryFilterSettings {
    * @return handler if set otherwise getParent().getHandlerFromContext().
    */
 	public String getHandlerFromContext() {
-    if ( handler!=null ) return handler;
+    if ( valid(handler) ) return handler;
     else return getParent().getHandlerFromContext();
 	}
 
@@ -550,7 +553,7 @@ public class Option extends QueryFilterSettings {
    * @return tableConstraint if set otherwise getParent().getTableConstraintFromContext().
    */
 	public String getTableConstraintFromContext() {
-    if ( tableConstraint!=null ) return tableConstraint;
+    if ( valid(tableConstraint) ) return tableConstraint;
     else return getParent().getTableConstraintFromContext();
   }
   
@@ -567,7 +570,7 @@ public class Option extends QueryFilterSettings {
 	 * @return qualifier if set otherwise getParent().getQualifierFromContext().
 	 */
 	public String getQualifierFromContext() {
-		if ( qualifier!=null ) return qualifier;
+		if ( valid(qualifier) ) return qualifier;
 		else return getParent().getQualifierFromContext();
 	}
 

@@ -110,15 +110,6 @@ public abstract class FilterWidget
 		}
 	}
 
-	/**
-	 * validates strings, checking if not null and not empty.
-	 * @param s
-	 * @return true if string is not null and not empty
-	 */
-	public static final boolean isInvalid(String s) {
-		return s == null && "".equals(s);
-	}
-
 	protected PushOptionsHandler[] pushOptionHandlers;
 
 	/**
@@ -143,7 +134,7 @@ public abstract class FilterWidget
 			pushOptionHandlers[i] =
 				new PushOptionsHandler(optionPushes[i], filterGroupWidget);
 			pushOptionHandlers[i].push();
-			System.out.println( "Pushing options" + optionPushes);
+			System.out.println("Pushing options" + optionPushes);
 		}
 	}
 
@@ -176,14 +167,13 @@ public abstract class FilterWidget
 				//					setFilter(f);
 				//				}
 
-				
-        Filter oldFilter = equivalentFilter( evt.getOldValue() );
-				if (oldFilter != null ) setFilter(null);
-				
+				Filter oldFilter = equivalentFilter(evt.getOldValue());
+				if (oldFilter != null)
+					setFilter(null);
 
-				Filter newFilter = equivalentFilter( evt.getNewValue() );
-				if (newFilter != null ) setFilter( newFilter );
-				
+				Filter newFilter = equivalentFilter(evt.getNewValue());
+				if (newFilter != null)
+					setFilter(newFilter);
 
 			}
 		}
@@ -192,9 +182,9 @@ public abstract class FilterWidget
 
 	protected final Filter equivalentFilter(Object possibleFilter) {
 		Filter filter = null;
-		if ( fieldName != null 
-      && !"".equals(fieldName)
-      && possibleFilter != null
+		if (fieldName != null
+			&& !"".equals(fieldName)
+			&& possibleFilter != null
 			&& possibleFilter instanceof Filter
 			&& (filter = (Filter) possibleFilter).getField().equals(fieldName)) {
 			return filter;
@@ -214,9 +204,9 @@ public abstract class FilterWidget
 			filter = null;
 		}
 	} /**
-				 * BasicFilter containing an InputPage, this page is used by the QueryEditor
-				 * when it detects the filter has been added or removed from the query.
-				 */
+					 * BasicFilter containing an InputPage, this page is used by the QueryEditor
+					 * when it detects the filter has been added or removed from the query.
+					 */
 	static class InputPageAwareBasicFilter
 		extends BasicFilter
 		implements InputPageAware {
@@ -237,6 +227,16 @@ public abstract class FilterWidget
 			String value,
 			InputPage inputPage) {
 			super(field, tableConstraint, condition, value);
+			this.inputPage = inputPage;
+		}
+
+		public InputPageAwareBasicFilter(Option option, InputPage inputPage) {
+			super(
+				option.getFieldFromContext(),
+				option.getTableConstraintFromContext(),
+				option.getQualifierFromContext(),
+				option.getValueFromContext(),
+        option.getHandlerFromContext() );
 			this.inputPage = inputPage;
 		}
 

@@ -89,12 +89,12 @@ public class TreeFilterWidget extends FilterWidget {
 			// shouldn't happen
 			e.printStackTrace();
 		}
-    nullItem = new JMenuItem(nullOption.getInternalName());
-    nullItem.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent event) {
-            setOption( nullOption);
-          }
-        });
+		nullItem = new JMenuItem(nullOption.getInternalName());
+		nullItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				setOption(nullOption);
+			}
+		});
 
 		// default property name.
 		this.propertyName = filterDescription.getInternalName();
@@ -102,7 +102,6 @@ public class TreeFilterWidget extends FilterWidget {
 		label = new JLabel(filterDescription.getDisplayName());
 		currentSelectedText.setEditable(false);
 		currentSelectedText.setMaximumSize(new Dimension(400, 27));
-    
 
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
@@ -126,35 +125,35 @@ public class TreeFilterWidget extends FilterWidget {
 		setLayout(new BorderLayout());
 		add(box, BorderLayout.NORTH);
 
-    option = nullOption;
-    lastSelectedOption = option;
+		option = nullOption;
+		lastSelectedOption = option;
 
 	}
 
 	/**
 	 * Adds menu items and submenus to menu based on contents of _options_. A submenu is added 
-   * when an option contains
-   * sub options. If an option has no sub options it is added as a leaf node. This method calls
-   * itself recursively to build up the menu tree.
+	 * when an option contains
+	 * sub options. If an option has no sub options it is added as a leaf node. This method calls
+	 * itself recursively to build up the menu tree.
 	 * @param menu menu to add options to
 	 * @param options options to be added, method does nothing if null.
-   * @param prefix prepended to option.getDisplayName() to create internal name for menu item 
-   * created for each option.
+	 * @param prefix prepended to option.getDisplayName() to create internal name for menu item 
+	 * created for each option.
 	 */
 	private void addOptions(JMenu menu, Option[] options, String prefix) {
 
 		for (int i = 0; options != null && i < options.length; i++) {
 
 			final Option option = options[i];
-      
-      String displayName = option.getDisplayName();
-      String qualifiedName = prefix + " " + displayName;
-        
+
+			String displayName = option.getDisplayName();
+			String qualifiedName = prefix + " " + displayName;
+
 			if (option.getOptions().length == 0) {
 
 				// add menu item
-				JMenuItem item = new JMenuItem( displayName );
-        item.setName( qualifiedName );
+				JMenuItem item = new JMenuItem(displayName);
+				item.setName(qualifiedName);
 				menu.add(item);
 				item.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent event) {
@@ -167,9 +166,9 @@ public class TreeFilterWidget extends FilterWidget {
 			} else {
 
 				// Add sub menu
-				JMenu subMenu = new JMenu( displayName );
+				JMenu subMenu = new JMenu(displayName);
 				menu.add(subMenu);
-				addOptions(subMenu, option.getOptions(), qualifiedName );
+				addOptions(subMenu, option.getOptions(), qualifiedName);
 
 			}
 		}
@@ -183,8 +182,9 @@ public class TreeFilterWidget extends FilterWidget {
 	 */
 	private void updateDisplay(Option option) {
 		String name = "";
-    if (option!=null && option != nullOption ) name = option.getDisplayName();
-    currentSelectedText.setText(name);
+		if (option != null && option != nullOption)
+			name = option.getDisplayName();
+		currentSelectedText.setText(name);
 		setNodeLabel(null, name);
 	}
 
@@ -195,7 +195,6 @@ public class TreeFilterWidget extends FilterWidget {
 	public Option getOption() {
 		return option;
 	}
-
 
 	/**
 	 * Default value is filterDescription.getInternalName().
@@ -249,11 +248,10 @@ public class TreeFilterWidget extends FilterWidget {
 		// choice.
 		treeTopOptions.add(nullItem);
 		valueToOption.put(nullOption.getValue(), nullOption);
-		
 
 		addOptions(treeTopOptions, options, "");
-    
-    allOptions = new HashSet( valueToOption.values() );
+
+		allOptions = new HashSet(valueToOption.values());
 	}
 
 	private void showTree() {
@@ -283,23 +281,21 @@ public class TreeFilterWidget extends FilterWidget {
 		}
 	}
 
-
-  /**
-   * 
-   * @param option should be one of the options currently available to this filter.
-   * @throws IllegalArgumentException if option unavailable in filter.
-   */
+	/**
+	 * 
+	 * @param option should be one of the options currently available to this filter.
+	 * @throws IllegalArgumentException if option unavailable in filter.
+	 */
 	public void setOption(Option option) {
 
-    System.out.println("parent=" + option.getParent());
+		if (!allOptions.contains(option))
+			throw new IllegalArgumentException(
+				"Option is unailable in filter: " + option);
 
-    if ( !allOptions.contains( option ) )
-      throw new IllegalArgumentException("Option is unailable in filter: " + option);
+		if (option == lastSelectedOption)
+			return;
 
-    if (option == lastSelectedOption)
-      return;
-      
-    updateDisplay(option);
+		updateDisplay(option);
 
 		Option old = this.option;
 		this.option = option;
@@ -318,20 +314,15 @@ public class TreeFilterWidget extends FilterWidget {
 
 			String value = null;
 			if (option != null) {
-				String tmp = option.getValue();
+				String tmp = option.getValueFromContext();
 				if (tmp != null && !"".equals(tmp)) {
 					value = tmp;
 				}
 
 				if (value != null) {
 
-					filter =
-						new InputPageAwareBasicFilter(
-							filterDescription.getField(),
-							option.getTableConstraint(),
-							"=",
-							value,
-							this);
+					filter = new InputPageAwareBasicFilter(option, this);
+          System.out.println("field == "+ option.getFieldFromContext() );
 				}
 
 				setNodeLabel(fieldName, option.getDisplayName());

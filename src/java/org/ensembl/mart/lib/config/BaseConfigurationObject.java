@@ -15,7 +15,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib.config;
 
 /**
@@ -26,67 +26,90 @@ package org.ensembl.mart.lib.config;
  */
 public class BaseConfigurationObject {
 
-    public BaseConfigurationObject(String internalName, String displayName, String description) throws ConfigurationException {
-      if (internalName == null || internalName.equals(""))
-        throw new ConfigurationException("Configuration Object must contain an internalName\n");
-        
-      this.internalName = internalName;
-      this.displayName = displayName;
-      this.description = description;
-      
-      int tmp = 17;
-      tmp = tmp*37 + (( internalName!=null ) ? internalName.hashCode() : 0);
-      tmp = tmp*37 + (( displayName!=null ) ? displayName.hashCode() : 0);
-      tmp = tmp*37 + (( description!=null ) ? description.hashCode() : 0);
-      hashCode = tmp; 
-    }
-      
-    /**
-     * Returns the Description
-		 * @return String description
-		 */
-		public String getDescription() {
-			return description;
-		}
+	/**
+	 * Determines if string is an invalid attribute value.
+	 * @param s
+	 * @return true if string is null or the empty string.
+	 */
+	public static final boolean isInvalid(String s) {
+		return s == null && "".equals(s);
+	}
 
-		/**
-     * Returns the displayName
-		 * @return String displayName
-		 */
-		public String getDisplayName() {
-			return displayName;
-		}
 
-		/**
-     * Returns the internalName
-		 * @return String internalName
-		 */
-		public String getInternalName() {
-			return internalName;
-		}
-    
-    
-    public int hashCode() {
-      return hashCode;
-    }
-    
-    
-    public boolean equals(Object o) {
-      return o instanceof BaseConfigurationObject && o.hashCode()==hashCode();
-    }
-    
-    public String toString() {
-			StringBuffer buf = new StringBuffer();
+  /**
+   * Determines if string is a validate attribute value.
+   * @param s
+   * @return true if string is not null and not empty
+   */
+  public static final boolean valid(String s) {
+    return s!=null && !"".equals(s);
+  }
 
-			buf.append("[");
-			buf.append(" internalName=").append(internalName);
-      buf.append(", displayName=").append(displayName);
-      buf.append(", description=").append(description);
-			buf.append("]");
 
-			return buf.toString();
-		}
-    
-  protected final String internalName, displayName, description;
-  protected final int hashCode;
+
+	public BaseConfigurationObject(
+		String internalName,
+		String displayName,
+		String description)
+		throws ConfigurationException {
+		if (internalName == null || internalName.equals(""))
+			throw new ConfigurationException("Configuration Object must contain an internalName\n");
+
+		this.internalName = internalName;
+		this.displayName = displayName;
+		this.description = description;
+
+		int tmp = 17;
+		tmp = tmp * 37 + ((internalName != null) ? internalName.hashCode() : 0);
+		tmp = tmp * 37 + ((displayName != null) ? displayName.hashCode() : 0);
+		tmp = tmp * 37 + ((description != null) ? description.hashCode() : 0);
+		hashCode = tmp;
+	}
+
+	/**
+	 * Returns the Description
+	 * @return String description
+	 */
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * Returns the displayName
+	 * @return String displayName
+	 */
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	/**
+	 * Returns the internalName
+	 * @return String internalName
+	 */
+	public String getInternalName() {
+		return internalName;
+	}
+
+	public int hashCode() {
+		return hashCode;
+	}
+
+	public boolean equals(Object o) {
+		return o instanceof BaseConfigurationObject && o.hashCode() == hashCode();
+	}
+
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+		buf.append(" internalName=").append(internalName);
+		buf.append(", displayName=").append(displayName);
+		buf.append(", description=").append(description);
+		buf.append("]");
+
+		return buf.toString();
+	}
+
+	protected final String internalName, displayName, description;
+	protected final int hashCode;
 }

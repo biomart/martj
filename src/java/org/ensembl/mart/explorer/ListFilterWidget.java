@@ -31,6 +31,7 @@ import javax.swing.JLabel;
 
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.Option;
 
@@ -80,7 +81,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     String field = filterDescription.getField();
 
-    if (isInvalid(field) && !filterDescription.hasOptions())
+    if (BaseConfigurationObject.isInvalid(field) && !filterDescription.hasOptions())
       throw new RuntimeException(
         "Invalid filterDescription: " + filterDescription);
 
@@ -204,7 +205,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
         String value = option.getValue();
         String field = option.getField();
-        if (isInvalid(value) && isInvalid(field))
+        if (BaseConfigurationObject.isInvalid(value) && BaseConfigurationObject.isInvalid(field))
           throw new RuntimeException("Invalid option = " + option);
 
         // add each option, via a surrogate, to the list. 

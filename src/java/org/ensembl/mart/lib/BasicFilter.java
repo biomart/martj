@@ -121,7 +121,7 @@ public class BasicFilter implements Filter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" name=").append(field);
+		buf.append(" field=").append(field);
 		buf.append(" ,condition=").append(condition);
 		buf.append(" ,value=").append(value);
 		buf.append(", tableConstraint=").append(tableConstraint);
