@@ -67,7 +67,7 @@ public abstract class MetaDataResolver {
 		ArrayList cols = new ArrayList();
 		
 		try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().username,name,"%");
+			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,"%");
 			int z=0;
 			while (columns.next()){	
 				

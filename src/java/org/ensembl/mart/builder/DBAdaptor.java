@@ -23,6 +23,7 @@ public class DBAdaptor {
 	public String username;
 	public String catalog;
 	public String rdbms;
+	public String schema;
 	
 	private String host;
 	private String port;
@@ -61,6 +62,7 @@ public class DBAdaptor {
 			port = p.getProperty("port");
 		    driver = p.getProperty("driver");
 		    instance = p.getProperty("instance");
+		    schema = p.getProperty("schema");
 		    catalog= p.getProperty("catalog");
 		    
 		} catch (IOException e1) {

@@ -52,7 +52,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getExportedKeys(getAdaptor().catalog,getAdaptor().username,maintable);
+			ResultSet keys = dmd.getExportedKeys(getAdaptor().catalog,getAdaptor().schema,maintable);
 			while (keys.next()){
 				
 				Table table = new Table();
@@ -81,7 +81,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().username,maintable);
+			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().schema,maintable);
 			while (keys.next()){
 				
 				Table table = new Table();
@@ -109,7 +109,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
  	
  	try {
  		DatabaseMetaData dmd = getConnection().getMetaData();
- 		ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.username,table);
+ 		ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.schema,table);
  		while (keys.next()){
  	    // This needs to be user specifed as it is not going to work properly with composite keys
  		pk=keys.getString(4);
