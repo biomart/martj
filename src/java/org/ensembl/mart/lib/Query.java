@@ -39,6 +39,9 @@ import org.ensembl.util.StringUtil;
  * <p>If the log level is set to >= FINE then the query is written to the log
  * after it's state is changed but before calling the listeners.</p>
  * 
+ * 
+ * TODO addXXX(int, o) -> add(o,int)
+ * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @see Attribute

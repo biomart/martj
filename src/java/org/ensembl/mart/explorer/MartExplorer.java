@@ -21,36 +21,23 @@ package org.ensembl.mart.explorer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.sql.DataSource;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
-import javax.swing.filechooser.FileFilter;
 
-import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -68,19 +55,11 @@ public class MartExplorer extends JFrame {
 	  a+f+os
 	 */
 
-	// TODO about dialog
 
-	// TODO list datasources
-	// TODO delete datasource
-
-	// TODO load query
-	// TODO save query
-
-	// TODO manage datatabases: list, remove
+	// TODO test save/load query
 
 	// TODO chained queries
 	// TODO user resolve datasetView name space clashes
-	// TODO support multiple, user added, jdbc drivers [initDatabaseSettings()]
 
 	// TODO support user renaming queries 
 
@@ -100,8 +79,6 @@ public class MartExplorer extends JFrame {
 	/** Currently available datasets. */
 	private List datasetViews = new ArrayList();
 
-	private DSViewAdaptor dsvAdaptor;
-
 	/** Currently available databases. */
 	private List databaseDSViewAdaptors = new ArrayList();
 
@@ -115,9 +92,6 @@ public class MartExplorer extends JFrame {
 	/** Persistent preferences object used to hold user history. */
 	private Preferences prefs;
 
-	public DatasetView[] getDatasetViews() throws ConfigurationException {
-		return dsvAdaptor.getDatasetViews();
-	}
 
 	private Feedback feedback = new Feedback(this);
 
@@ -131,21 +105,10 @@ public class MartExplorer extends JFrame {
 
 		// test mode preloads datasets and sets up a query ready to use.
 		if (true) {
-
-//			me.addDataSource(
-//				DatabaseUtil.createDataSource(
-//					"mysql",
-//					"127.0.0.1",
-//					"3313",
-//					"ensembl_mart_17_1",
-//					"ensro",
-//					null,
-//					10,
-//					"com.mysql.jdbc.Driver"));
-      me.setDsvAdaptor(QueryEditor.testDSViewAdaptor());
-      me.doNewQuery();
-      
+      me.datasetViewSettings.add(QueryEditor.testDSViewAdaptor());
 		} 
+
+    me.doNewQuery();
   }
 
 	public MartExplorer() {
@@ -158,9 +121,11 @@ public class MartExplorer extends JFrame {
 
 	}
 
+  /**
+   * TODO Displays "about" dialog.
+   *
+   */
 	public void doAbout() {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**
@@ -304,21 +269,6 @@ public class MartExplorer extends JFrame {
     
   }
 
-  /**
-	 * 
-	 */
-	protected void doConfigureDatabases() {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
-	 * 
-	 */
-	protected void doRemoveDatabase() {
-		// TODO Auto-generated method stub
-
-	}
 
 	/**
 	 * 
@@ -347,7 +297,7 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(dsvAdaptor, martManager, datasetViewSettings);
+			qe = new QueryEditor(null, martManager, datasetViewSettings);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -373,7 +323,7 @@ public class MartExplorer extends JFrame {
 
 		try {
 
-			if (dsvAdaptor==null || dsvAdaptor.getDatasetViews().length == 0) {
+			if (datasetViewSettings.getAdaptor().getDatasetViews().length == 0) {
 				feedback.warn(
 					"No dataset views available. You need load one or more "
 						+ "datasets before you can create a query.");
@@ -381,7 +331,7 @@ public class MartExplorer extends JFrame {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(dsvAdaptor, martManager, datasetViewSettings);
+				qe = new QueryEditor(null, martManager, datasetViewSettings);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 
@@ -401,18 +351,5 @@ public class MartExplorer extends JFrame {
 
 	}
 
-	/**
-	 * @return
-	 */
-	public DSViewAdaptor getDsvAdaptor() {
-		return dsvAdaptor;
-	}
-
-	/**
-	 * @param adaptor
-	 */
-	public void setDsvAdaptor(DSViewAdaptor adaptor) {
-		dsvAdaptor = adaptor;
-	}
 
 }

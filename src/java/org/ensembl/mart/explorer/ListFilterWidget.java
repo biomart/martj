@@ -44,6 +44,7 @@ import org.ensembl.mart.util.LoggingUtil;
  * Represents a list of user options. Some options cause the
  * options available in other widgets to be modified. Selecting
  * an option causes a Filter to be added to query.
+ * 
  */
 public class ListFilterWidget extends FilterWidget implements ActionListener {
 
@@ -142,12 +143,10 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     Filter oldFilter = filter;
 
-    if (selectedItem == emptySelection) {
-
-      if (filter != null)
+    if (filter != null)
         query.removeFilter(filter);
 
-    } else if (selectedItem != emptySelection) {
+    if (selectedItem != emptySelection) {
 
       String value = null;
       Option option = ((OptionWrapper) selectedItem).option;

@@ -81,7 +81,7 @@ public class InputPageContainer
   }
 
   /**
-   * TODO Show input page corresponding to selected tree node. 
+   * Show input page corresponding to selected tree node. 
    */
   public void valueChanged(TreeSelectionEvent e) {
 
@@ -108,10 +108,11 @@ public class InputPageContainer
   }
 
   /**
-   * @param tnd
+   * Brings page corresponding to tdd to the front. Does nothing
+   * if no such page exists.
+   * @param tnd tree node is a key for an input page.
    */
   private void toFront(TreeNodeData tnd) {
-    // TODO Auto-generated method stub
     cardLayout.show(this, tnd.getLabel());
   }
 

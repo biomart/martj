@@ -49,6 +49,7 @@ import org.ensembl.mart.util.LoggingUtil;
 /**
  * Represents a set of user options as a tree.
  * Component consists of a label, text area and button. 
+ * 
  */
 public class TreeFilterWidget extends FilterWidget {
   /**

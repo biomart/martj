@@ -55,7 +55,7 @@ import javax.swing.filechooser.FileFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.SimpleDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
@@ -98,7 +98,7 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  * 
  * TODO import from database
  */
-public class DatasetViewSettings extends Box {
+public class DatasetViewSettings extends Box  {
 
   private Logger logger = Logger.getLogger(DatasetViewSettings.class.getName());
   private Feedback feedback = new Feedback(this);
@@ -109,7 +109,7 @@ public class DatasetViewSettings extends Box {
 
   // --- state
   private DatasetView selected = null;
-  private CompositeDSViewAdaptor datasetViewAdaptor;
+  private CompositeDSViewAdaptor adaptor;
   private Map datasetNameToDatasetView = new HashMap();
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs;
@@ -136,7 +136,7 @@ public class DatasetViewSettings extends Box {
     selectedTextField.setText(none);
     initConfigFileChooser();
 
-    datasetViewAdaptor = new CompositeDSViewAdaptor();
+    adaptor = new CompositeDSViewAdaptor();
 
     noneMenuItem.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
@@ -214,7 +214,7 @@ public class DatasetViewSettings extends Box {
           (newIndex == -1) ? none : (String) names.get(newIndex);
 
         // remove the selected item
-        datasetViewAdaptor.removeDatasetView(selected);
+        adaptor.removeDatasetView(selected);
         datasetNameToDatasetView.remove(name);
 
         // select the "next" item
@@ -245,7 +245,7 @@ public class DatasetViewSettings extends Box {
       try {
         URLDSViewAdaptor adaptor = new URLDSViewAdaptor(f.toURL(), false);
         // TODO resolve any name clashes, i.e. existing dsv with same name
-        datasetViewAdaptor.add(adaptor);
+        this.adaptor.add(adaptor);
         DatasetView dsv = adaptor.getDatasetViews()[0];
         String name = dsv.getDisplayName();
         datasetNameToDatasetView.put(name, dsv);
@@ -271,9 +271,9 @@ public class DatasetViewSettings extends Box {
 
   public void showTree() {
     try {
-      if (datasetViewAdaptor != null) {
+      if (adaptor != null) {
 
-        updateMenu(datasetViewAdaptor.getDatasetViews());
+        updateMenu(adaptor.getDatasetViews());
         treeTopMenu.doClick();
       }
     } catch (ConfigurationException e) {
@@ -545,7 +545,7 @@ public class DatasetViewSettings extends Box {
   public boolean contains(DatasetView dsv) {
 
     try {
-      return dsv!=null && datasetViewAdaptor.supportsInternalName( dsv.getInternalName() );
+      return dsv!=null && adaptor.supportsInternalName( dsv.getInternalName() );
     } catch (ConfigurationException e) {
       // Shouldn't happen
       feedback.warn(e);
@@ -558,13 +558,8 @@ public class DatasetViewSettings extends Box {
    * Adds dataset.
    * @param datasetView
    */
-  public void add(DatasetView datasetView) {
-    try {
-      datasetViewAdaptor.add( new SimpleDSViewAdaptor(datasetView) );
-    } catch (ConfigurationException e) {
-      // Shouldn't happen
-      feedback.warn(e);
-    }
+  public void add(DatasetView datasetView) throws ConfigurationException {
+    add( new SimpleDSViewAdaptor(datasetView) );
   }
 
 
@@ -572,5 +567,24 @@ public class DatasetViewSettings extends Box {
     this.selected = selected;
     
   }
+
+
+  public void add(DSViewAdaptor a) throws ConfigurationException {
+    DatasetView[] dvs = a.getDatasetViews();
+    for (int i = 0; i < dvs.length; i++) {
+      DatasetView dv = dvs[i];
+      datasetNameToDatasetView.put( dv.getDisplayName(), dv );
+    } 
+    this.adaptor.add( a );
+  }
+
+  
+
+  public DSViewAdaptor getAdaptor() {
+    return adaptor;
+    
+  }
+
+
 
 }

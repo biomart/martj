@@ -32,6 +32,7 @@ import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
@@ -150,7 +151,11 @@ public class DatasetViewWidget
 
     if (newDatasetView != null
       && !datasetViewSettings.contains(newDatasetView))
-      datasetViewSettings.add(newDatasetView);
+      try {
+        datasetViewSettings.add(newDatasetView);
+      } catch (ConfigurationException e) {
+        feedback.warn(e);
+      }
     setDatasetView(newDatasetView);
   }
 

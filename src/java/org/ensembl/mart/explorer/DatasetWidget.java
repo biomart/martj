@@ -22,11 +22,12 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -35,18 +36,22 @@ import org.ensembl.mart.lib.QueryChangeListener;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
- * Widget representing the currently selected dataset 
- * and enabling the user to select another.
+ * Widget represents the currently selected dataset 
+ * and enables the user to select another.
+ * 
  */
 public class DatasetWidget
   extends InputPage
   implements QueryChangeListener, ChangeListener {
 
   private Logger logger = Logger.getLogger(DatasetWidget.class.getName());
+  
+  private static final String PREFERENCE_KEY = "DATASET_KEY";
+  private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 
   private Feedback feedback = new Feedback(this);
 
-  private LabelledComboBox combo = new LabelledComboBox("Dataset ", this);
+  private LabelledComboBox combo = new LabelledComboBox("Dataset ");
 
   private JButton defaultButton = new JButton("Reset from dataset view");
 
@@ -63,6 +68,14 @@ public class DatasetWidget
         doLoadDefaultDatasetName();
       }
     });
+
+    combo.setPreferenceKey(PREFERENCE_KEY);
+    combo.load(prefs);
+    combo.setSelectedItem( query.getDataset()  );
+    // Note: must add listener AFTER setSelected() otherwise
+    // this.stateChanged() will be called when the first element 
+    // in the preferences is the selected item.
+    combo.addChangeListener(this);
 
     Box b = Box.createVerticalBox();
     b.add(combo, BorderLayout.NORTH);
@@ -114,8 +127,22 @@ public class DatasetWidget
    */
   public void stateChanged(ChangeEvent e) {
 
-    if (combo.getSelectedItem() != query.getDataset())
-      query.setDataset((String) combo.getSelectedItem());
+    if (combo.getSelectedItem() == query.getDataset())
+      return;
+    
+    query.setDataset((String) combo.getSelectedItem());
+      
+    
+    combo.store(prefs, 10);
+    // We need to reload the list from the prefs so that the current selection is
+    // added to the drop down list.
+    combo.load(prefs);
+    try {
+      prefs.flush();
+    } catch (BackingStoreException e1) {
+      e1.printStackTrace();
+    }
+    
   }
 
   /* (non-Javadoc)

@@ -35,7 +35,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -83,7 +82,6 @@ import org.ensembl.util.ExtensionFileFilter;
 // TODO 1 Finish testing filter addition and removal
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
 // TODO support boolean_list filter type
-// TODO user change q.dataSource, select from list [fire query at different databases]
 // TODO support id list filters
 // TODO add user defined size for preview buffer
 
@@ -188,15 +186,10 @@ public class QueryEditor extends JPanel {
       return stale;
     }
 
-    /* (non-Javadoc)
-     * @see org.ensembl.mart.lib.QueryChangeListener#queryDatasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
-     */
     public void datasetViewChanged(
       Query query,
       DatasetView oldDatasetView,
       DatasetView newDatasetView) {
-      // TODO Auto-generated method stub
-
     }
   }
 
@@ -859,7 +852,11 @@ public class QueryEditor extends JPanel {
    */
   public static DatasetViewSettings testDatasetViewSettings() {
     DatasetViewSettings dvs = new DatasetViewSettings();
-    // TODO preload some data.
+    try {
+      dvs.add( testDSViewAdaptor() );
+    } catch (ConfigurationException e) {
+      e.printStackTrace();
+    }
     return dvs;
 
   }

@@ -71,7 +71,6 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.PushAction;
 import org.ensembl.mart.lib.config.QueryFilterSettings;
 
 /**
@@ -80,8 +79,6 @@ import org.ensembl.mart.lib.config.QueryFilterSettings;
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * 
- * <p>TODO use DSV to correctly render nodes 
-  * <p>TODO Finish documentation.
  */
 public class QueryTreeView extends JTree implements QueryChangeListener {
 
@@ -657,15 +654,10 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
 
 	}
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
-	 */
 	public void filterChanged(
 		Query sourceQuery,
 		Filter oldFilter,
 		Filter newFilter) {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**
