@@ -12,10 +12,14 @@ import org.ensembl.mart.explorer.*;
 public class QueryPanel extends JPanel {
     /** Creates new form QueryPanel */
     public QueryPanel( MartExplorerGUI martExplorerGUI) {
-        initGUI();
+        this();
         this.martExplorerGUI = martExplorerGUI;
     }
 
+    public QueryPanel() {
+      initGUI();
+      exportTab.setQueryPanel( this );
+    }
 
     /** This method is called from within the constructor to initialize the form. */
     private void initGUI() {
@@ -26,6 +30,12 @@ public class QueryPanel extends JPanel {
         queryTabs.add(filterTab, "Filters");
         queryTabs.add(attributeTab, "Attributes");
         queryTabs.add(exportTab, "Export");
+    }
+
+		public void clear() {
+			for (int i=0; i<inputPages.length; i++) {
+				inputPages[i].clear();
+      }
     }
 
     /** Loads a predefined query into the query panel so that the query parameters are displayed in the input pages. */
@@ -53,7 +63,7 @@ public class QueryPanel extends JPanel {
 
     private JTabbedPane queryTabs = new JTabbedPane();
     private DatabaseConfigPage databaseTab = new DatabaseConfigPage();
-    private ExportPanel exportTab = new ExportPanel( this );
+    private ExportPanel exportTab = new ExportPanel();
     private FilterPanel filterTab = new FilterPanel ();
     private AttributePanel attributeTab = new AttributePanel ();
     private QueryInputPage[] inputPages = new QueryInputPage[] {

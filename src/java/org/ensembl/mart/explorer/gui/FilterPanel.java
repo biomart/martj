@@ -151,7 +151,7 @@ public class FilterPanel extends JPanel
       if (o instanceof BasicFilter) {
         BasicFilter bf = (BasicFilter)o;
         if ("chromosome_id".equals(bf.getField()) && "=".equals(bf.getCondition())) {
-          chromosome.setSelectedItem(bf.getValue());
+          Tool.prepend( bf.getValue(), chromosome);
           chromosomeButton.setSelected(true);
         }
       }
@@ -159,7 +159,7 @@ public class FilterPanel extends JPanel
       if (o instanceof IDListFilter ) {
         
         IDListFilter f = (IDListFilter)o;
-        stableIDField.setSelectedItem( f.getField() );
+        Tool.prepend( f.getField(), stableIDField );
         stableIDButton.setSelected( true );
         switch( f.getMode() ) {
           
@@ -173,21 +173,37 @@ public class FilterPanel extends JPanel
           break;
           
         case IDListFilter.FILE_MODE:
-          stableIDFile.setSelectedItem( f.getFile().toString() );
+          Tool.prepend(f.getFile().toString(), stableIDFile );
           stableIDFileButton.setSelected( true );
           break;
           
         case IDListFilter.URL_MODE:
-          stableIDURL.setSelectedItem( f.getUrl().toString() );
+          Tool.prepend(f.getUrl().toString(), stableIDURL );
           stableIDURLButton.setSelected( true );
           break;
           
         default:
-          logger.info( "unknown IDListFilter");
+          logger.warn( "unknown IDListFilter: "+ f);
         }
       }
       
     }
+  }
+
+  /**
+   * Removes all selected values. 
+   */
+  public void clear(){
+		entireGenomeButton.setSelected( true );
+    Tool.clear( chromosome );
+    Tool.clear( stableIDField );
+    stableIDs.setText( "" );
+    stableIDStringButton.setSelected( false );
+    Tool.clear( stableIDFile );
+    stableIDFileButton.setSelected( false );
+    Tool.clear( stableIDURL );
+    stableIDURLButton.setSelected( false );
+
   }
 
   private JPanel chromosomePanel = new JPanel();

@@ -10,4 +10,9 @@ public interface QueryInputPage {
 
     /** Copies relevant parameters from the query into this page. */
     void updatePage(Query query);
+
+    /**
+     * Removes all selected values. 
+     */
+    void clear();
 }

@@ -83,6 +83,18 @@ public class DatabaseConfigPage extends JPanel implements org.ensembl.mart.explo
       Tool.prepend( query.getUser(), user );
     }
 
+    /**
+     * Removes all selected values. 
+     */
+    public void clear(){
+			Tool.clear( host );
+			Tool.clear( port );
+			Tool.clear( user );
+			password.setText( "" );
+			Tool.clear( database );
+
+    }
+
     private JPanel hostPanel = new JPanel();
     private JLabel hostLabel = new JLabel();
     private JPanel portPanel = new JPanel();

@@ -50,7 +50,7 @@ public class Engine {
         connStr.append("jdbc:mysql://");
         connStr.append( query.getHost() ).append("/");
         String p = query.getPort();
-        if ( p != null)
+        if ( p != null && !"".equals(p) )
             connStr.append(":").append( p );
         String db = query.getDatabase();
         if ( db != null && !db.equals(""))
@@ -77,7 +77,6 @@ public class Engine {
 
 
       init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
-      // test query!
       CompiledSQLQuery csql = new CompiledSQLQuery( query );
       String sql = csql.toSQL();
       logger.warn( "SQL = " +sql );

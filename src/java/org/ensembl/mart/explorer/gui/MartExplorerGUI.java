@@ -23,15 +23,17 @@ public class MartExplorerGUI extends JFrame {
   public MartExplorerGUI() {
     initGUI();
     setSize( new Dimension(WIDTH, HEIGHT) );
+		queryPanel.setMartExplorerGUI( this );
   }
 
 
   /** This method is called from within the constructor to initialize the form. */
   private void initGUI() {
     logger.info("start init");
-    newToolBarButton.setText("jButton1");
-    newToolBarButton.setLabel("New Query");
-    toolBar.add(newToolBarButton);
+    clearToolBarButton.setText("Clear");
+    clearToolBarButton.setLabel("Clear");
+    clearToolBarButton.setActionCommand("Clear");
+    toolBar.add(clearToolBarButton);
     toolBar.add(exportToolBarButton);
     exportToolBarButton.setText("jButton1");
     exportToolBarButton.setLabel("Export");
@@ -82,14 +84,19 @@ public class MartExplorerGUI extends JFrame {
     queryMenu.setText("Query");
     queryMenu.add(kakaMenuItem);
     queryMenu.add(executeMenuItem);
-    queryMenu.add(newMenuItem);
+    queryMenu.add(clearMenuItem);
     kakaMenuItem.setText("Kaka partial query");
     executeMenuItem.setText("Execute");
-    newMenuItem.setText("New");
-    newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newMenuItemActionPerformed(e);}});
+    clearMenuItem.setText("New");
+    clearMenuItem.setActionCommand("Clear");
+    clearMenuItem.setLabel("Clear");
+    clearMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newMenuItemActionPerformed(e);}});
     executeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){executeMenuItemActionPerformed(e);}});
     kakaMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){kakaMenuItemActionPerformed(e);}});
-    newToolBarButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){newToolBarButtonActionPerformed(e);}});
+    clearToolBarButton.addActionListener(
+        new ActionListener() {
+            public void actionPerformed(ActionEvent e) { clearToolBarButtonActionPerformed(e); }
+        });
   }
 
   /** Exit the Application */
@@ -120,7 +127,7 @@ public class MartExplorerGUI extends JFrame {
   }
 
   private void newQuery() {
-    logger.warn("todo");
+    queryPanel.clear();
   }
 
   private void executeQuery() {
@@ -183,7 +190,7 @@ public class MartExplorerGUI extends JFrame {
     kakaPartialQuery();
   }
 
-  public void newToolBarButtonActionPerformed(ActionEvent e) {
+  public void clearToolBarButtonActionPerformed(ActionEvent e) {
     newQuery();
   }
 
@@ -212,19 +219,19 @@ public class MartExplorerGUI extends JFrame {
 
   private Map resultWindows = new TreeMap();
   private static final Logger logger = Logger.getLogger(MartExplorerGUI.class.getName());
-  private QueryPanel queryPanel = new QueryPanel( this );
+  private QueryPanel queryPanel = new QueryPanel();
   private JMenuBar menuBar = new JMenuBar();
   private JMenu fileMenu = new JMenu();
   private JMenuItem exitMenuItem = new JMenuItem();
   private JMenu helpMenu = new JMenu();
   private JMenuItem aboutMenuItem = new JMenuItem();
   private JToolBar toolBar = new JToolBar();
-  private JButton newToolBarButton = new JButton();
+  private JButton clearToolBarButton = new JButton();
   private JButton exportToolBarButton = new JButton();
   private SummaryPanel summaryPanel = new SummaryPanel();
   private JMenu queryMenu = new JMenu();
   private JMenuItem kakaMenuItem = new JMenuItem();
   private JMenuItem executeMenuItem = new JMenuItem();
-  private JMenuItem newMenuItem = new JMenuItem();
+  private JMenuItem clearMenuItem = new JMenuItem();
   private Engine engine = new Engine();
 }

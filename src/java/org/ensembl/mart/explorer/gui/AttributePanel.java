@@ -39,6 +39,13 @@ public class AttributePanel extends JPanel implements org.ensembl.mart.explorer.
         this.ensemblGeneID = ensemblGeneID;
     }
 
+    /**
+     * Removes all selected values. 
+     */
+    public void clear(){
+			ensemblGeneIDCheckBox.setSelected( false );
+    }
+
     private JCheckBox ensemblGeneIDCheckBox = new JCheckBox();
     private FieldAttribute ensemblGeneID = new FieldAttribute("gene_stable_id");
 }

@@ -17,10 +17,15 @@ import javax.swing.ButtonGroup;
 
 /** Input panel where user selects export format, compression and file name. */
 public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
+
     /** Creates new form ExportPanel */
     public ExportPanel(QueryPanel queryPanel) {
-        initGUI();
+        this();
         this.queryPanel = queryPanel;
+    }
+
+    public ExportPanel() {
+      initGUI();
     }
 
     /** This method is called from within the constructor to initialize the form. */
@@ -115,6 +120,17 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
     public void setQueryPanel(QueryPanel queryPanel){
             this.queryPanel = queryPanel;
         }
+
+    /**
+     * Removes all selected values. 
+     */
+    public void clear(){
+			tsvFormatButton.setSelected( true );
+      noCompressionButton.setSelected( true );
+      exportToWindowButton.setSelected( true );
+			Tool.clear( windowName );
+      Tool.clear( fileName );
+    }
 
     private JPanel fileNamePanel = new JPanel();
     private JLabel fileNameLabel = new JLabel();
