@@ -38,10 +38,6 @@ import org.xml.sax.SAXException;
 public class ClasspathDTDEntityResolver implements EntityResolver {
 
    private final String MARTJARPROTOCAL = "classpath";
-   private final String DATASETVIEW = "DatasetView\\.dtd";
-   private final String MARTREGISTRY = "MartRegistry\\.dtd";
-   private final String MARTJARDATASETVIEWDTD = "data/XML/DatasetView.dtd";
-   private final String MARTJARMARTREGISTRYDTD = "data/XML/MartRegistry.dtd";
    
    private Logger logger = Logger.getLogger(ClasspathDTDEntityResolver.class.getName());
    
