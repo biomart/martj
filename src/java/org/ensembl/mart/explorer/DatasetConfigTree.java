@@ -67,8 +67,6 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 	 */
 	public void update() {
 
-    System.out.println("SHOW TREE");
-
 		boolean optional = manager.isAdvancedOptionsEnabled();
 		rootNode.removeAllChildren();
 		logger.fine("optional=" + optional);
