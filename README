@@ -3,48 +3,66 @@ README for MartExplorer
 
 MartExplorer provides access to Mart databases via several means:
 
--An application with a graphical user interface and a command line 
- mode for end users.
+- An application with a graphical user interface.
 
--A java (jar) library for programmers.
+- A command line tool.
+
+- A java library for programmers.
 
 
 
-
-APPLICATION USER
-----------------
-
-RUNNING THE PROGRAM
+REQUIREMENTS
+------------
 
 You must have java installed on your computer and the JVM ("java"
 program) should be included in your path.
+
+You must have network access to the database(s) you want to retrieve
+data from.
+
+
+
+RUNNING THE GRAPHICAL APPLICATION
+---------------------------------
 
 All users can start the application from a shell like this:
 
    java -jar mart-explorer-0.01/lib/mart-explorer.jar
 
+Un*x users can also run the application by running the script
+martexplorer.sh. Do this by either:
+
+a) prompt>sh bin/martgui.sh
+
+b) prompt>chmod +x bin/martgui.sh (make it executable, only have to do this once).
+   prompt>bin/martexplorer.sh 
+
 Windows users might be able to 'click' on the file
 ./lib/mart-explorer.jar.
 
 
-Un*x users can also run the application by running the script
-martexplorer.sh. Do this by either:
 
-a) prompt>chmod +x bin/martexplorer.sh (make it executable, only have to do this once).
+RUNNING THE COMMAND LINE TOOL
+-----------------------------
 
-   prompt>bin/martexplorer.sh 
-   OR 
-   prompt>martexplorer.sh (if ./bin is in your path.)
+All users can start the application from a shell like this so long as
+they have the classpath set up to include ./lib/*.jar:
 
-b) prompt>sh bin/martexplorer.sh
+   java org.ensembl.mart.explorer.MartExplorerTool
+
+Un*x users can also run the tool by running the script
+martcl.sh. Do this by either:
+
+a) prompt>sh bin/martgui.sh
+
+b) prompt>chmod +x bin/martcl.sh (make it executable, only have to do this once).
+   prompt>bin/martcl.sh 
 
 
-   
 
 
-
-LIBRARY USER
-------------
+USING THE LIBRARY
+-----------------
 
 Include these jars in your classpath:
   - martexplorer.jar
