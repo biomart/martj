@@ -29,38 +29,51 @@ import java.util.TreeMap;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class FilterPage {
-
-/**
- * Constructor for a nameless, descriptionless FilterPage.
+	
+	/*
+ * FilterPages must have an internalName, so disable parameterless construction
  */
-public FilterPage() {
-	this("", "");
+private FilterPage() throws ConfigurationException {
+	this("", "", "");
 }
 
 /**
- * Constructs a FilterPage object named by displayName.
+ * Constructs a FilterPage object named by internalName.
  * 
- * @param displayName String name to represent the FilterPage
+ * @param internalName String name to internally represent the FilterPage
  */
-public FilterPage(String displayName) {
-	this(displayName, "");
+public FilterPage(String internalName) throws ConfigurationException {
+	this(internalName, "", "");
 }
 
 /**
- * Constructs a FilterPage object named by displayName, with a description.
- * Note, FilterPages can have null displayNames.
+ * Constructs a FilterPage object named by internalName, with a displayName, and a description.
  * 
+ * @param internalName String name to internally represent the FilterPage. Must not be null.
  * @param displayName String name to represent the FilterPage
  * @param description String description of the FilterPage
+ * @throws ConfigurationException when the internalName is null or empty
  */
-public FilterPage(String displayName, String description) {
+public FilterPage(String internalName, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals(""))
+	  throw new ConfigurationException("FilterPage must have an internalName");
+	  
+	this.internalName = internalName;  
 	this.displayName = displayName;
 	this.description = description;
 }
 
 /**
+ * Returns the internalName to internally represent the FilterPage.
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
  * Returns the displayName of the FilterPage
- * Note, may be null.
  * 
  * @return String displayName
  */
@@ -85,7 +98,7 @@ public String getDescription() {
 public void addFilterGroup(FilterGroup fg) {
 	Integer fgRankInt = new Integer(fcRank);
 	filterGroups.put(fgRankInt, fg);
-	filterGroupNameMap.put(fg.getDisplayName(), fgRankInt);
+	filterGroupNameMap.put(fg.getInternalName(), fgRankInt);
 }
 
 /**
@@ -99,7 +112,7 @@ public void setFilterGroups(FilterGroup[] fg) {
 	for (int i = 0, n=fg.length; i < n; i++) {
 		Integer fgRankInt = new Integer(fcRank);
 		filterGroups.put(fgRankInt, fg[i]);
-		filterGroupNameMap.put(fg[i].getDisplayName(), fgRankInt);		
+		filterGroupNameMap.put(fg[i].getInternalName(), fgRankInt);		
 	}
 }
 
@@ -115,44 +128,44 @@ public FilterGroup[] getFilterGroups() {
 }
 
 /**
- * Returns a particular FilterGroup object, named by the given displayName.
+ * Returns a particular FilterGroup object, named by the given internalName.
  * 
- * @param displayName String name of the FilterGroup
+ * @param internalName String name of the FilterGroup
  * @return FilterGroup object
  */
-public FilterGroup getFilterGroupByName(String displayName) {
-	 return (FilterGroup) filterGroups.get( (Integer) filterGroupNameMap.get(displayName) );
+public FilterGroup getFilterGroupByName(String internalName) {
+	 return (FilterGroup) filterGroups.get( (Integer) filterGroupNameMap.get(internalName) );
 }
 
 /**
  * Check whether the FilterPage contains a given FilterGroup.
  * 
- * @param displayName String name of the given FilterGroup
+ * @param internalName String name of the given FilterGroup
  * @return boolean, true if FilterPage contains the FilterGroup, false if not
  */
-public boolean containsFilterGroup(String displayName) {
-   return filterGroupNameMap.containsKey(displayName);
+public boolean containsFilterGroup(String internalName) {
+   return filterGroupNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the FilterPage for a particular UIFilterDescription.
 	* 
-	* @param displayName name of the requested UIFilterDescription
+	* @param internalName name of the requested UIFilterDescription
 	* @return UIFilterDescription object
 	* @throws ConfigurationException when the UIFilterDescription is not found.  Note, it is best to first call containsUIFilterDescription,
 	*                   as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 	*/
-	 public UIFilterDescription getUIFilterDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIFilterDescription getUIFilterDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+			if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 					FilterGroup group = (FilterGroup) filterGroups.get( (Integer) iter.next() );
-					if (group.containsUIFilterDescription(displayName)) {
-						lastFilt = group.getUIFilterDescriptionByName(displayName);
+					if (group.containsUIFilterDescription(internalName)) {
+						lastFilt = group.getUIFilterDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -161,7 +174,7 @@ public boolean containsFilterGroup(String displayName) {
 			if (found)
 				 return lastFilt;
 			else
-				 throw new ConfigurationException("Could not find UIFilterDescription "+displayName+" in this FilterPage");
+				 throw new ConfigurationException("Could not find UIFilterDescription "+internalName+" in this FilterPage");
 	 }
    
 	 /**
@@ -169,20 +182,20 @@ public boolean containsFilterGroup(String displayName) {
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
 		*  found, this method caches the UIFilterDescription it has found.
 		* 
-		* @param displayName name of the requested UIFilterDescription object
+		* @param internalName name of the requested UIFilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIFilterDescription(String displayName) throws ConfigurationException {
+	 public boolean containsUIFilterDescription(String internalName) throws ConfigurationException {
 		boolean found = false;
 		
-		if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 				FilterGroup group = (FilterGroup) filterGroups.get( (Integer) iter.next() );
-				if (group.containsUIFilterDescription(displayName)) {
-					lastFilt = group.getUIFilterDescriptionByName(displayName);
+				if (group.containsUIFilterDescription(internalName)) {
+					lastFilt = group.getUIFilterDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -195,14 +208,15 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);	buf.append(" displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append(", FilterCollections=").append(filterGroups);
 	buf.append("]");
 	return buf.toString();
 }
 
-private final String displayName, description;
+private final String displayName, description, internalName;
 
 private int fcRank = 0;
 private TreeMap filterGroups = new TreeMap();

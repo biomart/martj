@@ -29,27 +29,43 @@ import java.util.TreeMap;
 public class AttributeCollection {
 
 /*
- * AttributeCollections must have a displayName, type, and maxSelect
+ * AttributeCollections must have a internalName, type, and maxSelect
  * so disable parameterless constructor
  */
-private AttributeCollection() {
-	this("", "", "", 0); // will never happen
+private AttributeCollection() throws ConfigurationException {
+	this("", "", 0, "", ""); // will never happen
 }
 
 /**
- * Constructor for a AttributeCollection named by displayName, of type type, with maxSelect value maxSelect.
- * May have description description.
+ * Constructor for an AttributeCollection named by internalName, with a type and maxSelect value.
  * 
- * @param displayName String name to represent the AttributeCollection.  Must not be null
- * @param description String description of the AttributeCollection
+* @param internalName String name to internally represent the AttributeCollection.  Must not be null
  * @param type String type of the AttributeCollection.  Must not be null
  * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
- * @throws RuntimeException if required parameters are not defined.
+ * @throws ConfigurationException when the required values are null or empty.
  */
-public AttributeCollection(String displayName, String description, String type, int maxSelect) {
-	if (displayName == null || type == null || maxSelect < 1)
-	throw new RuntimeException("AttributeCollections must contain a displayName, type, and maxSelect value");
+public AttributeCollection(String internalName, String type, int maxSelect) throws ConfigurationException {
+	this(internalName, type, maxSelect, "",  "");
+}
+
+/**
+ * Constructor for a AttributeCollection named by internalName, with a displayName, type and maxSelect value.
+ * May have description description.
+ * 
+ * @param internalName String name to internally represent the AttributeCollection.  Must not be null
+ * @param type String type of the AttributeCollection.  Must not be null
+ * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
+ * @param displayName String name to represent the AttributeCollection.
+ * @param description String description of the AttributeCollection
+ * @throws ConfigurationException if required parameters are null or empty.
+ */
+public AttributeCollection(String internalName, String type, int maxSelect, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals("")
+	    || type == null || type.equals("") 
+	    || maxSelect < 1)
+	throw new ConfigurationException("AttributeCollections must contain an internalName, type, and maxSelect value");
 	
+	this.internalName = internalName;
 	this.displayName = displayName;
 	this.description = description;
 	this.type = type;
@@ -57,9 +73,18 @@ public AttributeCollection(String displayName, String description, String type, 
 }
 
 /**
+ * Returns the internalName of the AttributeCollection.
+ * 
+ * @return String internalName of the AttributeCollection
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
  * Returns the displayName of the AttributeCollection.
  * 
- * @return String name of the AttributeCollection
+ * @return String displayName.
  */
 public String getDisplayName() {
 	return displayName;
@@ -100,7 +125,7 @@ public int getMaxSelect() {
 public void addUIAttribute(UIAttributeDescription a) {
 	Integer aRankInt = new Integer(aRank);
 	uiAttributes.put(aRankInt, a);
-	uiAttributeNameMap.put(a.getDisplayName(), aRankInt);
+	uiAttributeNameMap.put(a.getInternalName(), aRankInt);
 	aRank++;
 }
 
@@ -114,7 +139,7 @@ public void setUIAttributes(UIAttributeDescription[] a) {
 	for (int i = 0, n=a.length; i < n; i++) {
 		Integer aRankInt = new Integer(aRank);
 		uiAttributes.put(aRankInt, a[i]);
-		uiAttributeNameMap.put(a[i].getDisplayName(), aRankInt);
+		uiAttributeNameMap.put(a[i].getInternalName(), aRankInt);
 		aRank++;		
 	}
 }
@@ -131,43 +156,43 @@ public UIAttributeDescription[] getUIAttributes() {
 }
 
 /**
- * Returns a particular UIAttributeDescription named by displayName.
+ * Returns a particular UIAttributeDescription, named by internalName.
  * 
- * @param displayName String name of the requested UIAttributeDescription
+ * @param internalName String name of the requested UIAttributeDescription
  * @return UIAttributeDescription object
  */
-public UIAttributeDescription getUIAttributeByName(String displayName) {
-	return (UIAttributeDescription) uiAttributes.get((Integer) uiAttributeNameMap.get(displayName) );
+public UIAttributeDescription getUIAttributeByName(String internalName) {
+	return (UIAttributeDescription) uiAttributes.get((Integer) uiAttributeNameMap.get(internalName) );
 }
 
 /**
  * Check if a particular UIAttributeDescription object is contained within the AttributeCollection.
  * 
- * @param displayName String name of the requested UIAttributeDescription
+ * @param internalName String name of the requested UIAttributeDescription
  * @return boolean, true if UIAttributeDescription is contained within the AttributeCollection, false if not
  */
-public boolean containsUIAttribute(String displayName) {
-	return uiAttributeNameMap.containsKey(displayName);
+public boolean containsUIAttribute(String internalName) {
+	return uiAttributeNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the AttributeCollection for a particular UIAttributeDescription.
 	* 
-	* @param displayName name of the requested UIAttributeDescription
+	* @param internalName name of the requested UIAttributeDescription
 	* @return UIAttributeDescription object
 	* @throws ConfigurationException when the UIAttributeDescription is not found.  Note, it is best to first call containsUIAttributeDescription,
 	*                   as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 	*/
-	 public UIAttributeDescription getUIAttributeDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+			if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) uiAttributes.keySet().iterator(); iter.hasNext();) {
 					UIAttributeDescription attribute = (UIAttributeDescription) uiAttributes.get( (Integer) iter.next() );
-					if (attribute.getDisplayName().equals(displayName)) {
+					if (attribute.getInternalName().equals(internalName)) {
 						lastAtt = attribute;
 						found = true;
 						break;
@@ -177,7 +202,7 @@ public boolean containsUIAttribute(String displayName) {
 			if (found)
 				 return lastAtt;
 			else
-				 throw new ConfigurationException("Could not find UIAttributeDescription "+displayName+" in this AttributeCollection");
+				 throw new ConfigurationException("Could not find UIAttributeDescription "+internalName+" in this AttributeCollection");
 	 }
    
 	 /**
@@ -185,19 +210,19 @@ public boolean containsUIAttribute(String displayName) {
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
 		*  found, this method caches the UIAttributeDescription it has found.
 		* 
-		* @param displayName name of the requested UIAttributeDescription object
+		* @param internalName name of the requested UIAttributeDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIAttributeDescription(String displayName) {
+	 public boolean containsUIAttributeDescription(String internalName) {
 		boolean found = false;
 		
-		if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) uiAttributes.keySet().iterator(); iter.hasNext();) {
 				UIAttributeDescription attribute = (UIAttributeDescription) uiAttributes.get( (Integer) iter.next() );
-				if (attribute.getDisplayName().equals(displayName)) {
+				if (attribute.getInternalName().equals(internalName)) {
 					lastAtt = attribute;
 					found = true;
 					break;
@@ -211,7 +236,8 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
   buf.append(", type=").append(type);
   buf.append(", maxSelect=").append(maxSelect);
@@ -221,7 +247,7 @@ public String toString() {
   return buf.toString();	
 }
 
-private final String displayName, description, type;
+private final String internalName, displayName, description, type;
 private final int maxSelect;
 private int aRank = 0;
 private TreeMap uiAttributes = new TreeMap();

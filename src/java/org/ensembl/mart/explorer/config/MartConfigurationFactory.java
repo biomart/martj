@@ -49,7 +49,7 @@ public class MartConfigurationFactory {
   	String dmartName = "hsapiens_ensemblgene";
   	String[] stars = new String[] {"hsapiens_ensemblgene", "hsapiens_ensembltranscript"} ;
   	Dataset d = new Dataset(dmartName, displayName);
-  	d.setStars(stars);
+  	d.setStarBases(stars);
   	d.setPrimaryKeys(keys);
   	martconf.addDataset(d);
   	
@@ -57,7 +57,7 @@ public class MartConfigurationFactory {
 		dmartName = "hsapiens_estgene";
   	stars = new String[] {"hsapiens_estgene", "hsapiens_esttranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
   	
@@ -65,7 +65,7 @@ public class MartConfigurationFactory {
 		dmartName = "hsapiens_vegagene";
   	stars = new String[] {"hsapiens_vegagene", "hsapiens_vegatranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
   	
@@ -73,7 +73,7 @@ public class MartConfigurationFactory {
 		dmartName = "mmusculus_ensemblgene";
 		stars = new String[] {"mmusculus_ensemblgene", "mmusculus_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -81,7 +81,7 @@ public class MartConfigurationFactory {
 		dmartName = "mmusculus_estgene";		
 		stars = new String[] {"mmusculus_estgene", "mmusculus_esttranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -89,7 +89,7 @@ public class MartConfigurationFactory {
 		dmartName = "rnorvegicus_ensemblgene";				
 		stars = new String[] {"rnorvegicus_ensemblgene", "rnorvegicus_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -97,7 +97,7 @@ public class MartConfigurationFactory {
 		dmartName = "rnorvegicus_estgene";
 		stars = new String[] {"rnorvegicus_estgene", "rnorvegicus_esttranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -105,7 +105,7 @@ public class MartConfigurationFactory {
 		dmartName = "fugu_ensemblgene";
 		stars = new String[] {"frubripes_ensemblgene", "frubripes_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 				
@@ -113,7 +113,7 @@ public class MartConfigurationFactory {
 		dmartName = "agambiae_ensemblgene";
 		stars = new String[] {"agambiae_ensemblgene", "agambiae_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 				
@@ -121,7 +121,7 @@ public class MartConfigurationFactory {
 		dmartName = "agambiae_estgene";
 		stars = new String[] {"agambiae_estgene", "agambiae_esttranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -129,7 +129,7 @@ public class MartConfigurationFactory {
 		dmartName = "dmelanogaster_ensemblgene";
 		stars = new String[] {"dmelanogaster_ensemblgene", "dmelanogaster_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -137,7 +137,7 @@ public class MartConfigurationFactory {
 		dmartName = "drerio_ensemblgene";
 		stars = new String[] {"drerio_ensemblgene", "drerio_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -145,7 +145,7 @@ public class MartConfigurationFactory {
 		dmartName = "cbriggsae_ensemblgene";
 		stars = new String[] {"cbriggsae_ensemblgene", "cbriggsae_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -153,7 +153,7 @@ public class MartConfigurationFactory {
 		dmartName = "cbriggsae_estgene";
 		stars = new String[] {"cbriggsae_estgene", "cbriggsae_esttranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 		
@@ -161,7 +161,7 @@ public class MartConfigurationFactory {
 		dmartName = "celegans_ensemblgene";
 		stars = new String[] {"celegans_ensemblgene", "celegans_ensembltranscript"};
 		d = new Dataset(dmartName, displayName);
-		d.setStars(stars);
+		d.setStarBases(stars);
 		d.setPrimaryKeys(keys);
 		martconf.addDataset(d);
 				

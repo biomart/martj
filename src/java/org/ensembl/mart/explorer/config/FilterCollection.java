@@ -31,31 +31,54 @@ import java.util.TreeMap;
 public class FilterCollection {
 
 /*
- * FilterCollection must have a displayName, and type.  So disable parameterless constructor
+ * FilterCollection must have a internalName, and type.  So disable parameterless constructor
  */
-private FilterCollection() {
-	this("", "", "");
+private FilterCollection() throws ConfigurationException {
+	this("", "", "", "");
 }
 
 /**
- * Constructor for a FilterCollection named by displayName, of type type, with an optional description.
+ * Constructor for a FilterCollection named by intenalName, with a displayName, type.
  * 
- * @param displayName String name to represent the FilterCollection.  Must not be null.
- * @param description String description of the FilterCollection.
+ * @param internalName String name to internally represent the FilterCollection.  Must not be null.
  * @param type String type of the FilterCollection. Must not be null.
- * @throws RuntimeException when paremeter requirements are not met
+ * @throws ConfigurationException when paremeter requirements are not met
  */
-public FilterCollection(String displayName, String description, String type) {
-	if (displayName == null || type == null)
-	  throw new RuntimeException("FilterCollections must have a displayName and type");
+public FilterCollection(String internalName,  String type) throws ConfigurationException {
+	this(internalName, type, "", "");
+}
+
+/**
+ * Constructor for a FilterCollection named by intenalName, with a displayName, type, and optional description.
+ * 
+ * @param internalName String name to internally represent the FilterCollection.  Must not be null or empty.
+ * @param type String type of the FilterCollection. Must not be null or empty.
+ * @param displayName String name to represent the FilterCollection.
+ * @param description String description of the FilterCollection.
+ * @throws ConfigurationException when paremeters are null or empty
+ */
+public FilterCollection(String internalName,  String type, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals("") 
+	    || type == null || type.equals(""))
+	  throw new ConfigurationException("FilterCollections must have an internalName and type");
 	  
+	  this.internalName = internalName;
 	  this.displayName = displayName;
 	  this.description = description;
 	  this.type = type;
 }
 
 /**
- * Returns the displayName of the FilterCollection
+ * Returns the internalName of the FilterCollection
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
+ * Returns the displayName of the FilterGroup.
  * 
  * @return String displayName
  */
@@ -89,7 +112,7 @@ public String getType() {
 public void addUIFilter(UIFilterDescription f) {
 	Integer fRankInt = new Integer(fRank);
 	uiFilters.put(fRankInt, f);
-	uiFilterNameMap.put(f.getDisplayName(), fRankInt);
+	uiFilterNameMap.put(f.getInternalName(), fRankInt);
 	fRank++;
 }
 
@@ -104,7 +127,7 @@ public void setUIFilters(UIFilterDescription[] f) {
 	for (int i = 0, n=f.length; i < n; i++) {
 		Integer fRankInt = new Integer(fRank);
 		uiFilters.put(fRankInt, f[i]);
-		uiFilterNameMap.put(f[i].getDisplayName(), fRankInt);
+		uiFilterNameMap.put(f[i].getInternalName(), fRankInt);
 		fRank++;		
 	}
 }
@@ -121,43 +144,43 @@ public UIFilterDescription[] getUIFilters() {
 }
 
 /**
- * Returns a specific UIFilterDescription, named by displayName.
+ * Returns a specific UIFilterDescription, named by internalName.
  * 
- * @param displayName String name of the requested UIFilterDescription
+ * @param internalName String name of the requested UIFilterDescription
  * @return UIFilterDescription object
  */
-public UIFilterDescription getUIFilterbyName(String displayName) {
-	return (UIFilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(displayName));
+public UIFilterDescription getUIFilterbyName(String internalName) {
+	return (UIFilterDescription) uiFilters.get( (Integer) uiFilterNameMap.get(internalName));
 }
 
 /**
  * Check if this FilterCollection contains a specific UIFilterDescription.
  * 
- * @param displayName String name of the requested UIFilterDescription
+ * @param internalName String name of the requested UIFilterDescription
  * @return boolean, true if FilterCollection contains the UIFilterDescription, false if not.
  */
-public boolean containsUIFilter(String displayName) {
-	return uiFilterNameMap.containsKey(displayName);
+public boolean containsUIFilter(String internalName) {
+	return uiFilterNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the FilterCollection for a particular UIFilterDescription.
 	* 
-	* @param displayName name of the requested UIFilterDescription
+	* @param internalName name of the requested UIFilterDescription
 	* @return UIFilterDescription object
 	* @throws ConfigurationException when the UIFilterDescription is not found.  Note, it is best to first call containsUIFilterDescription,
 	*                   as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 	*/
-	 public UIFilterDescription getUIFilterDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIFilterDescription getUIFilterDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+			if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) uiFilters.keySet().iterator(); iter.hasNext();) {
 					UIFilterDescription filter = (UIFilterDescription) uiFilters.get( (Integer) iter.next() );
-					if (filter.getDisplayName().equals(displayName)) {
+					if (filter.getInternalName().equals(internalName)) {
 						lastFilt = filter;
 						found = true;
 						break;
@@ -167,7 +190,7 @@ public boolean containsUIFilter(String displayName) {
 			if (found)
 				 return lastFilt;
 			else
-				 throw new ConfigurationException("Could not find UIFilterDescription "+displayName+" in this FilterCollection");
+				 throw new ConfigurationException("Could not find UIFilterDescription "+internalName+" in this FilterCollection");
 	 }
    
 	 /**
@@ -175,19 +198,19 @@ public boolean containsUIFilter(String displayName) {
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
 		*  found, this method caches the UIFilterDescription it has found.
 		* 
-		* @param displayName name of the requested UIFilterDescription object
+		* @param internalName name of the requested UIFilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIFilterDescription(String displayName) {
+	 public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 		
-		if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) uiFilters.keySet().iterator(); iter.hasNext();) {
 				UIFilterDescription filter = (UIFilterDescription) uiFilters.get( (Integer) iter.next() );
-				if (filter.getDisplayName().equals(displayName)) {
+				if (filter.getInternalName().equals(internalName)) {
 					lastFilt = filter;
 					found = true;
 					break;
@@ -201,7 +224,8 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append(", type=").append(type);
 	buf.append(", UIFilters=").append(uiFilters);
@@ -210,7 +234,7 @@ public String toString() {
 	return buf.toString();
 }
 
-private final String displayName, description, type;
+private final String internalName, displayName, description, type;
 private int fRank = 0;
 private TreeMap uiFilters = new TreeMap();
 private Hashtable uiFilterNameMap = new Hashtable();

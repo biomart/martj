@@ -28,19 +28,45 @@ package org.ensembl.mart.explorer.config;
 public class UIFilterDescription {
 
 	/*
-	 * UIFilterDescriptions require a displayName, fieldName, type, and qualifier.  disable parameterless constructor
+	 * UIFilterDescriptions require a internalName, fieldName, type, and qualifier.  disable parameterless constructor
 	 */
-	private UIFilterDescription() {
-		this("", "", "", "", "", ""); // this will never happen
+	private UIFilterDescription() throws ConfigurationException {
+		this("", "", "", "", "", "", ""); // this will never happen
 	}
 
-	public UIFilterDescription(String displayName, String fieldName, String type,	String qualifier,	String tableConstraint,	String description) {
-		if (displayName == null
-			|| fieldName == null
-			|| type == null
-			|| qualifier == null)
-			throw new RuntimeException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
+/**
+ * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
+ * 
+ * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
+ * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
+ * @param type String type of filter.  Must not be null or empty.
+ * @param qualifier String qualifier to use in a SQL where clause. Must not be null or empty.
+ * @throws ConfigurationException when required values are null or empty.
+ */
+  public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier) throws ConfigurationException {
+  	this(internalName, fieldName, type, qualifier, "", "", "");
+  }
+  
+	/**
+	 * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
+	 * 
+	 * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
+	 * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
+	 * @param type String type of filter.  Must not be null or empty.
+	 * @param qualifier String qualifier to use in a SQL where clause. Must not be null displayName.
+	 * @param displayName String name to display in a UI
+	 * @param tableConstraint String table basename to constrain SQL fieldName
+	 * @param description String description of the Filter
+	 * @throws ConfigurationException when required values are null or empty.
+	 */
+	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	String description) throws ConfigurationException {
+		if (internalName == null || internalName.equals("") 
+		  || fieldName == null || fieldName.equals("")
+			|| type == null || type.equals("")
+			|| qualifier == null || qualifier.equals("")) 
+			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
 
+    this.internalName = internalName;
 		this.displayName = displayName;
 		this.fieldName = fieldName;
 		this.type = type;
@@ -49,26 +75,64 @@ public class UIFilterDescription {
 		this.description = description;
 	}
 
-	public String getDisplayName() {
-		return displayName;
+/**
+ * Returns the InternalName of the UIFilterDescription.
+ * 
+ * @return String internalName
+ */
+	public String getInternalName() {
+		return internalName;
 	}
 
+/**
+ * Returns the displayName of the UIFilterDescription.
+ * 
+ * @return String displayName
+ */
+  public String getDisplayName() {
+  	return displayName;
+  }
+  
+  /**
+   * returns the fieldName.
+   * @return String fieldName
+   */
 	public String getFieldName() {
 		return fieldName;
 	}
 
+/**
+ * Returns the type.
+ * 
+ * @return String type.
+ */
 	public String getType() {
 		return type;
 	}
 
+  /**
+   * Returns the qualifier to use SQL where clause.
+   * 
+   * @return String qualifier
+   */
 	public String getQualifier() {
 		return qualifier;
 	}
 
+	/**
+		 * Returns the tableConstraint for the fieldName.
+		 * 
+		 * @return String tableConstraint
+		 */
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
 
+/**
+ * Returns the description.
+ * 
+ * @return String description
+ */
 	public String getDescription() {
 		return description;
 	}
@@ -77,7 +141,8 @@ public class UIFilterDescription {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" displayName=").append(displayName);
+		buf.append(" internalName=").append(internalName);
+		buf.append(", displayName=").append(displayName);
 		buf.append(", fieldName=").append(fieldName);
 		buf.append(", type=").append(type);
 		buf.append(", qualifier=").append(qualifier);
@@ -88,5 +153,5 @@ public class UIFilterDescription {
 		return buf.toString();
 	}
 
-	private final String displayName,	fieldName,	type,	qualifier,	tableConstraint,	description;
+	private final String internalName, displayName,	fieldName,	type,	qualifier,	tableConstraint,	description;
 }

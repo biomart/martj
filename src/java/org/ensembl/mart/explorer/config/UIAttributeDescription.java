@@ -27,36 +27,58 @@ package org.ensembl.mart.explorer.config;
 public class UIAttributeDescription {
 
 /*
- * UIAttributeDescriptions must contain a displayName and fieldName.  Disable parameterless construction.
+ * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
  */
-private UIAttributeDescription() {
-	this("", "", 0, "", "", "", "", ""); // this will never happen
+private UIAttributeDescription() throws ConfigurationException {
+	this("", "", "", 0, "", "", "", "", ""); // this will never happen
 }
 
 /**
+ * Constructs a UIAttributeDescription with just the internalName and fieldName.
+ * 
+ * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty
+ * @param fieldName String name of the field in the mart for this Attribute. Must not be null or empty.
+ * @throws ConfigurationException when values are null or empty.
+ */
+public UIAttributeDescription(String internalName, String fieldName) throws ConfigurationException {
+	this(internalName, fieldName,"", 0, "", "", "", "", "");
+}
+/**
  * Constructor for a UIAttributeDescription.
  * 
- * @param displayName String name of the UIAttribute.  Must not be null.
- * @param fieldName String name of the field in the mart for this attribute.  Must not be null.
+ * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty.
+* @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
+ * @param displayName String name of the UIAttributeDescription.
  * @param maxLength Int maximum possible length of the field in the mart.
  * @param tableConstraint String base name of a specific table containing this UIAttribute.
  * @param description String description of this UIAttribute.
  * @param source String source for the data for this UIAttribute.
  * @param homePageURL String Web Homepage for the source.
  * @param linkoutURL String Base for a link to a specific entry in a source website.
+ * @throws ConfigurationException when required parameters are null or empty
  */
-public UIAttributeDescription(String displayName, String fieldName, int maxLength, String tableConstraint, String description, String source, String homePageURL, String linkoutURL) {
-	if(displayName == null || fieldName == null)
-	  throw new RuntimeException("UIAttributeDescriptions require a displayName, and fieldName");
+public UIAttributeDescription(String internalName, String fieldName, String displayName, int maxLength, String tableConstraint, String description, String source, String homePageURL, String linkoutURL) throws ConfigurationException {
+	if(internalName == null || internalName.equals("") || fieldName == null || fieldName.equals(""))
+	  throw new ConfigurationException("UIAttributeDescriptions require a displayName, and fieldName");
 	  
+	  this.internalName = internalName;
 	this.displayName = displayName;
 	this.fieldName = fieldName;
 	this.maxLength = maxLength;
 	this.tableConstraint = tableConstraint;
 	this.description = description;
 	this.source = source;
-	this.homePageURL = homePageURL;
+	this.homepageURL = homePageURL;
 	this.linkoutURL = linkoutURL;
+}
+
+/**
+ * Returns the internalName.
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
 }
 
 /**
@@ -119,7 +141,7 @@ public String getSource() {
  * @return String homePageURL.
  */
 public String getHomePageURL() {
-	return homePageURL;
+	return homepageURL;
 }
 
 /**
@@ -134,19 +156,20 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", fieldName=").append(fieldName);
 	buf.append(", maxLength=").append(maxLength);
 	buf.append(", tableConstraint=").append(tableConstraint);
 	buf.append(", description=").append(description);
 	buf.append(", source=").append(source);
-	buf.append(", homePageURL=").append(homePageURL);
+	buf.append(", homePageURL=").append(homepageURL);
 	buf.append(", linkoutURL=").append(linkoutURL);
 	buf.append("]");
 	
 	return buf.toString();
 }
 
-public final String displayName, fieldName, tableConstraint, description, source, homePageURL, linkoutURL;
+public final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
 public final int maxLength; 
 }

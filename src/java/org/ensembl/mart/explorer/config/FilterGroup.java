@@ -31,35 +31,51 @@ import java.util.TreeMap;
  */
 public class FilterGroup {
 
-/**
- * Constructor for a nameless, descriptionless FilterGroup.
+/*
+ * FilterGroups must have an internalName, so disable parameterless construction.
  */
-public FilterGroup() {
-	this("","");
+public FilterGroup() throws ConfigurationException {
+	this("","",""); // will never happen
 }
 
 /**
- * Constructor for a FilterGroup named by displayName.
+ * Constructor for a FilterGroup represented internally by internalName.
  * 
- * @param displayName name to represent the FilterGroup
+ * @param internalName name to internally represent the FilterGroup
+ * @throws ConfigurationException when internalName is null or empty
  */
-public FilterGroup(String displayName) {
-	this(displayName, "");
+public FilterGroup(String internalName) throws ConfigurationException {
+	this(internalName, "", "");
 }
 
 /**
- * Constructor for a FilterGroup named by displayName, with a description.
+ * Constructor for a FilterGroup named internally by internalName, with a displayName, and a description.
  * 
+ * @param internalName String name to internally represent the filterGroup. Must not be null.
  * @param displayName
  * @param description
+ * @throws ConfigurationException when internalName is null or empty.
  */
-public FilterGroup(String displayName, String description) {
+public FilterGroup(String internalName, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals(""))
+	  throw new ConfigurationException("FilterGroup must contain an internalName");
+	
+	this.internalName = internalName;
 	this.displayName = displayName;
 	this.description = description;
 }
 
 /**
- * Returns the displayName of the FilterGroup (May be null)
+ * Returns the internalName of the FilterGroup
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
+ * Returns the displayName of the FilterGroup.
  * 
  * @return String displayName
  */
@@ -84,7 +100,7 @@ public String getDescription() {
 public void addFilterCollection(FilterCollection f) {
 	Integer cRankInt = new Integer(cRank);
 	filterCollections.put(cRankInt, f);
-	filterCollectionNameMap.put(f.getDisplayName(), cRankInt);
+	filterCollectionNameMap.put(f.getInternalName(), cRankInt);
 	cRank++;
 }
 
@@ -98,7 +114,7 @@ public void setFilterCollections(FilterCollection[] f) {
 	for (int i = 0, n=f.length; i < n; i++) {
 		Integer cRankInt = new Integer(cRank);
 		filterCollections.put(cRankInt, f[i]);
-		filterCollectionNameMap.put(f[i].getDisplayName(), cRankInt);
+		filterCollectionNameMap.put(f[i].getInternalName(), cRankInt);
 		cRank++;		
 	}
 }
@@ -115,45 +131,45 @@ public FilterCollection[] getFilterCollections() {
 }
 
 /**
- * Returns a particular FilterCollection named by displayName
+ * Returns a particular FilterCollection named by internalName
  * 
- * @param displayName String name of the requested FilterCollection
+ * @param internalName String name of the requested FilterCollection
  * 
  * @return a FilterCollection object
  */
-public FilterCollection getFilterCollectionByName(String displayName) {
-	return (FilterCollection) filterCollections.get((Integer) filterCollectionNameMap.get(displayName) );
+public FilterCollection getFilterCollectionByName(String internalName) {
+	return (FilterCollection) filterCollections.get((Integer) filterCollectionNameMap.get(internalName) );
 }
 
 /**
- * Check if a FilterGroup contains a given FilterCollection, of name displayName
+ * Check if a FilterGroup contains a given FilterCollection, of name internalName
  * 
- * @param displayName String name of the requested FilterCollection
+ * @param internalName String name of the requested FilterCollection
  * @return boolean true if FilterGroup contains the FilterCollection, false if not
  */
-public boolean containsFilterCollection(String displayName) {
-	return filterCollectionNameMap.containsKey(displayName);
+public boolean containsFilterCollection(String internalName) {
+	return filterCollectionNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular UIFilterDescription.
 	* 
-	* @param displayName name of the requested UIFilterDescription
+	* @param internalName name of the requested UIFilterDescription
 	* @return UIFilterDescription object
 	* @throws ConfigurationException when the UIFilterDescription is not found.  Note, it is best to first call containsUIFilterDescription,
 	*                   as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 	*/
-	 public UIFilterDescription getUIFilterDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIFilterDescription getUIFilterDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+			if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
 					FilterCollection collection = (FilterCollection) filterCollections.get( (Integer) iter.next() );
-					if (collection.containsUIFilterDescription(displayName)) {
-						lastFilt = collection.getUIFilterDescriptionByName(displayName);
+					if (collection.containsUIFilterDescription(internalName)) {
+						lastFilt = collection.getUIFilterDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -162,7 +178,7 @@ public boolean containsFilterCollection(String displayName) {
 			if (found)
 				 return lastFilt;
 			else
-				 throw new ConfigurationException("Could not find UIFilterDescription "+displayName+" in this FilterGroup");
+				 throw new ConfigurationException("Could not find UIFilterDescription "+internalName+" in this FilterGroup");
 	 }
    
 	 /**
@@ -170,20 +186,20 @@ public boolean containsFilterCollection(String displayName) {
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
 		*  found, this method caches the UIFilterDescription it has found.
 		* 
-		* @param displayName name of the requested UIFilterDescription object
+		* @param internalName name of the requested UIFilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIFilterDescription(String displayName) throws ConfigurationException {
+	 public boolean containsUIFilterDescription(String internalName) throws ConfigurationException {
 		boolean found = false;
 		
-		if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
 				FilterCollection collection = (FilterCollection) filterCollections.get( (Integer) iter.next() );
-				if (collection.containsUIFilterDescription(displayName)) {
-					lastFilt = collection.getUIFilterDescriptionByName(displayName);
+				if (collection.containsUIFilterDescription(internalName)) {
+					lastFilt = collection.getUIFilterDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -196,7 +212,8 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append("filterCollections=").append(filterCollections);
 	buf.append("]");
@@ -204,7 +221,7 @@ public String toString() {
 	return buf.toString();
 }
 
-private final String displayName, description;
+private final String internalName, displayName, description;
 private int cRank = 0;  //keep track of collection order
 private TreeMap filterCollections = new TreeMap();
 private Hashtable filterCollectionNameMap = new Hashtable();

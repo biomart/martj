@@ -66,36 +66,40 @@ import java.util.TreeMap;
  */
 public class MartConfiguration {
 
-/*
- * MartConfigurations must have a martname, so dont allow parameterless construction
+	/*
+ * MartConfigurations must have a internalName, so dont allow parameterless construction
  */
  private MartConfiguration() throws ConfigurationException {
- 	this("", ""); // will never get here
+ 	this("", "", ""); // will never get here
  }
  
 	/**
 	 * Constructs a MartConfiguration for a particular mart database,
-	 * named by martname.
+	 * named by internalName.
 	 * 
-	 * @param martname String name of the mart database for this configuration
+	 * @param internalName String name of the mart database for this configuration
 	 */
 	public MartConfiguration(String martname) throws ConfigurationException {
-		this(martname, "");
+		this(martname, "", "");
 	}
 	
 /**
  * Constructs a MartConfiguration for a particular mart database,
- * named by martname.
+ * named by internalName.  May also have a displayName to display in a UI, and
+ * a description.
  * 
- * @param martname String name of the mart database for this configuration
+ * @param internalName String name of the mart database for this configuration.  May not be null.
+ * @param displayName String name to display in a UI.
  * @param description String description of the mart database for this configuration
+ * @throws ConfigurationException when internalName is null.
  */
-public MartConfiguration(String martname, String description) throws ConfigurationException {
+public MartConfiguration(String martname, String displayName, String description) throws ConfigurationException {
 	if (martname == null)
 	  throw new  ConfigurationException("MartConfiguration must have a martname");
 	  
-	this.martname = martname;
+	this.internalName = martname;
 	this.description = description;
+	this.displayName = displayName;
 }
 
 /**
@@ -107,7 +111,7 @@ public MartConfiguration(String martname, String description) throws Configurati
 public void addDataset(Dataset d) {
 	Integer rankInt = new Integer(thisRank);
 	datasets.put(rankInt, d);
-	datasetNameMap.put(d.getMartName(), rankInt);
+	datasetNameMap.put(d.getInternalName(), rankInt);
 	thisRank++;
 }
 
@@ -122,7 +126,7 @@ public void setDatasets(Dataset[] d) {
 	for (int i = 0, n=d.length; i < n; i++) {
 		Integer rankInt = new Integer(thisRank);
 		datasets.put(rankInt, d[i]);
-		datasetNameMap.put(d[i].getMartName(), rankInt);
+		datasetNameMap.put(d[i].getInternalName(), rankInt);
 		thisRank++;		
 	}
 }
@@ -130,10 +134,10 @@ public void setDatasets(Dataset[] d) {
 /**
  * Returns the name of the mart for this configuration.
  * 
- * @return String martname
+ * @return String internalName
  */
-public String getMartName() {
-	return martname;
+public String getInternalName() {
+	return internalName;
 }
 
 /**
@@ -143,6 +147,15 @@ public String getMartName() {
  */
 public String getDescription() {
 	return description;
+}
+
+/**
+ * Returns the DisplayName of the MartConfiguration.  To display in a UI.
+ * 
+ * @return String displayName
+ */
+public String getDisplayName() {
+	return displayName;
 }
 
 /**
@@ -157,26 +170,26 @@ public Dataset[] getDatasets() {
 }
 
 /**
- * Returns a particular Dataset based on a supplied Dataset displayName.
+ * Returns a particular Dataset based on a supplied Dataset internalName.
  * 
- * @param martName String martName of the Dataset
- * @return Dataset with the provided martName
+ * @param internalName String internalName of the Dataset
+ * @return Dataset with the provided internalName
  */
-public Dataset getDatasetByName(String martName) throws ConfigurationException {
-	if (! datasetNameMap.containsKey(martName))
-	  throw new ConfigurationException("MartConfiguration does not contain "+martName);
+public Dataset getDatasetByName(String internalName) throws ConfigurationException {
+	if (! datasetNameMap.containsKey(internalName))
+	  throw new ConfigurationException("MartConfiguration does not contain "+internalName);
 	  
-	return (Dataset) datasets.get((Integer) datasetNameMap.get(martName));
+	return (Dataset) datasets.get((Integer) datasetNameMap.get(internalName));
 }
 
 /**
- * Check for whether the MartConfiguration contains a particular Dataset named by displayName.
+ * Check for whether the MartConfiguration contains a particular Dataset named by internalName.
  * 
- * @param displayName String displayName of a Dataset
- * @return boolean, true if the MartConfiguration contains the Dataset named by the given displayName
+ * @param internalName String internalName of a Dataset
+ * @return boolean, true if the MartConfiguration contains the Dataset named by the given internalName
  */
-public boolean containsDataset(String displayName) {
-	return datasetNameMap.containsKey(displayName);
+public boolean containsDataset(String internalName) {
+	return datasetNameMap.containsKey(internalName);
 }
 
 /**
@@ -186,7 +199,8 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" martname=").append(martname);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append(", datasets=").append(datasets);
 	buf.append("]");
@@ -194,7 +208,7 @@ public String toString() {
 	return buf.toString();
 }	
 	
-private final String martname, description;
+private final String internalName, description, displayName;
 private int thisRank = 0;
 private TreeMap datasets = new TreeMap();
 private Hashtable datasetNameMap = new Hashtable();

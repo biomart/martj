@@ -30,36 +30,52 @@ import java.util.TreeMap;
  */
 public class AttributePage {
 
-/**
- * Constructor for a nameless, descriptionless AttributePage.
+/*
+ * AttributePages must have an internalName. So disable paremeterless construction
  */
-public AttributePage() {
-	this("", "");
+private AttributePage() throws ConfigurationException {
+	this("", "","");
 }
 
 /**
- * Constructor for an AttributePage named by displayName.
+ * Constructor for an AttributePage represented by internalName internally.
  * 
- * @param displayName String name to represent the AttributePage
+ * @param internalName String name to internally represent the AttributePage
+ * @throws ConfigurationException when the internalName is null or empty
  */
-public AttributePage(String displayName) {
-	this(displayName, "");
+public AttributePage(String internalName) throws ConfigurationException {
+	this(internalName, "", "");
 }
 
 /**
- * Constructor for an AttributePage named by displayName and 
- * described by description.
+ * Constructor for an AttributePage named internally by internalName, with a 
+ * displayName and described by description.
  * 
+ * @param internalName String name to internally represent the AttributePage.  Must not be null.
  * @param displayName String name to represent the AttributePage
  * @param description String description of the AttributePage
+ * @throws ConfigurationException when the internalName is null or empty
  */
-public AttributePage(String displayName, String description) {
+public AttributePage(String internalName, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals(""))
+	  throw new ConfigurationException("AttributePage must have an internalName");
+	
+	this.internalName = internalName;
 	this.displayName = displayName;
 	this.description = description;
 }
 
 /**
- * Returns the displayName of the AttributePage
+ * Returns the internalName of the AttributePage
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
+ * Returns the displayName to display in a UI.
  * 
  * @return String displayName
  */
@@ -84,7 +100,7 @@ public String getDescription() {
 public void addAttributeGroup(AttributeGroup a) {
 	Integer rankInt = new Integer(agroupRank);
 	attributeGroups.put(rankInt, a);
-	attGroupNameMap.put(a.getDisplayName(), rankInt);
+	attGroupNameMap.put(a.getInternalName(), rankInt);
 	agroupRank++;
 }
 
@@ -98,7 +114,7 @@ public void setAttributeGroups(AttributeGroup[] a) {
 	for (int i = 0, n=a.length; i < n; i++) {
 		Integer rankInt = new Integer(agroupRank);
 		attributeGroups.put(rankInt, a[i]);
-		attGroupNameMap.put(a[i].getDisplayName(), rankInt);
+		attGroupNameMap.put(a[i].getInternalName(), rankInt);
 		agroupRank++;		
 	}
 }
@@ -115,44 +131,44 @@ public AttributeGroup[] getAttributeGroups() {
 }
 
 /**
- * Returns a specific AttributeGroup named by displayName.
+ * Returns a specific AttributeGroup named by internalName.
  * 
- * @param displayName String name of the requested AttributeGroup
+ * @param internalName String name of the requested AttributeGroup
  * @return an AttributeGroup object
  */
-public AttributeGroup getAttributeGroupByName(String displayName) {
-	  return (AttributeGroup) attributeGroups.get( (Integer) attGroupNameMap.get(displayName) );
+public AttributeGroup getAttributeGroupByName(String internalName) {
+	  return (AttributeGroup) attributeGroups.get( (Integer) attGroupNameMap.get(internalName) );
 }
 
 /**
- * Check whether the AttributePage contains a particular AttributeGroup named by displayName.
+ * Check whether the AttributePage contains a particular AttributeGroup named by internalName.
  * 
- * @param displayName String name of the AttributeGroup
+ * @param internalName String name of the AttributeGroup
  * @return boolean, true if AttributePage contains AttributeGroup, false if not
  */
-public boolean containsAttributeGroup(String displayName) {
-	return attGroupNameMap.containsKey(displayName);
+public boolean containsAttributeGroup(String internalName) {
+	return attGroupNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular UIAttributeDescription.
 	* 
-	* @param displayName name of the requested UIAttributeDescription
+	* @param internalName name of the requested UIAttributeDescription
 	* @return UIAttributeDescription object
 	* @throws ConfigurationException when the UIAttributeDescription is not found.  Note, it is best to first call containsUIAttributeDescription,
 	*                   as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 	*/
-	 public UIAttributeDescription getUIAttributeDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+			if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
 					AttributeGroup group = (AttributeGroup) attributeGroups.get( (Integer) iter.next() );
-					if (group.containsUIAttributeDescription(displayName)) {
-						lastAtt = group.getUIAttributeDescriptionByName(displayName);
+					if (group.containsUIAttributeDescription(internalName)) {
+						lastAtt = group.getUIAttributeDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -161,7 +177,7 @@ public boolean containsAttributeGroup(String displayName) {
 			if (found)
 				 return lastAtt;
 			else
-				 throw new ConfigurationException("Could not find UIAttributeDescription "+displayName+" in this AttributePage");
+				 throw new ConfigurationException("Could not find UIAttributeDescription "+internalName+" in this AttributePage");
 	 }
    
 	 /**
@@ -169,20 +185,20 @@ public boolean containsAttributeGroup(String displayName) {
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
 		*  found, this method caches the UIAttributeDescription it has found.
 		* 
-		* @param displayName name of the requested UIAttributeDescription
+		* @param internalName name of the requested UIAttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIAttributeDescription(String displayName) throws ConfigurationException {
+	 public boolean containsUIAttributeDescription(String internalName) throws ConfigurationException {
 		boolean found = false;
 		
-		if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
 				AttributeGroup group = (AttributeGroup) attributeGroups.get( (Integer) iter.next() );
-				if (group.containsUIAttributeDescription(displayName)) {
-					lastAtt = group.getUIAttributeDescriptionByName(displayName);
+				if (group.containsUIAttributeDescription(internalName)) {
+					lastAtt = group.getUIAttributeDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -195,7 +211,8 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append(", AttributeGroups=").append(attributeGroups);
 	buf.append("]");
@@ -203,7 +220,7 @@ public String toString() {
 	return buf.toString();
 }
 
-private final String displayName, description;
+private final String internalName, displayName, description;
 private int agroupRank = 0;
 private TreeMap attributeGroups = new TreeMap();
 private Hashtable attGroupNameMap = new Hashtable();

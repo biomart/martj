@@ -30,76 +30,144 @@ import java.util.TreeMap;
  */
 public final class AttributeGroup {
 
-public AttributeGroup() {
-	this("","");
+/*
+ * AttributeGroups must have an internalName, so disable parameterless constructor.
+ */
+private AttributeGroup() throws ConfigurationException {
+	this("","", ""); // will never happen
 }
 
-public AttributeGroup(String displayName) {
-	this(displayName, "");
+/**
+ * Constructor for an AttributeGroup named by internalName.
+ * 
+ * @param internalName String name to internally represent the AttributeGroup.
+ * @throws ConfigurationException when internalName is null or empty
+ */
+public AttributeGroup(String internalName) throws ConfigurationException {
+	this(internalName, "", "");
 }
 
-public AttributeGroup(String displayName, String description) {
+/**
+ * Constructor for a fully defined AttributeGroup, with an internalName, displayName, and description.
+ * 
+ * @param internalName String name to internally represent the AttributeGroup. Must not be null or empty
+ * @param displayName String name to display in a UI.
+ * @param description String description of the AttributeGroup.
+ * @throws ConfigurationException when required parameters are null or empty
+ */
+public AttributeGroup(String internalName, String displayName, String description) throws ConfigurationException {
+	if (internalName == null || internalName.equals(""))
+	  throw new ConfigurationException("AttributeGroup must have an internalName");
+	  
+	this.internalName = internalName;
 	this.displayName = displayName;
 	this.description = description;
 }
 
+/**
+ * Returns internalName
+ * 
+ * @return String internalName
+ */
+public String getInternalName() {
+	return internalName;
+}
+
+/**
+ * Returns displayName
+ * 
+ * @return String displayName
+ */
 public String getDisplayName() {
 	return displayName;
 }
 
+/**
+ * Returns description.
+ * 
+ * @return String description
+ */
 public String getDescription() {
 	return description;
 }
 
+/**
+ * Add an AttributeColllection the the AttributeGroup.
+ * 
+ * @param c an AttributeCollection object.
+ */
 public void addAttributeCollection(AttributeCollection c) {
 	Integer cRankInt = new Integer(cRank);
 	attributeCollections.put(cRankInt, c);
-	attributeCollectionNameMap.put(c.getDisplayName(), cRankInt);
+	attributeCollectionNameMap.put(c.getInternalName(), cRankInt);
 	cRank++;
 }
 
+/**
+ * Set a group of AttributeCollection objects with one call.  Note, subsequent calls to addAttributeCollection
+ * or setAttributeCollections will add to what has been added before.
+ * 
+ * @param c an Array of AttributeCollection objects.
+ */
 public void setAttributeCollections(AttributeCollection[] c) {
 	for (int i = 0; i < c.length; i++) {
 		Integer cRankInt = new Integer(cRank);
 		attributeCollections.put(cRankInt, c[i]);
-		attributeCollectionNameMap.put(c[i].getDisplayName(), cRankInt);
+		attributeCollectionNameMap.put(c[i].getInternalName(), cRankInt);
 		cRank++;		
 	}
 }
 
+/**
+ * Get all of the AttributeCollection objects contained in this AttributeGroup in an array, in the order they were added.
+ * 
+ * @return Array of AttributeCollection objects.
+ */
 public AttributeCollection[] getAttributeCollections() {
 	AttributeCollection[] a = new AttributeCollection[attributeCollections.size()];
 	attributeCollections.values().toArray(a);
 	return a;
 }
 
-public AttributeCollection getAttributeCollectionByName(String displayName) {
-	return (AttributeCollection) attributeCollections.get((Integer) attributeCollectionNameMap.get(displayName));
+/**
+ * Returns a specific AttributeCollection, named by internalName.
+ * 
+ * @param internalName String internal name of  the AttributeCollection
+ * @return an AttributeCollection object
+ */
+public AttributeCollection getAttributeCollectionByName(String internalName) {
+	return (AttributeCollection) attributeCollections.get((Integer) attributeCollectionNameMap.get(internalName));
 }
 
-public boolean containsAttributeCollection(String displayName) {
-	return attributeCollectionNameMap.containsKey(displayName);
+/**
+ * Check to determine if this AttributeGroup contains a specific AttributeCollection named by intenalName.
+ * 
+ * @param internalName String internal name of the AttributeCollection
+ * @return boolean, true if found, false if not.
+ */
+public boolean containsAttributeCollection(String internalName) {
+	return attributeCollectionNameMap.containsKey(internalName);
 }
 
 /**
 	* Convenience method for non graphical UI.  Allows a call against the AttributeGroup for a particular UIAttributeDescription.
 	* 
-	* @param displayName name of the requested UIAttributeDescription
+	* @param internalName name of the requested UIAttributeDescription
 	* @return UIAttributeDescription object
 	* @throws ConfigurationException when the UIAttributeDescription is not found.  Note, it is best to first call containsUIAttributeDescription,
 	*                   as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 	*/
-	 public UIAttributeDescription getUIAttributeDescriptionByName(String displayName) throws ConfigurationException {
+	 public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) throws ConfigurationException {
 			boolean found = false;
 		  
-			if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+			if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {
 				for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
 					AttributeCollection collection = (AttributeCollection) attributeCollections.get( (Integer) iter.next() );
-					if (collection.containsUIAttributeDescription(displayName)) {
-						lastAtt = collection.getUIAttributeDescriptionByName(displayName);
+					if (collection.containsUIAttributeDescription(internalName)) {
+						lastAtt = collection.getUIAttributeDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -108,7 +176,7 @@ public boolean containsAttributeCollection(String displayName) {
 			if (found)
 				 return lastAtt;
 			else
-				 throw new ConfigurationException("Could not find UIAttributeDescription "+displayName+" in this AttributeGroup");
+				 throw new ConfigurationException("Could not find UIAttributeDescription "+internalName+" in this AttributeGroup");
 	 }
    
 	 /**
@@ -116,20 +184,20 @@ public boolean containsAttributeCollection(String displayName) {
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
 		*  found, this method caches the UIAttributeDescription it has found.
 		* 
-		* @param displayName name of the requested UIAttributeDescription
+		* @param internalName name of the requested UIAttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	 public boolean containsUIAttributeDescription(String displayName) throws ConfigurationException {
+	 public boolean containsUIAttributeDescription(String internalName) throws ConfigurationException {
 		boolean found = false;
 		
-		if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 			found = true;
 		}
 		else {   	  
 			for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
 				AttributeCollection collection = (AttributeCollection) attributeCollections.get( (Integer) iter.next() );
-				if (collection.containsUIAttributeDescription(displayName)) {
-					lastAtt = collection.getUIAttributeDescriptionByName(displayName);
+				if (collection.containsUIAttributeDescription(internalName)) {
+					lastAtt = collection.getUIAttributeDescriptionByName(internalName);
 					found = true;
 					break;
 				}
@@ -142,14 +210,16 @@ public String toString() {
 	StringBuffer buf = new StringBuffer();
 	
 	buf.append("[");
-	buf.append(" displayName=").append(displayName);
+	buf.append(" internalName=").append(internalName);
+	buf.append(", displayName=").append(displayName);
 	buf.append(", description=").append(description);
 	buf.append(", attributeCollections=").append(attributeCollections);
 	buf.append("]");
 	
 	return buf.toString();
 }
-private final String displayName, description;
+
+private final String internalName, displayName, description;
 private int cRank = 0;
 private TreeMap attributeCollections = new TreeMap();
 private Hashtable attributeCollectionNameMap = new Hashtable();

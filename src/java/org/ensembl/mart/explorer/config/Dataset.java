@@ -38,17 +38,17 @@ import java.util.TreeMap;
 public class Dataset {
 
 /*
- * Datasets must have a displayName, so dont allow parameterless construction
+ * Datasets must have an internalName, so dont allow parameterless construction
  */
  private Dataset() throws ConfigurationException {
  	this("", "", ""); // will never happen
  }
   /**
-   * Constructs a Dataset named by martName and displayName.
-   *  martName is a single word that references this dataset, used to get the dataset from the MartConfiguration by name.
+   * Constructs a Dataset named by internalName and displayName.
+   *  internalName is a single word that references this dataset, used to get the dataset from the MartConfiguration by name.
    *  displayName is the String to display in any UI.
    * 
-   * @param martName String name to represent this Dataset
+   * @param internalName String name to represent this Dataset
    * @param displayName String name to display.
    */
   public Dataset(String martName, String displayName) throws ConfigurationException {
@@ -56,19 +56,19 @@ public class Dataset {
   }
   
   /**
-   * Constructs a Dataset named by martName and displayName, with a description of
+   * Constructs a Dataset named by internalName and displayName, with a description of
    *  the dataset.
    * 
-   * @param martName String name to represent this Dataset. Must not be null
-   * @param displayName String name to display in an UI. Must not be null.
+   * @param internalName String name to represent this Dataset. Must not be null
+   * @param displayName String name to display in an UI.
    * @param description String description of the Dataset.
    * @throws ConfigurationException if required values are null.
    */
   public Dataset(String martName, String displayName, String description) throws ConfigurationException {
-  	if(martName == null || displayName == null)
+  	if(martName == null)
   	  throw new ConfigurationException("Datasets must contain a displayName");
   
-  this.martName = martName;	  
+  this.internalName = martName;	  
   this.displayName = displayName;
   this.description = description;
   }
@@ -80,24 +80,24 @@ public class Dataset {
    * 
    * @param starname  String name of a main table for a mart.
    */
-  public void addStar(String starname) {
-  	stars.add(starname);
+  public void addStarBase(String starname) {
+  	starBases.add(starname);
   }
   
   /**
    * Set all star names for a Dataset with one call.
    * Note, subsequent calls to setStars or addStar will add
-   * stars to what has been added before.
+   * starBases to what has been added before.
    * 
    * @param starnames String[] Array of star names.
    */
-  public void setStars(String[] starnames) {
-  	stars.addAll( Arrays.asList(starnames) );
+  public void setStarBases(String[] starnames) {
+  	starBases.addAll( Arrays.asList(starnames) );
   }
   
   /**
    * Adds a primary key to the dataset.  This is the key that joins the dimension tables
-   *  with the star table.  Datasets with multiple stars may have multiple primary keys.
+   *  with the star table.  Datasets with multiple starBases may have multiple primary keys.
    * 
    * @param primaryKey String name of primary key.
    */
@@ -124,7 +124,7 @@ public class Dataset {
   public void addAttributePage(AttributePage a) {
 		Integer rankInt = new Integer(apageRank);
 		attributePages.put(rankInt, a);
-		attributePageNameMap.put(a.getDisplayName(), rankInt);
+		attributePageNameMap.put(a.getInternalName(), rankInt);
 		apageRank++;
   }
   
@@ -139,7 +139,7 @@ public class Dataset {
   	for (int i = 0; i < a.length; i++) {
   		Integer rankInt = new Integer(apageRank);
 			attributePages.put(rankInt, a[i]);
-			attributePageNameMap.put(a[i].getDisplayName(), rankInt);
+			attributePageNameMap.put(a[i].getInternalName(), rankInt);
 			apageRank++;
 		}
   }
@@ -152,7 +152,7 @@ public class Dataset {
   public void addFilterPage(FilterPage f) {
   	Integer rankInt = new Integer(fpageRank);
   	filterPages.put(rankInt, f);
-  	filterPageNameMap.put(f.getDisplayName(), rankInt);
+  	filterPageNameMap.put(f.getInternalName(), rankInt);
   	fpageRank++;
   }
   
@@ -167,7 +167,7 @@ public class Dataset {
   	for (int i = 0, n=f.length; i < n; i++) {
   		Integer rankInt = new Integer(fpageRank);
 			filterPages.put(rankInt, f[i]);
-			filterPageNameMap.put(f[i].getDisplayName(), rankInt);
+			filterPageNameMap.put(f[i].getInternalName(), rankInt);
 			fpageRank++;
 		}
   }
@@ -182,12 +182,12 @@ public class Dataset {
   }
   
   /**
-   * Returns the martName to represent this dataset.
+   * Returns the internalName to represent this dataset.
    * 
-   * @return String martName
+   * @return String internalName
    */
-  public String getMartName() {
-  	return martName;
+  public String getInternalName() {
+  	return internalName;
   }
   
   /**
@@ -202,11 +202,11 @@ public class Dataset {
   /**
    * Returns the list of star names for this Dataset.
    * 
-   * @return stars String[]
+   * @return starBases String[]
    */
-  public String[] getStars() {
-  	String[] s = new String[ stars.size() ];
-  	stars.toArray(s);
+  public String[] getStarBases() {
+  	String[] s = new String[ starBases.size() ];
+  	starBases.toArray(s);
   	return s;
   }
   
@@ -238,8 +238,8 @@ public class Dataset {
    * @param displayName String name of a particular AttributePage
    * @return AttributePage object named by the given displayName
    */
-  public AttributePage getAttributePageByName(String displayName) {
-  	return (AttributePage) attributePages.get( (Integer) attributePageNameMap.get(displayName) );
+  public AttributePage getAttributePageByName(String internalName) {
+  	return (AttributePage) attributePages.get( (Integer) attributePageNameMap.get(internalName) );
   }
   
 	/**
@@ -248,8 +248,8 @@ public class Dataset {
 	 * @param displayName String name of the AttributePage
 	 * @return boolean true if AttributePage is contained in the Dataset, false if not.
 	 */
-  public boolean containsAttributePage(String displayName) {
-  	return attributePageNameMap.containsKey(displayName);
+  public boolean containsAttributePage(String internalName) {
+  	return attributePageNameMap.containsKey(internalName);
   }
    
   /**
@@ -268,8 +268,8 @@ public class Dataset {
    * @param displayName String name of a particular FilterPage
    * @return FilterPage object named by the given displayName
    */
-  public FilterPage getFilterPageByName(String displayName) {
-  	return (FilterPage) filterPages.get( (Integer) filterPageNameMap.get(displayName));
+  public FilterPage getFilterPageByName(String internalName) {
+  	return (FilterPage) filterPages.get( (Integer) filterPageNameMap.get(internalName));
   }
   
   /**
@@ -278,8 +278,8 @@ public class Dataset {
    * @param displayName String name of the FilterPage
    * @return boolean true if FilterPage is contained in the Dataset, false if not.
    */
-  public boolean containsFilterPage(String displayName) {
-  	return filterPageNameMap.containsKey(displayName);
+  public boolean containsFilterPage(String internalName) {
+  	return filterPageNameMap.containsKey(internalName);
   }
   
 	/**
@@ -290,17 +290,17 @@ public class Dataset {
 		* @throws ConfigurationException when the UIAttributeDescription is not found.  Note, it is best to first call containsUIAttributeDescription,
 		*                   as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		*/
-		 public UIAttributeDescription getUIAttributeDescriptionByName(String displayName) throws ConfigurationException {
+		 public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) throws ConfigurationException {
 				boolean found = false;
 		  
-				if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+				if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 					found = true;
 				}
 				else {
 					for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
 						AttributePage page = (AttributePage) attributePages.get( (Integer) iter.next() );
-						if (page.containsUIAttributeDescription(displayName)) {
-							lastAtt = page.getUIAttributeDescriptionByName(displayName);
+						if (page.containsUIAttributeDescription(internalName)) {
+							lastAtt = page.getUIAttributeDescriptionByName(internalName);
 							found = true;
 							break;
 						}
@@ -309,7 +309,7 @@ public class Dataset {
 				if (found)
 					 return lastAtt;
 				else
-					 throw new ConfigurationException("Could not find UIAttributeDescription "+displayName+" in this dataset");
+					 throw new ConfigurationException("Could not find UIAttributeDescription "+internalName+" in this dataset");
 		 }
    
 		 /**
@@ -320,17 +320,17 @@ public class Dataset {
 			* @param displayName name of the requested UIAttributeDescription
 			* @return boolean, true if found, false if not.
 			*/
-		 public boolean containsUIAttributeDescription(String displayName) throws ConfigurationException {
+		 public boolean containsUIAttributeDescription(String internalName) throws ConfigurationException {
 			boolean found = false;
 		
-			if (lastAtt != null && lastAtt.getDisplayName().equals(displayName)) {
+			if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {   	  
 				for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
 					AttributePage page = (AttributePage) attributePages.get( (Integer) iter.next() );
-					if (page.containsUIAttributeDescription(displayName)) {
-						lastAtt = page.getUIAttributeDescriptionByName(displayName);
+					if (page.containsUIAttributeDescription(internalName)) {
+						lastAtt = page.getUIAttributeDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -347,17 +347,17 @@ public class Dataset {
 		* @throws ConfigurationException when the UIFilterDescription is not found.  Note, it is best to first call containsUIFilterDescription,
 		*                   as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 		*/
-		 public UIFilterDescription getUIFilterDescriptionByName(String displayName) throws ConfigurationException {
+		 public UIFilterDescription getUIFilterDescriptionByName(String internalName) throws ConfigurationException {
 				boolean found = false;
 		  
-				if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+				if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 					found = true;
 				}
 				else {
 					for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 						FilterPage page = (FilterPage) filterPages.get( (Integer) iter.next() );
-						if (page.containsUIFilterDescription(displayName)) {
-							lastFilt = page.getUIFilterDescriptionByName(displayName);
+						if (page.containsUIFilterDescription(internalName)) {
+							lastFilt = page.getUIFilterDescriptionByName(internalName);
 							found = true;
 							break;
 						}
@@ -366,7 +366,7 @@ public class Dataset {
 				if (found)
 					 return lastFilt;
 				else
-					 throw new ConfigurationException("Could not find UIFilterDescription "+displayName+" in this dataset");
+					 throw new ConfigurationException("Could not find UIFilterDescription "+internalName+" in this dataset");
 		 }
    
 		 /**
@@ -377,17 +377,17 @@ public class Dataset {
 			* @param displayName name of the requested UIFilterDescription object
 			* @return boolean, true if found, false if not.
 			*/
-		 public boolean containsUIFilterDescription(String displayName) throws ConfigurationException {
+		 public boolean containsUIFilterDescription(String internalName) throws ConfigurationException {
 			boolean found = false;
 		
-			if (lastFilt != null && lastFilt.getDisplayName().equals(displayName)) {
+			if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
 				found = true;
 			}
 			else {   	  
 				for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 					FilterPage page = (FilterPage) filterPages.get( (Integer) iter.next() );
-					if (page.containsUIFilterDescription(displayName)) {
-						lastFilt = page.getUIFilterDescriptionByName(displayName);
+					if (page.containsUIFilterDescription(internalName)) {
+						lastFilt = page.getUIFilterDescriptionByName(internalName);
 						found = true;
 						break;
 					}
@@ -402,9 +402,10 @@ public class Dataset {
   public String toString() {
   	StringBuffer buf = new StringBuffer();
   	buf.append("[");
-  	buf.append(" dataset=").append(displayName);
+  	buf.append(" internalName=").append(internalName);
+  	buf.append(", displayName=").append(displayName);
   	buf.append(", description=").append(description);
-  	buf.append(", starnames=").append(stars);
+  	buf.append(", starnames=").append(starBases);
   	buf.append(", primarykeys=").append(primaryKeys);
   	buf.append(", filterPages=").append(filterPages);
   	buf.append(", attributePages=").append(attributePages);
@@ -421,9 +422,9 @@ public class Dataset {
   private TreeMap filterPages = new TreeMap();
   private Hashtable attributePageNameMap = new Hashtable();
   private Hashtable filterPageNameMap = new Hashtable();
-  private List stars = new ArrayList();
+  private List starBases = new ArrayList();
   private List primaryKeys = new ArrayList();
-  private final String martName, displayName, description;
+  private final String internalName, displayName, description;
   
   // cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
   private UIAttributeDescription lastAtt = null;
