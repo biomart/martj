@@ -96,7 +96,7 @@ public class ConfigurationTest extends Base {
 
 		SAXBuilder builder = new SAXBuilder();
 		builder.setValidation(true); // validate against the DTD
-		builder.setEntityResolver(new MartDTDEntityResolver(conn)); // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
+		builder.setEntityResolver(new MartDTDEntityResolver()); // set the EntityResolver to allow it to get the DTD from the classpath.
 
 		Document doc = builder.build(MartXMLutils.getInputSourceFor(conn, XMLTESTID));
 
@@ -111,7 +111,7 @@ public class ConfigurationTest extends Base {
 
 		SAXBuilder newbuilder = new SAXBuilder();
 		newbuilder.setValidation(true);
-		newbuilder.setEntityResolver(new MartDTDEntityResolver(conn));
+		newbuilder.setEntityResolver(new MartDTDEntityResolver());
 		// set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
 
 		Document newdoc = newbuilder.build(MartXMLutils.getInputSourceFor(conn, XMLTESTID));

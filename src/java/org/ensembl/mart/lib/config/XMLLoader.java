@@ -87,7 +87,7 @@ public class XMLLoader {
 			if (system_id.endsWith("xml")) {
 			  SAXBuilder builder = new SAXBuilder();
 			  builder.setValidation(true); // validate against the DTD
-			  builder.setEntityResolver(new MartDTDEntityResolver(conn)); // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
+			  builder.setEntityResolver(new MartDTDEntityResolver()); // set the EntityResolver to allow it to get the DTDs from the classpath.
 			
 			  Document doc = builder.build(sourceURL);
 			
