@@ -257,8 +257,8 @@ public class QueryEditor extends JPanel {
 
 		JComponent toolBar = createToolbar();
 		QueryTreeView treeView = new QueryTreeView(query, datasetViewAdaptor);
-    InputPageContainer inputPanelContainer = new InputPageContainer(query, datasetViewAdaptor);
-    treeView.addTreeSelectionListener(inputPanelContainer);
+    InputPageContainer inputPanelContainer = new InputPageContainer(query, datasetViewAdaptor, treeView);
+    
 		outputPanel = new JEditorPane();
 		outputPanel.setEditable(false);
 

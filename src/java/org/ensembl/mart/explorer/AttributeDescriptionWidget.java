@@ -18,10 +18,20 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Logger;
 
 import javax.swing.JCheckBox;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.FieldAttribute;
@@ -35,8 +45,11 @@ import org.ensembl.mart.lib.config.AttributeDescription;
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class AttributeDescriptionWidget
-  extends InputPage {
+  extends InputPage
+  implements TreeSelectionListener {
 
+  private final static Logger logger =
+    Logger.getLogger(AttributeDescriptionWidget.class.getName());
   private AttributeDescription attributeDescription;
   private Query query;
   private Attribute attribute;
@@ -51,11 +64,6 @@ public class AttributeDescriptionWidget
     implements InputPageAware {
 
     private InputPage inputPage;
-
-    public InputPageAwareAttribute(String field, InputPage inputPage) {
-      super(field);
-      this.inputPage = inputPage;
-    }
 
     public InputPageAwareAttribute(
       String field,
@@ -76,10 +84,12 @@ public class AttributeDescriptionWidget
    */
   public AttributeDescriptionWidget(
     final Query query,
-    AttributeDescription attributeDescription) {
+    AttributeDescription attributeDescription,
+    QueryTreeView tree) {
 
-    super(query, attributeDescription.getDisplayName());
-
+    super(query, attributeDescription.getDisplayName(), tree);
+    if (tree != null)
+      tree.addTreeSelectionListener(this);
     this.attributeDescription = attributeDescription;
     this.query = query;
 
@@ -112,7 +122,6 @@ public class AttributeDescriptionWidget
     return attribute;
   }
 
-
   /** 
    * If the attribute added corresponds to this widget then show it is
    * selected.
@@ -140,6 +149,50 @@ public class AttributeDescriptionWidget
 
     if (this.attribute.getField().equals(attribute.getField()))
       button.setSelected(false);
+  }
+
+  /**
+   * Callback method called when an item in the tree is selected.
+   * Brings this widget to the front if the selecte node corresponds to this widget this
+   * TODO get scrolling to a selected attribute working properly
+   * @see javax.swing.event.TreeSelectionListener#valueChanged(javax.swing.event.TreeSelectionEvent)
+   */
+  public void valueChanged(TreeSelectionEvent e) {
+
+    if (button.isSelected()) {
+
+      if (e.getNewLeadSelectionPath() != null
+        && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
+
+        DefaultMutableTreeNode node =
+          (DefaultMutableTreeNode) e
+            .getNewLeadSelectionPath()
+            .getLastPathComponent();
+
+        if (node != null) {
+
+          TreeNodeData tnd = (TreeNodeData) node.getUserObject();
+          Attribute a = tnd.getAttribute();
+          if (a != null && a == attribute) {
+            requestFocusInWindow();
+            for (Component p, c = this; c != null; c = p) {
+              p = c.getParent();
+              if (p instanceof JTabbedPane)
+                 ((JTabbedPane) p).setSelectedComponent(c);
+              else if (p instanceof JScrollPane) {
+                // not sure if this is being used
+                Point pt = c.getLocation();
+                Rectangle r = new Rectangle( pt );
+                ((JScrollPane) p).scrollRectToVisible(r);
+              }
+
+            }
+
+          }
+        }
+      }
+    }
+
   }
 
 }

@@ -501,7 +501,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
 
     String nodeLabel =
       (ad != null) ? ad.getDisplayName() : attribute.getField();
-    TreeNodeData userObject = new TreeNodeData(null, null, nodeLabel);
+    TreeNodeData userObject = new TreeNodeData(null, null, nodeLabel, attribute);
     DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
     attributesNode.insert(treeNode, index);
     treeModel.reload(attributesNode);
@@ -569,7 +569,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     String fieldName = (fd != null) ? fd.getDisplayName() : filter.getField();
 
     String nodeLabel = fieldName + filter.getCondition() + filter.getValue();
-    TreeNodeData userObject = new TreeNodeData(null, null, nodeLabel);
+    TreeNodeData userObject = new TreeNodeData(null, null, nodeLabel, filter);
     DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(userObject);
     filtersNode.insert(treeNode, index);
     treeModel.reload(filtersNode);

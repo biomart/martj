@@ -26,8 +26,6 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.ensembl.mart.lib.Attribute;
-import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -48,85 +46,26 @@ public class InputPageContainer
   private DatasetView datasetView;
   private CardLayout cardLayout = new CardLayout();
 
-  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor) {
+  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree) {
     super();
+    if (tree!=null) tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
     add(new DatasetViewWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
     add(new DatasourceWidget(query), TreeNodeData.DATASOURCE.getLabel());
-    add(new AttributesWidget(query, datasetViewAdaptor), TreeNodeData.ATTRIBUTES.getLabel());
+    add(new AttributesWidget(query, datasetViewAdaptor, tree), TreeNodeData.ATTRIBUTES.getLabel());
     add(new FiltersWidget(query, datasetViewAdaptor), TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }
 
   public void setDatasetView(DatasetView datasetView) {
-    removeAllPages();
     this.datasetView = datasetView;
-    addDefaultPages();
-    addPages(datasetView);
-
   }
 
-  /**
-   * TODO add all input pages for the specified datasetView.
-   * @param datasetView
-   */
-  private void addPages(DatasetView datasetView) {
-
-  }
-
-  /**
-   * TODO Add default input pages: dataset, db/mart_target
-   */
-  private void addDefaultPages() {
-
-    //  outputSettingsPage = new OutputSettingsPage();
-    //  outputSettingsPage.addPropertyChangeListener(this);
-    //  addPage(outputSettingsPage);
-
-  }
-
-  /**
-   * TODO Remove all input pages.
-   */
-  private void removeAllPages() {
-
-  }
-
-  /**
-   * 
-   */
-  private void addFilterPages(DatasetView dataset) {
-    //    filtersPage = new FilterPageSetWidget(query, dataset);
-    //    addPage(filtersPage);
-  }
-
-  /**
-   * Creates the attribute pages and various maps that are useful 
-   * for relating nodes, pages and attributes.
-   */
-  private void addAttributePages(DatasetView dataset) {
-
-    //    attributesPage = new AttributePageSetWidget(query, dataset);
-
-    //    List list = attributesPage.getLeafWidgets();
-    //    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
-    //    for (int i = 0; i < attributePages.length; i++) {
-    //      AttributeDescriptionWidget w = attributePages[i];
-    //      Attribute a = w.getAttribute();
-    //      attributeFieldNameToPage.put( a.getField(), w );
-    //      attributeToWidget.put( a, w );
-    //    }
-
-    //    addPage(attributesPage);
-
-  }
 
   /**
    * TODO Show input page corresponding to selected tree node. 
    */
   public void valueChanged(TreeSelectionEvent e) {
-
-    logger.info(e.toString());
 
     if (e.getNewLeadSelectionPath() != null
       && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
@@ -141,9 +80,9 @@ public class InputPageContainer
         TreeNodeData tnd = (TreeNodeData) node.getUserObject();
 
         if (tnd.getAttribute() != null)
-          toFront(tnd.getAttribute());
+          toFront( TreeNodeData.ATTRIBUTES );
         else if (tnd.getFilter() != null)
-          toFront(tnd.getFilter());
+          toFront( TreeNodeData.FILTERS );
         else
           toFront(tnd);
       }
@@ -158,20 +97,5 @@ public class InputPageContainer
     cardLayout.show(this, tnd.getLabel());
   }
 
-  /**
-   * @param filter
-   */
-  private void toFront(Filter filter) {
-    // TODO Auto-generated method stub
-
-  }
-
-  /**
-   * @param attribute
-   */
-  private void toFront(Attribute attribute) {
-    // TODO Auto-generated method stub
-
-  }
-
+  
 }

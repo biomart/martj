@@ -49,9 +49,9 @@ public class AttributeGroupWidget extends GroupWidget {
    * @param query
    * @param name
    */
-  public AttributeGroupWidget(Query query, String name, AttributeGroup group) {
+  public AttributeGroupWidget(Query query, String name, AttributeGroup group, QueryTreeView tree) {
 
-    super(name, query);
+    super(name, query, tree);
 
     this.group = group;
 
@@ -79,7 +79,7 @@ public class AttributeGroupWidget extends GroupWidget {
       widgets.addAll(Arrays.asList(attributes));
       GridPanel p =
         new GridPanel(attributes, 2, 200, 35, collection.getDisplayName());
-      container.add(p);
+      container.add( p );
 
     }
     return widgets;
@@ -102,7 +102,7 @@ public class AttributeGroupWidget extends GroupWidget {
       if (element instanceof AttributeDescription) {
 
         AttributeDescription a = (AttributeDescription) element;
-        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a);
+        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree);
         pages.add(w);
       }
       else {

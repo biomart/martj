@@ -54,7 +54,6 @@ public abstract class FilterWidget extends InputPage {
     this.filterDescription = filterDescription;
     this.filterGroupWidget = filterGroupWidget;
     this.fieldName = filterDescription.getField();
-
   }
 
   /**

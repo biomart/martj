@@ -28,12 +28,14 @@ import org.ensembl.mart.lib.Query;
  */
 public class GroupWidget extends InputPage {
 
-  /**
-   * @param name
-   * @param query
-   */
-  public GroupWidget(String name, Query query) {
-    super(query, name);
+
+  public GroupWidget(String name, Query query, QueryTreeView tree) {
+    super(query, name, tree);
   }
+
+  public GroupWidget(String name, Query query) {
+    this(name, query, null);
+  }
+  
 
 }

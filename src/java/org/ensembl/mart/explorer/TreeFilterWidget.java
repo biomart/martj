@@ -290,7 +290,6 @@ public class TreeFilterWidget extends FilterWidget {
    */
   protected void setFilter(Filter filter) {
     
-    logger.info("");
     this.filter = filter;
 
     if (filter == null) {

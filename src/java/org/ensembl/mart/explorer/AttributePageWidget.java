@@ -39,9 +39,9 @@ public class AttributePageWidget extends PageWidget {
 	 * @param name
 	 * @param query
 	 */
-	public AttributePageWidget(Query query, String name, AttributePage page) {
+	public AttributePageWidget(Query query, String name, AttributePage page, QueryTreeView tree) {
 
-		super(query, name);
+		super(query, name, tree);
 
 		this.page = page;
     
@@ -55,7 +55,7 @@ public class AttributePageWidget extends PageWidget {
         AttributeGroup group = (AttributeGroup)element;
         String groupName = group.getDisplayName();
     
-        AttributeGroupWidget w = new AttributeGroupWidget( query, groupName, group );
+        AttributeGroupWidget w = new AttributeGroupWidget( query, groupName, group, tree );
         tabbedPane.add( groupName, w);  
         leafWidgets.addAll( w.getLeafWidgets() );
 			}

@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 import javax.swing.JPanel;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 
@@ -27,10 +29,12 @@ import org.ensembl.mart.lib.config.DatasetView;
  */
 public class InputPage extends JPanel implements QueryChangeListener {
 
+  protected QueryTreeView tree;
+
   private Object userObject;
 
   protected Query query;
-  private Field field;
+  private Field fieldName;
   
   private String nodeLabel;  
   private MutableTreeNode node;
@@ -38,9 +42,10 @@ public class InputPage extends JPanel implements QueryChangeListener {
 
   protected List leafWidgets;  
 
-  public InputPage(Query query, String name) {
+  public InputPage(Query query, String name, QueryTreeView tree) {
     setName(name);
     this.query = query;
+    this.tree = tree;
     setNodeLabel(name, null );
     node = new DefaultMutableTreeNode(this);
     leafWidgets = new ArrayList();
@@ -51,14 +56,18 @@ public class InputPage extends JPanel implements QueryChangeListener {
 
   }
 
+  public InputPage(Query query, String name) {
+    this(query, name, null); 
+  }
 
   /**
    * Adds this instance as a query change listener.
    * @param query
    */
   public InputPage(Query query) {
-      this(query, null); 
-    }
+    this(query, null, null); 
+  }
+
   public MutableTreeNode getNode() {
     return node;
   }
@@ -121,14 +130,14 @@ public class InputPage extends JPanel implements QueryChangeListener {
    * none set.
    */
   public Field getField() {
-    return field;
+    return fieldName;
   }
   
   /**
    * @param field
    */
   protected void setField(Field field) {
-    this.field = field;
+    this.fieldName = field;
   }
 
   /* (non-Javadoc)
@@ -208,5 +217,7 @@ public class InputPage extends JPanel implements QueryChangeListener {
    */
   public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
   }
+
+
 
 }

@@ -22,15 +22,19 @@ public class PageWidget extends InputPage {
    * @param name
    * @param query
    */
-  public PageWidget(Query query, String name) {
+  public PageWidget(Query query, String name, QueryTreeView tree) {
     
-    super(query, name);
+    super(query, name, tree);
     
     setBorder( BorderFactory.createEmptyBorder( 10, 5, 5, 5 ) );
     setBackground( Color.BLACK );
     
     tabbedPane = new JTabbedPane(  JTabbedPane.LEFT  );
     add(tabbedPane);
+  }
+  
+  public PageWidget(Query query, String name) {
+    this(query, name, null); 
   }
 
   protected JTabbedPane tabbedPane;

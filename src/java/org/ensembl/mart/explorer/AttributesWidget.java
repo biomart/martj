@@ -41,9 +41,10 @@ public class AttributesWidget extends InputPage {
    * If none are available if displays a message to that effect. 
    * @param query
    */
-  public AttributesWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
-    super(query);
+  public AttributesWidget(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree) {
+    super(query, null, tree);
     clearAttributes();
+    
   }
 
   private void clearAttributes() {
@@ -70,7 +71,7 @@ public class AttributesWidget extends InputPage {
       AttributePage[] aps = newDatasetView.getAttributePages();
       for (int i = 0; i < aps.length; i++)
         tabbedPane.add(
-          new AttributePageWidget(query, aps[i].getDisplayName(), aps[i]));
+          new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree));
       add(tabbedPane);
       validate();
     }

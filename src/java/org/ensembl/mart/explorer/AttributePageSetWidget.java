@@ -38,7 +38,7 @@ public class AttributePageSetWidget extends PageSetWidget {
 		for (int i = 0, n = attributePages.length; i < n; i++) {
 			AttributePage page = attributePages[i];
       String name = page.getDisplayName();
-      AttributePageWidget p = new AttributePageWidget(query, name, page); 
+      AttributePageWidget p = new AttributePageWidget(query, name, page, tree); 
 			tabbedPane.add( name, p );
       leafWidgets.addAll( p.getLeafWidgets() );
 		}
