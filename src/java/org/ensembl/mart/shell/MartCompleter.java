@@ -295,6 +295,31 @@ public class MartCompleter implements ReadlineCompleter {
 							whereQualifiersMode = false;
 							whereValuesMode = true;
 							SetWhereNames();
+						} else if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
+							logger.info(lastWord + " appears to be a qualifier");
+
+							if (lineWords.length > 1) {
+								lastFilterName = lineWords[lineWords.length - 2];
+								pruneFilterPages();
+							}
+
+							if (MartShellLib.BOOLEANQUALIFIERS.contains(lastWord)) {
+
+								logger.info(" going to whereQualifiers Mode after boolean qualifier\n");
+
+                whereNamesMode = false;
+                whereQualifiersMode = true;
+                whereValuesMode = false;
+								SetEmptyMode();
+							} else {
+
+								logger.info(" going to whereValuesMode\n");
+
+                whereNamesMode = false;
+								whereQualifiersMode = false;
+								whereValuesMode = true;
+								SetWhereValues();
+							}							
 						}
 
 						if (whereNamesMode) {
