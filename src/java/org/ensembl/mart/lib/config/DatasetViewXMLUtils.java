@@ -68,6 +68,7 @@ public class DatasetViewXMLUtils {
 	private static final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names
+  private static final String DATASETPREFIX = "datasetPrefix";
 	private static final String INTERNALNAME = "internalName";
 	private static final String DISPLAYNAME = "displayName";
 	private static final String DESCRIPTION = "description";
@@ -95,7 +96,7 @@ public class DatasetViewXMLUtils {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public static DatasetView XMLStreamToDatasetView(InputStream xmlinput) throws ConfigurationException {
-    return XMLStreamToDatasetView(xmlinput, null, null, false); 
+    return XMLStreamToDatasetView(xmlinput, null, false); 
   }
   
   /**
@@ -107,21 +108,20 @@ public class DatasetViewXMLUtils {
    * @throws ConfigurationException for all underlying Exceptions.
    */
   public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, boolean validate) throws ConfigurationException {
-    return XMLStreamToDatasetView(xmlinput, null, null, validate);
+    return XMLStreamToDatasetView(xmlinput, null, validate);
   }
   
   /**
    * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetView object, with
    * a precomputed Message Digest using a given Algorithm.
    * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
-   * @param digestAlgorithm -- String name of the Digest Algorithm used to create the digest
    * @param digest -- byte[] containing the digest
    * @return DatasetView
    * @throws ConfigurationException for all underlying Exceptions
    * @see java.security.MessageDigest
    */
-  public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, String digestAlgorithm, byte[] digest) throws ConfigurationException {
-    return XMLStreamToDatasetView(xmlinput, digestAlgorithm, digest, false);
+  public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, byte[] digest) throws ConfigurationException {
+    return XMLStreamToDatasetView(xmlinput, digest, false);
   }
   
   /**
@@ -130,31 +130,41 @@ public class DatasetViewXMLUtils {
    * created by a sun.security.MessageDigest object, and for validating the xml against
    * the DatasetView.dtd stored in the java CLASSPATH. 
    * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
-   * @param digestAlgorithm -- String name of the Digest Algorithm used to create the digest
    * @param digest -- byte[] containing the digest
    * @param validate -- if true, XML is validated against the DatasetView.dtd contained in the Java CLASSPATH.
    * @return
    * @throws ConfigurationException for all underlying Exceptions
    * @see java.security.MessageDigest
    */
-	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, String digestAlgorithm, byte[] digest, boolean validate) throws ConfigurationException {
-		try {
-			SAXBuilder builder = new SAXBuilder();
-			builder.setValidation(true); // validate against the DTD
-			// set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
-			builder.setEntityResolver(new MartDTDEntityResolver());
-      builder.setValidation(validate);
-      
-			InputSource is = new InputSource(xmlinput);
-
-			Document doc = builder.build(is);
-
-      return DocumentToDatasetView(doc, digestAlgorithm, digest);
-		} catch (Exception e) {
-			throw new ConfigurationException(e);
-		}
+	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, byte[] digest, boolean validate) throws ConfigurationException {
+      return DocumentToDatasetView(XMLStreamToDocument(xmlinput, validate), digest);
 	}
 
+  /**
+   * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a JDOM Document.
+   * @param xmlinput -- InputStream containin DatasetView.dtd compliant XML
+   * @param validate -- if true, JDOM validates the XML against the DatasetView.dtd in the CLASSPATH
+   * @return org.jdom.Document
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public static Document XMLStreamToDocument(InputStream xmlinput, boolean validate) throws ConfigurationException {
+    try {
+      SAXBuilder builder = new SAXBuilder();
+      builder.setValidation(true); // validate against the DTD
+      // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
+      builder.setEntityResolver(new MartDTDEntityResolver());
+      builder.setValidation(validate);
+      
+      InputSource is = new InputSource(xmlinput);
+
+      Document doc = builder.build(is);
+
+      return doc;
+    } catch (Exception e) {
+      throw new ConfigurationException(e);
+    }
+  }
+  
   /**
    * Takes a org.jdom.Document Object representing a DatasetView.dtd compliant
    * XML document, and returns a DatasetView object.
@@ -163,7 +173,7 @@ public class DatasetViewXMLUtils {
    * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
    */
   public static DatasetView DocumentToDatasetView(Document doc) throws ConfigurationException {
-    return DocumentToDatasetView(doc, null, null);
+    return DocumentToDatasetView(doc, null);
   }
 
   /**
@@ -171,26 +181,23 @@ public class DatasetViewXMLUtils {
    * XML document, and returns a DatasetView object.  If a digestAlgorithm and
    * Message Digest are supplied, these are added to the DatasetView.
    * @param doc -- Document representing a DatasetView.dtd compliant XML document
-   * @param digestAlgorithm -- MessageDigest algorithm used to compute the accompanying digest
    * @param digest -- a digest computed with the given digestAlgorithm
    * @return DatasetView object
    * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
    */  
-  public static DatasetView DocumentToDatasetView(Document doc, String digestAlgorithm, byte[] digest) throws ConfigurationException {
+  public static DatasetView DocumentToDatasetView(Document doc, byte[] digest) throws ConfigurationException {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+    String datasetPrefix = thisElement.getAttributeValue(DATASETPREFIX, "");
     String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
-    DatasetView d = new DatasetView(intName, dispname, desc);
+    DatasetView d = new DatasetView(intName, dispname, datasetPrefix, desc);
 
     LoadDatasetViewWithDocument(d, doc);
 
     if (digest != null)
-      if (digestAlgorithm == null)
-        logger.warning("Recieved digest without a digestAlgorithm, not stored in DatasetView\n");
-      else
-        d.setMessageDigest(digestAlgorithm, digest);
+        d.setMessageDigest(digest);
         
     return d;    
   }
@@ -206,10 +213,8 @@ public class DatasetViewXMLUtils {
   public static void LoadDatasetViewWithDocument(DatasetView dsv, Document doc) throws ConfigurationException {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
-    String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
-    String desc = thisElement.getAttributeValue(DESCRIPTION, "");
     
-    // a DatasetView object must have been constructed with an internalName, displayName and descripton
+    // a DatasetView object must have been constructed with an internalName
     // test that the internalNames match , throw an exception if they are not
     if (!intName.equals(dsv.getInternalName()))
       throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
@@ -499,6 +504,8 @@ public class DatasetViewXMLUtils {
     
     if (validString(dsview.getDisplayName()))
       root.setAttribute(DISPLAYNAME, dsview.getDisplayName());
+    
+    root.setAttribute(DATASETPREFIX, dsview.getDatasetPrefix());
       
     if (validString(dsview.getDescription()))
       root.setAttribute(DESCRIPTION, dsview.getDescription());

@@ -24,6 +24,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -35,8 +37,9 @@ import javax.sql.DataSource;
  * They can be instantiated with a miniumum of information (internalName), and lazy loaded when
  * the rest of the information is needed.  Any call to a get method will cause the object to attempt
  * to lazy load.  Lazy loading is only attempted when there are no FilterPage or AttributePage objects
- * loaded into the DatasetView.  Note that any call to toString, equals, and hashCode will cause lazy 
- * loading to occur, which can lead to some issues (see the documentation for each of these methods below).
+ * loaded into the DatasetView.  A failed attempt to lazy load throws a RuntimeException.
+ * Note that any call to toString, equals, and hashCode will cause lazy loading to occur, 
+ * which can lead to some issues (see the documentation for each of these methods below).
  *   
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -44,10 +47,10 @@ import javax.sql.DataSource;
 public class DatasetView extends BaseConfigurationObject {
 
 	/*
-	 * Datasets must have an internalName, so dont allow parameterless construction
+	 * Datasets must have an internalName, and datasetPrefix so dont allow parameterless construction
 	 */
 	public DatasetView() throws ConfigurationException {
-		this("", "", "");
+		this("", "", "", "");
 	}
 	/**
 	 * Constructs a DatasetView named by internalName and displayName.
@@ -56,9 +59,10 @@ public class DatasetView extends BaseConfigurationObject {
 	 * 
 	 * @param internalName String name to represent this DatasetView
 	 * @param displayName String name to display.
+   * @param datasetPrefix String prefix for all tables in the Mart Database for this Dataset. Must not be null
 	 */
-	public DatasetView(String internalName, String displayName) throws ConfigurationException {
-		this(internalName, displayName, "");
+	public DatasetView(String internalName, String displayName, String datasetPrefix) throws ConfigurationException {
+		this(internalName, displayName, datasetPrefix, "");
 	}
 
 	/**
@@ -67,11 +71,16 @@ public class DatasetView extends BaseConfigurationObject {
 	 * 
 	 * @param internalName String name to represent this DatasetView. Must not be null
 	 * @param displayName String name to display in an UI.
+   * @param datasetPrefix String prefix for all tables in the Mart Database for this Dataset. Must not be null
 	 * @param description String description of the DatasetView.
 	 * @throws ConfigurationException if required values are null.
 	 */
-	public DatasetView(String internalName, String displayName, String description) throws ConfigurationException {
+	public DatasetView(String internalName, String displayName, String datasetPrefix, String description) throws ConfigurationException {
 		super(internalName, displayName, description);
+    
+    if (datasetPrefix == null)
+      throw new ConfigurationException("DatasetView objects must contain a datasetPrefix\n");
+    this.datasetPrefix = datasetPrefix;
 	}
 
 	/**
@@ -222,12 +231,20 @@ public class DatasetView extends BaseConfigurationObject {
 		}
 	}
 
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public String getDatasetPrefix() {
+    return datasetPrefix;
+  }
+  
 	/**
 	 * Determine if this DatasetView has Options Available.
 	 * 
 	 * @return boolean, true if Options are available, false if not.
 	 */
 	public boolean hasOptions() {
+    lazyLoad();
 		return hasOptions;
 	}
 
@@ -236,6 +253,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return Option[]
 	 */
 	public Option[] getOptions() {
+    lazyLoad();
 		Option[] ret = new Option[uiOptions.size()];
 		uiOptions.values().toArray(ret);
 		return ret;
@@ -246,6 +264,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return boolean, true if DefaultFilter(s) are available, false if not
 	 */
 	public boolean hasDefaultFilters() {
+    lazyLoad();
 		return hasDefaultFilters;
 	}
 
@@ -254,6 +273,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return DefaultFilter[] array of DefaultFilter objects.
 	 */
 	public DefaultFilter[] getDefaultFilters() {
+    lazyLoad();
 		DefaultFilter[] ret = new DefaultFilter[defaultFilters.size()];
 		defaultFilters.toArray(ret);
 		return ret;
@@ -265,6 +285,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return starBases String[]
 	 */
 	public String[] getStarBases() {
+    lazyLoad();
 		String[] s = new String[starBases.size()];
 		starBases.toArray(s);
 		return s;
@@ -276,6 +297,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return pkeys String[]
 	 */
 	public String[] getPrimaryKeys() {
+    lazyLoad();
 		String[] p = new String[primaryKeys.size()];
 		primaryKeys.toArray(p);
 		return p;
@@ -287,6 +309,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return attributePages AttributePage[]
 	 */
 	public AttributePage[] getAttributePages() {
+    lazyLoad();
 		AttributePage[] as = new AttributePage[attributePages.size()];
 		attributePages.values().toArray(as);
 		return as;
@@ -299,6 +322,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return AttributePage object named by the given displayName, or null.
 	 */
 	public AttributePage getAttributePageByInternalName(String internalName) {
+    lazyLoad();
 		if (attributePageNameMap.containsKey(internalName))
 			return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
 		else
@@ -312,6 +336,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return boolean true if AttributePage is contained in the DatasetView, false if not.
 	 */
 	public boolean containsAttributePage(String internalName) {
+    lazyLoad();
 		return attributePageNameMap.containsKey(internalName);
 	}
 
@@ -320,6 +345,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterPage[]
 	 */
 	public FilterPage[] getFilterPages() {
+    lazyLoad();
 		FilterPage[] fs = new FilterPage[filterPages.size()];
 		filterPages.values().toArray(fs);
 		return fs;
@@ -332,6 +358,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterPage object named by the given displayName, or null
 	 */
 	public FilterPage getFilterPageByName(String internalName) {
+    lazyLoad();
 		if (filterPageNameMap.containsKey(internalName))
 			return (FilterPage) filterPages.get((Integer) filterPageNameMap.get(internalName));
 		else
@@ -345,6 +372,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return boolean true if FilterPage is contained in the DatasetView, false if not.
 	 */
 	public boolean containsFilterPage(String internalName) {
+    lazyLoad();
 		return filterPageNameMap.containsKey(internalName);
 	}
 
@@ -357,6 +385,7 @@ public class DatasetView extends BaseConfigurationObject {
 		* @return AttributeDescription
 		*/
 	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
+    lazyLoad();
 		if (containsAttributeDescription(internalName))
 			return lastAtt;
 		else
@@ -372,6 +401,7 @@ public class DatasetView extends BaseConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsAttributeDescription(String internalName) {
+    lazyLoad();
 		boolean found = false;
 
 		if (lastAtt == null) {
@@ -403,6 +433,7 @@ public class DatasetView extends BaseConfigurationObject {
 		* @return FilterDescription found, or null
 		*/
 	public FilterDescription getFilterDescriptionByInternalName(String internalName) {
+    lazyLoad();
 		if (containsFilterDescription(internalName))
 			return lastFilt;
 		else
@@ -416,6 +447,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return AttributeDescription supporting the field and tableConstraint, or null
 	 */
 	public AttributeDescription getAttributeDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+    lazyLoad();
 		if (supportsAttributeDescription(field, tableConstraint))
 			return lastSupportingAttribute;
 		else
@@ -431,6 +463,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return boolean, true if an AttributeDescription contained in this AttributePage supports the field and tableConstraint, false otherwise
 	 */
 	public boolean supportsAttributeDescription(String field, String tableConstraint) {
+    lazyLoad();
 		boolean supports = false;
 
 		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
@@ -454,6 +487,7 @@ public class DatasetView extends BaseConfigurationObject {
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsFilterDescription(String internalName) {
+    lazyLoad();
 		boolean contains = false;
 
 		if (lastFilt == null) {
@@ -497,6 +531,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
 	 */
 	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+    lazyLoad();
 		if (supportsFilterDescription(field, tableConstraint))
 			return lastSupportingFilter;
 		else
@@ -512,6 +547,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return boolean, true if the DatasetView contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
 	 */
 	public boolean supportsFilterDescription(String field, String tableConstraint) {
+    lazyLoad();
 		boolean supports = false;
 
 		if (lastSupportingFilter == null) {
@@ -545,6 +581,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterPage object containing the requested FilterDescription
 	 */
 	public FilterPage getPageForFilter(String internalName) {
+    lazyLoad();
 		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
 
@@ -560,6 +597,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of FilterPages containing the FilterDescription named by internalName
 	 */
 	public List getPagesForFilter(String internalName) {
+    lazyLoad();
 		List pages = new ArrayList();
 
 		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
@@ -581,6 +619,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return AttributePage containing requested AttributeDescription
 	 */
 	public AttributePage getPageForAttribute(String internalName) {
+    lazyLoad();
 		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
 			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
 
@@ -596,6 +635,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of AttributePages containing the AttributeDescription named by internalName
 	 */
 	public List getPagesForAttribute(String internalName) {
+    lazyLoad();
 		List pages = new ArrayList();
 
 		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
@@ -614,6 +654,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of FilterDescription/MapFilterDescription objects
 	 */
 	public List getAllFilterDescriptions() {
+    lazyLoad();
 		List filts = new ArrayList();
 
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
@@ -634,6 +675,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of AttributeDescription objects
 	 */
 	public List getAllAttributeDescriptions() {
+    lazyLoad();
 		List atts = new ArrayList();
 
 		for (Iterator iter = attributePages.keySet().iterator(); iter.hasNext();) {
@@ -655,6 +697,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return true if DatasetView contains the starBase, false if not
 	 */
 	public boolean containsStarBase(String starBase) {
+    lazyLoad();
 		return starBases.contains(starBase);
 	}
 
@@ -665,6 +708,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return true if DatasetView contains the primary key, false if not
 	 */
 	public boolean containsPrimaryKey(String pkey) {
+    lazyLoad();
 		return primaryKeys.contains(pkey);
 	}
 	/**
@@ -675,6 +719,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterGroup for Attrribute Description provided, or null
 	 */
 	public FilterGroup getGroupForFilter(String internalName) {
+    lazyLoad();
 		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastFiltGroup == null) {
@@ -698,6 +743,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterCollection for Attrribute Description provided, or null
 	 */
 	public FilterCollection getCollectionForFilter(String internalName) {
+    lazyLoad();
 		if (!containsFilterDescription(internalName)) {
 			return null;
 		} else if (lastFiltColl == null) {
@@ -721,6 +767,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return FilterGroup for Attrribute Description provided, or null
 	 */
 	public AttributeGroup getGroupForAttribute(String internalName) {
+    lazyLoad();
 		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastAttGroup == null) {
@@ -744,6 +791,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return AttributeCollection for Attribute Description provided, or null
 	 */
 	public AttributeCollection getCollectionForAttribute(String internalName) {
+    lazyLoad();
 		if (!containsAttributeDescription(internalName)) {
 			return null;
 		} else if (lastFiltColl == null) {
@@ -764,6 +812,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @returns List of internalNames
 	 */
 	public List getAttributeCompleterNames() {
+    lazyLoad();
 		List names = new ArrayList();
 
 		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
@@ -783,6 +832,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @returns List of internalNames
 	 */
 	public List getFilterCompleterNames() {
+    lazyLoad();
 		List names = new ArrayList();
 
 		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
@@ -805,6 +855,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of values to complete
 	 */
 	public List getFilterCompleterValuesByInternalName(String internalName) {
+    lazyLoad();
 		if (internalName.indexOf(".") > 0)
 			return getFilterDescriptionByInternalName(internalName.split("\\.")[0]).getCompleterValues(internalName);
 		else
@@ -819,6 +870,7 @@ public class DatasetView extends BaseConfigurationObject {
 	 * @return List of qualifiers to complete
 	 */
 	public List getFilterCompleterQualifiersByInternalName(String internalName) {
+    lazyLoad();
 		if (internalName.indexOf(".") > 0 && !(internalName.endsWith(".")) && containsFilterDescription(internalName.split("\\.")[1])) {
 			String refname = internalName.split("\\.")[1];
 			return getFilterDescriptionByInternalName(refname).getCompleterQualifiers(refname);
@@ -843,15 +895,6 @@ public class DatasetView extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the String name of the java.security.MessageDigest algoritm used to generate
-	 * the digest stored with setDigest;
-	 * @return String name of algorithm
-	 */
-	public String getDigestAlgorithm() {
-		return digestAlgorithm;
-	}
-
-	/**
 	 * Returns a digest suitable for comparison with a digest computed on another version
 	 * of the XML underlying this DatasetView. 
 	 * @return byte[] digest
@@ -863,12 +906,10 @@ public class DatasetView extends BaseConfigurationObject {
 	/**
 	 * Set a Message Digest for the DatasetView.  This must be a digest
 	 * generated by a java.security.MessageDigest object with the given algorithmName
-	 * method. 
-	 * @param algorithmName -- String name of the java.security.MessageDigest used to calculate the digest 
+	 * method.  
 	 * @param bs - byte[] digest computed
 	 */
-	public void setMessageDigest(String algorithmName, byte[] bs) {
-		digestAlgorithm = algorithmName;
+	public void setMessageDigest(byte[] bs) {
 		digest = bs;
 	}
 
@@ -888,36 +929,38 @@ public class DatasetView extends BaseConfigurationObject {
 		return adaptor;
 	}
 
-	private void lazyLoad() throws ConfigurationException {
+	private void lazyLoad() {
 		if (filterPages.size() == 0 && attributePages.size() == 0) {
 			if (adaptor == null)
-				throw new ConfigurationException("DatasetView objects must be provided a DSViewAdaptor to facilitate lazyLoading\n");
-			adaptor.lazyLoad(this);
+				throw new RuntimeException("DatasetView objects must be provided a DSViewAdaptor to facilitate lazyLoading\n");
+			
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Lazy Loading DatasetView\n"); // TODO: remove me after testing within UI to make sure no un intended lazy loading is occuring
+      
+      try {
+				adaptor.lazyLoad(this);
+			} catch (ConfigurationException e) {
+        throw new RuntimeException("Could not lazyload datasetview " + e.getMessage(), e);
+			}
 		}
 	}
 
 	/**
-	 * Provides output useful for debugging purposes.  If the underlying lazy load fails, the toString
-   * output will reflect this.
+	 * Provides output useful for debugging purposes.  Calls lazyload, so could throw a RuntimeException
 	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
-
-		try {
-			lazyLoad();
-		} catch (ConfigurationException e) {
-			buf.append("Could not lazyLoad DatasetView object\n" + e.getMessage() + "\n");
-			return buf.toString();
-		}
+		
+    lazyLoad();
 
 		buf.append("[");
 		buf.append(super.toString());
+    buf.append(", datasetPrefix=").append(datasetPrefix);
 		buf.append(", starnames=").append(starBases);
 		buf.append(", primarykeys=").append(primaryKeys);
 		buf.append(", filterPages=").append(filterPages);
 		buf.append(", attributePages=").append(attributePages);
 		buf.append(", datasource=").append(datasource);
-		buf.append(", digestAlgorithm=").append(digestAlgorithm);
 		buf.append("]");
 
 		return buf.toString();
@@ -941,16 +984,10 @@ public class DatasetView extends BaseConfigurationObject {
 	 * a particular implimenation during lazyLoad, this will lead to a RuntimeException when hashCode is called.
 	 */
 	public int hashCode() {
-		try {
-			lazyLoad();
-		} catch (ConfigurationException e) {
-			throw new RuntimeException("Could not lazyLoad DatasetView in call to hashCode\n" + e.getMessage() + "\n", e);
-		}
+	  lazyLoad();
 
 		int tmp = super.hashCode();
-
-		if (datasource != null)
-			tmp = (31 * tmp) + datasource.hashCode();
+    tmp = (31 * tmp) + datasetPrefix.hashCode();
 
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);
@@ -975,10 +1012,12 @@ public class DatasetView extends BaseConfigurationObject {
 		return tmp;
 	}
 
+  private Logger logger = Logger.getLogger(DatasetView.class.getName()); // TODO: remove me after testing within UI to make sure no un intended lazy loading is occuring
+  
+  private String datasetPrefix = null;
 	private DSViewAdaptor adaptor = null;
 	private DataSource datasource = null;
 	private byte[] digest = null;
-	private String digestAlgorithm = null;
 
 	//keep track of ordering of filter and attribute pages
 	private int apageRank = 0;

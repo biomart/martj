@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config.test;
 
 import java.security.MessageDigest;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -33,7 +34,7 @@ import org.ensembl.mart.lib.test.Base;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class DatabaseDSViewAdaptorTest extends Base {
-   
+  private Logger logger = Logger.getLogger(DatabaseDSViewAdaptorTest.class.getName()); 
   public static final String USER = "test";
   private static final String MODTESTDATASETVIEWFILE = "data/XML/testDatasetViewMod.xml";
   
@@ -80,7 +81,7 @@ public class DatabaseDSViewAdaptorTest extends Base {
     assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView after store and update\n", refdbdsva.getDatasetViews().length == 1);
     assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView internalName after store and update\n", refdbdsva.getDatasetInternalNames().length == 1);
     assertTrue("DatabaseDSViewAdaptor should have 1 DatasetView displayName after store and update\n", refdbdsva.getDatasetDisplayNames().length == 1);
-    
+
     DatasetView ndsv = refdbdsva.getDatasetViews()[0];
 
     //use assertSame, as this tests the object reference.  Does not test actual equality, as this may be a stub DatasetView
@@ -95,7 +96,7 @@ public class DatabaseDSViewAdaptorTest extends Base {
     assertTrue("DatabaseDSViewAdaptor should support displayName of reference DatasetView\n", refdbdsva.supportsDisplayName(refdsv.getDisplayName()));
     
     DatasetView modDSV = DatasetViewXMLUtils.XMLStreamToDatasetView(DatasetViewXMLUtilsTest.class.getClassLoader().getResourceAsStream(MODTESTDATASETVIEWFILE), false);
-    modDSV.setMessageDigest(DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM, DatasetViewXMLUtils.DatasetViewToMessageDigest(modDSV));
+    modDSV.setMessageDigest( DatasetViewXMLUtils.DatasetViewToMessageDigest(modDSV) );
     
     DatabaseDSViewAdaptor.storeDatasetView(martJDataSource, USER, modDSV, true);
     refdbdsva.update();
@@ -123,13 +124,6 @@ public class DatabaseDSViewAdaptorTest extends Base {
     
     DatabaseDSViewAdaptor ndbdsva = getSampleDatasetViewAdaptor(martJDataSource);
     assertTrue("DatabaseDatasetViewAdaptor should be empty after delete, for test user\n", ndbdsva.getDatasetViews().length == 0);
-//      String[] inames = DatabaseDatasetViewUtils.getAllInternalNames(martJDataSource, USER);
-//      for (int i = 0, n = inames.length; i < n; i++) {
-//				String iname = inames[i];
-//				DatasetView view = DatabaseDatasetViewUtils.getDatasetViewByInternalName(martJDataSource, USER, iname);
-//        String metatable = DatabaseDatasetViewUtils.getDSViewTableFor(martJDataSource, USER);
-//        DatabaseDatasetViewUtils.DeleteOldDSViewEntriesFor(martJDataSource, metatable, view.getInternalName(), view.getDisplayName());
-
   }
 
   public static void main(String[] args) {

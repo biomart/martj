@@ -22,6 +22,8 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 import javax.sql.DataSource;
@@ -34,6 +36,7 @@ import javax.sql.DataSource;
  */
 public class DatabaseDSViewAdaptor implements DSViewAdaptor {
 
+  private Logger logger = Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
 	private List dsviews = new ArrayList();
 	private int inameIndex = 0;
 	private HashMap inameMap = new HashMap();
@@ -112,7 +115,9 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
 		if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
 			inameMap.put(dsv.getInternalName(), dsv);
 			dnameMap.put(dsv.getDisplayName(), dsv);
+      dsv.setDSViewAdaptor(this);
 			dsviews.add(dsv);
+      
 		}
 	}
 
@@ -123,6 +128,7 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
   public void removeDatasetView(DatasetView dsv) {
     inameMap.remove(dsv.getInternalName());
     dnameMap.remove(dsv.getDisplayName());
+    dsv.setDSViewAdaptor(null);
     dsviews.remove(dsv);
   }
 
@@ -158,6 +164,14 @@ public class DatabaseDSViewAdaptor implements DSViewAdaptor {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress) throws ConfigurationException {
-    DatabaseDatasetViewUtils.storeConfiguration(ds, user, dsv.getInternalName(), dsv.getDisplayName(), DatasetViewXMLUtils.DatasetViewToDocument(dsv), compress);
+    DatabaseDatasetViewUtils.storeConfiguration(ds, user, dsv.getInternalName(), dsv.getDisplayName(), dsv.getDatasetPrefix(), dsv.getDescription(), DatasetViewXMLUtils.DatasetViewToDocument(dsv), compress);
   }
+  
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetView)
+	 */
+	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+		DatasetViewXMLUtils.LoadDatasetViewWithDocument(dsv, DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName( dsvsource, user, dsv.getInternalName() ) );
+	}
+
 }

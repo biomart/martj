@@ -97,10 +97,13 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		String testDName = "Test of a DatasetView";
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
+    String testDatasetPrefix = "test";
+    String DatasetPrefix = d.getDatasetPrefix();
 
 		assertEquals("Internal Name not correctly set for DatasetView\n", testIName, IName);
 		assertEquals("Display Name not correctly set for DatasetView\n", testDName, DName);
 		assertEquals("Description not correctly set for DatasetView\n", TESTDESC, Desc);
+    assertEquals("DatasetPrefix not correctly set for DatasetView\n", testDatasetPrefix, DatasetPrefix);
 
 		String[] sbs = d.getStarBases();
 		assertEquals("should only get one starbase\n", 1, sbs.length);
