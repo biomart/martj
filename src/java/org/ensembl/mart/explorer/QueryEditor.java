@@ -26,15 +26,11 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -49,13 +45,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
+import org.ensembl.mart.guiutils.PreviewPaneOutputStream;
 import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
-import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
@@ -63,11 +58,7 @@ import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.shell.MartShellLib;
-import org.ensembl.mart.util.AutoFlushOutputStream;
-import org.ensembl.mart.util.FileUtil;
 import org.ensembl.mart.util.LoggingUtil;
-import org.ensembl.mart.util.MaximumBytesInputFilter;
-import org.ensembl.mart.util.PollingInputStream;
 
 // TODO 1 Finish testing filter addition and removal
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
@@ -90,10 +81,8 @@ public class QueryEditor extends JPanel {
   private QueryEditorContext editorManager;
 
   private OutputStream os = null;
-  private PollingInputStream pis = null;
 
-  private static final Logger logger =
-    Logger.getLogger(QueryEditor.class.getName());
+  private static final Logger logger = Logger.getLogger(QueryEditor.class.getName());
 
   /** default percentage of total width allocated to the tree constituent component. */
   private double TREE_WIDTH = 0.27d;
@@ -126,7 +115,7 @@ public class QueryEditor extends JPanel {
   private File currentDirectory;
 
   /** File for temporarily storing results in while this instance exists. */
-  private File tmpFile;
+//  private File tmpFile;
 
   private JSplitPane leftAndRight;
 
@@ -139,33 +128,24 @@ public class QueryEditor extends JPanel {
    * 
    * @throws IOException if fails to create temporary results file.
    */
-  public QueryEditor(
-    QueryEditorContext editorManager,
-    AdaptorManager datasetConfigSettings)
-    throws IOException {
+  public QueryEditor(QueryEditorContext editorManager, AdaptorManager datasetConfigSettings) throws IOException {
 
     this.adaptorManager = datasetConfigSettings;
     this.editorManager = editorManager;
     this.query = new Query();
 
-    QueryTreeView treeConfig =
-      new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
-    inputPanelContainer =
-      new InputPageContainer(query, treeConfig, datasetConfigSettings);
+    QueryTreeView treeConfig = new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
+    inputPanelContainer = new InputPageContainer(query, treeConfig, datasetConfigSettings);
 
     outputPanel = new JEditorPane();
     outputPanel.setEditable(false);
 
-    addWidgets(
-      new JScrollPane(treeConfig),
-      inputPanelContainer,
-      new JScrollPane(outputPanel));
+    addWidgets(new JScrollPane(treeConfig), inputPanelContainer, new JScrollPane(outputPanel));
 
-    mqlFileChooser.addChoosableFileFilter(
-      new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
+    mqlFileChooser.addChoosableFileFilter(new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
 
-    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
-    tmpFile.deleteOnExit();
+//    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
+//    tmpFile.deleteOnExit();
 
     // set default working directory
     setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -193,8 +173,7 @@ public class QueryEditor extends JPanel {
    */
   public void doLoadQuery() {
 
-    if (getMqlFileChooser().showOpenDialog(this)
-      != JFileChooser.APPROVE_OPTION)
+    if (getMqlFileChooser().showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
       return;
 
     logger.fine("Previous query: " + query);
@@ -245,10 +224,7 @@ public class QueryEditor extends JPanel {
    * @param listener
    * @return
    */
-  private JButton createButton(
-    String label,
-    ActionListener listener,
-    boolean enabled) {
+  private JButton createButton(String label, ActionListener listener, boolean enabled) {
     JButton b = new JButton(label);
     b.setEnabled(enabled);
     b.addActionListener(listener);
@@ -287,10 +263,7 @@ public class QueryEditor extends JPanel {
    *      bottom
    * </pre>
    */
-  private void addWidgets(
-    JComponent left,
-    JComponent right,
-    JComponent bottom) {
+  private void addWidgets(JComponent left, JComponent right, JComponent bottom) {
 
     left.setMinimumSize(MINIMUM_SIZE);
     right.setMinimumSize(MINIMUM_SIZE);
@@ -299,8 +272,7 @@ public class QueryEditor extends JPanel {
     leftAndRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right);
     leftAndRight.setOneTouchExpandable(true);
 
-    middleAndBottom =
-      new JSplitPane(JSplitPane.VERTICAL_SPLIT, leftAndRight, bottom);
+    middleAndBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, leftAndRight, bottom);
     middleAndBottom.setOneTouchExpandable(true);
 
     // don't use default FlowLayout manager because it won't resize components if
@@ -323,8 +295,7 @@ public class QueryEditor extends JPanel {
    * @return preloaded dataset configs
    * @throws ConfigurationException
    */
-  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor)
-    throws ConfigurationException {
+  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
 
     //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
@@ -336,8 +307,7 @@ public class QueryEditor extends JPanel {
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
       //dont ignore cache, dont validate, dont include hidden members (these are only for MartEditor)
-      ((CompositeDSConfigAdaptor) adaptor).add(
-        new URLDSConfigAdaptor(dvURL, false, false, false));
+       ((CompositeDSConfigAdaptor) adaptor).add(new URLDSConfigAdaptor(dvURL, false, false, false));
     }
 
     return adaptor;
@@ -388,8 +358,7 @@ public class QueryEditor extends JPanel {
     new QuickFrame("Query Editor (Test Frame)", p);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetConfig(
-      (DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
+    editor.getQuery().setDatasetConfig((DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
   }
 
   /**
@@ -436,15 +405,6 @@ public class QueryEditor extends JPanel {
       os = null;
     }
 
-    if (pis != null) {
-      try {
-        pis.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      pis = null;
-    }
-
     outputPanel.setText("");
   }
 
@@ -462,24 +422,15 @@ public class QueryEditor extends JPanel {
    * @param changeResultsFile if true the results file chooser is displayed
    * @param limit max number of rows in result set
    */
-  private void runQuery(
-    final boolean save,
-    final boolean changeResultsFile,
-    final int limit) {
+  private void runQuery(final boolean save, final boolean changeResultsFile, final int limit) {
 
     if (os != null) {
       feedback.info("Query is already running.");
       return;
     }
 
-    // Possible OPTIMISATION could write out to a dual outputStream, one outputStream goes
-    // to a file, the other is a pipe into the application. This would prevent the
-    // need to read from the file system and remove the need for PollingFileInputStream.
-
     //  user select result file if necessary
-    if (save
-      && resultsFileChooser.getSelectedFile() == null
-      || changeResultsFile) {
+    if (save && resultsFileChooser.getSelectedFile() == null || changeResultsFile) {
 
       if (resultsFileChooser.getSelectedFile() == null)
         resultsFileChooser.setSelectedFile(new File(getName() + ".mart"));
@@ -493,109 +444,56 @@ public class QueryEditor extends JPanel {
     // clear last results set before executing query
     outputPanel.setText("");
 
-    try {
+    new Thread() {
 
-      // We use the PollingInputStream wrapper so that we keep trying to read from
-      // file even reach end. Needed because we might read faster than we write to it.
-      pis = new PollingInputStream(new FileInputStream(tmpFile));
-      pis.setLive(true);
-
-      // JEditorPane.read(inputStream,...) only displays the contents of the inputStream 
-      // once the end of the stream is reached. Because of this, and to prevent the client
-      // memory usage becoming extreme for large queries we limit the amount of data
-      // to display by closing the inputStream (potentially) prematurely by the using the
-      // MaximumBytesInputFilter() wrapper around the inputStream. 
-      final InputStream is =
-        new MaximumBytesInputFilter(pis, maxPreconfigBytes);
-
-      final PollingInputStream pisFinal = pis;
-      new Thread() {
-
-        public void run() {
-          execute(limit);
-          // copy tmp file to results file if necessary
-          try {
-            if (save)
-              FileUtil.copyFile(tmpFile, resultsFileChooser.getSelectedFile());
-          } catch (IOException e) {
-            feedback.warning(e);
-          }
-          // tell the inputStream to stop reading once a -1 has been read
-          // from the file because we aren't writing any more.
-          pisFinal.setLive(false);
-        }
+      public void run() {
+        execute(save, limit);
+        // copy tmp file to results file if necessary
+//        try {
+//          if (save)
+//            FileUtil.copyFile(tmpFile, resultsFileChooser.getSelectedFile());
+//        } catch (IOException e) {
+//          feedback.warning(e);
+//        }
       }
-      .start();
-
-      // read results from file on another thread.
-      new Thread() {
-
-        public void run() {
-
-          loadPreconfigPanel(is);
-        }
-      }
-      .start();
-
-    } catch (FileNotFoundException e) {
-      feedback.warning(e);
     }
+    .start();
 
-  }
-
-  /**
-   * Reads all data from is and displays in preconfig panel.
-   */
-  private void loadPreconfigPanel(InputStream is) {
-
-    try {
-      outputPanel.read(is, null);
-      is.close();
-    } catch (IOException e) {
-      if (pis != null)
-        feedback.warning(e);
-    }
   }
 
   /**
    * 
    */
-  private void execute(final int limit) {
+  private void execute(final boolean save, final int limit) {
 
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
       return;
-    } else if (
-      query.getAttributes().length == 0
-        && query.getSequenceDescription() == null) {
+    } else if (query.getAttributes().length == 0 && query.getSequenceDescription() == null) {
       feedback.warning("Attributes must be set before executing query.");
       return;
     }
 
     try {
-
-      // The preconfig pane loading system can't read bytes from tmpFile
-      // until they are written to disk so we force the output memory buffer to
-      // flush often.
-      os =
-        new AutoFlushOutputStream(
-          new FileOutputStream(tmpFile),
-          maxPreconfigBytes);
-
+      File outFile = null;
+      
+      if (save) {
+        outFile = resultsFileChooser.getSelectedFile();
+        os = new FileOutputStream(outFile);
+      } else
+        os = new PreviewPaneOutputStream(null, outputPanel, maxPreconfigBytes);
+         
       int oldLimit = query.getLimit();
       if (limit > 0)
         query.setLimit(limit);
 
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-      engine.execute(
-        query,
-        inputPanelContainer.getOutputSettingsPage().getFormat(),
-        os);
+      engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
       os.close();
       os = null;
 
-      if (tmpFile.toURL().openConnection().getContentLength() < 1)
+      if (save && outFile != null && outFile.toURL().openConnection().getContentLength() < 1)
         feedback.warning("Empty result set.");
 
       if (limit > 0)
@@ -653,8 +551,7 @@ public class QueryEditor extends JPanel {
 
       String mql = getQueryAsMQL();
 
-      if (getMqlFileChooser().showSaveDialog(this)
-        != JFileChooser.APPROVE_OPTION)
+      if (getMqlFileChooser().showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
         return;
 
       File f = getMqlFileChooser().getSelectedFile().getAbsoluteFile();
@@ -708,8 +605,7 @@ public class QueryEditor extends JPanel {
     if (!directory.exists())
       throw new IllegalArgumentException("Directory not exist: " + directory);
     if (!directory.isDirectory())
-      throw new IllegalArgumentException(
-        "File is not a directory: " + directory);
+      throw new IllegalArgumentException("File is not a directory: " + directory);
     currentDirectory = directory;
   }
 
