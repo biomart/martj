@@ -20,11 +20,13 @@ package org.ensembl.mart.explorer;
 
 import java.awt.Color;
 
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.Dataset;
@@ -35,7 +37,7 @@ import org.ensembl.mart.lib.config.Dataset;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class AttributePageSetWidget extends InputPage implements ChangeListener {
+public class AttributePageSetWidget extends InputPage implements ChangeListener{
 
   final Color SELECTED_FOREGROUND = Color.WHITE;
   final Color SELECTED_BACKGROUND = Color.BLACK;
@@ -44,6 +46,10 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener 
   final Color UNSELECTED_BACKGROUND = Color.LIGHT_GRAY;
 
   private JTabbedPane tabbedPane;
+  private int lastSelectedIndex;
+  
+  /** Whether the widget is in the middle of reverting a user tab change action. */
+  private boolean reverting;
 
 	/**
 	 * @param query
@@ -56,7 +62,8 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener 
     tabbedPane.setBackground( SELECTED_BACKGROUND );
     tabbedPane.addChangeListener( this );
     tabbedPane.setUI(new ConfigurableTabbedPaneUI( SELECTED_BACKGROUND ));
-    
+    lastSelectedIndex = 0;
+    reverting = false;
     
 		AttributePage[] attributePages = dataset.getAttributePages();
 		for (int i = 0, n = attributePages.length; i < n; i++) {
@@ -77,17 +84,41 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener 
 	 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
 	 */
 	public void stateChanged(ChangeEvent e) {
-		
-    // TODO "Are you sure?"
-    
-    // TODO remove attributes
-    
-    //UIManager.put("", Color.green);
-    
-    resetTabColors();
-    
-    //tabbedPane.repaint();
-    
+
+		// Present user with an "Are you sure?" option.
+		if (!reverting && query.getAttributes().length > 0) {
+
+			int option =
+				JOptionPane.showConfirmDialog(
+					this,
+					new JLabel(
+						"Changing this page will cause all currently selected"
+							+ "attributes to be removed from the query. Continue?"),
+					"Change Attributes",
+					JOptionPane.YES_NO_OPTION);
+
+			if (option != JOptionPane.OK_OPTION) {
+				// revert to last selected attribute page
+				reverting = true;
+				tabbedPane.setSelectedIndex(lastSelectedIndex);
+				return;
+			}
+		}
+
+		if (!reverting) {
+
+			// Remove attributes from model
+			Attribute[] attributes = query.getAttributes();
+			for (int i = 0; i < attributes.length; i++) {
+				query.removeAttribute(attributes[i]);
+			}
+
+			resetTabColors();
+			lastSelectedIndex = tabbedPane.getSelectedIndex();
+		}
+
+		reverting = false;
+
 	}
 
 	/**
@@ -110,5 +141,6 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener 
       tabbedPane.setBackgroundAt(i, background );
     }
 	}
+
 
 }
