@@ -39,9 +39,9 @@ import org.ensembl.mart.lib.config.DatasetConfig;
  * 
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class LookupHandler implements UnprocessedFilterHandler {
+public class GenericHandler implements UnprocessedFilterHandler {
 
-	private Logger logger = Logger.getLogger(LookupHandler.class.getName());
+	private Logger logger = Logger.getLogger(GenericHandler.class.getName());
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
