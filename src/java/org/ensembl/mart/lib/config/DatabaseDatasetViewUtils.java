@@ -42,8 +42,7 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import javax.sql.DataSource;
-
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
@@ -112,12 +111,12 @@ public class DatabaseDatasetViewUtils {
   /**
    * Verify if a _meta_DatasetView_[user] table exists.  Returns false if user is null, or
    * if the table does not exist. 
-   * @param dsource - DataSource containing connection to Mart Database
+   * @param dsource - DetailedDataSource containing connection to Mart Database
    * @param user - user to query
    * @return true if _meta_DatasetView_[user] exists, false otherwise
    * @throws ConfigurationException for SQLExceptions
    */
-  public static boolean DSViewUserTableExists(DataSource dsource, String user) throws ConfigurationException {
+  public static boolean DSViewUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
     if (user == null)
       return false;
     else {
@@ -156,12 +155,12 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Determine if _meta_DatasetView exists in a Mart Database defined by the given DataSource.
-   * @param dsource -- DataSource for the Mart Database being querried.
+   * Determine if _meta_DatasetView exists in a Mart Database defined by the given DetailedDataSource.
+   * @param dsource -- DetailedDataSource for the Mart Database being querried.
    * @return true if _meta_DatasetView exists, false if it does not exist
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static boolean BaseDSViewTableExists(DataSource dsource) throws ConfigurationException {
+  public static boolean BaseDSViewTableExists(DetailedDataSource dsource) throws ConfigurationException {
     String table = BASEMETATABLE;
     String tcheck = null;
 
@@ -198,7 +197,7 @@ public class DatabaseDatasetViewUtils {
    * Store a DatesetView.dtd compliant (compressed or uncompressed) XML Document in the Mart Database with a given internalName and displayName.  
    * If user is not null and _meta_DatsetView_[user] exists, this table is the target, otherwise, _meta_DatasetView is the target.
    * Along with the internalName and displayName of the XML, an MD5 messageDigest of the xml is computed, and stored as well. 
-   * @param dsource -- DataSource object containing connection information for the Mart Database
+   * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
    * @param internalName -- internalName of the DatasetViewXML being stored.
    * @param displayName -- displayName of the DatasetView XML being stored.
@@ -208,7 +207,7 @@ public class DatabaseDatasetViewUtils {
    * @throws ConfigurationException when no _meta_DatasetView table exists, and for all underlying Exceptions
    */
   public static void storeConfiguration(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String user,
     String internalName,
     String displayName,
@@ -231,7 +230,7 @@ public class DatabaseDatasetViewUtils {
   }
 
   private static int storeUncompressedXML(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String user,
     String internalName,
     String displayName,
@@ -292,7 +291,7 @@ public class DatabaseDatasetViewUtils {
   }
 
   private static int storeCompressedXML(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String user,
     String internalName,
     String displayName,
@@ -358,12 +357,12 @@ public class DatabaseDatasetViewUtils {
   /**
    * Returns all of the internalNames stored in the _meta_DatasetView table for
    * the Mart Database for the given user.
-   * @param ds -- DataSource for Mart database
+   * @param ds -- DetailedDataSource for Mart database
    * @param user -- user for _meta_DatasetView table, if _meta_DatasetView_user does not exist, _meta_DatasetView is attempted.
    * @return String[] containing all of the internalNames
    * @throws ConfigurationException when valid _meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
-  public static String[] getAllInternalNames(DataSource ds, String user) throws ConfigurationException {
+  public static String[] getAllInternalNames(DetailedDataSource ds, String user) throws ConfigurationException {
     List names = new ArrayList();
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETINTNAMESQL + metatable;
@@ -396,12 +395,12 @@ public class DatabaseDatasetViewUtils {
   /**
    * Returns all of the displayNames stored in the _meta_DatasetView table for
    * the Mart Database for the given user.
-   * @param ds -- DataSource for Mart database
+   * @param ds -- DetailedDataSource for Mart database
    * @param user -- user for _meta_DatasetView table, if _meta_DatasetView_user does not exist, _meta_DatasetView is attempted.
    * @return String[] containing all of the displayNames
    * @throws ConfigurationException when valid _meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
-  public static String[] getAllDisplayNames(DataSource ds, String user) throws ConfigurationException {
+  public static String[] getAllDisplayNames(DetailedDataSource ds, String user) throws ConfigurationException {
     List names = new ArrayList();
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETDNAMESQL + metatable;
@@ -432,15 +431,15 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a DatasetView object from the Mart Database using a supplied DataSource for a given user, defined with the
+   * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName.
-   * @param dsource -- DataSource object containing connection information for the Mart Database
+   * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
    * @param internalName -- internalName of desired DatasetView object
    * @return DatasetView defined by given internalName
    * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByInternalName(DataSource dsource, String user, String internalName)
+  public static DatasetView getDatasetViewByInternalName(DetailedDataSource dsource, String user, String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -479,15 +478,15 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a DatasetView object from the Mart Database using a supplied DataSource for a given user, defined with the
+   * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given displayName.
-   * @param dsource -- DataSource object containing connection information for the Mart Database
+   * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
    * @param displayName -- displayName of desired DatasetView object
    * @return DatasetView defined by given displayName
    * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static Document getDatasetViewDocumentByInternalName(DataSource dsource, String user, String internalName)
+  public static Document getDatasetViewDocumentByInternalName(DetailedDataSource dsource, String user, String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -530,15 +529,15 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a DatasetView object from the Mart Database using a supplied DataSource for a given user, defined with the
+   * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given displayName
-   * @param dsource -- DataSource object containing connection information for the Mart Database
+   * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
    * @param displayName -- String displayName for requested DatasetView
    * @return DatasetView with given displayName
    * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByDisplayName(DataSource dsource, String user, String displayName)
+  public static DatasetView getDatasetViewByDisplayName(DetailedDataSource dsource, String user, String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -576,7 +575,7 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static Document getDatasetViewDocumentByDisplayName(DataSource dsource, String user, String displayName)
+  public static Document getDatasetViewDocumentByDisplayName(DetailedDataSource dsource, String user, String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -629,7 +628,7 @@ public class DatabaseDatasetViewUtils {
    * @return byte[] digest for given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByInternalName(DataSource dsource, String user, String internalName)
+  public static byte[] getDSViewMessageDigestByInternalName(DetailedDataSource dsource, String user, String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -668,7 +667,7 @@ public class DatabaseDatasetViewUtils {
    * @return String displayName for given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewDisplayNameByInternalName(DataSource dsource, String user, String internalName)
+  public static String getDSViewDisplayNameByInternalName(DetailedDataSource dsource, String user, String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -706,7 +705,7 @@ public class DatabaseDatasetViewUtils {
    * @return byte[] digest for given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByDisplayName(DataSource dsource, String user, String displayName)
+  public static byte[] getDSViewMessageDigestByDisplayName(DetailedDataSource dsource, String user, String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -745,7 +744,7 @@ public class DatabaseDatasetViewUtils {
    * @return String internalName for given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewInternalNameByDisplayName(DataSource dsource, String user, String displayName)
+  public static String getDSViewInternalNameByDisplayName(DetailedDataSource dsource, String user, String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -776,7 +775,7 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static int getDSViewEntryCountFor(DataSource ds, String metatable, String internalName, String displayName)
+  public static int getDSViewEntryCountFor(DetailedDataSource ds, String metatable, String internalName, String displayName)
     throws ConfigurationException {
     String existSQL = EXISTSELECT + metatable + EXISTWHERE;
     if (logger.isLoggable(Level.INFO))
@@ -811,14 +810,14 @@ public class DatabaseDatasetViewUtils {
   /**
    * Removes all records in a given metatable for the given internalName and displayName.  Throws an error if the rows deleted do not equal
    * the number of rows obtained using DatabaseDatasetViewAdaptor.getDSViewEntryCountFor(). 
-   * @param dsrc - DataSource for Mart Database
+   * @param dsrc - DetailedDataSource for Mart Database
    * @param metatable - _meta_DatasetView table to use to delete entries
    * @param internalName - internalName of DatasetView entries to delete from metatable
    * @param displayName - displayName of DatasetView entries to delete from metatable
    * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSViewEntryCountFor()
    */
   public static void DeleteOldDSViewEntriesFor(
-    DataSource dsrc,
+    DetailedDataSource dsrc,
     String metatable,
     String internalName,
     String displayName)
@@ -857,14 +856,14 @@ public class DatabaseDatasetViewUtils {
 
   /**
    * Get the correct DatasetView table for a given user in the Mart Database
-   * stored in the given DataSource.
-   * @param ds -- DataSource for Mart Database.
+   * stored in the given DetailedDataSource.
+   * @param ds -- DetailedDataSource for Mart Database.
    * @param user -- user to retrieve a DatasetView table.  If user is null, or if _meta_DatasetView_[user] does not exist
    *                returns DatabaseDatasetViewUtils.BASEMETATABLE.
    * @return String meta table name
    * @throws ConfigurationException if both _meta_DatasetView_[user] and DatabaseDatasetViewUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
-  public static String getDSViewTableFor(DataSource ds, String user) throws ConfigurationException {
+  public static String getDSViewTableFor(DetailedDataSource ds, String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
 
     //override if user not null
@@ -880,7 +879,7 @@ public class DatabaseDatasetViewUtils {
     return metatable;
   }
 
-  public static DatasetView getValidatedDatasetView(DataSource dsource, DatasetView dsv) throws SQLException {
+  public static DatasetView getValidatedDatasetView(DetailedDataSource dsource, DatasetView dsv) throws SQLException {
     String schema = null;
     String catalog = null;
 
@@ -1040,7 +1039,7 @@ public class DatabaseDatasetViewUtils {
   }
 
   private static DefaultFilter getValidatedDefaultFilter(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String schema,
     String catalog,
     DefaultFilter dfilter)
@@ -1059,7 +1058,7 @@ public class DatabaseDatasetViewUtils {
     return validatedDefaultFilter;
   }
 
-  public static String getValidatedStarBase(DataSource dsource, String schema, String catalog, String starbase)
+  public static String getValidatedStarBase(DetailedDataSource dsource, String schema, String catalog, String starbase)
     throws SQLException {
     String validatedStarBase = new String(starbase);
 
@@ -1084,7 +1083,7 @@ public class DatabaseDatasetViewUtils {
     return validatedStarBase;
   }
 
-  public static String getValidatedPrimaryKey(DataSource dsource, String schema, String catalog, String primaryKey)
+  public static String getValidatedPrimaryKey(DetailedDataSource dsource, String schema, String catalog, String primaryKey)
     throws SQLException {
     String validatedPrimaryKey = new String(primaryKey);
 
@@ -1110,7 +1109,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPrimaryKey;
   }
 
-  public static FilterPage getValidatedFilterPage(DataSource dsource, FilterPage page) throws SQLException {
+  public static FilterPage getValidatedFilterPage(DetailedDataSource dsource, FilterPage page) throws SQLException {
     FilterPage validatedPage = new FilterPage(page);
 
     boolean hasBrokenGroups = false;
@@ -1147,7 +1146,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPage;
   }
 
-  public static FilterGroup getValidatedFilterGroup(DataSource dsource, FilterGroup group) throws SQLException {
+  public static FilterGroup getValidatedFilterGroup(DetailedDataSource dsource, FilterGroup group) throws SQLException {
     FilterGroup validatedGroup = new FilterGroup(group);
 
     FilterCollection[] collections = group.getFilterCollections();
@@ -1181,13 +1180,13 @@ public class DatabaseDatasetViewUtils {
 
   /**
    * Runs through the FilterDescription objects within a FilterCollection and checks whether the field and,
-   * if present, tableConstraint is present in the given mart hosted by the DataSource provided, or, for FilterDescription
+   * if present, tableConstraint is present in the given mart hosted by the DetailedDataSource provided, or, for FilterDescription
    * Objects containing child Options/PushAction combinations, whether these are valid in the same manner.
-   * @param dsource - DataSource containing a Connection to a Mart Database
+   * @param dsource - DetailedDataSource containing a Connection to a Mart Database
    * @param collection - FilterCollection to validate
    * @return Copy of given FilterCollection with validated FilterDescription Objects 
    */
-  public static FilterCollection getValidatedFilterCollection(DataSource dsource, FilterCollection collection)
+  public static FilterCollection getValidatedFilterCollection(DetailedDataSource dsource, FilterCollection collection)
     throws SQLException {
     String schema = null;
     String catalog = null;
@@ -1237,7 +1236,7 @@ public class DatabaseDatasetViewUtils {
   }
 
   public static FilterDescription getValidatedFilterDescription(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String schema,
     String catalog,
     FilterDescription filter)
@@ -1304,7 +1303,7 @@ public class DatabaseDatasetViewUtils {
     return validatedFilter;
   }
 
-  public static Option getValidatedOption(DataSource dsource, String schema, String catalog, Option option)
+  public static Option getValidatedOption(DetailedDataSource dsource, String schema, String catalog, Option option)
     throws SQLException {
     Option validatedOption = new Option(option);
 
@@ -1394,7 +1393,7 @@ public class DatabaseDatasetViewUtils {
     return validatedOption;
   }
 
-  public static PushAction getValidatedPushAction(DataSource dsource, String schema, String catalog, PushAction action)
+  public static PushAction getValidatedPushAction(DetailedDataSource dsource, String schema, String catalog, PushAction action)
     throws SQLException {
     PushAction validatedPushAction = new PushAction(action);
 
@@ -1425,7 +1424,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPushAction;
   }
 
-  public static AttributePage getValidatedAttributePage(DataSource dsource, AttributePage page) throws SQLException {
+  public static AttributePage getValidatedAttributePage(DetailedDataSource dsource, AttributePage page) throws SQLException {
     AttributePage validatedPage = new AttributePage(page);
 
     boolean hasBrokenGroups = false;
@@ -1462,7 +1461,7 @@ public class DatabaseDatasetViewUtils {
     return validatedPage;
   }
 
-  public static AttributeGroup getValidatedAttributeGroup(DataSource dsource, AttributeGroup group) throws SQLException {
+  public static AttributeGroup getValidatedAttributeGroup(DetailedDataSource dsource, AttributeGroup group) throws SQLException {
     AttributeGroup validatedGroup = new AttributeGroup(group);
 
     boolean hasBrokenCollections = false;
@@ -1493,7 +1492,7 @@ public class DatabaseDatasetViewUtils {
     return validatedGroup;
   }
 
-  public static AttributeCollection getValidatedAttributeCollection(DataSource dsource, AttributeCollection collection)
+  public static AttributeCollection getValidatedAttributeCollection(DetailedDataSource dsource, AttributeCollection collection)
     throws SQLException {
     String schema = null;
     String catalog = null;
@@ -1544,7 +1543,7 @@ public class DatabaseDatasetViewUtils {
   }
 
   public static AttributeDescription getValidatedAttributeDescription(
-    DataSource dsource,
+    DetailedDataSource dsource,
     String schema,
     String catalog,
     AttributeDescription description)
@@ -1624,14 +1623,14 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a list of potential (nieve) dataset names from a given Mart compliant database hosted on a given DataSource.
+   * Returns a list of potential (nieve) dataset names from a given Mart compliant database hosted on a given DetailedDataSource.
    * These names can be used as an argument to getNieveMainTablesFor, getNieveDimensionTablesFor and getNieveDatasetViewFor.
-   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential datasets
    * @return String[] of potential dataset names
    * @throws SQLException
    */
-  public static String[] getNieveDatasetNamesFor(DataSource dsource, String databaseName) throws SQLException {
+  public static String[] getNieveDatasetNamesFor(DetailedDataSource dsource, String databaseName) throws SQLException {
     String[] potentials = getNieveMainTablesFor(dsource, databaseName, null);
     
     //now weed them to a subset, attempting to unionize conformed dimension names
@@ -1652,13 +1651,13 @@ public class DatabaseDatasetViewUtils {
    * Retruns a String[] of possible main tables for a given Mart Compliant database, hosted on a given 
    * RDBMS, with an (optional) datasetName to key upon.  With no datasetName, all possible main tables from 
    * the database are returned.
-   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
    * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
    * @return String[] of potential main table names
    * @throws SQLException
    */
-  public static String[] getNieveMainTablesFor(DataSource dsource, String databaseName, String datasetName)
+  public static String[] getNieveMainTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws SQLException {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
@@ -1707,13 +1706,13 @@ public class DatabaseDatasetViewUtils {
   /**
    * Returns a String[] of potential dimension tables from a given Mart Compliant database, hosted on a
    * given RDBMS, constrained to an (optional) dataset.
-   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
    * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
    * @return String[] of potential dimension table names
    * @throws SQLException
    */
-  public static String[] getNieveDimensionTablesFor(DataSource dsource, String databaseName, String datasetName)
+  public static String[] getNieveDimensionTablesFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws SQLException {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
@@ -1762,13 +1761,13 @@ public class DatabaseDatasetViewUtils {
   /**
    * Returns a TableDescription object describing a particular table in a given database,
    * hosted on a given RDBMS.
-   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance housing the requested table
    * @param tableName -- name of the desired table, as might be returned by a call to getXXXTablesFor
    * @return TableDescription object describing the table
    * @throws SQLException
    */
-  public static TableDescription getTableDescriptionFor(DataSource dsource, String databaseName, String tableName)
+  public static TableDescription getTableDescriptionFor(DetailedDataSource dsource, String databaseName, String tableName)
     throws SQLException {
     Connection conn = dsource.getConnection();
     DatabaseMetaData dmd = conn.getMetaData();
@@ -1804,14 +1803,14 @@ public class DatabaseDatasetViewUtils {
    * described for main tables, and no Option grouping is attempted.  All Descriptions are fully constrained to
    * a tableConstraint.  Note, this method is likely to undergo extensive revisions as we optimize the Mart Compliant
    * Schema.
-   * @param dsource -- DataSource housing a connection to an RDBMS
+   * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential tables
    * @param datasetName -- name of the dataset to constrain the search (can be a result of getNieveDatasetNamesFor, or null)
    * @return
    * @throws ConfigurationException
    * @throws SQLException
    */
-  public static DatasetView getNieveDatasetViewFor(DataSource dsource, String databaseName, String datasetName)
+  public static DatasetView getNieveDatasetViewFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws ConfigurationException, SQLException {
     DatasetView dsv = new DatasetView();
 

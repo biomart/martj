@@ -24,7 +24,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.sql.DataSource;
+import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
  * Provides a view of a mart dataset where a dataset is one or more main tables plus zero 
@@ -51,7 +51,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 
 	private final String datasetKey = "dataset";
 	private DSViewAdaptor adaptor = null;
-	private DataSource datasource = null;
+	private DetailedDataSource datasource = null;
 	private byte[] digest = null;
 
 	private List attributePages = new ArrayList();
@@ -1130,7 +1130,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 	 * Returns the DataSource for this DatasetView, or null.
 	 * @return DataSource datasource
 	 */
-	public DataSource getDatasource() {
+	public DetailedDataSource getDatasource() {
 		return datasource;
 	}
 
@@ -1138,7 +1138,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 	 * Set the DataSource and user for this DatasetView.
 	 * @param source -- DataSource
 	 */
-	public void setDatasource(DataSource source) {
+	public void setDatasource(DetailedDataSource source) {
 		datasource = source;
 	}
 

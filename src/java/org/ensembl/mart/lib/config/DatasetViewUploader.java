@@ -25,8 +25,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.LoggingUtils;
 
@@ -50,7 +48,7 @@ public class DatasetViewUploader {
 	private boolean help = false;
 	private String datasetUser = null; // optional
 
-	private DataSource dataSource = null;
+	private DetailedDataSource dataSource = null;
 	private String[] files = new String[] {
 	};
 
@@ -157,7 +155,7 @@ public class DatasetViewUploader {
 		Getopt g =
 			new Getopt("DatasetViewUploader", args, "h:P:d:u:p:U:Hn", longopts);
 		int c;
-		String arg;
+
 		while ((c = g.getopt()) != -1) {
 
 			switch (c) {

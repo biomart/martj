@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.LoggingUtils;
 
@@ -272,7 +270,7 @@ public class NieveDatasetViewGenerator {
       if (dbDriver == null)
         dbDriver = DetailedDataSource.DEFAULTDRIVER;
 
-      DataSource dsource =
+      DetailedDataSource dsource =
         new DetailedDataSource(
           dbType,
           dbHost,

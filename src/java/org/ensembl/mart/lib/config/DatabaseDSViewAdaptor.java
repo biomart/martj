@@ -30,8 +30,6 @@ import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import javax.sql.DataSource;
-
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.BigPreferences;
 import org.ensembl.util.StringUtil;
@@ -327,7 +325,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress)
+  public static void storeDatasetView(DetailedDataSource ds, String user, DatasetView dsv, boolean compress)
     throws ConfigurationException {
     DatabaseDatasetViewUtils.storeConfiguration(
       ds,
