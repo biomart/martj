@@ -84,7 +84,7 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
       DSViewAdaptor a = as[i];
       if (a.getDataSource() != null) {
         items.add(a.getName());
-        logger.warning( "Adding datasource: " + a.getName() );
+        logger.fine( "Adding datasource: " + a.getName() );
       }
     }
 
@@ -155,11 +155,10 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     if (selected != null && selected != none)
       try {
         int n = chooser.getItemCount();
-        for (int i = 0; i < n; i++) {
-					logger.warning("Available datasource: " + chooser.getItemAt(i));
-					
-				}
-        logger.warning("selected datasource: " +selected);
+
+        for (int i = 0; i < n; i++) 
+					logger.fine("Available datasource: " + chooser.getItemAt(i));
+        logger.fine("selected datasource: " +selected);
         ds =
           adaptorManager
             .getRootAdaptor()

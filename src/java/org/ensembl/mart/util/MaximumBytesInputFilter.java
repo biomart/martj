@@ -55,7 +55,6 @@ public class MaximumBytesInputFilter extends FilterInputStream {
 	}
 
   private int update(int c ) {
-    System.out.println(c);
     if ( c==-1 ) return -1;
     else {
       pos += c;
