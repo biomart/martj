@@ -400,7 +400,25 @@ JMenuItem execute = new JMenuItem(executeAction);
       }
     });
     settings.add( reset );
-   
+  
+
+
+
+
+
+
+ JMenuItem clear = new JMenuItem("Clear cache");
+    reset.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+
+          //DarinFavouriteClass.clear
+
+
+      }
+    });
+    settings.add( clear );
+  
+ 
 
     JMenu help = new JMenu("Help");
     JMenuItem about = new JMenuItem("About");
