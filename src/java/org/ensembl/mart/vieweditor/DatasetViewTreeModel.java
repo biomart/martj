@@ -95,8 +95,17 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 fc.addFilterDescription((FilterDescription) editingNode.getUserObject());
             }
         } else if (parentClassName.equals("org.ensembl.mart.lib.config.FilterDescription")) {
-
-        } else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributePage")) {
+			if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+				FilterDescription fd = (FilterDescription) parentNode.getUserObject();
+				fd.addOption((Option) editingNode.getUserObject());
+			}
+        } else if (parentClassName.equals("org.ensembl.mart.lib.config.Option")) {
+		    if (childClassName.equals("org.ensembl.mart.lib.config.Option")) {
+			  Option op = (Option) parentNode.getUserObject();
+			  op.addOption((Option) editingNode.getUserObject());
+		    }
+	    }
+	    else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributePage")) {
             if (childClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
                 ap.addAttributeGroup((AttributeGroup) editingNode.getUserObject());
@@ -174,7 +183,10 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
             } else if (child instanceof org.ensembl.mart.lib.config.Option) {
                 FilterDescription fd = (FilterDescription) parentNode.getUserObject();
                 fd.insertOption(index, (Option) editingNode.getUserObject());
-            } else {
+            } else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
+			    FilterDescription fd = (FilterDescription) parentNode.getUserObject();
+			    //fd.insertPushAction(index, (PushAction) editingNode.getUserObject());
+		    }else {
                 String error_string = "Error: " + childName + " cannot be inserted in a FilterDescription.";
                 return error_string;
             }
@@ -184,10 +196,13 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
         } else if (parent instanceof org.ensembl.mart.lib.config.Disable) {
             String error_string = "Error: Disable is a leaf node, no insertions are allowed.";
             return error_string;
-        } else if (parent instanceof org.ensembl.mart.lib.config.Option) {
-            String error_string = "Error: Option is a leaf node, no insertions are allowed.";
-            return error_string;
-        } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
+        }
+        //else if (parent instanceof org.ensembl.mart.lib.config.Option) {
+            //String error_string = "Error: Option is a leaf node, no insertions are allowed.";
+            //return error_string;
+        //}
+        
+         else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
             if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
                 ap.insertAttributeGroup(index, (AttributeGroup) editingNode.getUserObject());
