@@ -254,7 +254,7 @@ public class TreeFilterWidget extends FilterWidget {
 		allOptions = new HashSet(valueToOption.values());
 	}
 
-	private void showTree() {
+	public void showTree() {
 		treeTopOptions.doClick();
 	}
 

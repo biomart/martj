@@ -68,7 +68,7 @@ import org.ensembl.mart.lib.config.Option;
  */
 public class QueryEditor
 	extends JPanel
-	implements PropertyChangeListener, TreeSelectionListener {
+	implements PropertyChangeListener, TreeSelectionListener  {
 
 	private JSplitPane topAndBottom;
 
@@ -208,7 +208,10 @@ public class QueryEditor
 		datasetSelectionPage.addPropertyChangeListener(this);
 
 		addPage(datasetSelectionPage);
+    
 	}
+  
+
 
 	/**
 	 * Sets the relative positions of the constituent components. Layout is:
@@ -269,6 +272,17 @@ public class QueryEditor
 		treeView.addTreeSelectionListener(this);
 	}
 
+
+  /**
+   * Opens the dataset option tree if it is available, otherwise does
+   * nothing. Calling this methid saves the user having to open the 
+   * option list manually.
+   */
+  public void showDatasetOptions() {
+    if ( datasetSelectionPage!=null )
+      datasetSelectionPage.showTree();
+  }
+
 	public static void main(String[] args) throws ConfigurationException {
 		String confFile = "data/XML/MartConfigurationTemplate.xml";
     //String confFile = "data/XML/local_test.xml";
@@ -284,8 +298,13 @@ public class QueryEditor
     f.setSize(950, 750);
     f.setVisible(true);
     
+    // To be called by using program to open tree ready for user to choose
+    // dataset. Saves a click.
+    //editor.showDatasetOptions();
+    
    // TODO support programmatically selecting homosapiens ensembl gene option
-    //editor.datasetSelectionPage.setOption();
+   Option o = config.getLayout().getOptionByName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
+    editor.datasetSelectionPage.setOption( o );
     
 	}
 
@@ -501,6 +520,8 @@ public class QueryEditor
 	public MartConfiguration getMartConfiguration() {
 		return martConfiguration;
 	}
+
+
 
 
 }
