@@ -331,7 +331,7 @@ public class MartExplorerTool {
 		  q.setStarBases(ds.getStarBases());
 		  q.setPrimaryKeys(ds.getPrimaryKeys());
 		
-		  q.setAttributes(attributes);
+		  q.setAttributes((Attribute[]) attributes.toArray( new Attribute[] {}));
 
 		  q.setFilters((Filter[]) filters.toArray(new Filter[] {}));
 

@@ -61,7 +61,7 @@ import java.util.TreeMap;
  * one relevant Collection.  The resulting UI would be fairly simple, having one set of filters and one set of attributes
  * with no other information.  More complex marts could group attributes/filters into categories using their relevant
  * Collection objects, or even separate Collections of attributes or filters into separate Pages.  For example, the 
- * EnsMart Mart-Explorer implimentation uses Pages to group collections of attributes into functional groups that 
+ * EnsMart Mart-Explorer implementation uses Pages to group collections of attributes into functional groups that 
  * cannot be combined with attributes from other Pages in a single Query.</p>  
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>

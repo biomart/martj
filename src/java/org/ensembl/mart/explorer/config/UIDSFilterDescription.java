@@ -24,7 +24,7 @@ package org.ensembl.mart.explorer.config;
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
- * @see DomainSpecificFilterHandler
+ * @see org.ensembl.mart.explorer.DSFilterHandler
  */
 public class UIDSFilterDescription {
 	
@@ -45,7 +45,7 @@ public class UIDSFilterDescription {
 	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this Filter
 	 * 
 	 * @throws ConfigurationException when internalName or type are null, or when the objectCode == 0
-	 * @see DomainSpecificFilterHandler
+	 * @see org.ensembl.mart.explorer.DSFilterHandler
 	 */
 	public UIDSFilterDescription(String internalName, String type, String objectCode) throws ConfigurationException {
 	  this(internalName, type, objectCode, "", "", "");	

@@ -53,7 +53,7 @@ public class Query {
   	  for (int i = 0, n = oa.length; i < n; i++)
 			  na[i] = new FieldAttribute((FieldAttribute) oa[i]);
 			  
-      setAttributes(Arrays.asList(na));
+      setAttributes(na);
   	}
     
     if (oq.getFilters().length > 0) {
@@ -160,8 +160,8 @@ public class Query {
 	 * set an entire list of Attribute objects
 	 * @param List attributes
 	 */
-	public void setAttributes(List attributes) {
-		this.attributes = attributes;
+	public void setAttributes(Attribute[] attributes) {
+		this.attributes = new ArrayList(Arrays.asList(attributes));
 	}
 
 	/**
@@ -175,13 +175,27 @@ public class Query {
 		return f;
 	}
 
+ /**
+  * Allows the retrieval of a specific Filter object with a specified field name.
+  * 
+  * @param name - name of the fieldname for this Filter.
+  * @return Filter object named by given field name.
+  */
+  public Filter getFilterByName(String name) {
+  	for (int i = 0, n = filters.size(); i < n; i++) {
+			Filter element = (Filter) filters.get(i);
+			if (element.getName().equals(name))
+			  return element;
+		}
+		return null;
+  }
 	/**
 	 * set an entire list of Filter objects
 	 * 
 	 * @param Filter[] filters
 	 */
 	public void setFilters(Filter[] filters) {
-		this.filters = Arrays.asList(filters);
+		this.filters =  new ArrayList(Arrays.asList(filters));
 	}
 
 	/**

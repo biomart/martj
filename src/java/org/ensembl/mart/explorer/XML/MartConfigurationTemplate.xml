@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
-<MartConfiguration description="First Ensembl Mart Built upon Ensembl version 14 datasets" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
+<MartConfiguration description="First Ensembl Mart Built upon Ensembl version 15 datasets" displayName="Ensembl Mart version 15.1" internalName="ensembl_mart_15_1">
   <Dataset description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Homo sapiens (NCBI 31) -- Ensembl Genes" internalName="hsapiens_ensemblgene">
     <StarBase>hsapiens_ensemblgene</StarBase>
     <StarBase>hsapiens_ensembltranscript</StarBase>

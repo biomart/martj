@@ -48,7 +48,7 @@ public class AttributeTest extends Base {
 		q.addAttribute(new FieldAttribute("gene_chrom_start"));
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(new BasicFilter("chr_name", "=", "22"));
-		q.addFilter(new BasicFilter("gene_chrom_start", "<", "14000000"));
+		q.addFilter(new BasicFilter("gene_chrom_start", "<", "15000000"));
 
 		StatOutputStream stats = new StatOutputStream();
 		engine.execute(q, new FormatSpec(FormatSpec.TABULATED), stats);

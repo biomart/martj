@@ -60,7 +60,8 @@ public class UIFilterDescription {
 	 * @param description String description of the Filter
 	 * 
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
-	 * @see FilterSet, FilterDescription
+	 * @see FilterSet
+	 * @see UIFilterDescription
 	 */
 	public UIFilterDescription(
 		String internalName,

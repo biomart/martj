@@ -35,16 +35,17 @@ import java.util.List;
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
- * @see DomainSpecificFilterHandler
+ * @see DSFilterHandler
  */
 public class DomainSpecificFilter {
 	
 	public static String MARKER = "Marker";
 	public static String BAND = "Band";
 	public static String ENCODE = "Encode";
+	public static String QTL = "Qtl";
 	public static String EXPRESSION = "Expression";
 	
-	public static final List SUPPORTED_DSFILTERS = Collections.unmodifiableList(Arrays.asList( new String[] {"Marker", "Band", "Encode", "Expression" } ) );
+	public static final List SUPPORTED_DSFILTERS = Collections.unmodifiableList(Arrays.asList( new String[] {"Marker", "Band", "Encode", "Qtl", "Expression" } ) );
 	
 	/**
 	 * Constructor for a DomainSpecificFilter object

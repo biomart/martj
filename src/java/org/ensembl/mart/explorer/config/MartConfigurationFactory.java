@@ -22,6 +22,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -40,6 +41,7 @@ import org.jdom.input.SAXBuilder;
  */
 public class MartConfigurationFactory {
 
+  private Logger logger = Logger.getLogger(MartConfigurationFactory.class.getName());
 	private String martConfSystemID = "MartConfiguration.xml"; // default, but can be over-ridden
 
 	// element names
@@ -87,7 +89,7 @@ public class MartConfigurationFactory {
 	 * @param conn
 	 * @param martName
 	 * @param system_id
-	 * @return
+	 * @return MartConfiguration martconf
 	 * @throws ConfigurationException
 	 */
 	public MartConfiguration getInstance(Connection conn, String martName, String system_id) throws ConfigurationException {
@@ -116,13 +118,12 @@ public class MartConfigurationFactory {
 			Element martconfElement = doc.getRootElement();
 			String mname = martconfElement.getAttributeValue(internalName, "");
 			if (!mname.equals(martName))
-				throw new ConfigurationException(
-					"Warning, xml from " + martName + " contains different internalName " + mname + " may need to load a different xml into the mart database");
+				logger.warn("Warning, xml from " + martName + " contains different internalName " + mname + " may need to load a different xml into the mart database");
 
 			String dispname = martconfElement.getAttributeValue(displayName, "");
 			String desc = martconfElement.getAttributeValue(description, "");
 
-			martconf = new MartConfiguration(martName, dispname, desc);
+			martconf = new MartConfiguration(mname, dispname, desc);
 
 			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(dataset)); iter.hasNext();) {
 				Element datasetElement = (Element) iter.next();

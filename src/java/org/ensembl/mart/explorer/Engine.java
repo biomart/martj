@@ -105,6 +105,8 @@ public class Engine {
     }
 
     /**
+     * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+	   * system to modify the Query accordingly, if present.
      * Constructs a QueryRunner object for the given Query, and format using 
      * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
      * with the mySQL connection of this Engine, and write the results to 
@@ -120,7 +122,8 @@ public class Engine {
      * @see FormatSpec
      * @see QueryRunnerFactory
      * @see QueryRunner
-     * @see TabulatedQueryRunner
+	   * @see DSFilterHandler
+	   * @see DSFilterHandlerFactory
      */
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
         throws FormatException, SequenceException, InvalidQueryException {
@@ -130,10 +133,12 @@ public class Engine {
     }
     
 	/**
+	 * Checks for DomainSpecificFilters in the Query, and uses the DSFilterHandler
+	 * system to modify the Query accordingly, if present.
 	 * Constructs a QueryRunner object for the given Query, and format using 
-	 * a QueryRunnerFactory.  Uses the QueryRunner to execute the Query
-	 * with the mySQL connection of this Engine, and write the results to 
-	 * a specified OutputStream.
+	 * a QueryRunnerFactory.  Applies a limit clause to the SQL.
+	 * Uses the QueryRunner to execute the Query with the mySQL connection of 
+	 * this Engine, and write the results to a specified OutputStream.
 	 * 
 	 * @param query A Query Object
 	 * @param formatspec A FormatSpec Object
@@ -146,13 +151,23 @@ public class Engine {
 	 * @see FormatSpec
 	 * @see QueryRunnerFactory
 	 * @see QueryRunner
-	 * @see TabulatedQueryRunner
+	 * @see DSFilterHandler
+	 * @see DSFilterHandlerFactory
 	 */
 	public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit) 
 		throws SequenceException, FormatException, InvalidQueryException {
     
+			Connection conn = getDatabaseConnection();
+      if (query.hasDomainSpecificFilters()) {
+      	DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
+      	for (int i = 0, n = dsfilters.length; i < n; i++) {
+					DomainSpecificFilter dsf = dsfilters[i];
+					DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getObjectCode());
+					query = dsfh.ModifyQuery(conn, dsf.getHandlerParameter(), query);
+				}
+      }
+        
     	logger.info(query);
-		  Connection conn = getDatabaseConnection();
 		  QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
 		  qr.execute(limit);
 	}
