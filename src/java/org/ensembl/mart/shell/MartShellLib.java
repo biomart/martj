@@ -1329,7 +1329,7 @@ public class MartShellLib {
       DatasetRequest dsrq = new DatasetRequest(command, this);
 
       try {
-        envDataset = adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+        envDataset = adaptorManager.getAdaptorByName(dsrq.mart).getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
 
         if (envMart == null || !(envMart.getName().equals(dsrq.mart)))
           envMart = adaptorManager.getAdaptorByName(dsrq.mart).getDataSource();
