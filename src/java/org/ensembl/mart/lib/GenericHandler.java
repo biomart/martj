@@ -158,9 +158,10 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				ps = conn.prepareStatement(sql);
 				
 				ResultSet rs = ps.executeQuery();
-				
+				rs.next();
 				if (rs.isLast()){//only 1 row returned
-					rs.next(); // will only be one result
+					
+					//rs.next(); // will only be one result
 				    for (int k = 0; k < newfilterCols.length; ++k) {
 				      filterValue = rs.getString(k+1);
 				  
@@ -177,7 +178,9 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				    }				  
 				}
 				else{//multiple rows - need to set an ID list filter
+					
 					List tranIds = new ArrayList();
+					tranIds.add(rs.getString(1));
 					while(rs.next())
 						tranIds.add(rs.getString(1));
 					
