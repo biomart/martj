@@ -54,7 +54,6 @@ public class Option extends QueryFilterSettings {
    */
   public Option(Option o) {
     super(o);
-  	
   	Option[] os = o.getOptions();
   	for (int i = 0, n = os.length; i < n; i++) {
       addOption( new Option( os[i] ) );
@@ -442,6 +441,16 @@ public class Option extends QueryFilterSettings {
 	 */
 	public void addPushAction(PushAction optionPush) {
 		pushActions.add(optionPush);
+	}
+
+	/**
+	 * Insert a PushAction at a specific position within the Option list for this Option.
+	 * Options occuring at or after this position are shifted right.
+	 * @param position -- position to insert the given Option
+	 * @param o -- PushAction to insert.
+	 */
+	public void insertPushAction(int position, PushAction o) {
+		pushActions.add(position, o);
 	}
 
   /**
