@@ -275,6 +275,22 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
+   * Sets the type for this DatasetConfig object
+   * @param type -- Dataset type that this config represnets.
+   */
+  public void setType(String type) {
+	setAttribute(typeKey, type);
+  }
+  
+  /**
+   * Sets the visible flag for this DatasetConfig object
+   * @param visible - visble flag for this dataset.
+   */
+  public void setVisible(String visible) {
+	setAttribute(visibleKey, visible);
+  }
+
+  /**
    * @return the prefix for the mart database tables in this Dataset
    */
   public String getDataset() {

@@ -1537,11 +1537,11 @@ public class DatabaseDatasetConfigUtils {
       
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
       Connection conn = dsource.getConnection();
+      
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
         String tableName = rs.getString(3);
-
         boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
         fieldValid = valid[0];
         tableValid = valid[1];
@@ -2349,9 +2349,12 @@ public class DatabaseDatasetConfigUtils {
     dsv.setInternalName("default");
     dsv.setDisplayName(datasetName + " ( " + databaseName + " )");
     dsv.setDataset(datasetName);
+    dsv.setType("TableSet");
+    dsv.setVisible("1");
+    
 
     AttributePage ap = new AttributePage();
-    ap.setInternalName("attributes");
+    ap.setInternalName("feature_page");
     ap.setDisplayName("ATTRIBUTES");
 
     FilterPage fp = new FilterPage();
@@ -3063,10 +3066,11 @@ public class DatabaseDatasetConfigUtils {
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
-
+	
     if (tableName.equalsIgnoreCase("main")) {
       String[] starNames = dsConfig.getStarBases();
       String[] primaryKeys = dsConfig.getPrimaryKeys();
+      tableName = starNames[0];// in case no keys for a lookup type dataset
       for (int k = 0; k < primaryKeys.length; k++) {
         if (primaryKeys[k].equalsIgnoreCase(joinKey))
           tableName = starNames[k];
