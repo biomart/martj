@@ -104,7 +104,7 @@ public class DatasetViewTree extends PopUpTreeCombo {
 					for (int j = 0; j < datasetNames.length; j++) {
 
 						String dataset = datasetNames[j];
-						DatasetView[] views = adaptor.getDatasetViewByDataset(dataset);
+						DatasetView[] views = adaptor.getDatasetViewsByDataset(dataset);
 
 						LabelledTreeNode datasetNode = null;
 
