@@ -39,12 +39,18 @@ import org.ensembl.mart.lib.config.PushAction;
 /**
  * Base class for FilterWidgets. 
  */
-public abstract class FilterWidget extends InputPage implements TreeSelectionListener {
+public abstract class FilterWidget
+  extends InputPage
+  implements TreeSelectionListener {
 
   private final static Logger logger =
     Logger.getLogger(FilterWidget.class.getName());
 
   protected String fieldName;
+
+  protected String tableConstraint;
+
+  protected String key;
 
   protected FilterGroupWidget filterGroupWidget;
 
@@ -64,10 +70,12 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
 
     super(query, filterDescription.getDisplayName());
     if (tree != null)
-          tree.addTreeSelectionListener(this);
+      tree.addTreeSelectionListener(this);
     this.filterDescription = filterDescription;
     this.filterGroupWidget = filterGroupWidget;
-    this.fieldName = filterDescription.getField();
+    this.fieldName = filterDescription.getFieldFromContext();
+    this.tableConstraint = filterDescription.getTableConstraintFromContext();
+    this.key = filterDescription.getKeyFromContext();
   }
 
   /**
@@ -128,13 +136,24 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
   /**
    * @return true if otherfilter has the same fieldName
    */
-  protected boolean equivalentFilter(Object possibleFilter) {
-    return fieldName != null
-      && !"".equals(fieldName)
-      && possibleFilter != null
-      && possibleFilter instanceof Filter
-      && ((Filter) possibleFilter).getField()!=null
-      && ((Filter) possibleFilter).getField().equals(fieldName);
+  protected boolean equivalentFilter(Object otherFilter) {
+    return //
+    otherFilter != null && otherFilter instanceof Filter
+    //
+    && fieldName != null
+    && !"".equals(fieldName)
+    && ((Filter) otherFilter).getField() != null
+    && ((Filter) otherFilter).getField().equals(fieldName)
+    //
+    && tableConstraint != null
+    && !"".equals(tableConstraint)
+    && ((Filter) otherFilter).getTableConstraint() != null
+    && ((Filter) otherFilter).getTableConstraint().equals(tableConstraint)
+    //
+    && key != null
+    && !"".equals(key)
+    && ((Filter) otherFilter).getKey() != null
+    && ((Filter) otherFilter).getKey().equals(key);
   }
 
   protected abstract void setFilter(Filter filter);
@@ -220,7 +239,7 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
    */
   public void valueChanged(TreeSelectionEvent e) {
 
-    if ( filter!=null ) {
+    if (filter != null) {
 
       if (e.getNewLeadSelectionPath() != null
         && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
@@ -235,7 +254,7 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
           TreeNodeData tnd = (TreeNodeData) node.getUserObject();
           Filter f = tnd.getFilter();
           if (f != null && f == filter) {
-            
+
             for (Component p, c = this; c != null; c = p) {
               p = c.getParent();
               if (p instanceof JTabbedPane)
@@ -243,7 +262,7 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
               else if (p instanceof JScrollPane) {
                 // not sure if this is being used
                 Point pt = c.getLocation();
-                Rectangle r = new Rectangle( pt );
+                Rectangle r = new Rectangle(pt);
                 ((JScrollPane) p).scrollRectToVisible(r);
               }
 
@@ -254,10 +273,5 @@ public abstract class FilterWidget extends InputPage implements TreeSelectionLis
     }
 
   }
-
-  
-
-
-
 
 }
