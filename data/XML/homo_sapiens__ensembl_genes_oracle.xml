@@ -3757,8 +3757,8 @@
         <AttributeDescription displayName="Sanger HVER 1 3 1" field="display_id" internalName="sanger_hver1_3_1_id" maxLength="9" tableConstraint="xr_Sang_Hver1_3_1__dm"/>
       </AttributeCollection>
       <AttributeCollection displayName="Disease Attributes" internalName="disease_attributes">
-        <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="gene_disease__dm"/>
-        <AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="gene_disease__dm"/>
+        <AttributeDescription displayName="Disease OMIM ID" field="omim_id" internalName="omim_id" maxLength="6" tableConstraint="_GN_DISEASE__dm"/>
+	<AttributeDescription displayName="Disease Description" field="disease" internalName="disease_description" maxLength="110" tableConstraint="_GN_DISEASE__dm"/>
       </AttributeCollection>
     </AttributeGroup>
     <AttributeGroup description="EXPRESSION ATTRIBUTES" displayName="EXPRESSION:" internalName="expression_attributes">
