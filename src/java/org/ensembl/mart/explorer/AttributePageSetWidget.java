@@ -48,9 +48,7 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
   private JTabbedPane tabbedPane;
   private int lastSelectedIndex;
   
-  /** Whether the widget is in the middle of reverting a user tab change action. */
-  private boolean reverting;
-
+  
 	/**
 	 * @param query
 	 */
@@ -63,7 +61,6 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
     tabbedPane.addChangeListener( this );
     tabbedPane.setUI(new ConfigurableTabbedPaneUI( SELECTED_BACKGROUND ));
     lastSelectedIndex = 0;
-    reverting = false;
     
 		AttributePage[] attributePages = dataset.getAttributePages();
 		for (int i = 0, n = attributePages.length; i < n; i++) {
@@ -86,7 +83,7 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
 	public void stateChanged(ChangeEvent e) {
 
 		// Present user with an "Are you sure?" option.
-		if (!reverting && query.getAttributes().length > 0) {
+		if (query.getAttributes().length > 0) {
 
 			int option =
 				JOptionPane.showConfirmDialog(
@@ -98,26 +95,22 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
 					JOptionPane.YES_NO_OPTION);
 
 			if (option != JOptionPane.OK_OPTION) {
-				// revert to last selected attribute page
-				reverting = true;
+				// change selected tab back to the selected one 
+				tabbedPane.removeChangeListener(this);
 				tabbedPane.setSelectedIndex(lastSelectedIndex);
+				tabbedPane.addChangeListener(this);
 				return;
 			}
 		}
 
-		if (!reverting) {
-
-			// Remove attributes from model
-			Attribute[] attributes = query.getAttributes();
-			for (int i = 0; i < attributes.length; i++) {
-				query.removeAttribute(attributes[i]);
-			}
-
-			resetTabColors();
-			lastSelectedIndex = tabbedPane.getSelectedIndex();
+		// Remove attributes from model
+		Attribute[] attributes = query.getAttributes();
+		for (int i = 0; i < attributes.length; i++) {
+			query.removeAttribute(attributes[i]);
 		}
 
-		reverting = false;
+		resetTabColors();
+		lastSelectedIndex = tabbedPane.getSelectedIndex();
 
 	}
 
