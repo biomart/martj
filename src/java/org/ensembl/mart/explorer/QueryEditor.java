@@ -76,6 +76,7 @@ import org.ensembl.mart.util.MaximumBytesInputFilter;
 import org.ensembl.mart.util.PollingInputStream;
 import org.ensembl.util.ExtensionFileFilter;
 
+// TODO 1 Finish testing filter addition and removal
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
 // TODO support boolean_list filter type
 // TODO user change q.dataSource, select from list [fire query at different databases]

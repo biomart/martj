@@ -45,6 +45,7 @@ import org.ensembl.util.StringUtil;
  * @see SequenceDescription 
  * @see Filter
  * @see QueryChangeListener
+ * 
  */
 
 public class Query {
@@ -511,6 +512,7 @@ public class Query {
    * @param oldFilter
    * @param newFilter
    * @throws RuntimeException if oldFilter is not currently in the query.
+   * TODO remove replaceFilter() + listener method.
    */
   public void replaceFilter(Filter oldFilter, Filter newFilter) {
 
