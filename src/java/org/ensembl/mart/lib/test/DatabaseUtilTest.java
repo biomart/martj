@@ -21,6 +21,8 @@ package org.ensembl.mart.lib.test;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -35,6 +37,8 @@ import junit.framework.TestCase;
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
 public class DatabaseUtilTest extends TestCase {
+
+	private Logger logger = Logger.getLogger(DatabaseUtilTest.class.getName());
 
 	/**
 	 * Constructor for DatabaseUtilTest.
@@ -57,6 +61,38 @@ public class DatabaseUtilTest extends TestCase {
 		DatabaseMetaData meta = conn.getMetaData();
 		ResultSet rs = meta.getTables("homo_sapiens_core_16_33", null, null, null);
 		assertTrue("Failed to get any metadata from database", rs.next());
+    
+    if (logger.isLoggable(Level.FINE)) print(rs);
+		
+    conn.close();
+	}
+
+	public void testConvenienceMethod() throws Exception {
+		DataSource ds =
+			DatabaseUtil.createDataSource(
+				"mysql",
+				"kaka.sanger.ac.uk",
+				"3306",
+				"homo_sapiens_core_16_33",
+				"anonymous",
+				null,
+				10,
+				"com.mysql.jdbc.Driver");
+
+		Connection conn = ds.getConnection();
+		DatabaseMetaData meta = conn.getMetaData();
+		ResultSet rs = meta.getTables("homo_sapiens_core_16_33", null, null, null);
+		assertTrue("Failed to get any metadata from database", rs.next());
+
+    if (logger.isLoggable(Level.FINE)) print(rs);
+
+		conn.close();
+	}
+
+	/**
+	 * @param rs
+	 */
+	private void print(ResultSet rs) throws Exception {
 		do {
 			int n = rs.getMetaData().getColumnCount();
 			for (int i = 1; i <= n; i++) {
@@ -66,10 +102,6 @@ public class DatabaseUtilTest extends TestCase {
 			}
 			System.out.println();
 		} while (rs.next());
-	}
-
-	public void testConvenienceMethod() {
-
 	}
 
 }
