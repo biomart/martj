@@ -39,6 +39,8 @@ import javax.sql.DataSource;
  * @see Filter
  * @see DSFilter
  */
+// TODO fix set attributes/filters to use removeall + addXXX()
+
 public class Query {
   
 	
