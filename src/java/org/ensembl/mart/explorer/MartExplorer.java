@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -29,6 +30,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 import  java.util.prefs.*;
 
@@ -44,31 +46,28 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class MartExplorer extends JFrame {
+public class MartExplorer extends JPanel {
 	
-	private static final int WIDTH = 700;
-	private static final int HEIGHT = 700;
-  private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
+	private static final Dimension PREFERRED_SIZE = new Dimension( 700, 700 );
+	private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	
-	private JFileChooser configFileChooser = null;
-	private Preferences prefs = null;
- 
+  private Preferences prefs = null;
+ 	private JFileChooser configFileChooser = null;
+	private DatabaseSettingsDialog databaseSettings = null;
+	
     
 	private QueryManager queryManager = new QueryManager();
 	//private Engine engine = new Engine();
 	  
     
 	public MartExplorer() {
-		super("Mart Explorer");
-        
-    prefs = Preferences.userNodeForPackage( this.getClass() );
+		prefs = Preferences.userNodeForPackage( this.getClass() );
         
     initConfigFileChooser();    
-		setJMenuBar(createMenuBar());
+    initDatabaseSettings();
 
-		setSize(WIDTH, HEIGHT);
-
-		
+		setPreferredSize( PREFERRED_SIZE );
+		setMaximumSize( PREFERRED_SIZE );	
 
 	}
 
@@ -100,6 +99,11 @@ public class MartExplorer extends JFrame {
 
 	}
 
+
+	private void initDatabaseSettings() {
+		databaseSettings = new DatabaseSettingsDialog(prefs);
+	}
+
 	public void warn(String message) {
 		JOptionPane.showMessageDialog(
 			this,
@@ -114,7 +118,9 @@ public class MartExplorer extends JFrame {
 	}
 
 	public void connectToDatabase() {
-		// TODO
+		if ( databaseSettings.showDialog(this) ) {
+			System.out.println("todo - use db settings");
+		}
 	}
 
 	/**
@@ -271,6 +277,12 @@ public class MartExplorer extends JFrame {
 
 
 	public static void main(String[] args) {
-		new MartExplorer().setVisible( true );
+		MartExplorer me = new MartExplorer();
+		JFrame f = new JFrame( "Mart Explorer" );
+		f.getContentPane().add( me );
+		f.setJMenuBar( me.createMenuBar() );
+		f.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		f.pack();
+		f.setVisible( true );
 	}
 }

@@ -35,7 +35,7 @@ import javax.swing.JPanel;
 public class DatabaseSettingsDialog extends JPanel {
 
 	private LabelledComboBox host = null;
-	private Preferences prefs = null;
+	private Preferences preferences = null;
 	
 	public DatabaseSettingsDialog() {
 		this( null );
@@ -45,7 +45,8 @@ public class DatabaseSettingsDialog extends JPanel {
 		host = new LabelledComboBox("Host");
 		add( host );
 		
-		if ( prefs!=null ) setPrefs(prefs);
+		
+		if ( preferences!=null ) setPrefs(preferences);
 		
 	}
 
@@ -63,11 +64,10 @@ public class DatabaseSettingsDialog extends JPanel {
 				
 		if ( option==JOptionPane.OK_OPTION ) {
 			// persist state for next time program runs
-			prefs.put("history.host", host.toPreferenceString(3) );
-			System.out.println("Loading from prefs: " + prefs.get("history.host", "") );
+			preferences.put("history.host", host.toPreferenceString(3) );
 			
 			try {
-				prefs.flush();
+				preferences.flush();
 			} catch (BackingStoreException e) {
 				e.printStackTrace();
 			}
@@ -84,8 +84,6 @@ public class DatabaseSettingsDialog extends JPanel {
 		d.setPrefs( Preferences.userNodeForPackage( d.getClass() ) );
 		JFrame f = new JFrame();
 		f.getContentPane().add( d );
-		System.out.println( Boolean.toString( d.showDialog( f ) ));
-		System.out.println( d.getHost() );
 		System.exit(0);
 	}
 
@@ -96,11 +94,11 @@ public class DatabaseSettingsDialog extends JPanel {
 	}
 
 	public void setPrefs(Preferences prefs) {
-		this.prefs = prefs;
+		this.preferences = prefs;
 		host.parsePreferenceString( prefs.get("history.host", "") );
 	}
 
 	public Preferences getPrefs() {
-		return prefs;
+		return preferences;
 	}
 }
