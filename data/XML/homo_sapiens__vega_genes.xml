@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
-<DatasetView dataset="homo_sapiens_snps" description="Mart created from the Vega Manually curated Gene Dataset" displayName="Vega Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
+<DatasetView dataset="homo_sapiens_vega_genes" description="Mart created from the Vega Manually curated Gene Dataset" displayName="Vega Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
   <StarBase>hsapiens_vegagene</StarBase>
   <StarBase>hsapiens_vegatranscript</StarBase>
   <PrimaryKey>gene_id</PrimaryKey>
