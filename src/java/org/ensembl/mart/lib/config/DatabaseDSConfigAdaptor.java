@@ -25,14 +25,9 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 import org.ensembl.mart.lib.DetailedDataSource;
-import org.ensembl.mart.util.BigPreferences;
 import org.ensembl.util.StringUtil;
-
-import com.sun.rsasign.l;
 
 /**
  * DSConfigAdaptor implimentation that retrieves DatasetConfig objects from
@@ -40,20 +35,16 @@ import com.sun.rsasign.l;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable {
+public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable, Runnable {
 
   //each dataset will have 2 name maps, and a Set of DatasetConfig objects associated with it in an ArrayList
   private final int INAME_INDEX = 0;
-  private final int DNAME_INDEX = 1;
-  private final int CONFIG_INDEX = 2;
 
-  private final String DIGESTKEY = "MD5";
-  private final String XMLKEY = "XML";
-  Preferences xmlCache = null;
+  private DatasetConfigCache cache = null;
 
   private String dbpassword;
   private Logger logger = Logger.getLogger(DatabaseDSConfigAdaptor.class.getName());
-  private List dsconfigs = new ArrayList();
+  private List dsviews = new ArrayList();
   private HashMap datasetNameMap = new HashMap();
 
   private final DetailedDataSource dataSource;
@@ -65,10 +56,14 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   private boolean clearCache = false; //developer hack to clear the cache
   //will be replaced soon with user supported clearing
 
+  //To propogate update exceptions from thread
+  private Thread updateThread = null;
+  private ConfigurationException updateException = null;
+
   /**
    * Constructor for a DatabaseDSConfigAdaptor
    * @param ds -- DataSource for Mart RDBMS
-   * @param user -- user for RDBMS connection, AND meta_configuration_user table
+   * @param user -- user for RDBMS connection, AND meta_DatasetConfig_user table
    * @throws ConfigurationException if DataSource or user is null
    */
   public DatabaseDSConfigAdaptor(DetailedDataSource ds, String user) throws ConfigurationException {
@@ -83,20 +78,11 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
 
     adaptorName = ds.getName();
 
-    try {
-      //set up the preferences node with the datasource information as the root node
-      if (clearCache) {
-        BigPreferences.userNodeForPackage(DatabaseDSConfigAdaptor.class).node(adaptorName).node(user).removeNode();
-        BigPreferences.userNodeForPackage(DatabaseDSConfigAdaptor.class).flush();
-      }
-
-      xmlCache = BigPreferences.userNodeForPackage(DatabaseDSConfigAdaptor.class).node(adaptorName).node(user);
-    } catch (IllegalArgumentException e) {
-      throw new ConfigurationException(
-        "Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),
-        e);
-    } catch (BackingStoreException e) {
-      throw new ConfigurationException("Caught BackingStoreException clearing cache: " + e.getMessage(), e);
+    cache = new DatasetConfigCache(this, new String[] { adaptorName, user });
+    
+    //set up the preferences node with the datasource information as the root node
+    if (clearCache) {
+      cache.clearCache();
     }
 
     int tmp = user.hashCode();
@@ -125,145 +111,40 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigs()
    */
-  public DatasetConfig[] getDatasetConfigs() throws ConfigurationException {
-    DatasetConfig[] ret = new DatasetConfig[dsconfigs.size()];
-    
-    for (int i = 0, n = dsconfigs.size(); i < n; i++) {
-      DatasetConfig dsvorig = (DatasetConfig) dsconfigs.get(i);
-      ret[i] = new DatasetConfig(dsvorig); //return copy of datasetconfig, so that lazyLoad doesnt expand reference to original
-    }
-    return ret;
+  public DatasetConfigIterator getDatasetConfigs() throws ConfigurationException {
+    checkUpdateException();
+    return new DatasetConfigIterator(dsviews.iterator());
   }
 
   public void addDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+    checkUpdateException();
     if (!(datasetNameMap.containsKey(dsv.getDataset()))) {
       dsv.setDSConfigAdaptor(this);
-      dsconfigs.add(dsv); //add to the global dsconfigs list
+      dsviews.add(dsv); //add to the global dsviews list
 
       HashMap inameMap = new HashMap();
-      HashMap dnameMap = new HashMap();
-      ArrayList configs = new ArrayList();
 
       inameMap.put(dsv.getInternalName(), dsv);
-      dnameMap.put(dsv.getDisplayName(), dsv);
-      configs.add(dsv);
 
       Vector maps = new Vector();
       maps.add(INAME_INDEX, inameMap);
-      maps.add(DNAME_INDEX, dnameMap);
-      maps.add(CONFIG_INDEX, configs);
 
       datasetNameMap.put(dsv.getDataset(), maps);
     } else {
       Vector maps = (Vector) datasetNameMap.get(dsv.getDataset());
       HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
-      HashMap dnameMap = (HashMap) maps.get(DNAME_INDEX);
-      ArrayList configs = (ArrayList) maps.get(CONFIG_INDEX);
 
-      if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
+      if (!inameMap.containsKey(dsv.getInternalName())) {
         dsv.setDSConfigAdaptor(this);
-        dsconfigs.add(dsv); //add to the global dsconfigs list
+        dsviews.add(dsv); //add to the global dsviews list
 
         inameMap.put(dsv.getInternalName(), dsv);
-        dnameMap.put(dsv.getDisplayName(), dsv);
-        configs.add(dsv);
 
         maps.remove(INAME_INDEX);
         maps.add(INAME_INDEX, inameMap);
-        maps.remove(DNAME_INDEX);
-        maps.add(DNAME_INDEX, dnameMap);
-        maps.remove(CONFIG_INDEX);
-        maps.add(CONFIG_INDEX, configs);
 
         datasetNameMap.put(dsv.getDataset(), maps);
       }
-    }
-  }
-
-  //  private void updateXMLCache() throws ConfigurationException {
-  //    String iname = null;
-  //    String dataset = null;
-  //
-  //    try {
-  //      for (Iterator iter = dsconfigs.iterator(); iter.hasNext();) {
-  //        DatasetConfig dsv = (DatasetConfig) iter.next();
-  //        iname = dsv.getInternalName();
-  //        dataset = dsv.getDataset();
-  //
-  //        if (xmlCache.nodeExists(dataset) && xmlCache.node(dataset).nodeExists(iname)) {
-  //          byte[] md5 = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-  //
-  //          if (!MessageDigest.isEqual(md5, dsv.getMessageDigest()))
-  //            addToXMLCache(dsv);
-  //        } else
-  //          addToXMLCache(dsv);
-  //      }
-  //      xmlCache.flush();
-  //    } catch (BackingStoreException e) {
-  //      throw new ConfigurationException(
-  //        "Caught BackingStoreException checking for Preferences node "
-  //          + dataset
-  //          + " internalname "
-  //          + iname
-  //          + " "
-  //          + e.getMessage()
-  //          + "\nAssuming it doesnt exist\n",
-  //        e);
-  //    } catch (ConfigurationException e) {
-  //      throw e;
-  //    }
-  //  }
-
-  private void addToXMLCache(DatasetConfig dsv) throws ConfigurationException {
-    String iname = dsv.getInternalName();
-    String dataset = dsv.getDataset();
-
-    if (logger.isLoggable(Level.INFO))
-      logger.info("adding DatasetConfig " + dataset + " " + iname + " to cache\n");
-    byte[] xml = DatasetConfigXMLUtils.DatasetConfigToByteArray(dsv);
-    byte[] digest = dsv.getMessageDigest();
-    
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Storing " + xml.length + " bytes of XML to cache\n");
-      
-    if (digest == null)
-      throw new ConfigurationException("Recieved DatasetConfig to lazyLoad without a stored MessageDigest\n");
-
-    xmlCache.node(dataset).node(iname).putByteArray(DIGESTKEY, digest);
-    xmlCache.node(dataset).node(iname).putByteArray(XMLKEY, xml);
-
-    try {
-      xmlCache.flush();
-    } catch (BackingStoreException e) {
-      throw new ConfigurationException(
-        "Caught BackingStoreException adding new DatasetConfig to preferences node "
-          + dataset
-          + " internalName "
-          + iname
-          + " "
-          + e.getMessage()
-          + "\nAssuming it doesnt exist\n");
-    }
-  }
-
-  private void removeFromXMLCache(String dataset, String iname) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Removing old cache for " + dataset + " " + iname + " if any\n");
-
-    try {
-      xmlCache.node(dataset).remove(iname); //removes this node entirely
-      if (xmlCache.node(dataset).childrenNames().length == 0)
-        xmlCache.remove(dataset); //removes the dataset node, if empty
-      xmlCache.flush();
-    } catch (BackingStoreException e) {
-      throw new ConfigurationException(
-        "Caught BackingStoreException removing DatasetConfig from preferences node "
-          + dataset
-          + " internalName "
-          + iname
-          + " "
-          + e.getMessage()
-          + "\nAssuming it doesnt exist\n");
     }
   }
 
@@ -271,29 +152,23 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.MultiDSConfigAdaptor#removeDatasetConfig(org.ensembl.mart.lib.config.DatasetConfig)
    */
   public boolean removeDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+    checkUpdateException();
     if (datasetNameMap.containsKey(dsv.getDataset())) {
       Vector maps = (Vector) datasetNameMap.get(dsv.getDataset());
       HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
-      HashMap dnameMap = (HashMap) maps.get(DNAME_INDEX);
-      ArrayList configs = (ArrayList) maps.get(CONFIG_INDEX);
 
       if (inameMap.containsKey(dsv.getInternalName())) {
         datasetNameMap.remove(dsv.getDataset());
         inameMap.remove(dsv.getInternalName());
-        dnameMap.remove(dsv.getDisplayName());
-        dsconfigs.remove(dsv);
-        configs.remove(dsv);
+
+        dsviews.remove(dsv);
+
         dsv.setDSConfigAdaptor(null);
-        removeFromXMLCache(dsv.getDataset(), dsv.getInternalName());
 
         //if this dataset is completely removed from the adaptor, make sure its keys reflect its removal
-        if (configs.size() > 0) {
+        if (getNumDatasetConfigsByDataset(dsv.getDataset()) > 0) {
           maps.remove(INAME_INDEX);
-          maps.remove(DNAME_INDEX);
-          maps.remove(CONFIG_INDEX);
           maps.add(INAME_INDEX, inameMap);
-          maps.add(DNAME_INDEX, dnameMap);
-          maps.add(CONFIG_INDEX, configs);
           datasetNameMap.put(dsv.getDataset(), maps);
         } else
           datasetNameMap.remove(dsv.getDataset());
@@ -306,8 +181,8 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   }
 
   private void checkMemoryForUpdate(String dataset, HashMap inameMap, String iname) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info(" Already loaded, check for update\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine(" Already loaded, check for update\n");
 
     byte[] nDigest =
       DatabaseDatasetConfigUtils.getDSConfigMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
@@ -315,8 +190,8 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
 
     if (!MessageDigest.isEqual(oDigest, nDigest)) {
 
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Needs update\n");
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Needs update\n");
 
       removeDatasetConfig((DatasetConfig) inameMap.get(iname));
       loadFromDatabase(dataset, iname);
@@ -324,203 +199,54 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   }
 
   private boolean cacheUpToDate(String dataset, String iname) throws ConfigurationException {
-    boolean ret = false;
-    try {
-      ret = xmlCache.nodeExists(dataset);
-
-      if (logger.isLoggable(Level.INFO))
-        logger.info("cache node Dataset: " + dataset + " exists: " + ret + "\n");
-      if (ret) {
-        ret = xmlCache.node(dataset).nodeExists(iname);
-
-        if (logger.isLoggable(Level.INFO))
-          logger.info("cache node Dataset: " + dataset + " internalName: " + iname + " exists: " + ret + "\n");
-      }
-    } catch (BackingStoreException e) {
-      if (logger.isLoggable(Level.INFO))
-        logger.info(
-          "Caught BackingStoreException checking for Preferences node "
-            + dataset
-            + " "
-            + e.getMessage()
-            + "\nAssuming it doesnt exist\n");
-      ret = false;
-    }
-
-    if (ret) {
-      byte[] nDigest =
-        DatabaseDatasetConfigUtils.getDSConfigMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
-      byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-
-      //if the cache cannot return the digest for some reason, it should return an empty byte[]
-      
-      ret = MessageDigest.isEqual(cacheDigest, nDigest);
-
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Message Digests equal: " + ret + "\n");
-    }
-
-    if (!ret) {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Cache is not up to date for " + dataset + " " + iname + ", removing cache\n");
-      removeFromXMLCache(dataset, iname);
-    }
-    return ret;
+    byte[] sourceDigest = DatabaseDatasetConfigUtils.getDSConfigMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
+    
+    return cache.cacheUpToDate(sourceDigest, dataset, iname);
   }
-
+  
   private void loadCacheOrUpdate(String dataset, String iname) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Not loaded yet, is it in cache and is cache up to date?");
-
     if (cacheUpToDate(dataset, iname)) {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("getting from cache\n");
-
-      byte[] cacheDigest = xmlCache.node(dataset).node(iname).getByteArray(DIGESTKEY, new byte[0]);
-      byte[] cachedXML = xmlCache.node(dataset).node(iname).getByteArray(XMLKEY, null);
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Attempting to load from cache\n");
         
-      // should return a null if it cant load for some reason
-
-      if (cachedXML != null) {
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Recieved " + cachedXML.length + " bytes of xml from cache\n");
-          
-        DatasetConfig newDSV = DatasetConfigXMLUtils.ByteArrayToDatasetConfig(cachedXML);
-        newDSV.setMessageDigest(cacheDigest);
+        DatasetConfig newDSV = null;
+        try {
+          newDSV = cache.getDatasetConfig(dataset, iname, this);
+        } catch (ConfigurationException e) {
+          if (logger.isLoggable(Level.FINE))
+            logger.fine("Could not load " + dataset + " " + iname + " from cache: " + e.getMessage() + "\nloading from database!\n");
+            loadFromDatabase(dataset, iname);  
+        }
         addDatasetConfig(newDSV);
-      } else {
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Recieved null xml from cache\n");
-          
-        loadFromDatabase(dataset, iname); 
-      }
-    } else {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Need to update cache\n");
-
+    } else
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Cache is not up to date for " + dataset + " " + iname + "\n loading from Database!\n");
       loadFromDatabase(dataset, iname);
-    }
   }
 
   private void loadFromDatabase(String dataset, String iname) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
 
-    DatasetConfig newDSV = DatabaseDatasetConfigUtils.getDatasetConfigByDatasetInternalName(dataSource, user, dataset, iname);
+    DatasetConfig newDSV =
+      DatabaseDatasetConfigUtils.getDatasetConfigByDatasetInternalName(dataSource, user, dataset, iname);
     addDatasetConfig(newDSV);
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#update()
    */
-  public void update() throws ConfigurationException {
-    String[] datasets = DatabaseDatasetConfigUtils.getAllDatasetNames(dataSource, user);
-    for (int i = 0, n = datasets.length; i < n; i++) {
-      String dataset = datasets[i];
-      String[] inms = DatabaseDatasetConfigUtils.getAllInternalNamesForDataset(dataSource, user, dataset);
-
-      boolean datasetCacheExists = false;
-      try {
-        datasetCacheExists = xmlCache.nodeExists(dataset);
-      } catch (BackingStoreException e) {
-        if (logger.isLoggable(Level.INFO))
-          logger.info(
-            "Caught BackingStoreException checking for Preferences node "
-              + dataset
-              + " "
-              + e.getMessage()
-              + "\nAssuming it doesnt exist\n");
-        datasetCacheExists = false;
-      }
-
-      if (datasetNameMap.containsKey(dataset)) {
-        //dataset is loaded, check for update of its datasetconfig
-        Vector maps = (Vector) datasetNameMap.get(dataset);
-        HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
-
-        for (int k = 0, m = inms.length; k < m; k++) {
-          String iname = inms[k];
-
-          if (logger.isLoggable(Level.INFO))
-            logger.info("Checking for dataset " + dataset + " internamName " + iname + "\n");
-
-          boolean internalnameCacheExists = false;
-
-          try {
-            internalnameCacheExists = xmlCache.node(dataset).nodeExists(iname);
-          } catch (BackingStoreException e) {
-            if (logger.isLoggable(Level.INFO))
-              logger.info(
-                "Caught BackingStoreException checking for dataset "
-                  + dataset
-                  + " Preferences node "
-                  + iname
-                  + " "
-                  + e.getMessage()
-                  + "\nAssuming it doesnt exist\n");
-            internalnameCacheExists = false;
-          }
-
-          if (inameMap.containsKey(iname))
-            checkMemoryForUpdate(dataset, inameMap, iname);
-          else if (internalnameCacheExists)
-            loadCacheOrUpdate(dataset, iname);
-          else
-            loadFromDatabase(dataset, iname);
-        }
-      } else if (datasetCacheExists) {
-        //not already loaded, check for its datasetconfigs in cache
-        for (int k = 0, m = inms.length; k < m; k++) {
-          String iname = inms[k];
-
-          if (logger.isLoggable(Level.INFO))
-            logger.info("Checking for dataset " + dataset + " internamName " + iname + "\n");
-
-          boolean internalnameCacheExists = false;
-
-          try {
-            internalnameCacheExists = xmlCache.node(dataset).nodeExists(iname);
-          } catch (BackingStoreException e) {
-            if (logger.isLoggable(Level.INFO))
-              logger.info(
-                "Caught BackingStoreException checking for dataset "
-                  + dataset
-                  + " Preferences node "
-                  + iname
-                  + " "
-                  + e.getMessage()
-                  + "\nAssuming it doesnt exist\n");
-            internalnameCacheExists = false;
-          }
-
-          if (internalnameCacheExists)
-            loadCacheOrUpdate(dataset, iname);
-          else {
-            //load datasetconfig from database
-            if (logger.isLoggable(Level.INFO))
-              logger.info("Dataset " + dataset + " internalName " + iname + " not in cache, loading from database\n");
-
-            loadFromDatabase(dataset, iname);
-          }
-        }
-      } else {
-        //load dataset from database
-        if (logger.isLoggable(Level.INFO))
-          logger.info("Dataset " + dataset + " not in cache, loading from database\n");
-
-        for (int k = 0, m = inms.length; k < m; k++) {
-          String iname = inms[k];
-          loadFromDatabase(dataset, iname);
-        }
-      }
-    }
+  public synchronized void update() throws ConfigurationException {
+    checkUpdateException();
+    updateThread = new Thread(this, "DatabaseDSConfigAdaptorUpdateThread");
+    updateThread.start();
   }
 
   /**
    * Allows client to store a single DatasetConfig object as a DatasetConfig.dtd compliant XML document into a Mart Database.
    * Client can choose whether to compress (GZIP) the resulting XML before it is stored in the Database.
    * @param ds -- DataSource of the Mart Database where the DatasetConfig.dtd compliant XML is to be stored.
-   * @param user -- RDBMS user for meta_configuration_[user] table to store the document.  If null, or if meta_configuration_[user] does not exist, meta_configuration will be the target of the document.
+   * @param user -- RDBMS user for meta_DatasetConfig_[user] table to store the document.  If null, or if meta_DatasetConfig_[user] does not exist, meta_DatasetConfig will be the target of the document.
    * @param dsv -- DatasetConfig object to store
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
    * @throws ConfigurationException for all underlying Exceptions
@@ -539,8 +265,8 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   }
 
   private void lazyLoadWithDatabase(DatasetConfig dsv) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("lazy loading from database\n");
+    if (logger.isLoggable(Level.FINE))
+      logger.fine("lazy loading from database\n");
 
     DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(
       dsv,
@@ -551,29 +277,20 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
         dsv.getInternalName()));
 
     //cache this DatasetConfig, as, for some reason, it is needing to be cached
-    removeFromXMLCache(dsv.getDataset(), dsv.getInternalName());
-    addToXMLCache(dsv);
+    cache.removeDatasetConfig(dsv.getDataset(), dsv.getInternalName());
+    cache.addDatasetConfig(dsv);
   }
 
   private void lazyLoadWithCache(DatasetConfig dsv) throws ConfigurationException {
-    if (logger.isLoggable(Level.INFO))
-      logger.info("Attempting to lazy load with cache\n");
-
-    byte[] cachedXML = xmlCache.node(dsv.getDataset()).node(dsv.getInternalName()).getByteArray(XMLKEY, null);
-    //  should return a null if it cant load for some reason
-
-    if (cachedXML != null) {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("lazyLoading from non null cache of length " +  cachedXML.length + "\n");
-
-      DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(dsv, DatasetConfigXMLUtils.ByteArrayToDocument(cachedXML));
-    } else {
-      if (logger.isLoggable(Level.INFO))
-        logger.info("preferences returned null byte[], loading from database\n");
+    try {
+      cache.lazyLoadWithCache(dsv);
+    } catch (ConfigurationException e) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Recieved Exception attempting to lazyLoad from cache: " + e.getMessage() + "\nlazyLoading from Database!\n");
       lazyLoadWithDatabase(dsv);
     }
   }
-
+  
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetConfig)
    */
@@ -586,7 +303,7 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
     else
       lazyLoadWithDatabase(dsv);
   }
-
+  
   /**
    * Note, this method will only include the DataSource password in the resulting MartLocation object
    * if the user set the password using the setDatabasePassword method of this adaptor. Otherwise, 
@@ -598,6 +315,7 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getMartLocations()
    */
   public MartLocation[] getMartLocations() throws ConfigurationException {
+    checkUpdateException();
     MartLocation dbloc =
       new DatabaseLocation(
         dataSource.getHost(),
@@ -643,25 +361,27 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsDataset(java.lang.String)
    */
   public boolean supportsDataset(String dataset) throws ConfigurationException {
-    return getDatasetConfigsByDataset(dataset).length > 0;
+    checkUpdateException();
+    return getNumDatasetConfigsByDataset(dataset) > 0;
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
    */
-  public DatasetConfig[] getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
+  public DatasetConfigIterator getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
+    checkUpdateException();
 
     ArrayList l = new ArrayList();
 
-    for (int i = 0, n = dsconfigs.size(); i < n; i++) {
-      DatasetConfig config = (DatasetConfig) dsconfigs.get(i);
-      if (config.getDataset().equals(dataset)) {
-        l.add(new DatasetConfig(config)); //return copy of datasetconfig, so that lazyLoad doesnt expand reference to original
+    for (int i = 0, n = dsviews.size(); i < n; i++) {
+      DatasetConfig view = (DatasetConfig) dsviews.get(i);
+      if (view.getDataset().equals(dataset)) {
+        l.add(new DatasetConfig(view));
+        //return copy of datasetview, so that lazyLoad doesnt expand reference to original
       }
     }
 
-    return (DatasetConfig[]) l.toArray(new DatasetConfig[l.size()]);
-
+    return new DatasetConfigIterator(l.iterator());
   }
 
   /**
@@ -680,16 +400,16 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
   public DatasetConfig getDatasetConfigByDatasetInternalName(String dataset, String internalName)
     throws ConfigurationException {
 
-    DatasetConfig config = null;
-    for (int i = 0; i < dsconfigs.size(); ++i) {
+    checkUpdateException();
+    DatasetConfig view = null;
+    for (int i = 0; view == null && i < dsviews.size(); ++i) {
 
-      DatasetConfig dsv = (DatasetConfig) dsconfigs.get(i);
-      if (StringUtil.compare(dataset, dsv.getDataset()) == 0
-        && StringUtil.compare(internalName, dsv.getInternalName()) == 0)
-        config = dsv;
+      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
+      if (dsv.getDataset().equals(dataset) && dsv.getInternalName().equals(internalName))
+        view = new DatasetConfig(dsv, true); //lazyLoaded copy
     }
 
-    return config;
+    return view;
   }
 
   /* (non-Javadoc)
@@ -697,16 +417,18 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    */
   public DatasetConfig getDatasetConfigByDatasetDisplayName(String dataset, String displayName)
     throws ConfigurationException {
-    DatasetConfig config = null;
-    for (int i = 0; i < dsconfigs.size(); ++i) {
+    checkUpdateException();
 
-      DatasetConfig dsv = (DatasetConfig) dsconfigs.get(i);
+    DatasetConfig view = null;
+    for (int i = 0; i < dsviews.size(); ++i) {
+
+      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
       if (StringUtil.compare(dataset, dsv.getDataset()) == 0
         && StringUtil.compare(displayName, dsv.getDisplayName()) == 0)
-        config = dsv;
+        view = new DatasetConfig(dsv, true); //lazyLoaded copy
     }
 
-    return config;
+    return view;
   }
 
   /**
@@ -742,6 +464,7 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */
   public String[] getDatasetNames() throws ConfigurationException {
+    checkUpdateException();
     return (String[]) datasetNameMap.keySet().toArray(new String[datasetNameMap.size()]);
   }
 
@@ -749,6 +472,7 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames(java.lang.String)
    */
   public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+    checkUpdateException();
     if (adaptorName.equals(this.adaptorName))
       return getDatasetNames();
     else
@@ -759,13 +483,12 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigDisplayNamesByDataset(java.lang.String)
    */
   public String[] getDatasetConfigDisplayNamesByDataset(String dataset) throws ConfigurationException {
+    checkUpdateException();
     List names = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigsByDataset(dataset);
 
-    for (int i = 0, n = configs.length; i < n; i++) {
-      DatasetConfig dsv = (DatasetConfig) configs[i];
-
-      if (dsv.getDataset().equals(dataset))
+    for (int i = 0; i < dsviews.size(); ++i) {
+      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
+      if (StringUtil.compare(dataset, dsv.getDataset()) == 0)
         names.add(dsv.getDisplayName());
     }
 
@@ -776,13 +499,12 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigInternalNamesByDataset(java.lang.String)
    */
   public String[] getDatasetConfigInternalNamesByDataset(String dataset) throws ConfigurationException {
+    checkUpdateException();
     List names = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigsByDataset(dataset);
 
-    for (int i = 0, n = configs.length; i < n; i++) {
-      DatasetConfig dsv = (DatasetConfig) configs[i];
-
-      if (dsv.getDataset().equals(dataset))
+    for (int i = 0; i < dsviews.size(); ++i) {
+      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
+      if (StringUtil.compare(dataset, dsv.getDataset()) == 0)
         names.add(dsv.getInternalName());
     }
 
@@ -818,5 +540,123 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    */
   public DetailedDataSource getDataSource() {
     return dataSource;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
+   */
+  public int getNumDatasetConfigs() {
+    return dsviews.size();
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigsByDataset(java.lang.String)
+   */
+  public int getNumDatasetConfigsByDataset(String dataset) {
+    int ret = 0;
+
+    for (int i = 0; i < dsviews.size(); ++i) {
+      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
+      if (StringUtil.compare(dataset, dsv.getDataset()) == 0)
+        ret++;
+    }
+
+    return ret;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#containsDatasetConfig(org.ensembl.mart.lib.config.DatasetConfig)
+   */
+  public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+    checkUpdateException();
+    return dsviews.contains(dsv);
+  }
+
+  private void checkUpdateException() throws ConfigurationException {
+    if (updateThread != null && updateThread != Thread.currentThread()) {
+      //if this is the main thread, and the updateThread is still active, we need to wait here
+      try {
+        if (updateThread.isAlive()) {
+          if (logger.isLoggable(Level.FINE))
+            logger.fine("Waiting for Update thread to finish\n");
+          updateThread.join();
+        }
+      } catch (InterruptedException e1) {
+        updateException = new ConfigurationException("Update Thread was interrupted: "+ e1.getMessage() + "\n", e1);  
+      } finally {
+        //all getters use this to check if there was an exception in the underlying update Thread
+        if (updateException != null) {
+          ConfigurationException e = updateException;
+          updateException = null;
+          updateThread = null;
+          throw e;
+        }
+      }
+    }
+    return;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Runnable#run()
+   */
+  public void run() {
+    try {
+      String[] datasets = DatabaseDatasetConfigUtils.getAllDatasetNames(dataSource, user);
+      for (int i = 0, n = datasets.length; i < n; i++) {
+        String dataset = datasets[i];
+        String[] inms = DatabaseDatasetConfigUtils.getAllInternalNamesForDataset(dataSource, user, dataset);
+
+        if (datasetNameMap.containsKey(dataset)) {
+          //dataset is loaded, check for update of its datasetview
+          Vector maps = (Vector) datasetNameMap.get(dataset);
+          HashMap inameMap = (HashMap) maps.get(INAME_INDEX);
+
+          for (int k = 0, m = inms.length; k < m; k++) {
+            String iname = inms[k];
+
+            if (logger.isLoggable(Level.FINE))
+              logger.fine("Checking for dataset " + dataset + " internamName " + iname + "\n");
+
+            if (inameMap.containsKey(iname))
+              checkMemoryForUpdate(dataset, inameMap, iname);
+            else if (cache.cacheExists(dataset, iname))
+              loadCacheOrUpdate(dataset, iname);
+            else
+              loadFromDatabase(dataset, iname);
+          }
+        } else if (cache.cacheExists(dataset, null)) {
+          //not already loaded, check for its datasetviews in cache
+          for (int k = 0, m = inms.length; k < m; k++) {
+            String iname = inms[k];
+
+            if (logger.isLoggable(Level.FINE))
+              logger.fine("Checking for dataset " + dataset + " internamName " + iname + "\n");
+
+            if (cache.cacheExists(dataset, iname))
+              loadCacheOrUpdate(dataset, iname);
+            else {
+              //load datasetview from database
+              if (logger.isLoggable(Level.FINE))
+                logger.fine("Dataset " + dataset + " internalName " + iname + " not in cache, loading from database\n");
+
+              loadFromDatabase(dataset, iname);
+            }
+          }
+        } else {
+          //load dataset from database
+          if (logger.isLoggable(Level.FINE))
+            logger.fine("Dataset " + dataset + " not in cache, loading from database\n");
+
+          for (int k = 0, m = inms.length; k < m; k++) {
+            String iname = inms[k];
+            loadFromDatabase(dataset, iname);
+          }
+        }
+      }
+    } catch (ConfigurationException e) {
+      updateException = e;
+    } finally {
+      return;
+    }
   }
 }

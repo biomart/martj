@@ -19,6 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 import org.ensembl.mart.lib.DetailedDataSource;
+import org.python.modules.synchronize;
 
 /**
  * Interface for Objects providing access to one or more DatasetConfig Objects via
@@ -43,12 +44,27 @@ public interface DSConfigAdaptor {
   public String getName();
   
   /**
+   * Determine if the adaptor contains a given DatasetConfig.
+   * @param dsv - DatasetConfig to search
+   * @return true if adaptor contains DatasetConfig, false otherwise
+   * @throws ConfigurationException for underlying Exceptions
+   */
+  public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException;
+  
+  /**
+   * Returns a count of the number of DatasetConfigs held by this adaptor
+   * @return int number of datasetviews held by the adaptor
+   */
+  public int getNumDatasetConfigs();
+  
+  /**
    * Returns a DatasetConfig[] consisting of all DatasetConfig objects provided by a particular
    * DSConfigAdaptor object.
-   * @return DatasetConfig[] dsetconfigs
-   * @throws ConfigurationException  for all underlying exceptions
+   * @return DatasetConfigIterator dsetconfigs
+   * @throws ConfigurationException for all underlying exceptions
+   * @see org.ensembl.mart.lib.config.DatasetConfigIterator
    */
-  public DatasetConfig[] getDatasetConfigs() throws ConfigurationException;
+  public DatasetConfigIterator getDatasetConfigs() throws ConfigurationException;
 
   /**
    * Returns a specific DatasetConfig object, named by the given dataset
@@ -88,12 +104,20 @@ public interface DSConfigAdaptor {
   public boolean supportsDataset(String dataset) throws ConfigurationException;
 
   /**
+   * Returns the number of DatasetConfigs for a given Dataset supported by the adaptor
+   * @param dataset -- name of dataset for which count of DatasetConfigs is desired
+   * @return number of DatasetConfigs supporting this dataset.
+   */
+  public int getNumDatasetConfigsByDataset(String dataset);
+  
+  /**
    * Returns specific DatasetConfigs with the given dataset name 
    * @param dataset -- dataset name
-   * @return DatasetConfigs with the given dataset name, empty array if non found
+   * @return DatasetConfigIterator with DatasetConfigs for the given dataset name, empty Iterator if none found
    * @throws ConfigurationException for all underlying Exceptions
+   * @see org.ensembl.mart.lib.config.DatasetConfigIterator
    */
-  public DatasetConfig[] getDatasetConfigsByDataset(String dataset)
+  public DatasetConfigIterator getDatasetConfigsByDataset(String dataset)
     throws ConfigurationException;
 
   /**

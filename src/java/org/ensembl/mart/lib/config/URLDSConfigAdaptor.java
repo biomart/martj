@@ -21,6 +21,8 @@ package org.ensembl.mart.lib.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.DetailedDataSource;
@@ -78,8 +80,10 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigs()
    */
-  public DatasetConfig[] getDatasetConfigs() throws ConfigurationException {
-    return new DatasetConfig[] { dsv };
+  public DatasetConfigIterator getDatasetConfigs() throws ConfigurationException {
+    List l = new ArrayList();
+    l.add(dsv);
+    return new DatasetConfigIterator(l.iterator());
   }
 
   /* (non-Javadoc)
@@ -87,7 +91,7 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
    */
   public void update() throws ConfigurationException {
     try {
-      dsv = DatasetConfigXMLUtils.XMLStreamToDatasetConfig(InputSourceUtil.getStreamForURL(dsvurl), validate);
+      dsv = DatasetConfigXMLUtils.XMLStreamToDatasetConfig(InputSourceUtil.getStreamForURL(dsvurl), validate, false);
     } catch (Exception e) {
       throw new ConfigurationException(
         "Could not load DatasetConfig from URL: " + dsvurl.toString() + " " + e.getMessage(),
@@ -144,11 +148,11 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
     return hashCode() - ((DSConfigAdaptor) o).hashCode();
   }
 
-  /**
-   * Currently doesnt do anything, as URL DatasetConfig objects are fully loaded at instantiation.  Could change in the future.
+  /*
+   * (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetConfig)
    */
   public void lazyLoad(DatasetConfig dsv) throws ConfigurationException {
-    // Currently does not do anything, as URL DSConfigs are fully loaded at instantiation.  Could change in the future.
     try {
       DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(dsv, DatasetConfigXMLUtils.XMLStreamToDocument(InputSourceUtil.getStreamForURL(dsvurl), validate));
     } catch (IOException e) {
@@ -183,13 +187,14 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   /**
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
    */
-  public DatasetConfig[] getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
+  public DatasetConfigIterator getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
 
     if (supportsDataset(dataset))
-      return new DatasetConfig[] { dsv };
+      return getDatasetConfigs();
     else
-      return new DatasetConfig[0];
+      return new DatasetConfigIterator(new ArrayList().iterator()); //empty iterator 
   }
+  
   /**
    * @return "URL"
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDisplayName()
@@ -208,7 +213,7 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
     same = same && StringUtil.compare(internalName, dsv.getInternalName()) == 0;
 
     if (same)
-      return dsv;
+      return new DatasetConfig(dsv, true); // lazyLoaded copy
     else
       return null;
   }
@@ -222,7 +227,7 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
       same = same && StringUtil.compare(displayName, dsv.getDisplayName()) == 0;
 
       if (same)
-        return dsv;
+        return new DatasetConfig(dsv, true); // lazyLoaded copy
       else
         return null;
   }
@@ -311,7 +316,6 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsAdaptor(java.lang.String)
    */
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
-    // TODO Auto-generated method stub
     return false;
   }
   
@@ -322,5 +326,29 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
    */
   public DetailedDataSource getDataSource() {
     return null;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
+   */
+  public int getNumDatasetConfigs() {
+    return 1;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigsByDataset(java.lang.String)
+   */
+  public int getNumDatasetConfigsByDataset(String dataset) {
+    if (dsv.getDataset().equals(dataset))
+      return 1;
+    else
+      return 0;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#containsDatasetConfig(org.ensembl.mart.lib.config.DatasetConfig)
+   */
+  public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+    return this.dsv != null && this.dsv.equals(dsv);
   }
 }

@@ -80,41 +80,84 @@ public class DatasetConfigXMLUtils {
 	private static final String INTERNALNAME = "internalName";
 
   /**
-   * Returns a DatasetConfig from an XML stored as a byte[]
+   * Returns a DatasetConfig from an XML stored as a byte[].
+   * Returns a fully loaded DatasetConfig.
+   * @see ByteArrayToDatasetConfig(byte[] b, boolean loadFully) for information on how to get
+   * a DatasetConfig which defers loading its elements to the lazyLoad system.
    * @param b - byte[] holding XML
    * @return DatasetConfig for xml in byte[]
    * @throws ConfigurationException
    */
   public static DatasetConfig ByteArrayToDatasetConfig(byte[] b) throws ConfigurationException {
-    ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return XMLStreamToDatasetConfig(bin);
+    return ByteArrayToDatasetConfig(b, true);
+  }
+
+  /**
+   * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
+   * load all Elements, or defer this to the lazyLoad system. This does not validate the XML.
+   * @see ByteArrayToDatasetConfig(byte[] b, boolean validate, boolean loadFully) for information on how to validate
+   * the xml as well as specify its load state. 
+   * @param b - byte[] holding XML
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig for xml in byte[]
+   * @throws ConfigurationException
+   */
+  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, boolean loadFully) throws ConfigurationException {  
+    return ByteArrayToDatasetConfig(b, null, false, loadFully);
   }
   
   /**
-   * Returns a Document Object parsed from an XML stored as a ByteArray
+   * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
+   * load all Elements, or defer this to the lazyLoad system, and whether to validate.
+   * 
    * @param b - byte[] holding XML
-   * @return Document for XML
+   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig for xml in byte[]
    * @throws ConfigurationException
    */
-  public static Document ByteArrayToDocument(byte[] b) throws ConfigurationException {
-    ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return XMLStreamToDocument(bin, false);
+  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, boolean validate, boolean loadFully) throws ConfigurationException {
+    return ByteArrayToDatasetConfig(b, null, validate, loadFully);
   }
-
+  
+  /**
+   * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
+   * load all Elements, or defer this to the lazyLoad system, and whether to validate. Also allows system
+   * to supply a md5sum digest byte[] array to store into the resulting DatasetConfig.
+   *  
+   * @param b - byte[] holding XML
+   * @param digest -- byte[] containing the digest
+   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig for xml in byte[]
+   * @throws ConfigurationException
+   */
+  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, byte[] digest, boolean validate, boolean loadFully) throws ConfigurationException {
+    ByteArrayInputStream bin = new ByteArrayInputStream(b);
+    return XMLStreamToDatasetConfig(bin, digest, validate, loadFully);
+  }
+  
 	/**
 	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object.
+   * This returns a fully loaded, non-validated DatasetConfig, without validation. 
+   * @see XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) for information
+   * on how to specify validation, or whether to defer loading to the lazyLoad system.
 	 * 
 	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
 	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
 	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput) throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, null, false);
+		return XMLStreamToDatasetConfig(xmlinput, null, false, true);
 	}
 
 	/**
 	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object,
 	 * with optional validation of the XML against the DatasetConfig.dtd contained in the Java CLASSPATH.
+   * This returns a fully loaded DatasetConfig object.
+   * @see XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) for information
+   * on how to specify validation, or whether to defer loading to the lazyLoad system.
+   * 
 	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
 	 * @return DatasetConfig
@@ -122,12 +165,30 @@ public class DatasetConfigXMLUtils {
 	 */
 	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate)
 		throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, null, validate);
+		return XMLStreamToDatasetConfig(xmlinput, null, validate, true);
 	}
 
+  /**
+   * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object,
+   * with optional validation of the XML against the DatasetConfig.dtd contained in the Java CLASSPATH.
+   * Allows system to specify whether to validate, or whether to defer loading underlying elements to the
+   * lazyLoad system.
+   * 
+   * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
+   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig
+   * @throws ConfigurationException for all underlying Exceptions.
+   */
+  public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) throws ConfigurationException {
+    return XMLStreamToDatasetConfig(xmlinput, null, validate, loadFully);
+  }
+  
 	/**
 	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object, with
-	 * a precomputed Message Digest using a given Algorithm.
+	 * a precomputed Message Digest using md5sum.  This returns a non-validated, fully loaded DatasetConfig object.
+   * @see XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate, boolean loadFully) for information on how to specify
+   * whether to validate, or defer loading of the DatasetConfig elements to the lazyLoad system.
 	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
 	 * @return DatasetConfig
@@ -135,24 +196,27 @@ public class DatasetConfigXMLUtils {
 	 * @see java.security.MessageDigest
 	 */
 	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest) throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, digest, false);
+		return XMLStreamToDatasetConfig(xmlinput, digest, false, true);
 	}
 
 	/**
 	 * Takes an InputStream containing XML, and creates a DatasetConfig object.
 	 * Optional parameters exist for creating a DatasetConfig with a message digest
-	 * created by a sun.security.MessageDigest object, and for validating the xml against
-	 * the DatasetConfig.dtd stored in the java CLASSPATH. 
+	 * created by a sun.security.MessageDigest MD5SUM object, for validating the xml against
+	 * the DatasetConfig.dtd stored in the java CLASSPATH, and for defering the loading of DatasetConfig elements
+   * to the lazyLoad system.
+   *  
 	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
 	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-	 * @return
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 * @see java.security.MessageDigest
 	 */
-	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate)
+	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate, boolean loadFully)
 		throws ConfigurationException {
-		return DocumentToDatasetConfig(XMLStreamToDocument(xmlinput, validate), digest);
+		return DocumentToDatasetConfig(XMLStreamToDocument(xmlinput, validate), digest, loadFully);
 	}
 
 	/**
@@ -181,38 +245,74 @@ public class DatasetConfigXMLUtils {
 
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
-	 * XML document, and returns a DatasetConfig object.
+	 * XML document, and returns a DatasetConfig object. Note, this returns a fully loaded
+   * DatasetConfig object.
+   * @see DocumentToDatasetConfig(Document doc, boolean fullyLoad) for information on how
+   * to get a DatasetConfig which defers the loading of its elements to the lazyLoad system.
 	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
 	public static DatasetConfig DocumentToDatasetConfig(Document doc) throws ConfigurationException {
-		return DocumentToDatasetConfig(doc, null);
+		return DocumentToDatasetConfig(doc, null, true);
 	}
 
+  /**
+  /**
+   * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
+   * XML document, and returns a DatasetConfig object. Allows system to specify whether to fully load
+   * the DatasetConfig with its Elements, or defer this to the lazyLoad system.
+   * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig object
+   * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
+   */
+  public static DatasetConfig DocumentToDatasetConfig(Document doc, boolean loadFully) throws ConfigurationException {
+    return DocumentToDatasetConfig(doc, null, loadFully);
+  }
+  
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
 	 * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
-	 * Message Digest are supplied, these are added to the DatasetConfig.
+	 * Message Digest are supplied, these are added to the DatasetConfig. Note, this returns a fully loaded
+   * DatasetConfig object.
+   * @see DocumentToDatasetConfig(Document doc, byte[] digest, boolean loadFully) for information on how
+   * to get a DatasetConfig which defers the loading of its elements to the lazyLoad system.
 	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @param digest -- a digest computed with the given digestAlgorithm
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
 	public static DatasetConfig DocumentToDatasetConfig(Document doc, byte[] digest) throws ConfigurationException {
-		Element thisElement = doc.getRootElement();
-
-		DatasetConfig d = new DatasetConfig();
-    loadAttributesFromElement(thisElement, d);
-
-//		LoadDatasetConfigWithDocument(d, doc);
-
-		if (digest != null)
-			d.setMessageDigest(digest);
-
-		return d;
+		return DocumentToDatasetConfig(doc, digest, true);
 	}
 
+  /**
+   * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
+   * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
+   * Message Digest are supplied, these are added to the DatasetConfig. If loadFully is true,
+   * the DatasetConfig is fully populated with its Elements, otherwise, this is deferred to the lazyLoad system.
+   * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
+   * @param digest -- a digest computed with the given digestAlgorithm
+   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
+   * @return DatasetConfig object
+   * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
+   */
+  public static DatasetConfig DocumentToDatasetConfig(Document doc, byte[] digest, boolean loadFully) throws ConfigurationException {
+    Element thisElement = doc.getRootElement();
+
+    DatasetConfig d = new DatasetConfig();
+    loadAttributesFromElement(thisElement, d);
+
+    if (loadFully)
+      LoadDatasetConfigWithDocument(d, doc);
+
+    if (digest != null)
+      d.setMessageDigest(digest);
+
+    return d;
+  }
+  
   private static void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
 		List attributes = thisElement.getAttributes();
 		

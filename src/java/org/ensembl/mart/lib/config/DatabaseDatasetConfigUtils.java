@@ -44,7 +44,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.StringTokenizer;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -129,34 +128,38 @@ public class DatabaseDatasetConfigUtils {
    * @param dsource - DetailedDataSource containing connection to Mart Database
    * @param user - user to query
    * @return true if meta_configuration_[user] exists, false otherwise
-   * @throws ConfigurationException for SQLExceptions
    */
-  public static boolean DSConfigUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
+  public static boolean DSConfigUserTableExists(DetailedDataSource dsource, String user) {
     boolean exists = true;
     String table = BASEMETATABLE + "_" + user;
 
     if (user == null)
       return false;
 
-    exists = tableExists(dsource, table);
-
-    if (!exists) {
-      //try upper casing the name
-      exists = tableExists(dsource, table.toUpperCase());
-    }
-
-    if (!exists) {
-      //try lower casing the name
-      exists = tableExists(dsource, table.toLowerCase());
+    try {
+      exists = tableExists(dsource, table);
+      
+      if (!exists) {
+        //try upper casing the name
+        exists = tableExists(dsource, table.toUpperCase());
+      }
+      
+      if (!exists) {
+        //try lower casing the name
+        exists = tableExists(dsource, table.toLowerCase());
+      }
+    } catch (SQLException e) {
+      exists = false;
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Recieved SQL Exception checking for user table: " + e.getMessage() + "\ncontinuing!\n");
     }
 
     return exists;
   }
 
-  private static boolean tableExists(DetailedDataSource dsource, String table) throws ConfigurationException {
+  private static boolean tableExists(DetailedDataSource dsource, String table) throws SQLException {
     String tcheck = null;
 
-    try {
       Connection conn = dsource.getConnection();
       String catalog = conn.getCatalog();
 
@@ -168,9 +171,6 @@ public class DatabaseDatasetConfigUtils {
 
       vr.close();
       conn.close();
-    } catch (SQLException e) {
-      throw new ConfigurationException("Recieved SQL exception attempting to verify table " + table + "\n", e);
-    }
 
     if (tcheck == null) {
       if (logger.isLoggable(Level.FINE))
@@ -195,15 +195,19 @@ public class DatabaseDatasetConfigUtils {
    */
   public static boolean BaseDSConfigTableExists(DetailedDataSource dsource) throws ConfigurationException {
     String table = BASEMETATABLE;
-    boolean exists = true;
-
-    exists = tableExists(dsource, table);
-    if (!exists)
-      exists = tableExists(dsource, table.toUpperCase());
-    if (!exists)
-      exists = tableExists(dsource, table.toLowerCase());
-
-    return exists;
+    try {
+      boolean exists = true;
+      
+      exists = tableExists(dsource, table);
+      if (!exists)
+        exists = tableExists(dsource, table.toUpperCase());
+      if (!exists)
+        exists = tableExists(dsource, table.toLowerCase());
+      
+      return exists;
+    } catch (SQLException e) {
+      throw new ConfigurationException("Could not find base Configuration table " + table + " in DataSource: " + dsource + "\nRecieved SQL Exception: " + e.getMessage() + "\n");
+    }
   }
 
   /**

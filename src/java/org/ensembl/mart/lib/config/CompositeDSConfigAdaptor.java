@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.ensembl.mart.lib.DetailedDataSource;
-import org.ensembl.util.StringUtil;
 
 /**
  * A composite DSConfigAdaptor that combines the datasets from all contained 
@@ -92,62 +91,21 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigs()
    */
-  public DatasetConfig[] getDatasetConfigs() throws ConfigurationException {
-    List configs = new ArrayList();
+  public DatasetConfigIterator getDatasetConfigs() throws ConfigurationException {
+    DatasetConfigIterator dsviter = null;
+
     for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
       DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
-      configs.addAll(Arrays.asList(adaptor.getDatasetConfigs()));
+
+      if (dsviter == null)
+        dsviter = new DatasetConfigIterator(adaptor.getDatasetConfigs());
+      else
+        dsviter.addDatasetConfigIterator(adaptor.getDatasetConfigs());
     }
-    return (DatasetConfig[]) configs.toArray(new DatasetConfig[configs.size()]);
-  }
 
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsDisplayName(java.lang.String)
-   */
-  public boolean supportsDisplayName(String name) throws ConfigurationException {
-    return null != getDatasetConfigByDisplayName(name);
-  }
-
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDisplayName(java.lang.String)
-   */
-  public DatasetConfig getDatasetConfigByDisplayName(String name) throws ConfigurationException {
-
-    DatasetConfig result = null;
-    DatasetConfig[] configs = getDatasetConfigs();
-    for (int i = 0, n = configs.length; i < n; i++) {
-      DatasetConfig config = configs[i];
-      if (config.getDisplayName().equals(name)) {
-        result = config;
-        break;
-      }
-    }
-    return result;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsInternalName(java.lang.String)
-   */
-  public boolean supportsInternalName(String name) throws ConfigurationException {
-    return getDatasetConfigByInternalName(name) != null;
-  }
-
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByInternalName(java.lang.String)
-   */
-  public DatasetConfig getDatasetConfigByInternalName(String name) throws ConfigurationException {
-
-    DatasetConfig result = null;
-
-    DatasetConfig[] configs = getDatasetConfigs();
-    for (int i = 0, n = configs.length; i < n; i++) {
-      DatasetConfig config = configs[i];
-      if (config.getInternalName().equals(name)) {
-        result = config;
-        break;
-      }
-    }
-    return result;
+    if (dsviter == null)
+      dsviter = new DatasetConfigIterator(new ArrayList().iterator()); //empty iterator
+    return dsviter;
   }
 
   /**
@@ -253,25 +211,30 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsDataset(java.lang.String)
    */
   public boolean supportsDataset(String dataset) throws ConfigurationException {
-    return getDatasetConfigsByDataset(dataset).length > 0;
+    return getNumDatasetConfigsByDataset(dataset) > 0;
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
    */
-  public DatasetConfig[] getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
+  public DatasetConfigIterator getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
 
-    ArrayList l = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigs();
-    for (int i = 0, n = configs.length; i < n; i++) {
-      DatasetConfig config = configs[i];
-      if (config.getDataset().equals(dataset)) {
-        l.add(config);
+    DatasetConfigIterator dsviter = null;
+
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+
+      if (adaptor.supportsDataset(dataset)) {
+        if (dsviter == null)
+          dsviter = new DatasetConfigIterator(adaptor.getDatasetConfigsByDataset(dataset));
+        else
+          dsviter.addDatasetConfigIterator(adaptor.getDatasetConfigsByDataset(dataset));
       }
     }
 
-    return (DatasetConfig[]) l.toArray(new DatasetConfig[l.size()]);
-
+    if (dsviter == null)
+      dsviter = new DatasetConfigIterator(new ArrayList().iterator()); //empty iterator
+    return dsviter;
   }
 
   /**
@@ -288,20 +251,19 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
   public DatasetConfig getDatasetConfigByDatasetInternalName(String dataset, String internalName)
     throws ConfigurationException {
 
-    DatasetConfig config = null;
-    DatasetConfig[] dsconfigs = getDatasetConfigs();
-    for (int i = 0; i < dsconfigs.length; ++i) {
+    DatasetConfig view = null;
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
 
-      DatasetConfig dsv = dsconfigs[i];
-      if (StringUtil.compare(dataset, dsv.getDataset()) == 0
-        && StringUtil.compare(internalName, dsv.getInternalName()) == 0) {
-        config = dsv;
-        break;
+      if (adaptor.supportsDataset(dataset)) {
+        view = adaptor.getDatasetConfigByDatasetInternalName(dataset, internalName);
+        
+        if (view != null)
+          break;
       }
-
     }
 
-    return config;
+    return view;
   }
 
   /* (non-Javadoc)
@@ -309,30 +271,29 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    */
   public DatasetConfig getDatasetConfigByDatasetDisplayName(String dataset, String displayName)
     throws ConfigurationException {
-      DatasetConfig config = null;
-      DatasetConfig[] dsconfigs = getDatasetConfigs();
-      for (int i = 0; i < dsconfigs.length; ++i) {
+      DatasetConfig view = null;
+      for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+        DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
 
-        DatasetConfig dsv = dsconfigs[i];
-        if (StringUtil.compare(dataset, dsv.getDataset()) == 0
-          && StringUtil.compare(displayName, dsv.getDisplayName()) == 0) {
-          config = dsv;
-          break;
+        if (adaptor.supportsDataset(dataset)) {
+          view = adaptor.getDatasetConfigByDatasetDisplayName(dataset, displayName);
+        
+          if (view != null)
+            break;
         }
-
       }
 
-      return config;
+      return view;
   }
-  
+
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */
   public String[] getDatasetNames() throws ConfigurationException {
     List l = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigs();
-    for (int i = 0, n = configs.length; i < n; i++) {
-      l.add(configs[i].getDataset());
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+      l.addAll(Arrays.asList( adaptor.getDatasetNames() ));
     }
 
     return (String[]) l.toArray(new String[l.size()]);
@@ -408,9 +369,12 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    */
   public String[] getDatasetConfigDisplayNamesByDataset(String dataset) throws ConfigurationException {
     List l = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigsByDataset(dataset);
-    for (int i = 0, n = configs.length; i < n; i++) {
-      l.add(configs[i].getDisplayName());
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+
+      if (adaptor.supportsDataset(dataset)) {
+        l.addAll(Arrays.asList(adaptor.getDatasetConfigDisplayNamesByDataset(dataset)));
+      }
     }
 
     return (String[]) l.toArray(new String[l.size()]);
@@ -421,9 +385,13 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    */
   public String[] getDatasetConfigInternalNamesByDataset(String dataset) throws ConfigurationException {
     List l = new ArrayList();
-    DatasetConfig[] configs = getDatasetConfigsByDataset(dataset);
-    for (int i = 0, n = configs.length; i < n; i++) {
-      l.add(configs[i].getInternalName());
+
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+
+      if (adaptor.supportsDataset(dataset)) {
+        l.addAll(Arrays.asList(adaptor.getDatasetConfigInternalNamesByDataset(dataset)));
+      }
     }
 
     return (String[]) l.toArray(new String[l.size()]);
@@ -453,5 +421,48 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    */
   public DetailedDataSource getDataSource() {
     return null;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
+   */
+  public int getNumDatasetConfigs() {
+    int ret = 0;
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+      ret += adaptor.getNumDatasetConfigs();
+    }
+    
+    return ret;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigsByDataset(java.lang.String)
+   */
+  public int getNumDatasetConfigsByDataset(String dataset) {
+    int ret = 0;
+    
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+      ret += adaptor.getNumDatasetConfigsByDataset(dataset);
+    }
+    
+    return ret;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MultiDSConfigAdaptor#containsDatasetConfig(org.ensembl.mart.lib.config.DatasetConfig)
+   */
+  public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+    boolean ret = false;
+    
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+      ret = adaptor.containsDatasetConfig(dsv);
+      if (ret)
+        break;
+    }
+    
+    return ret;
   }
 }

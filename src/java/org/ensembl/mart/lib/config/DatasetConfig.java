@@ -101,7 +101,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private FilterDescription lastSupportingFilter = null;
 
   private Logger logger = Logger.getLogger(DatasetConfig.class.getName());
-  
+
   /**
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
    * than defering to a call to getXXX.
@@ -147,11 +147,11 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       }
     } else
       setDSConfigAdaptor(ds.getAdaptor());
-    
+
     if (lazyLoad)
       lazyLoad();
   }
-  
+
   /**
    * Copy Constructor. Creates a new copy of an existing DatasetConfig object.
    * Note, if the existing DatasetConfig object has a DatasetConfigAdaptor set to it, 
@@ -235,7 +235,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param o - An option to remove.
    */
   public void removeOption(Option o) {
-	lazyLoad();
+    lazyLoad();
     uiOptionNameMap.remove(o.getInternalName());
     uiOptions.remove(o);
     if (uiOptions.size() < 1)
@@ -249,7 +249,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param o - Option to be inserted
    */
   public void insertOption(int position, Option o) {
-	lazyLoad();
+    lazyLoad();
     uiOptionNameMap.put(o.getInternalName(), o);
     uiOptions.add(position, o);
     hasOptions = true;
@@ -262,7 +262,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException if the DatasetConfig does not contain the Option named by the given internalName.
    */
   public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
-	lazyLoad();
+    lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetConfig does not contain Option " + internalName + "\n");
 
@@ -276,7 +276,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException if the DatasetConfig does not contain the Option named by the given internalName.
    */
   public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
-	lazyLoad();
+    lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetConfig does not contain Option " + internalName + "\n");
 
@@ -307,7 +307,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   public void removeDefaultFilter(DefaultFilter df) {
-	lazyLoad();
+    lazyLoad();
     defaultFilters.remove(df);
     if (defaultFilters.size() < 1)
       hasDefaultFilters = false;
@@ -337,7 +337,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   public void removeStarBase(String starname) {
-	lazyLoad();
+    lazyLoad();
     starBases.remove(starname);
   }
 
@@ -363,7 +363,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   public void removePrimaryKey(String primaryKey) {
-	lazyLoad();
+    lazyLoad();
     primaryKeys.remove(primaryKey);
   }
 
@@ -393,7 +393,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param a -- AttributePage to be removed.
    */
   public void removeAttributePage(AttributePage a) {
-	lazyLoad();
+    lazyLoad();
     attributePageNameMap.remove(a.getInternalName());
     attributePages.remove(a);
   }
@@ -406,8 +406,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param a -- AttributePage to be inserted.
    */
   public void insertAttributePage(int position, AttributePage a) {
-	lazyLoad();
-  	System.out.println("PAGES\t" + attributePages.size());
+    lazyLoad();
+    System.out.println("PAGES\t" + attributePages.size());
     attributePages.add(position, a);
     attributePageNameMap.put(a.getInternalName(), a);
   }
@@ -434,7 +434,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetConfig does not contain an AttributePage named by the given internalName.
    */
   public void insertAttributePageAfterAttributePage(String internalName, AttributePage a) throws ConfigurationException {
-	lazyLoad();
+    lazyLoad();
     if (!attributePageNameMap.containsKey(internalName))
       throw new ConfigurationException("This DatasetConfig does not contain AttributePage " + internalName + "\n");
 
@@ -470,7 +470,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to be removed.
    */
   public void removeFilterPage(FilterPage f) {
-	lazyLoad();
+    lazyLoad();
     filterPageNameMap.remove(f.getInternalName());
     filterPages.remove(f);
   }
@@ -482,7 +482,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param f -- FilterPage to insert.
    */
   public void insertFilterPage(int position, FilterPage f) {
-	lazyLoad();
+    lazyLoad();
     filterPages.add(position, f);
     filterPageNameMap.put(f.getInternalName(), f);
   }
@@ -494,7 +494,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetConfig does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageBeforeFilterPage(String internalName, FilterPage f) throws ConfigurationException {
-	lazyLoad();
+    lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetConfig does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)), f);
@@ -507,7 +507,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when the DatasetConfig does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageAfterFilterPage(String internalName, FilterPage f) throws ConfigurationException {
-	lazyLoad();
+    lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
       throw new ConfigurationException("DatasetConfig does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)) + 1, f);
@@ -1223,21 +1223,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Provides output useful for debugging purposes.  Calls lazyload, so could throw a RuntimeException
+   * Provides output useful for debugging purposes.
    */
   public String toString() {
     StringBuffer buf = new StringBuffer();
-
-    lazyLoad();
 
     buf.append("[");
     buf.append(super.toString());
     buf.append(", starnames=").append(starBases);
     buf.append(", primarykeys=").append(primaryKeys);
-    buf.append(", options=").append(uiOptions);
-    buf.append(", defaultFilters=").append(defaultFilters);
-    buf.append(", filterPages=").append(filterPages);
-    buf.append(", attributePages=").append(attributePages);
     buf.append("]");
 
     return buf.toString();
@@ -1255,46 +1249,50 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   /**
    * hashCode for DatasetConfig
    * Note, currently does not compare digest data, even if present.
-   * Also Note that this method calls the underlying lazyLoad() function, using the lazyLoad(DatasetConfig dsv) method from the DSConfigAdaptor implimenting Object
-   * that it was instantiated with.  Depending upon the DSConfigAdaptor implimentation being used, if DatasetConfig objects are stored in Hash based collections immediately
-   * upon instantiation, this could remove the speed optimization that the lazy loading system is designed to provide.  Also, if any Exceptions are encountered by
-   * a particular implimenation during lazyLoad, this will lead to a RuntimeException when hashCode is called.
+   * In order to prevent an automatic lazyLoad for hashcode/equals comparisons,
+   * the method first checks to determine if the DatasetConfig has a DSConfigAdaptor
+   * set.  If it does, then it is assumed that two DatasetConfig objects containing the same
+   * Dataset, InternalName, DisplayName, description, and DSConfigAdaptor are equal (based on the fact that they come from the
+   * same source).  If this DatasetConfig does not have a DSConfigAdaptor, then it must be fully loaded (otherwise,
+   * it is an invalid DatasetConfig), so no lazyLoad will be necessary.
    */
   public int hashCode() {
-    lazyLoad();
 
     int tmp = super.hashCode();
+    
+    if (adaptor != null) {
+      tmp = (31 * tmp) + adaptor.hashCode();
+    } else {
+      for (int i = 0, n = starBases.size(); i < n; i++) {
+        String element = (String) starBases.get(i);
+        tmp = (31 * tmp) + element.hashCode();
+      }
 
-    for (int i = 0, n = starBases.size(); i < n; i++) {
-      String element = (String) starBases.get(i);
-      tmp = (31 * tmp) + element.hashCode();
+      for (int i = 0, n = primaryKeys.size(); i < n; i++) {
+        String element = (String) primaryKeys.get(i);
+        tmp = (31 * tmp) + element.hashCode();
+      }
+
+      for (int i = 0, n = uiOptions.size(); i < n; i++) {
+        Option element = (Option) uiOptions.get(i);
+        tmp = (31 * tmp) + element.hashCode();
+      }
+
+      for (int i = 0, n = defaultFilters.size(); i < n; i++) {
+        DefaultFilter element = (DefaultFilter) defaultFilters.get(i);
+        tmp = (31 * tmp) + element.hashCode();
+      }
+
+      for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
+        FilterPage element = (FilterPage) iter.next();
+        tmp = (31 * tmp) + element.hashCode();
+      }
+
+      for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
+        AttributePage element = (AttributePage) iter.next();
+        tmp = (31 * tmp) + element.hashCode();
+      }
     }
-
-    for (int i = 0, n = primaryKeys.size(); i < n; i++) {
-      String element = (String) primaryKeys.get(i);
-      tmp = (31 * tmp) + element.hashCode();
-    }
-
-    for (int i = 0, n = uiOptions.size(); i < n; i++) {
-      Option element = (Option) uiOptions.get(i);
-      tmp = (31 * tmp) + element.hashCode();
-    }
-
-    for (int i = 0, n = defaultFilters.size(); i < n; i++) {
-      DefaultFilter element = (DefaultFilter) defaultFilters.get(i);
-      tmp = (31 * tmp) + element.hashCode();
-    }
-
-    for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
-      FilterPage element = (FilterPage) iter.next();
-      tmp = (31 * tmp) + element.hashCode();
-    }
-
-    for (Iterator iter = attributePages.iterator(); iter.hasNext();) {
-      AttributePage element = (AttributePage) iter.next();
-      tmp = (31 * tmp) + element.hashCode();
-    }
-
     return tmp;
   }
 

@@ -114,11 +114,16 @@ public class DatasetConfigUploader {
         
 				URLDSConfigAdaptor fileLoader = new URLDSConfigAdaptor(url, true);
 
+        DatasetConfigIterator iter = fileLoader.getDatasetConfigs();
+        if (!iter.hasNext())
+          throw new RuntimeException("No DatasetConfig loaded from URL: " + files[i] + "\n");
+        
+        DatasetConfig dsv = (DatasetConfig) iter.next();  
 				// upload xml
 				DatabaseDSConfigAdaptor.storeDatasetConfig(
 					dataSource,
 					datasetUser,
-					fileLoader.getDatasetConfigs()[0],
+					dsv,
 					compress);
 
 				System.out.println("Finished uploading file: " + files[i]);
@@ -256,7 +261,7 @@ public class DatasetConfigUploader {
     +"\n--database, -d DATABASE"
     +"\n--user, -u USERNAME"
     +"\n--password, -p PASSWORD               - optional database password"
-    +"\n--dataset-user -U DATASET_CONFIG_USER   - username prefix for meta table on database."
+    +"\n--dataset-user -U DATASET_VIEW_USER   - username prefix for meta table on database."
     +"\n--help, -H"
     +"\n--no-compress, -n                     - files are compressed by default."
     +"\n--db-type DATABASE_TYPE               - optional database type, default is mysql"

@@ -282,7 +282,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
    * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
    * implimentations to equal.
    *
-	 * Equality is based on the CompositeConfigAdaptor hashCode, so that two URL
+	 * Equality is based on the CompositeViewAdaptor hashCode, so that two URL
 	 * sources specifying the same MartRegistry will equal.
 	 */
 	public boolean equals(Object o) {
