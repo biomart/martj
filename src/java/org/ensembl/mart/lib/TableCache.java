@@ -94,9 +94,6 @@ public class TableCache {
 
 		Table[] tables = new Table[tablesTmp.size()];
     
-    logger.warning( "Catalog = " + catalog );
-    logger.warning("Num tables loaded = " + tables.length );
-    
 		tablesTmp.toArray(tables);
 		mapperCache.put(FieldMapperCache.instance.queryHashcode(query), tables);
 
