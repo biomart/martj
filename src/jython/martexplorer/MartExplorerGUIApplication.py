@@ -45,7 +45,8 @@ from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
 from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane
-from javax.swing import JFileChooser, JTextArea, JTextField
+from javax.swing import JFileChooser, JTextArea, JTextField, JTabbedPane, BorderFactory
+from javax.swing import JCheckBox
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
@@ -65,6 +66,54 @@ DEFAULT_PASSWORD = ""
 GAP = 5
 SPACE=" &nbsp;"
         
+
+class Option(JPanel, ChangeListener ):
+
+    """ Listens for statechange events; these occur when a button is
+    selected and deselected. Selections cause a node corresponding to
+    this option to be added to the tree and conversely, deselection
+    causes it to be removed. """
+
+    def __init__(self, label, group=None, clearButton=None):
+
+        JPanel.__init__( self, BorderLayout() )
+        self.preferredSize = (170, 30)
+
+        if group:
+            self.button = JRadioButton(label)
+            group.add( self.button )
+        else:
+            self.button = JCheckBox(label)
+
+        self.button.model.addChangeListener( self )
+
+        self.add( self.button, BorderLayout.WEST)
+
+        self.node = None
+
+
+    def stateChanged( self, event=None):
+        if self.button.selected : self.select()
+        else : self.deselect()
+
+
+
+    def select( self ):
+        if not self.node:
+            print "selected", self.button.text
+            self.node = 1
+        # todo add to tree
+
+
+
+
+    def deselect( self ):
+        if self.node:
+            print "deselected", self.button.text
+            node = None
+        # todo remove from tree
+        
+
 
 
 
@@ -180,18 +229,22 @@ class TmpAtributesPage(JPanel):
                     radio = optionGroup[0][1]==1
                     if radio:
                         radioGroup = ButtonGroup()
-                        button = JRadioButton( "None", selected=1 )
-                        radioGroup.add( button )
-                        list[0].add( button )
+                        clearButton = JRadioButton("None", selected=1)
+                        radioGroup.add( clearButton )
+                        cbPanel = JPanel( BorderLayout() )
+                        cbPanel.add( clearButton, BorderLayout.WEST )
+                        list[0].add( cbPanel )
                         
                     i = 0
                     for option in optionGroup[1]:
                         # individual option
                         if radio:
-                            button = JRadioButton( option )
-                            radioGroup.add( button )
+                            button = Option( option, radioGroup, clearButton )
+                            #button = JRadioButton( option )
+                            #radioGroup.add( button )
                         else:
-                            button = JCheckBox(option)
+                            button = Option( option )
+                            #button = JCheckBox(option)
                             # add button to left or right column
                         list[i%2].add( button )
                         i = i+1
