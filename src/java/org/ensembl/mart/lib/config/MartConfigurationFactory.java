@@ -560,7 +560,7 @@ public class MartConfigurationFactory {
 			iter.hasNext();
 			) {
 			Element element = (Element) iter.next();
-			ac.addUIAttribute(getUIAttributeDescription(element));
+			ac.addAttributeDescription(getUIAttributeDescription(element));
 		}
 
 		return ac;

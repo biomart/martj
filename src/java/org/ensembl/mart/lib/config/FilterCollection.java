@@ -60,13 +60,19 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * @param description String description of the FilterCollection.
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
-	public FilterCollection(String internalName, String type, String displayName, String filterSetName, String description) throws ConfigurationException {
-		
-    super( internalName, displayName, description );
-    
-		if ( ! ( filterSetName == null || filterSetName.equals("")  ) )
-		 inFilterSet = true;
-		 
+	public FilterCollection(
+		String internalName,
+		String type,
+		String displayName,
+		String filterSetName,
+		String description)
+		throws ConfigurationException {
+
+		super(internalName, displayName, description);
+
+		if (!(filterSetName == null || filterSetName.equals("")))
+			inFilterSet = true;
+
 		this.filterSetName = filterSetName;
 		this.type = type;
 	}
@@ -162,21 +168,22 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * 
 	 * @return List of FilterDescription objects
 	 */
-	public List getUIFilterDescriptions() {
+	public List getFilterDescriptions() {
 		return new ArrayList(uiFilters.values());
 	}
 
 	/**
-	 * Returns a specific FilterDescription/MapFilterDescription, named by internalName.
+	 * Returns a specific FilterDescription/MapFilterDescription, named by internalName, or
+	 * containing an Option named by internalName.
 	 * 
 	 * @param internalName String name of the requested FilterDescription
 	 * @return Object requested, or null.
 	 */
-	public Object getUIFilterDescriptionByName(String internalName) {
-		if (uiFilterNameMap.containsKey(internalName))
-			return uiFilters.get((Integer) uiFilterNameMap.get(internalName));
+	public Object getFilterDescriptionByInternalName(String internalName) {
+		if (containsFilterDescription(internalName))
+		  return lastFilt;
 		else
-			return null;
+		  return null;
 	}
 
 	/**
@@ -185,19 +192,90 @@ public class FilterCollection extends BaseConfigurationObject {
 	 * @param internalName String name of the requested FilterDescription
 	 * @return boolean, true if FilterCollection contains the FilterDescription, false if not.
 	 */
-	public boolean containsUIFilterDescription(String internalName) {
-		return uiFilterNameMap.containsKey(internalName);
+	public boolean containsFilterDescription(String internalName) {
+		boolean contains = false;
+
+		if (lastFilt == null) {
+			contains = uiFilterNameMap.containsKey(internalName);
+
+			if (!contains) {
+				for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+					Object element = iter.next();
+					if (element instanceof FilterDescription) {
+						if (((FilterDescription) element).containsOption(internalName)) {
+							lastFilt = element;
+							contains = true;
+							break;
+						}
+					}
+				}
+			}
+		} else {
+			if (lastFilt instanceof FilterDescription && ( (FilterDescription) lastFilt).getInternalName().equals(internalName))
+			  contains = true;
+			else if (lastFilt instanceof MapFilterDescription && ( (MapFilterDescription) lastFilt).getInternalName().equals(internalName))
+				contains = true;
+			else {
+				lastFilt = null;
+				contains = containsFilterDescription(internalName);
+			}
+		}
+		return contains;
+	}
+
+	/**
+	 * Get a FilterDescription for a given field and tableConstraint.  Useful for mapping the field and tableConstraint from a Filter
+	 * object added to a Query object back to its MartConfiguration FilterDescription.
+	 * @param field -- String mart database field
+	 * @param tableConstraint -- String mart database tableConstraint
+	 * @return FilterDescription supporting the given field and tableConstraint, or null.
+	 */
+	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supports(field, tableConstraint))
+			return lastSupportFilt;
+		else
+			return null;
+	}
+
+  /**
+   * Determine if this FilterCollection contains a FilterDescription supporting a given field and tableConstraint.
+   * @param field - String field of a mart database table
+   * @param TableConstraint -- String tableConstraint of a mart database table
+   * @return boolean, true if a FilterDescription contained within this collection supports the field and tableConstraint, false otherwise.
+   */
+	public boolean supports(String field, String TableConstraint) {
+		boolean supports = false;
+
+    if (lastSupportFilt == null) {
+    	for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+				Object element = iter.next();
+				
+				if (element instanceof FilterDescription) {
+					if ( ( (FilterDescription) element ).supports(field, TableConstraint) ) {
+						lastSupportFilt = (FilterDescription) element;
+						supports = true;
+						break; 
+					}
+				}
+			}
+    } else {
+    	if (lastSupportFilt.supports(field, TableConstraint))
+    	  supports = true;
+    	else {
+    		lastSupportFilt = null;
+    		supports = supports(field, TableConstraint);
+    	}
+    }
+		return supports;
 	}
 
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append( super.toString() );
+		buf.append(super.toString());
 		buf.append(", type=").append(type);
 
-
-      
 		if (inFilterSet)
 			buf.append(", filterSetName=").append(filterSetName);
 
@@ -207,39 +285,40 @@ public class FilterCollection extends BaseConfigurationObject {
 		return buf.toString();
 	}
 
-  /**
+	/**
 	 * Allows Equality Comparisons manipulation of FilterCollection objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof FilterCollection && hashCode() == ((FilterCollection) o).hashCode();
+		return o instanceof FilterCollection && hashCode() == o.hashCode();
 	}
 
 	public int hashCode() {
 		int hashcode = inFilterSet ? 1 : 0;
 		hashcode = super.hashCode();
 		hashcode = (31 * hashcode) + filterSetName.hashCode();
-		
+
 		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
-			if (element instanceof FilterDescription) 
-			  hashcode = (31 * hashcode) + ( (FilterDescription) element).hashCode();
+			if (element instanceof FilterDescription)
+				hashcode = (31 * hashcode) + ((FilterDescription) element).hashCode();
 			else
-			  hashcode = (31 * hashcode) + ( (MapFilterDescription) element).hashCode();
+				hashcode = (31 * hashcode) + ((MapFilterDescription) element).hashCode();
 		}
 
-    
-		
 		return hashcode;
 	}
 
-  private String filterSetName;
-  private String type;
+	private String filterSetName;
+	private String type;
 	private boolean inFilterSet = false;
-  // uiFilters
+	// uiFilters
 	private int fRank = 0;
 	private TreeMap uiFilters = new TreeMap();
 	private Hashtable uiFilterNameMap = new Hashtable();
 
 	//cache one FilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
-	private FilterDescription lastFilt = null;
+	private Object lastFilt = null;
+
+	//cache one FilterDescription for call to supports
+	private FilterDescription lastSupportFilt = null;
 }

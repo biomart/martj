@@ -1192,13 +1192,13 @@ public class MartShell {
 
 					DescribeFilterPage(dset.getFilterPageByName(arg1value));
 				} else if (arg1key.equals(FILTERKEY)) {
-					if (!dset.containsUIFilterDescription(arg1value))
+					if (!dset.containsFilterDescription(arg1value))
 						throw new InvalidQueryException(
 							"Dataset " + dset.getInternalName() + " does not contain Filter " + arg1value + "\n");
 
 					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
 
-					String[] lines = DescribeFilter(dset.getUIFilterDescriptionByName(arg1value));
+					String[] lines = DescribeFilter(dset.getFilterDescriptionByInternalName(arg1value));
 					for (int i = 0, n = lines.length; i < n; i++)
 						System.out.println(lines[i]);
 
@@ -1209,15 +1209,15 @@ public class MartShell {
 							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
 					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nAttributePage: ");
-					DescribeAttributePage(dset.getAttributePageByName(arg1value));
+					DescribeAttributePage(dset.getAttributePageByInternalName(arg1value));
 
 				} else if (arg1key.equals(ATTRIBUTEKEY)) {
-					if (!dset.containsUIAttributeDescription(arg1value))
+					if (!dset.containsAttributeDescription(arg1value))
 						throw new InvalidQueryException(
 							"Dataset " + dset.getInternalName() + " does not contain Attribute " + arg1value + "\n");
 
 					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
-					String[] lines = DescribeAttribute(dset.getUIAttributeDescriptionByName(arg1value));
+					String[] lines = DescribeAttribute(dset.getAttributeDescriptionByInternalName(arg1value));
 					for (int i = 0, n = lines.length; i < n; i++)
 						System.out.println(lines[i]);
 
@@ -1272,7 +1272,7 @@ public class MartShell {
 						System.out.println();
 
 					} else if (arg2key.equals(FILTERKEY)) {
-						if (!fpage.containsUIFilterDescription(arg2value))
+						if (!fpage.containsFilterDescription(arg2value))
 							throw new InvalidQueryException(
 								"Dataset "
 									+ dset.getInternalName()
@@ -1294,7 +1294,7 @@ public class MartShell {
 								+ "\n");
 
 						System.out.println();
-						String[] lines = DescribeFilter(fpage.getUIFilterDescriptionByName(arg2value));
+						String[] lines = DescribeFilter(fpage.getFilterDescriptionByInternalName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
@@ -1315,7 +1315,7 @@ public class MartShell {
 							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
@@ -1346,7 +1346,7 @@ public class MartShell {
 							System.out.println("\t\t" + lines[i]);
 
 					} else if (arg2key.equals(ATTRIBUTEKEY)) {
-						if (!apage.containsUIAttributeDescription(arg2value))
+						if (!apage.containsAttributeDescription(arg2value))
 							throw new InvalidQueryException(
 								"Dataset "
 									+ dset.getInternalName()
@@ -1368,7 +1368,7 @@ public class MartShell {
 								+ "\n");
 
 						System.out.println();
-						String[] lines = DescribeAttribute(apage.getUIAttributeDescriptionByName(arg2value));
+						String[] lines = DescribeAttribute(apage.getAttributeDescriptionByInternalName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
@@ -1492,7 +1492,7 @@ public class MartShell {
 								System.out.println();
 
 							} else if (arg3key.equals(FILTERKEY)) {
-								if (!group.containsUIFilterDescription(arg3value))
+								if (!group.containsFilterDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1519,7 +1519,7 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeFilter(group.getUIFilterDescriptionByName(arg3value));
+								String[] lines = DescribeFilter(group.getFilterDescriptionByInternalName(arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
@@ -1554,7 +1554,7 @@ public class MartShell {
 							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
@@ -1610,7 +1610,7 @@ public class MartShell {
 								System.out.println();
 
 							} else if (arg3key.equals(ATTRIBUTEKEY)) {
-								if (!group.containsUIAttributeDescription(arg3value))
+								if (!group.containsAttributeDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1637,7 +1637,7 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeAttribute(group.getUIAttributeDescriptionByName(arg3value));
+								String[] lines = DescribeAttribute(group.getAttributeDescriptionByInternalName(arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
@@ -1724,7 +1724,7 @@ public class MartShell {
 								String arg4value = arg4[1];
 
 								if (arg4key.equals(FILTERKEY)) {
-									if (!collection.containsUIFilterDescription(arg4value))
+									if (!collection.containsFilterDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
 												+ dset.getInternalName()
@@ -1763,7 +1763,7 @@ public class MartShell {
 
 									System.out.print("\n\n");
 
-									String[] lines = DescribeFilter(collection.getUIFilterDescriptionByName(arg4value));
+									String[] lines = DescribeFilter(collection.getFilterDescriptionByInternalName(arg4value));
 									for (int i = 0, n = lines.length; i < n; i++)
 										System.out.println("\t\t\t" + lines[i]);
 
@@ -1881,7 +1881,7 @@ public class MartShell {
 							"Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage = dset.getAttributePageByInternalName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
@@ -1921,7 +1921,7 @@ public class MartShell {
 								String arg4value = arg4[1];
 
 								if (arg4key.equals(ATTRIBUTEKEY)) {
-									if (!collection.containsUIAttributeDescription(arg4value))
+									if (!collection.containsAttributeDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
 												+ dset.getInternalName()
@@ -1954,7 +1954,7 @@ public class MartShell {
 											+ collection.getDisplayName()
 											+ "\n\n");
 
-									String[] lines = DescribeAttribute(collection.getUIAttributeDescriptionByName(arg4value));
+									String[] lines = DescribeAttribute(collection.getAttributeDescriptionByInternalName(arg4value));
 									for (int i = 0, n = lines.length; i < n; i++)
 										System.out.println("\t\t\t\t" + lines[i]);
 
@@ -2175,7 +2175,7 @@ public class MartShell {
 			lines.add("");
 		}
 
-		List fdescs = collection.getUIFilterDescriptions();
+		List fdescs = collection.getFilterDescriptions();
 		for (int j = 0, n2 = fdescs.size(); j < n2; j++)
 			lines.addAll(Arrays.asList(DescribeFilter(fdescs.get(j))));
 
@@ -2204,7 +2204,7 @@ public class MartShell {
 			lines.add("");
 		}
 
-		List adescs = collection.getUIAttributeDescriptions();
+		List adescs = collection.getAttributeDescriptions();
 		for (int i = 0, n = adescs.size(); i < n; i++)
 			lines.addAll(Arrays.asList(DescribeAttribute(adescs.get(i))));
 

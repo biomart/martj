@@ -116,7 +116,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 		JComboBox list,
 		FilterDescription filterDescription) {
 
-		String field = filterDescription.getFieldName();
+		String field = filterDescription.getField();
 		if (field == null || "".equals(field))
 			throw new RuntimeException(
 				"field invalid: >"
@@ -220,7 +220,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
 			filter =
 				new InputPageAwareBasicFilter(
-					filterDescription.getFieldName(),
+					filterDescription.getField(),
 					option.getTableConstraint(),
 					"=",
 					option.getValue(),
@@ -229,7 +229,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
 			setNodeLabel(
 				null,
-				filterDescription.getFieldName() + " = " + option.getValue());
+				filterDescription.getField() + " = " + option.getValue());
 
 			pushOptions(option.getOptionPushes());
 		}

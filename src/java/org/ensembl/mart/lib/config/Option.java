@@ -227,6 +227,17 @@ public class Option extends BaseConfigurationObject {
 		return type;
 	}
 
+  /**
+   * Determine if an Option supports a given field and tableConstraint.
+   * 
+   * @param field -- String mart database field
+   * @param tableConstraint -- String mart database table
+   * @return boolean, true if the field and tableConstraint for this Option match the given field and tableConstraint, false otherwise
+   */
+  public boolean supports(String field, String tableConstraint) {
+  	return (this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint));
+  }
+  
 	/**
 		* Debug output
 		*/

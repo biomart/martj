@@ -291,7 +291,7 @@ public class Dataset extends BaseConfigurationObject {
 	 * @param displayName String name of a particular AttributePage
 	 * @return AttributePage object named by the given displayName, or null.
 	 */
-	public AttributePage getAttributePageByName(String internalName) {
+	public AttributePage getAttributePageByInternalName(String internalName) {
 		if (attributePageNameMap.containsKey(internalName))
 			return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
 		else
@@ -343,14 +343,14 @@ public class Dataset extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular AttributeDescription.
-		* Note, it is best to first call containsUIAttributeDescription,
-		* as there is a caching system to cache a AttributeDescription during a call to containsUIAttributeDescription.
+		* Note, it is best to first call containsAttributeDescription,
+		* as there is a caching system to cache a AttributeDescription during a call to containsAttributeDescription.
 		* 
 		* @param internalName name of the requested AttributeDescription
 		* @return AttributeDescription
 		*/
-	public Object getUIAttributeDescriptionByName(String internalName) {
-		if (containsUIAttributeDescription(internalName))
+	public Object getAttributeDescriptionByInternalName(String internalName) {
+		if (containsAttributeDescription(internalName))
 			return lastAtt;
 		else
 			return null;
@@ -358,20 +358,20 @@ public class Dataset extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific AttributeDescription.
-		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
+		*  As an optimization for initial calls to containsAttributeDescription with an immediate call to getAttributeDescriptionByName if
 		*  found, this method caches the AttributeDescription it has found.
 		* 
 		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIAttributeDescription(String internalName) {
+	public boolean containsAttributeDescription(String internalName) {
 		boolean found = false;
 
 		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
 				AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
-				if (page.containsUIAttributeDescription(internalName)) {
-					lastAtt = page.getUIAttributeDescriptionByName(internalName);
+				if (page.containsAttributeDescription(internalName)) {
+					lastAtt = page.getAttributeDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -381,7 +381,7 @@ public class Dataset extends BaseConfigurationObject {
 				found = true;
 			else {
 				lastAtt = null;
-				found = containsUIAttributeDescription(internalName);
+				found = containsAttributeDescription(internalName);
 			}
 		}
 		return found;
@@ -390,35 +390,71 @@ public class Dataset extends BaseConfigurationObject {
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular 
 		* FilterDescription/MapFilterDescription Object. Note, it is best to first call 
-		* containsUIFilterDescription, as there is a caching system to cache a FilterDescription Object 
-		* during a call to containsUIFilterDescription.
+		* containsFilterDescription, as there is a caching system to cache a FilterDescription Object 
+		* during a call to containsFilterDescription.
 		* 
 		* @param displayName name of the requested FilterDescription
 		* @return Object (either instanceof FilterDescription or MapFilterDescription)
 		*/
-	public Object getUIFilterDescriptionByName(String internalName) {
-		if (containsUIFilterDescription(internalName))
+	public Object getFilterDescriptionByInternalName(String internalName) {
+		if (containsFilterDescription(internalName))
 			return lastFilt;
 		else
 			return null;
 	}
 
 	/**
+	 * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return AttributeDescription supporting the field and tableConstraint, or null
+	 */
+	public AttributeDescription getAttributeDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supportsAttributeDescription(field, tableConstraint))
+			return lastSupportingAttribute;
+		else
+			return null;
+	}
+  
+	/**
+	 * Determine if this Dataset supports a given field and tableConstraint for an Attribute.  
+	 * Caches the first supporting AttributeDescription that it finds, for subsequent call to 
+	 * getAttributeDescriptionByFieldNameTableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return boolean, true if an AttributeDescription contained in this AttributePage supports the field and tableConstraint, false otherwise
+	 */
+	public boolean supportsAttributeDescription(String field, String tableConstraint) {
+		boolean supports = false;
+  	
+		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+			AttributePage element = (AttributePage) iter.next();
+			
+			if (element.supports(field, tableConstraint)) {
+				lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
+				supports = true;
+				break;
+			}
+		}
+		return supports;
+	}
+	
+	/**
 		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific FilterDescription/MapFilterDescription object.
-		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
+		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
 		*  found, this method caches the FilterDescription Object it has found.
 		* 
 		* @param displayName name of the requested FilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIFilterDescription(String internalName) {
+	public boolean containsFilterDescription(String internalName) {
 		boolean found = false;
 
 		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 				FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
-				if (page.containsUIFilterDescription(internalName)) {
-					lastFilt = page.getUIFilterDescriptionByName(internalName);
+				if (page.containsFilterDescription(internalName)) {
+					lastFilt = page.getFilterDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -436,16 +472,62 @@ public class Dataset extends BaseConfigurationObject {
 				found = true;
 			else {
 				lastFilt = null;
-				found = containsUIFilterDescription(internalName);
+				found = containsFilterDescription(internalName);
 			}
 		}
 		return found;
 	}
 
 	/**
+	 * Get a FilterDescription object that supports a given field and tableConstraint.  Useful for mapping from a Filter object
+	 * added to a Query back to its FilterDescription.
+	 * @param field -- String field of a mart database table
+	 * @param tableConstraint -- String tableConstraint of a mart database
+	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
+	 */  
+	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supportsFilterDescription(field, tableConstraint))
+			return lastSupportingFilter;
+		else
+			return null;
+	}  
+
+
+	/**
+	 * Determine if this Dataset contains a FilterDescription that supports a given field and tableConstraint.
+	 * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
+	 * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
+	 * @param field -- String field of a mart database table
+	 * @param tableConstraint -- String tableConstraint of a mart database
+	 * @return boolean, true if the Dataset contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+	 */
+	public boolean supportsFilterDescription(String field, String tableConstraint) {
+		boolean supports = false;
+  	
+		if (lastSupportingFilter == null) {
+			for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+				 FilterPage element = (FilterPage) iter.next();
+				 if (element.supports(field, tableConstraint)) {
+					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+					supports = true;
+					break;
+				 }
+			}
+		} else {
+			if (lastSupportingFilter.supports(field, tableConstraint))
+				supports = true;
+			else {
+				lastSupportingFilter = null;
+				supports = supportsFilterDescription(field, tableConstraint);
+			}
+		}
+		return supports;
+	}
+  
+	/**
 	 * Convenience method for non graphical UIs.
 	 * Returns the FilterPage containing a specific FilterDescription, named by internalName
-	 * Note, if a UIFlilterDescription is contained within multiple FilterPages, this
+	 * Note, if a FlilterDescription is contained within multiple FilterPages, this
 	 * will return the first FilterPage that contains the requested FilterDescription.
 	 * 
 	 * @param internalName -- String name of the FilterPage containing the requested FilterDescription
@@ -456,7 +538,7 @@ public class Dataset extends BaseConfigurationObject {
 		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
 
-			if (page.containsUIFilterDescription(internalName))
+			if (page.containsFilterDescription(internalName))
 				return page;
 		}
 		return null;
@@ -474,7 +556,7 @@ public class Dataset extends BaseConfigurationObject {
 		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
 			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
 
-			if (page.containsUIAttributeDescription(internalName))
+			if (page.containsAttributeDescription(internalName))
 				return page;
 		}
 		return null;
@@ -485,7 +567,7 @@ public class Dataset extends BaseConfigurationObject {
 	 * 
 	 * @return List of FilterDescription/MapFilterDescription objects
 	 */
-	public List getAllUIFilterDescriptions() {
+	public List getAllFilterDescriptions() {
 		List filts = new ArrayList();
 
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
@@ -493,7 +575,7 @@ public class Dataset extends BaseConfigurationObject {
 
       if (fpo instanceof FilterPage) {
         FilterPage fp = (FilterPage) fpo;
-			  filts.addAll(fp.getAllUIFilterDescriptions());
+			  filts.addAll(fp.getAllFilterDescriptions());
       }
 		}
 
@@ -505,7 +587,7 @@ public class Dataset extends BaseConfigurationObject {
 	 * 
 	 * @return List of AttributeDescription objects
 	 */
-	public List getAllUIAttributeDescriptions() {
+	public List getAllAttributeDescriptions() {
 		List atts = new ArrayList();
 
 		for (Iterator iter = attributePages.keySet().iterator(); iter.hasNext();) {
@@ -513,7 +595,7 @@ public class Dataset extends BaseConfigurationObject {
         
         if (apo instanceof AttributePage) {
           AttributePage ap = (AttributePage) apo;
-			    atts.addAll(ap.getAllUIAttributeDescriptions());
+			    atts.addAll(ap.getAllAttributeDescriptions());
         }
 		}
 
@@ -547,7 +629,7 @@ public class Dataset extends BaseConfigurationObject {
    * @return FilterGroup for Attrribute Description provided, or null
    */
 	public FilterGroup getGroupForFilter(String internalName) {
-		if (!containsUIFilterDescription(internalName))
+		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastFiltGroup == null) {
 			lastFiltGroup = getPageForFilter(internalName).getGroupForFilter(internalName);
@@ -570,7 +652,7 @@ public class Dataset extends BaseConfigurationObject {
    * @return FilterCollection for Attrribute Description provided, or null
    */
 	public FilterCollection getCollectionForFilter(String internalName) {
-		if (!containsUIFilterDescription(internalName)) {
+		if (!containsFilterDescription(internalName)) {
 			return null;
 		} else if (lastFiltColl == null) {
       lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
@@ -586,17 +668,17 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
   /**
-   * Returns an AttributeGroup object for a specific Attribute Description (AttributeDescription, UIDSAttributeDescription)
+   * Returns an AttributeGroup object for a specific AttributeDescription
    * based on its internalName.
    * 
    * @param internalName - String internalName of Attribute Description for which a group is requested.
    * @return FilterGroup for Attrribute Description provided, or null
    */
 	public AttributeGroup getGroupForAttribute(String internalName) {
-    if (!containsUIFilterDescription(internalName))
+    if (!containsFilterDescription(internalName))
       return null;
     else if (lastAttGroup == null) {
-      lastAttGroup = getPageForAttribute(internalName).getGroupForAttribute(internalName);
+      lastAttGroup = getPageForAttribute(internalName).getGroupForAttributeDescription(internalName);
       return lastAttGroup;
     } else {
       if (lastAttGroup.getInternalName().equals(internalName))
@@ -609,17 +691,17 @@ public class Dataset extends BaseConfigurationObject {
 	}
   
   /**
-   * Returns an AttributeCollection object for a specific Attribute Description (AttributeDescription, UIDSAttributeDescription)
+   * Returns an AttributeCollection object for a specific AttributeDescription
    * based on its internalName.
    * 
    * @param internalName - String internalName of Attribute Description for which a collection is requested.
    * @return AttributeCollection for Attribute Description provided, or null
    */
 	public AttributeCollection getCollectionForAttribute(String internalName) {
-    if (!containsUIAttributeDescription(internalName)) {
+    if (!containsAttributeDescription(internalName)) {
       return null;
     } else if (lastFiltColl == null) {
-      lastAttColl = getGroupForAttribute(internalName).getCollectionForAttribute(internalName);
+      lastAttColl = getGroupForAttribute(internalName).getCollectionForAttributeDescription(internalName);
       return lastAttColl;
     } else {
       if (lastFiltColl.getInternalName().equals(internalName))
@@ -699,9 +781,13 @@ public class Dataset extends BaseConfigurationObject {
   private Hashtable uiOptionNameMap = new Hashtable();
   private boolean hasOptions = false;  
 	
-	// cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	// cache one AttributeDescription for call to containsAttributeDescription or getAttributeDescriptionByInternalName
 	private AttributeDescription lastAtt = null;
-	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
+	
+	//cache one AttributeDescription for call to supportsAttributeDescription/getAttributeDescriptionByFieldNameTableConstraint
+	private AttributeDescription lastSupportingAttribute = null;
+	
+	//cache one FilterDescription Object for call to containsFilterDescription or getFiterDescriptionByInternalName
 	private Object lastFilt = null;
 
 	//cache one FilterGroup for call to getGroupForFilter
@@ -715,4 +801,7 @@ public class Dataset extends BaseConfigurationObject {
 
 	//cache one AttributeCollection for call to getCollectionForAttribute
 	private AttributeCollection lastAttColl = null;
+	
+	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
+	private FilterDescription lastSupportingFilter = null;
 }

@@ -169,14 +169,14 @@ public class MartShellLib {
 
 				List attMaps = (ArrayList) field_Attribute.get(datasetName);
 
-				List attributes = dataset.getAllUIAttributeDescriptions();
+				List attributes = dataset.getAllAttributeDescriptions();
 				for (int j = 0, k = attributes.size(); j < k; j++) {
 					Object attribute = attributes.get(j);
 					if (attribute instanceof AttributeDescription) {
 						AttributeDescription uiattribute = (AttributeDescription) attribute;
 
 						String iname = uiattribute.getInternalName();
-						String fname = uiattribute.getFieldName();
+						String fname = uiattribute.getField();
 						String tconstraint = uiattribute.getTableConstraint();
 
 						UIMapper attMap = null;
@@ -214,7 +214,7 @@ public class MartShellLib {
 
 				List fieldMaps = (ArrayList) field_Filter.get(datasetName);
 
-				List filters = dataset.getAllUIFilterDescriptions();
+				List filters = dataset.getAllFilterDescriptions();
 				for (Iterator iter = filters.iterator(); iter.hasNext();) {
 					Object filter = iter.next();
 
@@ -222,7 +222,7 @@ public class MartShellLib {
 						FilterDescription uifilter = (FilterDescription) filter;
 
 						String iname = uifilter.getInternalName();
-						String fname = uifilter.getFieldName();
+						String fname = uifilter.getField();
 						String tconstraint = uifilter.getTableConstraint();
 
 						UIMapper fieldMap = null;
@@ -421,7 +421,7 @@ public class MartShellLib {
 
 					if (filtMapper.canMap(fname)) {
 						FilterDescription uifilter =
-							(FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -431,7 +431,7 @@ public class MartShellLib {
 						}
 					} else if (filtMapper.canMap(fname, tconstraint)) {
 						FilterDescription uifilter =
-							(FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -442,7 +442,7 @@ public class MartShellLib {
 					} else {
 						// filterSet
 						String filterInternalName = filtMapper.getInternalName();
-						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName);
+						FilterDescription uifilter = (FilterDescription) dataset.getFilterDescriptionByInternalName(filterInternalName);
 						// must be a FilterDescription
 
 						if (uifilter.inFilterSet()) {
@@ -511,7 +511,7 @@ public class MartShellLib {
 
 					if (filtMapper.canMap(fname)) {
 						FilterDescription uifilter =
-							(FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -521,7 +521,7 @@ public class MartShellLib {
 						}
 					} else if (filtMapper.canMap(fname, tconstraint)) {
 						FilterDescription uifilter =
-							(FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+							(FilterDescription) dataset.getFilterDescriptionByInternalName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -532,7 +532,7 @@ public class MartShellLib {
 					} else {
 						// filterSet
 						String filterInternalName = filtMapper.getInternalName();
-						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName);
+						FilterDescription uifilter = (FilterDescription) dataset.getFilterDescriptionByInternalName(filterInternalName);
 						// must be a FilterDescription
 
 						if (uifilter.inFilterSet()) {
@@ -1091,11 +1091,11 @@ public class MartShellLib {
 	}
 
 	private Query addSequenceDescription(Query inquery, Dataset dset, String seqrequest) throws InvalidQueryException {
-		currentApage = dset.getAttributePageByName("sequences");
+		currentApage = dset.getAttributePageByInternalName("sequences");
 		for (int i = 0, n = atts.size(); i < n; i++) {
 			String element = (String) atts.get(i);
 
-			if (!currentApage.containsUIAttributeDescription(element))
+			if (!currentApage.containsAttributeDescription(element))
 				throw new InvalidQueryException(
 					"Cannot request attribute "
 						+ element
@@ -1148,15 +1148,15 @@ public class MartShellLib {
 		checkAttributeValidity(dset, attname);
 
 		Query newQuery = new Query(inquery);
-		AttributeDescription attdesc = (AttributeDescription) dset.getUIAttributeDescriptionByName(attname);
-		Attribute attr = new FieldAttribute(attdesc.getFieldName(), attdesc.getTableConstraint());
+		AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
+		Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint());
 		newQuery.addAttribute(attr);
 
 		return newQuery;
 	}
 
 	private void checkAttributeValidity(Dataset dset, String attname) throws InvalidQueryException {
-		if (!dset.containsUIAttributeDescription(attname))
+		if (!dset.containsAttributeDescription(attname))
 			throw new InvalidQueryException(
 				"Attribute " + attname + " is not found in this mart for dataset " + dset.getInternalName() + "\n");
 
@@ -1164,13 +1164,13 @@ public class MartShellLib {
 		if (currentApage == null) {
 			currentApage = dset.getPageForAttribute(attname);
 		} else {
-			if (!currentApage.containsUIAttributeDescription(attname)) {
+			if (!currentApage.containsAttributeDescription(attname)) {
 				currentApage = dset.getPageForAttribute(attname);
 
 				for (int i = 0, n = atts.size(); i < n; i++) {
 					String element = (String) atts.get(i);
 
-					if (!currentApage.containsUIAttributeDescription(element))
+					if (!currentApage.containsAttributeDescription(element))
 						throw new InvalidQueryException(
 							"Cannot request attributes "
 								+ attname
@@ -1182,7 +1182,7 @@ public class MartShellLib {
 		}
 
 		//check maxSelect
-		AttributeCollection collection = currentApage.getCollectionForAttribute(attname);
+		AttributeCollection collection = currentApage.getCollectionForAttributeDescription(attname);
 		String colname = collection.getInternalName();
 		int maxSelect = collection.getMaxSelect();
 
@@ -1220,8 +1220,9 @@ public class MartShellLib {
 		String thisFieldName = null;
 		String thisTableConstraint = null;
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
+			
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (!(fds.getType().matches("boolean.*")))
 				throw new InvalidQueryException(
@@ -1246,15 +1247,15 @@ public class MartShellLib {
 						"Request for this filter must be specified with a filterset " + filterName + "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 
@@ -1291,7 +1292,7 @@ public class MartShellLib {
 			}
 		} else {
 			//option
-			Option fds = (Option) dset.getUIFilterDescriptionByName(filterName);
+			Option fds = (Option) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (!(fds.getType().matches("boolean.*")))
 				throw new InvalidQueryException(
@@ -1386,7 +1387,7 @@ public class MartShellLib {
 
 		checkFilterValidity(dset, filterName);
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
 			FilterSetDescription fset = null;
 
 			if (filterSetName != null) {
@@ -1400,7 +1401,7 @@ public class MartShellLib {
 			String thisFieldName = null;
 			String thisTableConstraint = null;
 
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1410,15 +1411,15 @@ public class MartShellLib {
 							+ "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 
@@ -1456,8 +1457,8 @@ public class MartShellLib {
 		String thisFieldName = null;
 		String thisTableConstraint = null;
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1467,20 +1468,20 @@ public class MartShellLib {
 							+ "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 		} else {
 			//option
-			Option fds = (Option) dset.getUIFilterDescriptionByName(filterName);
+			Option fds = (Option) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1537,8 +1538,8 @@ public class MartShellLib {
 		String thisFieldName = null;
 		String thisTableConstraint = null;
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1548,20 +1549,20 @@ public class MartShellLib {
 							+ "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 		} else {
 			//option
-			Option fds = (Option) dset.getUIFilterDescriptionByName(filterName);
+			Option fds = (Option) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1616,8 +1617,8 @@ public class MartShellLib {
 		String thisFieldName = null;
 		String thisTableConstraint = null;
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1627,20 +1628,20 @@ public class MartShellLib {
 							+ "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 		} else {
 			//option
-			Option fds = (Option) dset.getUIFilterDescriptionByName(filterName);
+			Option fds = (Option) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1695,8 +1696,8 @@ public class MartShellLib {
 		String thisFieldName = null;
 		String thisTableConstraint = null;
 
-		if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
-			FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		if (dset.getFilterDescriptionByInternalName(filterName) instanceof FilterDescription) {
+			FilterDescription fds = (FilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1706,20 +1707,20 @@ public class MartShellLib {
 							+ "\n");
 				else {
 					if (fds.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
-						thisFieldName = fset.getFieldNameModifier() + fds.getFieldName();
+						thisFieldName = fset.getFieldNameModifier() + fds.getField();
 						thisTableConstraint = fds.getTableConstraint();
 					} else {
 						thisTableConstraint = fset.getTableConstraintModifier() + fds.getTableConstraint();
-						thisFieldName = fds.getFieldName();
+						thisFieldName = fds.getField();
 					}
 				}
 			} else {
-				thisFieldName = fds.getFieldName();
+				thisFieldName = fds.getField();
 				thisTableConstraint = fds.getTableConstraint();
 			}
 		} else {
 			//option
-			Option fds = (Option) dset.getUIFilterDescriptionByName(filterName);
+			Option fds = (Option) dset.getFilterDescriptionByInternalName(filterName);
 
 			if (fds.inFilterSet()) {
 				if (fset == null)
@@ -1785,7 +1786,7 @@ public class MartShellLib {
 
 		String thisHandlerParam = null;
 
-		MapFilterDescription fds = (MapFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+		MapFilterDescription fds = (MapFilterDescription) dset.getFilterDescriptionByInternalName(filterName);
 
 		if (fds.inFilterSet()) {
 			if (fset == null)
@@ -1807,19 +1808,19 @@ public class MartShellLib {
 	}
 
 	private void checkFilterValidity(Dataset dset, String filterName) throws InvalidQueryException {
-		if (!dset.containsUIFilterDescription(filterName))
+		if (!dset.containsFilterDescription(filterName))
 			throw new InvalidQueryException(
 				"Filter " + filterName + " not supported by mart dataset " + dset.getInternalName() + "\n");
 
 		if (currentFpage == null)
 			currentFpage = dset.getPageForFilter(filterName);
 		else {
-			if (!currentFpage.containsUIFilterDescription(filterName)) {
+			if (!currentFpage.containsFilterDescription(filterName)) {
 				currentFpage = dset.getPageForFilter(filterName);
 
 				for (int i = 0, n = filtNames.size(); i < n; i++) {
 					String element = (String) filtNames.get(i);
-					if (!currentFpage.containsUIFilterDescription(element))
+					if (!currentFpage.containsFilterDescription(element))
 						throw new InvalidQueryException(
 							"Cannot use filters "
 								+ filterName

@@ -276,7 +276,7 @@ public class ConfigurationTest extends Base {
 
 		String testGetByName = null;
 		if (containsTest) {
-			testGetByName = d.getAttributePageByName(testIName).getInternalName();
+			testGetByName = d.getAttributePageByInternalName(testIName).getInternalName();
 			assertEquals("Warning, getAttributePageByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
@@ -487,7 +487,7 @@ public class ConfigurationTest extends Base {
 		}
 
 		//FilterDescription data correct
-		List fs = fc.getUIFilterDescriptions();
+		List fs = fc.getFilterDescriptions();
 		assertEquals("Warning, should get two filter descriptions with first FilterCollection\n", 2, fs.size());
 
 		firstFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
@@ -523,7 +523,7 @@ public class ConfigurationTest extends Base {
 		}
 
 		//FilterDescription data correct
-		List fs = fc.getUIFilterDescriptions();
+		List fs = fc.getFilterDescriptions();
 		assertEquals("Warning, should get three filter descriptions\n", 3, fs.size());
 
 		secondFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
@@ -558,7 +558,7 @@ public class ConfigurationTest extends Base {
 		
 		
 		//FilterDescription data correct
-		List fs = fc.getUIFilterDescriptions();
+		List fs = fc.getFilterDescriptions();
 		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
 
 		thirdFColFirstFdescTest(d, fp, fg, fc, fs.get(0));
@@ -590,7 +590,7 @@ public class ConfigurationTest extends Base {
 		}
 
 		//AttributeDescription data correct
-		List as = ac.getUIAttributeDescriptions();
+		List as = ac.getAttributeDescriptions();
 		assertEquals("Warning, should get one attribute description\n", 1, as.size());
 
 		attributeCollectionFdescTest(d, ap, ag, ac, as.get(0));
@@ -607,7 +607,7 @@ public class ConfigurationTest extends Base {
 		String Desc = f.getDescription();
 		String Type = f.getType();
 		String testFieldName = "test_id";
-		String FieldName = f.getFieldName();
+		String FieldName = f.getField();
 		String Qualifier = f.getQualifier();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = f.getTableConstraint();
@@ -622,20 +622,20 @@ public class ConfigurationTest extends Base {
 		assertTrue("Warning, first FilterCollections FilterDescription should not be in a FilterSet\n", !f.inFilterSet());
 
 		//  contains/get for FilterCollection-FilterDescription
-		boolean containsTest = fc.containsUIFilterDescription(testIName);
+		boolean containsTest = fc.containsFilterDescription(testIName);
 		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
-			testGetByName = ((FilterDescription) fc.getUIFilterDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((FilterDescription) fc.getFilterDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
-		containsTest = fp.containsUIFilterDescription(testIName);
+		containsTest = fp.containsFilterDescription(testIName);
 		assertTrue("Warning, FilterPage should contain testUIFilterDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = ((FilterDescription) fp.getUIFilterDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((FilterDescription) fp.getFilterDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well
@@ -666,20 +666,20 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, Handler not set correctly for MapFilterDescription\n", TESTHANDLER, Handler);
 
 		//  contains/get for FilterCollection-FilterDescription
-		boolean containsTest = fc.containsUIFilterDescription(testIName);
+		boolean containsTest = fc.containsFilterDescription(testIName);
 		assertTrue("Warning, FilterCollection should contain testUIFilterDescription, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
-			testGetByName = ((MapFilterDescription) fc.getUIFilterDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((MapFilterDescription) fc.getFilterDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//  contains/get for FilterPage-FilterDescription (Tests all lower groups getByName as well
-		containsTest = fp.containsUIFilterDescription(testIName);
+		containsTest = fp.containsFilterDescription(testIName);
 		assertTrue("Warning, FilterPage should contain testUIDSFilterDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = ((MapFilterDescription) fp.getUIFilterDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((MapFilterDescription) fp.getFilterDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIFilterDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well
@@ -698,7 +698,7 @@ public class ConfigurationTest extends Base {
 		String Desc = fField.getDescription();
 		String Type = fField.getType();
 		String testFieldName = "syn_exclusive";
-		String FieldName = fField.getFieldName();
+		String FieldName = fField.getField();
 		String Qualifier = fField.getQualifier();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = fField.getTableConstraint();
@@ -710,7 +710,7 @@ public class ConfigurationTest extends Base {
 		String testFilterSetDIName = "testFilterSetDescription";
 		if (FilterSetReq.equals(FilterSetDescription.MODFIELDNAME))
 			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fField.getFieldName();
+				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fField.getField();
 		else
 			ModifiedName =
 				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getTableConstraintModifier()
@@ -739,7 +739,7 @@ public class ConfigurationTest extends Base {
 		String Desc = fTable.getDescription();
 		String Type = fTable.getType();
 		String testFieldName = "gene_stable_id_v";
-		String FieldName = fTable.getFieldName();
+		String FieldName = fTable.getField();
 		String Qualifier = fTable.getQualifier();
 		String testFilterSetReq = "table";
 		String FilterSetReq = fTable.getFilterSetReq();
@@ -751,7 +751,7 @@ public class ConfigurationTest extends Base {
 		String testFilterSetDIName = "testFilterSetDescription";
 		if (FilterSetReq.equals(FilterSetDescription.MODFIELDNAME))
 			ModifiedName =
-				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fTable.getFieldName();
+				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getFieldNameModifier() + fTable.getField();
 		else
 			ModifiedName =
 				fg.getFilterSetByName(fc.getFilterSetName()).getFilterSetDescriptionByName(testFilterSetDIName).getTableConstraintModifier()
@@ -875,7 +875,7 @@ public class ConfigurationTest extends Base {
     String Desc = fField.getDescription();
     String Type = fField.getType();
     String testFieldName = "test_id";
-    String FieldName = fField.getFieldName();
+    String FieldName = fField.getField();
     String Qualifier = fField.getQualifier();
     String testOptionName = "testOption";
 
@@ -919,7 +919,7 @@ public class ConfigurationTest extends Base {
 		String DName = a.getDisplayName();
 		String Desc = a.getDescription();
 		String testFieldName = "test_id";
-		String FieldName = a.getFieldName();
+		String FieldName = a.getField();
 		String testTableConstraint = "gene_main";
 		String TableConstraint = a.getTableConstraint();
 		int testMaxLength = 1;
@@ -942,20 +942,20 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, LinkoutURL not correctly set for AttributeDescription\n", testLPage, LPage);
 
 		//  contains/get for AttributeCollection-AttributeDescription
-		boolean containsTest = ac.containsUIAttributeDescription(testIName);
+		boolean containsTest = ac.containsAttributeDescription(testIName);
 		assertTrue("Warning, AttributeCollection should contain testUIAttributeDescription, but doesnt\n", containsTest);
     
     String testGetByName = null;
 		if (containsTest) {
-			testGetByName = ((AttributeDescription) ac.getUIAttributeDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((AttributeDescription) ac.getAttributeDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
 		//  contains/get for AttributePage-AttributeDescription (Tests all lower groups getByName as well
-		containsTest = ap.containsUIAttributeDescription(testIName);
+		containsTest = ap.containsAttributeDescription(testIName);
 		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
 		if (containsTest) {
-			testGetByName = ((AttributeDescription) ap.getUIAttributeDescriptionByName(testIName)).getInternalName();
+			testGetByName = ((AttributeDescription) ap.getAttributeDescriptionByInternalName(testIName)).getInternalName();
 			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well

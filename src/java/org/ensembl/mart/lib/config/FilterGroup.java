@@ -34,13 +34,6 @@ import java.util.TreeMap;
  */
 public class FilterGroup extends BaseConfigurationObject {
 
-	/*
-	 * FilterGroups must have an internalName, so disable parameterless construction.
-	 */
-	public FilterGroup() throws ConfigurationException {
-		this("", "", ""); // will never happen
-	}
-
 	/**
 	 * Constructor for a FilterGroup represented internally by internalName.
 	 * 
@@ -198,14 +191,14 @@ public class FilterGroup extends BaseConfigurationObject {
   
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular FilterDescription/MapFilterDescription object.
-		* Note, it is best to first call containsUIFilterDescription, as there is a caching system to cache a FilterDescription during a call 
-		* to containsUIFilterDescription.
+		* Note, it is best to first call containsFilterDescription, as there is a caching system to cache a FilterDescription during a call 
+		* to containsFilterDescription.
 		* 
 		* @param internalName name of the requested FilterDescription
 		* @return requested Object (either instanceof FilterDescription or MapFilterDescription), or null.
 		*/
-	public Object getUIFilterDescriptionByName(String internalName) {
-		if ( containsUIFilterDescription(internalName) )
+	public Object getFilterDescriptionByInternalName(String internalName) {
+		if ( containsFilterDescription(internalName) )
 			return lastFilt;
 		else
 			return null;
@@ -213,20 +206,20 @@ public class FilterGroup extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific FilterDescription/MapFilterDescription object.
-		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
+		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
 		*  found, this method caches the FilterDescription it has found.
 		* 
 		* @param internalName name of the requested FilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIFilterDescription(String internalName) {
+	public boolean containsFilterDescription(String internalName) {
 		boolean found = false;
 
 		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterCollections.keySet().iterator(); iter.hasNext();) {
 				FilterCollection collection = (FilterCollection) filterCollections.get((Integer) iter.next());
-				if (collection.containsUIFilterDescription(internalName)) {
-					lastFilt = collection.getUIFilterDescriptionByName(internalName);
+				if (collection.containsFilterDescription(internalName)) {
+					lastFilt = collection.getFilterDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -245,7 +238,7 @@ public class FilterGroup extends BaseConfigurationObject {
 			  found = true;
 			else {
 				lastFilt = null;
-				found = containsUIFilterDescription(internalName);
+				found = containsFilterDescription(internalName);
 			}
 		}
 		return found;
@@ -257,13 +250,13 @@ public class FilterGroup extends BaseConfigurationObject {
    * 
    * @return List of FilterDescription objects.
    */
-  public List getAllUIFilterDescriptions() {
+  public List getAllFilterDescriptions() {
   	List filts = new ArrayList();
   	
 		for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
 			FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
   		
-			filts.addAll(fc.getUIFilterDescriptions());
+			filts.addAll(fc.getFilterDescriptions());
 		}
 		
 		return filts;
@@ -338,13 +331,13 @@ public class FilterGroup extends BaseConfigurationObject {
 	 * @return FilterCollection for the FilterDescription provided, or null
 	 */
 	public FilterCollection getCollectionForFilter(String internalName) {
-		if (! containsUIFilterDescription(internalName))
+		if (! containsFilterDescription(internalName))
 			return null;
 		else if (lastColl == null) {
 			for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
 				FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
 				
-				if (fc.containsUIFilterDescription(internalName)) {
+				if (fc.containsFilterDescription(internalName)) {
 					lastColl = fc;
 					break;
 				}
@@ -361,6 +354,51 @@ public class FilterGroup extends BaseConfigurationObject {
 		}
 	}
 
+  /**
+   * Get a FilterDescription object that supports a given field and tableConstraint.  Useful for mapping from a Filter object
+   * added to a Query back to its FilterDescription.
+   * @param field -- String field of a mart database table
+   * @param tableConstraint -- String tableConstraint of a mart database
+   * @return FilterDescription object supporting the given field and tableConstraint, or null.
+   */  
+  public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+  	if (supports(field, tableConstraint))
+  	  return lastSupportingFilter;
+  	else
+  	  return null;
+  }
+  
+  /**
+   * Determine if this FilterGroup contains a FilterDescription that supports a given field and tableConstraint.
+   * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
+   * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
+   * @param field -- String field of a mart database table
+   * @param tableConstraint -- String tableConstraint of a mart database
+   * @return boolean, true if the FilterGroup contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+   */
+  public boolean supports(String field, String tableConstraint) {
+  	boolean supports = false;
+  	
+  	if (lastSupportingFilter == null) {
+  		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+				 FilterCollection element = (FilterCollection) iter.next();
+				 if (element.supports(field, tableConstraint)) {
+				 	lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+				 	supports = true;
+				 	break;
+				 }
+			}
+  	} else {
+  		if (lastSupportingFilter.supports(field, tableConstraint))
+  		  supports = true;
+  		else {
+  			lastSupportingFilter = null;
+  			supports = supports(field, tableConstraint);
+  		}
+  	}
+  	return supports;
+  }
+  
   /**
    * debug output
    */
@@ -409,7 +447,7 @@ private int cRank = 0; //keep track of collection order
 	private Hashtable filterCollectionNameMap = new Hashtable();
   private Hashtable filterSets = new Hashtable(); // do not need to presever order of filterSets
   
-	//cache one FilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
+	//cache one FilterDescription for call to containsFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
 	
 	//cache one FilterSetDescription for a call to containsFilterSetDescription or getFilterSetDescriptionByName
@@ -417,4 +455,7 @@ private int cRank = 0; //keep track of collection order
 	
 	//cache one FilterCollection for call to getCollectionForFilter
 	private FilterCollection lastColl = null;
+	
+	//cache one FilterDescription for call to supports
+	private FilterDescription lastSupportingFilter = null; 
 }

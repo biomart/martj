@@ -151,14 +151,14 @@ public class AttributePage extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular AttributeDescription.
-	 *  Note, it is best to first call containsUIAttributeDescription,  
-		*  as there is a caching system to cache a AttributeDescription during a call to containsUIAttributeDescription.
+	 *  Note, it is best to first call containsAttributeDescription,  
+		*  as there is a caching system to cache a AttributeDescription during a call to containsAttributeDescription.
 		*  
 		* @param internalName name of the requested AttributeDescription
 		* @return AttributeDescription requested, or null
 		*/
-	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		if ( containsUIAttributeDescription(internalName) )
+	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
+		if ( containsAttributeDescription(internalName) )
 			return lastAtt;
 		else
 			return null;
@@ -166,20 +166,20 @@ public class AttributePage extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Can determine if the AttributePage contains a specific AttributeDescription.
-		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
+		*  As an optimization for initial calls to containsAttributeDescription with an immediate call to getAttributeDescriptionByName if
 		*  found, this method caches the AttributeDescription it has found.
 		* 
 		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIAttributeDescription(String internalName){
+	public boolean containsAttributeDescription(String internalName){
 		boolean found = false;
 
 		if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeGroups.keySet().iterator(); iter.hasNext();) {
 				Object group = attributeGroups.get((Integer) iter.next());
-				if (group instanceof AttributeGroup && ( (AttributeGroup) group).containsUIAttributeDescription(internalName)) {
-					lastAtt = ( (AttributeGroup) group).getUIAttributeDescriptionByName(internalName);
+				if (group instanceof AttributeGroup && ( (AttributeGroup) group).containsAttributeDescription(internalName)) {
+					lastAtt = ( (AttributeGroup) group).getAttributeDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -190,25 +190,60 @@ public class AttributePage extends BaseConfigurationObject {
 			  found = true;
 			else {
 				lastAtt = null;
-				found = containsUIAttributeDescription(internalName);			
+				found = containsAttributeDescription(internalName);			
 			}
 		}
 		return found;
 	}
 
 	/**
-	 * Convenience method. Returns all of the UIAttributeDescriptions contained in all of the AttributeGroups.
+	 * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return AttributeDescription supporting the field and tableConstraint, or null
+	 */
+	public AttributeDescription getAttributeDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supports(field, tableConstraint))
+			return lastSupportingAttribute;
+		else
+			return null;
+	}
+  
+	/**
+	 * Determine if this AttributePage supports a given field and tableConstraint.  Caches the first supporting AttributeDescription
+	 * that it finds, for subsequent call to getAttributeDescriptionByFieldNameTableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return boolean, true if an AttributeDescription contained in this AttributePage supports the field and tableConstraint, false otherwise
+	 */
+	public boolean supports(String field, String tableConstraint) {
+		boolean supports = false;
+  	
+		for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+			AttributeGroup element = (AttributeGroup) iter.next();
+			
+			if (element.supports(field, tableConstraint)) {
+				lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
+				supports = true;
+				break;
+			}
+		}
+		return supports;
+	}
+  
+	/**
+	 * Convenience method. Returns all of the AttributeDescriptions contained in all of the AttributeGroups.
 	 * 
 	 * @return List of AttributeDescription objects
 	 */
-	public List getAllUIAttributeDescriptions() {
+	public List getAllAttributeDescriptions() {
 		List atts = new ArrayList();
   	
 		for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
 			Object ag = attributeGroups.get((Integer) iter.next());
   		
   		if (ag instanceof AttributeGroup)
-			  atts.addAll(( (AttributeGroup) ag ).getAllUIAttributeDescriptions());
+			  atts.addAll(( (AttributeGroup) ag ).getAllAttributeDescriptions());
 		}
 		
 		return atts;
@@ -221,8 +256,8 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @param internalName - String internalname for which a group is requested
 	 * @return AttributeGroup containing Attribute Description with given internalName, or null.
 	 */
-	public AttributeGroup getGroupForAttribute(String internalName) {
-		if (! containsUIAttributeDescription(internalName))
+	public AttributeGroup getGroupForAttributeDescription(String internalName) {
+		if (! containsAttributeDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
 			for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
@@ -233,7 +268,7 @@ public class AttributePage extends BaseConfigurationObject {
           
 				  AttributeGroup group = (AttributeGroup) groupo;
 				
-				  if (group.containsUIAttributeDescription(internalName)) {
+				  if (group.containsAttributeDescription(internalName)) {
 					  lastGroup = group;
 					  break;
 				  }
@@ -246,7 +281,7 @@ public class AttributePage extends BaseConfigurationObject {
 				return lastGroup;
 			else {
 				lastGroup = null;
-				return getGroupForAttribute(internalName);
+				return getGroupForAttributeDescription(internalName);
 			}
 		}  	
 	}
@@ -258,18 +293,18 @@ public class AttributePage extends BaseConfigurationObject {
 	 * @param internalName - String internalname for which a collection is requested
 	 * @return AttributeCollection object containing Attribute Description with given internalName, or null.
 	 */
-	public AttributeCollection getCollectionForAttribute(String internalName) {
-		if (! containsUIAttributeDescription(internalName))
+	public AttributeCollection getCollectionForAttributeDescription(String internalName) {
+		if (! containsAttributeDescription(internalName))
 					return null;
 		else if (lastColl == null) { 
-		  lastColl = getGroupForAttribute(internalName).getCollectionForAttribute(internalName);
+		  lastColl = getGroupForAttributeDescription(internalName).getCollectionForAttributeDescription(internalName);
 		  return lastColl;
 		} else {
 			if (lastColl.getInternalName().equals(internalName))
 				return lastColl;
 			else {
 				lastColl = null;
-				return getCollectionForAttribute(internalName);
+				return getCollectionForAttributeDescription(internalName);
 			}
 		}
 	}
@@ -313,8 +348,11 @@ private int agroupRank = 0;
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 
-	//cache one AttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	//cache one AttributeDescription object for call to containsAttributeDescription or getAttributeDescriptionByName
 	private AttributeDescription lastAtt = null;
+	
+	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+	private AttributeDescription lastSupportingAttribute = null;
 	
 	//cache one AttributeGroup for call to getGroupForAttribute
 	private AttributeGroup lastGroup = null;

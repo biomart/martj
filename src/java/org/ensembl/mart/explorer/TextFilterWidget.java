@@ -124,7 +124,7 @@ public class TextFilterWidget
     BasicFilter old = filter;
     setFilter(
       new InputPageAwareBasicFilter(
-        filterDescription.getFieldName(),
+        filterDescription.getField(),
         filterDescription.getTableConstraint(),
         filterDescription.getQualifier(),
         value,
@@ -174,7 +174,7 @@ public class TextFilterWidget
 
 
   private boolean relevantFilter(BasicFilter f) {
-    return f.getField().equals( filterDescription.getFieldName() );
+    return f.getField().equals( filterDescription.getField() );
   }
 
   private void setFilter(BasicFilter filter) {

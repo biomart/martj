@@ -172,14 +172,14 @@ public class BooleanFilterWidget
 
 		this.filter =
 			new InputPageAwareNullableFilter(
-				filterDescription.getFieldName(),
+				filterDescription.getField(),
 				filterDescription.getTableConstraint(),
 				condition,
 				this);
 
 		setNodeLabel(
 			null,
-			filterDescription.getFieldName() + filter.getRightHandClause());
+			filterDescription.getField() + filter.getRightHandClause());
 	}
 
 	/* (non-Javadoc)

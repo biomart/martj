@@ -152,14 +152,14 @@ public class FilterPage extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the FilterPage for a particular FilterDescription.
-		* Note, it is best to first call containsUIFilterDescription,
-		* as there is a caching system to cache a FilterDescription during a call to containsUIFilterDescription.
+		* Note, it is best to first call containsFilterDescription,
+		* as there is a caching system to cache a FilterDescription during a call to containsFilterDescription.
 		* 
 		* @param internalName name of the requested FilterDescription
 		* @return FilterDescription object, or null.
 		*/
-	public Object getUIFilterDescriptionByName(String internalName) {
-		if (containsUIFilterDescription(internalName))
+	public Object getFilterDescriptionByInternalName(String internalName) {
+		if (containsFilterDescription(internalName))
 			return lastFilt;
 		else
 			return null;
@@ -167,21 +167,21 @@ public class FilterPage extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Can determine if the FilterPage contains a specific FilterDescription.
-		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
-		*  found, this method caches the FilterDescription it has found.
+		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName,
+		*  this method caches the first FilterDescription it has found matching internalName.
 		* 
 		* @param internalName name of the requested FilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIFilterDescription(String internalName) {
+	public boolean containsFilterDescription(String internalName) {
 		boolean found = false;
 
 		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 				Object group = filterGroups.get((Integer) iter.next());
 
-				if (group instanceof FilterGroup && ((FilterGroup) group).containsUIFilterDescription(internalName)) {
-					lastFilt = ((FilterGroup) group).getUIFilterDescriptionByName(internalName);
+				if (group instanceof FilterGroup && ((FilterGroup) group).containsFilterDescription(internalName)) {
+					lastFilt = ((FilterGroup) group).getFilterDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -199,25 +199,70 @@ public class FilterPage extends BaseConfigurationObject {
 				found = true;
 			else {
 				lastFilt = null;
-				found = containsUIFilterDescription(internalName);
+				found = containsFilterDescription(internalName);
 			}
 		}
 		return found;
 	}
 
 	/**
+	 * Get a FilterDescription object that supports a given field and tableConstraint.  Useful for mapping from a Filter object
+	 * added to a Query back to its FilterDescription.
+	 * @param field -- String field of a mart database table
+	 * @param tableConstraint -- String tableConstraint of a mart database
+	 * @return FilterDescription object supporting the given field and tableConstraint, or null.
+	 */  
+	public FilterDescription getFilterDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supports(field, tableConstraint))
+			return lastSupportingFilter;
+		else
+			return null;
+	}  
+
+	/**
+	 * Determine if this FilterPage contains a FilterDescription that supports a given field and tableConstraint.
+	 * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
+	 * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
+	 * @param field -- String field of a mart database table
+	 * @param tableConstraint -- String tableConstraint of a mart database
+	 * @return boolean, true if the FilterPage contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+	 */
+	public boolean supports(String field, String tableConstraint) {
+		boolean supports = false;
+  	
+		if (lastSupportingFilter == null) {
+			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+				 FilterGroup element = (FilterGroup) iter.next();
+				 if (element.supports(field, tableConstraint)) {
+					lastSupportingFilter = element.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+					supports = true;
+					break;
+				 }
+			}
+		} else {
+			if (lastSupportingFilter.supports(field, tableConstraint))
+				supports = true;
+			else {
+				lastSupportingFilter = null;
+				supports = supports(field, tableConstraint);
+			}
+		}
+		return supports;
+	}
+  
+	/**
 	 * Convenience Method to get all FilterDescription/MapFilterDescription objects 
 	 * in all Groups/Collections within a FilterPage.
 	 * 
 	 * @return List of FilterDescription/MapFilterDescription objects
 	 */
-	public List getAllUIFilterDescriptions() {
+	public List getAllFilterDescriptions() {
 		List filts = new ArrayList();
 
 		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
 			Object fg = (FilterGroup) filterGroups.get((Integer) iter.next());
 			if (fg instanceof FilterGroup)
-				filts.addAll(((FilterGroup) fg).getAllUIFilterDescriptions());
+				filts.addAll(((FilterGroup) fg).getAllFilterDescriptions());
 		}
 
 		return filts;
@@ -290,7 +335,7 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @return FilterGroup object containing Filter Description with given internalName, or null.
 	 */
 	public FilterGroup getGroupForFilter(String internalName) {
-		if (!containsUIFilterDescription(internalName))
+		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
 			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
@@ -298,7 +343,7 @@ public class FilterPage extends BaseConfigurationObject {
 
 				if (groupo instanceof FilterGroup) {
 					FilterGroup group = (FilterGroup) groupo;
-					if (group.containsUIFilterDescription(internalName)) {
+					if (group.containsFilterDescription(internalName)) {
 						lastGroup = group;
 						break;
 					}
@@ -323,7 +368,7 @@ public class FilterPage extends BaseConfigurationObject {
 	 * @return FilterCollection object containing Filter Description with given internalName, or null.
 	 */
 	public FilterCollection getCollectionForFilter(String internalName) {
-		if (!containsUIFilterDescription(internalName))
+		if (!containsFilterDescription(internalName))
 			return null;
 		else if (lastColl == null) {
 			lastColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
@@ -389,4 +434,7 @@ public class FilterPage extends BaseConfigurationObject {
 
 	//cache one FilterCollection for call to getCollectionForFilter
 	private FilterCollection lastColl = null;
+	
+	//cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
+	private FilterDescription lastSupportingFilter = null;
 }

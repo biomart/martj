@@ -85,7 +85,7 @@ public class AttributeDescriptionWidget
 
 		attribute =
 			new InputPageAwareAttribute(
-				attributeDescription.getFieldName(),
+				attributeDescription.getField(),
 				attributeDescription.getTableConstraint(),
         this);
     setField( attribute );

@@ -26,28 +26,21 @@ package org.ensembl.mart.lib.config;
  */
 public class AttributeDescription extends BaseConfigurationObject {
 
-	/*
-	 * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
-	 */
-	private AttributeDescription() throws ConfigurationException {
-		this("", "", "", 0, "", "", "", "", ""); // this will never happen
-	}
-
 	/**
-	 * Constructs a AttributeDescription with just the internalName and fieldName.
+	 * Constructs a AttributeDescription with just the internalName and field.
 	 * 
 	 * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty
-	 * @param fieldName String name of the field in the mart for this Attribute. Must not be null or empty.
+	 * @param field String name of the field in the mart for this Attribute. Must not be null or empty.
 	 * @throws ConfigurationException when values are null or empty.
 	 */
-	public AttributeDescription(String internalName, String fieldName) throws ConfigurationException {
-		this(internalName, fieldName, "", 0, "", "", "", "", "");
+	public AttributeDescription(String internalName, String field) throws ConfigurationException {
+		this(internalName, field, "", 0, "", "", "", "", "");
 	}
 	/**
 	 * Constructor for a AttributeDescription.
 	 * 
 	 * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty.
-	 * @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
+	 * @param field String name of the field in the mart for this attribute.  Must not be null or empty.
 	 * @param displayName String name of the AttributeDescription.
 	 * @param maxLength Int maximum possible length of the field in the mart.
 	 * @param tableConstraint String base name of a specific table containing this UIAttribute.
@@ -59,7 +52,7 @@ public class AttributeDescription extends BaseConfigurationObject {
 	 */
 	public AttributeDescription(
 		String internalName,
-		String fieldName,
+		String field,
 		String displayName,
 		int maxLength,
 		String tableConstraint,
@@ -71,10 +64,10 @@ public class AttributeDescription extends BaseConfigurationObject {
 		
     super( internalName, displayName, description );
     
-    if ( fieldName == null || fieldName.equals(""))
-			throw new ConfigurationException("UIAttributeDescriptions require a fieldName");
+    if ( field == null || field.equals(""))
+			throw new ConfigurationException("UIAttributeDescriptions require a field");
 
-		this.fieldName = fieldName;
+		this.field = field;
 		this.maxLength = maxLength;
 		this.tableConstraint = tableConstraint;
 		this.source = source;
@@ -83,7 +76,7 @@ public class AttributeDescription extends BaseConfigurationObject {
 
 		hshcode = internalName.hashCode();
 		hshcode = (31 * hshcode) + displayName.hashCode();
-		hshcode = (31 * hshcode) + fieldName.hashCode();
+		hshcode = (31 * hshcode) + field.hashCode();
 		hshcode = (31 * hshcode) + maxLength;
 		hshcode = (31 * hshcode) + tableConstraint.hashCode();
 		hshcode = (31 * hshcode) + description.hashCode();
@@ -93,12 +86,12 @@ public class AttributeDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the fieldName.
+	 * Returns the field.
 	 * 
-	 * @return String fieldName
+	 * @return String field
 	 */
-	public String getFieldName() {
-		return fieldName;
+	public String getField() {
+		return field;
 	}
 
 	/**
@@ -145,12 +138,23 @@ public class AttributeDescription extends BaseConfigurationObject {
 		return linkoutURL;
 	}
 
+  /**
+   * Determine if this AttributeDescription supports a given field and tableConstraint. Useful for mapping Query Attribute Objects
+   * back to their corresponding MartConfiguration AttributeDescription.
+   * @param field -- String field of the mart datbase table
+   * @param tableConstraint -- String constraining the field to a particular table or table type
+   * @return boolean, true if given field and given tableConstraint matches underlying values for AttributeDescription 
+   */
+  public boolean supports(String field, String tableConstraint) {
+  	return this.field != null && this.field.equals(field) && this.tableConstraint != null && this.tableConstraint.equals(tableConstraint);
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[ AttributeDescription:");
 		buf.append( super.toString() );
-		buf.append(", fieldName=").append(fieldName);
+		buf.append(", field=").append(field);
 		buf.append(", maxLength=").append(maxLength);
 		buf.append(", tableConstraint=").append(tableConstraint);
 		buf.append(", source=").append(source);
@@ -172,7 +176,7 @@ public class AttributeDescription extends BaseConfigurationObject {
 		return hshcode;
 	}
 
-  private String fieldName;
+  private String field;
   private String tableConstraint;
   private String source;
   private String homepageURL;

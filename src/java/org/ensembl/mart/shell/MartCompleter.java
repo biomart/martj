@@ -346,7 +346,7 @@ public class MartCompleter implements ReadlineCompleter {
 							currentSet.add(page.getInternalName());
 						}
 					} else if (pageKey.equals("Filter")) {
-						List fdesc = martconf.getDatasetByName(dataset).getAllUIFilterDescriptions();
+						List fdesc = martconf.getDatasetByName(dataset).getAllFilterDescriptions();
 						for (int i = 0, n = fdesc.size(); i < n; i++) {
 							Object desc = fdesc.get(i);
 
@@ -364,7 +364,7 @@ public class MartCompleter implements ReadlineCompleter {
 						}
 					} else {
 						// must be Attribute
-						List adesc = martconf.getDatasetByName(dataset).getAllUIAttributeDescriptions();
+						List adesc = martconf.getDatasetByName(dataset).getAllAttributeDescriptions();
 						for (int i = 0, n = adesc.size(); i < n; i++) {
 							Object desc = adesc.get(i);
 
@@ -419,7 +419,7 @@ public class MartCompleter implements ReadlineCompleter {
 							if (martconf.getDatasetByName(datasetName).containsFilterPage(pageName)) {
 								currentSet = new TreeSet();
 
-								List descs = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllUIFilterDescriptions();
+								List descs = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllFilterDescriptions();
 								for (int i = 0, n = descs.size(); i < n; i++) {
 									Object desc = descs.get(i);
 									if (desc instanceof FilterDescription)
@@ -438,7 +438,7 @@ public class MartCompleter implements ReadlineCompleter {
 							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
 								currentSet = new TreeSet();
 
-								List groups = martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroups();
+								List groups = martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroups();
 								for (int i = 0, n = groups.size(); i < n; i++) {
 									Object group = groups.get(i);
 
@@ -505,7 +505,7 @@ public class MartCompleter implements ReadlineCompleter {
 									} else { // must be filter
 										currentSet = new TreeSet();
 
-										List descs = ((FilterGroup) group).getAllUIFilterDescriptions();
+										List descs = ((FilterGroup) group).getAllFilterDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = (Object) descs.get(i);
 											if (desc instanceof FilterDescription)
@@ -522,8 +522,8 @@ public class MartCompleter implements ReadlineCompleter {
 					} else { // must be AttributePage
 
 						if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-							if (martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).containsAttributeGroup(groupName)) {
-								Object group = martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName);
+							if (martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).containsAttributeGroup(groupName)) {
+								Object group = martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName);
 
 								if (group instanceof AttributeGroup) {
 
@@ -538,7 +538,7 @@ public class MartCompleter implements ReadlineCompleter {
 									} else { // must be attribute
 										currentSet = new TreeSet();
 
-										List descs = ((AttributeGroup) group).getAllUIAttributeDescriptions();
+										List descs = ((AttributeGroup) group).getAllAttributeDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
 
@@ -605,7 +605,7 @@ public class MartCompleter implements ReadlineCompleter {
 									if (group.containsFilterCollection(collectionName)) {
 										currentSet = new TreeSet();
 
-										List descs = group.getFilterCollectionByName(collectionName).getUIFilterDescriptions();
+										List descs = group.getFilterCollectionByName(collectionName).getFilterDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
 											if (desc instanceof FilterDescription)
@@ -621,15 +621,15 @@ public class MartCompleter implements ReadlineCompleter {
 						//must be AttributePage
 						if (martconf.containsDataset(datasetName)) {
 							if (martconf.getDatasetByName(datasetName).containsAttributePage(pageName)) {
-								if ((martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).containsAttributeGroup(groupName))
-									&& (martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName) instanceof AttributeGroup)) {
+								if ((martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).containsAttributeGroup(groupName))
+									&& (martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName) instanceof AttributeGroup)) {
 									AttributeGroup group =
-										(AttributeGroup) martconf.getDatasetByName(datasetName).getAttributePageByName(pageName).getAttributeGroupByName(groupName);
+										(AttributeGroup) martconf.getDatasetByName(datasetName).getAttributePageByInternalName(pageName).getAttributeGroupByName(groupName);
 
 									if (group.containsAttributeCollection(collectionName)) {
 										currentSet = new TreeSet();
 
-										List descs = group.getAttributeCollectionByName(collectionName).getUIAttributeDescriptions();
+										List descs = group.getAttributeCollectionByName(collectionName).getAttributeDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
 											if (desc instanceof AttributeDescription)
@@ -676,7 +676,7 @@ public class MartCompleter implements ReadlineCompleter {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
-			List attributes = lastLocalDataset.getAllUIAttributeDescriptions();
+			List attributes = lastLocalDataset.getAllAttributeDescriptions();
 			for (int i = 0, n = attributes.size(); i < n; i++) {
 				Object attribute = attributes.get(i);
 				if (attribute instanceof AttributeDescription)
@@ -687,7 +687,7 @@ public class MartCompleter implements ReadlineCompleter {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.GETQSTART)); // add any user defined values
 
-			List attributes = envDataset.getAllUIAttributeDescriptions();
+			List attributes = envDataset.getAllAttributeDescriptions();
 			for (int i = 0, n = attributes.size(); i < n; i++) {
 				Object attribute = attributes.get(i);
 				if (attribute instanceof AttributeDescription)
@@ -729,7 +729,7 @@ public class MartCompleter implements ReadlineCompleter {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
-			List filters = lastLocalDataset.getAllUIFilterDescriptions();
+			List filters = lastLocalDataset.getAllFilterDescriptions();
 			for (int i = 0, n = filters.size(); i < n; i++) {
 				Object filter = filters.get(i);
 
@@ -742,7 +742,7 @@ public class MartCompleter implements ReadlineCompleter {
 			currentSet = new TreeSet();
 			currentSet.addAll((SortedSet) setMapper.get(MartShellLib.QWHERE)); // user defined names
 
-			List filters = envDataset.getAllUIFilterDescriptions();
+			List filters = envDataset.getAllFilterDescriptions();
 			for (int i = 0, n = filters.size(); i < n; i++) {
 				Object filter = filters.get(i);
 

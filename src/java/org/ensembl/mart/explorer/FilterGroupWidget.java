@@ -92,7 +92,7 @@ public class FilterGroupWidget extends PageWidget {
 	 * @return
 	 */
 	private InputPage[] getFilterWidgets(FilterCollection collection) {
-    List filterDescriptions = collection.getUIFilterDescriptions();
+    List filterDescriptions = collection.getFilterDescriptions();
     List pages = new ArrayList();
 
     for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {

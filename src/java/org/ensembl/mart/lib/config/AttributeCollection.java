@@ -30,14 +30,6 @@ import java.util.TreeMap;
  */
 public class AttributeCollection extends BaseConfigurationObject {
 
-	/*
-	 * AttributeCollections must have a internalName, type, and maxSelect
-	 * so disable parameterless constructor
-	 */
-	private AttributeCollection() throws ConfigurationException {
-		this("", 0, "", ""); // will never happen
-	}
-
 	/**
 	 * Constructor for an AttributeCollection named by internalName, with a type.
 	 * 
@@ -78,7 +70,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * 
 	 * @param a a AttributeDescription object.
 	 */
-	public void addUIAttribute(AttributeDescription a) {
+	public void addAttributeDescription(AttributeDescription a) {
 		Integer aRankInt = new Integer(aRank);
 		uiAttributes.put(aRankInt, a);
 		uiAttributeNameMap.put(a.getInternalName(), aRankInt);
@@ -86,12 +78,12 @@ public class AttributeCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Set a group of AttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute, setUIAttribute,
+	 * Set a group of AttributeDescription objects in one call.  Note, subsequent calls to addAttributeDescription, setAttributeDescription,
 	 * addUIDSAttribute or setUIDSAttributes will add to what was added before.
 	 * 
 	 * @param a an Array of AttributeDescription objects.
 	 */
-	public void setUIAttributes(AttributeDescription[] a) {
+	public void setAttributeDescriptions(AttributeDescription[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
 			Integer aRankInt = new Integer(aRank);
 			uiAttributes.put(aRankInt, a[i]);
@@ -105,7 +97,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 	 * 
 	 * @return List of AttributeDescription objects.
 	 */
-	public List getUIAttributeDescriptions() {
+	public List getAttributeDescriptions() {
 		return new ArrayList(uiAttributes.values());
 	}
 
@@ -116,8 +108,8 @@ public class AttributeCollection extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription
 		* @return AttributeDescription requested, or null
 		*/
-	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		if ( containsUIAttributeDescription(internalName) )
+	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
+		if ( containsAttributeDescription(internalName) )
 			return (AttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
 		else
 			return null;
@@ -130,9 +122,44 @@ public class AttributeCollection extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIAttributeDescription(String internalName) {
+	public boolean containsAttributeDescription(String internalName) {
   	return uiAttributeNameMap.containsKey(internalName);
 	}
+  
+  /**
+   * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
+   * @param field
+   * @param tableConstraint
+   * @return AttributeDescription supporting the field and tableConstraint, or null
+   */
+  public AttributeDescription getAttributeDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+  	if (supports(field, tableConstraint))
+  	  return lastSupportingAttribute;
+  	else
+  	  return null;
+  }
+  
+  /**
+   * Determine if this AttributeCollection supports a given field and tableConstraint.  Caches the first supporting AttributeDescription
+   * that it finds, for subsequent call to getAttributeDescriptionByFieldNameTableConstraint.
+   * @param field
+   * @param tableConstraint
+   * @return boolean, true if an AttributeDescription contained in this AttributeCollection supports the field and tableConstraint, false otherwise
+   */
+  public boolean supports(String field, String tableConstraint) {
+  	boolean supports = false;
+  	
+  	for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+			AttributeDescription element = (AttributeDescription) iter.next();
+			
+			if (element.supports(field, tableConstraint)) {
+				lastSupportingAttribute = element;
+				supports = true;
+				break;
+			}
+		}
+  	return supports;
+  }
   
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
@@ -168,6 +195,9 @@ public class AttributeCollection extends BaseConfigurationObject {
 	private TreeMap uiAttributes = new TreeMap();
 	private Hashtable uiAttributeNameMap = new Hashtable();
 
-	//cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	//cache one AttributeDescription for call to containsAttributeDescriptionDescription or getAttributeDescriptionByInternalName
 	private AttributeDescription lastAtt = null;
+	
+	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+	private AttributeDescription lastSupportingAttribute = null;
 }

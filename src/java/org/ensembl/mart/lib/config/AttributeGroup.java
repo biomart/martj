@@ -131,8 +131,8 @@ public final class AttributeGroup extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription
 		* @return AttributeDescription requested, or null
 		*/
-	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
-		if ( containsUIAttributeDescription(internalName) )
+	public AttributeDescription getAttributeDescriptionByInternalName(String internalName) {
+		if ( containsAttributeDescription(internalName) )
 			return lastAtt;
 		else
 			return null;
@@ -146,14 +146,14 @@ public final class AttributeGroup extends BaseConfigurationObject {
 		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIAttributeDescription(String internalName){
+	public boolean containsAttributeDescription(String internalName){
 		boolean found = false;
 
     if (lastAtt == null) {
 			for (Iterator iter = (Iterator) attributeCollections.keySet().iterator(); iter.hasNext();) {
 				AttributeCollection collection = (AttributeCollection) attributeCollections.get((Integer) iter.next());
-				if (collection.containsUIAttributeDescription(internalName)) {
-					lastAtt = collection.getUIAttributeDescriptionByName(internalName);
+				if (collection.containsAttributeDescription(internalName)) {
+					lastAtt = collection.getAttributeDescriptionByInternalName(internalName);
 					found = true;
 					break;
 				}
@@ -164,25 +164,60 @@ public final class AttributeGroup extends BaseConfigurationObject {
 			  found = true;
 			else {
 			  lastAtt = null;
-			  found = containsUIAttributeDescription(internalName);
+			  found = containsAttributeDescription(internalName);
 			} 
 		}
 		return found;
 	}
 
+	/**
+	 * Retrieve a specific AttributeDescription that supports a given field and tableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return AttributeDescription supporting the field and tableConstraint, or null
+	 */
+	public AttributeDescription getAttributeDescriptionByFieldNameTableConstraint(String field, String tableConstraint) {
+		if (supports(field, tableConstraint))
+			return lastSupportingAttribute;
+		else
+			return null;
+	}
+  
+	/**
+	 * Determine if this AttributeGroup supports a given field and tableConstraint.  Caches the first supporting AttributeDescription
+	 * that it finds, for subsequent call to getAttributeDescriptionByFieldNameTableConstraint.
+	 * @param field
+	 * @param tableConstraint
+	 * @return boolean, true if an AttributeDescription contained in this AttributeGroup supports the field and tableConstraint, false otherwise
+	 */
+	public boolean supports(String field, String tableConstraint) {
+		boolean supports = false;
+  	
+		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+			AttributeCollection element = (AttributeCollection) iter.next();
+			
+			if (element.supports(field, tableConstraint)) {
+				lastSupportingAttribute = element.getAttributeDescriptionByFieldNameTableConstraint(field, tableConstraint);
+				supports = true;
+				break;
+			}
+		}
+		return supports;
+	}
+  
   /**
    * Convenience method. Returns all of the AttributeDescription objects 
    * contained in all of the AttributeCollections.
    * 
    * @return List of AttributeDescription objects
    */
-  public List getAllUIAttributeDescriptions() {
+  public List getAllAttributeDescriptions() {
   	List atts = new ArrayList();
   	
   	for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
   		AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
   		
-			atts.addAll(ac.getUIAttributeDescriptions());
+			atts.addAll(ac.getAttributeDescriptions());
 		}
 		
 		return atts;
@@ -195,13 +230,13 @@ public final class AttributeGroup extends BaseConfigurationObject {
    * @param internalName - String internalName of the Attribute Description for which the collection is being requested.
    * @return AttributeCollection for the AttributeDescription provided, or null
    */
-  public AttributeCollection getCollectionForAttribute(String internalName) {
-  	if (! containsUIAttributeDescription(internalName))
+  public AttributeCollection getCollectionForAttributeDescription(String internalName) {
+  	if (! containsAttributeDescription(internalName))
   	  return null;
   	else if (lastColl == null) {
 			for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
 				AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
-				if (ac.containsUIAttributeDescription(internalName)) {
+				if (ac.containsAttributeDescription(internalName)) {
 					lastColl = ac;
 					break;
 				}
@@ -213,7 +248,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
   		  return lastColl;
   		else {
   			lastColl = null;
-  			return getCollectionForAttribute(internalName);
+  			return getCollectionForAttributeDescription(internalName);
   		}
   	}
   }
@@ -254,8 +289,10 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	private TreeMap attributeCollections = new TreeMap();
 	private Hashtable attributeCollectionNameMap = new Hashtable();
 
-	//cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	//cache one AttributeDescription for call to containsUIAttributeDescription or getAttributeDescriptionByName
 	private AttributeDescription lastAtt = null;
 	//cache one AttributeCollecton for call to getCollectionForAttribute
 	private AttributeCollection lastColl = null;
+	//cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
+	private AttributeDescription lastSupportingAttribute = null;
 }

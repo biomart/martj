@@ -46,7 +46,7 @@ implements PropertyChangeListener {
     super(query, filterDescription.getDisplayName() );
     this.filterDescription = filterDescription;
     this.filterGroupWidget = filterGroupWidget;
-    this.fieldName = filterDescription.getFieldName();
+    this.fieldName = filterDescription.getField();
     
 	}
   

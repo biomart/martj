@@ -94,7 +94,7 @@ public class AttributeGroupWidget extends GroupWidget {
    */
   private InputPage[] getAttributeWidgets(AttributeCollection collection) {
 
-    List attributeDescriptions = collection.getUIAttributeDescriptions();
+    List attributeDescriptions = collection.getAttributeDescriptions();
     List pages = new ArrayList();
 
     for (Iterator iter = attributeDescriptions.iterator(); iter.hasNext();) {
