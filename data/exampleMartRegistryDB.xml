@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
+<MartRegistry>
+
+  <RegistryDBLocation name="pointer" databaseType="mysql"
+    host="web26.ebi.ac.uk" port="3326" instanceName="registry_DB" user="martro"/>
+
+</MartRegistry>
