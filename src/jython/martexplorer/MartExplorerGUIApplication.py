@@ -3,14 +3,16 @@
 
 # copyright EBI, GRL 2003
 
-# TODO "copy to window" <NAME>
-
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
 # stubs to InputPage. incl attr from query -> page!
 
-# Handle invalid port- currently freezes app.
-
 # editor.queryChanged / only execute if queryChanged or db settings changed.
+
+# TODO 4 - Add Sequence attribute support
+
+# TODO "copy to window" <NAME>
+
+# Handle invalid port- currently freezes app.
 
 # handle gene_chrom_start / end, strand
 
@@ -20,8 +22,6 @@
 # respective config panel to be displayed. If the OK button is pressed
 # on these then they are added to the query. Support removing filter
 # and attribute items from quesry. "Delete" and or right click/delete.
-
-# TODO 4 - Add Sequence attribute support
 
 # TODO Consider loading results piecemealfrom a file to avoid large
 # files being loaded in memory.
@@ -227,6 +227,9 @@ class LabelledComboBox(Box, ActionListener):
 
 
 
+
+
+
 class SpeciesPage(Page):
 
     name = "speciesPage"
@@ -238,6 +241,13 @@ class SpeciesPage(Page):
         Page.__init__(self)
         self.speciesBox = LabelledComboBox("Species", self)
         self.add( self.speciesBox )
+
+
+
+    def clear( self ):
+        self.speciesBox.setText("")
+
+        
 
     def updateQuery(self, query):
         item = self.speciesBox.getSelectedItem()
@@ -255,6 +265,8 @@ class SpeciesPage(Page):
 	return desc
 
 
+
+
 class FocusPage(Page):
 
     """ Input component manages display and communication between
@@ -262,18 +274,30 @@ class FocusPage(Page):
 
     name = "focus_page"
 
+
+
     def __init__(self):
         Page.__init__(self)
         self.box = LabelledComboBox("Focus", self)
         self.add( self.box )
+
+
+
+    def clear( self ):
+        self.box.setText("")
+        
 
     def updateQuery(self, query):
         item = self.box.getSelectedItem()
         if item: query.focus = item
         else: raise InvalidQueryException("Focus must be set")
 
+
+
     def updatePage(self, query):
         self.box.setText( query.focus )
+
+
         
     def htmlSummary(self):
         desc = "<b>Focus</b> "
@@ -281,6 +305,9 @@ class FocusPage(Page):
         if tmp:
 	    desc = desc + tmp
         return desc
+
+
+
 
 
 
@@ -418,9 +445,9 @@ class FormatPage(Page):
 
 	self.fasta = JRadioButton( "FASTA Format", 0, actionPerformed=self.actionPerformed )
 
-        group = ButtonGroup()
-	group.add( self.tabulated )
-	group.add( self.fasta )
+        self.group = ButtonGroup()
+	self.group.add( self.tabulated )
+	self.group.add( self.fasta )
 
 	group2 = ButtonGroup()
 	group2.add( self.tab )
@@ -505,6 +532,25 @@ class FormatPage(Page):
             raise InvalidQueryException("Unrecognised format.")
 
         self.dependencies()
+
+
+
+
+    def clear( self ):
+        self.group.remove( self.tabulated  )
+        self.group.remove( self.fasta  )
+        self.tabulated.setSelected(0)
+        self.fasta.setSelected(0)
+        self.group.add( self.tabulated  )
+        self.group.add( self.fasta  )
+        self.comma.setSelected(1)
+        self.dependencies()
+        
+        
+        
+
+
+
         
 class OutputPage(Page):
 
@@ -606,7 +652,9 @@ class AttributeManagerPage(Page):
         self.refreshView()
 
 
+
     def refreshView(self):
+        self.node.targetComponent.validate()
         self.cardContainer.show( self.node.targetCardName )
 
         # must explicitly call setListData() rather than .listData=
@@ -616,23 +664,38 @@ class AttributeManagerPage(Page):
         self.tree.expandPath( self.path )
 
 
+
     def htmlSummary(self):
 	return "<html><b>Attributes</b></html>"
+
 
 
     def updatePage(self, query):
         for attribute in query.attributes:
             if isinstance( attribute, FieldAttribute ):
-                self.selected.add( attribute.name )
+                self.select( attribute.name )
             # todo handle sequence attributes
+
+
 
     def updateQuery(self, query):
         for attributeName in self.selected:
             query.addAttribute( FieldAttribute( attributeName ) )
         # todo handle sequence attributes
 
+
+
     def clear(self):
-        print "clear attribute pages"
+        for node in self.node.children():
+            # remove the page associated with each "selected" attribute node
+            if isinstance( node, QueryTreeNode ):
+                page = node.targetComponent
+                self.deselect( page )
+        self.refreshView()
+
+
+
+
 
 
 class FilterPage(Page):
@@ -678,6 +741,15 @@ class RegionPage(Page):
 	return "<b>Region</b> " + chr + start + end + strand
 
 
+
+    def clear( self ):
+        self.chr.setText("")
+        self.start.setText("")
+        self.end.setText("")
+        self.strand.setText("")
+
+        
+
     def updateQuery(self, query):
 	chr = self.chr.getText()
 	if chr and chr!="": query.addFilter( BasicFilter("chr_name","=",chr) )
@@ -687,6 +759,9 @@ class RegionPage(Page):
 
 	end = self.end.getText()
 	if end and end!="": query.addFilter( BasicFilter("end","<=",end) )
+
+        strand = self.strand.getText()
+	if strand and strand!="": query.addFilter( BasicFilter("strand","<=",strand) )
 
 	
     def updatePage(self, query):
@@ -702,29 +777,7 @@ class RegionPage(Page):
 		    self.strand.setText( f.value )		    
 
 
-    def clear(self):
-        # todo
-        pass
 
-
-
-class GeneTypeFilterPage(Page):
-
-    name = "gene_type_filter_page"
-
-    def __init__(self):
-	Page.__init__(self)
-	self.id = LabelledComboBox("Gene Type", self)
-	self.add( self.id )
-	
-    def htmlSummary(self):
-	id = self.id.getText()
-	if not id: id ==""
-	return "<b>Gene Type</b> " + id
-
-    def updatePage(self, query):
-	# todo
-	pass
 
 
     
@@ -806,8 +859,6 @@ class QueryEditor(JPanel):
 				     FilterPage())
         regionNode = QueryTreeNode( tree, filtersNode, 0, self.cardContainer,
 				    RegionPage())
-	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, self.cardContainer,
-						GeneTypeFilterPage())
         outputNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
 				    OutputPage())
         attributesPage = AttributeManagerPage()
@@ -842,6 +893,11 @@ class QueryEditor(JPanel):
     def showPage( self, pageName ):
 	self.cardContainer.show( pageName )
 
+    def clear(self):
+        for node in self.rootNode.depthFirstEnumeration():
+            if isinstance( node, QueryTreeNode ):
+                node.targetComponent.clear()
+                
     def updateQuery(self, query):
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
