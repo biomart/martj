@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Class-Path: log4j-1.2.6.jar mysql-connector-java-2.0.14-bin.jar
-Main-Class: org.ensembl.mart.explorer.MartExplorerApplication
+Class-Path: log4j-1.2.6.jar mysql-connector-java-2.0.14-bin.jar ensj-util.jar jython.jar 
+Main-Class: org.ensembl.mart.explorer.Runner

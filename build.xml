@@ -191,6 +191,7 @@
       includes="org/**">
       <fileset dir=".">
         <include name="data/**" />
+        <include name="src/jython/martexplorer/*.py" />
         <exclude name="*~" />
         <exclude name="**/CVS/**" />
         <exclude name="**/*Test*" />

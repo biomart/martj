@@ -640,7 +640,7 @@ class QueryEditor(JPanel):
         regionNode = QueryTreeNode( tree, filtersNode, 0, cardContainer,
 				    RegionPage(),"region" )
 	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, cardContainer,
-						GeneTypeFilterPage(), "gene_stable_id" )
+						GeneTypeFilterPage(), "gene_type" )
         outputNode = QueryTreeNode( tree, self.rootNode, 4, cardContainer,
 				    OutputPage(),"output" )
         attributesPage = AttributeManagerPage()
