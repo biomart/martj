@@ -36,7 +36,7 @@ import org.ensembl.util.StringUtil;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
+public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   private final URL dsvurl;
   private final boolean validate;
   private final int hashcode;
@@ -232,33 +232,6 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
         return null;
   }
   
-  /**
-   * URLDSConfigAdaptor Objects do not contain child DSConfigAdaptor Objects.
-   * @return null
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptorByName(java.lang.String)
-   */
-  public DSConfigAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
-    return null;
-  }
-
-  /**
-   * URLDSConfigAdaptor Objects do not contain child DSConfigAdaptor Objects.
-   * @return empty String[]
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptorNames()
-   */
-  public String[] getAdaptorNames() throws ConfigurationException {
-    return new String[0];
-  }
-
-  /**
-   * URLDSConfigAdaptor Objects do not contain child DSConfigAdaptor Objects.
-   * @return empty DSConfigAdaptor[] 
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
-   */
-  public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
-    return new DSConfigAdaptor[0];
-  }
-
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */

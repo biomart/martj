@@ -35,7 +35,7 @@ import org.ensembl.util.StringUtil;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable, Runnable {
+public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable, Runnable {
 
   //each dataset will have 2 name maps, and a Set of DatasetConfig objects associated with it in an ArrayList
   private final int INAME_INDEX = 0;

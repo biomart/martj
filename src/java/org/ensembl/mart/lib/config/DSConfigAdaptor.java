@@ -156,7 +156,7 @@ public interface DSConfigAdaptor {
   /**
    * Returns all primitive DSConfigAdaptor objects contained with this Object (which may be a zero length list
    * for some implimentations). This recurses through composite adaptors and only returns those adaptors 
-   * that do not themselves contain adaptors, i.e. the "leaf" adaptors in the bbject graph.
+   * that do not themselves contain adaptors, i.e. the "leaf" adaptors in the object graph.
    * @return Array of DSConfigAdaptor objects
    * @throws ConfigurationException
    */

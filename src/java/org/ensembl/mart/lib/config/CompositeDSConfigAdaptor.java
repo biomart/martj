@@ -84,8 +84,21 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
    * @return all adaptors currently managed by this instance. Empty array 
    * if non available.
    */
-  public DSConfigAdaptor[] getLeafAdaptors() {
-    return (DSConfigAdaptor[]) adaptors.toArray(new DSConfigAdaptor[adaptors.size()]);
+  public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
+    List leafAdaptors = new ArrayList();
+    
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      Object adaptor = iter.next();
+      if (adaptor instanceof LeafDSConfigAdaptor)
+        leafAdaptors.add(adaptor);
+      else {
+        leafAdaptors.addAll( Arrays.asList( ( (DSConfigAdaptor) adaptor).getLeafAdaptors() ) );
+      }        
+    }
+    
+    DSConfigAdaptor[] ret = new DSConfigAdaptor[leafAdaptors.size()];
+    leafAdaptors.toArray(ret);
+    return ret;
   }
 
   /* (non-Javadoc)
