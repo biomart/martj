@@ -1,3 +1,21 @@
+/*
+		Copyright (C) 2003 EBI, GRL
+
+		This library is free software; you can redistribute it and/or
+		modify it under the terms of the GNU Lesser General Public
+		License as published by the Free Software Foundation; either
+		version 2.1 of the License, or (at your option) any later version.
+
+		This library is distributed in the hope that it will be useful,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+		Lesser General Public License for more details.
+
+		You should have received a copy of the GNU Lesser General Public
+		License along with this library; if not, write to the Free Software
+		Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ */
+
 package org.ensembl.mart.shell;
 
 import gnu.getopt.Getopt;
@@ -6,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,11 +71,15 @@ import org.gnu.readline.ReadlineLibrary;
 /**
  * Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (referred to below as the Mart Query Language).
  * The system can be used to run script files containing valid Mart Query Language commands, or individual queries from the commandline.
- * It has an interactive shell as well.  The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
+ * It has an interactive shell as well.  
+ * 
+ * The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
  * to allow commandline editing, history, and tab completion for those users working on Linux/Unix operating systems.  Unfortunately, there is no way
  * to provide this functionality in a portable way across OS platforms.  For windows users, there is a Getline c library which is provided with the Java Readline source.
- * By following the instructions to build a windows version of this library, you can overwrite the libreadline-java.jar and libJavaGetline.so file in the 
- * mart-explorer/lib directory with your own versions, and you will gain some (but not all) of this functionality.
+ * By following the instructions to build a windows version of this library, and you will get some (but not all) of this functionality.  One other side effect
+ * of the use of this library is that, because it uses GNU Readline, which is GPL, it makes MartShell GPL as well (despite the LPGL license that it and the rest
+ * of Mart-Explorer are released under).  If you are serious about extending/using the MartShell class in your own code for distribution, and are worried about
+ * the effects of the GPL, then you might consider rebuilding the Java Readline Library using the LGPL EditLine library, which is available on some Linux platforms.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -75,7 +98,7 @@ public class MartShell {
 	private static String mainPassword = null;
 	private static boolean mainBatchMode = false; // if -e is passed, go true
 	private static String mainBatchSQL = null;
-	private static String mainBatchScriptURL = null;
+	private static String mainBatchScriptFile = null;
 	// can hold the URL to a mart script
 	private static String mainBatchFile = null;
 	private static String mainBatchFormat = null;
@@ -239,7 +262,7 @@ public class MartShell {
 					break;
 
 				case 'E' :
-					mainBatchScriptURL = g.getOptarg();
+					mainBatchScriptFile = g.getOptarg();
 					mainBatchMode = true;
 					break;
 			}
@@ -281,11 +304,11 @@ public class MartShell {
 		if (mainBatchMode) {
 			boolean validQuery = true;
 
-			if (mainBatchSQL == null && mainBatchScriptURL == null) {
+			if (mainBatchSQL == null && mainBatchScriptFile == null) {
 				System.out.println("Must supply either a Query command or a query script\n" + usage());
 				System.exit(0);
-			} else if (mainBatchScriptURL != null) {
-				validQuery = ms.RunBatchScript(mainBatchScriptURL);
+			} else if (mainBatchScriptFile != null) {
+				validQuery = ms.RunBatchScript(mainBatchScriptFile);
 			} else {
 				if (mainBatchFile != null) {
 					try {
@@ -293,7 +316,7 @@ public class MartShell {
 					} catch (FileNotFoundException e) {
 						validQuery = false;
 					}
-			  }	
+				}
 				if (mainBatchFormat != null)
 					ms.setBatchOutputFormat(mainBatchFormat);
 				if (mainBatchSeparator == null)
@@ -317,25 +340,46 @@ public class MartShell {
 	public MartShell() {
 	}
 
+	/**
+	 * Method for creating an interactive MartShell session.  This system
+	 * will attempt to load the Java Readline library, first using Getline (Windows),
+	 * then attempting EditLine (linux/Unix LGPL), then GnuReadline (Linux GPL), 
+	 * and finally, given that all of these attempts have failed, loads the PureJava 
+	 * library, which is merely a wrapper around standard out/standard in, and provides 
+	 * no history/completion functionality.  The user is warned if PureJava is loaded.
+	 * It sets state depending on which library sucessfully loaded.  If the user
+	 * hasnt turned completion off with the -A flag, and a compatible library was loaded,
+	 * a MartCompleter is initialized, and the Readline is linked to that to allow
+	 * context sensitive command completion.  It then enters into the shell loop,
+	 * which attempts to capture all Exceptions and report them to the user at
+	 * the martshell prompt without exiting. 
+	 *
+	 */
 	public void RunInteractive() {
 		try {
 			Readline.load(ReadlineLibrary.Getline);
 			//		Getline doesnt support completion, or history manipulation/files
 			completionOn = false;
-			historyOn = false;
+			historyOn = true;
 			readlineLoaded = true;
 		} catch (UnsatisfiedLinkError ignore_me) {
 			try {
-				Readline.load(ReadlineLibrary.GnuReadline);
+				Readline.load(ReadlineLibrary.Editline);
 				historyOn = true;
 				readlineLoaded = true;
 			} catch (UnsatisfiedLinkError ignore_me2) {
-				mainLogger.warn(
-					"Could not load Readline Library, commandline editing, completion will not be available"
-						+ "\nConsult MartShell documentation for methods to resolve this error.");
-				historyOn = false;
-				readlineLoaded = false;
-				Readline.load(ReadlineLibrary.PureJava);
+				try {
+					Readline.load(ReadlineLibrary.GnuReadline);
+					historyOn = true;
+					readlineLoaded = true;
+				} catch (UnsatisfiedLinkError ignore_me3) {
+					mainLogger.warn(
+						"Could not load Readline Library, commandline editing, completion will not be available"
+							+ "\nConsult MartShell documentation for methods to resolve this error.");
+					historyOn = false;
+					readlineLoaded = false;
+					Readline.load(ReadlineLibrary.PureJava);
+				}
 			}
 		}
 
@@ -353,22 +397,22 @@ public class MartShell {
 			if (martHost == null || martHost.length() < 5)
 				setConnectionSettings(SETCONSETSC);
 			Initialize();
-			
+
 			if (completionOn) {
 				mcl = new MartCompleter(martconf);
-				
+
 				// add commands
 				mcl.AddAvailableCommandsTo("commands", availableCommands);
 				mcl.AddAvailableCommandsTo("commands", msl.availableCommands);
-				
+
 				// add sequences
 				mcl.AddAvailableCommandsTo(QSEQUENCE, SequenceDescription.SEQS);
-				
+
 				// add describe
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
-				
+
 				mcl.SetDefaultMode();
-				
+
 				Readline.setCompleter(mcl);
 			}
 		} catch (Exception e1) {
@@ -404,11 +448,20 @@ public class MartShell {
 		}
 	}
 
-	public boolean RunBatchScript(String batchScriptURL) {
+	/**
+	 * Method for running a batchScript file non-interactively.  This will attempt
+	 * to parse/run all of the Mart Query Languge commands in the file in succession.
+	 * It Returns true if the commands were executed successfully.  If there is an error,
+	 * it sets the BatchError message, and returns false.
+	 *  
+	 * @param batchScriptFile
+	 * @return boolean true if all commands are executed successfully, false if not.
+	 */
+	public boolean RunBatchScript(String batchScriptFile) {
 		boolean valid = true;
 		try {
 			Initialize();
-			reader = new BufferedReader(new InputStreamReader(new URL(batchScriptURL).openStream()));
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(batchScriptFile)));
 
 			for (String line = reader.readLine(); line != null; line = reader.readLine())
 				parse(line);
@@ -482,9 +535,9 @@ public class MartShell {
 
 	public void setBatchOutputFile(String batchFile) throws FileNotFoundException {
 		try {
-			sessionOutputFile = new FileOutputStream( batchFile );
+			sessionOutputFile = new FileOutputStream(batchFile);
 		} catch (FileNotFoundException e) {
-			setBatchError( "Could not open file "+ batchFile + "\n" + e.getMessage() );
+			setBatchError("Could not open file " + batchFile + "\n" + e.getMessage());
 			throw e;
 		}
 	}
@@ -512,13 +565,13 @@ public class MartShell {
 			martconf = engine.getMartConfiguration(new URL(altConfigurationFile));
 		else
 			martconf = engine.getMartConfiguration();
-			
-	  if (msl == null)
-	    msl = new MartShellLib(engine, martconf);
-	  else {
-	  	msl.setEngine(engine);
-	  	msl.setConfiguration(martconf);
-	  }
+
+		if (msl == null)
+			msl = new MartShellLib(engine, martconf);
+		else {
+			msl.setEngine(engine);
+			msl.setConfiguration(martconf);
+		}
 	}
 
 	private void ExitShell() throws IOException {
@@ -620,9 +673,9 @@ public class MartShell {
 			throw new InvalidQueryException("Could not load Help File " + e.getMessage());
 		}
 		helpLoaded = true;
-		
+
 		if (completionOn)
-		  mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
+			mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
 	}
 
 	private String[] ColumnIze(String input) {
@@ -1054,7 +1107,7 @@ public class MartShell {
 			while (sTokens.hasMoreTokens()) {
 				StringTokenizer tokens = new StringTokenizer(sTokens.nextToken(), "=");
 				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException( "Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n" );
+					throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
 
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
@@ -1072,11 +1125,11 @@ public class MartShell {
 				else if (key.equals(ALTCONFFILE))
 					altConfigurationFile = value;
 				else
-					throw new InvalidQueryException( "Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n" );
+					throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
 			}
 		} else {
 			if (mainBatchMode)
-				throw new InvalidQueryException( "Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n" );
+				throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
 
 			String thisLine = null;
 
@@ -1161,31 +1214,25 @@ public class MartShell {
 			StringTokenizer ctokens = new StringTokenizer(command, " ");
 			ctokens.nextToken();
 			String fSettings = ctokens.nextToken();
-			
+
 			StringTokenizer fTokens = new StringTokenizer(fSettings, ",");
 			while (fTokens.hasMoreTokens()) {
 				StringTokenizer tokens = new StringTokenizer(fTokens.nextToken(), "=");
 				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException(
-						"Recieved invalid setOutputFormat request: "
-							+ command
-							+ "\n"
-							+ Help(SETOUTSETSC)
-							+ "\n");
-			
+					throw new InvalidQueryException("Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
+
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
-			
+
 				if (key.equals(FILE)) {
 					if (value.equals("-")) {
 						if (sessionOutputFile != null)
 							sessionOutputFile.close();
 						sessionOutputFile = null;
-					}
-					else {
+					} else {
 						if (sessionOutputFile != null)
 							sessionOutputFile.close();
-						sessionOutputFile = new FileOutputStream( value );
+						sessionOutputFile = new FileOutputStream(value);
 					}
 				} else if (key.equals(FORMAT))
 					sessionOutputFormat = value;
@@ -1195,12 +1242,7 @@ public class MartShell {
 					else
 						sessionOutputSeparator = value;
 				else
-					throw new InvalidQueryException(
-						"Recieved invalid setOutputFormat request: "
-							+ command
-							+ "\n"
-							+ Help(SETOUTSETSC)
-							+ "\n");
+					throw new InvalidQueryException("Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
 			}
 		} catch (Exception e) {
 			throw new InvalidQueryException("Could not set output settings: " + e.getMessage() + "\n");
@@ -1213,7 +1255,20 @@ public class MartShell {
 			thisFile = sessionOutputFile.toString();
 
 		System.out.println(
-			"Output Format: " + FORMAT + " = " + sessionOutputFormat + ", " + SEPARATOR + " = " + "'" + sessionOutputSeparator + "'" + ", " + FILE + " = " + thisFile);
+			"Output Format: "
+				+ FORMAT
+				+ " = "
+				+ sessionOutputFormat
+				+ ", "
+				+ SEPARATOR
+				+ " = "
+				+ "'"
+				+ sessionOutputSeparator
+				+ "'"
+				+ ", "
+				+ FILE
+				+ " = "
+				+ thisFile);
 	}
 
 	private void WriteHistory(String command) throws InvalidQueryException {
@@ -1229,10 +1284,10 @@ public class MartShell {
 				throw new InvalidQueryException("WriteHistory command must be provided a valid URL: " + command + "\n");
 			else if (tokCount == 2) {
 				//url
-				fos = new FileOutputStream( com.nextToken() );
+				fos = new FileOutputStream(com.nextToken());
 			} else if (tokCount == 3) {
 				req = com.nextToken();
-				fos = new FileOutputStream( com.nextToken() );
+				fos = new FileOutputStream(com.nextToken());
 			} else
 				throw new InvalidQueryException("Recieved invalid WriteHistory request " + command + "\n");
 
@@ -1247,7 +1302,7 @@ public class MartShell {
 		String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
 
 		try {
-			OutputStreamWriter hisout = new OutputStreamWriter( os );
+			OutputStreamWriter hisout = new OutputStreamWriter(os);
 			for (int i = 0, n = lines.length; i < n; i++) {
 				String thisline = lines[i];
 				if (!thisline.startsWith(SAVETOSCRIPTC))
@@ -1442,35 +1497,41 @@ public class MartShell {
 			String command = conline.append(line).toString().trim();
 			continueQuery = false;
 			conline = new StringBuffer();
-			mcl.SetDefaultMode();
+			if (completionOn)
+				mcl.SetDefaultMode();
+				
 			parseCommand(command);
 		} else if (line.endsWith(LINEEND)) {
 			String command = conline.append(" " + line).toString().trim();
 			continueQuery = false;
 			conline = new StringBuffer();
-			mcl.SetDefaultMode();
-			
+
+			if (completionOn)
+				mcl.SetDefaultMode();
+
 			parseCommand(command);
 		} else {
 			conline.append(" " + line);
 			continueQuery = true;
-			
+
 			//MartCompleter Mode
-			if (line.indexOf(QSTART) >= 0)
-			  mcl.SetSelectMode();
-			else if (line.indexOf(QFROM) >= 0)
-			  mcl.SetFromMode();
-			else if (line.indexOf(QWHERE) >= 0)
-			  mcl.SetWhereMode();
-			//else not needed
+			if (completionOn) {
+				if (line.indexOf(QSTART) >= 0)
+					mcl.SetSelectMode();
+				else if (line.indexOf(QFROM) >= 0)
+					mcl.SetFromMode();
+				else if (line.indexOf(QWHERE) >= 0)
+					mcl.SetWhereMode();
+				//else not needed
+			}
 		}
 	}
 
 	private void parseCommand(String command) throws IOException, InvalidQueryException {
 		int cLen = command.length();
 
-    command = command.replaceAll("\\s;$", ";");
-    
+		command = command.replaceAll("\\s;$", ";");
+
 		if (cLen == 0)
 			return;
 		else if (command.startsWith(HELPC))
@@ -1503,17 +1564,16 @@ public class MartShell {
 			ExitShell();
 		else if (command.startsWith(QSTART)) {
 			if (sessionOutputFile != null)
-			  msl.setOutputStream( sessionOutputFile );
-			  
+				msl.setOutputStream(sessionOutputFile);
+
 			if (sessionOutputFormat != null)
-			  msl.setOutputFormat(sessionOutputFormat);
-			  
+				msl.setOutputFormat(sessionOutputFormat);
+
 			if (sessionOutputSeparator != null)
-			  msl.setOutputSeparator(sessionOutputSeparator);
-			  
+				msl.setOutputSeparator(sessionOutputSeparator);
+
 			msl.parseQuery(command);
-		}
-		else {
+		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
 		}
 	}
@@ -1523,7 +1583,7 @@ public class MartShell {
 	private MartConfiguration martconf;
 	private MartShellLib msl = null;
 	private BufferedReader reader;
-	
+
 	private String martHost = null;
 	private String martPort = null;
 	private String martUser = null;
@@ -1531,8 +1591,8 @@ public class MartShell {
 	private String martDatabase = null;
 	private MartCompleter mcl; // will hold the MartCompleter, if Readline is loaded and completion turned on
 	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
-	private boolean historyOn = true; // commandline history, default to on
-	private boolean completionOn = true; // command completion, default to on
+	private boolean historyOn = false; // commandline history, default to off
+	private boolean completionOn = false; // command completion, default to off
 	private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
 	private String userPrompt = null;
 
@@ -1542,7 +1602,7 @@ public class MartShell {
 	private String sessionOutputFormat = null; // this is set using the setOutputSettings command.
 	private final String DEFOUTPUTSEPARATOR = "\t"; // default to tab separated
 	private String sessionOutputSeparator = null; // this is set using the setOutputSettings command.
-	
+
 	private String batchErrorMessage = null;
 	private Properties commandHelp = new Properties();
 	private final String HELPFILE = "data/help.properties"; //contains help general to the shell
@@ -1570,7 +1630,7 @@ public class MartShell {
 	private final String SAVETOSCRIPTC = "saveToScript";
 	private final String HISTORYC = "history";
 	private final String QSTART = "select";
-	
+
 	protected final List availableCommands =
 		Collections.unmodifiableList(
 			Arrays.asList(
@@ -1590,19 +1650,13 @@ public class MartShell {
 					LOADSCRIPTC,
 					SAVETOSCRIPTC,
 					HISTORYC,
-					QSTART  }));
-					
-  // describe instructions
-  private final String FILTERPAGE = "FilterPage";
-  private final String ATTRIBUTEPAGE = "AttributePage";
-  
-  private final List describeCommands = 
-    Collections.unmodifiableList(
-      Arrays.asList(
-        new String[] {
-             FILTERPAGE, 
-             ATTRIBUTEPAGE
-             } ) );
+					QSTART }));
+
+	// describe instructions
+	private final String FILTERPAGE = "FilterPage";
+	private final String ATTRIBUTEPAGE = "AttributePage";
+
+	private final List describeCommands = Collections.unmodifiableList(Arrays.asList(new String[] { FILTERPAGE, ATTRIBUTEPAGE }));
 
 	// strings used to show/set output format settings
 	private final String FILE = "file";
@@ -1630,7 +1684,7 @@ public class MartShell {
 
 	private boolean continueQuery = false;
 	private StringBuffer conline = new StringBuffer();
-	
+
 	//other strings needed
 	private final String QFROM = "from";
 	private final String QWHERE = "where";
