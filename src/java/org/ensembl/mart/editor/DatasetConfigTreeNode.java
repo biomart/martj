@@ -86,16 +86,18 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
       //Disables go after Enables within a FilterDescription
       //FilterDescription fdesc = (FilterDescription) parent;
       //hetOffset = fdesc.getEnables().length;
-    } else if (child instanceof org.ensembl.mart.lib.config.Option) {
-      if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
+    } 
+    //else if (child instanceof org.ensembl.mart.lib.config.Option) {
+      //if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
         //Options go after Enables and Disables within a FilterDescription
-        FilterDescription fdesc = (FilterDescription) parent;
-        //hetOffset = fdesc.getEnables().length + fdesc.getDisables().length;
-      } else {
+        //FilterDescription fdesc = (FilterDescription) parent;
+        
+      //} else {
         //Options go first within an Option
-        hetOffset = 0;
-      }
-    } else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
+        //hetOffset = 0;
+      //}
+    //}
+    else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
       //PushActions go after Options within an Option
       Option op = (Option) parent;
       hetOffset = op.getOptions().length;
