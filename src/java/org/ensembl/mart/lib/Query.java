@@ -585,4 +585,19 @@ public class Query {
     
   }
 
+
+  /**
+   * Removes all PropertyChangeListeners from the query. Each removed PropertyChangeListener will
+   * generate a separate property change event.
+   */
+  public void removeAllPropertyChangeListeners() {
+    
+    PropertyChangeListener[] propertyChangeListeners = getPropertyChangeListeners();
+    
+    for (int i = 0, n = propertyChangeListeners.length; i < n; i++) {
+      removePropertyChangeListener( propertyChangeListeners[i] );
+    }
+    
+  }
+
 }
