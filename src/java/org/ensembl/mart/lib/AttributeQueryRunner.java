@@ -41,7 +41,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     this.osr = new PrintStream(os, true); // autoflush true
   }
 
-  public void execute(int limit) throws SequenceException, InvalidQueryException {
+  public void execute(int hardLimit) throws SequenceException, InvalidQueryException {
     //TODO: this should be moved into the Query object, so you can just do if (query.hasBigList())
     Filter[] filters = query.getFilters();
 
@@ -62,11 +62,11 @@ public final class AttributeQueryRunner implements QueryRunner {
       }
     }
 
-    if (limit < 1 && numBigLists > 0) {
+    if (numBigLists > 0) {
       String[] idBatch = new String[listSizeMax];
       int batchIter = 0;
 
-      for (int i = 0, n = biglist.length; i < n; i++) {
+      for (int i = 0, n = biglist.length; moreRows && i < n; i++) {
         String element = biglist[i];
 
         if ((i > 0) && ((i % listSizeMax) == 0)) {
@@ -77,7 +77,7 @@ public final class AttributeQueryRunner implements QueryRunner {
             new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), idBatch);
           newQuery.addFilter(newFilter);
 
-          executeQueryBatch(newQuery);
+          executeQuery(newQuery, hardLimit);
 
           idBatch = new String[listSizeMax];
           batchIter = 0;
@@ -105,84 +105,28 @@ public final class AttributeQueryRunner implements QueryRunner {
         IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), lbatch);
         newQuery.addFilter(newFilter);
 
-        executeQueryBatch(newQuery);
+        executeQuery(newQuery, hardLimit);
       }
     } else {
-      executeSQLLimit(limit);
+      executeQuery(query, hardLimit);
     }
   }
 
-  protected void executeQueryBatch(Query newQuery) throws SequenceException, InvalidQueryException {
-    attributes = newQuery.getAttributes();
-    filters = newQuery.getFilters();
+  protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    attributes = curQuery.getAttributes();
+    filters = curQuery.getFilters();
 
     Connection conn = null;
     String sql = null;
     try {
-      csql = new CompiledSQLQuery(newQuery);
-      sql = csql.toSQLWithKey();
-
-      queryID = csql.getPrimaryKey();
-
-      DataSource ds = newQuery.getDataSource();
-      if (ds == null)
-        throw new RuntimeException("newQuery.DataSource is null");
-      conn = ds.getConnection();
-
-      if (logger.isLoggable(Level.INFO)) {
-        logger.info("QUERY : " + newQuery);
-        logger.info("SQL : " + sql);
-      }
-
-      PreparedStatement ps = conn.prepareStatement(sql);
-
-      int p = 1;
-      for (int i = 0, n = filters.length; i < n; ++i) {
-        Filter f = filters[i];
-        String value = f.getValue();
-        if (value != null) {
-          logger.info("SQL (prepared statement value) : " + p + " = " + value);
-          ps.setString(p++, value);
-        }
-      }
-
-      ResultSet rs = ps.executeQuery();
-      resultSetRowsProcessed = 0;
-
-      processResultSet(conn, rs);
-
-      rs.close();
-    } catch (IOException e) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
-      throw new InvalidQueryException(e);
-    } catch (SQLException e) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning(e.getMessage());
-      throw new InvalidQueryException(e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  protected void executeSQLLimit(int limit) throws SequenceException, InvalidQueryException {
-    boolean moreRows = true;
-    boolean userLimit = false;
-
-    attributes = query.getAttributes();
-    filters = query.getFilters();
-
-    Connection conn = null;
-    String sql = null;
-    try {
-      csql = new CompiledSQLQuery(query);
+      csql = new CompiledSQLQuery(curQuery);
       String sqlbase = csql.toSQLWithKey();
       String primaryKey = csql.getQualifiedPrimaryKey();
       queryID = csql.getPrimaryKey();
 
-      DataSource ds = query.getDataSource();
+      DataSource ds = curQuery.getDataSource();
       if (ds == null)
-        throw new RuntimeException("query.DataSource is null");
+        throw new RuntimeException("curQuery.DataSource is null");
       conn = ds.getConnection();
 
       while (moreRows) {
@@ -196,22 +140,23 @@ public final class AttributeQueryRunner implements QueryRunner {
         sql += " ORDER BY " + primaryKey;
 
         if (logger.isLoggable(Level.INFO)) {
-          logger.info("QUERY : " + query);
+          logger.info("QUERY : " + curQuery);
           logger.info("SQL : " + sql);
         }
 
         PreparedStatement ps = conn.prepareStatement(sql);
 
-        if (limit > 0) {
-          userLimit = true;
-          ps.setMaxRows(limit);
-          moreRows = false;
-        } else
-          ps.setMaxRows(batchLength);
+        int maxRows = 0;
+        if (hardLimit > 0)
+          maxRows = Math.min(batchLimit, hardLimit - totalRows);
+        else
+          maxRows = batchLimit;        
+        
+        ps.setMaxRows(maxRows);
 
         int p = 1;
         for (int i = 0, n = filters.length; i < n; ++i) {
-          Filter f = query.getFilters()[i];
+          Filter f = curQuery.getFilters()[i];
           String value = f.getValue();
           if (value != null) {
             logger.info("SQL (prepared statement value) : " + p + " = " + value);
@@ -225,16 +170,17 @@ public final class AttributeQueryRunner implements QueryRunner {
         processResultSet(conn, skipNewBatchRedundantRecords(rs));
 
         // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
-        if ((!userLimit) && (resultSetRowsProcessed < batchLength))
+        if (resultSetRowsProcessed < batchLimit)
           moreRows = false;
 
-        if (batchLength < maxBatchLength) {
-          batchLength =
-            (batchLength * batchModifiers[modIter] < maxBatchLength)
-              ? batchLength * batchModifiers[modIter]
-              : maxBatchLength;
+        if (batchLimit < maxBatchLimit) {
+          batchLimit =
+            (batchLimit * batchModifiers[modIter] < maxBatchLimit)
+              ? batchLimit * batchModifiers[modIter]
+              : maxBatchLimit;
           modIter = (modIter == 0) ? 1 : 0;
-        }
+        } else
+          batchLimit += linearIncrease;
 
         rs.close();
       }
@@ -283,6 +229,10 @@ public final class AttributeQueryRunner implements QueryRunner {
 
       if (lastID > -1 && lastID != currID) {
         lastIDRowsProcessed = 0;
+        
+        //reset batchLimit to maxBatchLength if it has needed to creep up to finish the last ids results
+        if (batchLimit > maxBatchLimit)
+          batchLimit = maxBatchLimit;
       }
 
       for (int i = 1, nColumns = rs.getMetaData().getColumnCount(); i <= nColumns; ++i) {
@@ -309,12 +259,19 @@ public final class AttributeQueryRunner implements QueryRunner {
     }
   }
 
-  //batching 
+  //batching
+  private boolean moreRows = true; 
   private final int[] batchModifiers = { 2, 2 };
   private int modIter = 0; //start at 0 
-  private int batchLength = 50000;
-  private final int maxBatchLength = 200000;
-  //private int batchLength = 200000;
+  private int batchLimit = 50000;
+  private final int maxBatchLimit = 200000;
+  
+//allow batchLength to increase by this amount after maxBatchLength has been reached
+//this will result in slow response for queries where each id returns a resultset
+//larger than maxBatchLimit, but they will eventually finish
+//and the system will reset the limit back to the batch for each new id
+//this could, concievably, hit a memory limit, so test and tweak
+  private final int linearIncrease = 10; 
 
   //big list batching
   private final int listSizeMax = 1000;
