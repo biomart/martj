@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -47,8 +48,8 @@ import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.MartRegistryXMLUtils;
 import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.util.LoggingUtil;
 
-import com.sun.rsasign.g;
 
 /**
  * Widget representing the availabled adaptors.
@@ -64,7 +65,7 @@ import com.sun.rsasign.g;
 public class AdaptorManager extends Box {
 
 	private DataSourceManager martSettings = new DataSourceManager(this);
-	private Logger logger = Logger.getLogger(AdaptorManager.class.getName());
+	private static final Logger logger = Logger.getLogger(AdaptorManager.class.getName());
 	private Feedback feedback = new Feedback(this);
 	private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	private static final String REGISTRY_KEY = "REGISTRY_KEY";
@@ -73,7 +74,7 @@ public class AdaptorManager extends Box {
 	private RegistryDSViewAdaptor rootAdaptor = new RegistryDSViewAdaptor();
 	private Map optionToView = new HashMap();
 	/** Persistent preferences object used to hold user history. */
-	private Preferences prefs;
+	private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 
 	private LabelledComboBox combo = new LabelledComboBox("Adaptor");
 
@@ -90,9 +91,6 @@ public class AdaptorManager extends Box {
 	 */
 	public AdaptorManager() {
 		super(BoxLayout.Y_AXIS);
-
-		prefs = Preferences.userNodeForPackage(this.getClass());
-		//prefs.remove( REGISTRY_KEY );
 
 		loadPrefs();
 
@@ -172,7 +170,7 @@ public class AdaptorManager extends Box {
 		for (int i = 0; i < adaptors.length; i++) {
 			DSViewAdaptor a = adaptors[i];
 			optionToView.put(a.getName(), a);
-      System.out.println("Added" + a.getName()+":"+a );
+      logger.fine("Added" + a.getName()+":"+a );
 		}
 
 		// sort
@@ -301,6 +299,11 @@ public class AdaptorManager extends Box {
 	 * Runs a test; an instance of this class is shown in a Frame.
 	 */
 	public static void main(String[] args) throws Exception {
+    //Preferences.userNodeForPackage(AdaptorManager.class).remove( REGISTRY_KEY );
+    
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    logger.setLevel( Level.FINE); 
+    
 		AdaptorManager dvm = new AdaptorManager();
 		dvm.setSize(950, 750);
 		dvm.showDialog(null);

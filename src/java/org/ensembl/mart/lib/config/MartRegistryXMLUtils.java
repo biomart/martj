@@ -255,6 +255,7 @@ public class MartRegistryXMLUtils {
 	private static Element getURLLocationElement(URLLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
 		location.setAttribute(URL, loc.getUrl().toExternalForm());
+    location.setAttribute(NAME, loc.getName() );
 		return location;
 	}
 
@@ -264,7 +265,8 @@ public class MartRegistryXMLUtils {
 		location.setAttribute(HOST, loc.getHost());
 		location.setAttribute(USER, loc.getUser());
 		location.setAttribute(INSTANCENAME, loc.getInstanceName());
-
+    location.setAttribute(NAME, loc.getName() );
+    
 		if (loc.getPort() != null)
 			location.setAttribute(PORT, loc.getPort());
 
@@ -283,6 +285,7 @@ public class MartRegistryXMLUtils {
 	private static Element getRegistryLocationElement(RegistryLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
 		location.setAttribute(URL, loc.getUrl().toExternalForm());
+    location.setAttribute(NAME, loc.getName() );
 		return location;
 	}
 }

@@ -119,7 +119,7 @@ public class DataSourceManager extends Box {
   public void doAdd() {
     if (databaseDialog.showDialog(this)) {
 
-      DataSource ds =
+      DetailedDataSource ds =
 			  new DetailedDataSource(
 			    databaseDialog.getDatabaseType(),
 			    databaseDialog.getHost(),
