@@ -508,7 +508,7 @@ public class MartShellLib {
 						throw new InvalidQueryException("Invalid Query Recieved, where clause before " + GETQSTART + " clause: " + newquery + "\n");
 					else if (thisToken.equalsIgnoreCase(QLIMIT))
 						throw new InvalidQueryException("Invalid Query Recieved, limit clause before " + GETQSTART + " clause: " + newquery + "\n");
-					else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART)) {
+					else if (thisToken.equalsIgnoreCase(GETQSTART) ) {
 						usingClause = false;
 						getClause = true;
 					} else {
@@ -869,6 +869,7 @@ public class MartShellLib {
 									//url
 									try {
 										query = addListFilter(query, dset, filterName, new URL(thisToken));
+                    validQuery = true;
 									} catch (Exception e) {
 										throw new InvalidQueryException("Error adding url filter " + filterName + " " + thisToken + " " + e.getMessage(), e);
 									}
