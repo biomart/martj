@@ -39,7 +39,8 @@ public class DatabaseSettingsDialog extends Box {
 	
 	private Preferences preferences;
 	
-	private LabelledComboBox databaseType;
+  private LabelledComboBox databaseType;
+  private LabelledComboBox driver;
 	private LabelledComboBox host;
 	private LabelledComboBox port;
 	private LabelledComboBox database;
@@ -62,6 +63,11 @@ public class DatabaseSettingsDialog extends Box {
     databaseType.setPreferenceKey("database_type");
     databaseType.setEditable( false );
     add( databaseType );
+
+    driver = new LabelledComboBox("Database type");
+    driver.setPreferenceKey("driver_type");
+    driver.setEditable( false );
+    add( driver );
     	
 		host = new LabelledComboBox("Host");
 		host.setPreferenceKey("host");
@@ -204,12 +210,12 @@ public class DatabaseSettingsDialog extends Box {
 
 	
 
-	public LabelledComboBox getHost() {
-		return host;
+	public String getHost() {
+		return host.getText();
 	}
 
-  public LabelledComboBox getDatabaseType() {
-    return databaseType;
+  public String getDatabaseType() {
+    return databaseType.getText();
   }
 
 	public void setPrefs(Preferences prefs) {
@@ -226,54 +232,40 @@ public class DatabaseSettingsDialog extends Box {
 
 
 	
-	/**
-	 * @return database input box
-	 */
-	public LabelledComboBox getDatabase() {
-		return database;
+	public String getDatabase() {
+		return database.getText();
 	}
 
-	/**
-	 * @return password input box
-	 */
 	public String getPassword() {
 		return new String( password.getPassword() );
 	}
 
-	/**
-	 * @return port input box
-	 */
-	public LabelledComboBox getPort() {
-		return port;
+	public String getPort() {
+		return port.getText();
+	}
+
+	public String getUser() {
+		return user.getText();
+	}
+
+	public String getDriver() {
+		return driver.getText();
 	}
 
 	/**
-	 * @return User input box
+   * Adds item if not already in list.
+   * @param type
 	 */
-	public LabelledComboBox getUser() {
-		return user;
+	public void addDatabaseType(String type) {
+		databaseType.addItem( type );
 	}
 
-	/**
-	 * @param box
-	 */
-	public void setDatabase(LabelledComboBox box) {
-		database = box;
-	}
-
-
-	/**
-	 * @param box
-	 */
-	public void setPort(LabelledComboBox box) {
-		port = box;
-	}
-
-	/**
-	 * @param box
-	 */
-	public void setUser(LabelledComboBox box) {
-		user = box;
-	}
+  /**
+   * Adds item if not already in list.
+   * @param driverName
+   */
+  public void addDriver(String driverName) {
+    driver.addItem( driverName );
+  }
 
 }

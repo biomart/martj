@@ -240,12 +240,14 @@ public class LabelledComboBox extends Box implements ActionListener {
 	 * @throws RuntimeException if preferenceKey is not set.
 	 */
 	public void store(Preferences preferences, int limit) {
-		if ( preferenceKey==null ) {
-			throw new RuntimeException("PreferenceKey must be set first.");
-		}
+
+    if ( preferenceKey==null ) {
+      throw new RuntimeException("PreferenceKey must be set first.");
+    }
 		
-		System.out.println( "storing " + preferenceKey + ": " + toPreferenceString(limit) );
-		preferences.put(preferenceKey, toPreferenceString(limit) );
+    String value = toPreferenceString(limit);
+    if ( value!=null )
+		  preferences.put(preferenceKey, value );
 			 
 	}
 	

@@ -68,7 +68,8 @@ public class MartShellLibTest extends Base {
   	
   	MartShellLib msl = new MartShellLib(adaptor);
   	
-  	String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
+  	//String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
+    String martSQL = "using ensembl_genes_homo_sapiens get sequence peptide where chromosome_name=1";
 		StatOutputStream stats = new StatOutputStream();
     Query query = msl.MQLtoQuery(martSQL);
     query.setDataSource(martJDataSource);
