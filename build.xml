@@ -79,6 +79,7 @@
     <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
     <include name="optional.jar" />
     <include name="xalan.jar" />
+    <include name="p6spy.jar" />
   </fileset>
 
   <!-- patternsets to use in various zip and tar filesets during the dist-* targets -->
@@ -101,6 +102,7 @@
      <include name="libreadline-java.jar" />
      <include name="martj.jar" />
      <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
+    <include name="p6spy.jar" />     
   </patternset>
 
   <!-- test distribution jars -->
