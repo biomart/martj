@@ -322,18 +322,19 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     //menuItem.getAccessibleContext().setAccessibleDescription("inserts");
     //menu.add(menuItem);
 
+    /**
     menu = new JMenu("Settings");
     JMenuItem clear = new JMenuItem("Clear Cache");
     clear.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
 
-        // DarinFavouriteClass.clear();          
+
 
       }
     });
     menu.add(clear);
     menuBar.add(menu);
-
+*/
     //Build help menu in the menu bar.
     icon = createImageIcon(IMAGE_DIR + "help.gif");
     menu = new JMenu("Help");
