@@ -27,14 +27,11 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
  * Loads sample dataset view configuration file via an adaptor (searches the classpath) 
- * and reads some data from it it to ensure the adaptor worked.
+ * and reads some data from it to ensure the adaptor worked.
  * 
  * Sample file is: "data/XML/homo_sapiens__ensembl_genes.xml"
  */
 public class URLDSViewAdaptorTest extends TestCase {
-
-
-  public final static String SAMPLE_DATASET_FILE_URL = "data/XML/homo_sapiens__ensembl_genes.xml";
 
 	/**
 	 * Constructor for DSViewAdaptors.
@@ -59,16 +56,16 @@ public class URLDSViewAdaptorTest extends TestCase {
 		assertTrue(view.getAllFilterDescriptions().size() > 0);
 	}
 
-	public static URL getSampleURLForADataset() throws Exception {
+	public static URL getTestDatasetURL() throws Exception {
 
-		URL url = URLDSViewAdaptorTest.class.getClassLoader().getResource(SAMPLE_DATASET_FILE_URL);
-    assertNotNull("Missing dataset file: " + SAMPLE_DATASET_FILE_URL, url);
+		URL url = URLDSViewAdaptorTest.class.getClassLoader().getResource(DatasetViewXMLUtilsTest.TESTDATASETVIEWFILE);
+    assertNotNull("Missing dataset file: " + DatasetViewXMLUtilsTest.TESTDATASETVIEWFILE + "\n", url);
     
     return url;
 	}
   
   public static URLDSViewAdaptor getSampleDSViewAdaptor() throws Exception {
-    URLDSViewAdaptor adaptor = new URLDSViewAdaptor( getSampleURLForADataset(), true);
+    URLDSViewAdaptor adaptor = new URLDSViewAdaptor( getTestDatasetURL(), false);
     assertNotNull( adaptor );
     return adaptor;
   }
