@@ -29,8 +29,10 @@ package org.ensembl.mart.lib;
  */
 public class NullableFilter implements Filter {
 
-	public static final String isNULL = " ";
-	public static final String isNotNULL = " not ";
+	public static final String isNULL = "is null";
+	public static final String isNotNULL = "is not null";
+	public static final String isNULL_NUM = "!= 1";
+	public static final String isNotNULL_NUM = "= 1";
 
 	/**
 	 * default constructor
@@ -61,7 +63,7 @@ public class NullableFilter implements Filter {
 	public NullableFilter(String type, String tableConstraint, String condition) {
 		this.type = type;
 		this.tableConstraint = tableConstraint;
-		this.condition = " is" + condition + "null ";		
+		this.condition = condition;		
 	}
 	
 	public NullableFilter(NullableFilter o) {
@@ -102,7 +104,7 @@ public class NullableFilter implements Filter {
 	 * @param condition - String
 	 */
 	public void setCondition(String condition) {
-		this.condition = " is" + condition + "null ";
+		this.condition = condition;
 	}
 
 	/**
