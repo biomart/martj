@@ -13,8 +13,10 @@ import java.net.*;
  * @testpackage org.ensembl.mart.explorer.test*/
 public class CompiledSQLQueryTest extends Base {
 
-  	public final String STABLE_ID_FILE
-      =System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test";
+	/*  	public final String STABLE_ID_FILE
+			=System.getProperty("user.home")+"/src/head/mart-explorer/data/gene_stable_id.test";*/
+
+    public final String STABLE_ID_REL = "data/gene_stable_id.test";
 
     public CompiledSQLQueryTest(String name) {
         super(name);
@@ -53,7 +55,7 @@ public class CompiledSQLQueryTest extends Base {
     public void testStableIDQuery() throws Exception {
 
 			query.addAttribute( new FieldAttribute("gene_stable_id") );
-      query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000170057"}) );
+      query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000005175"}) );
       ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
       query.setResultTarget( stats );
 			executeQuery( query, stats );
@@ -66,7 +68,8 @@ public class CompiledSQLQueryTest extends Base {
     public void testStableIDsFromFileQuery() throws Exception {
       
       query.addAttribute( new FieldAttribute("gene_stable_id") );
-      query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE) ) );
+
+      query.addFilter( new IDListFilter("gene_stable_id", new File ( org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL ).getFile() ) ) );
       ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
       query.setResultTarget( stats );
 			executeQuery( query, stats );
@@ -75,12 +78,14 @@ public class CompiledSQLQueryTest extends Base {
 
     public void testStableIDsFromURLQuery() throws Exception {
 
-      // in practice this iss effectively the same as testStableIDsFromFile because
+      // in practice this is effectively the same as testStableIDsFromFile because
       // the implementation converts the file to a url. We include this test incase future
       // implementations work differently.
 
       query.addAttribute( new FieldAttribute("gene_stable_id") );
-      query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE).toURL() ) );
+
+      URL stableidurl = org.apache.log4j.helpers.Loader.getResource( STABLE_ID_REL );
+      query.addFilter( new IDListFilter("gene_stable_id", stableidurl ) );
       executeWithStats( query, 3 );
     }
 
