@@ -276,15 +276,15 @@ public class QueryEditor
 		MutableTreeNode parent = attributesPage.getNode();
     String displayName = attribute.getField();
 
-    // Use a "fake" input page so that cliking this node cause the
+    // Use a "fake" input page so that clicking this node causes the
     // attribute page to be selected in the input panel.
-    // TODO support selction off correct tab pane?
+    // TODO support selction of correct tab pane?
     InputPage page = new InputPage( attributesPage.getName(), null );
     page.setNodeLabel(null, displayName );
     
     MutableTreeNode child = new DefaultMutableTreeNode( page );
-    parent.insert( child, parent.getChildCount() );
-    // show node
+    treeModel.insertNodeInto( child, parent, parent.getChildCount() );
+    // select node in tree
     treeView.setSelectionPath( new TreePath(rootNode).pathByAddingChild( parent ).pathByAddingChild( child ) );
 	}
 
