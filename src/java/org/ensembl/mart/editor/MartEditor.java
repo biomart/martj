@@ -688,169 +688,168 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   }
 
   public void naiveDatasetConfig() {
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
+
     try {
-      if (ds == null) {
-        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      disableCursor();
+      String[] datasets = dbutils.getNaiveDatasetNamesFor(database);
+      String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "Dataset",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          datasets,
+          datasets[0]);
+      if (dataset == null)
+        return;
+
+      disableCursor();
+      // for oracle. arrayexpress: needs user, not instance
+      String dbtype = databaseDialog.getDatabaseType();
+      String qdb;
+
+      if (dbtype.startsWith("oracle"))
+        qdb = user.toUpperCase(); // not sure why needs uppercase
+      else
+        qdb = database;
+
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
+
+      frame.setVisible(true);
+      desktop.add(frame);
+      try {
+        frame.setSelected(true);
+      } catch (java.beans.PropertyVetoException e) {
+      }
+    } catch (SQLException e) {
+    } finally {
+      enableCursor();
+    }
+}
+
+public void updateDatasetConfig() {
+  try {
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
+
+    try {
+      disableCursor();
+      // check whether existing filters and atts are still in database
+      Object selectedFrame = desktop.getSelectedFrame();
+
+      if (selectedFrame == null) {
+        JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
         return;
       }
 
+      DatasetConfig odsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
+
+      if (odsv == null) {
+        JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+        return;
+      }
+
+      DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+      // check for new tables and cols
+      dsv = dbutils.getNewFiltsAtts(database, dsv);
+
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+      frame.setVisible(true);
+      desktop.add(frame);
       try {
-        disableCursor();
-        String[] datasets = dbutils.getNaiveDatasetNamesFor(database);
-        String dataset =
+        frame.setSelected(true);
+      } catch (java.beans.PropertyVetoException e) {
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  } finally {
+    enableCursor();
+  }
+}
+
+public void deleteDatasetConfig() {
+
+  try {
+    if (ds == null) {
+      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      return;
+    }
+
+    try {
+      disableCursor();
+      String[] datasets = dbutils.getAllDatasetNames(user);
+      String dataset =
+        (String) JOptionPane.showInputDialog(
+          null,
+          "Choose one",
+          "Dataset Config",
+          JOptionPane.INFORMATION_MESSAGE,
+          null,
+          datasets,
+          datasets[0]);
+      if (dataset == null)
+        return;
+      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+      String intName;
+      if (internalNames.length == 1)
+        intName = internalNames[0];
+      else {
+        intName =
           (String) JOptionPane.showInputDialog(
             null,
             "Choose one",
-            "Dataset",
+            "Internal name",
             JOptionPane.INFORMATION_MESSAGE,
             null,
-            datasets,
-            datasets[0]);
-        if (dataset == null)
-          return;
-
-        // for oracle. arrayexpress: needs user, not instance
-        String dbtype = databaseDialog.getDatabaseType();
-        String qdb;
-
-        if (dbtype.startsWith("oracle"))
-          qdb = user.toUpperCase(); // not sure why needs uppercase
-        else
-          qdb = database;
-
-        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
-
-        frame.setVisible(true);
-        desktop.add(frame);
-        try {
-          frame.setSelected(true);
-        } catch (java.beans.PropertyVetoException e) {
-        }
-      } catch (SQLException e) {
+            internalNames,
+            internalNames[0]);
       }
-    } finally {
-      enableCursor();
-    }
-  }
-
-  public void updateDatasetConfig() {
-    try {
-      if (ds == null) {
-        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+      if (intName == null)
         return;
-      }
+      dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
 
-      try {
-        disableCursor();
-        // check whether existing filters and atts are still in database
-        Object selectedFrame = desktop.getSelectedFrame();
-
-        if (selectedFrame == null) {
-          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
-          return;
-        }
-
-        DatasetConfig odsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
-
-        if (odsv == null) {
-          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
-          return;
-        }
-
-        DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
-        // check for new tables and cols
-        dsv = dbutils.getNewFiltsAtts(database, dsv);
-
-        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
-        frame.setVisible(true);
-        desktop.add(frame);
-        try {
-          frame.setSelected(true);
-        } catch (java.beans.PropertyVetoException e) {
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    } finally {
-      enableCursor();
+    } catch (ConfigurationException e) {
     }
+  } finally {
+    enableCursor();
   }
+}
 
-  public void deleteDatasetConfig() {
+public void save() {
+  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();
+}
 
-    try {
-      if (ds == null) {
-        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-        return;
-      }
+public void save_as() {
+  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save_as();
+}
 
-      try {
-        disableCursor();
-        String[] datasets = dbutils.getAllDatasetNames(user);
-        String dataset =
-          (String) JOptionPane.showInputDialog(
-            null,
-            "Choose one",
-            "Dataset Config",
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            datasets,
-            datasets[0]);
-        if (dataset == null)
-          return;
-        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
-        String intName;
-        if (internalNames.length == 1)
-          intName = internalNames[0];
-        else {
-          intName =
-            (String) JOptionPane.showInputDialog(
-              null,
-              "Choose one",
-              "Internal name",
-              JOptionPane.INFORMATION_MESSAGE,
-              null,
-              internalNames,
-              internalNames[0]);
-        }
-        if (intName == null)
-          return;
-        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
+public void exit() {
+  System.exit(0);
+}
 
-      } catch (ConfigurationException e) {
-      }
-    } finally {
-      enableCursor();
-    }
-  }
+public void undo() {
 
-  public void save() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();
-  }
+}
 
-  public void save_as() {
-    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save_as();
-  }
+public void redo() {
 
-  public void exit() {
-    System.exit(0);
-  }
+}
 
-  public void undo() {
+private void enableCursor() {
+  setCursor(Cursor.getDefaultCursor());
+  getGlassPane().setVisible(false);
+}
 
-  }
-
-  public void redo() {
-
-  }
-
-  private void enableCursor() {
-    setCursor(Cursor.getDefaultCursor());
-    getGlassPane().setVisible(false);
-  }
-
-  private void disableCursor() {
-    getGlassPane().setVisible(true);
-    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-  }
+private void disableCursor() {
+  getGlassPane().setVisible(true);
+  setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+}
 }
