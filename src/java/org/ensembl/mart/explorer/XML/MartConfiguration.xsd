@@ -2,6 +2,13 @@
 <xsd:schema elementFormDefault="qualified"
     targetNamespace="file://org/ensembl/mart/explorer/XML"
     xmlns="file://org/ensembl/mart/explorer/XML" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <!-- attributeGroup for internalName, displayName, and description in the form that all objects require -->
+    <xsd:attributeGroup name="desc_data">
+        <xsd:attribute name="internalName" type="xsd:string" use="required"/>
+        <xsd:attribute name="displayName" type="xsd:string" use="optional"/>
+        <xsd:attribute name="description" type="xsd:string" use="optional"/>
+    </xsd:attributeGroup>
+    <!-- Top-Level objects -->
     <xsd:element name="MartConfiguration">
         <xsd:complexType>
             <xsd:sequence>
@@ -33,10 +40,6 @@
                                     <xsd:complexType>
 
                                     <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
-
-                                    <xsd:attribute
                                     name="fieldName"
                                     type="xsd:string" use="required"/>
 
@@ -52,9 +55,7 @@
                                     name="type"
                                     type="xsd:string" use="required"/>
 
-                                    <xsd:attribute
-                                    name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
@@ -63,32 +64,18 @@
                                     name="type"
                                     type="xsd:string" use="required"/>
 
-                                    <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
-
-                                    <xsd:attribute
-                                    name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
-                                    <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
-                                    <xsd:attribute
-                                    name="Description"
-                                    type="xsd:string" use="optional"/>
                                     <xsd:attribute
                                     name="type"
                                     type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
-                                    <xsd:attribute name="displayName"
-                                    type="xsd:string" use="optional"/>
-                                    <xsd:attribute name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                 </xsd:complexType>
                             </xsd:element>
                             <xsd:element maxOccurs="unbounded"
@@ -112,10 +99,6 @@
                                     <xsd:complexType>
 
                                     <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
-
-                                    <xsd:attribute
                                     name="fieldName"
                                     type="xsd:string" use="required"/>
 
@@ -135,16 +118,10 @@
                                     name="linkoutURL"
                                     type="xsd:string" use="optional"/>
 
-                                    <xsd:attribute
-                                    name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
-
-                                    <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
 
                                     <xsd:attribute
                                     name="type"
@@ -154,38 +131,23 @@
                                     name="maxSelect"
                                     type="xsd:int" use="required"/>
 
-                                    <xsd:attribute
-                                    name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
-                                    <xsd:attribute
-                                    name="displayName"
-                                    type="xsd:string" use="required"/>
-                                    <xsd:attribute
-                                    name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                     </xsd:complexType>
                                     </xsd:element>
                                     </xsd:sequence>
-                                    <xsd:attribute name="displayName"
-                                    type="xsd:string" use="optional"/>
-                                    <xsd:attribute name="description"
-                                    type="xsd:string" use="optional"/>
+                                    <xsd:attributeGroup ref="desc_data"/>
                                 </xsd:complexType>
                             </xsd:element>
                         </xsd:sequence>
-                        <xsd:attribute name="displayName"
-                            type="xsd:string" use="required"/>
-                        <xsd:attribute name="description"
-                            type="xsd:string" use="optional"/>
-                        <xsd:attribute name="martName" type="xsd:string" use="required"/>
+                        <xsd:attributeGroup ref="desc_data"/>
                     </xsd:complexType>
                 </xsd:element>
             </xsd:sequence>
-            <xsd:attribute name="martName" type="xsd:string" use="required"/>
-            <xsd:attribute name="description" type="xsd:string" use="optional"/>
+            <xsd:attributeGroup ref="desc_data"/>
         </xsd:complexType>
     </xsd:element>
 </xsd:schema>
