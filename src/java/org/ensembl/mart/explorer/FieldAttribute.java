@@ -38,7 +38,10 @@ public class FieldAttribute implements Attribute {
     }
     
     public int hashCode() {
-        return (field == null) ? 0 : field.hashCode();
+    		int result = 17;
+    		result = 37*result + ((field == null) ? 0 : field.hashCode()); 
+				result = 37*result + ((tableConstraint == null) ? 0 : tableConstraint.hashCode()); 
+        return result;
     }
 
     public boolean equals(Object obj) {
@@ -69,5 +72,15 @@ public class FieldAttribute implements Attribute {
 			return field;
     }
 
+		public void setTableConstraint(String tableConstraint) {
+			this.tableConstraint = tableConstraint;
+		}
+
+		public String getTableConstraint() {
+			return tableConstraint;
+		}
+
+
+		private String tableConstraint;
     private String field;
 }
