@@ -52,8 +52,7 @@ public class TableCache {
 		mapperCache.put(queryHashcode(query), mappersValue);
 	}
 
-	public final Table[] get(Query query, Connection conn)
-		throws SQLException {
+	public final Table[] get(Query query, Connection conn) throws SQLException {
 		Object tmp = mapperCache.get(queryHashcode(query));
 		if (tmp != null)
 			return (Table[]) tmp;
@@ -70,21 +69,15 @@ public class TableCache {
 
 		ArrayList tablesTmp = new ArrayList();
 
-		
 		// load all the tables that begin with one of the star names
 		ResultSet rs = conn.createStatement().executeQuery("show tables");
 		while (rs.next()) {
 			String tableName = rs.getString(1);
 			for (int i = 0; i < query.getStarBases().length; i++) {
 				if (tableName.startsWith(query.getStarBases()[i])) {
-					tablesTmp.add(
-											new Table(tableName, columns(tableName, conn), ""));
-					System.out.println("loading tables from db: " + tableName);
-			
+					tablesTmp.add(new Table(tableName, columns(tableName, conn), ""));
 				}
-					
 			}
-
 		}
 
 		Table[] tables = new Table[tablesTmp.size()];
@@ -94,8 +87,7 @@ public class TableCache {
 		return tables;
 	}
 
-	private String[] columns(String table, Connection conn)
-		throws SQLException {
+	private String[] columns(String table, Connection conn) throws SQLException {
 		ArrayList columnsTmp = new ArrayList();
 
 		ResultSet rs = conn.createStatement().executeQuery("describe " + table);
