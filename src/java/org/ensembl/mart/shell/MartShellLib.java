@@ -376,8 +376,8 @@ public class MartShellLib {
 				DomainSpecificFilter dsfilter = dsfilters[i];
 				boolean thisMapped = false;
 
-				String objectCode = dsfilter.getObjectCode();
-				String value = dsfilter.getHandlerParameter();
+				String objectCode = dsfilter.getHandler();
+				String value = dsfilter.getCludgyParameter();
 
 				for (Iterator iter = filtMaps.iterator(); !(thisMapped) && iter.hasNext();) {
 					UIMapper filtMap = (UIMapper) iter.next();

@@ -164,8 +164,8 @@ public class Engine {
 			DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
 			for (int i = 0, n = dsfilters.length; i < n; i++) {
 				DomainSpecificFilter dsf = dsfilters[i];
-				DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getObjectCode());
-				query = dsfh.ModifyQuery(conn, dsf.getHandlerParameter(), query);
+				DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getHandler());
+				query = dsfh.ModifyQuery(conn, dsf.getCludgyParameter(), query);
 			}
 		}
 

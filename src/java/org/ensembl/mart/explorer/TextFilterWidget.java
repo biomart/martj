@@ -32,6 +32,7 @@ import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
@@ -180,6 +181,8 @@ public class TextFilterWidget
     }
   }
 
+
+
   private boolean relevantFilter(BasicFilter f) {
     return f.getField().equals( filterDescription.getFieldName() );
   }
@@ -203,4 +206,12 @@ public class TextFilterWidget
     // displaying in the tree.
     setField(filter);
   }
+  
+  /**
+   * Does nothing.
+   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+   */
+  public void setOptions(Option[] options) {
+  }
+
 }

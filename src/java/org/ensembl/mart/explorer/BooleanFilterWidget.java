@@ -30,6 +30,7 @@ import javax.swing.JRadioButton;
 
 import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
@@ -161,5 +162,15 @@ implements PropertyChangeListener , ActionListener{
 			null,
 			filterDescription.getFieldName() + filter.getRightHandClause());
 	}
+
+
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+   */
+  public void setOptions(Option[] options) {
+    // TODO Auto-generated method stub
+
+  }
 
 }

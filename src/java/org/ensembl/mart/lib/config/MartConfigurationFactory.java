@@ -64,6 +64,7 @@ public class MartConfigurationFactory {
 	private final String ATTRIBUTEDESCRIPTION = "UIAttributeDescription";
 	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 	private final String OPTION = "Option";
+  private final String OPTIONPUSH = "OptionPush";
 	private final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names
@@ -397,10 +398,37 @@ public class MartConfigurationFactory {
 			o.addOption(getOption(suboption));
 		}
 
+    for (Iterator iter = thisElement.getChildElements(OPTIONPUSH).iterator();
+          iter.hasNext();
+          ) {
+          o.addOptionPush( getOptionPush( (Element) iter.next() ) );
+        }
+
 		return o;
 	}
 
-	private UIDSFilterDescription getUIDSFilterDescription(Element thisElement)
+	/**
+   * @param suboption
+   */
+  private OptionPush getOptionPush(Element thisElement)  throws ConfigurationException {
+    // TODO Auto-generated method stub
+    String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+    String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+    String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+    String ref = thisElement.getAttributeValue(REF, "");
+        
+    OptionPush op = new OptionPush( intName, dispname, desc, ref);
+    
+    for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
+      iter.hasNext();
+      ) {
+      op.addOption( getOption( (Element) iter.next() ) );
+    }
+    
+    return op;
+  }
+
+  private UIDSFilterDescription getUIDSFilterDescription(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");

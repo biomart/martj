@@ -32,6 +32,7 @@ import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.OptionPush;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
@@ -72,6 +73,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
       return inputPage;
     }
   }
+
+  private OptionPush[] activePushOptions;
 
   private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -173,7 +176,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
     if (lastSelectedItem != emptySelection) {
       query.removeFilter(filter);
 
-      // TODO remove OptionPushes if set
+      removePushOptions();
     }
 
     lastSelectedItem = selectedItem;
@@ -195,9 +198,37 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         null,
         filterDescription.getFieldName() + " = " + option.getValue());
 
-      // TODO propagate OptionPushes if set, remember so we can remove them
-
+      setupPushOptions( option.getOptionPushes() );
     }
+
+  }
+
+  /**
+   * 
+   */
+  private void removePushOptions() {
+    // TODO removePushOptions()
+    
+  }
+
+  /**
+   * @param pushs
+   */
+  private void setupPushOptions(OptionPush[] pushOptions) {
+    this.activePushOptions = pushOptions;
+        for (int i = 0; i < pushOptions.length; i++) {
+      OptionPush op = pushOptions[i];
+      // TODO setupPushOptions(OptionPush[] pushs)
+      //FilterWidget widget = getWidget( op.getRef() );
+      //widget.setOptions( op.getOptions() );
+    }
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+   */
+  public void setOptions(Option[] options) {
+    // TODO Auto-generated method stub
 
   }
 

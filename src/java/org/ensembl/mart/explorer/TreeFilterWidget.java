@@ -115,6 +115,10 @@ public class TreeFilterWidget extends FilterWidget {
 
 	}
 
+    
+
+
+
 	/**
    * Recursively add menus of menu items and submenus made up of options of options.
 	 * @param menu
@@ -217,5 +221,13 @@ public class TreeFilterWidget extends FilterWidget {
 	public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
 		changeSupport.removePropertyChangeListener(listener);
 	}
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+   */
+  public void setOptions(Option[] options) {
+    // TODO Auto-generated method stub
+
+  }
 
 }
