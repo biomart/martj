@@ -19,10 +19,10 @@
 package org.ensembl.mart.shell;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,6 +52,16 @@ import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
+ * Library allowing client code to execute Mart Query Language (MQL)
+ * querries against a mart.  Must be provided an Engine Object, and a
+ * MartConfiguration Object.  
+ * The default output settings are tab - separated, tabulated output
+ * to STDOUT.  Clients can over ride these settings in one of two ways:
+ *   - using an into clause within the MQL query (takes highest priority)
+ *   - using the appropriate setter methods (these values are over ridden by an into clause,
+ *      but, once set, they remain in effect for the entire session, until another call to the
+ *      settter(s) is(are) made).
+ * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
@@ -498,7 +508,8 @@ public class MartShellLib {
 							thisToken = thisToken.substring(1);
 						}
 
-						if (thisToken.startsWith("file:")) {
+						if (thisToken.matches("\\w+\\:.*")) {
+							// in URL
 							if (thisToken.endsWith(LINEEND))
 								thisToken = thisToken.substring(0, thisToken.length() - 1);
 							if (thisToken.endsWith(","))
@@ -529,7 +540,7 @@ public class MartShellLib {
 								thisTableConstraint = fds.getTableConstraint();
 							}
 
-							Filter thisFilter = new IDListFilter(thisFieldName, new File(thisToken));
+							Filter thisFilter = new IDListFilter(thisFieldName, new URL( thisToken ) );
 							((IDListFilter) thisFilter).setTableConstraint(thisTableConstraint);
 							query.addFilter(thisFilter);
 							start = true;
@@ -754,6 +765,7 @@ public class MartShellLib {
 				thisFormat = DEFOUTPUTFORMAT;
 		}
 
+    boolean localFileUsed = false;
 		if (thisFile == null) {
 			if (subqueryOutput != null) {
 				thisFile = "subquery";
@@ -768,8 +780,10 @@ public class MartShellLib {
 		} else if (thisFile.equals("-")) {
 			thisFile = "stdout";
 			thisOs = System.out;
-		} else
+		} else {
+		  localFileUsed = true;
 			thisOs = new FileOutputStream(thisFile);
+		}
 
 		if (thisSeparator == null) {
 			if (outputSeparator != null)
@@ -794,42 +808,24 @@ public class MartShellLib {
 		logger.info("limit " + limit);
 
 		engine.execute(query, formatspec, thisOs, limit);
+		
+		// close files specified in an into statement, otherwise, leave thisOs open
+		if (localFileUsed)
+		  thisOs.close();
 	}
 
-	public void setAlternateMartConfiguration(String confFile) {
-		altConfigurationFile = confFile;
-	}
-	
-	
-	public void setDBHost(String dbhost) {
-		this.martHost = dbhost;
-	}
-
-
-	public void setDBPort(String dbport) {
-		this.martPort = dbport;
-	}
-
-
-	public void setDBUser(String dbuser) {
-		this.martUser = dbuser;
-	}
-
-
-	public void setDBPass(String dbpass) {
-		martPass = dbpass;
-	}
-
-	public void setDBDatabase(String db) {
-		martDatabase = db;
-	}
-	
 	public void setOutputFormat(String format) {
-		this.outputFormat = format;
+		if (format.equals("-"))
+		  this.outputFormat = null;
+		else
+		  this.outputFormat = format;
 	}
 	
 	public void setOutputSeparator(String separator) {
-		this.outputSeparator = separator;
+		if (separator.equals("-"))
+		  this.outputSeparator = null;
+		else
+		  this.outputSeparator = separator;
 	}
 	
 	public void setOutputStream(OutputStream os) {
@@ -917,12 +913,6 @@ public class MartShellLib {
 	//MartShellLib instance variables
 	private Engine engine;
 	private MartConfiguration martconf;
-	private String martHost = null;
-	private String martPort = null;
-	private String martUser = null;
-	private String martPass = null;
-	private String martDatabase = null;
-	private String altConfigurationFile = null;
 	private OutputStream os;
 	
 	private final String DEFOUTPUTFORMAT = "tabulated"; // default to tabulated output
@@ -955,7 +945,6 @@ public class MartShellLib {
 		Collections.unmodifiableList(
 			Arrays.asList(
 				new String[] {
-					QSTART,
 					QSEQUENCE,
 					QFROM,
 					QWHERE,
