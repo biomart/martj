@@ -382,11 +382,13 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         try {
-          adaptorManager.reset();
           prefs.clear();
+          adaptorManager.clearCache();
+          tabs.removeAll();
+
+          adaptorManager.reset();
           loadDefaultAdaptors();
           advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
-          adaptorManager.clearCache();
         } catch (BackingStoreException e1) {
           feedback.warning(e1);
         }
@@ -509,15 +511,18 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       } else {
 
         try {
-          
-          logger.finer("BEFORE New query: " + SystemUtil.memoryStatus());
-          
+   
           disableCursor();
           final QueryEditor qe = new QueryEditor(this, adaptorManager);
           qe.setName(nextQueryBuilderTabLabel());
           addQueryEditor(qe);
           tabs.setSelectedComponent(qe);
           qe.openDatasetConfigMenu();
+
+        } catch (OutOfMemoryError ex) {
+
+          feedback.warning("Out of memory, can not create a new Query.");
+
         } finally {
           enableCursor();
         }
@@ -525,6 +530,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     } catch (IOException e) {
       feedback.warning(e);
     }
+
   }
 
   /**
@@ -533,14 +539,14 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    */
   public int getNumDatasetConfigsAvailable() {
 
-    int n = 0;    
-    try{
+    int n = 0;
+    try {
       disableCursor();
       n = adaptorManager.getRootAdaptor().getNumDatasetConfigs();
     } finally {
       enableCursor();
     }
-    
+
     return n;
   }
 
