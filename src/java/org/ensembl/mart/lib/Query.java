@@ -24,6 +24,7 @@ import java.util.*;
 
 import org.ensembl.util.StringUtil;
 
+import javax.sql.DataSource;
 /**
  * Object for storing the parameters to construct a query against a Mart
  * database.  Parameters consist of at least one Attribute (a requested field
@@ -376,6 +377,16 @@ public class Query {
 	private String[] starBases;
 	private int limit = 0; // add a limit clause to the SQL with an int > 0
   private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
+	/**
+	 * Datasource this query applies to.
+	 */
+	private DataSource dataSource;
+
+	/**
+	 * Name of dataset this query applies to.
+	 */
+	private String datasetName;
+
   /**
    * @param listener
    */
@@ -496,5 +507,21 @@ public class Query {
     
     changeSupport.firePropertyChange("filter", oldFilter, newFilter );
   }
+
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public String getDatasetName() {
+		return datasetName;
+	}
+
+	public void setDatasetName(String datasetName) {
+		this.datasetName = datasetName;
+	}
 
 }
