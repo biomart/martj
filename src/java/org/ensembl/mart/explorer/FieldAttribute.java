@@ -58,7 +58,7 @@ public class FieldAttribute implements Attribute {
 
 			buf.append("[");
       buf.append(" field=").append(field);
-			buf.append(" tableConstraint=").append(tableConstraint);
+			buf.append(" ,tableConstraint=").append(tableConstraint);
       buf.append(" ]");
 
       return buf.toString();
