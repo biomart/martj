@@ -318,7 +318,11 @@
     </copy>
     
     <copy todir="${dist.dir}/data">
-      <fileset dir="${data.dir}"/>
+      <fileset dir="${data.dir}">
+         <include name="**/*"/>
+         <exclude name="**/*test_connection*"/>
+         <exclude name="**/CVS/**"/>
+      </fileset>
     </copy>
 
     <copy file="${readme}" todir="${dist.dir}" />
@@ -338,14 +342,10 @@
 
     </copy>
 
-    <copy todir="${dist.dir}/bin" >
-        <fileset dir="${bin.dir}" />
-    </copy>
-    
   </target>
 
   <!-- creates all distribution sets -->
-  <target name="dist-all" depends="dist-bin, dist-src, dist-api" 
+  <target name="dist-all" depends="dist-bin, dist-test, dist-src, dist-api" 
     description="Build all file sets for distribution." />
 
   <!-- creates the dist-bin distribution set -->
@@ -354,6 +354,17 @@
     depends="jar, prepare-dist">
 
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
+
+      <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
+      <copy file="${bin.dir}/martshell_hdcoded.bat" tofile="${dist.dir}/bin/martshell.bat" />
+      <copy file="${bin.dir}/martshell_hdcoded.sh" tofile="${dist.dir}/bin/martshell.sh" />
+
+      <!-- now copy the other bin files without hardcoded info -->
+      <copy todir="${dist.dir}/bin" >
+        <fileset dir="${bin.dir}" >
+          <exclude name="**/martshell*"/>
+        </fileset>
+      </copy>
 
       <tar destfile="${build.dir}/${name}-bin.tar">
 
