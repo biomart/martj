@@ -5,6 +5,8 @@
 
 # TODO scroll results to top
 
+# handle gene_chrom_start / end, strand
+
 # glue save button to dialog and save.
 
 # exec on thread + "busy" bar.
@@ -64,7 +66,11 @@ from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
 from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, BasicFilter
 from org.ensembl.mart.explorer import InvalidQueryException, Engine, FormatSpec
-from org.apache.log4j import Logger, Level
+from org.apache.log4j import Logger, Level, PropertyConfigurator
+
+# uncomment to use this logging conf file
+PropertyConfigurator.configure( System.getProperty("user.home")
+				+"/dev/mart-explorer/data/logging.conf" )
 
 GAP = 5
 SPACE=" &nbsp;"
@@ -350,7 +356,6 @@ class ResultsPage(Page):
 
 
     def scrollToTop( self ):
-        print "scrolling to top"
         self.textArea.scrollRectToVisible( Rectangle(1,1) )
         
 
@@ -630,9 +635,16 @@ class RegionPage(Page):
 
 
     def updateQuery(self, query):
-        # todo
-        pass
+	chr = self.chr.getText()
+	if chr and chr!="": query.addFilter( BasicFilter("chr_name","=",chr) )
 
+	start = self.start.getText()
+	if start and start!="": query.addFilter( BasicFilter("start",">=",start) )
+
+	end = self.end.getText()
+	if end and end!="": query.addFilter( BasicFilter("end","<=",end) )
+
+	
     def updatePage(self, query):
 	for f in query.filters:
 	    if isinstance(f, BasicFilter):
@@ -914,9 +926,9 @@ class MartGUIApplication(JFrame):
                   
                   ,focus = "gene" )
 	q.addFilter( BasicFilter("chr_name", "=", "22") )
-	q.addFilter( BasicFilter("start", "=", "1") )
-	q.addFilter( BasicFilter("end", "=", "100000") )
-	q.addFilter( BasicFilter("strand", "=", "1") )
+	#q.addFilter( BasicFilter("start", "=", "1") )
+	#q.addFilter( BasicFilter("end", "=", "1000") )
+	#q.addFilter( BasicFilter("strand", "=", "1") )
 
         # load test data file via classpath; this works from a
         # deployed jar and from normal directory in developement
@@ -936,14 +948,10 @@ class MartGUIApplication(JFrame):
 
 
     def viewResults( self ):
-        # execute query, piping results to window.
+        # execute query in new thread and pipe results to window.
         os = self.editor.resultsPage.getOutputStream()
-        # TODO start loading data bar
-        self.executeQuery( None, os)
-        # TODO stop loading data bar
+	thread.start_new_thread( self.executeQuery, (self, os) )
         os.close()
-        # scroll to top of results
-        self.editor.resultsPage.scrollToTop()
 
 
 
@@ -963,8 +971,6 @@ class MartGUIApplication(JFrame):
             validate(user, "User")
             validate(database, "Database")
             formatSpec = self.editor.getFormatSpec()
-            #outputStream = self.editor.getOutputStream()
-        
             self.editor.updateQuery( query )
 
             engine = Engine(host,
@@ -973,13 +979,16 @@ class MartGUIApplication(JFrame):
                             password,
                             database)
             engine.execute( query, formatSpec, outputStream )
+	    
+	    # scroll to top of results
+	    self.editor.resultsPage.scrollToTop()
 
         except (InvalidQueryException), ex:
             JOptionPane.showMessageDialog( self,
                                            "Failed to execute query: " + ex.message,
                                           "Error",
                                           JOptionPane.ERROR_MESSAGE)
-
+	    ex.printStackTrace()
 
 
     def doExecute(self, event=None):
