@@ -46,11 +46,10 @@
 <!ATTLIST FilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
-                   fieldName          CDATA #REQUIRED
+                   fieldName          CDATA #IMPLIED
                    qualifier          CDATA #IMPLIED
                    filterSetReq       CDATA #IMPLIED
-                   tableConstraint    CDATA #IMPLIED
-                   optionName         CDATA #IMPLIED>
+                   tableConstraint    CDATA #IMPLIED>
 
 <!ELEMENT MapFilterDescription (Option)*>
 <!ATTLIST MapFilterDescription
@@ -88,7 +87,7 @@
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
 
-<!ELEMENT Option (Option|OptionPush|OptionPush|Option)*>
+<!ELEMENT Option (Option|PushOptions|PushOptions|Option)*>
 <!ATTLIST Option 
                  %desc_data;
                  isSelectable  CDATA #REQUIRED
@@ -101,8 +100,8 @@
                  tableConstraint    CDATA #IMPLIED
 >
 
-<!ELEMENT OptionPush (Option)+>
-<!ATTLIST OptionPush
+<!ELEMENT PushOptions (Option)+>
+<!ATTLIST PushOptions
 				%desc_data;
 				ref CDATA #REQUIRED>
 

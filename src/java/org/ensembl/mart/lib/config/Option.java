@@ -190,18 +190,18 @@ public class Option extends BaseConfigurationObject {
 
 
   /**
-   * Get all OptionPush objects available as an array.  OptionPushes are returned in the order they were added.
-   * @return OptionPush[]
+   * Get all PushOptions objects available as an array.  OptionPushes are returned in the order they were added.
+   * @return PushOptions[]
    */
-  public OptionPush[] getOptionPushes() {
-    return (OptionPush[]) uiOptionPushes.toArray(
-      new OptionPush[uiOptionPushes.size()]);
+  public PushOptions[] getOptionPushes() {
+    return (PushOptions[]) uiOptionPushes.toArray(
+      new PushOptions[uiOptionPushes.size()]);
   }
 
   /**
    * @param object
    */
-  public void addOptionPush(OptionPush optionPush) {
+  public void addOptionPush(PushOptions optionPush) {
     uiOptionPushes.add(optionPush);
     hashcode = -1;
   }

@@ -23,12 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * OptionPush specifies a set of options that should be pushed onto
+ * PushOptions specifies a set of options that should be pushed onto
  * a filter. These options replace any options currently available on
  * that filter. It contains the name of the filter, available via getRef(),
  * and the options that are to be pushed, available via getOptions().
  */
-public class OptionPush extends BaseConfigurationObject {
+public class PushOptions extends BaseConfigurationObject {
 
   private String ref;
   private List options = new ArrayList();
@@ -40,7 +40,7 @@ public class OptionPush extends BaseConfigurationObject {
    * @param description
    * @throws ConfigurationException
    */
-  public OptionPush(
+  public PushOptions(
     String internalName,
     String displayName,
     String description,
@@ -78,7 +78,7 @@ public class OptionPush extends BaseConfigurationObject {
    * @see java.lang.Object#equals(java.lang.Object)
    */
   public boolean equals(Object o) {
-    return o instanceof OptionPush && hashCode() == o.hashCode();
+    return o instanceof PushOptions && hashCode() == o.hashCode();
   }
 
   /**

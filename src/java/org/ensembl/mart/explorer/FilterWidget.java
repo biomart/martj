@@ -100,4 +100,12 @@ implements PropertyChangeListener {
 		}
 	}
 
+  /**
+   * validates strings, checking if not null and not empty.
+   * @param s
+   * @return true if string is not null and not empty
+   */
+  public static final boolean isInvalid(String s) {
+  	return s == null && "".equals(s);
+  }
 }

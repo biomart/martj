@@ -64,7 +64,7 @@ public class MartConfigurationFactory {
 	private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
 	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 	private final String OPTION = "Option";
-  private final String OPTIONPUSH = "OptionPush";
+  private final String PUSHOPTIONS = "PushOptions";
 	private final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names
@@ -401,10 +401,10 @@ public class MartConfigurationFactory {
 			o.addOption(getOption(suboption));
 		}
 
-    for (Iterator iter = thisElement.getChildElements(OPTIONPUSH).iterator();
+    for (Iterator iter = thisElement.getChildElements(PUSHOPTIONS).iterator();
           iter.hasNext();
           ) {
-          o.addOptionPush( getOptionPush( (Element) iter.next() ) );
+          o.addOptionPush( getPushOptions( (Element) iter.next() ) );
         }
 
 		return o;
@@ -413,14 +413,13 @@ public class MartConfigurationFactory {
 	/**
    * @param suboption
    */
-  private OptionPush getOptionPush(Element thisElement)  throws ConfigurationException {
-    // TODO Auto-generated method stub
+  private PushOptions getPushOptions(Element thisElement)  throws ConfigurationException {
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
     String desc = thisElement.getAttributeValue(DESCRIPTION, "");
     String ref = thisElement.getAttributeValue(REF, "");
         
-    OptionPush op = new OptionPush( intName, dispname, desc, ref);
+    PushOptions op = new PushOptions( intName, dispname, desc, ref);
     
     for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
       iter.hasNext();
