@@ -39,7 +39,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -87,7 +86,7 @@ public class QueryEditor extends JPanel {
   private int previewLimit    = 10000;
   private int maxPreviewBytes = 100000;
   
-  private AdaptorManager datasetViewSettings;
+  private AdaptorManager adaptorManager;
 
   private QueryEditorContext editorManager;
 
@@ -144,11 +143,10 @@ public class QueryEditor extends JPanel {
     AdaptorManager datasetViewSettings)
     throws IOException {
 
-    this.datasetViewSettings = datasetViewSettings;
+    this.adaptorManager = datasetViewSettings;
     this.editorManager = editorManager;
     this.query = new Query();
 
-    JComponent toolBar = createToolbar();
     QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getRootAdaptor());
     InputPageContainer inputPanelContainer =
       new InputPageContainer(
@@ -160,7 +158,6 @@ public class QueryEditor extends JPanel {
     outputPanel.setEditable(false);
 
     addWidgets(
-      new JScrollPane(toolBar),
       new JScrollPane(treeView),
       new JScrollPane(inputPanelContainer),
       new JScrollPane(outputPanel));
@@ -174,30 +171,6 @@ public class QueryEditor extends JPanel {
     // set default working directory
     setCurrentDirectory(new File(System.getProperty("user.home")));
 
-  }
-
-  private JComponent createToolbar() {
-
-    int gap = 5;
-    
-    Box toolBar = Box.createHorizontalBox();
-    
-    LabelledComboBox datasetViewCombo = new DatasetViewChooser(query);
-    datasetViewCombo.setEditable( false );
-    Dimension s = new Dimension(250, 40);
-    datasetViewCombo.setPreferredSize( s );
-    datasetViewCombo.setMaximumSize( s );
-    toolBar.add( datasetViewCombo );
-    
-    
-    
-    toolBar.add(Box.createHorizontalStrut(4*gap));
-    
-    toolBar.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
-
-    toolBar.add(Box.createHorizontalStrut(4*gap));
-
-    return toolBar;
   }
 
   /**
@@ -240,7 +213,7 @@ public class QueryEditor extends JPanel {
 
       logger.fine("Loaded MQL: " + buf.toString());
 
-      MartShellLib msl = new MartShellLib(datasetViewSettings.getRootAdaptor());
+      MartShellLib msl = new MartShellLib(adaptorManager.getRootAdaptor());
       setQuery(msl.MQLtoQuery(buf.toString()));
       logger.fine("Loaded Query:" + getQuery());
 
@@ -308,7 +281,7 @@ public class QueryEditor extends JPanel {
    * Sets the relative positions of the constituent components with splitters
    * where needed. Layout is:
    * <pre>
-   *       top
+
    * -----------------
    * left   |    right  
    * -----------------
@@ -316,7 +289,6 @@ public class QueryEditor extends JPanel {
    * </pre>
    */
   private void addWidgets(
-    JComponent top,
     JComponent left,
     JComponent right,
     JComponent bottom) {
@@ -342,7 +314,6 @@ public class QueryEditor extends JPanel {
       }
 
     });
-    add(top, BorderLayout.NORTH);
     add(middleAndBottom, BorderLayout.CENTER);
 
   }

@@ -66,7 +66,8 @@ import org.ensembl.mart.util.LoggingUtil;
 public class AdaptorManager extends Box {
 
   
-  private static final Logger logger =
+  private boolean optionalDatasetViewsEnabled;
+	private static final Logger logger =
     Logger.getLogger(AdaptorManager.class.getName());
   private Feedback feedback = new Feedback(this);
   private static final String DS_VIEW_FILE_KEY = "CONFIG_FILE_KEY";
@@ -501,5 +502,14 @@ public class AdaptorManager extends Box {
     return rootAdaptor;
 
   }
+
+	public void setOptionalDatasetViewsEnabled(boolean b) {
+		this.optionalDatasetViewsEnabled = b;
+		
+	}
+
+	public boolean isOptionalDatasetViewsEnabled() {
+		return optionalDatasetViewsEnabled;
+	}
 
 }

@@ -66,20 +66,23 @@ public class DatasetViewWidget
 
 	private String noneOption = "None";
 
+  boolean includeOptionalDatasetViews;
+
 
 	/**
 	 * @param query underlying model for this widget.
 	 */
 	public DatasetViewWidget(
 		Query query,
-		AdaptorManager datasetViewSettings,
+		AdaptorManager adaptorManager,
     InputPageContainer container) {
 
 		super(query, "Dataset View");
 
-		this.adaptorManager = datasetViewSettings;
+		this.adaptorManager = adaptorManager;
     this.container = container;
-
+    this.includeOptionalDatasetViews = adaptorManager.isOptionalDatasetViewsEnabled();
+    
     initOptions();
     
     chooser.setEditable(false);
@@ -102,13 +105,20 @@ public class DatasetViewWidget
 
 			// Collect all dataset views and key by adaptor->dataset
 			optionToView.clear();
+      includeOptionalDatasetViews = adaptorManager.isOptionalDatasetViewsEnabled(); 
 			for (int i = 0; i < views.length; i++) {
 				DatasetView view = views[i];
+        if ( !includeOptionalDatasetViews && !"default".equals(view.getInternalName().toLowerCase()) ) 
+          continue; 
+          
 				String option = toOption(view);
 
 				// add novel options
 				if (!optionToView.containsKey(option)) {
 					optionToView.put(option, view);
+          logger.warning("Added "+ option);
+				} else {
+          logger.warning("Ignoring "+ option);
 				}
 
 			}
@@ -189,12 +199,16 @@ public class DatasetViewWidget
 
 	/**
 	 * @param view DatasetView to convert to a string option name. 
+   * @param includeOptionalDatasetViews include view.internalName if this is true.
 	 * @return option name for the view
 	 */
 	private String toOption(DatasetView view) {
 
 		DSViewAdaptor a = view.getAdaptor();
-		return a.getName() + " -> " + view.getDataset();
+    String option = a.getName() + " -> " + view.getDataset();
+    if ( includeOptionalDatasetViews )
+      option = option + "->" + view.getInternalName();
+    return option;
 	}
 
 	/**
