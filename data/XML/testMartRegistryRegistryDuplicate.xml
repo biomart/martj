@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
-    <URLLocation url="file:data/XML/testDatasetViewRegFile.xml"/>
+  <RegistryLocation url="file:data/XML/testMartRegistryFile.xml"/>
 </MartRegistry>

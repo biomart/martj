@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
+<DatasetView dataset="test" description="For Testing Purposes Only" displayName="Test of a Registry Registry DatasetView" internalName="test_dataset_registry">
+  <Option description="For Testing Purposes Only" displayName="A Test DatasetView Option" internalName="dataset option" isSelectable="true"/>
+  <DefaultFilter value="1">
+    <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testDefaultFilterDescription" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list"/>
+  </DefaultFilter>
+  <StarBase> test_starbase</StarBase>
+  <PrimaryKey>test_primaryKey</PrimaryKey>
+  <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
+    <DSFilterGroup description="For Testing Purposes Only" displayName="Test A DSFilterGroup:" handler="testHandler" internalName="testDSFilterGroup"/>
+    <FilterGroup description="For Testing Purposes Only" displayName="Test A FilterGroup:" internalName="testFilterGroup">
+      <FilterCollection description="For Testing Purposes Only" displayName="Test of a FilterCollection" internalName="testFilterCollection">
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testFilterDescription" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list"/>
+        <FilterDescription description="For Testing Purposes Only" displayName="Filter With Enable" field="enable_test_id" internalName="enableFilter" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list">
+          <Enable ref="testFilterDescription" valueCondition="1"/>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="Filter With Disable" field="disable_test_id" internalName="disableFilter" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list">
+          <Disable ref="testFilterDescription" valueCondition="1"/>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="handlerField" handler="testHandler" internalName="testHandlerFilterDescription" legal_qualifiers="in,=" qualifier="in" type="list"/>
+      </FilterCollection>
+      <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF Options" internalName="testOptionsCollection">
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST Value Option" field="value_option_id" internalName="filterDescriptionValueOption" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list">
+          <Option internalName="valueOption" isSelectable="true" value="1"/>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST Tree Value Option" field="test_id" internalName="filterDescriptionTreeValueOption" legal_qualifiers="in,=" qualifier="in" tableConstraint="tree_value_dm" type="list">
+          <Option internalName="treeValueOption" isSelectable="false" value="">
+            <Option internalName="valueOption" isSelectable="true" value="1"/>
+          </Option>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST Option Filters" internalName="FilterDescriptionOptionFilters" type="list">
+          <Option description="For Testing Purposes Only" displayName="A Test Option Filter" field="test_id" internalName="filterOptionOne" isSelectable="true" legal_qualifiers="in,=" qualifier="in" tableConstraint="filterOne_dm" type="list"/>
+          <Option description="For Testing Purposes Only" displayName="A Test Option Filter" field="test_id" internalName="filterOptionTwo" isSelectable="true" legal_qualifiers="in,=" qualifier="in" tableConstraint="filterTwo_dm" type="list"/>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST OF OPTION WITH PUSHACTION" internalName="FilterDescriptionOptionPushAction" type="list">
+          <Option description="For Testing Purposes Only" displayName="A TEST OPTION WITH PUSHACTION" field="pushActionOption_id" internalName="pushActionOption" isSelectable="true" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list">
+            <PushAction description="For Testing Purposes Only" displayName="A TEST PUSHACTION" internalName="TestValuePushAction" ref="testFilterDescription">
+              <Option description="For Testing Purposes Only" displayName="A TEST PUSHACTION OPTION" internalName="testPushActionOption" isSelectable="true" value="1"/>
+            </PushAction>
+          </Option>
+        </FilterDescription>
+        <FilterDescription description="For Testing Purposes Only" displayName="A TEST OF A PUSHACTION FILTER OPTION" internalName="testPushActionOptionFilter" type="list">
+          <Option description="For Testing Purposes Only" displayName="A TEST OPTION WITH PUSHACTION FILTER OPTION" internalName="PushActionFilterOption" isSelectable="true">
+            <PushAction description="For Testing Purposes Only" displayName="A TEST PUSHACTION WITH OPTION FILTER" internalName="OptionFilterPushAction" ref="testFilterDescription">
+              <Option description="For Testing Purposes Only" displayName="A TEST FILTER OPTION IN A PUSHACTION" field="pushActionFilterOption_id" internalName="PushActionFilterOption" isSelectable="true" legal_qualifiers="in,=" qualifier="in" tableConstraint="gene_main" type="list"/>
+            </PushAction>
+          </Option>
+        </FilterDescription>
+      </FilterCollection>
+    </FilterGroup>
+  </FilterPage>
+  <AttributePage description="For Testing Purposes Only" displayName="Test of an Attribute Page" internalName="testAttributePage">
+    <DSAttributeGroup description="For Testing Purposes Only" displayName="test of an DSAttribute Group:" handler="testHandler" internalName="testDSAttributeGroup"/>
+    <AttributeGroup description="For Testing Purposes Only" displayName="test of an Attribute Group:" internalName="testAttributeGroup">
+      <AttributeCollection description="For Testing Purposes Only" displayName="Test of an AttributeCollection:" internalName="testAttributeCollection" maxSelect="1">
+        <AttributeDescription description="For Testing Purposes Only" displayName="Test of a AttributeDescription" field="test_id" homepageURL="http://test.org" internalName="testAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>
+      </AttributeCollection>
+    </AttributeGroup>
+  </AttributePage>
+</DatasetView>
