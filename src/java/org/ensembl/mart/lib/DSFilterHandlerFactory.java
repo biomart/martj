@@ -20,10 +20,12 @@ package org.ensembl.mart.lib;
 
 /**
  * Factory object providing a static method to create a specific DSFilterHandler implementing 
- * object for a given objectCode.
+ * object for a given DSFilter object based on its objectCode.
  *  
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @see org.ensembl.mart.lib.DSFilterHandler
+ * @see org.ensembl.mart.lib.DomainSpecificFilter
  */
 public class DSFilterHandlerFactory {
 	/**
@@ -34,7 +36,7 @@ public class DSFilterHandlerFactory {
 	 * 
 	 * @param objectCode - String matching one of the DomainSpecificFilter static String enums.
 	 * @return DSFilterHandler dsfh - a DSFilterHandler implementing object.
-	 * @see DomainSpecificFilter
+	 * @throws InvalidQueryException -- currently for unsuported objectCode.
 	 */
   public static DSFilterHandler getInstance(String objectCode) throws InvalidQueryException {
   	DSFilterHandler dsfh = null;
