@@ -81,7 +81,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       //set up the preferences node with the datasource information as the root node
       xmlCache =
         BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(
-          host + "/" + port + "/" + databaseName);
+          adaptorName);
     } catch (IllegalArgumentException e) {
       throw new ConfigurationException(
         "Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),
@@ -94,6 +94,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     tmp = (ds.getDatabaseType() != null) ? (31 * tmp) + ds.getDatabaseType().hashCode() : tmp;
     tmp = (databaseName != null) ? (31 * tmp) + databaseName.hashCode() : tmp;
     tmp = (31 * tmp) + ds.getJdbcDriverClassName().hashCode();
+    tmp = (31 * tmp) + adaptorName.hashCode();
     hashcode = tmp;
     
     update();
