@@ -1,88 +1,20 @@
-The MartJ development team would like to formally announce the release of 
-MartShell, A Java commandline interactive shell environment for Mart.  
-It comes with specifications for Homo sapiens ensembl, vega, and snp datasets, 
-and the Mus musculus ensembl dataset.  Other datasets will be included in the future.
 
-Introduction
---------------------------------------------------------------------------------
-MartShell is a commandline interface to Mart written in Java.  It works with a 
-Language called Mart Query Language (see below).  It has batch (commandline, and 
-MQL scripts) and interactive modes for executing commands against a Mart dataset, 
-and outputing the results in various formats.  It provides an editable commandline 
-history and command completion system.  There is an extensive online help system 
-for information on MQL and MartShell command syntax.  Commands exist for changing 
-the Mart Database Connection information, and output settings during an interactive 
-session, or within an MQL batch script.  
-The system supports Multi-line, whitespace formatted commands in interactive, and 
-batch modes.  It also supports the storing of named MQL queries for use as filters 
-chained into other Queries.  This Query Chaining functionality
-makes MartJ a robust Data Integration framework, with many avenues for
-users to integrate their own data with data stored in other Mart datasets.
+We are pleased to announce the release of the next development snapshot
+of martj - the java based data access tools and a design workbench
+for mart databases.
+                                                                                                                             
+This release consists of:
+                                                                                                                             
+1. MartEditor - Configuration Editor (beta)
+2. MartShell -  Interactive Shell    (beta)
+3. MartExplorer - GUI         (development)
+                                                                                                                             
+The main feature of the current snapshot is the addition of the almost
+fully featured mart configuration system, which allows to automatically
+create 'de novo' dataset configurations, modify existing configurations
+and automatically include user added tables to existing mart databases.
+                                                                                                                             
+As of this release all mart databases comply with a new table naming
+convention, which supports automated configuration
 
-Installation
---------------------------------------------------------------------------------
-Users can obtain a distribution from 
-ftp://ftp.ebi.ac.uk/pub/software/ensembl/ensmart
-
-There are several tar and zip archives available here.  See the README
-file for information on which archive is most appropriate for your needs.
-
-Examples
---------------------------------------------------------------------------------
-# A really quick query.  This should return very fast.
-use ensembl_genes_homo_sapiens;
-get ensembl_gene_id limit 10;
-
-#list all datasetviews
-list datasetviews;
-
-#list all filters for the dataset you are 'use'ing
-use ensembl_genes_homo_sapiens;
-list filters;
-
-#now list attributes for the same dataset
-list attributes;
-
-# Store a named procedure returning gene ids for mouse genes homologous
-# with human disease genes with transmembrane domains on chromosome 21
-using ensembl_genes_homo_sapiens get mouse_homologue_ensembl_gene_id 
-where chromosome_name=21 and 
-      disease_genes only and 
-      transmembrane_domains only 
-as MouseHomologsForHumanDiseaseTransMembraneGenes;
-
-# Get coding sequences for mouse genes
-# on either chromosome 10 or 16 which are included in the 
-# gene ids returned from the above named query
-using ensembl_genes_mus_musculus get sequence coding where  
-ensembl_gene_id in MouseHomologsForHumanDiseaseTransMembraneGenes and 
-chromosome_name in (10,16);
-
-# bind variables
-# a generic query that can be applied in different contexts
-using ? get ?_homologue_ensembl_gene_id 
-where ?_homologs only and 
-transmembrane_domains only 
-limit 10 
-as transMembraneHomologsFor;
-
-# use it to get human genes for mouse human homologues
-use ensembl_genes_homo_sapiens;
-get ensembl_gene_id 
-where ensembl_gene_id in transMembraneHomologsFor(ensembl_genes_mus_musculus, human, human);
-
-# or use it to get mouse genes for human mouse homologues
-use ensembl_genes_mus_musculus ;
-get ensembl_gene_id
-where ensembl_gene_id in transMembraneHomologsFor(ensembl_genes_homo_sapiens,mouse, mouse);
-
-# get 200 base pairs of upstream flanking sequence for each human ensembl transcript
-# on chromosome 21 which is on a disease gene having transmembrane domains, and a snp
-# ka/ks ratio > 0.4
-using ensembl_genes_homo_sapiens get sequence 200+transcript_flanks where
-chromosome_name=21 and disease_genes only and transmembrane_domains
-only and snp_ka_ks_ratio>0.4;
-
-For more information, and examples consult the documentation in the FTP site.
-
-
+
