@@ -47,7 +47,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
@@ -79,7 +78,7 @@ import org.ensembl.mart.lib.config.FilterDescription;
  * <p>TODO use DSV to correctly render nodes 
   * <p>TODO Finish documentation.
  */
-public class QueryTreeView extends JPanel implements QueryChangeListener {
+public class QueryTreeView extends JTree implements QueryChangeListener {
 
 	/**
 	 * Handles all DnD behaviour for the tree. Uses several call back
@@ -88,6 +87,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	private class DnDHandler
 		implements DragSourceListener, DragGestureListener, DropTargetListener {
 
+		private JTree jTree;
 		// We need to create and pass a transferable around even though we
 		// don't use it so we need to create one.
 		private Transferable dummyTransferable =
@@ -99,8 +99,10 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		 * Initialises dnd source and target for the tree and registers
 		 * itself as a listener.
 		 */
-		private DnDHandler() {
+		private DnDHandler(JTree jTree) {
 
+      this.jTree = jTree;
+     
 			DropTarget target = new DropTarget(jTree, this);
 			dragSource = new DragSource();
 			dragSource.createDefaultDragGestureRecognizer(
@@ -228,7 +230,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 	private final class DeleteAction extends AbstractAction {
 		public void actionPerformed(ActionEvent e) {
 
-			TreePath path = jTree.getSelectionModel().getSelectionPath();
+			TreePath path = getSelectionModel().getSelectionPath();
 			if (path == null)
 				return;
 
@@ -305,8 +307,6 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 	private DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
 
-	private JTree jTree = new JTree(treeModel);
-
 	private final static Logger logger =
 		Logger.getLogger(QueryTreeView.class.getName());
 
@@ -330,7 +330,8 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		this.dsvAdaptor = dsvAdaptor;
 		query.addQueryChangeListener(this);
 
-		jTree.setRootVisible(false);
+    setModel( treeModel );
+		setRootVisible(false);
 
 		rootNode.add(datasetViewNode);
 		rootNode.add(dataSourceNode);
@@ -338,22 +339,21 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 		rootNode.add(filtersNode);
 		rootNode.add(formatNode);
 
-		jTree.getSelectionModel().setSelectionMode(
+		getSelectionModel().setSelectionMode(
 			TreeSelectionModel.SINGLE_TREE_SELECTION);
 
 		// ensure the 1st level of nodes are visible
 		TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
-		jTree.makeVisible(path);
+		makeVisible(path);
 
-		jTree.getInputMap().put(
+		getInputMap().put(
 			KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),
 			"doDelete");
-		jTree.getActionMap().put("doDelete", new DeleteAction());
+		getActionMap().put("doDelete", new DeleteAction());
 
 		// handles dnd for this component
-		new DnDHandler();
+		new DnDHandler(this);
 
-		add(new JScrollPane(jTree));
 	}
 
 	/**
@@ -448,7 +448,7 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 			}
 		});
 
-		c.add(qtv);
+		c.add( new JScrollPane(qtv) );
 
 		JFrame f = new JFrame("QueryTreeView unit test");
 		f.getContentPane().add(c);
@@ -469,9 +469,6 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 
 	}
 
-	public void addTreeSelectionListener(TreeSelectionListener tsl) {
-		jTree.addTreeSelectionListener(tsl);
-	}
 
 	/**
 	 * Do nothing.
@@ -576,9 +573,9 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
 				next = (DefaultMutableTreeNode) parentNode.getChildAt(nChildren - 1);
 
 		TreePath path = new TreePath(next.getPath());
-		jTree.scrollPathToVisible(path);
+		scrollPathToVisible(path);
 		if (select)
-			jTree.setSelectionPath(path);
+			setSelectionPath(path);
 
 	}
 
