@@ -151,6 +151,8 @@ public class MartExplorer
         getSelectedQueryEditor().doPreview();
     }
   };
+  
+  
   private Action countRowsAction =
     new AbstractAction("Count Rows", createImageIcon("count_rows.gif")) {
     public void actionPerformed(ActionEvent event) {
@@ -159,6 +161,7 @@ public class MartExplorer
     }
   };
 
+  
   private Action countFocusAction =
     new AbstractAction("Count Focus", createImageIcon("count_focus.gif")) {
     public void actionPerformed(ActionEvent event) {
@@ -329,11 +332,13 @@ public class MartExplorer
     tb.add(new ExtendedButton(newQueryAction, "Create a New Query"));
     tb.add(new ExtendedButton(saveResultsAction, "Save Results to file"));
     tb.addSeparator();
+    
+    tb.add(new ExtendedButton(countFocusAction, "Count Number Of Focus objects"));
     tb.add(new ExtendedButton(executeAction, "Execute Query"));
-    tb.add(
-      new ExtendedButton(countFocusAction, "Count Number Of Focus objects"));
-    tb.add(
-      new ExtendedButton(countRowsAction, "Count Number of Focus objects"));
+    
+    // does not scale for big tables
+    //tb.add(new ExtendedButton(countRowsAction, "Count Number of Focus objects"));
+    
     tb.add(new ExtendedButton(stopAction, "Stop running Query"));
     return tb;
   }
@@ -396,7 +401,7 @@ public class MartExplorer
     JMenuItem execute = new JMenuItem(executeAction);
     query.add(execute).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
-    query.add(new JMenuItem(countRowsAction));
+    //query.add(new JMenuItem(countRowsAction));
     query.add(new JMenuItem(countFocusAction));
 
     query.addSeparator();
@@ -642,7 +647,7 @@ public class MartExplorer
 
     executeAction.setEnabled(false);
     countFocusAction.setEnabled(false);
-    countRowsAction.setEnabled(false);
+    //countRowsAction.setEnabled(false);
     saveResultsAction.setEnabled(false);
     saveResultsAsAction.setEnabled(false);
     stopAction.setEnabled(false);
@@ -660,7 +665,7 @@ public class MartExplorer
 
         executeAction.setEnabled(true);
         countFocusAction.setEnabled(true);
-        countRowsAction.setEnabled(true);
+        //countRowsAction.setEnabled(true);
         saveResultsAction.setEnabled(true);
         saveResultsAsAction.setEnabled(true);
 

@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
-public class CompiledSQLQuery {
+public class QueryCompiler {
 
   /**
    * Constructs a CompiledSQLQuery object with a specified mySQL
@@ -47,7 +47,7 @@ public class CompiledSQLQuery {
    * @throws SQLException
    * @see Query
    */
-  public CompiledSQLQuery(Query query) throws SQLException {
+  public QueryCompiler(Query query) throws SQLException {
     this.query = query;
   }
 
@@ -193,7 +193,7 @@ public class CompiledSQLQuery {
     StringBuffer buf = new StringBuffer();
     
     if (query.getFilters().length < 1) {
-      buf.append(SELECT).append(" count(distinct ").append(query.getPrimaryKeys()[0]).append(")").append(FROM).append(" ").append(query.getMainTables()[0]);
+      buf.append(SELECT).append(" count(").append(query.getPrimaryKeys()[0]).append(")").append(FROM).append(" ").append(query.getMainTables()[0]);
       fcountSQL = buf.toString();
     } else {
       boolean success = false;
@@ -414,7 +414,7 @@ public class CompiledSQLQuery {
   private String fcountSQL = null;
   private String rcountSQL = null;
   private Query query = null;
-  private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
+  private Logger logger = Logger.getLogger(QueryCompiler.class.getName());
   private String mainTable = null; // either the _main table, or the single dimension table when that is chosen
   //private String primaryKey = null; // whichever primary_key supplied by the query is used in the SQL
   private String lowestLevelKey = null; // 

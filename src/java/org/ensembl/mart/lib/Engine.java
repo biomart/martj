@@ -107,7 +107,7 @@ public class Engine {
       query = idhandler.ModifyQuery(this, unprocessedFilters, query);
     }
 
-    CompiledSQLQuery csql = new CompiledSQLQuery(query);
+    QueryCompiler csql = new QueryCompiler(query);
     String fcountSQL = csql.toFocusCountSQL();
     writeSQLResults(pstream, query, fcountSQL);
   }
@@ -142,7 +142,7 @@ public class Engine {
       query = idhandler.ModifyQuery(this, unprocessedFilters, query);
     }
 
-    CompiledSQLQuery csql = new CompiledSQLQuery(query);
+    QueryCompiler csql = new QueryCompiler(query);
     String rcountSQL = csql.toRowCountSQL();
     writeSQLResults(pstream, query, rcountSQL);
   }

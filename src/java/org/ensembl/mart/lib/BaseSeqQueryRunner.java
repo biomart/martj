@@ -299,7 +299,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     try {
       conn = ds.getConnection();
 
-      CompiledSQLQuery csql = new CompiledSQLQuery(curQuery);
+      QueryCompiler csql = new QueryCompiler(curQuery);
       String sqlbase = csql.toSQL();
 
       while (moreRows) {
@@ -390,7 +390,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     try {
       conn = curQuery.getDataSource().getConnection();
 
-      CompiledSQLQuery csql = new CompiledSQLQuery(curQuery);
+      QueryCompiler csql = new QueryCompiler(curQuery);
       String sqlbase = csql.toSQL();
 
       while (moreRows) {

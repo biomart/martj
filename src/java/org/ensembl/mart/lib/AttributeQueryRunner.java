@@ -157,7 +157,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     Connection conn = null;
     String sql = null;
     try {
-      csql = new CompiledSQLQuery(curQuery);
+      csql = new QueryCompiler(curQuery);
       String sqlbase = csql.toSQLWithKey();
       String primaryKey = csql.getQualifiedLowestLevelKey();
       //queryID = csql.getPrimaryKey();
@@ -242,7 +242,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     Connection conn = null;
     String sql = null;
     try {
-      csql = new CompiledSQLQuery(curQuery);
+      csql = new QueryCompiler(curQuery);
       String sqlbase = csql.toSQL();
 
       conn = ds.getConnection();
@@ -423,7 +423,7 @@ public final class AttributeQueryRunner implements QueryRunner {
 
   private Logger logger = Logger.getLogger(AttributeQueryRunner.class.getName());
   private Query query = null;
-  private CompiledSQLQuery csql;
+  private QueryCompiler csql;
   private Attribute[] attributes = null;
   private Filter[] filters = null;
   private FormatSpec format = null;

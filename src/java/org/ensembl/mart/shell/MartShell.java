@@ -2201,7 +2201,10 @@ public class MartShell {
       command.startsWith(MartShellLib.GETQSTART)
         || command.startsWith(MartShellLib.USINGQSTART)
         || command.startsWith(COUNTFOCUSC)
-        || command.startsWith(COUNTROWSC)) {
+    //    || command.startsWith(COUNTROWSC)
+    		) 
+    
+    {
       //is it a store command
       Matcher storeMatcher = MartShellLib.STOREPAT.matcher(command);
       if (storeMatcher.matches()) {
@@ -2452,7 +2455,8 @@ public class MartShell {
           LISTC,
           USEC,
           COUNTFOCUSC,
-          COUNTROWSC }));
+        //  COUNTROWSC 
+        }));
 
   // strings used to show/set output format settings
   private final String FILE = "file";
