@@ -336,7 +336,8 @@ public class CompiledSQLQuery {
 
     Table[] tables = TableCache.instance.get(query);
     String[] starNames = query.getStarBases();
-
+		String[] primaryKeys = query.getPrimaryKeys();
+		
     // Get all relevant dimension tables and create a mapper for each
     for (int i = 0; i < tables.length; i++) {
       Table table = tables[i];
@@ -344,7 +345,16 @@ public class CompiledSQLQuery {
       for (int j = 0; j < starNames.length; j++) {
         String starName = starNames[j];
         if (tableName.startsWith(starName) && tableName.endsWith("_dm")) {
-          dimensionMappers.add(new FieldMapper(new Table[] { table }, null));
+        	String thisPrimaryKey = null;
+        	
+        	//find the first primary key that maps to this table
+        	for (int k = 0, n = primaryKeys.length; k < n && (thisPrimaryKey == null); k++) {
+            for (int l = 0, m = table.columns.length; l < m && (thisPrimaryKey == null); l++) {
+              if (primaryKeys[k].equals(table.columns[l])) thisPrimaryKey = primaryKeys[k];
+            }
+          }
+        	
+          dimensionMappers.add(new FieldMapper(new Table[] { table }, thisPrimaryKey));
           dimensionTables.add(table);
           break;
         }
@@ -354,7 +364,6 @@ public class CompiledSQLQuery {
     //	sort so that we can use Arrays.binarySearch() later	
     Arrays.sort(tables);
 
-    String[] primaryKeys = query.getPrimaryKeys();
     for (int i = 0; i < starNames.length; i++) {
       String primaryKey = primaryKeys[i];
       for (int j = 0; j < starNames.length; j++) {
