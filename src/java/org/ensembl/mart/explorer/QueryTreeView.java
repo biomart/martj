@@ -472,7 +472,7 @@ public class QueryTreeView extends JTree implements QueryListener {
     // through QueryListener.
 		if (newDatasource!=null && newDatasource instanceof DetailedDataSource) {
 			DetailedDataSource ds = (DetailedDataSource) newDatasource;
-			s = ds.getDatabaseName() + "@" + ds.getHost();
+			s = ds.getName();
 		}
 
 		((TreeNodeData) dataSourceNode.getUserObject()).setRightText(s);
