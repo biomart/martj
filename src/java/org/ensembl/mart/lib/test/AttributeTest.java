@@ -93,7 +93,7 @@ public class AttributeTest extends Base {
 		String expectedDiseaseID = "RB2B_HUMAN";
 		Query q = new Query(genequery);
 		
-		q.addAttribute(new FieldAttribute("display_id", "xref_SWISSPROT"));
+		q.addAttribute(new FieldAttribute("display_id", "xref_SWISSPROT", "transcript_id_key"));
 		q.addFilter(new BasicFilter("gene_stable_id", "=", geneID));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		engine.execute(q, new FormatSpec(FormatSpec.TABULATED), out);

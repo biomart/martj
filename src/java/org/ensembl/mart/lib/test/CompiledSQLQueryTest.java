@@ -113,7 +113,7 @@ public class CompiledSQLQueryTest extends Base {
 	}
 
 	public void testUnprocessedFilterHandlers() throws Exception {
-		Filter chrFilter = new BasicFilter("chr_name", "gene_main", "=", "1");
+		Filter chrFilter = new BasicFilter("chr_name", "gene_main",  "gene_id_key", "=", "1");
 
 		//Marker
 		Query q = new Query(genequery);
