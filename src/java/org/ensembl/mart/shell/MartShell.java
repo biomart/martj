@@ -73,7 +73,7 @@ import org.gnu.readline.ReadlineLibrary;
 public class MartShell {
 
 	// main variables
-	private static final String defaultConf = System.getProperty("user.home") + "/.martexplorer";
+	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
 	private static String COMMAND_LINE_SWITCHES = "hAC:M:H:P:U:p:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
@@ -115,11 +115,11 @@ public class MartShell {
 			+ "\n-F OUTPUT_FORMAT               - output format, either tabulated or fasta"
 			+ "\n-R OUTPUT_SEPARATOR            - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
 			+ "\n\n-E QUERY_FILE_URL            - URL to file with valid Mart Query Commands"
-			+ "\n\nThe application searches for a .martexplorer file in the user home directory for mysql connection configuration"
+			+ "\n\nThe application searches for a .martshell file in the user home directory for mysql connection configuration"
 			+ "\nif present, this file will be loaded. If the -g option is given, or any of the commandline connection"
-			+ "\nparameters are passed, these over-ride those values provided in the .martexplorer file"
+			+ "\nparameters are passed, these over-ride those values provided in the .martshell file"
 			+ "\nUsers specifying a mysql connection configuration file with -g,"
-			+ "\nor using a .martexplorer file, can use -H, -P, -p, -u, or -d to specify"
+			+ "\nor using a .martshell file, can use -H, -P, -p, -u, or -d to specify"
 			+ "\nparameters not specified in the configuration file, or over-ride those that are specified."
 			+ "\n";
 	}
@@ -357,8 +357,10 @@ public class MartShell {
 			if (martHost == null || martHost.length() < 5)
 				setConnectionSettings(SETCONSETSC);
 			initEngine();
-			if (completionOn)
-				Readline.setCompleter(new MartCompleter(martconf));
+			if (completionOn) {
+				mcl = new MartCompleter(martconf);
+				Readline.setCompleter(mcl);
+			}
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 			e1.printStackTrace();
@@ -1499,16 +1501,27 @@ public class MartShell {
 			String command = conline.append(line).toString().trim();
 			continueQuery = false;
 			conline = new StringBuffer();
+			mcl.SetDefaultMode();
 			parseCommand(command);
 		} else if (line.endsWith(LINEEND)) {
 			String command = conline.append(" " + line).toString().trim();
 			continueQuery = false;
 			conline = new StringBuffer();
-
+			mcl.SetDefaultMode();
+			
 			parseCommand(command);
 		} else {
 			conline.append(" " + line);
 			continueQuery = true;
+			
+			//MartCompleter Mode
+			if (line.indexOf(QSTART) >= 0)
+			  mcl.SetSelectMode();
+			else if (line.indexOf(QFROM) >= 0)
+			  mcl.SetFromMode();
+			else if (line.indexOf(QWHERE) >= 0)
+			  mcl.SetWhereMode();
+			//else not needed
 		}
 	}
 
@@ -2297,6 +2310,7 @@ public class MartShell {
 	private String martUser = null;
 	private String martPass = null;
 	private String martDatabase = null;
+	private MartCompleter mcl; // will hold the MartCompleter, if Readline is loaded and completion turned on
 	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
 	private boolean historyOn = true; // commandline history, default to on
 	private boolean completionOn = true; // command completion, default to on
