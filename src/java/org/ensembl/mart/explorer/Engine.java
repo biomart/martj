@@ -182,7 +182,7 @@ public class Engine {
 	 */
 	public MartConfiguration getMartConfiguration(URL martConfURL) throws ConfigurationException {
 	    Connection conn = getDatabaseConnection();
-	    return new MartConfigurationFactory().getInstance(conn, martConfURL);
+	    return new MartConfigurationFactory().getInstance(martConfURL);
 	}
 	
 	/**
