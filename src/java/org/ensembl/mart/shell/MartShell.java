@@ -87,13 +87,15 @@ import org.gnu.readline.ReadlineLibrary;
 public class MartShell {
 
   // main variables
-  private final static String REGISTRY_FILE_NAME = ".martj_adaptors.xml";
+  //private final static String REGISTRY_FILE_NAME = ".martj_adaptors.xml";
+  private final static String REGISTRY_FILE_NAME = ".userMartRegistry.xml";
+  
 
   /**
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
    */
-  private final static String DEFAULT_REGISTRY_URL = "data/defaultRegistry.xml";
+  private final static String DEFAULT_REGISTRY_URL = "data/defaultMartRegistry.xml";
   private static final String INITSCRIPT = "initScript";
 
   private static final String defaultConf = System.getProperty("user.home") + "/.martshell";

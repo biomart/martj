@@ -47,7 +47,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -100,19 +99,19 @@ public class MartExplorer
    * If the file does not exist then a default file is loaded
    * instead. 
    */
-  public final static String REGISTRY_FILE_NAME = ".martj_adaptors.xml";
+  public final static String REGISTRY_FILE_NAME = ".userMartRegistry.xml";
 
   /**
    * Default registry file loaded at startup if none
    * is found in the user's home directory.
    */
-  private final static String DEFAULT_REGISTRY_URL = "data/defaultRegistry.xml";
+  private final static String DEFAULT_REGISTRY_URL = "data/defaultMartRegistry.xml";
 
   private static final String IMAGE_DIR = "data/image";
 
   private AdaptorManager adaptorManager = new AdaptorManager();
 
-  private final static String TITLE = " Mart Explorer (Development version)";
+  private final static String TITLE = " Mart Explorer ";
 
   private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
