@@ -481,7 +481,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    */
   protected void doPreconfig() {
     if (isQueryEditorSelected())
-      getSelectedQueryEditor().doPreconfig();
+      getSelectedQueryEditor().doPreview();
   }
 
   /**

@@ -82,15 +82,15 @@ import org.ensembl.mart.util.PollingInputStream;
  */
 public class QueryEditor extends JPanel {
 
-  private int preconfigLimit    = 1000;
+  private int preconfigLimit = 1000;
   private int maxPreconfigBytes = 100000;
-  
+
   private AdaptorManager adaptorManager;
 
   private QueryEditorContext editorManager;
 
   private OutputStream os = null;
-  private PollingInputStream pis = null; 
+  private PollingInputStream pis = null;
 
   private static final Logger logger =
     Logger.getLogger(QueryEditor.class.getName());
@@ -128,14 +128,12 @@ public class QueryEditor extends JPanel {
   /** File for temporarily storing results in while this instance exists. */
   private File tmpFile;
 
-  
-
   private JSplitPane leftAndRight;
 
   private JSplitPane middleAndBottom;
 
   private JEditorPane outputPanel;
-	private InputPageContainer inputPanelContainer;
+  private InputPageContainer inputPanelContainer;
 
   /**
    * 
@@ -150,12 +148,10 @@ public class QueryEditor extends JPanel {
     this.editorManager = editorManager;
     this.query = new Query();
 
-    QueryTreeView treeConfig = new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
+    QueryTreeView treeConfig =
+      new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
     inputPanelContainer =
-      new InputPageContainer(
-        query,
-        treeConfig,
-        datasetConfigSettings);
+      new InputPageContainer(query, treeConfig, datasetConfigSettings);
 
     outputPanel = new JEditorPane();
     outputPanel.setEditable(false);
@@ -180,19 +176,19 @@ public class QueryEditor extends JPanel {
    * 
    */
   protected void doClose() {
-    if ( editorManager!=null ) 
+    if (editorManager != null)
       editorManager.remove(this);
   }
 
   /**
-	 * 
-	 */
-	private void doDatasetConfigChanged() {
-		// TODO Auto-generated method stub
-		
-	}
+   * 
+   */
+  private void doDatasetConfigChanged() {
+    // TODO Auto-generated method stub
 
-	/**
+  }
+
+  /**
    * 
    */
   public void doLoadQuery() {
@@ -284,7 +280,7 @@ public class QueryEditor extends JPanel {
    * Sets the relative positions of the constituent components with splitters
    * where needed. Layout is:
    * <pre>
-
+  
    * -----------------
    * left   |    right  
    * -----------------
@@ -321,26 +317,27 @@ public class QueryEditor extends JPanel {
 
   }
 
-
   /**
    * Loads dataset configs from files in classpath for test
    * purposes.
    * @return preloaded dataset configs
    * @throws ConfigurationException
    */
-  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
+  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor)
+    throws ConfigurationException {
 
     //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
-    String[] urls = new String[] { 
+    String[] urls = new String[] {
       //"data/XML/hsapiens_gene_est.xml"
-      "data/XML/hsapiens_gene_ensembl.xml" 
+      "data/XML/hsapiens_gene_ensembl.xml"
       //,"data/XML/hsapiens_gene_vega.xml" 
     };
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
       //dont ignore cache, dont validate, dont include hidden members (these are only for MartEditor)
-      ((CompositeDSConfigAdaptor)adaptor).add(new URLDSConfigAdaptor(dvURL,false, false, false));
+      ((CompositeDSConfigAdaptor) adaptor).add(
+        new URLDSConfigAdaptor(dvURL, false, false, false));
     }
 
     return adaptor;
@@ -352,7 +349,7 @@ public class QueryEditor extends JPanel {
   static List testDatasources() throws ConfigurationException {
     Vector dss = new Vector();
     dss.add(
-    new DetailedDataSource(
+      new DetailedDataSource(
         "mysql",
         "ensembldb.ensembl.org",
         "3306",
@@ -362,7 +359,7 @@ public class QueryEditor extends JPanel {
         10,
         "com.mysql.jdbc.Driver"));
     dss.add(
-    new DetailedDataSource(
+      new DetailedDataSource(
         "mysql",
         "ensembldb.ensembl.org",
         "3306",
@@ -391,7 +388,8 @@ public class QueryEditor extends JPanel {
     new QuickFrame("Query Editor (Test Frame)", p);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetConfig((DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
+    editor.getQuery().setDatasetConfig(
+      (DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
   }
 
   /**
@@ -401,16 +399,14 @@ public class QueryEditor extends JPanel {
     return query;
   }
 
-
   /**
    * Executes query and writes results to preconfig panel, limits number
    * of result rows printed to preconfigLimit.
    *
    */
-  public void doPreconfig() {
+  public void doPreview() {
     runQuery(false, false, preconfigLimit);
   }
-
 
   /**
    * Executes query and writes results to temporary file.
@@ -419,20 +415,19 @@ public class QueryEditor extends JPanel {
   public void doExecute() {
     runQuery(false, false, 0);
   }
-  
-  
+
   /**
    * Stops running query. Does nothing if query not running.
    *
    */
   public void doStop() {
-    
+
     // Stop the query by closing the output stream. This is a little hacky 
     // but is the only way to
     // stop the execution (other than Thread.stop() ) becuase the engine does not 
     // have any "stop" hooks.
-    
-    if (os!=null) {
+
+    if (os != null) {
       try {
         os.close();
       } catch (IOException e) {
@@ -440,8 +435,8 @@ public class QueryEditor extends JPanel {
       }
       os = null;
     }
-    
-    if (pis!=null) {
+
+    if (pis != null) {
       try {
         pis.close();
       } catch (IOException e) {
@@ -449,7 +444,7 @@ public class QueryEditor extends JPanel {
       }
       pis = null;
     }
-    
+
     outputPanel.setText("");
   }
 
@@ -467,7 +462,15 @@ public class QueryEditor extends JPanel {
    * @param changeResultsFile if true the results file chooser is displayed
    * @param limit max number of rows in result set
    */
-  private void runQuery(final boolean save, final boolean changeResultsFile, final int limit) {
+  private void runQuery(
+    final boolean save,
+    final boolean changeResultsFile,
+    final int limit) {
+
+    if (os != null) {
+      feedback.info("Query is already running.");
+      return;
+    }
 
     // Possible OPTIMISATION could write out to a dual outputStream, one outputStream goes
     // to a file, the other is a pipe into the application. This would prevent the
@@ -494,8 +497,7 @@ public class QueryEditor extends JPanel {
 
       // We use the PollingInputStream wrapper so that we keep trying to read from
       // file even reach end. Needed because we might read faster than we write to it.
-      pis =
-        new PollingInputStream(new FileInputStream(tmpFile));
+      pis = new PollingInputStream(new FileInputStream(tmpFile));
       pis.setLive(true);
 
       // JEditorPane.read(inputStream,...) only displays the contents of the inputStream 
@@ -503,7 +505,8 @@ public class QueryEditor extends JPanel {
       // memory usage becoming extreme for large queries we limit the amount of data
       // to display by closing the inputStream (potentially) prematurely by the using the
       // MaximumBytesInputFilter() wrapper around the inputStream. 
-      final InputStream is = new MaximumBytesInputFilter(pis, maxPreconfigBytes);
+      final InputStream is =
+        new MaximumBytesInputFilter(pis, maxPreconfigBytes);
 
       final PollingInputStream pisFinal = pis;
       new Thread() {
@@ -549,7 +552,7 @@ public class QueryEditor extends JPanel {
       outputPanel.read(is, null);
       is.close();
     } catch (IOException e) {
-      if (pis!=null)
+      if (pis != null)
         feedback.warning(e);
     }
   }
@@ -562,7 +565,9 @@ public class QueryEditor extends JPanel {
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
       return;
-    } else if (query.getAttributes().length == 0 && query.getSequenceDescription()==null) {
+    } else if (
+      query.getAttributes().length == 0
+        && query.getSequenceDescription() == null) {
       feedback.warning("Attributes must be set before executing query.");
       return;
     }
@@ -577,24 +582,29 @@ public class QueryEditor extends JPanel {
           new FileOutputStream(tmpFile),
           maxPreconfigBytes);
 
-      
       int oldLimit = query.getLimit();
-      if ( limit>0 ) query.setLimit( limit );
+      if (limit > 0)
+        query.setLimit(limit);
 
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-     
-      engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
-      os.close();
 
-      if ( tmpFile.toURL().openConnection().getContentLength()<1 )
+      engine.execute(
+        query,
+        inputPanelContainer.getOutputSettingsPage().getFormat(),
+        os);
+      os.close();
+      os = null;
+
+      if (tmpFile.toURL().openConnection().getContentLength() < 1)
         feedback.warning("Empty result set.");
-      
-      if ( limit>0 ) query.setLimit( oldLimit );
+
+      if (limit > 0)
+        query.setLimit(oldLimit);
 
     } catch (Exception e) {
       // if the os is null then it must have been set by doCancel() 
       e.printStackTrace();
-      if (os!=null)
+      if (os != null)
         feedback.warning(e);
     } finally {
       setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -710,7 +720,7 @@ public class QueryEditor extends JPanel {
     AdaptorManager dvs = new AdaptorManager(false);
     dvs.setAdvancedOptionsEnabled(true);
     try {
-      testDSConfigAdaptor(dvs.getRootAdaptor()) ;
+      testDSConfigAdaptor(dvs.getRootAdaptor());
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
@@ -718,27 +728,27 @@ public class QueryEditor extends JPanel {
 
   }
 
-	/**
+  /**
    * When doPreconfig() is called a limit is set on the query with this value.
-	 * @return max number of rows in preconfig results.
-	 */
-	public int getPreconfigLimit() {
-		return preconfigLimit;
-	}
+   * @return max number of rows in preconfig results.
+   */
+  public int getPreconfigLimit() {
+    return preconfigLimit;
+  }
 
-	/**
-	 * Set the maximum number of rows to be displayed during a doPreconfig() cal.
+  /**
+   * Set the maximum number of rows to be displayed during a doPreconfig() cal.
    * @return max number of rows to include in preconfig results pane.
-	 */
-	public void setPreconfigLimit(int i) {
-		preconfigLimit = i;
-	}
+   */
+  public void setPreconfigLimit(int i) {
+    preconfigLimit = i;
+  }
 
-	/**
-	 * 
-	 */
-	public void openDatasetConfigMenu() {
-		inputPanelContainer.openDatasetConfigMenu();
-	}
+  /**
+   * 
+   */
+  public void openDatasetConfigMenu() {
+    inputPanelContainer.openDatasetConfigMenu();
+  }
 
 }
