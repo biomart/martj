@@ -169,6 +169,77 @@ public class FilterCollection {
 		}
 	}
 
+  /**
+   * adda Option object to this FilterCollection.  Options are stored in the order that they are added.
+   * @param o - an Option object
+   */
+  public void addOption(Option o) {
+		Integer oRankInt = new Integer(oRank);
+		uiOptions.put(oRankInt, o);
+		uiOptionNameMap.put(o.getInternalName(), oRankInt);
+		oRank++;
+		hasOptions = true;
+  }
+  
+  /**
+   * Set a group of Option objects in one call.  Subsequent calls to
+   * addOption or setOptions will add to what was added before, in the order that they are added.
+   * @param o - an array of Option objects
+   */
+  public void setOptions(Option[] o) {
+		for (int i = 0, n = o.length; i < n; i++) {
+			Integer oRankInt = new Integer(oRank);
+			uiOptions.put(oRankInt, o[i]);
+			uiOptionNameMap.put(o[i].getInternalName(), oRankInt);
+			oRank++;			
+		}  	
+		hasOptions = true;
+  }
+  
+  /**
+   * Determine if this FilterCollection has Options Available.
+   * 
+   * @return boolean, true if Options are available, false if not.
+   */
+  public boolean hasOptions() {
+  	return hasOptions;
+  }
+  
+  /**
+   * Get all Option objects available as an array.  Options are returned in the order they were added.
+   * @return Option[]
+   */
+  public Option[] getOptions() {
+		Option[] ret = new Option[uiOptions.size()];
+		uiOptions.values().toArray(ret);
+		return ret;  	 
+  }
+  
+  /**
+   * Determine if this FilterCollection contains an Option.  This only determines if the specified internalName
+   * maps to a specific Option in the FilterCollection during a shallow search.  It does not do a deep search
+   * within the Options.
+   * 
+   * @param internalName - String name of the requested Option
+   * @return boolean, true if found, false if not found.
+   */
+  public boolean containsOption(String internalName) {
+		return uiOptionNameMap.containsKey(internalName);
+  }
+  
+  /**
+   * Get a specific Option named by internalName.  This does not do a deep search within Options.
+   * 
+   * @param internalName - String name of the requested Option.   * 
+   * @return Option object named by internalName
+   */
+  public Option getOptionByName(String internalName) {
+		if (uiOptionNameMap.containsKey(internalName))
+				return (Option) uiOptions.get( (Integer) uiOptionNameMap.get(internalName) );
+			else
+				return null;  	
+  }
+  
 	/**
 	 * Returns the internalName of the FilterSet this Collection belongs within.
 	 * 
@@ -229,6 +300,9 @@ public class FilterCollection {
 		buf.append(", description=").append(description);
 		buf.append(", type=").append(type);
 
+    if (hasOptions)
+      buf.append(", Options=").append(uiOptions);
+      
 		if (inFilterSet)
 			buf.append(", filterSetName=").append(filterSetName);
 
@@ -246,26 +320,38 @@ public class FilterCollection {
 	}
 
 	public int hashCode() {
-		int tmp = inFilterSet ? 1 : 0;
-		tmp = (31 * tmp) + internalName.hashCode();
-		tmp = (31 * tmp) + displayName.hashCode();
-		tmp = (31 * tmp) + filterSetName.hashCode();
-		tmp = (31 * tmp) + description.hashCode();
+		int hashcode = inFilterSet ? 1 : 0;
+		hashcode = (31 * hashcode) + internalName.hashCode();
+		hashcode = (31 * hashcode) + displayName.hashCode();
+		hashcode = (31 * hashcode) + filterSetName.hashCode();
+		hashcode = (31 * hashcode) + description.hashCode();
 
 		for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof UIFilterDescription) 
-			  tmp = (31 * tmp) + ( (UIFilterDescription) element).hashCode();
+			  hashcode = (31 * hashcode) + ( (UIFilterDescription) element).hashCode();
 			else
-			  tmp = (31 * tmp) + ( (UIDSFilterDescription) element).hashCode();
+			  hashcode = (31 * hashcode) + ( (UIDSFilterDescription) element).hashCode();
 		}
 
-		return tmp;
+		for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
+			Option option = (Option) iter.next();
+			hashcode = (31 * hashcode) + option.hashCode();
+		}
+		
+		return hashcode;
 	}
 
 	private final String internalName, displayName, description, filterSetName, type;
 	private boolean inFilterSet = false;
+	private boolean hasOptions = false;
+	
+	//options
+	private int oRank = 0;
+	private TreeMap uiOptions = new TreeMap();
+	private Hashtable uiOptionNameMap = new Hashtable();
 
+  // uiFilters
 	private int fRank = 0;
 	private TreeMap uiFilters = new TreeMap();
 	private Hashtable uiFilterNameMap = new Hashtable();

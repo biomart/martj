@@ -37,7 +37,7 @@
                        tableConstraintModifier CDATA #IMPLIED
                        fieldNameModifier CDATA #IMPLIED> 
 
-<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
+<!ELEMENT FilterCollection (Option|UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
                    filterSetName       CDATA #IMPLIED
@@ -50,13 +50,15 @@
                    fieldName          CDATA #REQUIRED
                    qualifier          CDATA #IMPLIED
                    filterSetReq       CDATA #IMPLIED
-                   tableConstraint    CDATA #IMPLIED>
+                   tableConstraint    CDATA #IMPLIED
+                   optionName         CDATA #IMPLIED>
 
 <!ELEMENT UIDSFilterDescription EMPTY>
 <!ATTLIST UIDSFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
                    filterSetReq       CDATA #IMPLIED
+                   optionName         CDATA #IMPLIED
                    objectCode         CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup|DSAttributeGroup|DSAttributeGroup|AttributeGroup)+>
@@ -83,3 +85,8 @@
                     source                CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
+
+<!ELEMENT Option (Option*)>
+<!ATTLIST Option 
+                 %desc_data;
+                 isSelectable  CDATA #REQUIRED>

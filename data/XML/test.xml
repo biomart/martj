@@ -19,6 +19,14 @@
           <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST TABLE MODIFIER" fieldName="gene_stable_id_v" filterSetReq="table" internalName="filterSetUIFilterDescriptionTable" qualifier="in" tableConstraint="_dm" type="list"/>
           <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" filterSetReq="table" internalName="filterSetUIDSFilterDescription" objectCode="testObjectCode" type="list"/>
         </FilterCollection>
+        <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF Options" internalName="testOptionCollection" type="list">
+          <Option description="For Testing Purposes Only" displayName="A Test Option" internalName="testOption" isSelectable="true"/>
+          <Option description="For Testing Purposes Only" displayName="A Test Option With an Option" internalName="testOptionWithOption" isSelectable="false">
+            <Option description="For Testing Purposes Only" displayName="A Test Option In an Option" internalName="testOptionInOption" isSelectable="true"/>
+          </Option>
+          <UIFilterDescription description="For Testing Purposes Only" displayName="A FilterDescription With An Option" fieldName="test_id" internalName="OptionFilterDescription" optionName="testOption" qualifier="in" type="list"/>
+          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" internalName="optionUIDSFilterDescription" objectCode="testObjectCode" optionName="testOptionWithOption" type="list"/>
+        </FilterCollection>
       </FilterGroup>
     </FilterPage>
     <AttributePage description="For Testing Purposes Only" displayName="Test of an Attribute Page" internalName="testAttributePage">

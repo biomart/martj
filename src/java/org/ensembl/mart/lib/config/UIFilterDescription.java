@@ -31,7 +31,7 @@ public class UIFilterDescription {
 	 * This will throw a ConfigurationException.
 	 */
 	public UIFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "", "", "", "");
+		this("", "", "", "", "", "", "", "", "");
 	}
 
 	/**
@@ -44,7 +44,7 @@ public class UIFilterDescription {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public UIFilterDescription(String internalName, String fieldName, String type, String qualifier) throws ConfigurationException {
-		this(internalName, fieldName, type, qualifier, "", "", "", "");
+		this(internalName, fieldName, type, qualifier, "", "", "", "", "");
 	}
 
 	/**
@@ -58,6 +58,7 @@ public class UIFilterDescription {
 	 * @param tableConstraint String table basename to constrain SQL fieldName
 	 * @param filterSetReq String, which of the modifications specified by a FilterSetDescription are required by this UIFilterDescription
 	 * @param description String description of the Filter
+	 * @param optionName String name represention an Option that holds Options for this UIFilterDescription
 	 * 
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 * @see FilterSet
@@ -71,7 +72,8 @@ public class UIFilterDescription {
 		String displayName,
 		String tableConstraint,
 		String filterSetReq,
-		String description)
+		String description,
+		String optionName)
 		throws ConfigurationException {
 		if (internalName == null || internalName.equals("") || fieldName == null || fieldName.equals("") || type == null || type.equals(""))
 			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
@@ -83,6 +85,7 @@ public class UIFilterDescription {
 		this.qualifier = qualifier;
 		this.tableConstraint = tableConstraint;
 		this.filterSetReq = filterSetReq;
+		this.optionName = optionName;
 
 		if (!(filterSetReq == null || filterSetReq.equals("")))
 			inFilterSet = true;
@@ -98,6 +101,7 @@ public class UIFilterDescription {
 		hshcode = (31 * hshcode) + tableConstraint.hashCode();
 		hshcode = (31 * hshcode) + filterSetReq.hashCode();
 		hshcode = (31 * hshcode) + description.hashCode();
+		hshcode = (31 * hshcode) + optionName.hashCode();
 	}
 
 	/**
@@ -182,6 +186,14 @@ public class UIFilterDescription {
 		return description;
 	}
 
+	/**
+	 * Returns the optionName
+	 * @return String optionName
+	 */
+	public String getOptionName() {
+		return optionName;
+	}
+	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -197,6 +209,7 @@ public class UIFilterDescription {
 			buf.append(", filterSetReq=").append(filterSetReq);
 
 		buf.append(", description=").append(description);
+		buf.append(", optionName=").append(optionName);
 		buf.append("]");
 
 		return buf.toString();
@@ -213,7 +226,7 @@ public class UIFilterDescription {
 		return hshcode;
 	}
 
-	private final String internalName, displayName, fieldName, type, qualifier, filterSetReq, tableConstraint, description;
+	private final String internalName, displayName, fieldName, type, qualifier, filterSetReq, tableConstraint, description, optionName;
 	private boolean inFilterSet = false;
 	private int hshcode = 0;
 }

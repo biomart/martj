@@ -34,7 +34,7 @@ public class UIDSFilterDescription {
 	 * @throws ConfigurationException
 	 */
 	public UIDSFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "", "");
+		this("", "", "", "", "", "", "");
 	}
 	
 	/**
@@ -47,7 +47,7 @@ public class UIDSFilterDescription {
 	 * @throws ConfigurationException when internalName or type are null, or when the objectCode == 0
 	 */
 	public UIDSFilterDescription(String internalName, String type, String objectCode) throws ConfigurationException {
-	  this(internalName, type, objectCode, "", "", "");	
+	  this(internalName, type, objectCode, "", "", "", "");	
 	}
 
   /**
@@ -59,10 +59,11 @@ public class UIDSFilterDescription {
 	 * @param filterSetReq - String FilterSet Modification Requirement.  If this is not null, inFilterSet is set to true.
    * @param displayName - String name to display in a UI for this FilterDescription
    * @param description - String descriptive information for this FilterDescription
+   * @param optionName String name represention an Option that holds Options for this UIDSFilterDescription
    * 
    * @throws ConfigurationException when internalName, type, or objectCode are null
    */
-  public UIDSFilterDescription(String internalName, String type, String objectCode, String filterSetReq, String displayName, String description) throws ConfigurationException {
+  public UIDSFilterDescription(String internalName, String type, String objectCode, String filterSetReq, String displayName, String description, String optionName) throws ConfigurationException {
   	if (internalName == null || internalName.equals("")
   	  || type == null || type.equals("")
   	  || objectCode == null || objectCode.equals(""))
@@ -78,6 +79,7 @@ public class UIDSFilterDescription {
   	this.filterSetReq = filterSetReq;
   	this.displayName = displayName;
   	this.description = description;
+  	this.optionName = optionName;
   	
   	//generate hashcode for immutable object
   	hshcode = inFilterSet ? 1 : 0;
@@ -87,6 +89,7 @@ public class UIDSFilterDescription {
 	  hshcode = (31 * hshcode) + description.hashCode();
 	  hshcode = (31 * hshcode) + objectCode.hashCode();
 	  hshcode = (31 * hshcode) + filterSetReq.hashCode();
+		hshcode = (31 * hshcode) + optionName.hashCode();
   }  
   
 	/**
@@ -125,6 +128,14 @@ public class UIDSFilterDescription {
 		return objectCode;
 	}
 
+	/**
+	 * Returns the optionName
+	 * @return String optionName
+	 */
+	public String getOptionName() {
+		return optionName;
+	}
+	
 	/**
 	 * Returns the Type of this UIDSFilterDescription
 	 * 
@@ -166,6 +177,8 @@ public class UIDSFilterDescription {
 		if (inFilterSet)
 		  buf.append(", filterSetReq=").append(filterSetReq);
 		  
+		buf.append(", optionName=").append(optionName);
+		  
 		buf.append("]");
 
 		return buf.toString();
@@ -185,7 +198,7 @@ public class UIDSFilterDescription {
 		 return hshcode;
 	}
 	
-  private final String internalName, displayName, description, type, objectCode, filterSetReq;
+  private final String internalName, displayName, description, type, objectCode, filterSetReq, optionName;
   private boolean inFilterSet = false;
   private int hshcode = 0;
 }

@@ -61,6 +61,7 @@ public class MartConfigurationFactory {
 	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
 	private final String ATTRIBUTEDESCRIPTION = "UIAttributeDescription";
 	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
+	private final String OPTION = "Option";
 
 	// attribute names
 	private final String INTERNALNAME = "internalName";
@@ -80,6 +81,8 @@ public class MartConfigurationFactory {
 	private final String FILTERSETNAME = "filterSetName";
 	private final String FILTERSETREQ = "filterSetReq";
 	private final String OBJECTCODE = "objectCode";
+	private final String ISSELECTABLE = "isSelectable";
+	private final String OPTIONNAME = "optionName";
 
 	private MartConfiguration martconf = null;
 
@@ -295,18 +298,43 @@ public class MartConfigurationFactory {
 				fc.addUIDSFilterDescription(getUIDSFilterDescription(element));
 		}
 
+		for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
+			Element option = (Element) iter.next();
+			fc.addOption(getOption(option));
+		}
+		
 		return fc;
 	}
 
-	private UIDSFilterDescription getUIDSFilterDescription(Element element) throws ConfigurationException {
-		String intName = element.getAttributeValue(INTERNALNAME, "");
-		String dispname = element.getAttributeValue(DISPLAYNAME, "");
-		String desc = element.getAttributeValue(DESCRIPTION, "");
-		String typeval = element.getAttributeValue(TYPE, "");
-		String objCode = element.getAttributeValue(OBJECTCODE, "");
-		String filterSetReq = element.getAttributeValue(FILTERSETREQ, "");
+  private Option getOption(Element thisElement) throws ConfigurationException {
+  	String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+  	
+  	String isSelectableString = thisElement.getAttributeValue(ISSELECTABLE, "");
+  	
+   	boolean isSelectable = Boolean.valueOf(isSelectableString).booleanValue();
+ 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		
+  	Option o = new Option(intName, isSelectable, dispname, desc);
+  	
+  	for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
+			Element suboption = (Element) iter.next();
+			o.addOption(getOption(suboption));
+		}
+		
+  	return o;
+  }
+  
+	private UIDSFilterDescription getUIDSFilterDescription(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
+		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
+		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
+		String typeval = thisElement.getAttributeValue(TYPE, "");
+		String objCode = thisElement.getAttributeValue(OBJECTCODE, "");
+		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
+		String optionName = thisElement.getAttributeValue(OPTIONNAME, "");
 
-		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc);
+		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc, optionName);
 
 		return f;
 	}
@@ -318,12 +346,13 @@ public class MartConfigurationFactory {
 		String typeval = thisElement.getAttributeValue(TYPE, "");
 		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
 		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
+		String optionName = thisElement.getAttributeValue(OPTIONNAME, "");
 
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 
 		String qual = thisElement.getAttributeValue(QUALIFIER, "");
 
-		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, filterSetReq, desc);
+		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, filterSetReq, desc, optionName);
 
 		return f;
 	}
