@@ -179,8 +179,8 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
     return dsv.getDataset().equals(dataset);
   }
 
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigsByDataset(java.lang.String)
    */
   public DatasetConfigIterator getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
 

@@ -111,7 +111,7 @@ public class SimpleDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   /**
    * Currently doesnt do anything, as Simple DatasetConfig objects are fully loaded
    * at instantiation.  Could change in the future.
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#lazyLoad()
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#lazyLoad(DatasetConfig)
    */
   public void lazyLoad(DatasetConfig dsv) throws ConfigurationException {
     // Doesnt do anything, should be fully instantiated
@@ -134,8 +134,8 @@ public class SimpleDSConfigAdaptor implements DSConfigAdaptor, Comparable {
     return dsv.getDataset().equals(dataset);
   }
 
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigsByDataset(java.lang.String)
    */
   public DatasetConfigIterator getDatasetConfigsByDataset(String dataset)
     throws ConfigurationException {
@@ -190,7 +190,7 @@ public class SimpleDSConfigAdaptor implements DSConfigAdaptor, Comparable {
     
   /**
    * SimpleDSConfigAdaptor Objects do not contain child DSConfigAdaptor Objects
-   * @returns null
+   * @return null
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptorByName(java.lang.String)
    */
   public DSConfigAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
@@ -209,7 +209,7 @@ public class SimpleDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   /**
    * SimpleDSConfigAdaptor objects do not contain child DSConfigAdaptor Objects
    * @return Empty DSConfigAdaptor[]
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
+   * @see org.ensembl.mart.lib.config.LeafDSConfigAdaptor#getLeafAdaptors()
    */
   public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
     return new DSConfigAdaptor[0];

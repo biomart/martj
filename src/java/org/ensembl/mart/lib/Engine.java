@@ -201,8 +201,8 @@ public class Engine {
    * @see FormatSpec
    * @see QueryRunnerFactory
    * @see QueryRunner
-   * @see DSFilterHandler
-   * @see DSFilterHandlerFactory
+   * @see UnprocessedFilterHandler
+   * @see UnprocessedFilterHandlerFactory
    */
   public void execute(Query query, FormatSpec formatspec, OutputStream os)
     throws SequenceException, FormatException, InvalidQueryException, SQLException {
@@ -233,8 +233,8 @@ public class Engine {
    * @see FormatSpec
    * @see QueryRunnerFactory
    * @see QueryRunner
-   * @see DSFilterHandler
-   * @see DSFilterHandlerFactory
+   * @see UnprocessedFilterHandler
+   * @see UnprocessedFilterHandlerFactory
    */
   public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit)
     throws SequenceException, FormatException, InvalidQueryException, SQLException {
@@ -242,6 +242,24 @@ public class Engine {
     execute(query, formatspec, os, limit, false);
   }
 
+  /**
+   * allows the client to add a limit to the number of rows returned for a query.
+   * @param query
+   * @param formatspec
+   * @param os
+   * @param limit
+   * @param isSubQuery
+   * @throws SequenceException
+   * @throws FormatException
+   * @throws InvalidQueryException
+   * @throws SQLException
+   * @see Query
+   * @see FormatSpec
+   * @see QueryRunnerFactory
+   * @see QueryRunner
+   * @see UnprocessedFilterHandler
+   * @see UnprocessedFilterHandlerFactory
+   */
   public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit, boolean isSubQuery)
     throws SequenceException, FormatException, InvalidQueryException, SQLException {
 

@@ -2259,7 +2259,7 @@ public class DatabaseDatasetConfigUtils {
    * Schema.
    * @param databaseName -- name of the RDBMS instance to search for potential tables
    * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
-   * @return
+   * @return DatasetConfig nievely generated
    * @throws ConfigurationException
    * @throws SQLException
    */

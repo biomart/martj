@@ -110,8 +110,9 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	/**
-	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and legalQualifiers.
-	 * * not used anywhere yet and should probably add tableConstraint and Key
+	 * Constructor for a FilterDescription named by internalName internally, with a field, type, 
+   * and legalQualifiers. not used anywhere yet and should probably add tableConstraint and Key
+   * 
 	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param field String name of the field to reference in the mart.
 	 * @param type String type of filter.  Must not be null or empty.

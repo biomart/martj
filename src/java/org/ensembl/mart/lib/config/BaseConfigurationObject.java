@@ -74,7 +74,7 @@ public abstract class BaseConfigurationObject implements Comparable {
    * Get the value of an attribute for a given key. This method is primarily for DatasetConfigEditor.  Client code should
    * use the getXXX methods.
    * @param key- 
-   * @return
+   * @return String attribute for key
    */
   public String getAttribute(String key) {
     return attributes.getProperty(key);

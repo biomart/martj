@@ -53,12 +53,11 @@ public class IDListFilter implements Filter {
   public static final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
 
   /**
-   * Construct an STRING type IDListFilter object of a given field name on a String[] List of 
-   * identifiers.
+   * Construct an IDListFilter object of a given field name on a String[] List of 
+   * identifiers. This will not need further processing by an UnprocessedFilterHandler
    * 
    * @param String name - field name
    * @param String[] identifiers
-   * @see StringIDListFilterHandler
    */
   public IDListFilter(String field, String[] identifiers) {
     this(field, null, null, identifiers, null);
@@ -71,7 +70,6 @@ public class IDListFilter implements Filter {
    * @param String name - field name
    * @param String tableConstraint - table constraint for field name
    * @param String[] identifiers
-   * @see StringIDListFilterHandler
    */
   public IDListFilter(String field, String tableConstraint, String key, String[] identifiers) {
     this(field, tableConstraint, key, identifiers, null);
@@ -79,13 +77,12 @@ public class IDListFilter implements Filter {
 
   /**
    * Construct an IDListFilter object of a given field name and tableConstraint, on a String[] List of 
-   * identifiers, with a user supplied handler (default handler for this type of IDListFilter is IDListFilter.STRING).
+   * identifiers, with a user supplied handler
    * 
    * @param String name - field name
    * @param String tableConstraint - table constraint for field name
    * @param String[] identifiers
-   * @param handler -- handler object to process this Filter, default is used if null
-   * @see StringIDListFilterHandler
+   * @param handler -- handler object to process this Filter, ids are not preprocessed if null
    */
   public IDListFilter(String field, String tableConstraint, String key, String[] identifiers, String handler) {
     this.field = field;
@@ -208,7 +205,7 @@ public class IDListFilter implements Filter {
    * from a Query object that fits the constraints of a subQuery.
    * @param String name - field name
    * @param Query subQuery - Query that, when evaluated, returns a list of IDs
-   * @see QueryIDListFilterHandler 
+   * @see SubQueryIDListFilterHandler 
    */
   public IDListFilter(String name, Query subQuery) {
     this(name, null, null, subQuery, null);
@@ -221,7 +218,7 @@ public class IDListFilter implements Filter {
    * @param String name - field name
    * @param String tableConstraint - table constraint for field name
    * @param Query subQuery - Query that, when evaluated, returns a list of IDs
-   * @see QueryIDListFilterHandler 
+   * @see SubQueryIDListFilterHandler 
    */
   public IDListFilter(String name, String tableConstraint, String key, Query subQuery) {
     this(name, tableConstraint, key, subQuery, null);
@@ -234,7 +231,7 @@ public class IDListFilter implements Filter {
    * @param String tableConstraint - table constraint for field name
    * @param Query subQuery - Query that, when evaluated, returns a list of IDs
    * @param handler -- handler object to process this Filter, default is used if null
-  	 * @see QueryIDListFilterHandler
+   * @see SubQueryIDListFilterHandler
    */
   public IDListFilter(String name, String tableConstraint, String key, Query subQuery, String handler) {
     this.field = name;

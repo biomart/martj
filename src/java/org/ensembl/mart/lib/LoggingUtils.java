@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  * Java logging system
 * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
 * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
-* @see java.util.logging.*
+* @see java.util.logging.Logger
 */
 public class LoggingUtils {
 

@@ -1099,7 +1099,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   /**
    * Returns a List of potential AttributeDescription.internalName to the MartCompleter command completion system.
-   * @returns List of internalNames
+   * @return List of internalNames
    */
   public List getAttributeCompleterNames() {
     lazyLoad();
@@ -1119,7 +1119,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   /**
    * Returns a List of potential FilterDescription.internalName to the MartCompleter command completion system.
-   * @returns List of internalNames
+   * @return List of internalNames
    */
   public List getFilterCompleterNames() {
     lazyLoad();

@@ -100,7 +100,8 @@ public class DetailedDataSource implements DataSource {
 
   /**
    * Creates a datasource backed by a connection pool. connectionString should 
-   * match the host, port, and dbType. 
+   * match the host, port, and dbType.
+   *  
    * @param dbType database type e.g. mysql.
    * @param host host name e.g. ensembldb.ensembl.org
    * @param port port number. e.g. 3306.
@@ -111,7 +112,6 @@ public class DetailedDataSource implements DataSource {
    * @param maxPoolSize maximum poolsize
    * @param jdbcDriverClassName name of jdbc driver to back the datasource.
    * @param displayName displayName for datasource, if null a default is set
-   * @return connection pool capable datasource
    **/
   public DetailedDataSource(
     String dbType,
@@ -153,7 +153,8 @@ public class DetailedDataSource implements DataSource {
 
   /**
    * Creates a datasource backed by a connection pool. connectionString should 
-   * match the host, port, and dbType. Sets default displayName. 
+   * match the host, port, and dbType. Sets default displayName.
+   *  
    * @param dbType database type e.g. mysql.
    * @param host host name e.g. ensembldb.ensembl.org
    * @param port port number. e.g. 3306.
@@ -163,7 +164,6 @@ public class DetailedDataSource implements DataSource {
    * @param password password, can be null
    * @param maxPoolSize maximum poolsize
    * @param jdbcDriverClassName name of jdbc driver to back the datasource.
-   * @return connection pool capable datasource
    **/
   public DetailedDataSource(
     String dbType,
@@ -182,11 +182,11 @@ public class DetailedDataSource implements DataSource {
   
   /**
    * Convenience method which calls createDataSource(DEFAULTDATABASETYPE, host, DEFAULTPORT, database, user, password, DEFAULTPOOLSIZE, DEFAULTDRIVER);
+   * 
    * @param host host name e.g. ensembldb.ensembl.org
    * @param database name of database on database server  
    * @param user username
    * @param password password, can be null
-   * @return connection pool capable datasource
    * @throws ConfigurationException thrown if a problem occurs creating the datasource
    */
   public DetailedDataSource(
@@ -280,6 +280,7 @@ public class DetailedDataSource implements DataSource {
    * <li>sybase:Tds --> jdbc:sybase:Tds:host:port/dbname
    * <li>postgresSQL/mySQL --> jdbc:x://host:port/dbname
    * </ul>
+   * 
    * @param databaseType database type e.g. mysql.
    * @param host host name e.g. ensembldb.ensembl.org
    * @param port port number. e.g. 3306.
@@ -319,6 +320,7 @@ public class DetailedDataSource implements DataSource {
   /**
    * Convenience method for closing a connection and handling any SQLException
    * by printing a stack trace.
+   * 
    * @param conn connection to be closed, method does nothing if conn=null.
    */
   public static void close(Connection conn) {
@@ -364,6 +366,7 @@ public class DetailedDataSource implements DataSource {
   /**
    * A connection pool is created when this merthod is first called
    * and then connections are returned from it.
+   * 
    * @return Connection to the database specified.
    * @throws java.sql.SQLException if any problem occurs making the connection.
    */
@@ -420,7 +423,7 @@ public class DetailedDataSource implements DataSource {
   /**
    * @param username
    * @param password
-   * @return
+   * @return Connection
    * @throws java.sql.SQLException
    */
   public Connection getConnection(String username, String password)
@@ -429,7 +432,7 @@ public class DetailedDataSource implements DataSource {
   }
 
   /**
-   * @return
+   * @return int loginTimeout
    * @throws java.sql.SQLException
    */
   public int getLoginTimeout() throws SQLException {
@@ -437,7 +440,7 @@ public class DetailedDataSource implements DataSource {
   }
 
   /**
-   * @return
+   * @return PrintWriter logWriter
    * @throws java.sql.SQLException
    */
   public PrintWriter getLogWriter() throws SQLException {
@@ -461,77 +464,77 @@ public class DetailedDataSource implements DataSource {
   }
 
   /**
-   * @return
+   * @return String databaseName
    */
   public String getDatabaseName() {
     return databaseName;
   }
 
   /**
-   * @return
+   * @return String databaseType
    */
   public String getDatabaseType() {
     return databaseType;
   }
 
   /**
-   * @return
+   * @return DataSource dataSource
    */
   public DataSource getDatasource() {
     return dataSource;
   }
 
   /**
-   * @return
+   * @return String name
    */
   public String getName() {
     return name;
   }
 
   /**
-   * @return
+   * @return String user
    */
   public String getUser() {
     return user;
   }
 
   /**
-   * @return
+   * @return String host
    */
   public String getHost() {
     return host;
   }
 
   /**
-   * @return
-   */
+   * @return String jdbcDriverClassName
+   */ 
   public String getJdbcDriverClassName() {
     return jdbcDriverClassName;
   }
 
   /**
-   * @return
+   * @return String port
    */
   public String getPort() {
     return port;
   }
 
   /**
-   * @return
+   * @return String JDBC Connection String
    */
   public String getConnectionString() {
     return connectionString;
   }
 
   /**
-   * @return
+   * @return int maxPoolSize
    */
   public int getMaxPoolSize() {
     return maxPoolSize;
   }
 
   /**
-   * @return
+   * @return String password
    */
   public String getPassword() {
     return password;

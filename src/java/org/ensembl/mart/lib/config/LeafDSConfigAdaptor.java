@@ -47,7 +47,7 @@ public abstract class LeafDSConfigAdaptor {
   /**
     * LeafDSConfigAdaptor Objects do not contain child DSConfigAdaptor Objects.
     * @return empty DSConfigAdaptor[] 
-    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
+    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getLeafAdaptors()
     */
    public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
      return new DSConfigAdaptor[0];

@@ -46,7 +46,7 @@ import org.ensembl.util.StringUtil;
  * @see Attribute
  * @see SequenceDescription 
  * @see Filter
- * @see QueryChangeListener
+ * @see QueryListener
  * 
  */
 

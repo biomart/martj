@@ -376,7 +376,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     return hashcode - ((DSConfigAdaptor) o).hashCode();
   }
 
-  /**
+  /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#supportsDataset(java.lang.String)
    */
   public boolean supportsDataset(String dataset) throws ConfigurationException {
@@ -384,8 +384,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     return getNumDatasetConfigsByDataset(dataset) > 0;
   }
 
-  /**
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDataset(java.lang.String)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigsByDataset(java.lang.String)
    */
   public DatasetConfigIterator getDatasetConfigsByDataset(String dataset) throws ConfigurationException {
     checkUpdateException();
@@ -413,7 +413,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     return (dataSource == null) ? "No Database" : dataSource.toString();
   }
 
-  /**
+  /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetConfigByDatasetInternalName(java.lang.String, java.lang.String)
    */
   public DatasetConfig getDatasetConfigByDatasetInternalName(String dataset, String internalName)
@@ -472,7 +472,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   /**
    * DatabaseDSConfigAdaptor objects do not contain child adaptors
    * return empty DSConfigAdaptor[]
-   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
+   * @see org.ensembl.mart.lib.config.LeafDSConfigAdaptor#getLeafAdaptors()
    */
   public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
     // DatabaseDSConfigAdaptor objects do not contain child adaptors
@@ -555,7 +555,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   }
 
   /**
-   * @return
+   * Get the underlying DataSource for this DatabaseDSConfigAdaptor
+   * @return DetailedDataSource
    */
   public DetailedDataSource getDataSource() {
     return dataSource;

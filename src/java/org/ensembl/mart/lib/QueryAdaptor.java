@@ -33,12 +33,12 @@ import org.ensembl.mart.lib.config.DatasetConfig;
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * 
- * @see org.ensembl.mart.lib.QueryChangeListener
+ * @see org.ensembl.mart.lib.QueryListener
  */
 public abstract class QueryAdaptor implements QueryListener {
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#queryNameChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
   public void queryNameChanged(
     Query sourceQuery,
@@ -46,8 +46,8 @@ public abstract class QueryAdaptor implements QueryListener {
     String newName) {
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#datasetChanged(org.ensembl.mart.lib.Query, java.lang.String, java.lang.String)
    */
   public void datasetChanged(
     Query source,
@@ -58,7 +58,7 @@ public abstract class QueryAdaptor implements QueryListener {
   }
 
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+   * @see org.ensembl.mart.lib.QueryListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
    */
   public void datasourceChanged(
     Query sourceQuery,
@@ -69,7 +69,7 @@ public abstract class QueryAdaptor implements QueryListener {
   }
 
   /*
-   * @see org.ensembl.mart.lib.QueryChangeListener#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+   * @see org.ensembl.mart.lib.QueryListener#attributeAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
    */
   public void attributeAdded(
     Query sourceQuery,
@@ -79,8 +79,8 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#attributeRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Attribute)
    */
   public void attributeRemoved(
     Query sourceQuery,
@@ -90,24 +90,24 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#filterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#filterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
    */
   public void filterAdded(Query sourceQuery, int index, Filter filter) {
     
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#filterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#filterRemoved(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
    */
   public void filterRemoved(Query sourceQuery, int index, Filter filter) {
     
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#filterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#filterChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.Filter, org.ensembl.mart.lib.Filter)
    */
   public void filterChanged(
     Query sourceQuery,
@@ -118,8 +118,8 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#sequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#sequenceDescriptionChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.SequenceDescription, org.ensembl.mart.lib.SequenceDescription)
    */
   public void sequenceDescriptionChanged(
     Query sourceQuery,
@@ -129,16 +129,16 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#limitChanged(org.ensembl.mart.lib.Query, int, int)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#limitChanged(org.ensembl.mart.lib.Query, int, int)
    */
   public void limitChanged(Query query, int oldLimit, int newLimit) {
     
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#starBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#starBasesChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
   public void starBasesChanged(
     Query sourceQuery,
@@ -148,8 +148,8 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#primaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#primaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
    */
   public void primaryKeysChanged(
     Query sourceQuery,
@@ -159,8 +159,8 @@ public abstract class QueryAdaptor implements QueryListener {
 
   }
 
-  /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
   public void datasetConfigChanged(
     Query query,
