@@ -660,6 +660,7 @@ class SequencePage(Page):
         map( includePanel.add, self.includeButtons + ( flank5Panel, flank3Panel) )
         map( self.add, (self.remove, self.gene, self.transcript, includePanel ) )
 
+        self.changeEvent = ChangeEvent( self )
 
 
 
@@ -693,6 +694,7 @@ class SequencePage(Page):
 
     def actionPerformed(self, event=None):
         self.dependencies()
+        self.stateChanged( self.changeEvent )
         # todo update tree - emit stateChange!
 
 
@@ -727,24 +729,23 @@ class SequencePage(Page):
 
 
 
-    def clear( self ):
-        # ungroup buttons in order to deselect all.
-        self.__ungroup__()
-        for b in self.includeButtons:
-            b.selected = 0
-        self.__group__()
-
-
-
     def updateQuery(self, query):
-        # TODO
-        pass
+        print "TODO query from page"
 
 
 
     def updatePage(self, query):
-        # TODO
-        pass
+
+        if query.sequenceDescription.type=="coding":
+            self.transcript.selected = 1
+            self.dependencies()
+            self.includeCodingSequence.selected = 1
+        elif query.sequenceDescription.type=="peptide":
+            self.transcript.selected = 1
+            self.dependencies()
+            self.includePeptide.selected = 1
+        else:
+            raise InvalidQueryException("Unsupported sequence description")
 
 
 
@@ -787,8 +788,9 @@ class AttributeManagerPage(Page):
 
     def select( self, value ):
         
-        """ Selecting an attribute means removing it from available
-        and adding it to the tree."""
+        """ Selecting an attribute means removing it from the
+        available list, adding it to the tree and creating a page. The
+        page is returned."""
         
         # need to prevent the method running more than once in case it
         # is called as a result of multiple events (this happens on
@@ -801,6 +803,7 @@ class AttributeManagerPage(Page):
 
         if value=="sequence":
             attributePage = SequencePage( self )
+            self.sequencePage = attributePage
         else:
             attributePage = SimpleAttributePage(self, value)
 
@@ -811,6 +814,9 @@ class AttributeManagerPage(Page):
                               attributePage)
         attributePage.node = node
         self.refreshView()
+
+        return attributePage
+
 
 
     def deselect( self, attributePage ):
@@ -846,15 +852,21 @@ class AttributeManagerPage(Page):
         for attribute in query.attributes:
             if isinstance( attribute, FieldAttribute ):
                 self.select( attribute.name )
-        # todo handle sequence attributes
-
+        sd = query.sequenceDescription
+        if sd:
+            page = self.select("sequence")
+            page.updatePage( query )
 
 
 
     def updateQuery(self, query):
         for attributeName in self.selected:
-            query.addAttribute( FieldAttribute( attributeName ) )
-        # todo handle sequence attributes
+            if attributeName=="sequence":
+                self.sequencePage.updateQuery( query )
+            else:
+                query.addAttribute( FieldAttribute( attributeName ) )
+            
+
 
 
 
