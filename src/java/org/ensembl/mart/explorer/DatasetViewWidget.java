@@ -233,8 +233,8 @@ public class DatasetViewWidget
 			query.setStarBases(dsv.getStarBases());
 			query.setDataset(dsv.getDataset());
       
-      if ( dsv.getDatasource()!=null )
-        query.setDataSource( dsv.getDatasource() );
+      if ( dsv.getDSViewAdaptor()!=null && dsv.getDSViewAdaptor().getDataSource()!=null )
+        query.setDataSource( dsv.getDSViewAdaptor().getDataSource() );
 		}
 
     container.toFront( TreeNodeData.ATTRIBUTES );
