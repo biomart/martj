@@ -282,7 +282,7 @@
     <tar tarfile="${build.dir}/${name}.tar" basedir="${dist.root}" includes="**" />
     <gzip zipfile="${build.dir}/${name}.tgz" src="${build.dir}/${name}.tar" />
     <delete file="${build.dir}/${name}.tar"/>
-    <zip zipfile="${build.dir}/${name}.zip" basedir="${dist.dir}" includes="**" />
+    <zip zipfile="${build.dir}/${name}.zip" basedir="${dist.root}" includes="**" />
 
   </target>
 
