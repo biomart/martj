@@ -19,6 +19,8 @@ import org.ensembl.mart.lib.Query;
  */
 public class InputPage extends JPanel {
 
+  private Object userObject;
+
   protected Query query;
   
   private String nodeLabel;  
@@ -70,4 +72,20 @@ public class InputPage extends JPanel {
 		return nodeLabel;
 	}
 
+  /**
+   * User object is an object that the user has attached to 
+   * this page.
+   * @return user object if set, otherwise null.
+   */
+  public Object getUserObject() {
+    return userObject;
+  }
+
+  /**
+   * User object is an object that the user has attached to 
+   * this page.
+   */
+  public void setUserObject( Object userObject ) {
+    this.userObject = userObject;
+  }
 }

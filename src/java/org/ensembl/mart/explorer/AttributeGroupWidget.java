@@ -28,7 +28,6 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 
@@ -47,7 +46,7 @@ public class AttributeGroupWidget extends InputPage {
   private final static int ROW_HEIGHT = 25;
 
 	private AttributeGroup group;
-  private JComponent[] attributeWidgets;
+  private List attributeDescriptionWidgets;
   
 
 	/**
@@ -62,15 +61,19 @@ public class AttributeGroupWidget extends InputPage {
 
     setLayout( new BoxLayout(this, BoxLayout.Y_AXIS) ); 
     Box panel = Box.createVerticalBox();
-    attributeWidgets = addCollections(panel, group.getAttributeCollections());
+    attributeDescriptionWidgets = addCollections(panel, group.getAttributeCollections());
     add( new JScrollPane( panel ) );
     add( Box.createVerticalGlue() );
 	}
 
+  public List getAttributeDescriptionWidgets() {
+    return attributeDescriptionWidgets;
+  }
+
 	/**
 	 * @param collections
 	 */
-	private JComponent[] addCollections(
+	private List addCollections(
 		Container container,
 		AttributeCollection[] collections) {
 
@@ -98,7 +101,7 @@ public class AttributeGroupWidget extends InputPage {
       });
       }
       
-      return (JComponent[]) widgets.toArray(new JComponent[widgets.size()]);
+      return widgets;
 		}
     
     
@@ -115,11 +118,13 @@ public class AttributeGroupWidget extends InputPage {
 			int height = ROW_HEIGHT;
 			Dimension size = new Dimension(noScrollWidth, height);
 
-			for (int i = 0, n = attributeWidgets.length; i < n; i++) {
-				attributeWidgets[i].setPreferredSize(size);
-				attributeWidgets[i].setMinimumSize(size);
-				attributeWidgets[i].setMaximumSize(size);
-				attributeWidgets[i].invalidate();
+			for (int i = 0, n = attributeDescriptionWidgets.size(); i < n; i++) {
+        AttributeDescriptionWidget w 
+        = (AttributeDescriptionWidget)attributeDescriptionWidgets.get(i);
+				w.setPreferredSize(size);
+				w.setMinimumSize(size);
+				w.setMaximumSize(size);
+				w.invalidate();
 			}
 
 			lastWidth = width;
@@ -158,6 +163,7 @@ public class AttributeGroupWidget extends InputPage {
             AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a); 
             widgets.add( w );
 						row.add( w );
+            
 					
           } else {
 					

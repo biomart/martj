@@ -80,6 +80,10 @@ public class AttributeDescriptionWidget
 		add(button);
 	}
 
+  public Attribute getAttribute() {
+    return attribute;
+  }
+
 	/** 
 	 * Listens to changes in query. If an attribute corresponding to this widget is added then
 	 * this the state of this widget is set to selected. If such an attribute is removed then

@@ -19,6 +19,9 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,6 +40,8 @@ public class AttributePageWidget extends InputPage {
 
 	private AttributePage page;
 	private JTabbedPane tabbedPane;
+  
+  private List attributeDescriptionWidgets;
 
 	/**
 	 * @param name
@@ -47,6 +52,7 @@ public class AttributePageWidget extends InputPage {
 		super(name, query);
 
 		this.page = page;
+    this.attributeDescriptionWidgets = new ArrayList();
 
     //setBorder( new LineBorder( Color.BLACK ) );
     setBorder( BorderFactory.createEmptyBorder( 10, 5, 5, 5 ) );
@@ -62,7 +68,9 @@ public class AttributePageWidget extends InputPage {
         AttributeGroup group = (AttributeGroup)element;
         String groupName = group.getDisplayName();
     
-        tabbedPane.add( groupName, new AttributeGroupWidget( query, groupName, group ));  
+        AttributeGroupWidget w = new AttributeGroupWidget( query, groupName, group );
+        tabbedPane.add( groupName, w);  
+        attributeDescriptionWidgets.addAll( w.getAttributeDescriptionWidgets() );
 			}
       else if ( element instanceof DSAttributeGroup ) {
         System.out.println( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
@@ -75,6 +83,10 @@ public class AttributePageWidget extends InputPage {
       }
       
 		}
+  }
+  
+  public List getAttributeDescriptionWidgets() {
+    return attributeDescriptionWidgets;
   }
 
 }

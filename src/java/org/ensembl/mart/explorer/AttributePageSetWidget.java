@@ -19,6 +19,8 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -47,7 +49,7 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
 
   private JTabbedPane tabbedPane;
   private int lastSelectedIndex;
-  
+  private List attributeDescriptionWidgets;
   
 	/**
 	 * @param query
@@ -62,17 +64,29 @@ public class AttributePageSetWidget extends InputPage implements ChangeListener{
     tabbedPane.setUI(new ConfigurableTabbedPaneUI( SELECTED_BACKGROUND ));
     lastSelectedIndex = 0;
     
+    attributeDescriptionWidgets = new ArrayList();
+    
 		AttributePage[] attributePages = dataset.getAttributePages();
 		for (int i = 0, n = attributePages.length; i < n; i++) {
 			AttributePage page = attributePages[i];
       String name = page.getDisplayName();
-			tabbedPane.add( name, new AttributePageWidget(query, name, page) );
+      AttributePageWidget p = new AttributePageWidget(query, name, page); 
+			tabbedPane.add( name, p );
+      attributeDescriptionWidgets.addAll( p.getAttributeDescriptionWidgets() );
 		}
     resetTabColors(); 
     
     add( tabbedPane );
     
 	}
+
+  /**
+   * 
+   * @return all AttributeDescriptionWidgets contained in sub pages.
+   */
+  public List getAttributeDescriptionWidgets() {
+    return attributeDescriptionWidgets;
+  }
 
 	/**
    * Listens for tab changes. When a tab change is attempted and attributes are currently

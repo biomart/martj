@@ -24,6 +24,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
@@ -47,6 +50,7 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
+import org.ensembl.mart.lib.config.UIAttributeDescription;
 
 /**
  * Provides a panel in which a user can create and edit
@@ -61,7 +65,10 @@ public class QueryEditor
 	extends JPanel
 	implements PropertyChangeListener, TreeSelectionListener {
 
-	private static final Logger logger =
+  /** Maps attribute fieldnames to the corresponding InputPage. */
+	private Map attributeFieldNameToPage;
+
+  private static final Logger logger =
 		Logger.getLogger(QueryEditor.class.getName());
 
 	/** total height of the componment */
@@ -94,11 +101,17 @@ public class QueryEditor
 	private OutputSettingsPage outputSettingsPage;
 
 	private AttributePageSetWidget attributesPage;
+  
+  /** Maps attributes to the tree node they are represented by. */
+  private Map attributeToWidget;
 
 	public QueryEditor(MartConfiguration config) {
-		this.martConfiguration = config;
+		
+    this.martConfiguration = config;
 		this.query = new Query();
-
+    this.attributeToWidget = new HashMap();
+    this.attributeFieldNameToPage = new HashMap();
+    
 		query.addPropertyChangeListener(this);
 
 		initTree();
@@ -241,9 +254,9 @@ public class QueryEditor
        
       if ( "attribute".equals( propertyName ) ) {
         if ( newValue!=null && oldValue==null ) 
-          updateAddedAttribute( (Attribute)newValue );
+          updateAttributeAdded( (Attribute)newValue );
         else if ( newValue==null && oldValue!=null )
-          updateRemovedAttribute( (Attribute)oldValue );
+          updateAttributeRemoved( (Attribute)oldValue );
       }
 
 			Enumeration enum = rootNode.breadthFirstEnumeration();
@@ -263,34 +276,62 @@ public class QueryEditor
    * Remove the tree node representing the attribute
 	 * @param attribute that has been removed from Query.
 	 */
-	private void updateRemovedAttribute(Attribute attribute) {
-		// TODO
-		
-	}
+  private void updateAttributeRemoved(Attribute attribute) {
+    
+    InputPage w = (InputPage) attributeToWidget.get(attribute);
+    treeModel.removeNodeFromParent( w.getNode() );
+  
+  }
 
 
 	/**
 	 * @param attribute that has been added to the Query.
 	 */
-	private void updateAddedAttribute(Attribute attribute) {
-		MutableTreeNode parent = attributesPage.getNode();
-    String displayName = attribute.getField();
+  private void updateAttributeAdded(Attribute attribute) {
+
+    MutableTreeNode parent = attributesPage.getNode();
+    AttributeDescriptionWidget w = (AttributeDescriptionWidget)attributeToWidget.get( attribute );
+    MutableTreeNode child = w.getNode();
+
+    // need to cause value to be cached, also do a quick check
+//    if (!currentDataset.containsUIAttributeDescription(attribute.getField()))
+//      throw new RuntimeException("Attribute not in dataset: " + attribute.getField());
+//      
+//    UIAttributeDescription d =
+//      (UIAttributeDescription) currentDataset.getUIAttributeDescriptionByName(
+//        attribute.getField());
 
     // Use a "fake" input page so that clicking this node causes the
     // attribute page to be selected in the input panel.
     // TODO support selction of correct tab pane?
-    InputPage page = new InputPage( attributesPage.getName(), null );
-    page.setNodeLabel(null, displayName );
-    
-    MutableTreeNode child = new DefaultMutableTreeNode( page );
-    treeModel.insertNodeInto( child, parent, parent.getChildCount() );
+    //InputPage page = new InputPage(attributesPage.getName(), null);
+    //page.setUserObject(attribute);
+    //page.setNodeLabel(null, d.getDisplayName());
+    InputPage page = getAttributeWidgetByFieldName( attribute.getField() );
+
+    //MutableTreeNode child = new DefaultMutableTreeNode(page);
+    // need this so we can remove node later if attribute is removed 
+    //attributeToWidget.put(attribute, child);
+    treeModel.insertNodeInto(child, parent, parent.getChildCount());
     // select node in tree
-    treeView.setSelectionPath( new TreePath(rootNode).pathByAddingChild( parent ).pathByAddingChild( child ) );
-	}
+    treeView.setSelectionPath(
+      new TreePath(rootNode).pathByAddingChild(parent).pathByAddingChild(
+        child));
+  }
 
 
 
 	/**
+   * @param fieldName
+   * @return InputPage if available, otherwise null
+   */
+  private InputPage getAttributeWidgetByFieldName(String fieldName ) {
+    Object o = attributeFieldNameToPage.get( fieldName );
+    if ( o==null ) return null;
+    else return (InputPage)o;
+  }
+
+  /**
 	 * Update the model (query) and the view (tree and inputPanels).
 	 */
 	private void updateModelAndViewAfterDatasetChanged() {
@@ -321,8 +362,9 @@ public class QueryEditor
 		currentDataset = datasetSelectionPage.getSelectedDataset();
 
 		// Add attribute, filter and output pages to the views.
-		attributesPage = new AttributePageSetWidget(query, currentDataset);
-		addPage(attributesPage);
+		addAttributePages();
+
+    
 		// todo add filter page here
 		outputSettingsPage = new OutputSettingsPage();
 		outputSettingsPage.addPropertyChangeListener(this);
@@ -334,6 +376,25 @@ public class QueryEditor
 	}
 
 	/**
+   * Creates the attribute pages, adds them to the GUI and creates
+   * useful maps that are used later.
+   */
+  private void addAttributePages() {
+    
+    attributesPage = new AttributePageSetWidget(query, currentDataset);
+    List list = attributesPage.getAttributeDescriptionWidgets();
+    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
+    for (int i = 0; i < attributePages.length; i++) {
+      AttributeDescriptionWidget w = attributePages[i];
+      Attribute a = w.getAttribute();
+      attributeFieldNameToPage.put( a.getField(), w );
+      attributeToWidget.put( a, w );
+    }
+    addPage(attributesPage);
+       
+  }
+
+  /**
 	 * Show input page corresponding to selected tree node. 
 	 */
 	public void valueChanged(TreeSelectionEvent e) {
