@@ -1,17 +1,17 @@
 Known Issues
 --------------------------------------------------------------------------
-- In some queries involving large amounts of data, such as large sequence requests
-or large data query chains, the mart user interface may not perform optimally. We
-are actively developing solutions to this issue. 
 
-- This system has been developed and tested predominantly in Linux, tru64,
-  and Windows 2000 and XP.  
+- This system has been developed and tested predominantly in Linux, Windows 2000
+  and Windows NT
 
 - It does not have all of the mart datasets specified, but the ones that 
 are specified are relatively complete compared to the existing web MartView system 
 written in Perl.  
 
-- The history/command completion system relies on JNI interaction with the GNU Readline
+- MartExplorer does not perform optimally when handling multiple dataset configurations.
+We are actively developing solutions to this issue.
+
+- The MartShell history/command completion system relies on JNI interaction with the GNU Readline
 (*NIX), or GetLine (Windows) c libraries.  For this reason, shared object files must
 be compiled for each platform that the system is to be run on, and placed in the
 LD_LIBRARY_PATH (or windows equivalent).  Without this, MartShell works fine, but

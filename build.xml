@@ -543,12 +543,12 @@
         </zipfileset>
 
         <!-- linux jre -->
-        <zipfileset dir="${jre.dir}" filemode="755" prefix="${build.name}/jre">
+        <zipfileset dir="${jre.dir}"  prefix="${build.name}/jre">
             <include name="**/linux/**/*"/>        
         </zipfileset>
         
         <!-- shell files with correct unix file mode -->
-        <zipfileset dir="${dist.dir}" filemode="755" prefix="${build.name}">
+        <zipfileset dir="${dist.dir}"  prefix="${build.name}">
             <include name="**/bin/*.sh"/>
         </zipfileset>
 
@@ -640,7 +640,7 @@
         </zipfileset>
 
         <!-- windows jre -->
-        <zipfileset dir="${jre.dir}" filemode="755" prefix="${build.name}/jre">
+        <zipfileset dir="${jre.dir}"  prefix="${build.name}/jre">
             <include name="**/windows/**/*"/>        
         </zipfileset>
         
@@ -739,12 +739,12 @@
         </zipfileset>
 
         <!-- alpha jre -->
-        <zipfileset dir="${jre.dir}" filemode="755" prefix="${build.name}/jre">
+        <zipfileset dir="${jre.dir}"  prefix="${build.name}/jre">
             <include name="**/alpha/**/*" />        
         </zipfileset>
         
         <!-- shell files with correct unix file mode -->
-        <zipfileset dir="${dist.dir}" filemode="755" prefix="${build.name}">
+        <zipfileset dir="${dist.dir}"  prefix="${build.name}">
             <include name="**/bin/*.sh"/>
         </zipfileset>
 
