@@ -109,4 +109,29 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 	public void update() throws ConfigurationException {
 		//immutable object, cannot be updated.
 	}
+  
+  public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+		buf.append(" dataset DisplayName=").append(dsv.getDisplayName());
+		buf.append("]");
+
+		return buf.toString();
+	}
+  
+  /**
+	 * Allows Equality Comparisons manipulation of SimpleDSViewAdaptor objects
+	 */
+	public boolean equals(Object o) {
+		return o instanceof SimpleDSViewAdaptor && hashCode() == o.hashCode();
+	}
+  
+  /* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	public int hashCode() {
+		return dsv.hashCode();
+	}
+
 }
