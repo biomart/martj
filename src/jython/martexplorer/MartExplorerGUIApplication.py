@@ -3,11 +3,6 @@
 
 # copyright EBI, GRL 2003
 
-# cursor OR "active" bar whilst loading data
-
-# clicking view results multiple times while already loading should
-# pop up dialog box: "Already executing query, stop?" check state of cursor
-
 # TODO "save to file" <NAME> and "copy to window" <NAME>
 
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
@@ -15,8 +10,7 @@
 
 # Move database to menu
 
-# cache results so don't reload if query unchanged Query.equals()? or
-# stateChanged -> dirty flag via state changed.
+# editor.queryChanged / only execute if queryChanged or db settings changed.
 
 # handle gene_chrom_start / end, strand
 
@@ -50,7 +44,8 @@ from java.awt import CardLayout, Dimension, BorderLayout, Rectangle, Cursor
 from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
-from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane, JTextArea
+from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane
+from javax.swing import JFileChooser, JTextArea
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
@@ -885,6 +880,7 @@ class MartGUIApplication(JFrame):
         self.buildGUI()
         self.visible=1
 	self.cursorUtil = CursorUtil()
+	self.chooser = JFileChooser( System.getProperty("user.home") )
 
     def buildGUI(self):
         self.JMenuBar = self.createMenuBar()
@@ -899,6 +895,12 @@ class MartGUIApplication(JFrame):
     def createMenuBar(self):
 
         fileMenu = JMenu("File")
+	fileMenu.add( JMenuItem("Save Results"
+                                 ,toolTipText="Saves results to file"
+                                 ,actionPerformed=self.doSaveResults) )
+	fileMenu.add( JMenuItem("Save Results As"
+				,toolTipText="Saves results to file"
+				,actionPerformed=self.doSaveResultsAs) )
         fileMenu.add( JMenuItem("Exit"
                                 ,toolTipText="Quits Application"
                                 ,actionPerformed=self.doExit) )
@@ -907,9 +909,9 @@ class MartGUIApplication(JFrame):
         queryMenu.add( JMenuItem("Insert test query"
                                 ,toolTipText="Inserts a test query into the application"
                                 ,actionPerformed=self.doInsertKakaQuery) )
-        queryMenu.add( JMenuItem("Execute"
-                                 ,toolTipText="Executes query"
-                                 ,actionPerformed=self.doExecute) )
+        queryMenu.add( JMenuItem("View Results"
+                                 ,toolTipText="Opens results in viewer"
+                                 ,actionPerformed=self.doViewResults) )
         queryMenu.add( JMenuItem("Clear"
                                  ,toolTipText="Clears query"
                                  ,actionPerformed=self.doClear) )
@@ -941,10 +943,21 @@ class MartGUIApplication(JFrame):
 
     def doSaveResults(self, event=None):
         # open popup window window asking for filename
+	if self.chooser.selectedFile:
+	    # execute query, piping results to file.
+	    os = FileOutputStream( self.chooser.selectedFile )
+	    thread.start_new_thread( self.executeQuery, (self, os) )
+	else:
+	    self.doSaveResultsAs()
 
-        # execute query, piping results to file.
-        pass
+	    
 
+    def doSaveResultsAs(self, event=None):
+        # open popup window window asking for filename
+	if JFileChooser.APPROVE_OPTION == self.chooser.showSaveDialog(self):
+	    # execute query, piping results to file.
+	    os = FileOutputStream( self.chooser.selectedFile )
+	    thread.start_new_thread( self.executeQuery, (self, os) )
 
 
     def doExit(self, event=None):
@@ -1021,8 +1034,6 @@ class MartGUIApplication(JFrame):
 	    
 	    # scroll to top of results
 	    self.resultsPage.scrollToTop()
-	    self.cursorUtil.stopWaitCursor(self)
-
         except (InvalidQueryException), ex:
             JOptionPane.showMessageDialog( self,
                                            "Failed to execute query: " + ex.message,
@@ -1030,9 +1041,9 @@ class MartGUIApplication(JFrame):
                                           JOptionPane.ERROR_MESSAGE)
 	    ex.printStackTrace()
 
+	self.cursorUtil.stopWaitCursor(self)
 
-    def doExecute(self, event=None):
-        thread.start_new_thread( self.executeQuery, (self, "f") )
+
 
     def doAbout(self, event=None):
         JOptionPane.showMessageDialog(self,
