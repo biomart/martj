@@ -478,4 +478,13 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
     
     return ret;
   }
+  
+  
+  public void clearCache() {
+    System.out.println("clearing cache" + this);
+    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+      DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
+      adaptor.clearCache();
+    }
+  }
 }

@@ -308,4 +308,11 @@ public class SimpleDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   public boolean containsDatasetConfig(DatasetConfig dsvc) throws ConfigurationException {
     return dsv != null && dsv.equals(dsvc);
   }
+  
+  /**
+   * Do nothing.
+   */
+  public void clearCache() {
+    
+  }
 }

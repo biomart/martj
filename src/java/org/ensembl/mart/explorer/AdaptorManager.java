@@ -444,4 +444,8 @@ public class AdaptorManager extends Box {
     }
     setAdvancedOptionsEnabled(false);
   }
+
+  public void clearCache() {
+    rootAdaptor.clearCache();
+  }
 }

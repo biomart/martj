@@ -227,4 +227,9 @@ public interface DSConfigAdaptor {
   public DetailedDataSource getDataSource();
 
 
+  /**
+   * Clears cache if one is used, otherwise does nothing.
+   */
+  public void clearCache();
+
 }

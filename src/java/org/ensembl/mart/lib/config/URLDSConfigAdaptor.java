@@ -319,4 +319,11 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
   public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
     return this.dsv != null && this.dsv.equals(dsv);
   }
+  
+  /**
+   * Do nothing.
+   */
+  public void clearCache() {
+    
+  }
 }

@@ -688,4 +688,16 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       updateException = e;
     }
   }
+  
+  /**
+   * Removes cached config files from filesystem.
+   */
+  public void clearCache() {
+      try {
+        cache.clearCache();
+      } catch (ConfigurationException e) {
+        e.printStackTrace();
+      }
+    
+  }
 }

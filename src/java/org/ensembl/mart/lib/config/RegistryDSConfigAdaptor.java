@@ -327,4 +327,5 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
   public String getName() {
       return super.getName();
   }
+
 }
