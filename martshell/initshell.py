@@ -3,7 +3,7 @@
 from org.ensembl.mart.explorer import *
 from org.ensembl.mart.explorer.gui import *
 
-MartExplorerApplication.defaultLoggingConfiguration()
+MartExplorerApplication.defaultLoggingConfiguration(0)
 
 print "*************"
 print "* MartShell *"
