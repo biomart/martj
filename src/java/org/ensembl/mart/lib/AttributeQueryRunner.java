@@ -2,7 +2,7 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,7 +34,7 @@ public final class AttributeQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new PrintStream(os, true); // autoflush true
 	}
 
 	public void execute(int limit) throws SequenceException, InvalidQueryException {
@@ -82,14 +82,16 @@ public final class AttributeQueryRunner implements QueryRunner {
 					
 					for (int i = 1, nColumns = rs.getMetaData().getColumnCount(); i <= nColumns; ++i) {
 						if (i > 1)
-							osr.write(format.getSeparator());
+							osr.print(format.getSeparator());
 						String v = rs.getString(i);
 						if (v != null)
-							osr.write(v);
+							osr.print(v);
 						logger.debug(v);
 					}
-					osr.write("\n");
-					osr.flush();
+					osr.print("\n");
+					
+					if (osr.checkError())
+					  throw new IOException();
 				}
 				if (rows < batchLength)
 					moreRows = false;
@@ -108,6 +110,6 @@ public final class AttributeQueryRunner implements QueryRunner {
 	private Logger logger = Logger.getLogger(AttributeQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
-	private OutputStreamWriter osr;
+	private PrintStream osr;
 	private Connection conn;
 }

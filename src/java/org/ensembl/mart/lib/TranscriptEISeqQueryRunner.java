@@ -20,7 +20,6 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
+import org.ensembl.util.FormattedSequencePrintStream;
 
 /**
  * This object prints out Transcripts )Exons and Introns) in one of the supported formats
@@ -63,7 +63,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -227,7 +227,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 						if (geneiDs.size() > 0) {
 							// write the previous genes data, and refresh the geneiDs TreeMap
 							if (lastGene.intValue() > 0)
-							  seqWriter.writeSequences(lastGene);
+								seqWriter.writeSequences(lastGene);
 							geneiDs = new TreeMap();
 						}
 						lastGene = geneID;
@@ -397,11 +397,11 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 						(Hashtable) traniDs.get((Integer) tranIDiter.next());
 
 					String displayIDout = (String) tranatts.get(DisplayID);
-					osr.write(displayIDout);
+					osr.print(displayIDout);
 
 					SequenceLocation tranloc =
 						(SequenceLocation) tranatts.get(Location);
-					osr.write(
+					osr.print(
 						separator
 							+ "tstrand="
 							+ strandout
@@ -411,32 +411,35 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 							+ separator
 							+ "assembly="
 							+ assemblyout);
-					osr.flush();
+
+					if (osr.checkError())
+						throw new IOException();
 
 					for (int j = 0, n = fields.size(); j < n; j++) {
-						osr.write(separator);
+						osr.print(separator);
 						String field = (String) fields.get(j);
 						if (tranatts.containsKey(field)) {
 							ArrayList values = (ArrayList) tranatts.get(field);
 
 							if (values.size() > 1)
-								osr.write(field + " in ");
+								osr.print(field + " in ");
 							else
-								osr.write(field + "=");
+								osr.print(field + "=");
 
 							for (int vi = 0; vi < values.size(); vi++) {
 								if (vi > 0)
-									osr.write(",");
-								osr.write((String) values.get(vi));
+									osr.print(",");
+								osr.print((String) values.get(vi));
 							}
 						} else
-							osr.write(field + "= ");
-						osr.flush();
+							osr.print(field + "= ");
 					}
 
-					osr.write(separator + (String) tranatts.get(Description));
-					osr.write(separator);
-					osr.flush();
+					osr.print(separator + (String) tranatts.get(Description));
+					osr.print(separator);
+
+					if (osr.checkError())
+						throw new IOException();
 
 					//extend flanks, if necessary, and write sequence
 					if (query.getSequenceDescription().getLeftFlank() > 0)
@@ -463,9 +466,12 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 								tranloc.getChr(),
 								tranloc.getStart(),
 								tranloc.getEnd()));
-					osr.flush();
-					osr.write("\n");
-					osr.flush();
+
+					osr.print("\n");
+
+					if (osr.checkError())
+						throw new IOException();
+
 				}
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
@@ -505,11 +511,11 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 
 					// write the header, starting with the displayID
 					String displayIDout = (String) tranatts.get(DisplayID);
-					osr.write(">" + displayIDout);
+					osr.print(">" + displayIDout);
 
 					SequenceLocation tranloc =
 						(SequenceLocation) tranatts.get(Location);
-					osr.write(
+					osr.print(
 						"\tstrand="
 							+ strandout
 							+ separator
@@ -518,32 +524,35 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 							+ separator
 							+ "assembly="
 							+ assemblyout);
-					osr.flush();
+
+					if (osr.checkError())
+						throw new IOException();
 
 					for (int j = 0, n = fields.size(); j < n; j++) {
-						osr.write(separator);
+						osr.print(separator);
 						String field = (String) fields.get(j);
 						if (tranatts.containsKey(field)) {
 							ArrayList values = (ArrayList) tranatts.get(field);
 
 							if (values.size() > 1)
-								osr.write(field + " in ");
+								osr.print(field + " in ");
 							else
-								osr.write(field + "=");
+								osr.print(field + "=");
 
 							for (int vi = 0; vi < values.size(); vi++) {
 								if (vi > 0)
-									osr.write(",");
-								osr.write((String) values.get(vi));
+									osr.print(",");
+								osr.print((String) values.get(vi));
 							}
 						} else
-							osr.write(field + "= ");
-						osr.flush();
+							osr.print(field + "= ");
 					}
 
-					osr.write(separator + (String) tranatts.get(Description));
-					osr.write("\n");
-					osr.flush();
+					osr.print(separator + (String) tranatts.get(Description));
+					osr.print("\n");
+
+					if (osr.checkError())
+						throw new IOException();
 
 					//extend flanks, if necessary, and write sequence
 					if (query.getSequenceDescription().getLeftFlank() > 0)
@@ -556,7 +565,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 								query.getSequenceDescription().getRightFlank());
 
 					if (tranloc.getStrand() < 0)
-						osr.write(
+						osr.writeSequence(
 							SequenceUtil.reverseComplement(
 								dna.getSequence(
 									species,
@@ -564,15 +573,19 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 									tranloc.getStart(),
 									tranloc.getEnd())));
 					else
-						osr.write(
+						osr.writeSequence(
 							dna.getSequence(
 								species,
 								tranloc.getChr(),
 								tranloc.getStart(),
 								tranloc.getEnd()));
-					osr.flush();
-					osr.write("\n");
-					osr.flush();
+
+					osr.print("\n");
+          osr.resetColumnCount();
+
+					if (osr.checkError())
+						throw new IOException();
+
 				}
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
@@ -584,6 +597,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 		}
 	};
 
+  private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
@@ -594,7 +608,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private Connection conn = null;
-	private OutputStreamWriter osr;
+	private FormattedSequencePrintStream osr;
 
 	private TreeMap geneiDs = new TreeMap();
 	// holds each objects information, in order

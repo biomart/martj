@@ -20,7 +20,6 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,10 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.regex.*;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
+import org.ensembl.util.FormattedSequencePrintStream;
 
 /**
  * Outputs Cdna sequence in one of the supported output formats
@@ -55,15 +55,11 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 	 * @param conn a java.sql.Connection object
 	 * @param os an OutputStream object
 	 */
-	public CdnaSeqQueryRunner(
-		Query query,
-		FormatSpec format,
-		Connection conn,
-		OutputStream os) {
+	public CdnaSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -100,15 +96,11 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 		query.addAttribute(new FieldAttribute(StrandColumn, "_structure_dm"));
 
 		for (int i = 0, n = displayIDs.size(); i < n; i++) {
-			query.addAttribute(
-				new FieldAttribute(
-					(String) displayIDs.get(i),
-					"_structure_dm"));
+			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), "_structure_dm"));
 		}
 	}
 
-	public void execute(int limit)
-		throws SequenceException, InvalidQueryException {
+	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
 		boolean moreRows = true;
 		int batchStart = 0;
@@ -139,11 +131,7 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  "
-				+ structure_table
-				+ ".transcript_id, "
-				+ structure_table
-				+ ".rank";
+			sqlbase += " order by  " + structure_table + ".transcript_id, " + structure_table + ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -166,23 +154,17 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 					Filter f = query.getFilters()[i];
 					String value = f.getValue();
 					if (value != null) {
-						logger.info(
-							"SQL (prepared statement value) : "
-								+ p
-								+ " = "
-								+ value);
+						logger.info("SQL (prepared statement value) : " + p + " = " + value);
 						ps.setString(p++, value);
 					}
 				}
 
 				ResultSet rs = ps.executeQuery();
 				ResultSetMetaData rmeta = rs.getMetaData();
-                int nColumns = rmeta.getColumnCount();
-                
+				int nColumns = rmeta.getColumnCount();
+
 				// process columnNames for required attribute indices
-				for (int i = 1;
-					i <= nColumns;
-					++i) {
+				for (int i = 1; i <= nColumns; ++i) {
 					String column = rmeta.getColumnName(i);
 					if (column.equals(queryID))
 						queryIDindex = i;
@@ -216,7 +198,7 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 						if (traniDs.size() > 0) {
 							//	process the previous tranID, if this isnt the first time through, then refresh the traniDs TreeMap
 							if (lastTran.intValue() > 0)
-							  seqWriter.writeSequences(lastTran);
+								seqWriter.writeSequences(lastTran);
 							traniDs = new TreeMap();
 						}
 						lastTran = tranID;
@@ -236,37 +218,18 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 						int strand = rs.getInt(strandIndex);
 
 						//	order the locations by their rank in ascending order
-						((TreeMap) tranatts.get(Locations)).put(
-							rank,
-							new SequenceLocation(chr, start, end, strand));
+						 ((TreeMap) tranatts.get(Locations)).put(rank, new SequenceLocation(chr, start, end, strand));
 
 						// keep track of the lowest start and highest end for the gene	
 						if (!tranatts.containsKey(Geneloc)) {
-							tranatts.put(
-								Geneloc,
-								new SequenceLocation(chr, start, end, strand));
+							tranatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
 						} else {
-							SequenceLocation geneloc =
-								(SequenceLocation)
-									((Hashtable) traniDs.get(tranID)).get(
-									Geneloc);
+							SequenceLocation geneloc = (SequenceLocation) ((Hashtable) traniDs.get(tranID)).get(Geneloc);
 							if (start < geneloc.getStart()) {
-								tranatts.put(
-									Geneloc,
-									new SequenceLocation(
-										chr,
-										start,
-										geneloc.getEnd(),
-										strand));
+								tranatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
 								// overwrite the previous copy
 								if (end > geneloc.getEnd())
-									tranatts.put(
-										Geneloc,
-										new SequenceLocation(
-											chr,
-											geneloc.getStart(),
-											end,
-											strand));
+									tranatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
 								// overwrite the previous copy
 							}
 						}
@@ -276,13 +239,10 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 					if (!tranatts.containsKey(DisplayID)) {
 						StringBuffer displayID = new StringBuffer();
 
-						for (int i = 0, n = displayIDindices.size();
-							i < n;
-							i++) {
+						for (int i = 0, n = displayIDindices.size(); i < n; i++) {
 							if (i > 0)
 								displayID.append(separator);
-							int currindex =
-								((Integer) displayIDindices.get(i)).intValue();
+							int currindex = ((Integer) displayIDindices.get(i)).intValue();
 							if (rs.getString(currindex) != null)
 								displayID.append(rs.getString(currindex));
 						}
@@ -294,8 +254,7 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 					// currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
 
 					for (int i = 0, n = otherIndices.size(); i < n; i++) {
-						int currindex =
-							((Integer) otherIndices.get(i)).intValue();
+						int currindex = ((Integer) otherIndices.get(i)).intValue();
 						if (rs.getString(currindex) != null) {
 							String field = attributes[currindex - 1].getField();
 							if (!fields.contains(field))
@@ -303,10 +262,8 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 							String value = rs.getString(currindex);
 
 							if (tranatts.containsKey(field)) {
-								if (!((ArrayList) tranatts.get(field))
-									.contains(value))
-									((ArrayList) tranatts.get(field)).add(
-										value);
+								if (!((ArrayList) tranatts.get(field)).contains(value))
+									 ((ArrayList) tranatts.get(field)).add(value);
 							} else {
 								List values = new ArrayList();
 								values.add(value);
@@ -347,81 +304,56 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 
 				// write the header, starting with the displayID
 				String displayIDout = (String) tranatts.get(DisplayID);
-				osr.write(displayIDout);
+				osr.print(displayIDout);
 
-				SequenceLocation geneloc =
-					(SequenceLocation) tranatts.get(Geneloc);
-				String strandout =
-					geneloc.getStrand() > 0 ? "forward" : "revearse";
+				SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
+				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) tranatts.get(Assembly);
-				osr.write(
-					separator
-						+ "strand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ assemblyout);
-				osr.flush();
+				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+
+				if (osr.checkError())
+					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.write(separator);
+					osr.print(separator);
 					String field = (String) fields.get(j);
 					if (tranatts.containsKey(field)) {
 						List values = (ArrayList) tranatts.get(field);
 
 						if (values.size() > 1)
-							osr.write(field + " in ");
+							osr.print(field + " in ");
 						else
-							osr.write(field + "=");
+							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
-								osr.write(",");
-							osr.write((String) values.get(vi));
+								osr.print(",");
+							osr.print((String) values.get(vi));
 						}
 					} else
-						osr.write(field + "= ");
-					osr.flush();
+						osr.print(field + "= ");
 				}
-				osr.write(separator + (String) tranatts.get(Description));
-				osr.write(separator);
-				osr.flush();
+				osr.print(separator + (String) tranatts.get(Description));
+				osr.print(separator);
+
+				if (osr.checkError())
+					throw new IOException();
 
 				TreeMap locations = (TreeMap) tranatts.get(Locations);
-				dna.CacheSequence(
-					species,
-					geneloc.getChr(),
-					geneloc.getStart(),
-					geneloc.getEnd());
+				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
-				for (Iterator lociter = locations.keySet().iterator();
-					lociter.hasNext();
-					) {
-					SequenceLocation loc =
-						(SequenceLocation) locations.get(
-							(Integer) lociter.next());
+				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
+					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					if (loc.getStrand() < 0)
-						osr.write(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(
-									species,
-									loc.getChr(),
-									loc.getStart(),
-									loc.getEnd())));
+						osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd())));
 					else
-						osr.write(
-							dna.getSequence(
-								species,
-								loc.getChr(),
-								loc.getStart(),
-								loc.getEnd()));
-					osr.flush();
+						osr.write(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+
 				}
-				osr.write("\n");
-				osr.flush();
+				osr.print("\n");
+
+				if (osr.checkError())
+					throw new IOException();
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -439,80 +371,58 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 
 				// write the header, starting with the displayID
 				String displayIDout = (String) tranatts.get(DisplayID);
-				osr.write(">" + displayIDout);
+				osr.print(">" + displayIDout);
 
-				SequenceLocation geneloc =
-					(SequenceLocation) tranatts.get(Geneloc);
-				String strandout =
-					geneloc.getStrand() > 0 ? "forward" : "revearse";
+				SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
+				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) tranatts.get(Assembly);
-				osr.write(
-					"\tstrand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ assemblyout);
-				osr.flush();
+				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+
+				if (osr.checkError())
+					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.write(separator);
+					osr.print(separator);
 					String field = (String) fields.get(j);
 					if (tranatts.containsKey(field)) {
 						List values = (ArrayList) tranatts.get(field);
 
 						if (values.size() > 1)
-							osr.write(field + " in ");
+							osr.print(field + " in ");
 						else
-							osr.write(field + "=");
+							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
-								osr.write(",");
-							osr.write((String) values.get(vi));
+								osr.print(",");
+							osr.print((String) values.get(vi));
 						}
 					} else
-						osr.write(field + "= ");
-					osr.flush();
+						osr.print(field + "= ");
 				}
-				osr.write(separator + (String) tranatts.get(Description));
-				osr.write("\n");
-				osr.flush();
+				osr.print(separator + (String) tranatts.get(Description));
+				osr.print("\n");
+
+				if (osr.checkError())
+					throw new IOException();
 
 				TreeMap locations = (TreeMap) tranatts.get(Locations);
-				dna.CacheSequence(
-					species,
-					geneloc.getChr(),
-					geneloc.getStart(),
-					geneloc.getEnd());
+				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
-				for (Iterator lociter = locations.keySet().iterator();
-					lociter.hasNext();
-					) {
-					SequenceLocation loc =
-						(SequenceLocation) locations.get(
-							(Integer) lociter.next());
+				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
+					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					if (loc.getStrand() < 0)
-						osr.write(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(
-									species,
-									loc.getChr(),
-									loc.getStart(),
-									loc.getEnd())));
+						osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd())));
 					else
-						osr.write(
-							dna.getSequence(
-								species,
-								loc.getChr(),
-								loc.getStart(),
-								loc.getEnd()));
-					osr.flush();
+						osr.writeSequence(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+
 				}
-				osr.write("\n");
-				osr.flush();
+				osr.print("\n");
+				osr.resetColumnCount();
+
+				if (osr.checkError())
+					throw new IOException();
+
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -523,16 +433,16 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 		}
 	};
 
+	private int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
-	private Logger logger =
-		Logger.getLogger(CdnaSeqQueryRunner.class.getName());
+	private Logger logger = Logger.getLogger(CdnaSeqQueryRunner.class.getName());
 	private Query query = null;
 	private String dataset = null;
 	private String species = null;
 	private FormatSpec format = null;
-	private OutputStreamWriter osr;
+	private FormattedSequencePrintStream osr;
 	private Connection conn = null;
 
 	private TreeMap traniDs = new TreeMap();

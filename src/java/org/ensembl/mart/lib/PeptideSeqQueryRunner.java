@@ -20,7 +20,6 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
+import org.ensembl.util.FormattedSequencePrintStream;
 
 /**
  * Outputs peptide sequence in one of the supported output format
@@ -63,7 +63,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -345,13 +345,13 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 			try {
 				Hashtable atts = (Hashtable) traniDs.get(tranID);
 
-				osr.write((String) atts.get(DisplayID));
+				osr.print((String) atts.get(DisplayID));
 
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
 				String strandout =
 					geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
-				osr.write(
+				osr.print(
 					separator
 						+ "strand="
 						+ strandout
@@ -361,32 +361,35 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						+ separator
 						+ "assembly="
 						+ assemblyout);
-				osr.flush();
+
+               if (osr.checkError())
+                 throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.write(separator);
+					osr.print(separator);
 					String field = (String) fields.get(j);
 					if (atts.containsKey(field)) {
 						List values = (ArrayList) atts.get(field);
 
 						if (values.size() > 1)
-							osr.write(field + " in ");
+							osr.print(field + " in ");
 						else
-							osr.write(field + "=");
+							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
-								osr.write(",");
-							osr.write((String) values.get(vi));
+								osr.print(",");
+							osr.print((String) values.get(vi));
 						}
 					} else
-						osr.write(field + "= ");
-					osr.flush();
+						osr.print(field + "= ");
 				}
 
-				osr.write(separator + (String) atts.get(Description));
-				osr.write(separator);
-				osr.flush();
+				osr.print(separator + (String) atts.get(Description));
+				osr.print(separator);
+
+               if (osr.checkError())
+                 throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
 				dna.CacheSequence(
@@ -395,34 +398,53 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					geneloc.getStart(),
 					geneloc.getEnd());
 
-				StringBuffer sequence = new StringBuffer();
-				// to collect all sequence before translation
+				List locbytes = new ArrayList();
+				 // to collect all sequence before translation
 
-				for (Iterator lociter = locations.keySet().iterator();
-					lociter.hasNext();
-					) {
-					SequenceLocation loc =
-						(SequenceLocation) locations.get(
-							(Integer) lociter.next());
-					if (loc.getStrand() < 0)
-						sequence.append(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(
-									species,
-									loc.getChr(),
-									loc.getStart(),
-									loc.getEnd())));
-					else
-						sequence.append(
-							dna.getSequence(
-								species,
-								loc.getChr(),
-								loc.getStart(),
-								loc.getEnd()));
-				}
-				osr.write(SequenceUtil.dna2protein(sequence.toString()) + "\n");
-				osr.write("\n");
-				osr.flush();
+				 for (Iterator lociter = locations.keySet().iterator();
+					 lociter.hasNext();
+					 ) {
+					 SequenceLocation loc =
+						 (SequenceLocation) locations.get(
+							 (Integer) lociter.next());
+					 if (loc.getStrand() < 0)
+						 locbytes.add(
+							 SequenceUtil.reverseComplement(
+								 dna.getSequence(
+									 species,
+									 loc.getChr(),
+									 loc.getStart(),
+									 loc.getEnd())));
+					 else
+						 locbytes.add(
+							 dna.getSequence(
+								 species,
+								 loc.getChr(),
+								 loc.getStart(),
+								 loc.getEnd()));
+				 }
+				
+				 //iterate through locbytes twice, once to calculate desired length of sequence byte[], and once to fill sequence byte[]
+				 int seqLen = 0;
+				 for (int i = 0, n = locbytes.size(); i < n; i++) {
+					 byte[] thesebytes = (byte[]) locbytes.get(i);
+					 seqLen += thesebytes.length;
+				 }
+				
+				 byte[] sequence = new byte[seqLen];
+				 int nextPos = 0;
+				 for (int i = 0, n = locbytes.size(); i < n; i++) {
+					 byte[] thisChunk = (byte[]) locbytes.get(i);
+					 System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
+					 nextPos += thisChunk.length;
+				 }
+				
+				 osr.write( SequenceUtil.dna2protein(sequence));
+				osr.print("\n");
+
+                if (osr.checkError())
+                  throw new IOException();
+                  
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -440,13 +462,13 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 
 				// write the header, starting with the displayID
 				String displayIDout = (String) atts.get(DisplayID);
-				osr.write(">" + displayIDout);
+				osr.print(">" + displayIDout);
 
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
 				String strandout =
 					geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
-				osr.write(
+				osr.print(
 					"\tstrand="
 						+ strandout
 						+ separator
@@ -455,32 +477,35 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						+ separator
 						+ "assembly="
 						+ assemblyout);
-				osr.flush();
+
+                if (osr.checkError())
+                  throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.write(separator);
+					osr.print(separator);
 					String field = (String) fields.get(j);
 					if (atts.containsKey(field)) {
 						List values = (ArrayList) atts.get(field);
 
 						if (values.size() > 1)
-							osr.write(field + " in ");
+							osr.print(field + " in ");
 						else
-							osr.write(field + "=");
+							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
-								osr.write(",");
-							osr.write((String) values.get(vi));
+								osr.print(",");
+							osr.print((String) values.get(vi));
 						}
 					} else
-						osr.write(field + "= ");
-					osr.flush();
+						osr.print(field + "= ");
 				}
 
-				osr.write(separator + (String) atts.get(Description));
-				osr.write("\n");
-				osr.flush();
+				osr.print(separator + (String) atts.get(Description));
+				osr.print("\n");
+
+                if (osr.checkError())
+                  throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
 				dna.CacheSequence(
@@ -489,7 +514,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					geneloc.getStart(),
 					geneloc.getEnd());
 
-				StringBuffer sequence = new StringBuffer();
+                List locbytes = new ArrayList();
 				// to collect all sequence before translation
 
 				for (Iterator lociter = locations.keySet().iterator();
@@ -499,7 +524,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						(SequenceLocation) locations.get(
 							(Integer) lociter.next());
 					if (loc.getStrand() < 0)
-						sequence.append(
+						locbytes.add(
 							SequenceUtil.reverseComplement(
 								dna.getSequence(
 									species,
@@ -507,16 +532,36 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 									loc.getStart(),
 									loc.getEnd())));
 					else
-						sequence.append(
+						locbytes.add(
 							dna.getSequence(
 								species,
 								loc.getChr(),
 								loc.getStart(),
 								loc.getEnd()));
 				}
-				osr.write(SequenceUtil.dna2protein(sequence.toString()) + "\n");
-				osr.write("\n");
-				osr.flush();
+				
+				//iterate through locbytes twice, once to calculate desired length of sequence byte[], and once to fill sequence byte[]
+				int seqLen = 0;
+				for (int i = 0, n = locbytes.size(); i < n; i++) {
+					byte[] thesebytes = (byte[]) locbytes.get(i);
+					seqLen += thesebytes.length;
+				}
+				
+				byte[] sequence = new byte[seqLen];
+				int nextPos = 0;
+				for (int i = 0, n = locbytes.size(); i < n; i++) {
+					byte[] thisChunk = (byte[]) locbytes.get(i);
+					System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
+					nextPos += thisChunk.length;
+				}
+				
+				osr.writeSequence( SequenceUtil.dna2protein(sequence));
+				osr.print("\n");
+        osr.resetColumnCount();
+
+                if (osr.checkError())
+                  throw new IOException();
+                  
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
 				throw e;
@@ -527,6 +572,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		}
 	};
 
+  private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
@@ -536,7 +582,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	private String dataset = null;
 	private String species = null;
 	private FormatSpec format = null;
-	private OutputStreamWriter osr = null;
+	private FormattedSequencePrintStream osr = null;
 	private Connection conn = null;
 
 	private TreeMap traniDs = new TreeMap();

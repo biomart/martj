@@ -20,7 +20,6 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,6 +35,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
+import org.ensembl.util.FormattedSequencePrintStream;
 
 /**
  * Outputs Gene Exon sequences in one of the supported formats
@@ -62,7 +62,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.conn = conn;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -221,7 +221,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 						if (geneiDs.size() > 0) {
 							// write the previous genes data, and refresh the geneiDs TreeMap
 							if (lastGene.intValue() > 0)
-							  seqWriter.writeSequences(lastGene);
+								seqWriter.writeSequences(lastGene);
 							geneiDs = new TreeMap();
 						}
 						// only do each exon once
@@ -377,11 +377,11 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 						(SequenceLocation) exonatts.get(Location);
 
 					// write the header, starting with the displayID
-					osr.write((String) exonatts.get(DisplayID));
+					osr.print((String) exonatts.get(DisplayID));
 
 					String strandout =
 						exonloc.getStrand() > 0 ? "forward" : "revearse";
-					osr.write(
+					osr.print(
 						separator
 							+ "strand="
 							+ strandout
@@ -391,33 +391,36 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 							+ separator
 							+ "assembly="
 							+ assemblyout);
-					osr.flush();
+
+					if (osr.checkError())
+						throw new IOException();
 
 					for (int j = 0, n = fields.size(); j < n; j++) {
-						osr.write(separator);
+						osr.print(separator);
 						String field = (String) fields.get(j);
 						if (exonatts.containsKey(field)) {
 							List values = (ArrayList) exonatts.get(field);
 
 							if (values.size() > 1)
-								osr.write(field + " in ");
+								osr.print(field + " in ");
 							else
-								osr.write(field + "=");
+								osr.print(field + "=");
 
 							for (int vi = 0; vi < values.size(); vi++) {
 								if (vi > 0)
-									osr.write(",");
-								osr.write((String) values.get(vi));
+									osr.print(",");
+								osr.print((String) values.get(vi));
 							}
 						} else
-							osr.write(field + "= ");
-						osr.flush();
+							osr.print(field + "= ");
 					}
 
 					// write the description
-					osr.write(separator + (String) exonatts.get(Description));
-					osr.write(separator);
-					osr.flush();
+					osr.print(separator + (String) exonatts.get(Description));
+					osr.print(separator);
+
+					if (osr.checkError())
+						throw new IOException();
 
 					//extend flanking sequence if necessary
 					int lflank = query.getSequenceDescription().getLeftFlank();
@@ -444,9 +447,11 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 								exonloc.getChr(),
 								exonloc.getStart(),
 								exonloc.getEnd()));
-					osr.flush();
-					osr.write("\n");
-					osr.flush();
+
+					osr.print("\n");
+
+					if (osr.checkError())
+						throw new IOException();
 				}
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
@@ -482,11 +487,11 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 						(SequenceLocation) exonatts.get(Location);
 
 					// write the header, starting with the displayID
-					osr.write(">" + (String) exonatts.get(DisplayID));
+					osr.print(">" + (String) exonatts.get(DisplayID));
 
 					String strandout =
 						exonloc.getStrand() > 0 ? "forward" : "revearse";
-					osr.write(
+					osr.print(
 						"\tstrand="
 							+ strandout
 							+ separator
@@ -495,33 +500,36 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 							+ separator
 							+ "assembly="
 							+ assemblyout);
-					osr.flush();
+
+					if (osr.checkError())
+						throw new IOException();
 
 					for (int j = 0, n = fields.size(); j < n; j++) {
-						osr.write(separator);
+						osr.print(separator);
 						String field = (String) fields.get(j);
 						if (exonatts.containsKey(field)) {
 							List values = (ArrayList) exonatts.get(field);
 
 							if (values.size() > 1)
-								osr.write(field + " in ");
+								osr.print(field + " in ");
 							else
-								osr.write(field + "=");
+								osr.print(field + "=");
 
 							for (int vi = 0; vi < values.size(); vi++) {
 								if (vi > 0)
-									osr.write(",");
-								osr.write((String) values.get(vi));
+									osr.print(",");
+								osr.print((String) values.get(vi));
 							}
 						} else
-							osr.write(field + "= ");
-						osr.flush();
+							osr.print(field + "= ");
 					}
 
 					// write the description
-					osr.write(separator + (String) exonatts.get(Description));
-					osr.write("\n");
-					osr.flush();
+					osr.print(separator + (String) exonatts.get(Description));
+					osr.print("\n");
+
+					if (osr.checkError())
+						throw new IOException();
 
 					//extend flanking sequence if necessary
 					int lflank = query.getSequenceDescription().getLeftFlank();
@@ -534,7 +542,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 
 					// write out the sequence
 					if (exonloc.getStrand() < 0)
-						osr.write(
+						osr.writeSequence(
 							SequenceUtil.reverseComplement(
 								dna.getSequence(
 									species,
@@ -542,15 +550,18 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 									exonloc.getStart(),
 									exonloc.getEnd())));
 					else
-						osr.write(
+						osr.writeSequence(
 							dna.getSequence(
 								species,
 								exonloc.getChr(),
 								exonloc.getStart(),
 								exonloc.getEnd()));
-					osr.flush();
-					osr.write("\n");
-					osr.flush();
+
+					osr.print("\n");
+          osr.resetColumnCount();
+
+					if (osr.checkError())
+						throw new IOException();
 				}
 			} catch (SequenceException e) {
 				logger.warn(e.getMessage());
@@ -562,6 +573,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 		}
 	};
 
+  private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
@@ -571,7 +583,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 	private String dataset = null;
 	private String species = null;
 	private FormatSpec format = null;
-	private OutputStreamWriter osr = null;
+	private FormattedSequencePrintStream osr = null;
 	private Connection conn = null;
 
 	private TreeMap geneiDs = new TreeMap();
