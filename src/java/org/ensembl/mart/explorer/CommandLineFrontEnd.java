@@ -3,32 +3,240 @@ package org.ensembl.mart.explorer;
 import java.sql.*;
 import org.apache.log4j.*;
 import java.util.*;
+import gnu.getopt.*;
+import java.io.*;
+import java.net.*;
 
 public class CommandLineFrontEnd {
-    private Logger logger = Logger.getLogger(CommandLineFrontEnd.class.getName());
-    private String[] commandLineParams;
-    private Engine engine;
 
-    /** @throws IllegalArgumentException if host or user are null. */
-    public CommandLineFrontEnd(Engine engine, String host, String port, String user, String password,
-        String[] commandLineParams) {
-            logger.info("Constructor:" + Arrays.asList(commandLineParams));
-            if (host == null) throw new IllegalArgumentException("host is not set");
-            if (user == null) throw new IllegalArgumentException("user is not set");
-            this.engine = engine;
-            this.commandLineParams = commandLineParams;
-            this.engine.init(host, port, user, password);
+  private Logger logger = Logger.getLogger(CommandLineFrontEnd.class.getName());
+
+  private List attributes = new ArrayList();
+  private List filters = new ArrayList();
+  private String host = null;
+  private String port = null;
+  private String database = null;
+  private String user = null;
+  private String password = null;
+  private ResultFile resultFile = new ResultFile();
+  private Formatter formatter = null;
+  private boolean validQuery = true;
+  private IDListFilter idFilter = null;
+
+  public final static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:h";
+
+  public CommandLineFrontEnd() {
+  }
+  
+
+  public static String usage() {
+    return 
+      "MartExplorerApplication <OPTIONS>"
+      + "\n"
+      + "\nIf host (-H) is specified then the program runs in command line mode,"
+      + "\notherwise the program starts with the Graphical User Interface."
+      + "\n"
+      + "\n-h                             - this screen"
+      + "\n-H HOST                        - database host"
+      + "\n-P PORT                        - database port" 
+      + "\n-u USER                        - database user name"
+      + "\n-p PASSWORD                    - database password"
+      + "\n-d DATABASE                    - database name"
+      + "\n-a ATTRIBUTE                   - one or more attributes"
+      + "\n-f FILTER                      - zero or more filters"
+      + "\n-o OUTPUT_FILE                 - output file, default is standard out"
+      + "\n-F OUTPUT_FORMAT               - output format, default is tab separated values"
+      + "\n-i IDENTIFIER_FILTER           - zero or more identifiers "
+      + "\n-I URL_CONTAINING_IDENTIFIERS  - url with one or more identifiers"
+      + "\n-t IDENTIFIER_TYPE             - type of identifiers (necessary if -i or -I)"
+      + "\n-l LOGGING_FILE_URL            - logging file, defaults to console if non specified";
+  }
+
+  /**
+   * Parses command line parameters. 
+   */
+  public void init(String[] args) {
+
+    Getopt g = new Getopt("MartExplorerApplication", args, COMMAND_LINE_SWITCHES);
+    int c;
+    String arg;
+    while ((c = g.getopt()) != -1) {
+      switch (c) {
+
+      case 'l':
+        // do nothing, should have been handled by MartExplorerApplication
+        break;
+
+      case 'h':
+        // do nothing, should have been handled by MartExplorerApplication
+        break;
+
+      case 'H':
+        host = g.getOptarg();
+        break;
+
+      case 'P':
+        port = g.getOptarg();
+        break;
+
+      case 'd':
+        database = g.getOptarg();
+        break;
+
+      case 'u':
+        user = g.getOptarg();
+        break;
+
+      case 'p':
+        password = g.getOptarg();
+        break;
+
+      case 'a':
+        addAttribute( g.getOptarg() );
+        break;
+
+      case 'f':
+        addFilter( g.getOptarg() );
+        break;
+
+      case 'o':
+        nameFile( g.getOptarg() );
+        break;
+
+      case 'F':
+        format( g.getOptarg() ); 
+        break;
+
+      case 'I':
+        addIdFilterURL( g.getOptarg() ); 
+        break;
+
+      case 'i':
+        addIdFilter( g.getOptarg() ); 
+        break;
+        
+        
+      case 't':
+        identifierType( g.getOptarg() );
+        break;
+    }
+    }            
+
+    // Default to writing output to stdout.
+    if ( resultFile.getName()==null )
+      resultFile.setWriter( new BufferedWriter(new OutputStreamWriter(System.out) ) );
+
+    // Default to writing output format as tab separated values.
+    if ( resultFile.getFormatter()==null )
+      resultFile.setFormatter( new SeparatedValueFormatter("\t") );
+
+    if (host == null) 
+      validationError("Host must be set (use -h).");
+    else if (user == null) 
+      validationError("User must be set (use -u).");
+    else if (database == null) 
+      validationError("Database must be set (use -d).");
+    else if ( attributes.size()==0 ) 
+      validationError("At least one attributes must be chosen (use -a).");
+    else if ( idFilter!=null && idFilter.getType()==null ) 
+      validationError("You must set id filter type if you use an id filter (use -t).");
+
+  }
+
+
+  private void validationError( String message ) {
+    System.err.println( "Error: " + message );
+    validQuery = false;
+  }
+
+  /**
+   * Constructs a Query based on the command line parameters and executes it.
+   */
+  public void run() {
+
+    if ( !validQuery ) {
+      System.err.println( "Run with -h for help." );
+      return;
     }
 
-    public void run() {
-        logger.info("Running");
-        try {
-            System.out.println(engine.databases());
-        } catch (SQLException e) {
-            logger.error("", e);
-        }
-    }
+    if ( idFilter!=null ) filters.add( idFilter );
 
-    public void execute(Connection conn, Query query, Formatter formatter) {
+    Query q = new Query();
+    q.setHost( host );
+    q.setPort( port );
+    q.setDatabase( database );
+    q.setUser( user );
+    q.setPassword( password );
+    q.setAttributes( attributes );
+    q.setFilters( filters );
+    q.setResultTarget( resultFile );
+
+    Engine e = new Engine();
+    try {
+      e.execute( q );
+    } catch ( Exception ex) {
+      ex.printStackTrace();
     }
+  }
+
+
+
+
+  private void addAttribute( String attribute ) {
+    attributes.add( new FieldAttribute( attribute ) );
+  }
+
+  private void addFilter( String filterCondition ) {
+    
+    // currently only support BasicFilters e.g. a=3
+    StringTokenizer tokens = new StringTokenizer( filterCondition, "=<>", true);
+    int n = tokens.countTokens();
+    if (n!=3 ) 
+      validationError("Currently unsupported filter: " + filterCondition);
+    else 
+      filters.add( new BasicFilter( tokens.nextToken(), tokens.nextToken(), tokens.nextToken() ) );
+  }
+
+  
+  private void nameFile( String fileName ) {
+    resultFile.setName( fileName );
+  }
+
+  private void format( String format ) {
+    if ( "tsv".equals( format) ) 
+      resultFile.setFormatter( new SeparatedValueFormatter("\t") );
+    else
+      validationError("Unkown format: " + format);
+  }
+
+
+  private void addIdFilter( String identifier ) {
+    if ( idFilter==null ) idFilter = new IDListFilter();
+    idFilter.addIdentifier( identifier );
+  }
+  
+  private void addIdFilterURL( String url ) {
+    
+    try {
+
+      // retain current filterType if set
+      String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
+
+      idFilter = new IDListFilter(filterType, new URL( url ));
+
+    } catch ( Exception e ){
+      validationError("Problem loading from url: " + url + " : " + e.getMessage());
+    }
+  }
+
+  private void identifierType(String type) {
+    if ( idFilter==null )
+      idFilter = new IDListFilter();
+    
+    if ( idFilter.getType()==null )
+      idFilter.setType( type );
+    else
+      validationError("ID Filter type already set, can't set it again: " + type);
+  }
+
 }

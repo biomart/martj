@@ -150,7 +150,7 @@ public class FilterPanel extends JPanel
 
       if (o instanceof BasicFilter) {
         BasicFilter bf = (BasicFilter)o;
-        if ("chromosome_id".equals(bf.getField()) && "=".equals(bf.getCondition())) {
+        if ("chromosome_id".equals(bf.getType()) && "=".equals(bf.getCondition())) {
           Tool.prepend( bf.getValue(), chromosome);
           chromosomeButton.setSelected(true);
         }
@@ -159,7 +159,7 @@ public class FilterPanel extends JPanel
       if (o instanceof IDListFilter ) {
         
         IDListFilter f = (IDListFilter)o;
-        Tool.prepend( f.getField(), stableIDField );
+        Tool.prepend( f.getType(), stableIDField );
         stableIDButton.setSelected( true );
         switch( f.getMode() ) {
           

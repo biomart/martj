@@ -5,7 +5,7 @@ package org.ensembl.mart.explorer;
 public class BasicFilter implements Filter {
 
     public BasicFilter(String field, String condition, String value) {
-      this.field = field;
+      this.type = field;
       this.condition = condition;
       this.value = value;
     }
@@ -22,15 +22,15 @@ public class BasicFilter implements Filter {
 
     public String getValue() { return value; }
 
-    public String getField(){
-            return field;
+    public String getType(){
+            return type;
         }
 
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
 			buf.append("[");
-      buf.append(" field=").append(field);
+      buf.append(" field=").append(type);
       buf.append(" ,condition=").append(condition);
       buf.append(" ,value=").append(value);
       buf.append("]");
@@ -39,10 +39,10 @@ public class BasicFilter implements Filter {
     }
 
     public String sqlRepr(){
-			return field+condition+value;
+			return type +condition+value;
     }
 
-    private String field;
+    private String type;
 
 
 

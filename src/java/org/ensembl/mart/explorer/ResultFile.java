@@ -6,79 +6,118 @@ import java.sql.*;
 import java.io.*;
 import org.apache.log4j.*;
 
+
+/**
+ * Target to send query results to, supports output to files and Writers.
+ */
 public class ResultFile implements ResultTarget {
 
-	private final static Logger logger = Logger.getLogger( ResultFile.class.getName() );
+  private final static Logger logger = Logger.getLogger( ResultFile.class.getName() );
 
-	public ResultFile(String fileName, Formatter formatter) {
-  	this.name = fileName;
+  public ResultFile() {
+  }
+  
+
+  /**
+   * Output results to file.
+   */
+  public ResultFile(String fileName, Formatter formatter) {
+    this.name = fileName;
     this.formatter = formatter;
   }
 
-    public String getName() {
-        return name;
+
+  /**
+   * Output results to writer.
+   * <p>example usage:
+   * <p><code>new ResultFile("stdout", new SeparatedValueFormatter("\t"), new BufferedWriter(new OutputStreamWriter(System.out) );</code> 
+   */
+  public ResultFile(String name, Formatter formatter, OutputStreamWriter writer) {
+    this.name = name;
+    this.formatter = formatter;
+    this.writer = writer;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String fileName) {
+    this.name = fileName;
+  }
+
+  public Writer getWriter() {
+    return writer;
+  }
+
+  public void setWriter(Writer writer) {
+    this.writer = writer;
+  }
+
+
+  public Formatter getFormatter() {
+    return formatter;
+  }
+
+  public void setFormatter(Formatter formatter) {
+    this.formatter = formatter;
+  }
+
+  public boolean isZipCompreesion(){
+    return zipCompreesion;
+  }
+
+  public void setZipCompreesion(boolean zipCompreesion){
+    this.zipCompreesion = zipCompreesion;
+  }
+
+  public boolean isGzipCompression(){
+    return gzipCompression;
+  }
+
+  public void setGzipCompression(boolean gzipCompression){
+    this.gzipCompression = gzipCompression;
+  }
+
+
+  public String toString() {
+    StringBuffer buf = new StringBuffer();
+      
+    buf.append("[");
+    buf.append(" name=").append(name);
+    buf.append(" ,formatter=").append(formatter);
+    buf.append(" ,zipCompreesion=").append(zipCompreesion);
+    buf.append(" ,gzipCompression=").append(gzipCompression);
+    buf.append("]");
+      
+    return buf.toString();
+  }
+
+  public void output(ResultSet rs) throws FormatterException {
+    try {
+      logger.info( "Writing results to file: " + name );
+      formatter.setResultSet( rs );
+
+      // Output to writer if specified, otherwise to file.
+      Writer out = writer;
+      if ( writer==null ) out = new FileWriter( name );
+
+      for( String line = formatter.readLine(); line!=null; line=formatter.readLine() )
+        out.write( line );
+      out.flush();
+      if ( writer==null ) out.close(); // close if we opened it!
+
+    }catch ( IOException e ) {
+      throw new FormatterException ( e );
     }
-
-    public void setName(String fileName) {
-        this.name = fileName;
+    catch (SQLException e) {
+      throw new FormatterException ( e );
     }
+  }
 
-    public Formatter getFormatter() {
-        return formatter;
-    }
-
-    public void setFormatter(Formatter formatter) {
-        this.formatter = formatter;
-    }
-
-    public boolean isZipCompreesion(){
-            return zipCompreesion;
-        }
-
-    public void setZipCompreesion(boolean zipCompreesion){
-            this.zipCompreesion = zipCompreesion;
-        }
-
-    public boolean isGzipCompression(){
-            return gzipCompression;
-        }
-
-    public void setGzipCompression(boolean gzipCompression){
-            this.gzipCompression = gzipCompression;
-        }
-
-
-    public String toString() {
-      StringBuffer buf = new StringBuffer();
-
-			buf.append("[");
-      buf.append(" name=").append(name);
-      buf.append(" ,formatter=").append(formatter);
-      buf.append(" ,zipCompreesion=").append(zipCompreesion);
-      buf.append(" ,gzipCompression=").append(gzipCompression);
-      buf.append("]");
-
-      return buf.toString();
-    }
-
-    public void output(ResultSet rs) throws FormatterException {
-      try {
-        logger.info( "Writing results to file: " + name );
-        formatter.setResultSet( rs );
-				FileWriter out = new FileWriter( name );
-      	for( String line = formatter.readLine(); line!=null; line=formatter.readLine() )
-        	out.write( line );
-        out.close();
-      }catch ( IOException e ) {
-				throw new FormatterException ( e );
-      }
-      catch (SQLException e) {
-				throw new FormatterException ( e );
-      }
-    }
-
-    private String name;
-    private Formatter formatter;
-    private boolean zipCompreesion;
-    private boolean gzipCompression;
+  private String name;
+  private Formatter formatter;
+  private boolean zipCompreesion;
+  private boolean gzipCompression;  
+  private Writer writer;
 }

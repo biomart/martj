@@ -18,7 +18,7 @@ public class IDListFilter implements Filter {
   }
 
     public IDListFilter(String field, String[] identifiers) {
-      this.field = field;
+      this.type = field;
       this.identifiers = identifiers;
       mode = STRING_MODE;
     }
@@ -37,7 +37,7 @@ public class IDListFilter implements Filter {
      * per line of file.
      */
     public IDListFilter(String field, URL url) throws IOException {
-      this.field = field;
+      this.type = field;
       this.url = url;
       mode = URL_MODE;
       // load entries from file into identifiers array
@@ -49,12 +49,21 @@ public class IDListFilter implements Filter {
       lines.toArray( identifiers );
     }
 
+    public IDListFilter() {
+    }
+
+  public void addIdentifier(String identifier) {
+    String[] tmp = identifiers;
+    identifiers = new String[ tmp.length+1 ];
+    System.arraycopy(tmp, 0, identifiers, 0, tmp.length);
+    identifiers[ tmp.length ] = identifier;
+  }
 
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
 			buf.append("[");
-     	buf.append(" field=").append( field );
+     	buf.append(" field=").append( type);
       buf.append(", #identifiers=").append( identifiers.length);
       buf.append("]");
 
@@ -63,7 +72,7 @@ public class IDListFilter implements Filter {
 
     public String sqlRepr(){
       StringBuffer buf = new StringBuffer();
-      buf.append( field ).append( " IN (");
+      buf.append( type).append( " IN (");
 			for(int i=0; i<identifiers.length; ++i ) {
 				if ( i>0 ) buf.append( ", " );
         buf.append("\"").append( identifiers[i] ).append("\"");
@@ -74,20 +83,26 @@ public class IDListFilter implements Filter {
 
     public String[] getIdentifiers(){ return identifiers; }
 
-    public String getField(){
-            return field;
-        }
+  public String getType(){
+    return type;
+  }
 
-    public File getFile(){
-            return file;
-        }
+  public void setType(String type){ this.type = type; }
 
-    public URL getUrl(){
-            return url;
-        }
+  public File getFile(){
+    return file;
+  }
 
-    private String field;
-    private String[] identifiers;
+  public void setFile(File file){ this.file = file; }
+  
+  public URL getUrl(){
+    return url;
+  }
+
+  public void setUrl(URL url){ this.url = url; }
+  
+  private String type;
+  private String[] identifiers = new String[0];
   private File file;
   private URL url;
   private int mode;

@@ -45,42 +45,28 @@ public class MartExplorerApplication {
 
     /** Examines the command line parameters and then passes them to the appropriate front end implementation. */
     public static void main(String[] args) {
-        System.out.println("MartExplorer is running.");
         String loggingURL = null;
-        String host = null;
-        String port = null;
-        String user = null;
-        String password = null;
         boolean commandline = false;
-        Getopt g = new Getopt("MartExplorerApplication", args, "l:ch:P:u:p:");
+        boolean help = false;
+        Getopt g = new Getopt("MartExplorerApplication", args, CommandLineFrontEnd.COMMAND_LINE_SWITCHES);
         int c;
-        String arg;
         while ((c = g.getopt()) != -1) {
-            switch (c) {
-                case 'l':
-                    loggingURL = g.getOptarg();
-                    break;
-                case 'c':
-                    commandline = true;
-                    break;
-                case 'h':
-                    host = g.getOptarg();
-                    break;
-                case 'P':
-                    port = g.getOptarg();
-                    break;
-                case 'u':
-                    user = g.getOptarg();
-                    break;
-                case 'p':
-                    password = g.getOptarg();
-                    break;
-            }
+          switch (c) {
+          case 'l':
+            loggingURL = g.getOptarg();
+            break;
+          case 'H':
+            // if host specified assume command line mode
+            commandline = true;
+            break;
+
+          case 'h':
+            help = true;
+            break;
+          }
         }
         int offset = g.getOptind();
         int len = args.length - offset;
-        String[] cleanArgs = new String[len];
-        System.arraycopy(args, offset, cleanArgs, 0, len);
         // Initialise logging system
         if (loggingURL != null) {
             PropertyConfigurator.configure(loggingURL);
@@ -88,12 +74,20 @@ public class MartExplorerApplication {
         else {
           defaultLoggingConfiguration();
         }
-        Engine engine = new Engine();
-        // start interface: if -c then run CommandLineFrontEnd else SwingFrontEnd
-        if (commandline)
-            new CommandLineFrontEnd(engine, host, port, user, password, cleanArgs).run();
-        else
-            new MartExplorerGUI().run();
+
+
+        if ( help ) {
+          System.out.println( CommandLineFrontEnd.usage() );
+        }
+
+        else if (commandline) {
+          CommandLineFrontEnd cfe = new CommandLineFrontEnd();
+          cfe.init( args );
+          cfe.run();
+        }
+        else {
+          new MartExplorerGUI().run();
+        }
     }
 
     /** @link dependency */

@@ -119,13 +119,13 @@ public class Engine {
         return tables;
     }
 
-    public List databases() throws SQLException {
+    public String[] databases(Query q) throws SQLException {
         ArrayList tables = new ArrayList();
-        Connection conn = getServerConnection();
+        Connection conn = getDatabaseConnection( q );
         ResultSet rs = conn.createStatement().executeQuery("show databases");
         while (rs.next()) {
             tables.add(rs.getString(1));
         }
-        return tables;
+        return (String[])tables.toArray(new String[ tables.size() ]);
     }
 }

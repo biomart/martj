@@ -3,7 +3,7 @@
 package org.ensembl.mart.explorer;
 
 public interface Filter {
-    String getField();
+    String getType();
 
     String sqlRepr();
 }
