@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,14 +53,19 @@ import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * Widget representing the currently selected dataset view
- * and enabling the user to select another.  
+ * and enabling the user to select another, add and delete 
+ * datasetViews.
  * 
- * The tree is constructed from all of the datasetNames 
+ * <p>
+ * The datasets are represented hierarchically in a tree.  
+  * The tree is constructed from all of the datasetNames 
  * displayNames. They are arranged as a tree of options.
  * Where "__" appears in the displayName it is used as a
  * branch point in a tree menu.
  * For example an array of datasetViews with these datasetNames:
- * <pre>
+ * </p>
+ *
+ *  <pre>
  * AAA
  * BBB
  * CCCCC__DDDDD
@@ -89,12 +95,14 @@ import org.ensembl.mart.lib.config.DatasetView;
  * A single dataset could be represented by multiple datasetViews, in this 
  * case the widget cannot choose which view to select.  
  */
-public class DatasetViewWidget extends InputPage implements QueryChangeListener {
+public class DatasetViewWidget
+  extends InputPage
+  implements QueryChangeListener {
 
   private DatasetView datasetView;
 
   private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
-  
+
   private Feedback feedback = new Feedback(this);
 
   private DSViewAdaptor datasetViewAdaptor;
@@ -114,49 +122,89 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
   private JMenuItem clearDatasetMenuItem = new JMenuItem("Clear Dataset");
 
   /**
-   * This widget is part of a system based on the MVC design pattern. 
+   * TODO This widget is part of a system based on the MVC design pattern. 
    * From this perspective the widget is a View and a Controller
    * and the query is the Model.
    * @param query underlying model for this widget.
    */
-  public DatasetViewWidget(Query query, DSViewAdaptor datasetViewAdaptor) {
+  public DatasetViewWidget(Query query, DatasetViewSettings datasetViewSetting) {
 
     super(query, "Dataset");
 
-    this.datasetViewAdaptor = datasetViewAdaptor;
-    query.addQueryChangeListener(this);
+    add( new JLabel("TODO"));
 
-    clearDatasetMenuItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doUserSelectDatasetView(null);
-      }
-    });
+//    this.datasetViewAdaptor = datasetViewAdaptor;
+//    query.addQueryChangeListener(this);
+//
+//    clearDatasetMenuItem.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent event) {
+//        doUserSelectDatasetView(null);
+//      }
+//    });
+//
+//    currentSelectedText.setEditable(false);
+//    currentSelectedText.setMaximumSize(new Dimension(400, 27));
+//
+//    button.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent event) {
+//        showTree();
+//      }
+//    });
+//
+//    // make the menu appear beneath the row of components 
+//    // containing the label, textField and button when displayed.
+//    treeMenu.setMaximumSize(new Dimension(0, 100));
+//    treeMenu.add(treeTopMenu);
+//
+//    JButton add = new JButton("Add");
+//    add.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent e) {
+//        doAdd();
+//      }
+//    });
+//    JButton delete = new JButton("Delete");
+//    delete.addActionListener(new ActionListener() {
+//      public void actionPerformed(ActionEvent e) {
+//        doDelete();
+//      }
+//    });
+//
+//    Box top = Box.createHorizontalBox();
+//    top.add(treeMenu);
+//    top.add(new JLabel("Dataset"));
+//    top.add(Box.createHorizontalStrut(5));
+//    top.add(button);
+//    top.add(Box.createHorizontalStrut(5));
+//    top.add(currentSelectedText);
+//
+//    Box bottom = Box.createHorizontalBox();
+//    bottom.add(Box.createHorizontalGlue());
+//    bottom.add(add);
+//    bottom.add(delete);
+//
+//    Box all = Box.createVerticalBox();
+//    all.add(top);
+//    all.add(bottom);
+//
+//    setLayout(new BorderLayout());
+//    add(all, BorderLayout.NORTH);
 
-    currentSelectedText.setEditable(false);
-    currentSelectedText.setMaximumSize(new Dimension(400, 27));
+  }
 
-    button.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        showTree();
-      }
-    });
+  /**
+   * 
+   */
+  protected void doDelete() {
+    // TODO Auto-generated method stub
+    
+  }
 
-    // make the menu appear beneath the row of components 
-    // containing the label, textField and button when displayed.
-    treeMenu.setMaximumSize(new Dimension(0, 100));
-    treeMenu.add(treeTopMenu);
-
-    Box box = Box.createHorizontalBox();
-    box.add(treeMenu);
-    box.add(new JLabel("Dataset"));
-    box.add(Box.createHorizontalStrut(5));
-    box.add(button);
-    box.add(Box.createHorizontalStrut(5));
-    box.add(currentSelectedText);
-
-    setLayout(new BorderLayout());
-    add(box, BorderLayout.NORTH);
-
+  /**
+   * 
+   */
+  protected void doAdd() {
+    // TODO Auto-generated method stub
+    
   }
 
   public void showTree() {
@@ -171,7 +219,6 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
     }
 
   }
-
 
   /**
    * If query has attributes or filters then set a "confirm" dialog box
@@ -211,7 +258,7 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
           datasetViewAdaptor.getDatasetViewByDisplayName(displayName);
 
         // initialise the query with settings from the datasetview.
-        query.setDatasetView( dsv );
+        query.setDatasetView(dsv);
         query.setDataset(dsv.getDataset());
         query.setDataSource(dsv.getDatasource());
         query.setPrimaryKeys(dsv.getPrimaryKeys());
@@ -223,7 +270,6 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
     }
 
   }
-
 
   /**
    * Unpacks the datasetViews into several sets and maps that enable
@@ -374,19 +420,16 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
 
   }
 
-
-
   /**
    * Runs a test; an instance of this class is shown in a Frame.
    */
   public static void main(String[] args) throws Exception {
-    JFrame f = new JFrame("Dataset Chooser (Test Frame)");
-    Box p = Box.createVerticalBox();
-    p.add(new DatasetViewWidget(new Query(), QueryEditor.testDSViewAdaptor()));
-    f.getContentPane().add(p);
-    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    f.setSize(950, 750);
-    f.setVisible(true);
+    Query q = new Query();
+    DatasetViewWidget dvm =
+      new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
+    dvm.setSize(950, 750);
+    dvm.showDialog(null);
+
   }
   /**
    * @return
@@ -399,11 +442,52 @@ public class DatasetViewWidget extends InputPage implements QueryChangeListener 
    * Responds to a change in dataset view on the query. Updates the state of
    * this widget by changing the currently selected item in the list.
    */
-  public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+  public void datasetViewChanged(
+    Query query,
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView) {
     String s = "";
-    if ( newDatasetView!=null )
+    if (newDatasetView != null)
       s = newDatasetView.getDisplayName();
-    currentSelectedText.setText( s );
+    currentSelectedText.setText(s);
+  }
+
+  /**
+   * Opens this DatasetViewManager as a dialog box. User can then
+   * select, add and remove Marts.
+   * @param parent
+   * @return
+   */
+  public boolean showDialog(Component parent) {
+
+    initialiseOptions();
+
+    int option =
+      JOptionPane.showOptionDialog(
+        parent,
+        this,
+        "DatasetViews",
+        JOptionPane.OK_CANCEL_OPTION,
+        JOptionPane.DEFAULT_OPTION,
+        null,
+        null,
+        null);
+
+    if (option != JOptionPane.OK_OPTION) {
+      return false;
+    } else {
+      //selected = (String) combo.getSelectedItem();
+      return true;
+    }
+
+  }
+
+  /**
+   * 
+   */
+  private void initialiseOptions() {
+    // TODO Auto-generated method stub
+
   }
 
 }

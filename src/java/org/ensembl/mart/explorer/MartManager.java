@@ -241,7 +241,7 @@ public class MartManager extends Box {
   }
 
   /**
-   * Opens this widget as a dialog box. User can then
+   * Opens this MartManager as a dialog box. User can then
    * select, add and remove Marts.
    * @param parent
    * @return

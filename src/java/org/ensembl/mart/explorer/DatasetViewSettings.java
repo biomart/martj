@@ -39,6 +39,7 @@ import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -54,6 +55,7 @@ import javax.swing.filechooser.FileFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
@@ -518,5 +520,25 @@ public class DatasetViewSettings extends Box {
     configFileChooser.addChoosableFileFilter(xmlFilter);
 
   }
+
+
+  /**
+     * TODO call this from a button
+     * @param ds
+     */
+    private void doLoadFromDataSource(DataSource ds) throws ConfigurationException {
+
+//      DatabaseDSViewAdaptor adaptor =
+//        new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
+//
+//      databaseDSViewAdaptors.add(adaptor);
+//
+//      DatasetView[] views = adaptor.getDatasetViews();
+//      if (views.length == 0) {
+//        feedback.warn("No Views found in database: " + adaptor.toString());
+//      } 
+
+    }
+
 
 }

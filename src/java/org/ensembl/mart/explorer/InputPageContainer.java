@@ -47,21 +47,36 @@ public class InputPageContainer
   private DatasetView datasetView;
   private CardLayout cardLayout = new CardLayout();
 
-  public InputPageContainer(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree, MartManager martManager) {
+  public InputPageContainer(
+    Query query,
+    DSViewAdaptor datasetViewAdaptor,
+    QueryTreeView tree,
+    MartManager martManager,
+    DatasetViewSettings datasetViewSettings) {
+    
     super();
-    if (tree!=null) tree.addTreeSelectionListener(this);
+    
+    if (tree != null)
+      tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
-    add(new DatasetViewWidget(query, datasetViewAdaptor), TreeNodeData.DATASET_VIEW.getLabel());
-    add(new DatasourceWidget(query, martManager), TreeNodeData.DATASOURCE.getLabel());
-    add(new AttributesWidget(query, datasetViewAdaptor, tree), TreeNodeData.ATTRIBUTES.getLabel());
-    add(new FiltersWidget(query, datasetViewAdaptor, tree), TreeNodeData.FILTERS.getLabel());
+    add(
+      new DatasetViewWidget(query, datasetViewSettings),
+      TreeNodeData.DATASET_VIEW.getLabel());
+    add(
+      new DatasourceWidget(query, martManager),
+      TreeNodeData.DATASOURCE.getLabel());
+    add(
+      new AttributesWidget(query, datasetViewAdaptor, tree),
+      TreeNodeData.ATTRIBUTES.getLabel());
+    add(
+      new FiltersWidget(query, datasetViewAdaptor, tree),
+      TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }
 
   public void setDatasetView(DatasetView datasetView) {
     this.datasetView = datasetView;
   }
-
 
   /**
    * TODO Show input page corresponding to selected tree node. 
@@ -81,9 +96,9 @@ public class InputPageContainer
         TreeNodeData tnd = (TreeNodeData) node.getUserObject();
 
         if (tnd.getAttribute() != null)
-          toFront( TreeNodeData.ATTRIBUTES );
+          toFront(TreeNodeData.ATTRIBUTES);
         else if (tnd.getFilter() != null)
-          toFront( TreeNodeData.FILTERS );
+          toFront(TreeNodeData.FILTERS);
         else
           toFront(tnd);
       }
@@ -98,5 +113,4 @@ public class InputPageContainer
     cardLayout.show(this, tnd.getLabel());
   }
 
-  
 }

@@ -221,7 +221,7 @@ public class QueryEditor extends JPanel {
 
   private JFileChooser mqlFileChooser = new JFileChooser();
 
-  private DatasetViewWidget datasetPage;
+  private DatasetViewSettings datasetPage;
   private String currentDatasetName;
   private OutputSettingsPage outputSettingsPage;
 
@@ -253,7 +253,10 @@ public class QueryEditor extends JPanel {
    * 
    * @throws IOException if fails to create temporary results file.
    */
-  public QueryEditor(DSViewAdaptor datasetViewAdaptor, MartManager martManager)
+  public QueryEditor(
+    DSViewAdaptor datasetViewAdaptor,
+    MartManager martManager,
+    DatasetViewSettings datasetViewSettings)
     throws IOException {
 
     this.datasetViewAdaptor = datasetViewAdaptor;
@@ -263,7 +266,12 @@ public class QueryEditor extends JPanel {
     JComponent toolBar = createToolbar();
     QueryTreeView treeView = new QueryTreeView(query, datasetViewAdaptor);
     InputPageContainer inputPanelContainer =
-      new InputPageContainer(query, datasetViewAdaptor, treeView, martManager);
+      new InputPageContainer(
+        query,
+        datasetViewAdaptor,
+        treeView,
+        martManager,
+        datasetViewSettings);
 
     outputPanel = new JEditorPane();
     outputPanel.setEditable(false);
@@ -562,7 +570,8 @@ public class QueryEditor extends JPanel {
 
     DSViewAdaptor a = testDSViewAdaptor();
     MartManager mm = testMartManager();
-    final QueryEditor editor = new QueryEditor(a, mm);
+    DatasetViewSettings dvs = testDatasetViewSettings();
+    final QueryEditor editor = new QueryEditor(a, mm, dvs);
     editor.setName("test_query");
 
     JFrame f = new JFrame("Query Editor (Test Frame)");
@@ -759,7 +768,7 @@ public class QueryEditor extends JPanel {
   public String getQueryAsMQL() throws InvalidQueryException {
 
     String mql = null;
-    DatasetView datasetView = datasetPage.getDatasetView();
+    DatasetView datasetView = query.getDatasetView();
     if (datasetView == null)
       throw new InvalidQueryException("DatasetView must be selected before query can be converted to MQL.");
 
@@ -845,6 +854,14 @@ public class QueryEditor extends JPanel {
     return datasetViewAdaptor;
   }
 
+  /**
+   * 
+   */
+  public static DatasetViewSettings testDatasetViewSettings() {
+    DatasetViewSettings dvs = new DatasetViewSettings();
+    // TODO preload some data.
+    return dvs;
 
+  }
 
 }

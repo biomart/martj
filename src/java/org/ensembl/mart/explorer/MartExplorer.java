@@ -73,9 +73,6 @@ public class MartExplorer extends JFrame {
 	// TODO list datasources
 	// TODO delete datasource
 
-	// TODO list datasetviews
-	// TODO delete datasetviews
-
 	// TODO load query
 	// TODO save query
 
@@ -91,13 +88,12 @@ public class MartExplorer extends JFrame {
 	// TODO load registry file
 
 	private MartManager martManager = new MartManager();
+  private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
 	private final static String TITLE =
 		" MartExplorer(Developement version- incomplete and unstable)";
-
-	private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 
 	private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
@@ -111,8 +107,6 @@ public class MartExplorer extends JFrame {
 
 	/** Currently visible QueryEditors **/
 	private List queryEditors = new ArrayList();
-
-	private JFileChooser configFileChooser;
 
 	private JTabbedPane queryEditorTabbedPane = new JTabbedPane();
 
@@ -158,10 +152,7 @@ public class MartExplorer extends JFrame {
 
 		super(TITLE);
 
-		prefs = Preferences.userNodeForPackage(this.getClass());
-
-		initConfigFileChooser();
-		initDatabaseSettings();
+    initDatabaseSettings();
 		setJMenuBar(createMenuBar());
 		getContentPane().add(queryEditorTabbedPane);
 		setSize(PREFERRED_SIZE);
@@ -229,45 +220,21 @@ public class MartExplorer extends JFrame {
 		});
 		file.add(exit);
 
-		JMenu connections = new JMenu("Connections");
+		JMenu settings = new JMenu("Settings");
 
-		JMenu databases = new JMenu("Databases");
-		connections.add(databases);
-		JMenuItem addDatabase = new JMenuItem("Add");
-		databases.add(addDatabase);
-		addDatabase.addActionListener(new ActionListener() {
+		JMenuItem datasources = new JMenuItem("Datasources");
+		settings.add(datasources);
+		datasources.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				doAddDatabase();
-			}
-		});
-		JMenuItem removeDatabase = new JMenuItem("Remove");
-		removeDatabase.setEnabled(false);
-		databases.add(removeDatabase);
-		removeDatabase.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				doRemoveDatabase();
+				doDatasourceSettings();
 			}
 		});
 
-		JMenu servers = new JMenu("Servers");
-		connections.add(servers);
-		JMenuItem addServer = new JMenuItem("Add");
-		addServer.setEnabled(false);
-		servers.add(addServer);
-		JMenuItem removeServer = new JMenuItem("Remove");
-		removeServer.setEnabled(false);
-		servers.add(removeServer);
-
-		JMenu views = new JMenu("Views");
-		JMenuItem removeView = new JMenuItem("Remove");
-		removeView.setEnabled(false);
-		views.add(removeView);
-		views.addSeparator();
-		JMenuItem importView = new JMenuItem("Import");
-		views.add(importView);
-		importView.addActionListener(new ActionListener() {
+		JMenuItem datasetviews = new JMenuItem("DatasetViews");
+    settings.add( datasetviews );
+		datasetviews.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				doLoadDatasetsFromFile();
+				doDatasetViewSettings();
 			}
 		});
 
@@ -324,14 +291,21 @@ public class MartExplorer extends JFrame {
 
 		JMenuBar all = new JMenuBar();
 		all.add(file);
-		all.add(connections);
-		all.add(views);
+		all.add(settings);
 		all.add(query);
 		all.add(help);
 		return all;
 	}
 
 	/**
+   * 
+   */
+  protected void doDatasetViewSettings() {
+    datasetViewSettings.showDialog(this);
+    
+  }
+
+  /**
 	 * 
 	 */
 	protected void doConfigureDatabases() {
@@ -350,51 +324,12 @@ public class MartExplorer extends JFrame {
 	/**
 	 * 
 	 */
-	protected void doAddDatabase() {
+	protected void doDatasourceSettings() {
 
-		if (databaseDialog.showDialog(this)) {
-
-			try {
-
-				DataSource ds =
-					DatabaseUtil.createDataSource(
-						databaseDialog.getDatabaseType(),
-						databaseDialog.getHost(),
-						databaseDialog.getPort(),
-						databaseDialog.getDatabase(),
-						databaseDialog.getUser(),
-						databaseDialog.getPassword(),
-						10,
-						databaseDialog.getDriver());
-
-				addDataSource(ds);
-
-			} catch (ConfigurationException e) {
-				e.printStackTrace();
-				feedback.warn("Failed to connect to database: " + e.getMessage());
-			}
-		}
+		martManager.showDialog(this);
 	}
 
-	/**
-	 * @param ds
-	 */
-	private void addDataSource(DataSource ds) throws ConfigurationException {
-
-		DatabaseDSViewAdaptor adaptor =
-			new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
-
-		databaseDSViewAdaptors.add(adaptor);
-
-		DatasetView[] views = adaptor.getDatasetViews();
-		if (views.length == 0) {
-			feedback.warn("No Views found in database: " + adaptor.toString());
-		} else {
-			resolveAndAddDatasetVies(views);
-		}
-
-	}
-
+	
 	/**
 	 * Delete currently selected QueryBuilder from tabbed pane if one is 
 	 * selected.
@@ -413,7 +348,7 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor(dsvAdaptor, martManager);
+			qe = new QueryEditor(dsvAdaptor, martManager, datasetViewSettings);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
@@ -430,31 +365,7 @@ public class MartExplorer extends JFrame {
 		System.exit(0);
 	}
 
-	/**
-	 * Initialises _configFileChooser_. Sets the last loaded 
-	 * config file if available and makes the 
-	 * chooser only show XML files.
-	 */
-	private void initConfigFileChooser() {
-		configFileChooser = new JFileChooser();
-		FileFilter xmlFilter = new FileFilter() {
-			public boolean accept(File f) {
-				return f != null
-					&& (f.isDirectory() || f.getName().toLowerCase().endsWith(".xml"));
-			}
-			public String getDescription() {
-				return "XML Files";
-			}
-		};
 
-		String lastChosenFile = prefs.get(CONFIG_FILE_KEY, null);
-
-		if (lastChosenFile != null) {
-			configFileChooser.setSelectedFile(new File(lastChosenFile));
-		}
-		configFileChooser.addChoosableFileFilter(xmlFilter);
-
-	}
 
 	private void initDatabaseSettings() {
 		databaseDialog = new DatabaseSettingsDialog();
@@ -463,55 +374,6 @@ public class MartExplorer extends JFrame {
 		databaseDialog.setPrefs(prefs);
 	}
 
-	/**
-	 * Presents the user with a file chooser dialog with which she can 
-	 * choose a configuration file. 
-	 */
-	public void doLoadDatasetsFromFile() {
-		// user chooses file
-
-		int action = configFileChooser.showOpenDialog(this);
-
-		// convert file contents into string
-		if (action == JFileChooser.APPROVE_OPTION) {
-			File f = configFileChooser.getSelectedFile().getAbsoluteFile();
-			prefs.put(CONFIG_FILE_KEY, f.toString());
-
-			try {
-				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(f.toURL(), false);
-				DatasetView[] newViews = adaptor.getDatasetViews();
-				resolveAndAddDatasetVies(newViews);
-
-			} catch (MalformedURLException e) {
-				JOptionPane.showMessageDialog(
-					this,
-					"File " + f.toString() + " not found: " + e.getMessage());
-			} catch (ConfigurationException e) {
-				JOptionPane.showMessageDialog(
-					this,
-					"Problem loading the Failed to load file: "
-						+ f.toString()
-						+ ": "
-						+ e.getMessage());
-
-			}
-
-		}
-	}
-
-	/**
-	 * Adds new DatasetViews to the application but forces the user
-	 * to resolve any name.version clashes.  
-	 * @param newViews
-	 */
-	private void resolveAndAddDatasetVies(DatasetView[] newViews)
-		throws ConfigurationException {
-
-		DatasetView[] currentViews = getDatasetViews();
-		// TODO find any clashes
-		// TODO user to resolve clashes
-		datasetViews.addAll(Arrays.asList(newViews));
-	}
 
 	/**
 		 * 
@@ -528,7 +390,7 @@ public class MartExplorer extends JFrame {
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor(dsvAdaptor, martManager);
+				qe = new QueryEditor(dsvAdaptor, martManager, datasetViewSettings);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 
