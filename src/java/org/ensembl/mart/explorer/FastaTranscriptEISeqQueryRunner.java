@@ -53,14 +53,16 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
      * @param os
      */
     public FastaTranscriptEISeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
-		this.query = query;
-		this.format = format;
-		this.conn = conn;
-		this.os = os;
+		    this.query = query;
+		    this.format = format;
+		    this.conn = conn;
+		    this.os = os;
+		    this.osr =  new OutputStreamWriter(os);
 	}
  
 	private void updateQuery() {
 		query.addAttribute(new FieldAttribute(queryID));
+		query.addAttribute(new FieldAttribute(TranscriptID));
 		query.addAttribute(new FieldAttribute(Rank));
 		query.addAttribute(new FieldAttribute(AssemblyColumn));
 		query.addAttribute(new FieldAttribute(coordStart));
@@ -73,33 +75,34 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 		}
 	}
 
-	private void writeSequence() throws SequenceException, IOException {
-		OutputStreamWriter osr =  new OutputStreamWriter(os);
+	private void writeSequences(Integer geneID) throws SequenceException, IOException {
 		try {
-			// run through the idS list, make and print the header, then get and print the sequences from the locations
+			// run through the geneiDs list, make and print the header, then get and print the sequences from the locations
+			Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
+			TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 			
 			for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
-				Hashtable atts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
+				Hashtable tranatts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
 				
 				// write the header, starting with the displayID
-				String displayIDout = (String) atts.get(DisplayID);
+				String displayIDout = (String) tranatts.get(DisplayID);
 				osr.write(">"+displayIDout);
 					
 				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
-				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
+				SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
 				dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 					
-				SequenceLocation tranloc = (SequenceLocation) atts.get(Location);
+				SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 				String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
-				String assemblyout = (String) atts.get(Assembly);
+				String assemblyout = (String) tranatts.get(Assembly);
 				osr.write("\tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
 				osr.flush();
 					
 				for (int j = 0, n = fields.size(); j < n; j++) {
 					osr.write(separator);
 					String field = (String) fields.get(j);
-					if (atts.containsKey(field)) {
-						ArrayList values = (ArrayList) atts.get(field);
+					if (tranatts.containsKey(field)) {
+						ArrayList values = (ArrayList) tranatts.get(field);
 							
 						if (values.size() > 1)
 							osr.write(field+" in ");
@@ -116,7 +119,7 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 					osr.flush();
 				}
 					
-				osr.write(separator+(String) atts.get(Description));
+				osr.write(separator+(String) tranatts.get(Description));
 				osr.write("\n");
 				osr.flush();
         
@@ -133,17 +136,16 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 				osr.flush();
 				osr.write("\n");
 				osr.flush();
-			}
-			osr.close();			
+			}		
 		} catch (SequenceException e) {
-		    logger.warn(e.getMessage());
-		    throw e;
-	    } catch (IOException e) {
-		    logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
-		    throw e;
-	    }	    
+			logger.warn(e.getMessage());
+			throw e;
+		} catch (IOException e) {
+			logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+			throw e;
+		}	    
 	}
-	
+		
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.QueryRunner#execute(int)
 	 */    
@@ -154,6 +156,7 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 
 			// need to know these indexes specifically
 			int queryIDindex = 0;
+			int tranIDindex = 0;
 			int rankIndex = 0;
 			int assemblyIndex = 0;
 			int startIndex = 0;
@@ -163,7 +166,7 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 			List displayIDindices = new ArrayList();
 			List otherIndices = new ArrayList();
         
-			queryID = "transcript_id";
+			queryID = "gene_id";
 			coordStart = "exon_chrom_start";
 			coordEnd = "exon_chrom_end";
 			displayIDs.add("transcript_stable_id_v");
@@ -204,6 +207,8 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 					String column = rmeta.getColumnName(i);
 					if (column.equals(queryID))
 						queryIDindex = i;
+					else if (column.equals(TranscriptID))
+						tranIDindex = i;						
 					else if (column.equals(Rank))
 						rankIndex = i;
 					else if (column.equals(AssemblyColumn))
@@ -222,17 +227,34 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 						otherIndices.add(new Integer(i));
 				}
 			
+				Integer lastGene = new Integer(0); // will hold the previous geneID
 				while ( rs.next() ) {
-					Integer tranID = new Integer(rs.getInt(queryIDindex));
+					Integer geneID = new Integer(rs.getInt(queryIDindex));
+					Integer tranID = new Integer(rs.getInt(tranIDindex));
 					Integer rank = new Integer(rs.getInt(rankIndex));
-				
-					if (! traniDs.containsKey(tranID)) { 
-						Hashtable atts = new Hashtable();
-						atts.put(Assembly, rs.getString(assemblyIndex));
-					    traniDs.put(tranID, atts);
+				  
+				  // want everything ordered by gene_id, transcript_id
+					if (! geneiDs.containsKey(geneID)) {
+						  if (geneiDs.size() > 0) {
+                  // write the previous genes data, and refresh the geneiDs TreeMap
+						      writeSequences(lastGene);
+						      geneiDs = new TreeMap();
+						  }
+						  lastGene = geneID;
+						  Hashtable atts = new Hashtable();
+						  atts.put(Transcripts, new TreeMap());
+					    geneiDs.put(geneID, atts);
 					}
+					Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
+					TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
+					
+					if (! traniDs.containsKey(tranID)) { 
+											Hashtable atts = new Hashtable();
+											atts.put(Assembly, rs.getString(assemblyIndex));
+											traniDs.put(tranID, atts);
+				  }
 				
-					Hashtable atts = (Hashtable) traniDs.get(tranID);
+					Hashtable tranatts = (Hashtable) traniDs.get(tranID);
 				
 					int start = rs.getInt(startIndex);
 					if (start > 0) {
@@ -242,30 +264,30 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 						int strand = rs.getInt(strandIndex);
 						
 						// keep track of the lowest start and highest end for the gene, for caching
-						if (! (atts.containsKey(Geneloc)) )
-						    atts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
+						if (! (tranatts.containsKey(Geneloc)) )
+						    tranatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
 						else {
-							SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
+							SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
 							if (start < geneloc.getStart())
-							    atts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
+							    tranatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
 							if (end > geneloc.getEnd())
-							    atts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
+							    tranatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
 						}
 						
                         // keep track of the lowest start and highest end for the transcript
-						if (! (atts.containsKey(Location) ) )
-						    atts.put(Location , new SequenceLocation(chr, start, end, strand));
+						if (! (tranatts.containsKey(Location) ) )
+						    tranatts.put(Location , new SequenceLocation(chr, start, end, strand));
 						else {
-							SequenceLocation tranloc = (SequenceLocation) atts.get(Location);
+							SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 							if (start < tranloc.getStart())
-							    atts.put(Location , new SequenceLocation(chr, start, tranloc.getEnd(), strand));
+							    tranatts.put(Location , new SequenceLocation(chr, start, tranloc.getEnd(), strand));
 							if (end > tranloc.getEnd())
-							atts.put(Location , new SequenceLocation(chr, tranloc.getStart(), end, strand));
+							tranatts.put(Location , new SequenceLocation(chr, tranloc.getStart(), end, strand));
 						}
 					}
 
 					//	process displayID, if necessary
-					if (! (atts.containsKey(DisplayID)  ) ) {								
+					if (! (tranatts.containsKey(DisplayID)  ) ) {								
 						StringBuffer displayID = new StringBuffer();
                 
 						for (int i = 0, n = displayIDindices.size(); i < n; i++) {
@@ -275,7 +297,7 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 								displayID.append( rs.getString(currindex) );
 						}
 				
-						atts.put(DisplayID, displayID.toString());
+						tranatts.put(DisplayID, displayID.toString());
 					}
                    
 					// Rest can be duplicates, or novel values for a given field, collect lists of values for each field
@@ -290,24 +312,29 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 						
 							String value = rs.getString(currindex);
 							
-							if ( atts.containsKey(field) ) {
-								if (! ((ArrayList) atts.get(field)).contains(value))
-									((ArrayList) atts.get(field)).add(value);
+							if ( tranatts.containsKey(field) ) {
+								if (! ((ArrayList) tranatts.get(field)).contains(value))
+									((ArrayList) tranatts.get(field)).add(value);
 							}
 							else {
 								ArrayList values = new ArrayList();
 								values.add(value); 
-								atts.put(field, values);
+								tranatts.put(field, values);
 							}
 						}
 					}
 				
 					// add the description, if necessary
-					if (! atts.containsKey(Description) )
-						atts.put( Description, seqd.getDescription() );
+					if (! tranatts.containsKey(Description) )
+						tranatts.put( Description, seqd.getDescription() );
 				}
-			    writeSequence();
-			} catch (SQLException e) {
+				// write the last genes data
+				writeSequences(lastGene);
+				osr.close();
+			} catch (IOException e) {
+			    logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+			    throw e;
+		  } catch (SQLException e) {
 				logger.warn(e.getMessage()+ " : " + sql);
 				throw e;
 			}
@@ -319,8 +346,9 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 	 private FormatSpec format = null;
 	 private OutputStream os = null;
 	 private Connection conn = null;
+	 private OutputStreamWriter osr;
 	
-	 private TreeMap traniDs = new TreeMap(); // holds each objects information, in order
+	 private TreeMap geneiDs = new TreeMap(); // holds each objects information, in order
 	 private List fields = new ArrayList(); // holds unique list of resultset description fields from the query
 	 private DNAAdaptor dna;
     
@@ -328,12 +356,14 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 	 private String queryID;
 	 private String coordStart, coordEnd;
 	 private List displayIDs = new ArrayList();
+	 private final String TranscriptID = "transcript_id";
 	 private final String Rank = "rank";
 	 private final String Chr =  "chr_name";
 	 private final String AssemblyColumn = "assembly_type";
 	 private final String StrandColumn = "exon_chrom_strand";
     
 	 // Strings for use in idattribute Hashtable keys
+	 private final String Transcripts = "transcripts";
 	 private final String Location = "location";
 	 private final String Assembly = "assembly";
 	 private final String Strand = "strand";	

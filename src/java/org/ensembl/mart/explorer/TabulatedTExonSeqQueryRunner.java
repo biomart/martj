@@ -74,6 +74,7 @@ public final class TabulatedTExonSeqQueryRunner implements QueryRunner {
 			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
 		}
 	}
+	
 	private void writeSequence() throws SequenceException, IOException {
 		OutputStreamWriter osr =  new OutputStreamWriter(os);
 		
