@@ -149,24 +149,6 @@ public abstract class FilterWidget
 
 			if (evt.getPropertyName().equals("filter")) {
 
-				//				Object oldValue = evt.getOldValue();
-				//				
-				//				if (oldValue != null
-				//					&& oldValue instanceof Filter
-				//					&& (f = (Filter) oldValue).getField().equals(fieldName)) {
-				//
-				//					setFilter(null);
-				//				}
-				//
-				//				Object newValue = evt.getNewValue();
-				//				if (newValue != null
-				//					&& newValue instanceof Filter
-				//					&& (f = (Filter) newValue).getField().equals(fieldName)) {
-				//
-				//					System.out.println("filedName=>" + fieldName + "<" + f);
-				//					setFilter(f);
-				//				}
-
 				Filter oldFilter = equivalentFilter(evt.getOldValue());
 				if (oldFilter != null)
 					setFilter(null);

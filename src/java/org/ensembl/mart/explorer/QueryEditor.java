@@ -48,10 +48,12 @@ import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 // TODO Support attribute order rearrangment via DnD
 // TODO Support attribute / filter removal by DELETE key
@@ -70,6 +72,8 @@ public class QueryEditor
 	extends JPanel
 	implements PropertyChangeListener, TreeSelectionListener  {
 
+	private DSViewAdaptor dsViewAdaptor;
+
 	private JSplitPane topAndBottom;
 
 	private JSplitPane top;
@@ -85,8 +89,8 @@ public class QueryEditor
 
 	private Dimension MINIMUM_SIZE = new Dimension(50, 50);
 
-	/** Configuration defining the "query space" this editor encompasses. */
-	private MartConfiguration martConfiguration;
+	/** DatasetViews defining the "query space" this editor encompasses. */
+	private DatasetView[] datasetViews;
 
 	/** The query part of the model. */
 	private Query query;
@@ -98,7 +102,7 @@ public class QueryEditor
 	private JPanel inputPanel;
 	private JPanel outputPanel;
 
-	private TreeFilterWidget datasetSelectionPage;
+	private DatasetWidget datasetSelectionPage;
 	private String currentDatasetName;
 	private OutputSettingsPage outputSettingsPage;
 
@@ -110,14 +114,12 @@ public class QueryEditor
 	/** Maps attributes to the tree node they are represented by. */
 	private Map attributeToWidget;
 
-	public QueryEditor(MartConfiguration config) {
+	public QueryEditor() {
 
 		// don't use default FlowLayout manager because it won't resize components if
 		// QueryEditor is resized.
 		setLayout( new BorderLayout() );
     
-
-
 		addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				resizeSplits();
@@ -125,7 +127,6 @@ public class QueryEditor
              
 		});
 
-		this.martConfiguration = config;
 		this.query = new Query();
 		this.attributeToWidget = new HashMap();
 
@@ -198,14 +199,9 @@ public class QueryEditor
     // don't want this widget to interact with 
     // the query
 		datasetSelectionPage =
-			new TreeFilterWidget(null, null, martConfiguration.getLayout());
-
-		lastDatasetOption = datasetSelectionPage.getOption();
-
-		// this is the perperty name that will be included in 
-		// the propertyChange evetn emitted when the widget changes.
-		datasetSelectionPage.setPropertyName("dataset");
-		datasetSelectionPage.addPropertyChangeListener(this);
+			new DatasetWidget( query );
+    datasetSelectionPage.setQueryEditor( this );
+    datasetSelectionPage.setDatasetViews( datasetViews );
 
 		addPage(datasetSelectionPage);
     
@@ -284,14 +280,14 @@ public class QueryEditor
   }
 
 	public static void main(String[] args) throws ConfigurationException {
-		String confFile = "data/XML/MartConfigurationTemplate.xml";
-    //String confFile = "data/XML/local_test.xml";
-		URL confURL = QueryEditor.class.getClassLoader().getResource(confFile);
-	   System.out.println( confURL );
-    MartConfiguration config =
-			new MartConfigurationFactory().getInstance(confURL);
 
-		QueryEditor editor = new QueryEditor(config);
+		String dvFilePath = "data/XML/homo_sapiens__ensembl_genes.xml";
+		URL dvURL = QueryEditor.class.getClassLoader().getResource( dvFilePath );
+	  System.out.println( dvFilePath );
+    URLDSViewAdaptor adaptor = new URLDSViewAdaptor( dvURL, true );
+
+		QueryEditor editor = new QueryEditor();
+    editor.setDSViewAdaptor( adaptor );
 		JFrame f = new JFrame("Query Editor");
     f.getContentPane().add(editor);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -303,9 +299,16 @@ public class QueryEditor
     //editor.showDatasetOptions();
     
    // TODO support programmatically selecting homosapiens ensembl gene option
-   Option o = config.getLayout().getOptionByInternalName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
-    editor.datasetSelectionPage.setOption( o );
+//   Option o = config.getLayout().getOptionByInternalName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
+//    editor.datasetSelectionPage.setOption( o );
     
+	}
+
+	/**
+	 * @param adaptor
+	 */
+	public void setDSViewAdaptor(URLDSViewAdaptor adaptor) {
+		this.dsViewAdaptor = adaptor;
 	}
 
 	/**
@@ -318,41 +321,16 @@ public class QueryEditor
 		Object newValue = evt.getNewValue();
 		Object oldValue = evt.getOldValue();
 
-		if (evt.getSource() == datasetSelectionPage
-			&& datasetSelectionPage.getPropertyName().equals(propertyName)
-			&& !newValue.equals(oldValue)) {
-
-			if (oldValue != null 
-          && ( query.getAttributes().length>0 || query.getFilters().length>0 )) {
-
-        // Confirm user really wants to change dataset
-				int option =
-					JOptionPane.showConfirmDialog(
-						this,
-						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-						"Change Attributes",
-						JOptionPane.YES_NO_OPTION);
-
-        // undo if user changes mind
-				if (option != JOptionPane.OK_OPTION) {
-
-					datasetSelectionPage.removePropertyChangeListener(this);
-					datasetSelectionPage.setOption(lastDatasetOption);
-					datasetSelectionPage.addPropertyChangeListener(this);
-
-					return;
-				}
-			}
-      
-			lastDatasetOption = (Option)newValue;
-
-			datasetChanged(  martConfiguration.getDatasetByName( lastDatasetOption.getRef() ) );
-      
-		}
-
 		if (evt.getSource() == query) {
 
-			if ("attribute".equals(propertyName)) {
+      if ("dataset".equals(propertyName)) {
+        
+        // TODO update dataset node in tree
+        
+
+      }
+
+			else if ("attribute".equals(propertyName)) {
 
 				if (newValue != null && oldValue == null)
 					insertNode(
@@ -410,7 +388,7 @@ public class QueryEditor
 	/**
 	 * Update the model (query) and the view (tree and inputPanels).
 	 */
-	private void datasetChanged(DatasetView dataset) {
+	void datasetChanged(DatasetView dataset) {
 
     treeModel.nodeChanged( datasetSelectionPage.getNode() );
     
@@ -514,14 +492,20 @@ public class QueryEditor
 		}
 	}
 
+
+
 	/**
 	 * @return
 	 */
-	public MartConfiguration getMartConfiguration() {
-		return martConfiguration;
+	public DatasetView[] getDatasetViews() {
+		return datasetViews;
 	}
 
-
-
+	/**
+	 * @param views
+	 */
+	public void setDatasetViews(DatasetView[] views) {
+		datasetViews = views;
+	}
 
 }
