@@ -87,16 +87,17 @@ public class BooleanFilterWidget
 
       requireFilterType = BooleanFilter.isNotNULL;
       excludeFilterType = BooleanFilter.isNULL;
-      
+
       list = new JComboBox();
-      
-      Dimension s = new Dimension(
-      Constants.LIST_MAX_PIXEL_WIDTH,
-      Constants.LIST_MAX_PIXEL_HEIGHT); 
+
+      Dimension s =
+        new Dimension(
+          Constants.LIST_MAX_PIXEL_WIDTH,
+          Constants.LIST_MAX_PIXEL_HEIGHT);
       list.setMaximumSize(s);
       //    we need to set preferred because maximum is ignored by Boxcontainer (at least on JVM1.4@linux)
-      list.setPreferredSize(s); 
-      list.setMinimumSize(s); 
+      list.setPreferredSize(s);
+      list.setMinimumSize(s);
 
       setOptions(fd.getOptions());
     } else
@@ -164,20 +165,26 @@ public class BooleanFilterWidget
     // we make reflected back to us.
     query.removeQueryChangeListener(this);
 
-    if (filter != null)
-      query.removeFilter(filter);
+    Filter newFilter = null;
 
     if (src == require || require.isSelected())
-      filter = createFilter(requireFilterType);
-
+      newFilter = createFilter(requireFilterType);
     else if (src == exclude || exclude.isSelected())
-      filter = createFilter(excludeFilterType);
-
+      newFilter = createFilter(excludeFilterType);
     else if (src == irrelevant || irrelevant.isSelected())
-      filter = null;
+      newFilter = null;
 
-    if (filter != null)
-      query.addFilter(filter);
+    if (newFilter == null) {
+      if (filter != null)
+        query.removeFilter(filter);
+    } else {
+      if (filter != null)
+        query.replaceFilter(filter, newFilter);
+      else
+        query.addFilter(newFilter);
+    }
+
+    filter = newFilter;
 
     query.addQueryChangeListener(this);
 
@@ -222,7 +229,7 @@ public class BooleanFilterWidget
     list.addActionListener(this);
 
     list.validate();
-    
+
   }
 
   /**
@@ -384,7 +391,5 @@ public class BooleanFilterWidget
 
     return -1;
   }
-
-
 
 }
