@@ -12,6 +12,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.util.PropertiesUtil;
 
 /** JUnit TestSuite. 
  * @testfamily JUnit
@@ -81,7 +82,7 @@ public class CompiledSQLQueryTest extends Base {
 		Query q = new Query(genequery);
 
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new IDListFilter("gene_stable_id", new File(org.apache.log4j.helpers.Loader.getResource(STABLE_ID_REL).getFile())));
+		q.addFilter(new IDListFilter("gene_stable_id", new File(PropertiesUtil.class.getClassLoader().getResource(STABLE_ID_REL).getFile())));
 		executeQuery(q);
 	}
 
