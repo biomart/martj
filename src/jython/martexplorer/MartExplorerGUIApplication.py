@@ -6,8 +6,8 @@
 # copyright EBI, GRL 2003
 
 # TODO implement each of the 'basic' nodes (database, species, focus,
-# format, destination) using NodeInfo instances. See tmp
-# EXAMPLE. Create separate config panels for each.
+# format, destination) using NodeInfo instances. Create separate
+# config panels for each.
 
 # TODO implement useful toString() or better summary():String methods
 # on targetComponents such as DatabaseConfPanel()
@@ -22,16 +22,17 @@
 # quesry. "Delete" and or right click/delete.
 
 # try this tip to get compilation / jars working
-#http://lists.free.net.ph/pipermail/python/2002-April/000220.html
 
-import pawt.swing.JPanel
-from pawt.swing import *
-from pawt.swing.tree import *
 from org.ensembl.mart.explorer.gui import *
+from org.ensembl.mart.explorer import *
 from java.lang import *
+from java.io import *
+from java.net import *
 from javax.swing.event import *
 from java.awt import *
-
+from javax.swing import *
+from javax.swing.tree import *
+from jarray import *
 
 class Dummy(QueryInputPage, JPanel):
     def __init__(self, message):
@@ -124,7 +125,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener):
 
 
 
-class tree_prototype(JPanel):
+class tree_prototype(QueryPanel):
 
 
     def __init__(self):
@@ -170,7 +171,105 @@ class tree_prototype(JPanel):
         pass
 
 
+class MartGUIApplication(JFrame):
+
+    def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
+        JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(800,500))
+        self.buildGUI()
+        self.visible=1
+
+
+    def buildGUI(self):
+        self.JMenuBar = self.createMenuBar()
+        self.queryPanel = tree_prototype()
+        self.contentPane.add( self.queryPanel )
+
+
+    def createMenuBar(self):
+
+        fileMenu = JMenu("File")
+        fileMenu.add( JMenuItem("Exit"
+                                ,toolTipText="Quits Application"
+                                ,actionPerformed=self.doExit) )
+
+        queryMenu = JMenu("Query")
+        queryMenu.add( JMenuItem("Insert test query"
+                                ,toolTipText="Inserts a test query into the application"
+                                ,actionPerformed=self.doInsertKakaQuery) )
+        queryMenu.add( JMenuItem("Execute"
+                                 ,toolTipText="Executes query"
+                                 ,actionPerformed=self.doExecute) )
+        queryMenu.add( JMenuItem("Clear"
+                                 ,toolTipText="Clears query"
+                                 ,actionPerformed=self.doClear) )
+        
+        helpMenu = JMenu("Help")
+        helpMenu.add( JMenuItem("About"
+                                 ,toolTipText="Displays about information"
+                                 ,actionPerformed=self.doAbout) )
+        
+        menuBar = JMenuBar()
+        menuBar.add( fileMenu )
+        menuBar.add( queryMenu )
+        menuBar.add( helpMenu )
+
+        return menuBar
+
+    def doExit(self, event=None):
+        System.exit(0)
+
+
+    def doInsertKakaQuery(self, event=None):
+        q = Query(
+            host = "kaka.sanger.ac.uk" 
+            ,user =  "anonymous" 
+            ,database = "ensembl_mart_11_1" 
+            ,species = "homo_sapiens" 
+            ,focus = "gene" )
+        q.addFilter( IDListFilter("gene_stable_id",
+                                  File( System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
+        
+        q.addFilter( IDListFilter("gene_stable_id",
+                                  URL( "file://" +System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
+        q.addFilter( IDListFilter("gene_stable_id",
+                                  array( ("ENSG00000177741"), String) ) )
+        q.addAttribute( FieldAttribute("gene_stable_id") )
+        #query.addFilter( IDListFilter("gene_stable_id", File( STABLE_ID_FILE).toURL() ) )
+        #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") ) 
+        q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
+        print q
+        self.queryPanel.updatePage( q )
+
+
+
+    def executeQuery( self, query ):
+        Engine().execute(query)
+
+
+    def doExecute(self, event=None):
+        q = Query()
+        try:
+            self.queryPanel.updateQuery( q )
+            import threading
+            threading.Thread(target=self.executeQuery(q)).start()
+        except (Exception,RuntimeException), e:
+            JOptionPane.showMessageDialog( self,
+                                           "Failed to execute query: " + e.getMessage(),
+                                           "Error",
+                                           JOptionPane.ERROR_MESSAGE)
+
+
+
+    def doAbout(self, event=None):
+        AboutDialog( visible=1 )
+
+
+
+    def doClear(self, event=None):
+        self.queryPanel.clear()
+
+
 if __name__=="__main__":
-    frame =JFrame("Explorer", defaultCloseOperation=JFrame.DISPOSE_ON_CLOSE, size=(800,500))
-    frame.contentPane.add( tree_prototype() )
-    frame.visible=1
+    # 1=don't exit JVM, fast for development purposes
+    if 1: MartGUIApplication(JFrame.DISPOSE_ON_CLOSE).visible=1
+    else: MartGUIApplication(JFrame.EXIT_ON_CLOSE).visible=1
