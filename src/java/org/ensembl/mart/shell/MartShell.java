@@ -98,8 +98,10 @@ import org.gnu.readline.ReadlineLibrary;
 public class MartShell {
 
 	// main variables
-	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
-	private static String COMMAND_LINE_SWITCHES = "h:AC:M:H:T:P:U:p:D:d:vl:e:O:F:R:E:";
+	private static final String defaultConf =
+		System.getProperty("user.home") + "/.martshell";
+	private static String COMMAND_LINE_SWITCHES =
+		"h:AC:M:H:T:P:U:p:D:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
 	private static String mainHost = null;
@@ -117,7 +119,8 @@ public class MartShell {
 	private static String mainBatchFormat = null;
 	private static String mainBatchSeparator = null;
 	private static String helpCommand = null;
-	private static Logger mainLogger = Logger.getLogger(MartShell.class.getName());
+	private static Logger mainLogger =
+		Logger.getLogger(MartShell.class.getName());
 
 	/**
 	 *  @return application usage instructions
@@ -192,9 +195,17 @@ public class MartShell {
 			mainConfiguration = p.getProperty("alternateConfigurationFile");
 
 		} catch (java.net.MalformedURLException e) {
-			mainLogger.warn("Could not load connection file " + connfile + " MalformedURLException: " + e);
+			mainLogger.warn(
+				"Could not load connection file "
+					+ connfile
+					+ " MalformedURLException: "
+					+ e);
 		} catch (java.io.IOException e) {
-			mainLogger.warn("Could not load connection file " + connfile + " IOException: " + e);
+			mainLogger.warn(
+				"Could not load connection file "
+					+ connfile
+					+ " IOException: "
+					+ e);
 		}
 		confinUse = connfile;
 	}
@@ -222,12 +233,14 @@ public class MartShell {
 			}
 		}
 
-		String[] ret = new String[argtable.size() * 2]; // one slot for each key, and one slot for each non null or non empty value
+		String[] ret = new String[argtable.size() * 2];
+		// one slot for each key, and one slot for each non null or non empty value
 		int argnum = 0;
 
 		for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
 			String thiskey = (String) iter.next();
-			String thisvalue = ((StringBuffer) argtable.get(thiskey)).toString();
+			String thisvalue =
+				((StringBuffer) argtable.get(thiskey)).toString();
 
 			ret[argnum] = thiskey;
 			argnum++;
@@ -361,7 +374,8 @@ public class MartShell {
 		if (confinUse != null) {
 			mainLogger.info("Using configuration file: " + confinUse + "\n");
 		} else {
-			mainLogger.info("Using commandline options only for connection configuration");
+			mainLogger.info(
+				"Using commandline options only for connection configuration");
 		}
 
 		// check for help
@@ -374,7 +388,10 @@ public class MartShell {
 				try {
 					System.out.println(ms.Help(helpCommand));
 				} catch (InvalidQueryException e) {
-					System.out.println("Couldnt provide Help for " + helpCommand + e.getMessage());
+					System.out.println(
+						"Couldnt provide Help for "
+							+ helpCommand
+							+ e.getMessage());
 					e.printStackTrace();
 				}
 			}
@@ -404,7 +421,9 @@ public class MartShell {
 			ms.UnsetCommandCompletion();
 
 			if (mainBatchSQL == null && mainBatchScriptFile == null) {
-				System.out.println("Must supply either a Query command or a query script\n" + usage());
+				System.out.println(
+					"Must supply either a Query command or a query script\n"
+						+ usage());
 				System.exit(0);
 			} else if (mainBatchScriptFile != null) {
 				validQuery = ms.RunBatchScript(mainBatchScriptFile);
@@ -426,7 +445,11 @@ public class MartShell {
 				validQuery = ms.RunBatch(mainBatchSQL);
 			}
 			if (!validQuery) {
-				System.out.println("Invalid Batch command:" + ms.getBatchError() + "\n" + usage());
+				System.out.println(
+					"Invalid Batch command:"
+						+ ms.getBatchError()
+						+ "\n"
+						+ usage());
 				System.exit(0);
 			} else
 				System.exit(0);
@@ -494,36 +517,39 @@ public class MartShell {
 		try {
 			// load help file
 			LoadHelpFile();
-			  
+
 			//display startup information
 			String startupMessage = Help(STARTUP);
-			  
+
 			if (historyOn)
-			  startupMessage = startupMessage.replaceAll(HISTORYQ, Help(HISTORYQ));
-      else
-        startupMessage = startupMessage.replaceAll(HISTORYQ, "");
-			  
-      if (completionOn)
-			  startupMessage = startupMessage.replaceAll(COMPLETIONQ, Help(COMPLETIONQ));
+				startupMessage =
+					startupMessage.replaceAll(HISTORYQ, Help(HISTORYQ));
 			else
-        startupMessage = startupMessage.replaceAll(COMPLETIONQ, "");
-          
+				startupMessage = startupMessage.replaceAll(HISTORYQ, "");
+
+			if (completionOn)
+				startupMessage =
+					startupMessage.replaceAll(COMPLETIONQ, Help(COMPLETIONQ));
+			else
+				startupMessage = startupMessage.replaceAll(COMPLETIONQ, "");
+
 			System.out.println(startupMessage);
 		} catch (InvalidQueryException e2) {
-			System.out.println("Couldnt display startup information\n" + e2.getMessage());
-			
-      StackTraceElement[] stacks = e2.getStackTrace();
-      StringBuffer stackout = new StringBuffer();
-      
-      for (int i = 0, n = stacks.length; i < n; i++) {
+			System.out.println(
+				"Couldnt display startup information\n" + e2.getMessage());
+
+			StackTraceElement[] stacks = e2.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
+
+			for (int i = 0, n = stacks.length; i < n; i++) {
 				StackTraceElement element = stacks[i];
 				stackout.append(element.toString()).append("\n");
 			}
-      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 		}
 
 		try {
- 			if (martHost == null || martHost.length() < 5)
+			if (martHost == null || martHost.length() < 5)
 				setConnectionSettings(SETCONSETSC);
 			Initialize();
 
@@ -535,7 +561,9 @@ public class MartShell {
 				mcl.AddAvailableCommandsTo("commands", msl.availableCommands);
 
 				// add sequences
-				mcl.AddAvailableCommandsTo(MartShellLib.QSEQUENCE, SequenceDescription.SEQS);
+				mcl.AddAvailableCommandsTo(
+					MartShellLib.QSEQUENCE,
+					SequenceDescription.SEQS);
 
 				// add describe
 				HashMap describeCommands = new HashMap();
@@ -596,19 +624,19 @@ public class MartShell {
 
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
-        if (helpLoaded)
-          mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
-        
-        if (envDataset != null)
-          mcl.setEnvDataset(envDataset);
-            
+				if (helpLoaded)
+					mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
+
+				if (envDataset != null)
+					mcl.setEnvDataset(envDataset);
+
 				mcl.SetCommandMode();
 
 				Readline.setCompleter(mcl);
 			}
 
-      mainLogger.info("Completer set\n");
-      
+			mainLogger.info("Completer set\n");
+
 			if (readlineLoaded && historyOn) {
 				File histFile = new File(history_file);
 				if (!histFile.exists())
@@ -618,21 +646,22 @@ public class MartShell {
 			}
 
 		} catch (Exception e1) {
-			System.out.println("Could not initialize connection: " + e1.getMessage());
+			System.out.println(
+				"Could not initialize connection: " + e1.getMessage());
 
-      StackTraceElement[] stacks = e1.getStackTrace();
-      StringBuffer stackout = new StringBuffer();
-      
-      for (int i = 0, n = stacks.length; i < n; i++) {
-        StackTraceElement element = stacks[i];
-        stackout.append(element.toString()).append("\n");
-      }
-      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
-      
+			StackTraceElement[] stacks = e1.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
+
+			for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
 			System.exit(1);
 		}
-    
-    String thisline = null;
+
+		String thisline = null;
 		while (true) {
 			try {
 				thisline = Prompt();
@@ -645,16 +674,16 @@ public class MartShell {
 				}
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
-				
-        StackTraceElement[] stacks = e.getStackTrace();
-        StringBuffer stackout = new StringBuffer();
-      
-        for (int i = 0, n = stacks.length; i < n; i++) {
-          StackTraceElement element = stacks[i];
-          stackout.append(element.toString()).append("\n");
-        }
-        mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
-        
+
+				StackTraceElement[] stacks = e.getStackTrace();
+				StringBuffer stackout = new StringBuffer();
+
+				for (int i = 0, n = stacks.length; i < n; i++) {
+					StackTraceElement element = stacks[i];
+					stackout.append(element.toString()).append("\n");
+				}
+				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
 				conline = new StringBuffer();
 				continueQuery = false;
 				thisline = null;
@@ -665,14 +694,14 @@ public class MartShell {
 			ExitShell();
 		} catch (IOException e) {
 			System.err.println("Warning, could not close Buffered Reader\n");
-      StackTraceElement[] stacks = e.getStackTrace();
-      StringBuffer stackout = new StringBuffer();
-      
-      for (int i = 0, n = stacks.length; i < n; i++) {
-        StackTraceElement element = stacks[i];
-        stackout.append(element.toString()).append("\n");
-      }
-      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+			StackTraceElement[] stacks = e.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
+
+			for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
 			System.exit(1);
 		}
@@ -695,22 +724,27 @@ public class MartShell {
 		boolean valid = true;
 		try {
 			Initialize();
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(batchScriptFile)));
+			reader =
+				new BufferedReader(
+					new InputStreamReader(
+						new FileInputStream(batchScriptFile)));
 
-			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+			for (String line = reader.readLine();
+				line != null;
+				line = reader.readLine()) {
 				if (!line.startsWith("#"))
 					parse(line);
 			}
 		} catch (Exception e) {
 			setBatchError(e.getMessage());
-      StackTraceElement[] stacks = e.getStackTrace();
-      StringBuffer stackout = new StringBuffer();
-      
-      for (int i = 0, n = stacks.length; i < n; i++) {
-        StackTraceElement element = stacks[i];
-        stackout.append(element.toString()).append("\n");
-      }
-      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+			StackTraceElement[] stacks = e.getStackTrace();
+			StringBuffer stackout = new StringBuffer();
+
+			for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+			mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 			valid = false;
 		}
 		return valid;
@@ -751,17 +785,17 @@ public class MartShell {
 				if (!querystring.endsWith(LINEEND))
 					querystring = querystring + LINEEND;
 
-				parseCommand(querystring);
+				parseForCommands(querystring);
 			} catch (Exception e) {
 				setBatchError(e.getMessage());
-        StackTraceElement[] stacks = e.getStackTrace();
-        StringBuffer stackout = new StringBuffer();
-      
-        for (int i = 0, n = stacks.length; i < n; i++) {
-          StackTraceElement element = stacks[i];
-          stackout.append(element.toString()).append("\n");
-        }
-        mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+				StackTraceElement[] stacks = e.getStackTrace();
+				StringBuffer stackout = new StringBuffer();
+
+				for (int i = 0, n = stacks.length; i < n; i++) {
+					StackTraceElement element = stacks[i];
+					stackout.append(element.toString()).append("\n");
+				}
+				mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 
 				validQuery = false;
 			}
@@ -854,7 +888,8 @@ public class MartShell {
 
 			sessionOutputFile = new FileOutputStream(batchFile);
 		} catch (FileNotFoundException e) {
-			setBatchError("Could not open file " + batchFileName + "\n" + e.getMessage());
+			setBatchError(
+				"Could not open file " + batchFileName + "\n" + e.getMessage());
 			throw e;
 		}
 	}
@@ -900,11 +935,21 @@ public class MartShell {
 		batchErrorMessage = message;
 	}
 
-	private void Initialize() throws MalformedURLException, ConfigurationException, SQLException {
-		engine = new Engine("mysql", martHost, martPort, martDatabase, martUser, martPass);
+	private void Initialize()
+		throws MalformedURLException, ConfigurationException, SQLException {
+		engine =
+			new Engine(
+				"mysql",
+				martHost,
+				martPort,
+				martDatabase,
+				martUser,
+				martPass);
 
 		if (altConfigurationFile != null)
-			martconf = new MartConfigurationFactory().getInstance(new URL(altConfigurationFile));
+			martconf =
+				new MartConfigurationFactory().getInstance(
+					new URL(altConfigurationFile));
 		else
 			martconf = engine.getMartConfiguration();
 
@@ -928,17 +973,19 @@ public class MartShell {
 		System.exit(0);
 	}
 
-	private String Prompt() throws EOFException, UnsupportedEncodingException, IOException {
+	private String Prompt()
+		throws EOFException, UnsupportedEncodingException, IOException {
 		String line = null;
 		if (continueQuery)
 			line = subPrompt();
 		else
 			line = mainPrompt();
-      
+
 		return line;
 	}
 
-	private String mainPrompt() throws EOFException, UnsupportedEncodingException, IOException {
+	private String mainPrompt()
+		throws EOFException, UnsupportedEncodingException, IOException {
 		String prompt = null;
 		String line = null;
 
@@ -949,14 +996,15 @@ public class MartShell {
 		else
 			prompt = "> ";
 
-    if (completionOn)
-      mcl.SetCommandMode();
-      
+		if (completionOn)
+			mcl.SetCommandMode();
+
 		line = Readline.readline(prompt, historyOn);
 		return line;
 	}
 
-	private String subPrompt() throws EOFException, UnsupportedEncodingException, IOException {
+	private String subPrompt()
+		throws EOFException, UnsupportedEncodingException, IOException {
 		return Readline.readline("% ", historyOn);
 	}
 
@@ -980,7 +1028,9 @@ public class MartShell {
 		if (command.equals(HELPC)) {
 			buf.append("\nAvailable items:\n");
 
-			for (Iterator iter = commandHelp.keySet().iterator(); iter.hasNext();) {
+			for (Iterator iter = commandHelp.keySet().iterator();
+				iter.hasNext();
+				) {
 				String element = (String) iter.next();
 				buf.append("\t\t" + element).append("\n");
 			}
@@ -1003,12 +1053,17 @@ public class MartShell {
 					Matcher m = pat.matcher(output);
 
 					if (m.matches())
-						buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
+						buf.append(m.group(1)).append(Help(m.group(2))).append(
+							m.group(3)).append(
+							"\n");
 					else
 						buf.append(output).append("\n");
 				}
 			} else
-				buf.append("Sorry, no information available for item: ").append(command).append("\n");
+				buf.append(
+					"Sorry, no information available for item: ").append(
+					command).append(
+					"\n");
 			return buf.toString();
 		}
 	}
@@ -1019,16 +1074,17 @@ public class MartShell {
 		try {
 			commandHelp.load(help.openStream());
 			commandHelp.load(dshelp.openStream());
-      
-      if (! historyOn)
-        commandHelp.remove(HISTORYQ);
-      
-      if (! completionOn)
-        commandHelp.remove(COMPLETIONQ);
-          
+
+			if (!historyOn)
+				commandHelp.remove(HISTORYQ);
+
+			if (!completionOn)
+				commandHelp.remove(COMPLETIONQ);
+
 		} catch (IOException e) {
 			helpLoaded = false;
-			throw new InvalidQueryException("Could not load Help File " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not load Help File " + e.getMessage());
 		}
 		helpLoaded = true;
 	}
@@ -1075,27 +1131,42 @@ public class MartShell {
 			Dataset[] dsets = martconf.getDatasets();
 			for (int i = 0, n = dsets.length; i < n; i++) {
 				Dataset dset = dsets[i];
-				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
+				output += "\t"
+					+ dset.getInternalName()
+					+ "   ("
+					+ dset.getDisplayName()
+					+ ")\n";
 			}
 			System.out.println(output);
 		} else if (tokCount == 2) {
 			String dsetName = toks.nextToken();
 
 			if (!martconf.containsDataset(dsetName))
-				throw new InvalidQueryException("Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+				throw new InvalidQueryException(
+					"Dataset "
+						+ dsetName
+						+ " Not found in mart configuration for "
+						+ martconf.getInternalName()
+						+ "\n");
 
 			DescribeDataset(martconf.getDatasetByName(dsetName));
 		} else if (tokCount > 2) {
 
 			int mod = tokCount % 2; // must be even number of elements
 			if (mod > 0)
-				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
+				throw new InvalidQueryException(
+					"Recieved invalid describe command: " + command + "\n");
 
 			List args = new ArrayList();
 
 			String dsetName = toks.nextToken();
 			if (!martconf.containsDataset(dsetName))
-				throw new InvalidQueryException("Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+				throw new InvalidQueryException(
+					"Dataset "
+						+ dsetName
+						+ " Not found in mart configuration for "
+						+ martconf.getInternalName()
+						+ "\n");
 
 			while (toks.hasMoreTokens()) {
 				args.add(new String[] { toks.nextToken(), toks.nextToken()});
@@ -1106,7 +1177,12 @@ public class MartShell {
 	}
 
 	private void DescribeDataset(Dataset dset) throws InvalidQueryException {
-		System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n");
+		System.out.print(
+			"Dataset "
+				+ dset.getInternalName()
+				+ " - "
+				+ dset.getDisplayName()
+				+ "\n");
 
 		String[] dlines = ColumnIze(dset.getDescription());
 		for (int i = 0, n = dlines.length; i < n; i++)
@@ -1122,7 +1198,8 @@ public class MartShell {
 
 			FilterPage page = fpages[i];
 
-			String filtPageDesc = page.getInternalName() + " - " + page.getDisplayName();
+			String filtPageDesc =
+				page.getInternalName() + " - " + page.getDisplayName();
 			if (!page.getDescription().equals(""))
 				filtPageDesc += ": " + page.getDescription();
 
@@ -1145,7 +1222,8 @@ public class MartShell {
 
 			AttributePage page = apages[i];
 
-			String atPageDesc = page.getInternalName() + " - " + page.getDisplayName();
+			String atPageDesc =
+				page.getInternalName() + " - " + page.getDisplayName();
 			if (!page.getDescription().equals(""))
 				atPageDesc += ": " + page.getDescription();
 
@@ -1156,7 +1234,8 @@ public class MartShell {
 		System.out.println(DASHES);
 	}
 
-	private void DescribeDataset(Dataset dset, List args) throws InvalidQueryException {
+	private void DescribeDataset(Dataset dset, List args)
+		throws InvalidQueryException {
 		int argCount = args.size();
 		String[] arg1 = null;
 		String arg1key = null;
@@ -1170,41 +1249,89 @@ public class MartShell {
 
 				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain FilterPage "
+								+ arg1value
+								+ "\n");
 
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nFilterPage: ");
+					System.out.print(
+						"Dataset "
+							+ dset.getInternalName()
+							+ " - "
+							+ dset.getDisplayName()
+							+ "\n\nFilterPage: ");
 
 					DescribeFilterPage(dset.getFilterPageByName(arg1value));
 				} else if (arg1key.equals(FILTERKEY)) {
 					if (!dset.containsUIFilterDescription(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Filter " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain Filter "
+								+ arg1value
+								+ "\n");
 
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
+					System.out.print(
+						"Dataset "
+							+ dset.getInternalName()
+							+ " - "
+							+ dset.getDisplayName()
+							+ "\n\n");
 
-					String[] lines = DescribeFilter(dset.getUIFilterDescriptionByName(arg1value));
+					String[] lines =
+						DescribeFilter(
+							dset.getUIFilterDescriptionByName(arg1value));
 					for (int i = 0, n = lines.length; i < n; i++)
 						System.out.println(lines[i]);
 
 					System.out.println();
 				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain AttributePage "
+								+ arg1value
+								+ "\n");
 
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nAttributePage: ");
-					DescribeAttributePage(dset.getAttributePageByName(arg1value));
+					System.out.print(
+						"Dataset "
+							+ dset.getInternalName()
+							+ " - "
+							+ dset.getDisplayName()
+							+ "\n\nAttributePage: ");
+					DescribeAttributePage(
+						dset.getAttributePageByName(arg1value));
 
 				} else if (arg1key.equals(ATTRIBUTEKEY)) {
 					if (!dset.containsUIAttributeDescription(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Attribute " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain Attribute "
+								+ arg1value
+								+ "\n");
 
-					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
-					String[] lines = DescribeAttribute(dset.getUIAttributeDescriptionByName(arg1value));
+					System.out.print(
+						"Dataset "
+							+ dset.getInternalName()
+							+ " - "
+							+ dset.getDisplayName()
+							+ "\n\n");
+					String[] lines =
+						DescribeAttribute(
+							dset.getUIAttributeDescriptionByName(arg1value));
 					for (int i = 0, n = lines.length; i < n; i++)
 						System.out.println(lines[i]);
 
 					System.out.println();
 				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+					throw new InvalidQueryException(
+						"Recieved describe command with invalid request key: "
+							+ arg1key
+							+ "\n");
 				}
 				break;
 
@@ -1216,7 +1343,12 @@ public class MartShell {
 				String[] arg2 = null;
 				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain FilterPage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
 					FilterPage fpage = dset.getFilterPageByName(arg1value);
@@ -1226,7 +1358,13 @@ public class MartShell {
 					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " FilterPage "
+									+ fpage.getInternalName()
+									+ " does not contain FilterGroup "
+									+ arg2value
+									+ "\n");
 
 						System.out.print(
 							"Dataset "
@@ -1239,7 +1377,9 @@ public class MartShell {
 								+ fpage.getDisplayName()
 								+ "\n\n");
 
-						String[] lines = DescribeFilterGroup(fpage.getFilterGroupByName(arg2value));
+						String[] lines =
+							DescribeFilterGroup(
+								fpage.getFilterGroupByName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
@@ -1248,7 +1388,13 @@ public class MartShell {
 					} else if (arg2key.equals(FILTERKEY)) {
 						if (!fpage.containsUIFilterDescription(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain Filter " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " FilterPage "
+									+ fpage.getInternalName()
+									+ " does not contain Filter "
+									+ arg2value
+									+ "\n");
 
 						System.out.print(
 							"Dataset "
@@ -1262,29 +1408,48 @@ public class MartShell {
 								+ "\n");
 
 						System.out.println();
-						String[] lines = DescribeFilter(fpage.getUIFilterDescriptionByName(arg2value));
+						String[] lines =
+							DescribeFilter(
+								fpage.getUIFilterDescriptionByName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
 						System.out.println();
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain AttributePage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage =
+						dset.getAttributePageByName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
 					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " AttributePage: "
+									+ apage.getInternalName()
+									+ " does not contain AttributeGroup "
+									+ arg2value
+									+ "\n");
 
 						System.out.print(
 							"Dataset "
@@ -1297,14 +1462,22 @@ public class MartShell {
 								+ apage.getDisplayName()
 								+ "\n\n");
 
-						String[] lines = DescribeAttributeGroup(apage.getAttributeGroupByName(arg2value));
+						String[] lines =
+							DescribeAttributeGroup(
+								apage.getAttributeGroupByName(arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
 					} else if (arg2key.equals(ATTRIBUTEKEY)) {
 						if (!apage.containsUIAttributeDescription(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain Attribute " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " AttributePage: "
+									+ apage.getInternalName()
+									+ " does not contain Attribute "
+									+ arg2value
+									+ "\n");
 
 						System.out.print(
 							"Dataset "
@@ -1318,18 +1491,29 @@ public class MartShell {
 								+ "\n");
 
 						System.out.println();
-						String[] lines = DescribeAttribute(apage.getUIAttributeDescriptionByName(arg2value));
+						String[] lines =
+							DescribeAttribute(
+								apage.getUIAttributeDescriptionByName(
+									arg2value));
 						for (int i = 0, n = lines.length; i < n; i++)
 							System.out.println("\t\t" + lines[i]);
 
 						System.out.println();
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+					throw new InvalidQueryException(
+						"Recieved describe command with invalid request key: "
+							+ arg1key
+							+ "\n");
 				}
 				break;
 
@@ -1342,7 +1526,12 @@ public class MartShell {
 				String[] arg3 = null;
 				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain FilterPage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
 					FilterPage fpage = dset.getFilterPageByName(arg1value);
@@ -1352,10 +1541,19 @@ public class MartShell {
 					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " FilterPage "
+									+ fpage.getInternalName()
+									+ " does not contain FilterGroup "
+									+ arg2value
+									+ "\n");
 
-						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
-							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
+						if (fpage.getFilterGroupByName(arg2value)
+							instanceof FilterGroup) {
+							FilterGroup group =
+								(FilterGroup) fpage.getFilterGroupByName(
+									arg2value);
 
 							arg3 = (String[]) args.get(2);
 							String arg3key = arg3[0];
@@ -1389,7 +1587,10 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeFilterCollection(group.getFilterCollectionByName(arg3value));
+								String[] lines =
+									DescribeFilterCollection(
+										group.getFilterCollectionByName(
+											arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
@@ -1423,14 +1624,17 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeFilterSet(group.getFilterSetByName(arg3value));
+								String[] lines =
+									DescribeFilterSet(
+										group.getFilterSetByName(arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
 								System.out.println();
 
 							} else if (arg3key.equals(FILTERKEY)) {
-								if (!group.containsUIFilterDescription(arg3value))
+								if (!group
+									.containsUIFilterDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1457,7 +1661,10 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeFilter(group.getUIFilterDescriptionByName(arg3value));
+								String[] lines =
+									DescribeFilter(
+										group.getUIFilterDescriptionByName(
+											arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
@@ -1478,31 +1685,52 @@ public class MartShell {
 						// DSFilterGroup code goes here, if needed
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request key: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request key: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain AttributePage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage =
+						dset.getAttributePageByName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
 					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " AttributePage "
+									+ apage.getInternalName()
+									+ " does not contain AttributeGroup "
+									+ arg2value
+									+ "\n");
 
-						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
-							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
+						if (apage.getAttributeGroupByName(arg2value)
+							instanceof AttributeGroup) {
+							AttributeGroup group =
+								(AttributeGroup) apage.getAttributeGroupByName(
+									arg2value);
 							arg3 = (String[]) args.get(2);
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
 							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
-								if (!group.containsAttributeCollection(arg3value))
+								if (!group
+									.containsAttributeCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1529,14 +1757,18 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeAttributeCollection(group.getAttributeCollectionByName(arg3value));
+								String[] lines =
+									DescribeAttributeCollection(
+										group.getAttributeCollectionByName(
+											arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
 								System.out.println();
 
 							} else if (arg3key.equals(ATTRIBUTEKEY)) {
-								if (!group.containsUIAttributeDescription(arg3value))
+								if (!group
+									.containsUIAttributeDescription(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1563,7 +1795,10 @@ public class MartShell {
 										+ group.getDisplayName()
 										+ "\n\n");
 
-								String[] lines = DescribeAttribute(group.getUIAttributeDescriptionByName(arg3value));
+								String[] lines =
+									DescribeAttribute(
+										group.getUIAttributeDescriptionByName(
+											arg3value));
 								for (int i = 0, n = lines.length; i < n; i++)
 									System.out.println("\t\t" + lines[i]);
 
@@ -1582,11 +1817,19 @@ public class MartShell {
 						// describe individual sequences or other DSAttributeGroup things?
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+					throw new InvalidQueryException(
+						"Recieved describe command with invalid request key: "
+							+ arg1key
+							+ "\n");
 				}
 				break;
 
@@ -1600,7 +1843,12 @@ public class MartShell {
 				String[] arg4 = null;
 				if (arg1key.equals(FILTERPAGEKEY)) {
 					if (!dset.containsFilterPage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain FilterPage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
 					FilterPage fpage = dset.getFilterPageByName(arg1value);
@@ -1610,10 +1858,19 @@ public class MartShell {
 					if (arg2key.equals(FILTERGROUPKEY)) {
 						if (!fpage.containsFilterGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " FilterPage "
+									+ fpage.getInternalName()
+									+ " does not contain FilterGroup "
+									+ arg2value
+									+ "\n");
 
-						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
-							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
+						if (fpage.getFilterGroupByName(arg2value)
+							instanceof FilterGroup) {
+							FilterGroup group =
+								(FilterGroup) fpage.getFilterGroupByName(
+									arg2value);
 
 							arg3 = (String[]) args.get(2);
 							String arg3key = arg3[0];
@@ -1633,12 +1890,14 @@ public class MartShell {
 											+ "\n");
 
 								arg4 = (String[]) args.get(3);
-								FilterCollection collection = group.getFilterCollectionByName(arg3value);
+								FilterCollection collection =
+									group.getFilterCollectionByName(arg3value);
 								String arg4key = arg4[0];
 								String arg4value = arg4[1];
 
 								if (arg4key.equals(FILTERKEY)) {
-									if (!collection.containsUIFilterDescription(arg4value))
+									if (!collection
+										.containsUIFilterDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
 												+ dset.getInternalName()
@@ -1671,12 +1930,20 @@ public class MartShell {
 											+ collection.getDisplayName());
 
 									if (collection.inFilterSet())
-										System.out.print("\n\t\tMust be qualified with a FilterSetDescription from FilterSet: " + collection.getFilterSetName());
+										System.out.print(
+											"\n\t\tMust be qualified with a FilterSetDescription from FilterSet: "
+												+ collection.getFilterSetName());
 
 									System.out.print("\n\n");
 
-									String[] lines = DescribeFilter(collection.getUIFilterDescriptionByName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
+									String[] lines =
+										DescribeFilter(
+											collection
+												.getUIFilterDescriptionByName(
+												arg4value));
+									for (int i = 0, n = lines.length;
+										i < n;
+										i++)
 										System.out.println("\t\t\t" + lines[i]);
 
 									System.out.println();
@@ -1708,12 +1975,14 @@ public class MartShell {
 											+ "\n");
 
 								arg4 = (String[]) args.get(3);
-								FilterSet fset = group.getFilterSetByName(arg3value);
+								FilterSet fset =
+									group.getFilterSetByName(arg3value);
 								String arg4key = arg4[0];
 								String arg4value = arg4[1];
 
 								if (arg4key.equals(FILTERSETDESCRIPTIONKEY)) {
-									if (!fset.containsFilterSetDescription(arg4value))
+									if (!fset
+										.containsFilterSetDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
 												+ dset.getInternalName()
@@ -1746,8 +2015,13 @@ public class MartShell {
 											+ fset.getDisplayName()
 											+ "\n\n");
 
-									String[] lines = DescribeFilterSetDescription(fset.getFilterSetDescriptionByName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
+									String[] lines =
+										DescribeFilterSetDescription(
+											fset.getFilterSetDescriptionByName(
+												arg4value));
+									for (int i = 0, n = lines.length;
+										i < n;
+										i++)
 										System.out.println("\t\t\t" + lines[i]);
 
 									System.out.println();
@@ -1779,31 +2053,52 @@ public class MartShell {
 						// DSFilterGroup code goes here, if needed
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else if (arg1key.equals(ATTRIBUTEPAGEKEY)) {
 					if (!dset.containsAttributePage(arg1value))
-						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+						throw new InvalidQueryException(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " does not contain AttributePage "
+								+ arg1value
+								+ "\n");
 
 					arg2 = (String[]) args.get(1);
-					AttributePage apage = dset.getAttributePageByName(arg1value);
+					AttributePage apage =
+						dset.getAttributePageByName(arg1value);
 					String arg2key = arg2[0];
 					String arg2value = arg2[1];
 
 					if (arg2key.equals(ATTRIBUTEGROUPKEY)) {
 						if (!apage.containsAttributeGroup(arg2value))
 							throw new InvalidQueryException(
-								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+								"Dataset "
+									+ dset.getInternalName()
+									+ " AttributePage "
+									+ apage.getInternalName()
+									+ " does not contain AttributeGroup "
+									+ arg2value
+									+ "\n");
 
-						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
-							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
+						if (apage.getAttributeGroupByName(arg2value)
+							instanceof AttributeGroup) {
+							AttributeGroup group =
+								(AttributeGroup) apage.getAttributeGroupByName(
+									arg2value);
 							arg3 = (String[]) args.get(2);
 							String arg3key = arg3[0];
 							String arg3value = arg3[1];
 
 							if (arg3key.equals(ATTRIBUTECOLLECTIONKEY)) {
-								if (!group.containsAttributeCollection(arg3value))
+								if (!group
+									.containsAttributeCollection(arg3value))
 									throw new InvalidQueryException(
 										"Dataset "
 											+ dset.getInternalName()
@@ -1816,12 +2111,15 @@ public class MartShell {
 											+ "\n");
 
 								arg4 = (String[]) args.get(3);
-								AttributeCollection collection = group.getAttributeCollectionByName(arg3value);
+								AttributeCollection collection =
+									group.getAttributeCollectionByName(
+										arg3value);
 								String arg4key = arg4[0];
 								String arg4value = arg4[1];
 
 								if (arg4key.equals(ATTRIBUTEKEY)) {
-									if (!collection.containsUIAttributeDescription(arg4value))
+									if (!collection
+										.containsUIAttributeDescription(arg4value))
 										throw new InvalidQueryException(
 											"Dataset "
 												+ dset.getInternalName()
@@ -1854,9 +2152,16 @@ public class MartShell {
 											+ collection.getDisplayName()
 											+ "\n\n");
 
-									String[] lines = DescribeAttribute(collection.getUIAttributeDescriptionByName(arg4value));
-									for (int i = 0, n = lines.length; i < n; i++)
-										System.out.println("\t\t\t\t" + lines[i]);
+									String[] lines =
+										DescribeAttribute(
+											collection
+												.getUIAttributeDescriptionByName(
+												arg4value));
+									for (int i = 0, n = lines.length;
+										i < n;
+										i++)
+										System.out.println(
+											"\t\t\t\t" + lines[i]);
 
 									System.out.println();
 
@@ -1887,11 +2192,19 @@ public class MartShell {
 						//DSAttributeGroup Code goes here
 
 					} else {
-						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+						throw new InvalidQueryException(
+							"Recieved describe command with request key: "
+								+ arg1key
+								+ " and invalid second request: "
+								+ arg2key
+								+ "\n");
 					}
 
 				} else {
-					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+					throw new InvalidQueryException(
+						"Recieved describe command with invalid request key: "
+							+ arg1key
+							+ "\n");
 				}
 				break;
 
@@ -1900,14 +2213,20 @@ public class MartShell {
 		}
 	}
 
-	private void DescribeFilterPage(FilterPage page) throws InvalidQueryException {
-		System.out.print(page.getInternalName() + " contains the following FilterGroups:\n\n");
+	private void DescribeFilterPage(FilterPage page)
+		throws InvalidQueryException {
+		System.out.print(
+			page.getInternalName()
+				+ " contains the following FilterGroups:\n\n");
 
 		List groups = page.getFilterGroups();
 		for (int i = 0, n = groups.size(); i < n; i++) {
 			if (i > 0) {
 				try {
-					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
+					String quit =
+						Readline.readline(
+							"\n\nHit Enter to continue with next group, q to return to prompt: ",
+							false);
 					if (quit.equals("q"))
 						break;
 
@@ -1926,14 +2245,20 @@ public class MartShell {
 		}
 	}
 
-	private void DescribeAttributePage(AttributePage page) throws InvalidQueryException {
-		System.out.print(page.getInternalName() + " contains the following AttributeGroups:\n\n");
+	private void DescribeAttributePage(AttributePage page)
+		throws InvalidQueryException {
+		System.out.print(
+			page.getInternalName()
+				+ " contains the following AttributeGroups:\n\n");
 
 		List groups = page.getAttributeGroups();
 		for (int i = 0, n = groups.size(); i < n; i++) {
 			if (i > 0) {
 				try {
-					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
+					String quit =
+						Readline.readline(
+							"\n\nHit Enter to continue with next group, q to return to prompt: ",
+							false);
 					if (quit.equals("q"))
 						break;
 
@@ -1952,12 +2277,17 @@ public class MartShell {
 		}
 	}
 
-	private String[] DescribeFilterGroup(Object groupo) throws InvalidQueryException {
+	private String[] DescribeFilterGroup(Object groupo)
+		throws InvalidQueryException {
 		List lines = new ArrayList();
 
 		if (groupo instanceof FilterGroup) {
 			FilterGroup group = (FilterGroup) groupo;
-			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
+			lines.add(
+				"Group: "
+					+ group.getInternalName()
+					+ " - "
+					+ group.getDisplayName());
 			lines.add(DASHES);
 
 			if (group.hasFilterSets()) {
@@ -1997,12 +2327,19 @@ public class MartShell {
 			DSAttributeGroup group = (DSAttributeGroup) groupo;
 
 			if (group.getInternalName().equals("sequences")) {
-				lines.add("\t" + group.getInternalName() + " - " + group.getDisplayName());
+				lines.add(
+					"\t"
+						+ group.getInternalName()
+						+ " - "
+						+ group.getDisplayName());
 				lines.add("");
 
-				for (int i = 0, n = SequenceDescription.SEQS.size(); i < n; i++) {
+				for (int i = 0, n = SequenceDescription.SEQS.size();
+					i < n;
+					i++) {
 					String seqname = (String) SequenceDescription.SEQS.get(i);
-					String seqdesc = (String) SequenceDescription.SEQDESCRIPTIONS.get(i);
+					String seqdesc =
+						(String) SequenceDescription.SEQDESCRIPTIONS.get(i);
 					lines.add("\t\t" + seqname + " - " + seqdesc);
 				}
 			}
@@ -2012,7 +2349,11 @@ public class MartShell {
 			}
 		} else {
 			AttributeGroup group = (AttributeGroup) groupo;
-			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
+			lines.add(
+				"Group: "
+					+ group.getInternalName()
+					+ " - "
+					+ group.getDisplayName());
 			lines.add(DASHES);
 
 			AttributeCollection[] attcs = group.getAttributeCollections();
@@ -2020,7 +2361,8 @@ public class MartShell {
 				if (i > 0)
 					lines.add(DASHES);
 
-				lines.addAll(Arrays.asList(DescribeAttributeCollection(attcs[i])));
+				lines.addAll(
+					Arrays.asList(DescribeAttributeCollection(attcs[i])));
 			}
 			lines.add(DASHES);
 		}
@@ -2042,7 +2384,8 @@ public class MartShell {
 
 		FilterSetDescription[] fsetdescs = fset.getFilterSetDescriptions();
 		for (int i = 0, n = fsetdescs.length; i < n; i++)
-			lines.addAll(Arrays.asList(DescribeFilterSetDescription(fsetdescs[i])));
+			lines.addAll(
+				Arrays.asList(DescribeFilterSetDescription(fsetdescs[i])));
 
 		String[] ret = new String[lines.size()];
 		lines.toArray(ret);
@@ -2089,7 +2432,11 @@ public class MartShell {
 		lines.add(colheader);
 
 		if (collection.getMaxSelect() > 0) {
-			String[] clines = ColumnIze("(Note: Only " + collection.getMaxSelect() + " of the following attributes can be selected in the same query)");
+			String[] clines =
+				ColumnIze(
+					"(Note: Only "
+						+ collection.getMaxSelect()
+						+ " of the following attributes can be selected in the same query)");
 			for (int j = 0, k = clines.length; j < k; j++)
 				lines.add("\t" + clines[j]);
 			lines.add("");
@@ -2122,13 +2469,22 @@ public class MartShell {
 
 		if (filtero instanceof UIFilterDescription) {
 			UIFilterDescription desc = (UIFilterDescription) filtero;
-			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
+			lines.add(
+				"\t\t"
+					+ desc.getInternalName()
+					+ " - "
+					+ desc.getDisplayName()
+					+ " (Type "
+					+ desc.getType()
+					+ ")");
 		} else {
 			UIDSFilterDescription desc = (UIDSFilterDescription) filtero;
 			String disp = "\t\t" + desc.getInternalName();
 			if (desc.getDisplayName().length() > 0)
 				disp += " - " + desc.getDisplayName();
-			disp += " (see 'help " + desc.getHandler() + "' for further information)";
+			disp += " (see 'help "
+				+ desc.getHandler()
+				+ "' for further information)";
 			lines.add(disp);
 		}
 
@@ -2142,7 +2498,11 @@ public class MartShell {
 
 		if (attributeo instanceof UIAttributeDescription) {
 			UIAttributeDescription desc = (UIAttributeDescription) attributeo;
-			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName());
+			lines.add(
+				"\t\t"
+					+ desc.getInternalName()
+					+ " - "
+					+ desc.getDisplayName());
 		} else {
 			// for now, do nothing.  If we add UIDSAttributeDescriptions to the config, add hooks here
 		}
@@ -2155,7 +2515,11 @@ public class MartShell {
 	private void setPrompt(String command) throws InvalidQueryException {
 		StringTokenizer toks = new StringTokenizer(command, " ");
 		if (toks.countTokens() < 2)
-			throw new InvalidQueryException("Invalid setPrompt Command Recieved: " + command + "\n" + Help(SETPROMPT));
+			throw new InvalidQueryException(
+				"Invalid setPrompt Command Recieved: "
+					+ command
+					+ "\n"
+					+ Help(SETPROMPT));
 		toks.nextToken(); // skip command
 		String tmp = toks.nextToken();
 
@@ -2165,7 +2529,8 @@ public class MartShell {
 			userPrompt = tmp;
 	}
 
-	private void setConnectionSettings(String command) throws InvalidQueryException {
+	private void setConnectionSettings(String command)
+		throws InvalidQueryException {
 		StringTokenizer ctokens = new StringTokenizer(command, " ");
 		if (ctokens.countTokens() > 1) {
 			// parse command
@@ -2174,9 +2539,13 @@ public class MartShell {
 
 			StringTokenizer sTokens = new StringTokenizer(connSettings, ",");
 			while (sTokens.hasMoreTokens()) {
-				StringTokenizer tokens = new StringTokenizer(sTokens.nextToken(), "=");
+				StringTokenizer tokens =
+					new StringTokenizer(sTokens.nextToken(), "=");
 				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+					throw new InvalidQueryException(
+						"Recieved invalid setConnectionSettings command.\n"
+							+ Help(SETCONSETSC)
+							+ "\n");
 
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
@@ -2196,33 +2565,60 @@ public class MartShell {
 				else if (key.equals(ALTCONFFILE))
 					altConfigurationFile = value;
 				else
-					throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+					throw new InvalidQueryException(
+						"Recieved invalid setConnectionSettings command.\n"
+							+ Help(SETCONSETSC)
+							+ "\n");
 			}
 		} else {
 			if (mainBatchMode)
-				throw new InvalidQueryException("Recieved invalid setConnectionSettings command.\n" + Help(SETCONSETSC) + "\n");
+				throw new InvalidQueryException(
+					"Recieved invalid setConnectionSettings command.\n"
+						+ Help(SETCONSETSC)
+						+ "\n");
 
 			String thisLine = null;
 
 			try {
 
 				String myHost = (martHost == null) ? "" : martHost;
-				thisLine = Readline.readline("\nPlease enter the host address of the mart database (press enter to leave as '" + myHost + "'): ", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the host address of the mart database (press enter to leave as '"
+							+ myHost
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martHost = thisLine;
 
-				String myDBType = (martDatabaseType == null) ? "" : martDatabaseType;
-				thisLine = Readline.readline("\nPlease enter the type of RDBMS hosting the mart database (press enter to leave as '" + myDBType + "'): ", false);
+				String myDBType =
+					(martDatabaseType == null) ? "" : martDatabaseType;
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the type of RDBMS hosting the mart database (press enter to leave as '"
+							+ myDBType
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martDatabaseType = thisLine;
 
 				String myPort = (martPort == null) ? "" : martPort;
-				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave as '" + myPort + "'): ", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the port on which the mart database is running (press enter to leave as '"
+							+ myPort
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martPort = thisLine;
 
 				String myUser = (martUser == null) ? "" : martUser;
-				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database (press enter to leave as '" + myUser + "'): ", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the user name used to connect to the mart database (press enter to leave as '"
+							+ myUser
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martUser = thisLine;
 
@@ -2232,16 +2628,27 @@ public class MartShell {
 						myPass += "*";
 				}
 
-				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database (press enter to leave as '" + myPass + "'): ", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the password used to connect to the mart database (press enter to leave as '"
+							+ myPass
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martPass = thisLine;
 
 				String myDb = (martDatabase == null) ? "" : martDatabase;
-				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query (press enter to leave as '" + myDb + "'): ", false);
+				thisLine =
+					Readline.readline(
+						"\nPlease enter the name of the mart database you wish to query (press enter to leave as '"
+							+ myDb
+							+ "'): ",
+						false);
 				if (thisLine != null)
 					martDatabase = thisLine;
 
-				String myAltFile = (altConfigurationFile == null) ? "-" : altConfigurationFile;
+				String myAltFile =
+					(altConfigurationFile == null) ? "-" : altConfigurationFile;
 				thisLine =
 					Readline.readline(
 						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave as '"
@@ -2258,13 +2665,16 @@ public class MartShell {
 				}
 
 			} catch (Exception e) {
-				throw new InvalidQueryException("Problem reading input for mart connection settings: " + e.getMessage());
+				throw new InvalidQueryException(
+					"Problem reading input for mart connection settings: "
+						+ e.getMessage());
 			}
 		}
 		try {
 			Initialize();
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not initialize connection: " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not initialize connection: " + e.getMessage());
 		}
 	}
 
@@ -2292,7 +2702,8 @@ public class MartShell {
 
 	private void setVerbose(String command) throws InvalidQueryException {
 		if (!command.matches("\\w+\\s(on|off)"))
-			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
+			throw new InvalidQueryException(
+				"Invalid setVerbose command recieved: " + command + "\n");
 
 		String val = command.split("\\s")[1];
 		verbose = (val.equals("on")) ? true : false;
@@ -2301,7 +2712,8 @@ public class MartShell {
 		defaultLoggingConfiguration(verbose);
 	}
 
-	private void setOutputSettings(String command) throws InvalidQueryException {
+	private void setOutputSettings(String command)
+		throws InvalidQueryException {
 		try {
 			StringTokenizer ctokens = new StringTokenizer(command, " ");
 			ctokens.nextToken();
@@ -2309,9 +2721,15 @@ public class MartShell {
 
 			StringTokenizer fTokens = new StringTokenizer(fSettings, ",");
 			while (fTokens.hasMoreTokens()) {
-				StringTokenizer tokens = new StringTokenizer(fTokens.nextToken(), "=");
+				StringTokenizer tokens =
+					new StringTokenizer(fTokens.nextToken(), "=");
 				if (tokens.countTokens() < 2)
-					throw new InvalidQueryException("Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
+					throw new InvalidQueryException(
+						"Recieved invalid setOutputFormat request: "
+							+ command
+							+ "\n"
+							+ Help(SETOUTSETSC)
+							+ "\n");
 
 				String key = tokens.nextToken();
 				String value = tokens.nextToken();
@@ -2334,10 +2752,16 @@ public class MartShell {
 					else
 						sessionOutputSeparator = value;
 				else
-					throw new InvalidQueryException("Recieved invalid setOutputFormat request: " + command + "\n" + Help(SETOUTSETSC) + "\n");
+					throw new InvalidQueryException(
+						"Recieved invalid setOutputFormat request: "
+							+ command
+							+ "\n"
+							+ Help(SETOUTSETSC)
+							+ "\n");
 			}
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not set output settings: " + e.getMessage() + "\n");
+			throw new InvalidQueryException(
+				"Could not set output settings: " + e.getMessage() + "\n");
 		}
 	}
 
@@ -2370,13 +2794,21 @@ public class MartShell {
 				tokens.nextToken();
 				useCommand(tokens.nextToken());
 			} else
-				throw new InvalidQueryException("invalid use command: does not contain a dataset to use: " + command + " has " + tokens.countTokens() + " tokens\n");
+				throw new InvalidQueryException(
+					"invalid use command: does not contain a dataset to use: "
+						+ command
+						+ " has "
+						+ tokens.countTokens()
+						+ " tokens\n");
 
 		} else {
 			if (martconf.containsDataset(command))
 				envDataset = command;
 			else
-				throw new InvalidQueryException("MartConfiguration does not contain dataset " + command + "\n");
+				throw new InvalidQueryException(
+					"MartConfiguration does not contain dataset "
+						+ command
+						+ "\n");
 		}
 
 		if (completionOn)
@@ -2400,7 +2832,10 @@ public class MartShell {
 			File outPutFile = null;
 
 			if (tokCount < 2)
-				throw new InvalidQueryException("WriteHistory command must be provided a valid URL: " + command + "\n");
+				throw new InvalidQueryException(
+					"WriteHistory command must be provided a valid URL: "
+						+ command
+						+ "\n");
 			else if (tokCount == 2) {
 				//file
 				outPutFileName = com.nextToken();
@@ -2410,20 +2845,25 @@ public class MartShell {
 				outPutFileName = com.nextToken();
 				outPutFile = new File(outPutFileName);
 			} else
-				throw new InvalidQueryException("Recieved invalid WriteHistory request " + command + "\n");
+				throw new InvalidQueryException(
+					"Recieved invalid WriteHistory request " + command + "\n");
 
 			WriteHistoryLinesToFile(req, outPutFile);
 
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not write history " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not write history " + e.getMessage());
 		}
 	}
 
-	private void WriteHistoryLinesToFile(String req, File outPutFile) throws InvalidQueryException {
-		String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+	private void WriteHistoryLinesToFile(String req, File outPutFile)
+		throws InvalidQueryException {
+		String[] lines = GetHistoryLines(req);
+		// will throw an exception if GetHistoryLines requirements are not satisfied
 
 		try {
-			OutputStreamWriter hisout = new OutputStreamWriter(new FileOutputStream(outPutFile));
+			OutputStreamWriter hisout =
+				new OutputStreamWriter(new FileOutputStream(outPutFile));
 			for (int i = 0, n = lines.length; i < n; i++) {
 				String thisline = lines[i];
 				if (!thisline.startsWith(SAVETOSCRIPTC))
@@ -2449,15 +2889,24 @@ public class MartShell {
 			scriptFile = new File(scriptFileName);
 			ExecScriptFromFile(scriptFile);
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not execute script: " + scriptFileName + " " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not execute script: "
+					+ scriptFileName
+					+ " "
+					+ e.getMessage());
 		}
 	}
 
-	private void ExecScriptFromFile(File scriptFile) throws InvalidQueryException {
+	private void ExecScriptFromFile(File scriptFile)
+		throws InvalidQueryException {
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile)));
+			reader =
+				new BufferedReader(
+					new InputStreamReader(new FileInputStream(scriptFile)));
 
-			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
+			for (String line = reader.readLine();
+				line != null;
+				line = reader.readLine()) {
 				if (historyOn)
 					Readline.addToHistory(line);
 				parse(line);
@@ -2479,11 +2928,13 @@ public class MartShell {
 			scriptFile = com.nextToken();
 			LoadScriptFromFile(scriptFile);
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not load script: " + scriptFile + " " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not load script: " + scriptFile + " " + e.getMessage());
 		}
 	}
 
-	private void LoadScriptFromFile(String scriptFile) throws InvalidQueryException {
+	private void LoadScriptFromFile(String scriptFile)
+		throws InvalidQueryException {
 		if (!readlineLoaded)
 			throw new InvalidQueryException("Sorry, histrory functions are not available on your terminal.\n");
 		if (!historyOn)
@@ -2507,7 +2958,8 @@ public class MartShell {
 				com.nextToken(); // skip commmand start
 				String req = com.nextToken();
 
-				String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+				String[] lines = GetHistoryLines(req);
+				// will throw an exception if GetHistoryLines requirements are not satisfied
 				for (int i = 0, n = lines.length; i < n; i++) {
 					String thisline = lines[i];
 
@@ -2517,7 +2969,8 @@ public class MartShell {
 				}
 			}
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not execute command " + command + " " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not execute command " + command + " " + e.getMessage());
 		}
 	}
 
@@ -2550,13 +3003,15 @@ public class MartShell {
 					}
 			}
 
-			String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
+			String[] lines = GetHistoryLines(req);
+			// will throw an exception if GetHistoryLines requirements are not satisfied
 			for (int i = 0, n = lines.length; i < n; i++) {
 				System.out.print(start + " " + lines[i] + "\n");
 				start++;
 			}
 		} catch (Exception e) {
-			throw new InvalidQueryException("Could not show history " + e.getMessage());
+			throw new InvalidQueryException(
+				"Could not show history " + e.getMessage());
 		}
 	}
 
@@ -2617,33 +3072,75 @@ public class MartShell {
 		return ret;
 	}
 
-	private void parse(String line) throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
-		if (line.equals(LINEEND)) {
-			String command = conline.append(line).toString().trim();
-			continueQuery = false;
-			conline = new StringBuffer();
+	private void parse(String line)
+		throws
+			SequenceException,
+			FormatException,
+			InvalidQueryException,
+			IOException,
+			SQLException {
 
-			parseCommand(command);
-		} else if (line.endsWith(LINEEND)) {
-			String command = conline.append(" " + line).toString().trim();
-			continueQuery = false;
-			conline = new StringBuffer();
-
-			parseCommand(command);
+		if (line.indexOf(LINEEND) >= 0) {
+			String residual =
+				parseForCommands(conline.append(line).toString().trim());
+			if (residual != null) {
+				continueQuery = true;
+				conline = new StringBuffer(residual);
+				
+				if (completionOn)
+				  mcl.SetModeForLine(residual);
+			} else {
+				continueQuery = false;
+				conline = new StringBuffer();
+			}
 		} else {
 			conline.append(" " + line);
 			continueQuery = true;
 
 			//MartCompleter Mode
 			if (completionOn)
-        mcl.SetModeForLine(line);
+				mcl.SetModeForLine(line);
 		}
 	}
 
-	private void parseCommand(String command) throws SequenceException, FormatException, InvalidQueryException, IOException, SQLException {
+	private String parseForCommands(String line)
+		throws
+			SequenceException,
+			FormatException,
+			InvalidQueryException,
+			IOException,
+			SQLException {
+		StringBuffer residual = null;
+
+		StringTokenizer commandtokens =
+			new StringTokenizer(line, LINEEND, true);
+
+		while (commandtokens.hasMoreTokens()) {
+			String thisCommand = commandtokens.nextToken().trim();
+			if (thisCommand.equals(LINEEND)) {
+				parseCommand(residual.toString());
+				residual = new StringBuffer();
+			} else
+				residual = new StringBuffer(thisCommand);
+		}
+
+		if (residual.length() > 0)
+			return residual.toString();
+		else
+			return null;
+	}
+
+	private void parseCommand(String command)
+		throws
+			SequenceException,
+			FormatException,
+			InvalidQueryException,
+			IOException,
+			SQLException {
 		int cLen = command.length();
 
-		command = command.replaceAll("\\s;$", ";"); // removes any whitespace before the ; character
+		command = command.replaceAll("\\s;$", ";");
+		// removes any whitespace before the ; character
 
 		if (cLen == 0)
 			return;
@@ -2677,9 +3174,13 @@ public class MartShell {
 			ExecuteScript(NormalizeCommand(command));
 		else if (command.startsWith(SAVETOSCRIPTC))
 			WriteHistory(NormalizeCommand(command));
-		else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
+		else if (
+			NormalizeCommand(command).equals(EXITC)
+				|| NormalizeCommand(command).equals(QUITC))
 			ExitShell();
-		else if (command.startsWith(MartShellLib.GETQSTART) || command.startsWith(MartShellLib.USINGQSTART)) {
+		else if (
+			command.startsWith(MartShellLib.GETQSTART)
+				|| command.startsWith(MartShellLib.USINGQSTART)) {
 			if (envDataset != null)
 				msl.setDataset(envDataset);
 
@@ -2711,7 +3212,8 @@ public class MartShell {
 			engine.execute(query, fspec, os);
 
 		} else {
-			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
+			throw new InvalidQueryException(
+				"\nInvalid Command: please try again " + command + "\n");
 		}
 	}
 
@@ -2722,7 +3224,8 @@ public class MartShell {
 	private BufferedReader reader;
 	private boolean verbose = false;
 
-	private final String history_file = System.getProperty("user.home") + "/.martshell_history";
+	private final String history_file =
+		System.getProperty("user.home") + "/.martshell_history";
 
 	private String martHost = null;
 	private String martPort = null;
@@ -2730,28 +3233,43 @@ public class MartShell {
 	private String martPass = null;
 	private String martDatabase = null;
 	private String martDatabaseType = "mysql"; //default
-	private MartCompleter mcl; // will hold the MartCompleter, if Readline is loaded and completion turned on
-	private boolean helpLoaded = false; // first time Help function is called, loads the help properties file and sets this to true
+	private MartCompleter mcl;
+	// will hold the MartCompleter, if Readline is loaded and completion turned on
+	private boolean helpLoaded = false;
+	// first time Help function is called, loads the help properties file and sets this to true
 	private boolean historyOn = false; // commandline history, default to off
 	private boolean completionOn = true; // command completion, default to on
-	private boolean readlineLoaded = false; // true only if functional Readline library was loaded, false if PureJava
+	private boolean readlineLoaded = false;
+	// true only if functional Readline library was loaded, false if PureJava
 	private String userPrompt = null;
 
 	private String altConfigurationFile = null;
-	private FileOutputStream sessionOutputFile = null; // this is set using the setOutputSettings command.
-	private final String DEFOUTPUTFORMAT = "tabulated"; // default to tabulated output
-	private String sessionOutputFormat = null; // this is set using the setOutputSettings command.
+	private FileOutputStream sessionOutputFile = null;
+	// this is set using the setOutputSettings command.
+	private final String DEFOUTPUTFORMAT = "tabulated";
+	// default to tabulated output
+	private String sessionOutputFormat = null;
+	// this is set using the setOutputSettings command.
 	private final String DEFOUTPUTSEPARATOR = "\t"; // default to tab separated
-	private String sessionOutputSeparator = null; // this is set using the setOutputSettings command.
+	private String sessionOutputSeparator = null;
+	// this is set using the setOutputSettings command.
 
 	private String batchErrorMessage = null;
 	private Properties commandHelp = new Properties();
-	private final String HELPFILE = "data/help.properties"; //contains help general to the shell
-	private final String DSHELPFILE = "data/dshelp.properties"; // contains help for domain specific aspects
+	private final String HELPFILE = "data/help.properties";
+	//contains help general to the shell
+	private final String DSHELPFILE = "data/dshelp.properties";
+	// contains help for domain specific aspects
 
-	private final Pattern[] dsCommands = new Pattern[] { Pattern.compile("(.*)DOMAINSPECIFIC\\s(\\w+)(.+)", Pattern.DOTALL)};
+	private final Pattern[] dsCommands =
+		new Pattern[] {
+			 Pattern.compile(
+				"(.*)DOMAINSPECIFIC\\s(\\w+)(.+)",
+				Pattern.DOTALL)};
 
-	private final List dsHelpItems = Collections.unmodifiableList(Arrays.asList(new String[] { "selectSequence" }));
+	private final List dsHelpItems =
+		Collections.unmodifiableList(
+			Arrays.asList(new String[] { "selectSequence" }));
 
 	// available commands
 	private final String EXITC = "exit";
@@ -2826,21 +3344,36 @@ public class MartShell {
 	private final String DATABASETYPE = "databaseType";
 	private final String ALTCONFFILE = "alternateConfigurationFile";
 
-  //startup message variables
-  private final String STARTUP = "startUp";
-  private final String HISTORYQ = "CommandHistoryHelp";
-  private final String COMPLETIONQ = "CommandCompletionHelp";
-  
+	//startup message variables
+	private final String STARTUP = "startUp";
+	private final String HISTORYQ = "CommandHistoryHelp";
+	private final String COMPLETIONQ = "CommandCompletionHelp";
+
 	// variables for subquery
 	private ByteArrayOutputStream subqueryOutput = null;
 	private int nestedLevel = 0;
-	private final int MAXNESTING = 1; // change this to allow deeper nesting of queries inside queries
-	private final int MAXLINECOUNT = 60; // page prompt describe output line limit
+	private final int MAXNESTING = 1;
+	// change this to allow deeper nesting of queries inside queries
+	private final int MAXLINECOUNT = 60;
+	// page prompt describe output line limit
 	private final int MAXCHARCOUNT = 80; // describe group output limit
 
-	private final String DASHES = "--------------------------------------------------------------------------------"; // describe output separator
+	private final String DASHES =
+		"--------------------------------------------------------------------------------";
+	// describe output separator
 
-	private List qualifiers = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "exclusive", "excluded", "in" });
+	private List qualifiers =
+		Arrays.asList(
+			new String[] {
+				"=",
+				"!=",
+				"<",
+				">",
+				"<=",
+				">=",
+				"exclusive",
+				"excluded",
+				"in" });
 
 	private boolean continueQuery = false;
 	private StringBuffer conline = new StringBuffer();
