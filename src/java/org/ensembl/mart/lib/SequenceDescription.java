@@ -428,19 +428,38 @@ public final class SequenceDescription {
 	
 	private Logger logger = Logger.getLogger(SequenceDescription.class.getName());
 	
-	//TODO: add new enums as new types of sequences are implimented
+	// add new enums as new types of sequences are implimented
 	public static final List SEQS = Collections.unmodifiableList(Arrays.asList( new String[]{"coding", 
-                                                                                                                                                    "peptide" , 
-                                                                                                                                                    "cdna", 
-                                                                                                                                                    "transcript_exons", 
-                                                                                                                                                    "transcript_exon_intron",
-                                                                                                                                                    "transcript_flanks",
-                                                                                                                                                    "gene_exon_intron",
-                                                                                                                                                    "gene_exons",
-                                                                                                                                                    "gene_flanks",
-                                                                                                                                                    "downstream_utr",
-                                                                                                                                                    "upstream_utr"
-                                                                                                                                                    }));
+                                                                                           "peptide" , 
+                                                                                           "cdna", 
+                                                                                           "transcript_exons", 
+                                                                                           "transcript_exon_intron",
+                                                                                           "transcript_flanks",
+		                                                                                       "gene_exons",                                                                                           
+                                                                                           "gene_exon_intron",
+                                                                                           "gene_flanks",
+                                                                                           "downstream_utr",
+                                                                                           "upstream_utr"
+                                                                                          }
+                                                                             )
+                                                                );
+  
+  // descriptions for SEQS.  The order of the description must match the order of the SEQ                                                                                                                                                  
+  public static final List SEQDESCRIPTIONS = Collections.unmodifiableList(Arrays.asList( new String[] {
+                                                                                                        "Coding Sequences",
+                                                                                                        "Protein Translations",
+                                                                                                        "Cdna Sequences",
+                                                                                                        "Transcript Exons (with optional flanking sequences)",
+                                                                                                        "Transcripts with Exons and Intronic Sequence (with optional flanking sequences)",
+                                                                                                        "Left or Right Flanking Sequence of Transcripts (must specify a left or right flanking length)",
+		                                                                                                    "Gene Exons (with optional flanking sequences)",
+		                                                                                                    "Genes with Exons and Intronic Sequence (with optional flanking sequences)",
+		                                                                                                    "Left or Right Flanking Sequence of Genes (must specify a left or right flanking length)",
+		                                                                                                    "Downstream Untranslated Region (must specify a right flank length. Note, some genes do not have UTR categorized)",
+		                                                                                                    "Upstream Untranslated Region (must specify a left flank length. Note, some genes do not have UTR categorized)"                                                              
+                                                                                                      }
+                                                                                        )
+                                                                          );                                                                                                                                                   
 	
 	/**
 	 * enums over sequence type that objects can use to test the type, and SequenceDescription can use to set seqtype
