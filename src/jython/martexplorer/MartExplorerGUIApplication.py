@@ -67,115 +67,7 @@ GAP = 5
 SPACE=" &nbsp;"
 
 
-        
-class OptionTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListener): 
-
-    """A TreeNode which: (1) causes the OptionPage to be displayed if
-    node is selected , (2) derives it's label from Option.label the
-    contained Option (via toString()), (3) Listens to changes in
-    targetComponent and cause the tree to be redrawn when changes
-    detected. """
-
-
-    def __init__(self, tree, parent, cardContainer, targetCardName, label):
-        
-        """ Adds targetComponent to cardContainer with the name
-        targetCardName. Makes this a tree listener and inserts self as
-        child of parent at specified position."""
-
-        DefaultMutableTreeNode.__init__(self)
-        self.label = label
-	self.cardContainer = cardContainer
-	self.targetCardName = targetCardName
-        self.tree = tree
-        self.tree.addTreeSelectionListener( self )
-        self.tree.model.insertNodeInto( self, parent, parent.childCount)
-        
-
-    def toString(self):
-        return self.label
-        
-
-
-    def valueChanged(self, event):
-
-	""" Brings the targetComponent to the front of the
-	cardContainer if this was the node selected in the tree"""
-	if event.newLeadSelectionPath and self == event.newLeadSelectionPath.lastPathComponent:
-	    self.cardContainer.show( self.targetCardName )
-
-    def stateChanged(self, event=None):
-        # redraw tree
-        self.tree.repaint()
-
-
-        
-class Option(JPanel, ChangeListener ):
-
-    """ Listens for statechange events; these occur when a button is
-    selected and deselected. Selections cause a node corresponding to
-    this option to be added to the tree and conversely, deselection
-    causes it to be removed. """
-
-    def __init__(self, label,
-                 attributeManager,
-                 group=None, clearButton=None):
-
-        JPanel.__init__( self, BorderLayout() )
-        self.preferredSize = (170, 30)
-        self.name = str(self)
-
-        self.attributeManager = attributeManager 
-
-        if group:
-            self.button = JRadioButton(label)
-            group.add( self.button )
-        else:
-            self.button = JCheckBox(label)
-
-        self.button.model.addChangeListener( self )
-
-        self.add( self.button, BorderLayout.WEST)
-
-        self.node = None
-
-
-    def addChangeListener(self, listener):
-        
-        # This might cause the screen to flicker if there are too many
-        # calls per action
-
-        self.button.model.addChangeListener( listener )
-
-
-    def stateChanged( self, event=None):
-        """ Called when the buttons model changes. """
-        if self.button.selected : self.select()
-        else : self.deselect()
-
-
-
-    def select( self ):
-        if not self.node:
-            print "selected", self.button.text
-            self.node = self.attributeManager.select( self )
-
-
-
-    def deselect( self ):
-        if self.node:
-            print "deselected", self.button.text
-            self.attributeManager.deselect( self )
-            self.node = None
-
-
-    def label(self):
-        return String(self.button.text)
-
-
-
-class OptionPage(JPanel):
-    attributes = (
+defaultAttributeConfiguration = (
     ( "Features",
       ( "REGION",
         ( ("Chromosome Attributes", None),
@@ -268,81 +160,63 @@ class OptionPage(JPanel):
       ),
 
     )
-    
-
-    def __init__(self, attributeManager):
-        p = JTabbedPane()
-        self.add( p )
-        self.attributeManager = attributeManager
-
-        # Add all attributes in appropriatte hierarchy
-        for g1 in OptionPage.attributes:
-            print g1[0]
-            # tab level
-            p1 = Box.createVerticalBox()
-            p.add( JScrollPane(p1), g1[0] )
-            for g2 in g1[1:]:
-                # group level
-                groupPanel = Box.createVerticalBox()
-                groupPanel.border=BorderFactory.createTitledBorder( g2[0] ) 
-                p1.add( groupPanel ) 
-                for optionGroup in g2[1:]:
-                    # option group level
-                    groupTitle = optionGroup[0][0]
-                    #groupPanel.add( JLabel( optionGroup[0][0], foreground=Color.RED ) )
-            
-                    # Support 2 column lists of options
-                    list = ( Box.createVerticalBox(), Box.createVerticalBox() )
-                    listPanel = Box.createHorizontalBox()
-                    listPanel.border = BorderFactory.createTitledBorder( optionGroup[0][0] )
-                    listPanel.add( list[0] )
-                    listPanel.add( list[1] )
-                    groupPanel.add( listPanel )
-                    
-                    # handle radio button lists
-                    radio = optionGroup[0][1]==1
-                    if radio:
-                        radioGroup = ButtonGroup()
-                        clearButton = JRadioButton("None", selected=1)
-                        radioGroup.add( clearButton )
-                        cbPanel = JPanel( BorderLayout() )
-                        cbPanel.add( clearButton, BorderLayout.WEST )
-                        list[0].add( cbPanel )
-                        
-                    i = 0
-                    for option in optionGroup[1]:
-                        # individual option
-                        if radio:
-                            button = Option( option, self, radioGroup, clearButton )
-                            #button = JRadioButton( option )
-                            #radioGroup.add( button )
-                        else:
-                            button = Option( option, self )
-                            #button = JCheckBox(option)
-                            # add button to left or right column
-                        list[i%2].add( button )
-                        i = i+1
-
-        # Sequence page is hard-coded
-        p.add( SequencePage( self.attributeManager ), "Sequence" )
 
 
-    def select(self, option ):
-        print "select ", option.label()
-        node = OptionTreeNode( self.attributeManager.tree
-                               ,self.attributeManager.node # parent
-                               ,self.attributeManager.cardContainer
-                               ,"attribute_manager_page"
-                               ,option.label()
-                               )
-        self.attributeManager.refreshView()
-        return node
-
-    def deselect( self, option ):
-        print "deselect ", option.label()
-        self.attributeManager.tree.model.removeNodeFromParent( option.node )
-        self.attributeManager.refreshView()
         
+class AttributeManager(ChangeListener ):
+
+    """ Listens for statechange events; these occur when a button is
+    selected and deselected. Selections cause a node corresponding to
+    this option to be added to the tree and conversely, deselection
+    causes it to be removed. """
+
+    def __init__(self, label,
+                 attributePage,
+                 group=None):
+
+        self.attributePage = attributePage
+
+        self.__widget = JPanel( BorderLayout() )
+        self.__widget.preferredSize = (170, 30)
+        self.name = str(self)
+
+        if group:
+            self.button = JRadioButton(label)
+            group.add( self.button )
+        else:
+            self.button = JCheckBox(label)
+
+        self.button.model.addChangeListener( self )
+        self.__widget.add( self.button, BorderLayout.WEST)
+        self.node = DefaultMutableTreeNode( label )
+	self.nodeInTree = None
+
+    def getWidget( self ):
+	return self.__widget
+
+
+    def getNode( self ):
+	return self.__node
+
+
+    def stateChanged( self, event=None):
+
+         """ Adds / removes node from tree when button clicked.  Can
+         be called several times per click"""
+	
+	 if self.button.selected : 
+	     if not self.nodeInTree: # prevents trying to add node to tree several times per "click"
+		 print "selected", self.button.text
+		 self.attributePage.addNode( self.node )
+		 self.nodeInTree = 1
+	 else : 
+	     if self.nodeInTree:
+		 print "deselected", self.button.text
+		 self.attributePage.removeNode( self.node )
+		 self.nodeInTree = None
+		 
+
+
 
 
 def toVector(list):
@@ -1041,147 +915,95 @@ class SequencePage(Page):
 
 
 
-class AttributeManagerPage(Page):
-
-    """ Manages the attributes by supporting selecting and deselecting
-    atributes. A list of available attributes is maintained and this
-    is displayed in this page. Items selected from this list have a
-    tree node constructed and inserted into the tree. Attributes
-    removed from the tree (via the "remove" button on the
-    SimpleAttribute page are readded to the available list."""
+class AttributePage(Page):
 
     name = "attribute_manager_page"
 
-    def __init__(self):
-        Page.__init__(self)
-        self.selected = Vector()
-        self.available = toVector(["gene_stable_id", "chr_name", "gene_chrom_end", "chrom_strand"
-                                   , "sequence"])
-        self.availableWidget = JList( self.available,
-                                      valueChanged=self.valueChanged,
-                                      selectionMode=ListSelectionModel.SINGLE_SELECTION)
-        panel = JPanel()
-        
-        panel.add( JLabel("Select an attribute to add it") )
-        panel.add( JScrollPane( self.availableWidget ) )
-        self.add( panel )
-        # these must be set before select() is called.
-        self.node = None
+    def __init__(self, cardContainer):
+	Page.__init__(self)
+	self.cardContainer = cardContainer
+	# these must be set before add/removeNode() is called.
         self.tree = None
-        self.path = None
+        self.attributesNode = None
+        self.attributesNodePath = None
+	tp = JTabbedPane()
+	self.add( tp )
+	self.addTabs(tp, defaultAttributeConfiguration)
+	tp.add( SequencePage(self), "Sequence" )
 
-        # tmp code
-        self.tmpAttributesPage =  OptionPage( self )
-        self.add( self.tmpAttributesPage )
+    def addTabs(self, tabbedPane, configuration):
+	# tab -> group -> subGroup -> attribute widget
+	
+	# add All AttributeSubPages (add user attributes to features, snps)
+        for tabData in configuration:
+            tabPanel = Box.createVerticalBox()
+            tabbedPane.add( JScrollPane(tabPanel), tabData[0] )
+            for groupData in tabData[1:]:
+                # groupData level
+                groupPanel = Box.createVerticalBox()
+                groupPanel.border=BorderFactory.createTitledBorder( groupData[0] ) 
+                tabPanel.add( groupPanel ) 
+                for subGroup in groupData[1:]:
+                    # option group level
+                    groupTitle = subGroup[0][0]
+            
+                    # Support 2 column lists of options
+                    list = ( Box.createVerticalBox(), Box.createVerticalBox() )
+                    listPanel = Box.createHorizontalBox()
+                    listPanel.border = BorderFactory.createTitledBorder( subGroup[0][0] )
+                    listPanel.add( list[0] )
+                    listPanel.add( list[1] )
+                    groupPanel.add( listPanel )
+                    
+                    # handle radio button lists
+                    radio = subGroup[0][1]==1
+                    if radio:
+                        radioGroup = ButtonGroup()
+                        clearButton = JRadioButton("None", selected=1)
+                        radioGroup.add( clearButton )
+                        cbPanel = JPanel( BorderLayout() )
+                        cbPanel.add( clearButton, BorderLayout.WEST )
+                        list[0].add( cbPanel )
+		    else:
+			radioGroup = None
+			clearButton = None
+                        
+                    i = 0
+                    for attribute in subGroup[1]:
+			am = AttributeManager( attribute, self, radioGroup )
+                        list[i%2].add( am.getWidget() )
+                        i = i+1
 
+	
+	# Add SequencePage
+	pass
+    
 
-    def valueChanged(self, event=None):
-        """ Handles user clicking on an available attribute. """
-        selected = self.availableWidget.selectedValue
-        if selected:
-            self.select( selected )
+    def updateQuery(self, query):
+	print "todo updateQ"
 
+    def updatePage(self, query):
+	print "todo updatePage"
 
-    def select( self, value ):
-        
-        """ Selecting an attribute means removing it from the
-        available list, adding it to the tree and creating a page. The
-        page is returned."""
-        
-        # need to prevent the method running more than once in case it
-        # is called as a result of multiple events (this happens on
-        # Macs)
-        if value in self.selected:
-            return
+    def clear( self):
+	print "todo clear"
 
-        self.selected.add( value )
-        self.available.remove( value )
+    def addNode(self, node):
+	self.tree.model.insertNodeInto( node, self.attributesNode, self.attributesNode.childCount)
+	self.refreshView() # opens tree attributeNode if it was closed
 
-        if isinstance( value, Option):
-            value = value.button.text
-            attributePage = self.tmpAttributesPage
-        elif value=="sequence":
-            attributePage = SequencePage( self )
-            self.sequencePage = attributePage
-        else:
-            attributePage = SimpleAttributePage(self, value)
-
-        node = QueryTreeNode( self.tree,
-                              self.node,
-                              self.node.childCount,
-                              self.cardContainer,
-                              attributePage)
-        attributePage.node = node
-        self.refreshView()
-
-        return attributePage
-
-
-
-    def deselect( self, attributePage ):
-
-        """ Remove attribute from tree and add it to the list of
-        available attributes."""
-        
-        self.selected.remove( attributePage.field )
-        self.available.add( attributePage.field )
-        self.tree.model.removeNodeFromParent( attributePage.node)
-        self.refreshView()
-
-
+    def removeNode(self, node):
+	self.tree.model.removeNodeFromParent( node)
 
     def refreshView(self):
-        self.node.targetComponent.validate()
-        self.cardContainer.show( self.node.targetCardName )
-
-        # must explicitly call setListData() rather than .listData=
-        # to avoid conversion problems on linux and windows
-        Collections.sort( self.available )
-        self.availableWidget.setListData( self.available )
-
-        self.tree.expandPath( self.path )
-
-
-
+	print "todo refresh"
+	self.cardContainer.show( self.name )
+	self.tree.expandPath( self.attributesNodePath )
+	
     def htmlSummary(self):
 	return "<html><b>Attributes</b></html>"
 
-
-
-    def updatePage(self, query):
-        for attribute in query.attributes:
-            if isinstance( attribute, FieldAttribute ):
-                self.select( attribute.name )
-        sd = query.sequenceDescription
-        if sd:
-            page = self.select("sequence")
-            page.updatePage( query )
-
-
-
-    def updateQuery(self, query):
-        for attributeName in self.selected:
-            if attributeName=="sequence":
-                self.sequencePage.updateQuery( query )
-            else:
-                query.addAttribute( FieldAttribute( attributeName ) )
-            
-
-
-
-
-    def clear(self):
-        for node in self.node.children():
-            # remove the page associated with each "selected" attribute node
-            if isinstance( node, QueryTreeNode ):
-                page = node.targetComponent
-                self.deselect( page )
-        self.refreshView()
-
-
-
-
-
+    
 
 class FilterPage(Page):
 
@@ -1347,9 +1169,10 @@ class QueryEditor(JPanel):
 				    RegionPage())
         outputNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
 				    OutputPage())
-        attributesPage = AttributeManagerPage()
+        attributePage = AttributePage(self.cardContainer)
+	print "attributePage", attributePage
         attributesNode = QueryTreeNode( tree, outputNode, 0, self.cardContainer,
-					attributesPage)
+					attributePage)
         formatNode = QueryTreeNode( tree, outputNode, 1, self.cardContainer,
 				    self.formatPage)
         
@@ -1361,10 +1184,9 @@ class QueryEditor(JPanel):
         path = path.pathByAddingChild( attributesNode )
 	tree.expandPath( path )
 
-        attributesPage.node = attributesNode
-        attributesPage.path = path
-        attributesPage.tree = tree
-        attributesPage.cardContainer = self.cardContainer
+        attributePage.attributesNode = attributesNode
+        attributePage.attributesNodePath = path
+        attributePage.tree = tree
 
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
