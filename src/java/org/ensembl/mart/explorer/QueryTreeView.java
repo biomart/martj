@@ -41,6 +41,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.BasicFilter;
@@ -168,6 +169,8 @@ public class QueryTreeView extends JPanel implements QueryChangeListener {
     rootNode.add(attributesNode);
     rootNode.add(filtersNode);
     rootNode.add(formatNode);
+
+    jTree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
 
     // ensure the 1st level of nodes are visible
     TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
