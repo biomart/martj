@@ -146,6 +146,8 @@ public class BigPreferencesTest extends Base {
   public void setUp() throws Exception {
     super.setUp();
     clearPrefs();
+    userPref = BigPreferences.userNodeForPackage(BigPreferences.class).node(TEST_NODE);
+    sysPref = BigPreferences.systemNodeForPackage(BigPreferences.class).node(TEST_NODE);
   }
 
   /* (non-Javadoc)
@@ -159,16 +161,11 @@ public class BigPreferencesTest extends Base {
   private void clearPrefs() {
     //empty test nodes
     try {
-      userPref.node(TEST_NODE).removeNode();
-      userPref.flush();
+      BigPreferences.userNodeForPackage(BigPreferences.class).node(TEST_NODE).removeNode();
+      BigPreferences.userNodeForPackage(BigPreferences.class).node(TEST_NODE).flush();
 
-      sysPref.node(TEST_NODE).removeNode();
-      sysPref.flush();
-      userPref.node(TEST_NODE).removeNode();
-      userPref.flush();
-      sysPref.node(TEST_NODE).removeNode();
-      sysPref.flush();
-
+      BigPreferences.systemNodeForPackage(BigPreferences.class).node(TEST_NODE).removeNode();
+      BigPreferences.systemNodeForPackage(BigPreferences.class).node(TEST_NODE).flush();
     } catch (BackingStoreException e) {
       if (logger.isLoggable(Level.WARNING))
         logger.warning("BackingStoreException prevented clearing the preferences." + e.getMessage() + "\n");
