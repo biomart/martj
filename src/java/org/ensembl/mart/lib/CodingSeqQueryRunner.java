@@ -102,6 +102,7 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
 		boolean moreRows = true;
+
 		// batching output system stops when this is false
 		int batchStart = 0; // start at 0 during batching
 
@@ -168,6 +169,7 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 				// process columnNames for required attribute indices
 				for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
 					String column = rmeta.getColumnName(i);
+
 					if (column.equals(queryID))
 						queryIDindex = i;
 					else if (column.equals(Rank))
@@ -242,11 +244,16 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 						StringBuffer displayID = new StringBuffer();
 
 						for (int i = 0, n = displayIDindices.size(); i < n; i++) {
-							if (i > 0)
-								displayID.append(separator);
+
 							int currindex = ((Integer) displayIDindices.get(i)).intValue();
-							if (rs.getString(currindex) != null)
-								displayID.append(rs.getString(currindex));
+							if (rs.getString(currindex) != null) {
+								String thisID = rs.getString(currindex);
+								if (displayID.indexOf(thisID) < 0) {
+									if (i > 0)
+										displayID.append(separator);
+									displayID.append(thisID);
+								}
+							}
 						}
 
 						tranatts.put(DisplayID, displayID.toString());
@@ -283,9 +290,14 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 				if (lastTran.intValue() > 0)
 					seqWriter.writeSequences(lastTran, conn);
 
+				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
 				if (rows < batchLength)
 					moreRows = false;
-				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
+
+				if (batchLength < maxBatchLength) {
+					batchLength *= batchModifiers[modIter];
+					modIter = (modIter == 0) ? 1 : 0;
+				}
 
 				rs.close();
 			}
@@ -381,7 +393,7 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 				DNAAdaptor dna = new DNAAdaptor(conn);
 
 				Hashtable tranatts = (Hashtable) traniDs.get(tranID);
-        
+
 				// write the header, starting with the displayID
 				String displayIDout = (String) tranatts.get(DisplayID);
 				osr.print(">" + displayIDout);
@@ -424,7 +436,7 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 
 				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
-          
+
 					if (loc.getStrand() < 0)
 						osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd())));
 					else
@@ -449,7 +461,13 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 	};
 
 	private final int maxColumnLen = 80;
-	private int batchLength = 200000;
+
+  //batching 
+	private final int[] batchModifiers = { 5, 2 };
+	private int modIter = 0; //start at 0 
+	private int batchLength = 1000;
+  private final int maxBatchLength = 50000;
+
 	// number of records to process in each batch
 	private String separator;
 	private Logger logger = Logger.getLogger(CodingSeqQueryRunner.class.getName());

@@ -257,11 +257,16 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 						StringBuffer displayID = new StringBuffer();
 
 						for (int i = 0, n = displayIDindices.size(); i < n; i++) {
-							if (i > 0)
-								displayID.append(separator);
-							int currindex = ((Integer) displayIDindices.get(i)).intValue();
-							if (rs.getString(currindex) != null)
-								displayID.append(rs.getString(currindex));
+
+              int currindex = ((Integer) displayIDindices.get(i)).intValue();
+              if (rs.getString(currindex) != null) {
+                String thisID = rs.getString(currindex);
+                if (displayID.indexOf(thisID) < 0) {
+                  if (i > 0)
+                    displayID.append(separator);
+                  displayID.append(thisID);
+                }
+              }
 						}
 
 						tranatts.put(DisplayID, displayID.toString());
@@ -301,6 +306,11 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 					moreRows = false;
 				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
 
+        if (batchLength < maxBatchLength) {
+          batchLength *= batchModifiers[modIter];
+          modIter = (modIter == 0) ? 1 : 0;
+        }
+        
 				rs.close();
 			}
 			conn.close();
@@ -578,8 +588,13 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 	};
 
 	private final int maxColumnLen = 80;
-	private int batchLength = 200000;
-	// number of records to process in each batch
+
+  //batching
+  private final int[] batchModifiers = { 5, 2 };
+  private int modIter = 0; //start at 0 
+  private int batchLength = 1000;
+  private final int maxBatchLength = 50000;
+  
 	private String separator;
 	private Logger logger = Logger.getLogger(DownStreamUTRSeqQueryRunner.class.getName());
 	private Query query = null;

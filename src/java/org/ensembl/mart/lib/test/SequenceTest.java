@@ -103,7 +103,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = transcript.getTranslation().getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n",ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for transcript "+ transcript_stable_id +"\n",ensjseq, martseq.toString());
 		}
 	}
 	
@@ -137,7 +137,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = transcript.getTranslation().getPeptide();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for transcript "+ transcript_stable_id +"\n", ensjseq, martseq.toString());
 		}		
 	}
 	
@@ -167,7 +167,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = transcript.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for transcript "+ transcript_stable_id +"\n", ensjseq, martseq.toString());
 		}
 	}
 	
@@ -196,7 +196,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = exon.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for exon "+ exon_stable_id +"\n", ensjseq, martseq.toString());
 		}
 	}
 	
@@ -232,7 +232,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for transcript "+ transcript_stable_id +"\n", ensjseq, martseq.toString());
 		}		
 	}
 
@@ -273,7 +273,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for transcript "+ transcript_stable_id +"\n", ensjseq, martseq.toString());
 		}		
 	}
 	
@@ -309,7 +309,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for gene " + gene_stable_id + "\n", ensjseq, martseq.toString());
 		}				
 	}
 	
@@ -351,7 +351,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			    
-			assertEquals("WARNING: Mart Sequence for Gene " + gene_stable_id + " Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence for Gene " + gene_stable_id + " Doesnt match ENSJ Sequence for gene " + gene_stable_id + "\n", ensjseq, martseq.toString());
 		}				
 	}
 	
@@ -380,7 +380,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = exon.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence for exon "+ exon_stable_id +"\n", ensjseq, martseq.toString());
 		}
 	}
   	
@@ -393,7 +393,8 @@ public class SequenceTest extends Base {
     try {
           ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
         } catch (ConfigurationException e) {
-          logger.log(Level.WARNING, "", e);
+          if (logger.isLoggable(Level.WARNING))
+            logger.warning("Could not Get an ensjDriver! " + e.getMessage());
         }
 	}
 
