@@ -68,7 +68,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
     private MartEditor editor;
 
 	
-    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String database) {
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String internalName, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -100,7 +100,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
             DatasetConfig lconfig = (DatasetConfig) configs.next();
-					  if (lconfig.getDataset().equals(dataset)){
+					  if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
 					    config = lconfig;
 					    break;
 					  }

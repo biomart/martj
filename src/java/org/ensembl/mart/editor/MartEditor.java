@@ -45,6 +45,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 
 import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
@@ -359,7 +361,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   //Create a new internal frame.
   protected void createFrame(File file) {
 
-    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null);
+    DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file, this, null, null, null, null, null);
     frame.setVisible(true);
     desktop.add(frame);
     try {
@@ -595,14 +597,33 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         (String) JOptionPane.showInputDialog(
           null,
           "Choose one",
-          "Dataset Config",
+          "Dataset config",
           JOptionPane.INFORMATION_MESSAGE,
           null,
           datasets,
           datasets[0]);
       if (dataset == null)
         return;
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, null);
+        
+      String[] internalNames = dbutils.getAllInternalNamesForDataset(user,dataset);  
+	  String intName;
+	  if (internalNames.length == 1)
+	     intName = internalNames[0];
+	  else{ 
+	    intName =
+		(String) JOptionPane.showInputDialog(
+		  null,
+		  "Choose one",
+		  "Internal name",
+		  JOptionPane.INFORMATION_MESSAGE,
+		  null,
+		  internalNames,
+		  internalNames[0]);
+	  }
+	  if (intName == null)
+		return;
+		        
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, user, dataset, intName, null);
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -618,17 +639,38 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
       return;
     }
-    int confirm =
-      JOptionPane.showConfirmDialog(
-        null,
-        "Export to database " + database,
-        "",
-        JOptionPane.OK_CANCEL_OPTION,
-        JOptionPane.INFORMATION_MESSAGE,
-        null);
 
-    if (confirm != JOptionPane.OK_OPTION)
-      return;
+   DatasetConfig dsConfig =	((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
+   String dset = dsConfig.getDataset();
+   String intName = dsConfig.getInternalName();
+ 
+   String dataset =
+	 (String) JOptionPane.showInputDialog(
+	   null,
+	   "Choose one",
+	   "Dataset config",
+	   JOptionPane.INFORMATION_MESSAGE,
+	   null,
+	   null,
+	   dset);
+   if (dataset == null)
+	 return;
+        
+   String internalName =
+	 (String) JOptionPane.showInputDialog(
+	   null,
+	   "Choose one",
+	   "Internal name",
+	   JOptionPane.INFORMATION_MESSAGE,
+	   null,
+	   null,
+	   intName);
+   if (internalName == null)
+	 return;
+	     
+    dsConfig.setInternalName(internalName);
+    dsConfig.setDataset(dataset);
+
     ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
   }
 
@@ -663,7 +705,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       else
         qdb = database;
 
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, qdb);
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
 
       frame.setVisible(true);
       desktop.add(frame);
@@ -688,7 +730,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       // check for new tables and cols
       dsv = dbutils.getNewFiltsAtts(database, dsv);
 
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, database);
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
       frame.setVisible(true);
       desktop.add(frame);
       try {
@@ -720,9 +762,24 @@ public class MartEditor extends JFrame implements ClipboardOwner {
           datasets[0]);
       if (dataset == null)
         return;
-
-      //TODO: this will delete all configs for the given dataset (which may or may not be more than one)
-      dbutils.deleteDatasetConfigsForDataset(dataset);
+		String[] internalNames = dbutils.getAllInternalNamesForDataset(user,dataset);  
+		String intName;
+		if (internalNames.length == 1)
+		   intName = internalNames[0];
+		else{ 
+		  intName =
+		  (String) JOptionPane.showInputDialog(
+			null,
+			"Choose one",
+			"Internal name",
+			JOptionPane.INFORMATION_MESSAGE,
+			null,
+			internalNames,
+			internalNames[0]);
+		}
+		if (intName == null)
+		  return;
+        dbutils.deleteDatasetConfigsForDatasetIntName(dataset,intName);
 
     } catch (ConfigurationException e) {
     }
