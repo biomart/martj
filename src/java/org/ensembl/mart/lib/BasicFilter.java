@@ -38,17 +38,7 @@ public class BasicFilter implements Filter {
 		this(field, null, null, qualifier, value);
 	}
 
-	/**
-	 * constructs a BasicFilter object with a tableConstraint, which can be added to a Query
-	 * 
-	 * @param field -- String type.  The type of filter being applied
-	 * @param tableConstraint -- String table where field is found
-	 * @param qualifier -- String qualifier of the clause, eg. =<>
-	 * @param value -- parameter of the qualifier, applicable to the type.
-	 */
-	public BasicFilter(String field, String tableConstraint, String key, String qualifier, String value) {
-		this(field, tableConstraint, key, qualifier, value, null);
-	}
+
 
 	/**
 	 * constructs a BasicFilter object with a tableConstraint and handler, 
@@ -61,20 +51,20 @@ public class BasicFilter implements Filter {
 	 * @param handler -- name of UnprocessedFilterHandler implimenting class to load to handle this Filter, or null if
 	 *                                  no processing is required.
 	 */
-	public BasicFilter(String field, String tableConstraint, String key, String qualifier, String value, String handler) {
+	public BasicFilter(String field, String tableConstraint, String key, String qualifier, String value) {
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.key = key;
 		this.qualifier = qualifier;
 		this.value = value;
-		this.handler = handler;
+		//this.handler = handler;
 
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
 		hashcode = (this.qualifier != null) ? (31 * hashcode) + this.qualifier.hashCode() : hashcode;
 		hashcode = (this.value != null) ? (31 * hashcode) + ((this.value == null) ? 0 : this.value.hashCode()) : hashcode;
 		hashcode = (this.tableConstraint != null) ? (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
 		hashcode = (this.key != null) ? (31 * hashcode) + this.key.hashCode() : hashcode;
-		hashcode = (this.handler != null) ? (31 * hashcode) + this.handler.hashCode() : hashcode; 
+		//hashcode = (this.handler != null) ? (31 * hashcode) + this.handler.hashCode() : hashcode; 
 	}
 
 	/**
@@ -114,9 +104,9 @@ public class BasicFilter implements Filter {
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.Filter#getHandler()
 	 */
-	public String getHandler() {
-		return handler;
-	}
+	//public String getHandler() {
+	//	return handler;
+	//}
 
 	/**
 	 * prints information about the filter, for logging purposes
@@ -132,7 +122,7 @@ public class BasicFilter implements Filter {
     buf.append(", key=").append(key);
 		buf.append(" ,qualifier=").append(qualifier);
 		buf.append(" ,value=").append(value);
-		buf.append(", handler=").append(handler);
+		//buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -181,6 +171,6 @@ public class BasicFilter implements Filter {
 	private final String value;
 	private final String tableConstraint;
 	private final String key;
-	private final String handler;
+	//private final String handler;
 	private int hashcode = 0; //hashcode for immutable object
 }

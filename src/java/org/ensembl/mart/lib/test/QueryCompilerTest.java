@@ -165,8 +165,8 @@ public class QueryCompilerTest extends Base {
 		Query q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
-		Filter anatomical_filter = new BasicFilter("est.anatomical_site","main","gene_id_key", "=", "ovary", "org.ensembl.mart.lib.ExpressionFilterHandler");
-		Filter development_filter = new BasicFilter("est.development_stage","main","gene_id_key", "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		Filter anatomical_filter = new BasicFilter("est.anatomical_site","main","gene_id_key", "=", "ovary");
+		Filter development_filter = new BasicFilter("est.development_stage","main","gene_id_key", "=", "adult");
 		
 		q.addFilter(anatomical_filter);
 		q.addFilter(development_filter);

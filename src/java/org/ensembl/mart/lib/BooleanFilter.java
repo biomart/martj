@@ -44,31 +44,20 @@ public class BooleanFilter implements Filter {
     this(field, null, null,qualifier);
 	}
 
-	/**
-	 * constructor for a fully defined BooleanFilter.
-	 * static isNULL and isNotNull variables can be used
-	 * to set the qualifier
-	 * 
-	 * @param field - String, field of filter
-	 * @param tableConstraint - String, tableConstraint for the Filter
-	 * @param qualifier - String, one of isNULL or isNotNull
-	 */	
-	public BooleanFilter(String field, String tableConstraint, String key,String qualifier) {
-		this(field, tableConstraint, key, qualifier, null);
-	}
 
-  public BooleanFilter(String field, String tableConstraint, String key, String qualifier, String handler) {	
+
+  public BooleanFilter(String field, String tableConstraint, String key, String qualifier) {	
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 	    this.key = key;
 		this.qualifier = qualifier;
-		this.handler = handler;
+		//this.handler = handler;
     
 		hashcode = (this.field == null) ? 0 : this.field.hashCode();
 		hashcode = (this.tableConstraint != null) ?  (31 * hashcode) + this.tableConstraint.hashCode() : hashcode;
 	    hashcode = (this.key != null) ?  (31 * hashcode) + this.key.hashCode() : hashcode;
 		hashcode = (this.qualifier != null) ? (31 * hashcode) + this.qualifier.hashCode() : hashcode;
-		hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
+		//hashcode = (this.handler != null) ? ( 31 * hashcode) + handler.hashCode() : hashcode; 
   }
   
 	/**
@@ -114,12 +103,6 @@ public class BooleanFilter implements Filter {
 		 return qualifier;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.Filter#getHandler()
-	 */
-	public String getHandler() {
-		return handler;
-	}
 	
   public String toString() {
 		StringBuffer buf = new StringBuffer();
@@ -130,7 +113,7 @@ public class BooleanFilter implements Filter {
     buf.append(", key=").append(key);
 		buf.append(", qualifier=").append(qualifier);
     buf.append(" ,value=").append(getValue());
-		buf.append(", handler=").append(handler);
+		//buf.append(", handler=").append(handler);
 		buf.append("]");
 
 		return buf.toString();
@@ -154,6 +137,6 @@ public class BooleanFilter implements Filter {
 	private final String tableConstraint; 
 	private final String key; 
 	private final String qualifier;
-	private final String handler;
+	//private final String handler;
   private int hashcode = 0; //hashcode for immutable object
 }

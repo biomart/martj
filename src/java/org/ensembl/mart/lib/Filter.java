@@ -38,11 +38,6 @@ public interface Filter extends Field {
      */
     String getValue();
    
-	/**
-		* handler, null if not needed. This can be added to the prepared statment.
-		*/
-   String getHandler();
-   
     /**
      * String to be included in where clause.
      * TODO: remove this?

@@ -344,8 +344,8 @@ public class MartShellLib {
 
     mqlbuf.append(filterName).append(" in ");
 
-    String handler = filter.getHandler();
-
+    //String handler = filter.getHandler();
+	String handler = null;
     if (handler.equals(IDListFilter.FILE)) {
       mqlbuf.append(filter.getFile());
     } else if (handler.equals(IDListFilter.URL)) {

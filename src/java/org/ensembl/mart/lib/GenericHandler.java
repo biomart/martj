@@ -73,12 +73,13 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				else if (field.endsWith("_end"))
 				  end = true;  
 				
+				lookUpTable = null;
 				//String marker_value = element.getValue();
-				if (element.getHandler().equals("org.ensembl.mart.lib.GenericHandler")) {
-					lookUpTable = element.getTableConstraint();
-				} else
-					throw new InvalidQueryException(
-						"Recieved invalid handler for GenericHandler " + field + "\n");
+				//if (element.getHandler().equals("org.ensembl.mart.lib.GenericHandler")) {
+				//	lookUpTable = element.getTableConstraint();
+				//} else
+				//	throw new InvalidQueryException(
+				//		"Recieved invalid handler for GenericHandler " + field + "\n");
 
 				
 				DatabaseMetaData dmd = conn.getMetaData();

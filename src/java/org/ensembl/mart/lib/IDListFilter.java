@@ -60,20 +60,10 @@ public class IDListFilter implements Filter {
    * @param String[] identifiers
    */
   public IDListFilter(String field, String[] identifiers) {
-    this(field, null, null, identifiers, null);
+    this(field, null, null, identifiers);
   }
 
-  /**
-   * Construct an IDListFilter object of a given field name and tableConstraint, on a String[] List of 
-   * identifiers.
-   * 
-   * @param String name - field name
-   * @param String tableConstraint - table constraint for field name
-   * @param String[] identifiers
-   */
-  public IDListFilter(String field, String tableConstraint, String key, String[] identifiers) {
-    this(field, tableConstraint, key, identifiers, null);
-  }
+
 
   /**
    * Construct an IDListFilter object of a given field name and tableConstraint, on a String[] List of 
@@ -84,7 +74,7 @@ public class IDListFilter implements Filter {
    * @param String[] identifiers
    * @param handler -- handler object to process this Filter, ids are not preprocessed if null
    */
-  public IDListFilter(String field, String tableConstraint, String key, String[] identifiers, String handler) {
+  public IDListFilter(String field, String tableConstraint, String key, String[] identifiers) {
     this.field = field;
     this.tableConstraint = tableConstraint;
 	this.key = key;
@@ -93,7 +83,7 @@ public class IDListFilter implements Filter {
     this.url = null;
     this.subQuery = null;
 
-    this.handler = handler;
+    //this.handler = handler;
 
     setHashCode();
   }
@@ -143,10 +133,10 @@ public class IDListFilter implements Filter {
     this.url = null;
     this.subQuery = null;
 
-    if (handler != null)
-      this.handler = handler;
-    else
-      this.handler = FILE;
+    //if (handler != null)
+      //this.handler = handler;
+    //else
+      //this.handler = FILE;
 
     setHashCode();
   }
@@ -193,10 +183,10 @@ public class IDListFilter implements Filter {
     this.file = null;
     this.subQuery = null;
 
-    if (handler != null)
-      this.handler = handler;
-    else
-      this.handler = URL;
+    //if (handler != null)
+      //this.handler = handler;
+    //else
+      //this.handler = URL;
     setHashCode();
   }
 
@@ -241,10 +231,10 @@ public class IDListFilter implements Filter {
     this.file = null;
     this.url = null;
 
-    if (handler != null)
-      this.handler = handler;
-    else
-      this.handler = SUBQUERY;
+    //if (handler != null)
+      //this.handler = handler;
+    //else
+      //this.handler = SUBQUERY;
     setHashCode();
   }
 
@@ -252,7 +242,7 @@ public class IDListFilter implements Filter {
     hashcode = (field == null) ? 0 : field.hashCode();
     hashcode = (tableConstraint != null) ? (31 * hashcode) + tableConstraint.hashCode() : hashcode;
 	  hashcode = (key != null) ? (31 * hashcode) + key.hashCode() : hashcode;
-    hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
+    //hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
     if (identifiers.size() > 0) {
       for (Iterator iter = identifiers.iterator(); iter.hasNext();) {
@@ -377,12 +367,7 @@ public class IDListFilter implements Filter {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.Filter#getHandler()
-   */
-  public String getHandler() {
-    return handler;
-  }
+
 
   /**
    * returns a description of the object useful for logging systems.
@@ -396,7 +381,7 @@ public class IDListFilter implements Filter {
     buf.append(" field=").append(field);
     buf.append(", tableConstraint=").append(tableConstraint);
     buf.append(", key=").append(key);
-    buf.append(", handler=").append(handler);
+    //buf.append(", handler=").append(handler);
     buf.append(", identifiers=").append(identifiers);
     buf.append(", File=").append(file);
     buf.append(", URL=").append(url);
@@ -424,7 +409,7 @@ public class IDListFilter implements Filter {
   private final String field;
   private final String tableConstraint;
   private final String key;
-  private final String handler;
+  //private final String handler;
 
   private final Query subQuery; // for Query based Filter
   private final File file;
