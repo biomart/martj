@@ -19,36 +19,19 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryChangeListener;
-import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
@@ -67,16 +50,15 @@ public class DatasetViewWidget
 
   private Feedback feedback = new Feedback(this);
 
-  private DSViewAdaptor datasetViewAdaptor;
-
   private JTextField datasetViewName = new JTextField(30);
   private JButton button = new JButton("change");
-
 
   /**
    * @param query underlying model for this widget.
    */
-  public DatasetViewWidget(Query query, DatasetViewSettings datasetViewSettings) {
+  public DatasetViewWidget(
+    Query query,
+    DatasetViewSettings datasetViewSettings) {
 
     super(query, "Dataset View");
 
@@ -98,26 +80,43 @@ public class DatasetViewWidget
     b.add(datasetViewName);
     add(b, BorderLayout.NORTH);
 
-
   }
-
 
   /**
    * Opens DatasetViewSettings dialog.
    */
-  protected void doChange() {
+  public void doChange() {
     datasetViewSettings.setSelected(query.getDatasetView());
-      
+
     if (datasetViewSettings.showDialog(this)) {
 
-      setDatasetView(datasetViewSettings.getSelected());
-      query.setDatasetView( datasetViewSettings.getSelected() );
+      DatasetView dsv = datasetViewSettings.getSelected();
+      if (datasetView != dsv
+        && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
+
+        int o =
+          JOptionPane.showConfirmDialog(
+            this,
+            new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+            "Delete current Change Attributes",
+            JOptionPane.YES_NO_OPTION);
+
+        // undo if user changes mind
+        if (o != JOptionPane.OK_OPTION)
+          return;
+
+      }
+
+      setDatasetView(dsv);
+      query.clear();
+      query.setDatasetView(dsv);
+      query.setPrimaryKeys(dsv.getPrimaryKeys());
+      query.setStarBases(dsv.getStarBases());
+      query.setDataset(dsv.getDataset());
+
     }
-    
+
   }
-
-
-
 
   /**
    * Runs a test; an instance of this class is shown in a Frame.
@@ -127,13 +126,12 @@ public class DatasetViewWidget
     DatasetViewWidget dvm =
       new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
     dvm.setSize(950, 750);
-    
-    JFrame f  = new JFrame(dvm.getClass().getName() + " - test");
+
+    JFrame f = new JFrame(dvm.getClass().getName() + " - test");
     f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    f.getContentPane().add( dvm );
+    f.getContentPane().add(dvm);
     f.pack();
     f.setVisible(true);
-    
 
   }
 
@@ -152,10 +150,11 @@ public class DatasetViewWidget
     Query query,
     DatasetView oldDatasetView,
     DatasetView newDatasetView) {
-      
-    if ( newDatasetView!=null && !datasetViewSettings.contains(newDatasetView))  
-      datasetViewSettings.add( newDatasetView);
-    setDatasetView( newDatasetView );
+
+    if (newDatasetView != null
+      && !datasetViewSettings.contains(newDatasetView))
+      datasetViewSettings.add(newDatasetView);
+    setDatasetView(newDatasetView);
   }
 
   /**
@@ -163,11 +162,11 @@ public class DatasetViewWidget
    * @param object
    */
   private void setDatasetView(DatasetView dsv) {
-    datasetView = dsv;  
+    datasetView = dsv;
     String s = "";
     if (datasetView != null)
       s = datasetView.getDisplayName();
-    datasetViewName.setText(s);    
+    datasetViewName.setText(s);
   }
 
 }
