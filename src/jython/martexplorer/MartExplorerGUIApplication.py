@@ -830,9 +830,8 @@ class SequencePage(Page):
 	includePanel.border = BorderFactory.createEmptyBorder( 0,30,0,0 )
         map( includePanel.add, self.includeButtons + ( self.flank5Label, self.flank5, 
 						       self.flank3Label, self.flank3 ) )
-        map( self.add, (self.remove, self.gene, self.transcript, includePanel) )
-
-	self.add( Box.createVerticalGlue() )
+        map( self.add, (self.remove, self.gene, self.transcript
+                        , includePanel, Box.createVerticalGlue()) )
 	self.changeEvent = ChangeEvent( self )
 	
 
@@ -976,7 +975,7 @@ class AttributePage(Page):
 	# add All AttributeSubPages (add user attributes to features, snps)
         for tabData in configuration:
             tabPanel = Box.createVerticalBox()
-            tabbedPane.add( JScrollPane(tabPanel), tabData[0] )
+            tabbedPane.add( tabPanel, tabData[0] )
             for groupData in tabData[1:]:
                 # groupData level
                 groupPanel = Box.createVerticalBox()
@@ -1012,10 +1011,13 @@ class AttributePage(Page):
 			am = AttributeManager( attribute, self, radioGroup )
                         list[i%2].add( am.getWidget() )
                         i = i+1
+                        
+                # prevent grouppanels being stretched to fill the
+                # available space.
+                groupPanel.maximumSize = groupPanel.preferredSize
 
-	
-	# Add SequencePage
-	pass
+            tabPanel.add( Box.createVerticalGlue() )
+
     
 
     def updateQuery(self, query):
