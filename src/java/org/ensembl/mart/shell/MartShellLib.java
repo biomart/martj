@@ -1658,11 +1658,15 @@ public class MartShellLib {
                 String valTok = filtToks.nextToken();
                 whereFilterVal = true;
                 
-                if (valTok.startsWith(QUOTE)) {
-                  valTok = valTok.substring(1);
+                if (valTok.startsWith(QUOTE) || valTok.startsWith(QUOTEESCSTART)) {
+                  if (valTok.startsWith(QUOTEESCSTART))
+                    valTok = valTok.substring(2);
+                  else
+                    valTok = valTok.substring(1);
+                  
                   inQuotedValue = true;
                   
-                  if (valTok.endsWith(QUOTE)) {
+                  if (valTok.endsWith(QUOTE) || valTok.endsWith(QUOTEESCEND)) {
                     valTok = valTok.substring(0, valTok.length() - 1);
                     query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
                     validQuery = true;
@@ -1725,11 +1729,15 @@ public class MartShellLib {
               String valTok = m.group(2);            
               whereFilterVal = true;
                 
-              if (valTok.startsWith(QUOTE)) {
-                valTok = valTok.substring(1);
+              if (valTok.startsWith(QUOTE) || valTok.startsWith(QUOTEESCSTART)) {
+                if (valTok.startsWith(QUOTEESCSTART))
+                  valTok = valTok.substring(2);
+                else  
+                  valTok = valTok.substring(1);                  
+                
                 inQuotedValue = true;
                   
-                if (valTok.endsWith(QUOTE)) {
+                if (valTok.endsWith(QUOTE) || valTok.endsWith(QUOTEESCEND)) {
                   valTok = valTok.substring(0, valTok.length() - 1);
                   query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, valTok);
                   validQuery = true;
@@ -1764,12 +1772,16 @@ public class MartShellLib {
               whereFilterVal = true;
             }
           } else if (whereFilterVal) {
-            if (thisToken.startsWith(QUOTE)) {
-              String tok = thisToken.substring(1);
+            if (thisToken.startsWith(QUOTE) || thisToken.startsWith(QUOTEESCSTART)) {
+              String tok = null;
+              if (thisToken.startsWith(QUOTEESCSTART))
+                tok = thisToken.substring(2);
+              else
+                tok = thisToken.substring(1);
 
               inQuotedValue = true;
 
-              if (thisToken.endsWith(QUOTE)) {
+              if (thisToken.endsWith(QUOTE) || thisToken.endsWith(QUOTEESCEND)) {
                 tok = tok.substring(0, tok.length() - 1);
                 query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, tok);
                 validQuery = true;
@@ -1784,7 +1796,7 @@ public class MartShellLib {
               } else
                 filterValue.append(tok);
             } else if (inQuotedValue) {
-              if (thisToken.endsWith(QUOTE)) {
+              if (thisToken.endsWith(QUOTE) || thisToken.endsWith(QUOTEESCEND)) {
                 filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
 
                 query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, filterValue.toString());
@@ -2480,6 +2492,8 @@ public class MartShellLib {
   public static final char LISTSTARTCHR = '(';
   private final String LSTART = String.valueOf(LISTSTARTCHR);
   private final String QUOTE = "'";
+  private final String QUOTEESCSTART = "q(";
+  private final String QUOTEESCEND = ")";
   public static final char LISTENDCHR = ')';
   private final String LEND = String.valueOf(LISTENDCHR);
   private final String SEQDELIMITER = "+";
