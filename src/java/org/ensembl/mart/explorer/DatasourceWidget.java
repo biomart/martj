@@ -125,7 +125,7 @@ public class DatasourceWidget extends InputPage {
     DataSource oldDatasource,
     DataSource newDatasource) {
 
-    if ( !martManager.contains( newDatasource ))
+    if ( newDatasource!=null && !martManager.contains( newDatasource ))
       martManager.add( newDatasource );
     setDatasource(newDatasource);
   }
