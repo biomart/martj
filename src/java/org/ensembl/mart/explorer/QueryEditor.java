@@ -342,11 +342,7 @@ public class QueryEditor
 			} else if ("filter".equals(propertyName)) {
 
 				if (newValue != null && oldValue == null) {
-          System.out.println( filtersPage );
-          System.out.println( filtersPage.getNode() );
-          System.out.println( ((InputPageAware) newValue).getInputPage() );
-          System.out.println( ((InputPageAware) newValue).getInputPage().getNode() );
-					insertNode(
+          insertNode(
 						filtersPage.getNode(),
 						((InputPageAware) newValue).getInputPage().getNode());
         }
