@@ -87,7 +87,7 @@ public class MartExplorer extends JFrame {
 	// TODO clone query
 	// TODO load registry file
 
-	private MartManager martManager = new MartManager();
+	private MartSettings martManager = new MartSettings();
   private DatasetViewSettings datasetViewSettings = new DatasetViewSettings();
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());

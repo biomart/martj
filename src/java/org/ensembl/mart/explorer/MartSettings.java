@@ -46,12 +46,12 @@ import org.ensembl.mart.lib.config.ConfigurationException;
  * </p>
  * <p></p>
  */
-public class MartManager extends Box {
+public class MartSettings extends Box {
 
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
 
   private final static Logger logger =
-    Logger.getLogger(MartManager.class.getName());
+    Logger.getLogger(MartSettings.class.getName());
 
   private Vector marts = new Vector();
   private HashMap stringToMart = new HashMap();
@@ -60,7 +60,7 @@ public class MartManager extends Box {
   private String selected = none;
   private Feedback feedback = new Feedback(this);
 
-  public MartManager() {
+  public MartSettings() {
 
     super(BoxLayout.Y_AXIS);
 
@@ -277,7 +277,7 @@ public class MartManager extends Box {
    */
   public static void main(String[] args) throws Throwable {
 
-    MartManager mm = new MartManager();
+    MartSettings mm = new MartSettings();
 
     // load some test values and check that the
     // manager works. 

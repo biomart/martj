@@ -51,7 +51,7 @@ public class InputPageContainer
     Query query,
     DSViewAdaptor datasetViewAdaptor,
     QueryTreeView tree,
-    MartManager martManager,
+    MartSettings martManager,
     DatasetViewSettings datasetViewSettings) {
     
     super();

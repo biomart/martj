@@ -255,7 +255,7 @@ public class QueryEditor extends JPanel {
    */
   public QueryEditor(
     DSViewAdaptor datasetViewAdaptor,
-    MartManager martManager,
+    MartSettings martManager,
     DatasetViewSettings datasetViewSettings)
     throws IOException {
 
@@ -544,8 +544,8 @@ public class QueryEditor extends JPanel {
   /**
    * @return MartManager with some preloaded datasources.
    */
-  public static MartManager testMartManager() {
-    MartManager mm = new MartManager();
+  public static MartSettings testMartManager() {
+    MartSettings mm = new MartSettings();
 
     List dss;
     try {
@@ -569,7 +569,7 @@ public class QueryEditor extends JPanel {
     DatasetView[] views = null;
 
     DSViewAdaptor a = testDSViewAdaptor();
-    MartManager mm = testMartManager();
+    MartSettings mm = testMartManager();
     DatasetViewSettings dvs = testDatasetViewSettings();
     final QueryEditor editor = new QueryEditor(a, mm, dvs);
     editor.setName("test_query");

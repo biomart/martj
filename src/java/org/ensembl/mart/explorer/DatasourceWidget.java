@@ -40,7 +40,7 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class DatasourceWidget extends InputPage {
 
-  private MartManager martManager;
+  private MartSettings martManager;
   private JTextField martName = new JTextField(30);
   private String none = "None";
   private static Logger logger =
@@ -51,7 +51,7 @@ public class DatasourceWidget extends InputPage {
    * @param datasources list of available datasources. A reference to this list
    * is kept so that the widget is always up to date.
    */
-  public DatasourceWidget(Query query, MartManager martManager) {
+  public DatasourceWidget(Query query, MartSettings martManager) {
 
     super(query);
 
@@ -102,7 +102,7 @@ public class DatasourceWidget extends InputPage {
     logger.setLevel(Level.FINEST);
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
-    MartManager mm = QueryEditor.testMartManager();
+    MartSettings mm = QueryEditor.testMartManager();
     Query q = new Query();
     DatasourceWidget dw = new DatasourceWidget(q, mm);
 
