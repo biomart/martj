@@ -553,7 +553,8 @@ public class MartViewEditor extends JFrame {
 				   "Choose one", "Dataset",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);		
-			
+		  if (dataset == null)
+		    return;	
 		  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,user,dataset,null);
 		  frame.setVisible(true);
 		  desktop.add(frame);
@@ -571,7 +572,17 @@ public class MartViewEditor extends JFrame {
 			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
 			return;
 		}
-		
+		int confirm =
+					JOptionPane.showConfirmDialog(
+						null,
+						"Export to database " + database,
+						"",
+						JOptionPane.OK_CANCEL_OPTION,
+						JOptionPane.INFORMATION_MESSAGE,
+						null);
+
+		if (confirm != JOptionPane.OK_OPTION)
+			return;
 		((DatasetViewTreeWidget)desktop.getSelectedFrame()).export();
 	}
 
@@ -587,7 +598,8 @@ public class MartViewEditor extends JFrame {
 				   "Choose one", "Dataset",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);
-	    
+		if (dataset == null)
+					return;	
 		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,dataset,database);
 		frame.setVisible(true);
 		desktop.add(frame);
