@@ -276,6 +276,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @return String tableConstraint
 	 */
 	public String getTableConstraint(String internalName) {
+		System.out.println("RECOVERING TC FOR " + internalName);
 		if ( getAttribute(internalNameKey).equals(internalName))
 			return  getAttribute(tableConstraintKey);
 		else {
@@ -325,6 +326,8 @@ public class FilterDescription extends QueryFilterSettings {
 				return null; // nothing found
 		}
 	}
+
+
 
 	/**
 	 * Returns the handler, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
