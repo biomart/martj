@@ -66,6 +66,9 @@ public class Query {
    */
   public void initialise(Query oq) {
     
+		setDatasetInternalName( oq.getDatasetInternalName() );
+		setDataSource( oq.getDataSource() );
+
     removeAllAttributes();
     if (oq.getAttributes().length > 0) {
       Attribute[] oatts = oq.getAttributes();
@@ -108,8 +111,6 @@ public class Query {
     }
     
     limit = oq.getLimit();
-    setDatasetInternalName( oq.getDatasetInternalName() );
-    setDataSource( oq.getDataSource() );
 
   }
   
