@@ -24,10 +24,7 @@ public class SequenceTest extends Base {
 	}
 
 	public static Test suite() {
-		//return new TestSuite( SequenceTest.class );
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite( SequenceTest.class);
-		return suite;
+		return new TestSuite( SequenceTest.class );
 	}
 
 	public SequenceTest(String name) {
@@ -50,7 +47,7 @@ public class SequenceTest extends Base {
 									+ " " + codingSeq);
 			}
 		}
-		
+
 	}
 	
 }
