@@ -82,7 +82,7 @@ public abstract class PopUpTreeCombo extends JPanel {
     createUI(label);
 
   }
-
+  
   public void addActionListener(ActionListener listener) {
     listeners.add(listener);
   }
@@ -315,5 +315,10 @@ public abstract class PopUpTreeCombo extends JPanel {
    */
   public Object getSelectedUserObject() {
     return lastObject;
+  }
+  
+  
+  public void setSelected(LabelledTreeNode node) {
+    doSelect( node.getLabel(), node.getUserObject() );
   }
 }
