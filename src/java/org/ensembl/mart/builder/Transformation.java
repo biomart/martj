@@ -63,20 +63,25 @@ public class Transformation {
 			
 			if (ref_tables[i].type.equals("skip")) continue;
 			
-			if (ref_tables[i].type.equals("simple")){
-				TransformationUnit unit = new TransformationUnitSimple(ref_tables[i]);	
-				if (ref_tables[i].type.equals("outer"))
-					unit.useFK=true;
-				units.add(unit);
-			}
+			TransformationUnit unit = new TransformationUnitSimple(ref_tables[i]);
+			
+			//if (ref_tables[i].type.equals("simple")){
+					
+				//if (ref_tables[i].type.equals("outer"))
+				//	unit.useFK=true;
+			//	units.add(unit);
+			//}
 			
 			
-			if (ref_tables[i].type.equals("main")){
-				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
-				if (ref_tables[i].type.equals("outer"))
-					unit.useFK=true;
-				units.add(unit);
-			}
+			//if (ref_tables[i].type.equals("main")){
+				//TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
+				if (ref_tables[i].type.equals("outer")){
+				unit.useFK=true;
+				}
+			//}
+		
+			units.add(unit);
+		
 		}
 	}
 	
@@ -141,6 +146,9 @@ public class Transformation {
 			}
 			if (unit.has_extension){
 				unit.temp_start.extension=unit.extension;    	
+			}
+			if (unit.useFK){
+				unit.temp_start.key=unit.ref_table.key;
 			}
 			
 			unit.temp_end.final_table=final_table;

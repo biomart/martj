@@ -65,7 +65,7 @@ public abstract class TransformationUnit {
 		
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE ");
 		
-		tempsql.append(temp+ " as SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
+		tempsql.append(temp+ "  SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
 				temp_start.getName()+	", "+ref_table.getName()+ " WHERE " +ref_table.getName()+"."+
 				ref_table.getKey()+" = "+ temp_start.getName()+"."+temp_start.getKey());
 		if (ref_table.hasExtension()){

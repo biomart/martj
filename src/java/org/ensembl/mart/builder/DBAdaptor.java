@@ -43,7 +43,6 @@ public class DBAdaptor {
 		super();
 		setConfig(config);
 		initialiseConnections();
-		// TODO Auto-generated constructor stub
 	}
 	
 	
@@ -65,7 +64,6 @@ public class DBAdaptor {
 		    catalog= p.getProperty("catalog");
 		    
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -86,8 +84,6 @@ public class DBAdaptor {
 			else System.err.println("not supported rdbms type: "+ rdbms);
 			Connection con = DriverManager.getConnection (url, username,password);
 			setCon(con);
-			
-			
 		}
 		catch(SQLException ex) {
 			System.err.print("SQLException: ");

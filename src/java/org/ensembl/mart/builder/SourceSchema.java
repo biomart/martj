@@ -26,8 +26,6 @@ public class SourceSchema {
 		DBAdaptor adaptor = new DBAdaptor(config);
 		MetaDataResolver resolver = null;
 		
-		System.out.println("adaptor "+adaptor.rdbms);
-		
 		if (adaptor.rdbms.equals("mysql")){
 		resolver = new MetaDataResolverMySQL(adaptor);
 		} if (adaptor.rdbms.equals("oracle")){
