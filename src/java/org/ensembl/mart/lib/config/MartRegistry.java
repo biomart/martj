@@ -29,7 +29,7 @@ import java.util.List;
 public class MartRegistry {
   private List martLocations = new ArrayList();
   
-  public void addDatasetViewLocation(MartLocation dsvl) {
+  public void addMartLocation(MartLocation dsvl) {
     martLocations.add(dsvl);
   }
   
