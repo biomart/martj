@@ -63,12 +63,12 @@ public class MartShellLibTest extends Base {
 	}
 
   public void testMQLtoQuery() throws Exception {
-  	//String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
-    String martSQL = "using ensembl_genes_homo_sapiens get sequence peptide where chromosome_name=1";
+  	String martSQL = "using ensembl_genes_homo_sapiens get ensembl_gene_id limit 100";
 		StatOutputStream stats = new StatOutputStream();
+    
+    msl.setEnvDataSource(martJDataSource);
     Query query = msl.MQLtoQuery(martSQL);
     query.setDataSource(martJDataSource);
-    msl.setEnvDataSource(martJDataSource);
         
     engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, stats);
     
