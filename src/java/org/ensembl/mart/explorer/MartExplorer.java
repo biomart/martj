@@ -356,7 +356,7 @@ public class MartExplorer
    */
   private JMenuBar createMenuBar() {
 
-    JMenu query = new JMenu("Query");
+    JMenu query = new JMenu("File");
 
     JMenuItem newQuery = new JMenuItem(newQueryAction);
     query.add(newQuery).setAccelerator(
