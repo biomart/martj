@@ -102,7 +102,9 @@ public class MartConfigurationFactory {
 	 */
 	public MartConfiguration getInstance(Connection conn, String systemID)
 		throws ConfigurationException {
-
+	
+		logger.info("Using " + systemID + " from mart database for configuration\n");
+		
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			builder.setValidation(true); // validate against the DTD
@@ -133,6 +135,8 @@ public class MartConfigurationFactory {
   public MartConfiguration getInstance(URL martConfFile)
     throws ConfigurationException {
 
+   logger.info("Using URL " + martConfFile + " for configuration\n");
+   
     try {
       SAXBuilder builder = new SAXBuilder();
       builder.setValidation(true); // validate against the DTD

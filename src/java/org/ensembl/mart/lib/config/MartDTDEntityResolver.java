@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -37,6 +38,7 @@ public class MartDTDEntityResolver implements EntityResolver {
 
    private Connection conn = null;
    private final String MARTDBPROTOCAL = "martdatabase";
+   private Logger logger = Logger.getLogger(MartDTDEntityResolver.class.getName());
    
    /**
     * Constructs a MartDTDEntityResolver object to add to an XML (SAX, DOM) Parser for MartConfiguration.xml
@@ -62,6 +64,7 @@ public class MartDTDEntityResolver implements EntityResolver {
 	public InputSource resolveEntity(String publicID, String systemID) throws SAXException, IOException {
 		
 		if (systemID.startsWith(MARTDBPROTOCAL)) {
+			logger.info("Getting DTD " + systemID + " from mart database\n");
       StringTokenizer tokens = new StringTokenizer(systemID, ":");
       tokens.nextToken();
       systemID = tokens.nextToken();
