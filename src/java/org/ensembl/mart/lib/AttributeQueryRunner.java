@@ -92,11 +92,9 @@ public final class AttributeQueryRunner implements QueryRunner {
 
           if (isSubQuery) {
 //          get all ids for a subQuery
-            lastID = -1; // so nothing is skipped
             moreRows = true;
           } else {
             //only execute batches until all are completed, or totalRows == hardLimit
-            lastID = -1; // so nothing is skipped
             moreRows = totalRows < hardLimit;
           }
             
@@ -126,7 +124,6 @@ public final class AttributeQueryRunner implements QueryRunner {
         IDListFilter newFilter = new IDListFilter(bigListFilter.getField(), bigListFilter.getTableConstraint(), lbatch);
         newQuery.addFilter(newFilter);
 
-        lastID = -1;
         executeQuery(newQuery, hardLimit);
       }
     } else {
@@ -135,6 +132,7 @@ public final class AttributeQueryRunner implements QueryRunner {
   }
 
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+    lastID = -1; // so nothing is skipped
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
     boolean moreRows = true;
