@@ -60,7 +60,6 @@ public class AdaptorManager extends Box {
 	private Feedback feedback = new Feedback(this);
 	private static final String DS_CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	private static final String REGISTRY_FILE_KEY = "REGISTRY_FILE_KEY";
-	private static final String REGISTRY_KEY = "REGISTRY_KEY";
 	private static final String OPTIONAL_ENABLED_KEY = "OPTIONAL_ENABLED";
 	private String none = "None";
 	private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor();
@@ -258,24 +257,6 @@ public class AdaptorManager extends Box {
 		}
 	}
 	private void loadPrefs() {
-		byte[] b = prefs.getByteArray(REGISTRY_KEY, new byte[0]);
-		try {
-			MartRegistry reg = null;
-			if (b.length > 0) {
-				reg = MartRegistryXMLUtils.ByteArrayToMartRegistry(b);
-			}
-			if (reg != null) {
-				RegistryDSConfigAdaptor tmp = new RegistryDSConfigAdaptor(reg);
-				DSConfigAdaptor[] adaptors = tmp.getLeafAdaptors();
-				for (int i = 0; i < adaptors.length; i++) {
-					add(adaptors[i]);
-					logger.fine("Loaded Adaptor:" + adaptors[i].getName()
-							+ ", num datasetConfigs=" + adaptors[i].getNumDatasetConfigs());
-				}
-			}
-		} catch (ConfigurationException e1) {
-			e1.printStackTrace();
-		}
 		advancedOptionsEnabled = prefs.getBoolean(OPTIONAL_ENABLED_KEY, false);
 	}
 	/**
@@ -339,8 +320,6 @@ public class AdaptorManager extends Box {
 	 * Runs a test; an instance of this class is shown in a Frame.
 	 */
 	public static void main(String[] args) throws Exception {
-		//Preferences.userNodeForPackage(AdaptorManager.class).remove(
-		// REGISTRY_KEY );
 		LoggingUtil.setAllRootHandlerLevelsToFinest();
 		logger.setLevel(Level.FINE);
 		AdaptorManager dvm = new AdaptorManager();
@@ -387,9 +366,6 @@ public class AdaptorManager extends Box {
 		storePrefs();
 	}
 	private void storePrefs() throws ConfigurationException {
-		MartRegistry reg = rootAdaptor.getMartRegistry();
-		byte[] b = MartRegistryXMLUtils.MartRegistryToByteArray(reg);
-		prefs.putByteArray(REGISTRY_KEY, b);
 		prefs.putBoolean(OPTIONAL_ENABLED_KEY, advancedOptionsEnabled);
 		try {
 			prefs.flush();
