@@ -353,7 +353,7 @@ public class MartShellLib {
         success = false;
         MQLError = ("Could not map subquery:\n" + subq + "\n" + e);
       }
-    } else if (handler.equals(IDListFilter.STRING)) {
+    } else {
       String[] ids = filter.getIdentifiers();
       mqlbuf.append("(");
 

@@ -47,7 +47,7 @@ public class IDListFilter implements Filter {
   /**
    * enums over UnprocessedFilterHandler implimenting class names
    */
-  public static final String STRING = "org.ensembl.mart.lib.StringIDListFilterHandler";
+
   public static final String FILE = "org.ensembl.mart.lib.FileIDListFilterHandler";
   public static final String URL = "org.ensembl.mart.lib.URLIDListFilterHandler";
   public static final String SUBQUERY = "org.ensembl.mart.lib.SubQueryIDListFilterHandler";
@@ -96,10 +96,7 @@ public class IDListFilter implements Filter {
     this.url = null;
     this.subQuery = null;
 
-    if (handler != null)
-      this.handler = handler;
-    else
-      this.handler = STRING;
+    this.handler = handler;
 
     setHashCode();
   }
@@ -257,7 +254,7 @@ public class IDListFilter implements Filter {
   private void setHashCode() {
     hashcode = (field == null) ? 0 : field.hashCode();
     hashcode = (tableConstraint != null) ? (31 * hashcode) + tableConstraint.hashCode() : hashcode;
-	hashcode = (key != null) ? (31 * hashcode) + key.hashCode() : hashcode;
+	  hashcode = (key != null) ? (31 * hashcode) + key.hashCode() : hashcode;
     hashcode = (handler != null) ? (31 * hashcode) + handler.hashCode() : hashcode;
 
     if (identifiers.size() > 0) {
