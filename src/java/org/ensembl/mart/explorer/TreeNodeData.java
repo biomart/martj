@@ -156,7 +156,9 @@ public class TreeNodeData {
     if (value == null)
       value = "";
 
-    this.rightText = fieldName + " " + condition + " " + value;
+    String tmp = fieldName + " " + condition + " " + value;
+    // we need to make the special characters < and > safe for display in html
+    this.rightText = tmp.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
   }
   
