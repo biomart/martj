@@ -441,15 +441,15 @@ public class MartShell {
           validQuery = false;
         }
       }
-      
+
       if (mainBatchFormat != null)
         ms.setBatchOutputFormat(mainBatchFormat);
-      
+
       if (mainBatchSeparator == null)
         ms.setBatchOutputSeparator("\t"); //default
       else
         ms.setBatchOutputSeparator(mainBatchSeparator);
-        
+
       if (mainBatchSQL == null && mainBatchScriptFile == null) {
         System.out.println("Must supply either a Query command or a query script\n" + usage());
         System.exit(0);
@@ -559,10 +559,10 @@ public class MartShell {
       try {
         mcl.setController(msl);
       } catch (ConfigurationException e) {
-         System.err.println(
-            "Recieved Exception Loading DatasetNames into Completer: "
-              + e.getMessage()
-              + "\ncontinuing without this information!\n");
+        System.err.println(
+          "Recieved Exception Loading DatasetNames into Completer: "
+            + e.getMessage()
+            + "\ncontinuing without this information!\n");
       }
 
       // add commands
@@ -1178,7 +1178,7 @@ public class MartShell {
       try {
         if (lastDBSettings[HOSTITER] != null)
           Readline.addToHistory(lastDBSettings[HOSTITER]);
-            
+
         thisLine = Readline.readline("\nPlease enter the host address of the mart database: ", false);
         if (thisLine != null)
           martHost = thisLine;
@@ -1186,7 +1186,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[DBTYPEITER] != null)
           Readline.addToHistory(lastDBSettings[DBTYPEITER]);
-          
+
         thisLine =
           Readline.readline(
             "\nPlease enter the type of RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
@@ -1201,7 +1201,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[DRIVERITER] != null)
           Readline.addToHistory(lastDBSettings[DRIVERITER]);
-          
+
         thisLine =
           Readline.readline(
             "\nPlease enter the Driver Class Name of the RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
@@ -1216,7 +1216,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[PORTITER] != null)
           Readline.addToHistory(lastDBSettings[PORTITER]);
-          
+
         thisLine =
           Readline.readline(
             "\nPlease enter the port on which the mart database is running (defaults to "
@@ -1231,7 +1231,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[USERITER] != null)
           Readline.addToHistory(lastDBSettings[USERITER]);
-          
+
         thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database: ", false);
         if (thisLine != null)
           martUser = thisLine;
@@ -1239,7 +1239,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[PASSITER] != null)
           Readline.addToHistory(lastDBSettings[PASSITER]);
-          
+
         thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database: ", false);
         if (thisLine != null)
           martPass = thisLine;
@@ -1247,7 +1247,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[DBNAMEITER] != null)
           Readline.addToHistory(lastDBSettings[DBNAMEITER]);
-          
+
         thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query: ", false);
         if (thisLine != null)
           martDatabase = thisLine;
@@ -1255,7 +1255,7 @@ public class MartShell {
         Readline.clearHistory();
         if (lastDBSettings[SOURCEKEYITER] != null)
           Readline.addToHistory(lastDBSettings[SOURCEKEYITER]);
-          
+
         thisLine =
           Readline.readline(
             "\nPlease enter a name to refer to this Mart in Shell commands (defaults to "
@@ -1291,12 +1291,28 @@ public class MartShell {
     if (sourceKey == null)
       sourceKey = DetailedDataSource.defaultName(martHost, martPort, martDatabase, martUser);
 
-    setLastDatabaseSettings(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, martDriver, sourceKey);
-    
+    setLastDatabaseSettings(
+      martDatabaseType,
+      martHost,
+      martPort,
+      martDatabase,
+      martUser,
+      martPass,
+      martDriver,
+      sourceKey);
+
     msl.addMart(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, martDriver, sourceKey);
   }
 
-  private void setLastDatabaseSettings(String martDatabaseType, String martHost, String martPort, String martDatabase, String martUser, String martPass, String martDriver, String sourceKey) {
+  private void setLastDatabaseSettings(
+    String martDatabaseType,
+    String martHost,
+    String martPort,
+    String martDatabase,
+    String martUser,
+    String martPass,
+    String martDriver,
+    String sourceKey) {
     lastDBSettings[HOSTITER] = martHost;
     lastDBSettings[DBTYPEITER] = martDatabaseType;
     lastDBSettings[DRIVERITER] = martDriver;
@@ -1304,9 +1320,9 @@ public class MartShell {
     lastDBSettings[USERITER] = martUser;
     lastDBSettings[PASSITER] = martPass;
     lastDBSettings[DBNAMEITER] = martDatabase;
-    lastDBSettings[SOURCEKEYITER] = sourceKey; 
+    lastDBSettings[SOURCEKEYITER] = sourceKey;
   }
-  
+
   private void removeRequest(String command) throws InvalidQueryException {
     StringTokenizer toks = new StringTokenizer(command, " ");
     toks.nextToken(); // skip remove
@@ -2165,7 +2181,11 @@ public class MartShell {
       WriteHistory(normalizeCommand(command));
     else if (normalizeCommand(command).equals(EXITC) || normalizeCommand(command).equals(QUITC))
       ExitShell();
-    else if (command.startsWith(MartShellLib.GETQSTART) || command.startsWith(MartShellLib.USINGQSTART)) {
+    else if (
+      command.startsWith(MartShellLib.GETQSTART)
+        || command.startsWith(MartShellLib.USINGQSTART)
+        || command.startsWith(COUNTFOCUSC)
+        || command.startsWith(COUNTROWSC)) {
       //is it a store command
       Matcher storeMatcher = MartShellLib.STOREPAT.matcher(command);
       if (storeMatcher.matches()) {
@@ -2185,6 +2205,20 @@ public class MartShell {
         if (completionOn)
           mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
       } else {
+
+        boolean countFocus = false;
+        boolean countRows = false;
+
+        if (command.startsWith(COUNTFOCUSC)) {
+          command = command.substring(COUNTFOCUSC.length());
+          countFocus = true;
+        }
+
+        if (command.startsWith(COUNTROWSC)) {
+          command = command.substring(COUNTROWSC.length());
+          countRows = true;
+        }
+
         Query query = msl.MQLtoQuery(command);
 
         FormatSpec fspec = null;
@@ -2206,14 +2240,20 @@ public class MartShell {
 
         Engine engine = new Engine();
 
-        int hardLimit = INTERACTIVE_MAX_ROWS;
-        if (sessionOutputFileName != null) {
-          hardLimit = 0; // no hardLimit for file output
-          sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
+        if (countFocus)
+          engine.countFocus(sessionOutput, query);
+        else if (countRows)
+          engine.countRows(sessionOutput, query);
+        else {
+          int hardLimit = INTERACTIVE_MAX_ROWS;
+          if (sessionOutputFileName != null) {
+            hardLimit = 0; // no hardLimit for file output
+            sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
+          }
+
+          engine.execute(query, fspec, sessionOutput, hardLimit);
         }
-
-        engine.execute(query, fspec, sessionOutput, hardLimit);
-
+        
         if (sessionOutputFileName != null)
           sessionOutput.close();
       }
@@ -2299,6 +2339,8 @@ public class MartShell {
   private final String SAVETOSCRIPTC = "saveToScript";
   private final String HISTORYC = "history";
   private final String LISTC = "list";
+  private final String COUNTFOCUSC = "count_focus_from";
+  private final String COUNTROWSC = "count_rows_from";
   private final String SCRIPTREQ = "Script";
   private final String MARTREQ = "Mart";
   private final String MARTSREQ = "Marts";
@@ -2366,7 +2408,9 @@ public class MartShell {
           UPDATEC,
           DESCC,
           LISTC,
-          USEC }));
+          USEC,
+          COUNTFOCUSC,
+          COUNTROWSC }));
 
   // strings used to show/set output format settings
   private final String FILE = "file";
@@ -2396,7 +2440,7 @@ public class MartShell {
 
   //other strings needed
   private final String LINEEND = ";";
-  
+
   //database settings history
   private String[] lastDBSettings = new String[8];
   private final int HOSTITER = 0;

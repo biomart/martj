@@ -28,6 +28,8 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.config.AttributePage;
@@ -114,6 +116,8 @@ public class MartCompleter implements ReadlineCompleter {
   private final String USEC = "use";
   private final String ENVC = "environment";
   private final String EXECC = "execute";
+  private final String COUNTFOCUSC = "count_focus_from";
+  private final String COUNTROWSC = "count_rows_from";
 
   private List currentApages = new ArrayList();
   private List currentFpages = new ArrayList();
@@ -152,7 +156,7 @@ public class MartCompleter implements ReadlineCompleter {
       }
     }
   }
-  
+
   /**
    * Implimentation of the ReadlineCompleter completer method.  Switches its state based on the presence and position of keywords in the command.
    * <ul>
@@ -182,6 +186,13 @@ public class MartCompleter implements ReadlineCompleter {
 
   public void setModeForLine(String currentCommand) {
     if (lastLine == null || !(lastLine.equals(currentCommand))) {
+      if (currentCommand.startsWith(COUNTFOCUSC))
+        currentCommand = currentCommand.substring(COUNTFOCUSC.length()).trim();
+      if (currentCommand.startsWith(COUNTROWSC))
+        currentCommand = currentCommand.substring(COUNTROWSC.length()).trim();
+
+      currentCommand = currentCommand.trim(); //strip off trailing whitespace, so most modes will set empty mode when things match exactly
+      
       if (currentCommand.startsWith(ADDC))
         setAddMode(currentCommand);
       else if (currentCommand.startsWith(REMOVEC))
@@ -635,6 +646,22 @@ public class MartCompleter implements ReadlineCompleter {
     }
   }
 
+  private void setUsingDatasetReqMode(String martName) {
+    currentSet = new TreeSet();
+    try {
+      if (msl.adaptorManager.supportsAdaptor(martName)) {
+        String[] dsets = msl.adaptorManager.getAdaptorByName(martName).getDatasetNames();
+        for (int i = 0, n = dsets.length; i < n; i++) {
+          String dset = dsets[i];
+          currentSet.add(martName+"."+dset); //martName.dataset
+        } 
+      }
+    } catch (ConfigurationException e) {
+      currentSet = new TreeSet();
+      setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
+    }
+  }
+  
   private void setDatasetConfigReqMode() {
     currentSet = new TreeSet();
     if (msl.envMart == null)
@@ -648,6 +675,8 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setDatasetConfigReqMode(String martName, String datasetName) {
+    currentSet = new TreeSet();
+    
     try {
       if (msl.adaptorManager.supportsAdaptor(martName)
         && msl.adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName))
@@ -661,6 +690,25 @@ public class MartCompleter implements ReadlineCompleter {
     }
   }
 
+  private void setUsingDatasetConfigReqMode(String martName, String datasetName) {
+    currentSet = new TreeSet();
+    
+    try {
+      if (msl.adaptorManager.supportsAdaptor(martName) 
+          && msl.adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName)) {
+        String[] dnames = msl.adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName);
+        for (int i = 0, n = dnames.length; i < n; i++) {
+          String dname = dnames[i];
+          currentSet.add(martName+"."+datasetName+"."+dname);
+        }
+      }       
+    } catch (ConfigurationException e) {
+      currentSet = new TreeSet();
+      if (logger.isLoggable(Level.INFO))
+        logger.info("Couldng set dataset config req mode, caught Configuration Exception: " + e.getMessage() + "\n");
+    }
+  }
+  
   private void setDescribeFilterMode() {
     if (msl.envDataset == null)
       setNoEnvMode();
@@ -781,23 +829,86 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setUseDatasetMode(String token) {
-    String[] toks = token.split("\\s+");
-
     try {
-      if (toks.length <= 1) {
-        if (msl.envMart == null)
-          setNoEnvMode();
-        else
-          setDatasetReqMode();
-      } else {
-        if (msl.adaptorManager.supportsDataset(toks[1]))
-          setEmptyMode();
-      }
+      Pattern usePat = Pattern.compile(USEC + "\\s*(\\w*)(\\.?)(\\w*)(\\.?)(\\w*)");
+      Matcher useMatcher = usePat.matcher(token);
+      
+      Pattern usingPat = Pattern.compile(MartShellLib.USINGQSTART + "\\s*(\\w*)(\\.?)(\\w*)(\\.?)(\\w*)");
+      Matcher usingMatcher = usingPat.matcher(token);
+      
+      if (useMatcher.matches())
+        setUseDatasetModeWithMatcher(useMatcher);
+      else if (usingMatcher.matches())
+        setUseDatasetModeWithMatcher(usingMatcher);
+      
     } catch (ConfigurationException e) {
       setErrorMode("Caught ConfigurationException updating the Completion System\n");
     }
   }
 
+  private void setUseDatasetModeWithMatcher(Matcher matcher) throws ConfigurationException {
+    String mat1 = matcher.group(1);
+    String mat2 = matcher.group(2);
+    String mat3 = matcher.group(3);
+    String mat4 = matcher.group(4);
+    String mat5 = matcher.group(5);
+        
+    if (validString(mat5)) {
+      //using x.y.z
+      if (validMartAndDataset(mat1, mat3)) {
+          if (msl.adaptorManager.getDatasetConfigByDatasetInternalName(mat3, mat5) != null)
+            setEmptyMode(); //nothing more to complete
+          else
+            setUsingDatasetConfigReqMode(mat1, mat3); //still in configreq
+      }            
+    } else if (validString(mat4)) {
+      //using x.y.
+      if (validMartAndDataset(mat1, mat3))
+        setUsingDatasetConfigReqMode(mat1, mat3);
+    } else if (validString(mat3)) {
+      //using x.y
+      if (validMartAndDataset(mat1, mat3))
+        setEmptyMode(); //nothing more to complete
+      else if (validMart(mat1))
+        setUsingDatasetReqMode(mat1);
+      else if (msl.envMart != null)
+        if (validDatasetForMart(msl.envMart.getName(), mat3))
+          setEmptyMode(); //nothing more to complete
+        else
+          setDatasetReqMode(msl.envMart.getName());
+      else
+        setNoEnvMode();
+    } else if (validString(mat2)) {
+      //using x.
+      if (validMart(mat1))
+        setUsingDatasetReqMode(mat1);
+      else if (msl.envMart != null) {
+        if (validDatasetForMart(msl.envMart.getName(), mat1))
+          setEmptyMode();
+        else
+          setDatasetReqMode(msl.envMart.getName());
+      } else
+        setNoEnvMode();
+    } else if (validString(mat1)) {
+      //using x
+      if (validMart(mat1))
+        setEmptyMode(); //nothing more to complete
+      else if (msl.envMart != null) {
+        //assume dataset relative to envMart
+        setDatasetReqMode(msl.envMart.getName());
+      } else {
+        //assume mart. request
+        setMartReqMode();
+      }
+    } else {
+      //using
+      if (msl.envMart != null)
+        setDatasetReqMode(msl.envMart.getName());
+      else
+        setMartReqMode();
+    }
+  }
+  
   private void setProcedureNameMode() {
     currentSet = new TreeSet();
     currentSet.addAll(procSet);
@@ -1025,5 +1136,31 @@ public class MartCompleter implements ReadlineCompleter {
   public void setExecuteBaseCommands(Collection requests) {
     executeBaseSet = new TreeSet();
     executeBaseSet.addAll(requests);
+  }
+
+  private void logInfo(String message) {
+    if (logger.isLoggable(Level.INFO))
+      logger.info(message);
+  }
+
+  private void logWarning(String message) {
+    if (logger.isLoggable(Level.WARNING))
+      logger.warning(message);
+  }
+  
+  private boolean validString(String input) {
+    return input != null && input.length() > 0;
+  }
+  
+  private boolean validMartAndDataset(String martName, String dataset) throws ConfigurationException {
+    return msl.adaptorManager.supportsAdaptor(martName) && msl.adaptorManager.supportsDataset(dataset);
+  }
+  
+  private boolean validDatasetForMart(String martName, String dataset) throws ConfigurationException {
+    return msl.adaptorManager.getAdaptorByName(martName).supportsDataset(dataset);
+  }
+  
+  private boolean validMart(String martName) throws ConfigurationException {
+    return msl.adaptorManager.supportsAdaptor(martName);
   }
 }
