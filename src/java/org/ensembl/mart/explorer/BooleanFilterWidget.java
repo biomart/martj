@@ -47,18 +47,6 @@ public class BooleanFilterWidget
   extends FilterWidget
   implements ActionListener {
 
-  private class OptionToStringProxy {
-    private Option option;
-
-    OptionToStringProxy(Option o) {
-      this.option = o;
-    }
-
-    public String toString() {
-      return option.getDisplayName();
-    }
-  }
-
   private String excludeFilterType;
   private String requireFilterType;
 
@@ -200,7 +188,7 @@ public class BooleanFilterWidget
     QueryFilterSettings settings = filterDescription;
     if (list != null) {
 
-      settings = ((OptionToStringProxy) list.getSelectedItem()).option;
+      settings = ((OptionToStringWrapper) list.getSelectedItem()).option;
       // The fieldName will change if this is a list 
       fieldName = settings.getFieldFromContext();
       tableConstraint = settings.getTableConstraint();
@@ -228,12 +216,12 @@ public class BooleanFilterWidget
     for (int i = 0; i < options.length; i++) {
       Option o = options[i];
       if (o.isSelectable())
-        list.addItem(new OptionToStringProxy(o));
+        list.addItem(new OptionToStringWrapper(this, o));
     }
 
     list.addActionListener(this);
 
-    panel.validate();
+    list.validate();
     
   }
 
@@ -376,7 +364,7 @@ public class BooleanFilterWidget
     final int n = list.getItemCount();
     for (int i = 0; i < n; i++) {
 
-      OptionToStringProxy op = (OptionToStringProxy) list.getItemAt(i);
+      OptionToStringWrapper op = (OptionToStringWrapper) list.getItemAt(i);
       Option o = op.option;
       String f = filter.getField();
       String tc = filter.getTableConstraint();
