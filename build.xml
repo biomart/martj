@@ -34,7 +34,7 @@
 
 
   <property name="name" value="martj" />
-  <property name="version" value="0.1" />
+  <property name="version" value="0.2" />
   <property name="build.name" value="${name}-${version}" />
   <property name="build.compiler" value="modern" />
   <property name="build.deprecation" value="false" />
