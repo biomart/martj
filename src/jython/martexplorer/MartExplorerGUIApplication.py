@@ -3,31 +3,22 @@
 
 # copyright EBI, GRL 2003
 
-# "active" bar / cursor whilst loading data
+# cursor OR "active" bar whilst loading data
+
+# clicking view results multiple times while already loading should
+# pop up dialog box: "Already executing query, stop?" check state of cursor
+
+# TODO "save to file" <NAME> and "copy to window" <NAME>
+
+# TODO impl all updateQuery(), updatePage(), clear() methods. add
+# stubs to InputPage. incl attr from query -> page!
+
+# Move database to menu
 
 # cache results so don't reload if query unchanged Query.equals()? or
 # stateChanged -> dirty flag via state changed.
 
-# clicking view results multiple times while already loading should
-# pop up dialog box: "Already executing query, stop?"
-
 # handle gene_chrom_start / end, strand
-
-# glue save button to dialog and save.
-
-# exec on thread + "busy" bar.
-
-# TODO 1 - complete kaka dummy query sets all gui values, format, 
-# format
-# output to window
-
-
-# TODO impl all updateQuery(), updatePage(), clear() methods. add
-# stubs to InputPage
-
-# TODO implement results window. Clicking on it in tree cause EXECUTE
-# and results to be displayed in page (buffer to avoid blowing up) and
-# optional "save to file" <NAME> and "copy to window" <NAME>
 
 # TODO 3 - FilterManagerPage + XXXFilterPages. add implementation for
 # Filter . Clicking should cause a list of available (not already
@@ -42,15 +33,10 @@
 # TODO strand = -1, Unstranded +1
 # TODO fetch chromosomes from db and load into drop down list.
 
-
-
-# Move database to menu
-
 # Handle tabs of queries / results
 
 # Toggleable auto-update
 
-# TODO AboutDialog
 
 
 import thread
@@ -60,8 +46,8 @@ from java.lang import Thread
 from java.io import File, FileOutputStream, ByteArrayOutputStream
 from java.net import URL
 from java.util import Arrays, Vector
-from java.awt import CardLayout, Dimension, BorderLayout, Rectangle
-from java.awt.event import ActionListener
+from java.awt import CardLayout, Dimension, BorderLayout, Rectangle, Cursor
+from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
 from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane, JTextArea
@@ -88,6 +74,28 @@ def platformSpecificPath( path ):
 def validate( value, name ):
     if not value or value=="" or String("").equals(value):
         raise InvalidQueryException(name + " must be set")
+
+class EmptyMouseAdapter(MouseAdapter):
+    pass
+
+class CursorUtil:
+
+    def __init__(self):
+	self.mouseAdapter = EmptyMouseAdapter()
+    
+    def startWaitCursor(self, root): 
+	""" Sets cursor for specified component to Wait cursor """
+	root.getGlassPane().setCursor( Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) )
+	root.getGlassPane().addMouseListener(self.mouseAdapter)
+	root.getGlassPane().setVisible(1)
+
+
+    def stopWaitCursor(self, root):
+	""" Sets cursor for specified component to normal cursor """
+	root.getGlassPane().setCursor( Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) )
+	root.getGlassPane().removeMouseListener( self.mouseAdapter)
+	root.getGlassPane().setVisible(0)
+  
 
 class Page(Box, ChangeListener):
 
@@ -876,7 +884,7 @@ class MartGUIApplication(JFrame):
 	self.editor.addPage( self.resultsPage )
         self.buildGUI()
         self.visible=1
-
+	self.cursorUtil = CursorUtil()
 
     def buildGUI(self):
         self.JMenuBar = self.createMenuBar()
@@ -980,11 +988,11 @@ class MartGUIApplication(JFrame):
         # execute query in new thread and pipe results to window.
         os = self.resultsPage.getOutputStream()
 	thread.start_new_thread( self.executeQuery, (self, os) )
-        os.close()
 
 
 
     def executeQuery( self, dummy=None, outputStream=None ):
+
 
         host = self.editor.getHost()
         port = self.editor.getPort()
@@ -996,6 +1004,8 @@ class MartGUIApplication(JFrame):
         formatSpec = None
         # handles valildation and loads query
         try:
+	    self.cursorUtil.startWaitCursor(self)
+
             validate(host, "Host")
             validate(user, "User")
             validate(database, "Database")
@@ -1010,7 +1020,8 @@ class MartGUIApplication(JFrame):
             engine.execute( query, formatSpec, outputStream )
 	    
 	    # scroll to top of results
-	    self.editor.resultsPage.scrollToTop()
+	    self.resultsPage.scrollToTop()
+	    self.cursorUtil.stopWaitCursor(self)
 
         except (InvalidQueryException), ex:
             JOptionPane.showMessageDialog( self,
