@@ -40,134 +40,141 @@ import org.ensembl.mart.lib.config.DatasetView;
  * and enabling the user to select another.
  */
 public class DatasetViewWidget
-  extends InputPage
-  implements QueryChangeListener {
+	extends InputPage
+	implements QueryChangeListener {
 
-  private DatasetViewSettings datasetViewSettings;
+	private DatasetViewSettings datasetViewSettings;
 
-  private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
+	private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
 
-  private Feedback feedback = new Feedback(this);
+	private Feedback feedback = new Feedback(this);
 
-  private JTextField datasetViewName = new JTextField(30);
-  private JButton button = new JButton("change");
+	private JTextField datasetViewName = new JTextField(30);
+	private JButton button = new JButton("change");
 
-  /**
-   * @param query underlying model for this widget.
-   */
-  public DatasetViewWidget(
-    Query query,
-    DatasetViewSettings datasetViewSettings) {
+	/**
+	 * @param query underlying model for this widget.
+	 */
+	public DatasetViewWidget(
+		Query query,
+		DatasetViewSettings datasetViewSettings) {
 
-    super(query, "Dataset View");
+		super(query, "Dataset View");
 
-    this.datasetViewSettings = datasetViewSettings;
-    datasetViewName.setEditable(false);
-    setDatasetView(null);
+		this.datasetViewSettings = datasetViewSettings;
+		datasetViewName.setEditable(false);
+		setDatasetView(null);
 
-    JButton cb = new JButton("Change");
-    cb.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doChange();
+		JButton cb = new JButton("Change");
+		cb.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				doChange();
 
-      }
-    });
+			}
+		});
 
-    Box b = Box.createHorizontalBox();
-    b.add(new JLabel("DatasetView "));
-    b.add(cb);
-    b.add(datasetViewName);
-    add(b, BorderLayout.NORTH);
+		Box b = Box.createHorizontalBox();
+		b.add(new JLabel("DatasetView "));
+		b.add(cb);
+		b.add(datasetViewName);
+		add(b, BorderLayout.NORTH);
 
-  }
+	}
 
-  /**
-   * Opens DatasetViewSettings dialog.
-   */
-  public void doChange() {
+	/**
+	 * Opens DatasetViewSettings dialog.
+	 */
+	public void doChange() {
 
-    DatasetView oldDsv = query.getDatasetView();
+		DatasetView oldDsv = query.getDatasetView();
 
-    datasetViewSettings.setSelected(oldDsv);
+		datasetViewSettings.setSelected(oldDsv);
 
-    DatasetView dsv = null;
-    if (datasetViewSettings.showDialog(this)) {
+		DatasetView dsv = null;
+		if (datasetViewSettings.showDialog(this)) {
 
-      dsv = datasetViewSettings.getSelected();
+			dsv = datasetViewSettings.getSelected();
 
-      if (oldDsv != dsv
-        && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
+			if (oldDsv != dsv
+				&& (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
 
-        int o =
-          JOptionPane.showConfirmDialog(
-            this,
-            new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-            "Delete current Change Attributes",
-            JOptionPane.YES_NO_OPTION);
+				int o =
+					JOptionPane.showConfirmDialog(
+						this,
+						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+						"Delete current Change Attributes",
+						JOptionPane.YES_NO_OPTION);
 
-        // undo if user changes mind
-        if (o != JOptionPane.OK_OPTION)
-          return;
+				// undo if user changes mind
+				if (o != JOptionPane.OK_OPTION)
+					return;
 
-      }
+			}
 
-      query.clear();
-      query.setDatasetView(dsv);
-      if (dsv != null) {
+			query.clear();
+			query.setDatasetView(dsv);
+			if (dsv != null) {
 
-        query.setPrimaryKeys(dsv.getPrimaryKeys());
-        query.setStarBases(dsv.getStarBases());
-        query.setDataset(dsv.getDataset());
-      }
-    }
+				query.setPrimaryKeys(dsv.getPrimaryKeys());
+				query.setStarBases(dsv.getStarBases());
+				query.setDataset(dsv.getDataset());
+			}
+		}
 
-  }
+	}
 
-  /**
-   * Runs a test; an instance of this class is shown in a Frame.
-   */
-  public static void main(String[] args) throws Exception {
-    Query q = new Query();
-    DatasetViewWidget dvm =
-      new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
-    dvm.setSize(950, 750);
+	/**
+	 * Runs a test; an instance of this class is shown in a Frame.
+	 */
+	public static void main(String[] args) throws Exception {
+		Query q = new Query();
+		DatasetViewWidget dvm =
+			new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
+		dvm.setSize(950, 750);
 
-    JFrame f = new JFrame(dvm.getClass().getName() + " - test");
-    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    f.getContentPane().add(dvm);
-    f.pack();
-    f.setVisible(true);
+		JFrame f = new JFrame(dvm.getClass().getName() + " - test");
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.getContentPane().add(dvm);
+		f.pack();
+		f.setVisible(true);
 
-  }
+	}
 
-  /**
-   * Responds to a change in dataset view on the query. Updates the state of
-   * this widget by changing the currently selected item in the list.
-   */
-  public void datasetViewChanged(
-    Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+	/**
+	 * Responds to a change in dataset view on the query. Updates the state of
+	 * this widget by changing the currently selected item in the list.
+	 */
+	public void datasetViewChanged(
+		Query query,
+		DatasetView oldDatasetView,
+		DatasetView newDatasetView) {
 
-    if (newDatasetView != null
-      && !datasetViewSettings.contains(newDatasetView))
-      try {
-        datasetViewSettings.add(newDatasetView);
-      } catch (ConfigurationException e) {
-        feedback.warn(e);
-      }
-    setDatasetView(newDatasetView);
-  }
+		if (newDatasetView != null
+			&& !datasetViewSettings.contains(newDatasetView))
+			try {
+				datasetViewSettings.add(newDatasetView);
+			} catch (ConfigurationException e) {
+				feedback.warn(e);
+			}
+		setDatasetView(newDatasetView);
+    
+    // set these to default values
+    if (newDatasetView != null) {
+      query.setPrimaryKeys(newDatasetView.getPrimaryKeys());
+      query.setStarBases(newDatasetView.getStarBases());
+		}
 
-  /**
-   * Update the label to show which dataset view is currently selected.
-   * @param object
-   */
-  private void setDatasetView(DatasetView datasetView) {
-    String s = "";
-    if (datasetView != null)
-      s = datasetView.getDisplayName();
-    datasetViewName.setText(s);
-  }
+	}
+
+	/**
+	 * Update the label to show which dataset view is currently selected.
+	 * @param object
+	 */
+	private void setDatasetView(DatasetView datasetView) {
+		String s = "";
+		if (datasetView != null)
+			s = datasetView.getDisplayName();
+		datasetViewName.setText(s);
+	}
 
 }
