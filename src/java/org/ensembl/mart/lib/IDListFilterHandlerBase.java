@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.StringTokenizer;
 
 /*
     Copyright (C) 2003 EBI, GRL
@@ -63,7 +64,11 @@ public abstract class IDListFilterHandlerBase implements UnprocessedFilterHandle
 			throw new InvalidQueryException("Recieved Query with missing starbase\n");
 
 		String constellation_name = query_with_starbases.getStarBases()[0]; // get the first starBase, should be valid
-
+        //StringTokenizer constellationTokens = new StringTokenizer(constellation_name,"_");
+        //String dset = constellationTokens.nextToken();
+		String[] sbtokens = constellation_name.split("__");
+		String dset = sbtokens[0];
+        
 		boolean versioned_ids = false;
 
 		try {

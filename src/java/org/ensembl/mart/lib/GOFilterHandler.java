@@ -83,8 +83,10 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 				throw new InvalidQueryException("Could not determine dataset for query, perhaps it is a snp query ");
 			}
             
-            StringTokenizer datasetTokens = new StringTokenizer(dataset,"__");
-            dset = datasetTokens.nextToken();
+            //StringTokenizer datasetTokens = new StringTokenizer(dataset,"_");
+            //dset = datasetTokens.nextToken();
+			String[] sbtokens = dataset.split("__");
+		    dset = sbtokens[0];
                 
 			List goTables = new ArrayList();
 			StringBuffer selectBuf = new StringBuffer("select ");

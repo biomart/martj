@@ -62,8 +62,11 @@ public class EncodeQtlFilterHandler implements UnprocessedFilterHandler {
 			String focus = null;
 			String joinKey;
 			String starBase = newQuery.getStarBases()[0];
-			StringTokenizer starBaseTokens = new StringTokenizer(starBase, "__");
-			String dset = starBaseTokens.nextToken();
+			//StringTokenizer starBaseTokens = new StringTokenizer(starBase, "__");
+			//String dset = starBaseTokens.nextToken();
+			String[] sbtokens = starBase.split("__");
+			String dset = sbtokens[0];
+			
 			if (dset.endsWith("snp")){
 				focus = "snp";
 			    joinKey = "snp_id_key";	

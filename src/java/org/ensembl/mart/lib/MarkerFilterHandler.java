@@ -61,10 +61,12 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 
 			// species can be parsed from the beginning of the first starBase
 			String starBase = newQuery.getStarBases()[0];
-			StringTokenizer sbtokens = new StringTokenizer(starBase, "__");
-			species = sbtokens.nextToken();
-			String tmp = sbtokens.nextToken();
-
+			//StringTokenizer sbtokens = new StringTokenizer(starBase, "_o");
+			String[] sbtokens = starBase.split("__");
+			String[] dstokens = sbtokens[0].split("_");
+			species = dstokens[0];
+			String tmp = dstokens[1];
+            
 			//focus is snp if tmp ends with snp
 			if (tmp.endsWith("snp")){
 				focus = "snp";
