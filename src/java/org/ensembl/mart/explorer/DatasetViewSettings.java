@@ -202,12 +202,10 @@ public class DatasetViewSettings extends Box {
     try {
       MartRegistry reg = null;
       if ( b.length>0 ) {
-        logger.warning("b>0");
         reg = MartRegistryXMLUtils.ByteArrayToMartRegistry(b);
       }
         
       if ( reg!=null ) {
-        logger.warning( reg.toString() );
         RegistryDSViewAdaptor tmp = new RegistryDSViewAdaptor(reg);
         DSViewAdaptor[] adaptors = tmp.getAdaptors();
         for (int i = 0; i < adaptors.length; i++) 
@@ -628,7 +626,6 @@ public class DatasetViewSettings extends Box {
 	private void storePrefs() throws ConfigurationException {
     
     MartRegistry reg = adaptor.getMartRegistry();
-    logger.warning("store:" + reg);
     
     byte[] b =
       MartRegistryXMLUtils.MartRegistryToByteArray(reg);
