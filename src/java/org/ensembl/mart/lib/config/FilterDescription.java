@@ -456,12 +456,12 @@ public class FilterDescription extends QueryFilterSettings {
 
 		if (hshcode == -1) {
 			hshcode = super.hashCode();
-			hshcode = (31 * hshcode) + field.hashCode();
-			hshcode = (31 * hshcode) + type.hashCode();
-			hshcode = (31 * hshcode) + qualifier.hashCode();
-			hshcode = (31 * hshcode) + legalQualifiers.hashCode();
-			hshcode = (31 * hshcode) + tableConstraint.hashCode();
-			hshcode = (31 * hshcode) + description.hashCode();
+			if ( field!=null ) hshcode = (31 * hshcode) + field.hashCode();
+			if ( type!=null ) hshcode = (31 * hshcode) + type.hashCode();
+			if ( qualifier!=null ) hshcode = (31 * hshcode) + qualifier.hashCode();
+			if ( legalQualifiers!=null ) hshcode = (31 * hshcode) + legalQualifiers.hashCode();
+			if ( tableConstraint!=null ) hshcode = (31 * hshcode) + tableConstraint.hashCode();
+			if ( description!=null ) hshcode = (31 * hshcode) + description.hashCode();
 
 			for (Iterator iter = uiOptions.values().iterator(); iter.hasNext();) {
 				Option option = (Option) iter.next();
