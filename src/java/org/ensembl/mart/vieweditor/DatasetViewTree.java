@@ -72,7 +72,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.config.*;
-import org.ensembl.mart.lib.DetailedDataSource;
+
 
 /**
  * Class DatasetViewTree extends JTree.
@@ -592,18 +592,6 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         String pushTableName = fd2.getTableConstraint();
         String field = fd1.getField();
         
-        // eventually will have dsource open already
-        DetailedDataSource dsource = new DetailedDataSource(
-            "mysql",
-            "web27.ebi.ac.uk",
-            "3327",
-            "ensembl_mart_test",
-            "admin",
-            ">fc9i9m92",
-            DetailedDataSource.DEFAULTPOOLSIZE,
-            "com.mysql.jdbc.Driver");
-	            
-        
 		Option[] options = fd1.getOptions();
 		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
 		
@@ -612,7 +600,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 			String opName = op.getInternalName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,dsource));
+			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,MartViewEditor.getDetailedDataSource()));
 			
 			if (pa.getOptions().length > 0){  
 			  Enumeration children = parentNode.children();
@@ -641,25 +629,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         
 		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
         
-		// eventually will have dsource open already
-		DetailedDataSource dsource = new DetailedDataSource(
-				"mysql",
-				"web27.ebi.ac.uk",
-				"3327",
-				"ensembl_mart_test",
-				"admin",
-				">fc9i9m92",
-				DetailedDataSource.DEFAULTPOOLSIZE,
-				"com.mysql.jdbc.Driver");
-        
-        String field = fd1.getField();
+		String field = fd1.getField();
         String tableName = fd1.getTableConstraint();
         String joinKey = fd1.getKey();
 		fd1.setType("list");
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 
-		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, dsource, dsView);
+		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, MartViewEditor.getDetailedDataSource(), dsView);
 		for (int k = options.length - 1; k > -1; k-- ){
 			insert(options[k], "Option");
 		}
@@ -704,6 +681,16 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             e.printStackTrace();
         }
     }
+
+	public void export() {
+		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+		try {
+			DatabaseDSViewAdaptor.storeDatasetView(MartViewEditor.getDetailedDataSource(), MartViewEditor.getUser() ,dsView, true);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
     public void lostOwnership(Clipboard c, Transferable t) {
 
