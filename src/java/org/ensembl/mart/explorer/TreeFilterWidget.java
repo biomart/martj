@@ -254,9 +254,7 @@ public class TreeFilterWidget extends FilterWidget {
    */
   public void setOptions(Option[] options) {
 
-    setFilter(null);
-
-    setFilter(null);
+    if ( filter!=null ) query.removeFilter( filter );
 
     // reset the maps so we can can find things later
     valueToOption.clear();

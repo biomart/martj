@@ -509,7 +509,8 @@ public class QueryEditor extends JPanel {
 
 		DatasetView[] views = null;
 
-		final QueryEditor editor = new QueryEditor(testDSViewAdaptor());
+    DSViewAdaptor a = testDSViewAdaptor();
+		final QueryEditor editor = new QueryEditor(a);
 		editor.setName("test_query");
 
 		JFrame f = new JFrame("Query Editor (Test Frame)");
@@ -519,6 +520,10 @@ public class QueryEditor extends JPanel {
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setSize(950, 750);
 		f.setVisible(true);
+
+    // set 1st dsv to save having to do it while testing.
+    editor.getQuery().setDatasetView( a.getDatasetViews()[0]);
+
 
 	}
 

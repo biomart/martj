@@ -232,7 +232,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
     unassignPushOptions();
 
-    setFilter(null);
+    if ( filter!=null ) query.removeFilter( filter );
 
     filterValueToItem = resetList(list, options);
 
