@@ -364,7 +364,14 @@ public class Query {
 	public int getLimit() {
 		return limit;
 	}
-	
+
+  /**
+   * Returns the total number of filters of all types added to the Query
+   * @return int count of all filters added
+   */
+  public int getTotalFilterCount() {
+  	return filters.size() + dsfilters.size() + unprocessedfilters.size();	
+  }
 	/**
 	 * returns a description of the Query for logging purposes
 	 * 
@@ -456,6 +463,7 @@ public class Query {
 	private List filters = new Vector();
   private List dsfilters = new Vector(); // will hold DomainSpecificFilter objects
   private List unprocessedfilters = new Vector(); // will hold non STRING type IDListFilter objects
+
   private boolean hasDomainSpecificFilters = false; // will be set to true if a DomainSpecificFilterObject is added
   private boolean hasUnprocessedListFilters = false; // will be set to true if a non STRING type IDListFilter Object is added
 	private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
