@@ -25,6 +25,7 @@ import java.sql.Connection;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetViewIterator;
 import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
@@ -67,7 +68,7 @@ public class RegistryDSViewAdaptorTest extends Base {
     //set URL to load File, just to test if it has a DatasetView
     regadaptor.setRegistryURL(getURL(TESTMARTREGISTRYFILE));
     
-    assertEquals("File RegistryDSViewAdaptor should have 1 DatasetView after setRegistryURL on empty\n", 1, regadaptor.getDatasetViews().length);
+    assertEquals("File RegistryDSViewAdaptor should have 1 DatasetView after setRegistryURL on empty\n", 1, regadaptor.getNumDatasetViews());
     
     //testMartRegistryFile
     regadaptor = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYFILE));
@@ -80,17 +81,17 @@ public class RegistryDSViewAdaptorTest extends Base {
     
     regadaptor = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYDB));
     //assertEquals("DB RegistryDSViewAdaptor should be empty before store and update\n", 0, regadaptor.getDatasetInternalNames().length);
-    DatasetView dbdsview = new URLDSViewAdaptor(getURL(TESTDBDSVIEW)).getDatasetViews()[0];
+    DatasetView dbdsview = (DatasetView) new URLDSViewAdaptor(getURL(TESTDBDSVIEW)).getDatasetViews().next();
     DatabaseDSViewAdaptor.storeDatasetView(martJDataSource, USER, dbdsview, true);
     
     regadaptor = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYDB));
     
     //assertEquals("DB RegistryDSViewAdaptor should have 1 DatasetView after store, recreate\n", 1, regadaptor.getDatasetDisplayNames().length);
-    assertEquals("DB RegistryDSViewAdaptor Dataset internalName is incorrect\n", TESTMARTREGDBINAME, regadaptor.getDatasetViews()[0].getInternalName());
+    assertEquals("DB RegistryDSViewAdaptor Dataset internalName is incorrect\n", TESTMARTREGDBINAME, ((DatasetView) regadaptor.getDatasetViews().next()).getInternalName());
     
     //testMartRegistryRegistry
     regadaptor = new RegistryDSViewAdaptor(getURL(TESTMARTREGISTRYREGISTRY));
-    assertEquals("Registry RegistryDSViewAdaptor should have 1 DatasetView\n", 1, regadaptor.getDatasetViews().length);
+    assertEquals("Registry RegistryDSViewAdaptor should have 1 DatasetView\n", 1, regadaptor.getNumDatasetViews());
     //assertEquals("Registry RegistryDSViewAdaptor Dataset internalName is incorrect\n", TESTMARTREGISTRYREGINAME, regadaptor.getDatasetInternalNames()[0]);
     
 
@@ -111,22 +112,20 @@ public class RegistryDSViewAdaptorTest extends Base {
     //testMartRegistryComposite
     regadaptor = new RegistryDSViewAdaptor( getURL( TESTMARTREGISTRYCOMPOSITE ) );
     
-    assertEquals("Composite RegistryDSViewAdaptor should have 3 DatasetViews\n", 3, regadaptor.getDatasetViews().length);
-    assertTrue("Composite RegistryDSViewAdaptor should support File DatasetView internalName\n", regadaptor.supportsInternalName(TESTMARTREGFILEINAME));
-    assertTrue("Composite RegistryDSViewAdaptor should support DB DatasetView internalName\n", regadaptor.supportsInternalName(TESTMARTREGDBINAME));
-    assertTrue("Composite RegistryDSViewAdaptor should support Registry DatasetView internalName\n", regadaptor.supportsInternalName(TESTMARTREGISTRYREGINAME));
+    assertEquals("Composite RegistryDSViewAdaptor should have 3 DatasetViews\n", 3, regadaptor.getNumDatasetViews());
     
     //getMartRegistry
     MartRegistry mr = regadaptor.getMartRegistry();
     assertEquals("MartRegistry from Composite RegistryDSViewAdaptor should have 3 MartLocations\n", 3, mr.getMartLocations().length);
     
     //Store new datasetView to DB, and update
-    DatasetView newDatasetView = URLDSViewAdaptorTest.getSampleDSViewAdaptor().getDatasetViews()[0];
+    DatasetViewIterator dsvi = URLDSViewAdaptorTest.getSampleDSViewAdaptor().getDatasetViews();
+    assertTrue("URLDSViewAdaptor should have one DatasetView\n", dsvi.hasNext());
+    DatasetView newDatasetView = (DatasetView) dsvi.next();
     DatabaseDSViewAdaptor.storeDatasetView(martJDataSource, USER, newDatasetView, true);
     
     regadaptor.update();
-    assertEquals("Composite RegistryDSViewAdaptor should contain 4 DatasetViews after store and update\n", 4, regadaptor.getDatasetViews().length);
-    assertTrue("Composite RegistryDSViewAdaptor should now support newDatasetView after store and update\n", regadaptor.supportsInternalName(newDatasetView.getInternalName()));
+    assertEquals("Composite RegistryDSViewAdaptor should contain 4 DatasetViews after store and update\n", 4, regadaptor.getNumDatasetViews());
 
 //TODO: sameness issue    
 //    // new registry, no URL
