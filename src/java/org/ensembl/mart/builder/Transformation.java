@@ -104,6 +104,8 @@ public class Transformation {
 			
 			if (type.equals("central")){
 				temp_end_name ="C"+temp_end_name;
+			} if (type.equals("linked") && final_table_type.equals("DM")){
+				temp_end_name ="D"+temp_end_name;
 			}
 			temp_end_name =temp_end_name+i;
 		
