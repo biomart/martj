@@ -369,10 +369,10 @@ public class MartXMLutils {
 	//TODO:impliment user/fallback tables
   //TODO:create stub DatasetViews instead of full DatasetViews
   //TODO:impliment MD5SUM in DatasetView
-	public static DSViewDatabaseAdaptor getDSViewDatabaseAdaptorFor(DataSource dsource, String user) throws ConfigurationException {
+	public static DatabaseDSViewAdaptor getDSViewDatabaseAdaptorFor(DataSource dsource, String user) throws ConfigurationException {
 
 		try {
-			DSViewDatabaseAdaptor dsva = new DSViewDatabaseAdaptor(dsource, user);
+			DatabaseDSViewAdaptor dsva = new DatabaseDSViewAdaptor(dsource, user);
 			Connection conn = dsource.getConnection();
 			PreparedStatement ps = conn.prepareStatement(GETALLDSVDATA);
 

@@ -32,7 +32,7 @@ import javax.sql.DataSource;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSViewDatabaseAdaptor implements DSViewAdaptor {
+public class DatabaseDSViewAdaptor implements DSViewAdaptor {
 
 	private List dsviews = new ArrayList();
 	private int inameIndex = 0;
@@ -43,9 +43,9 @@ public class DSViewDatabaseAdaptor implements DSViewAdaptor {
 	private final DataSource dsvsource;
 	private final String user;
 
-	public DSViewDatabaseAdaptor(DataSource ds, String user) throws ConfigurationException {
+	public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
 		if (ds == null || user == null)
-			throw new ConfigurationException("DSViewDatabaseAdaptor Objects must be instantiated with a DataSource and User\n");
+			throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
 
 		this.user = user;
 		dsvsource = ds;
