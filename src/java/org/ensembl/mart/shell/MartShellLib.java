@@ -1252,87 +1252,14 @@ public class MartShellLib {
 
   public DatasetConfig getDatasetConfigFor(String name) throws InvalidQueryException {
     DatasetConfig ret = null;
-    String[] toks = name.split("\\.");
-
+    DatasetRequest dsetreq = new DatasetRequest(name, this);
+    
     try {
-      if (toks.length == 3) {
-        //sourcename.datasetname.configname
-
-        if (!adaptorManager.supportsAdaptor(toks[0]))
-          throw new InvalidQueryException(
-            "Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
-
-        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-        if (!adaptor.supportsDataset(toks[1]))
-          throw new InvalidQueryException(
-            "Dataset "
-              + toks[1]
-              + " is not supported by sourcename "
-              + toks[0]
-              + " in datasetconfig request "
-              + name
-              + "\n");
-
-        ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], toks[2]);
-      } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.configname relative to envMart
-        if (adaptorManager.supportsAdaptor(toks[0])) {
-          //assume it is sourcename.datasetname
-          if (!adaptorManager.supportsAdaptor(toks[0]))
-            throw new InvalidQueryException(
-              "Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
-
-          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-          if (!adaptor.supportsDataset(toks[1]))
-            throw new InvalidQueryException(
-              "Dataset "
-                + toks[1]
-                + " is not supported by sourcename "
-                + toks[0]
-                + " in datasetconfig request "
-                + name
-                + "\n");
-
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], DEFAULTDATASETCONFIGNAME);
-        } else {
-          //assume it is datasetname.configname relative to envMart
-          if (envMart == null)
-            throw new InvalidQueryException(
-              "Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
-
-          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], toks[1]);
-        }
-      } else if (toks.length == 1) {
-        if (envMart == null)
-          throw new InvalidQueryException(
-            "Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
-
-        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-
-        //either datasetname relative to envMart or configname relative to envMart.envDataset
-        if (adaptorManager.supportsDataset(toks[0])) {
-          //assume it is datasetname relative to envMart
-          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], DEFAULTDATASETCONFIGNAME);
-        } else {
-          //assume it is configname relative to envMart and envDataset
-          if (envDataset == null)
-            throw new InvalidQueryException(
-              "Must set environmental Dataset to manipulate DatasetConfigs with relative name " + name + "\n");
-
-          ret = adaptor.getDatasetConfigByDatasetInternalName(envDataset.getDataset(), toks[0]);
-        }
-      }
+      ret = adaptorManager.getAdaptorByName(dsetreq.mart).getDatasetConfigByDatasetInternalName(dsetreq.dataset, dsetreq.datasetconfig);
     } catch (ConfigurationException e) {
-      throw new InvalidQueryException(
-        "Caught ConfigurationException manipulating DatasetConfig named " + name + " " + e.getMessage(),
-        e);
-    } catch (InvalidQueryException e) {
-      throw e;
+      throw new InvalidQueryException("Could not parse " + name + " for DatasetConfig : " + e.getMessage() + "\n");
     }
-
+    
     if (ret == null)
       throw new InvalidQueryException("Could not manipulate DatasetConfig " + name + "\n");
 
@@ -1377,205 +1304,17 @@ public class MartShellLib {
       //unset command
       envDataset = null;
     } else {
-      List datasetMart = getDatasetAndMartFrom(command);
-
-      envDataset = (DatasetConfig) datasetMart.get(0);
-
-      if (datasetMart.size() == 2)
-        envMart = (DetailedDataSource) datasetMart.get(1);
-    }
-  }
-
-  private List getDatasetAndMartFrom(String command) throws InvalidQueryException {
-    List ret = new ArrayList();
-    DetailedDataSource retMart = null;
-    DatasetConfig retDataset = null;
-
-    DSConfigAdaptor dsadaptor = null;
-    String datasourcereq = null;
-    String datasetreq = null;
-    String configreq = null;
-
-    String dsourceDelimiter = ">";
-    if (command.indexOf(dsourceDelimiter) > 0) {
-      String[] toks = command.split(dsourceDelimiter);
-      datasetreq = toks[0];
-      datasourcereq = toks[1];
+      DatasetRequest dsrq = new DatasetRequest(command, this);
 
       try {
-        if (!adaptorManager.supportsAdaptor(datasourcereq))
-          throw new InvalidQueryException("Mart " + datasourcereq + " has not been added, use add Mart\n");
-
-        DetailedDataSource ds = adaptorManager.getAdaptorByName(datasourcereq).getDataSource();
-
-        if (ds == null)
-          throw new InvalidQueryException(
-            "Mart " + datasourcereq + " File Mart Sources cannot be used in the name>martName syntax\n");
-        retMart = ds;
-      } catch (ConfigurationException e1) {
-        throw new InvalidQueryException(
-          "Caught ConfigurationException setting Mart to " + datasourcereq + " " + e1.getMessage(),
-          e1);
-      } catch (InvalidQueryException e1) {
-        throw e1;
+        envDataset = adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+        
+        if (envMart == null || !(envMart.getName().equals(dsrq.mart)))
+          envMart = adaptorManager.getAdaptorByName(dsrq.mart).getDataSource();
+      } catch (ConfigurationException e) {
+         throw new InvalidQueryException("Could not parse set Dataset command " + command + ": " + e.getMessage() +"\n");
       }
-    } else
-      datasetreq = command;
-
-    String[] toks = datasetreq.split("\\.");
-    try {
-      if (toks.length == 3) {
-        //sourcename.datasetname.configname
-
-        //dont use datasourcereq for returned Mart if using 'name>martName' syntax
-        if (datasourcereq == null) {
-          datasourcereq = toks[0];
-
-          if (!adaptorManager.supportsAdaptor(datasourcereq))
-            throw new InvalidQueryException(
-              "Datasets for Mart "
-                + datasourcereq
-                + " have not been loaded, use add datasets from "
-                + datasourcereq
-                + "\n");
-
-          // get the adaptor for sourcename, even if using the 'name>martName' syntax
-          dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-          DetailedDataSource ds = dsadaptor.getDataSource();
-
-          if (ds == null)
-            throw new InvalidQueryException(
-              "Source for "
-                + datasourcereq
-                + " does not appear to be a Mart backed source, if it was loaded from the file system, you must use the 'name>martName' syntax for set dataset or use dataset\n");
-
-          retMart = ds;
-        }
-
-        // get the adaptor for sourcename, even if using the 'name>martName' syntax
-        if (dsadaptor == null)
-          dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-        datasetreq = toks[1];
-        configreq = toks[2];
-      } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.configname
-        if (adaptorManager.supportsAdaptor(toks[0])) {
-          //assume it is sourcename.datasetname
-
-          //dont use datasourcereq for returned Mart if using 'name>martName' syntax
-          if (datasourcereq == null) {
-            datasourcereq = toks[0];
-
-            if (!adaptorManager.supportsAdaptor(datasourcereq))
-              throw new InvalidQueryException(
-                "Datasets for Mart "
-                  + datasourcereq
-                  + " have not been loaded, use add datasets from "
-                  + datasourcereq
-                  + "\n");
-
-            // get the adaptor for sourcename, even if using the 'name>martName' syntax
-            dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-            DetailedDataSource ds = dsadaptor.getDataSource();
-
-            if (ds == null)
-              throw new InvalidQueryException(
-                "Source for "
-                  + datasourcereq
-                  + " does not appear to be a Mart backed source, if it was loaded from the file system, you must use the 'name>martName' syntax for set dataset or use dataset\n");
-
-            retMart = ds;
-          }
-
-          // get the adaptor for sourcename, even if using the 'name>martName' syntax
-          if (dsadaptor == null)
-            dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
-
-          datasetreq = toks[1];
-          configreq = DEFAULTDATASETCONFIGNAME;
-        } else if (adaptorManager.supportsDataset(toks[0])) {
-          //assume it is datasetname.configname
-
-          if (envMart == null)
-            throw new InvalidQueryException("Must set environmental Mart with use or set for relative dataset names to work\n");
-
-          if (!adaptorManager.supportsAdaptor(envMart.getName()))
-            throw new InvalidQueryException(
-              "No Datasets have been loaded for Mart "
-                + envMart.getName()
-                + " try 'add dataset from "
-                + envMart.getName()
-                + ";'");
-
-          dsadaptor = adaptorManager.getAdaptorByName(envMart.getName());
-
-          datasetreq = toks[0];
-          configreq = toks[1];
-        } else
-          throw new InvalidQueryException(
-            "Could not resolve set Dataset "
-              + toks[0]
-              + "."
-              + toks[1]
-              + " command to either sourcename.datasetname or datasetname.configname\n");
-      } else {
-        //either datasetname or configname, so check for envMart and associated adaptor
-        if (envMart == null)
-          throw new InvalidQueryException("Must set environmental Mart with use or set for relative dataset names to work\n");
-
-        if (!adaptorManager.supportsAdaptor(envMart.getName()))
-          throw new InvalidQueryException(
-            "No Datasets have been loaded for Mart "
-              + envMart.getName()
-              + " try 'add dataset from "
-              + envMart.getName()
-              + ";'");
-
-        dsadaptor = adaptorManager.getAdaptorByName(envMart.getName());
-
-        if (adaptorManager.supportsDataset(toks[0])) {
-          //assume it is datasetname
-          datasetreq = toks[0];
-          configreq = DEFAULTDATASETCONFIGNAME;
-        } else {
-          //assume it is configname
-          if (envDataset == null)
-            throw new InvalidQueryException("Must set environmental Dataset before using relative configname\n");
-
-          datasetreq = envDataset.getDataset();
-          configreq = toks[0];
-        }
-      }
-
-      if (!dsadaptor.supportsDataset(datasetreq))
-        throw new InvalidQueryException("Mart " + toks[0] + " does not support dataset " + datasetreq + "\n");
-
-      DatasetConfig dsv = dsadaptor.getDatasetConfigByDatasetInternalName(datasetreq, configreq);
-
-      if (dsv == null)
-        throw new InvalidQueryException(
-          "Mart " + toks[0] + " does not support dataset " + datasetreq + " config " + configreq + "\n");
-
-      retDataset = dsv;
-    } catch (ConfigurationException e) {
-      throw new InvalidQueryException(
-        "Caught ConfigurationException attempting to set or use a dataset: " + e.getMessage(),
-        e);
-    } catch (InvalidQueryException e) {
-      throw e;
     }
-
-    if (retDataset == null)
-      throw new InvalidQueryException("Could not resolve Dataset with " + command + "\n");
-
-    ret.add(retDataset);
-
-    if (retMart != null)
-      ret.add(retMart);
-    return ret;
   }
 
   public String showEnvMart() {
@@ -1693,13 +1432,17 @@ public class MartShellLib {
               throw new InvalidQueryException(
                 "Invalid Query Recieved, DatasetConfig already set, attempted to set again: " + newquery + "\n");
             else {
-              List datasetMart = getDatasetAndMartFrom(thisToken);
+              DatasetRequest dsrq = new DatasetRequest(thisToken, this);
 
-              thisDatasetConfig = (DatasetConfig) datasetMart.get(0);
-              query.setDataset(thisDatasetConfig.getDataset());
-
-              if (datasetMart.size() == 2)
-                query.setDataSource((DetailedDataSource) datasetMart.get(1));
+              try {
+                if (envMart == null || !(envMart.getName().equals(dsrq.mart)))
+                  query.setDataSource(adaptorManager.getAdaptorByName(dsrq.mart).getDataSource());
+                
+                thisDatasetConfig = adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+                query.setDataset(thisDatasetConfig.getDataset());
+              } catch (ConfigurationException e1) {
+                throw new InvalidQueryException("Could not set parse using request " + thisToken + "\n");
+              }
 
               if (logger.isLoggable(Level.INFO)) {
                 logger.info("setting local dataset to " + thisDatasetConfig.getDataset() + "\n");

@@ -60,6 +60,7 @@ import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
@@ -1898,7 +1899,15 @@ public class MartShell {
       throw new InvalidQueryException("Invalid execute procedure command recieved\n" + Help(EXECC));
 
     String storedCommandName = toks.nextToken();
+    String nestedQuery = getMQLForStoredProcedure(storedCommandName);
+    try {
+      executeCommand(nestedQuery);
+    } catch (Exception e) {
+      throw new InvalidQueryException("Recieved Exception executing Stored Procedure " + e.getMessage() + "\n", e);
+    }
+  }
 
+  private String getMQLForStoredProcedure(String storedCommandName) throws InvalidQueryException {
     String bindValues = null;
     if (storedCommandName.indexOf(MartShellLib.LISTSTARTCHR) > 0) {
       bindValues =
@@ -1911,30 +1920,25 @@ public class MartShell {
     String nestedQuery = msl.describeStoredMQLCommand(storedCommandName);
 
     if (nestedQuery != null) {
-      try {
-        if ((bindValues != null) && (bindValues.length() > 0)) {
-          List bindVariables = new ArrayList();
-          StringTokenizer vtokens = new StringTokenizer(bindValues, ",");
-          while (vtokens.hasMoreTokens())
-            bindVariables.add(vtokens.nextToken().trim());
+      if ((bindValues != null) && (bindValues.length() > 0)) {
+        List bindVariables = new ArrayList();
+        StringTokenizer vtokens = new StringTokenizer(bindValues, ",");
+        while (vtokens.hasMoreTokens())
+          bindVariables.add(vtokens.nextToken().trim());
 
-          Pattern bindp = Pattern.compile("\\?");
-          Matcher bindm = bindp.matcher(nestedQuery);
+        Pattern bindp = Pattern.compile("\\?");
+        Matcher bindm = bindp.matcher(nestedQuery);
 
-          StringBuffer qbuf = new StringBuffer();
-          int bindIter = 0;
-          while (bindm.find()) {
-            bindm.appendReplacement(qbuf, (String) bindVariables.get(bindIter));
-            bindIter++;
-          }
-          bindm.appendTail(qbuf);
-          nestedQuery = qbuf.toString();
+        StringBuffer qbuf = new StringBuffer();
+        int bindIter = 0;
+        while (bindm.find()) {
+          bindm.appendReplacement(qbuf, (String) bindVariables.get(bindIter));
+          bindIter++;
         }
-
-        executeCommand(nestedQuery);
-      } catch (Exception e) {
-        throw new InvalidQueryException("Recieved Exception executing Stored Procedure " + e.getMessage() + "\n", e);
+        bindm.appendTail(qbuf);
+        nestedQuery = qbuf.toString();
       }
+      return nestedQuery;
     } else
       throw new InvalidQueryException("Procedure for " + storedCommandName + " has not been defined\n");
   }
@@ -2132,6 +2136,18 @@ public class MartShell {
       return null;
   }
 
+  private DatasetRequest validDatasetRequest(String command) {
+    DatasetRequest ret = null;
+
+    try {
+      ret = new DatasetRequest(command, msl); //it will throw an exception if this is not a valid request
+    } catch (InvalidQueryException e) {
+      ret = null;
+    }
+
+    return ret;
+  }
+
   /**
    * Takes a complete MQL command, and executes it.
    * @param command -- MQL to execute
@@ -2205,21 +2221,48 @@ public class MartShell {
         if (completionOn)
           mcl.setProcedureNames(msl.getStoredMQLCommandKeys());
       } else {
-
         boolean countFocus = false;
         boolean countRows = false;
 
+        Query query = null;
         if (command.startsWith(COUNTFOCUSC)) {
-          command = command.substring(COUNTFOCUSC.length());
+          command = command.substring(COUNTFOCUSC.length()).trim();
+
+          if (command.split("\\s+").length == 1) {
+            //must be a stored procedure, or a dataset request
+            DatasetRequest dsrq = validDatasetRequest(normalizeCommand(command));
+            if (dsrq != null) {
+              query = new Query();
+              query.setDataSource(msl.adaptorManager.getAdaptorByName(dsrq.mart).getDataSource());
+
+              DatasetConfig thisDatasetConfig =
+                msl.adaptorManager.getDatasetConfigByDatasetInternalName(dsrq.dataset, dsrq.datasetconfig);
+                
+              query.setDataset(thisDatasetConfig.getDataset());
+              query.setMainTables(thisDatasetConfig.getStarBases());
+              query.setPrimaryKeys(thisDatasetConfig.getPrimaryKeys());
+
+            } else
+              command = getMQLForStoredProcedure(normalizeCommand(command));
+          }
+
           countFocus = true;
         }
 
         if (command.startsWith(COUNTROWSC)) {
-          command = command.substring(COUNTROWSC.length());
+          command = command.substring(COUNTROWSC.length()).trim();
+
+          if (command.split("\\s+").length == 1) {
+            //must be a stored procedure
+            command = getMQLForStoredProcedure(normalizeCommand(command));
+          }
+
           countRows = true;
         }
 
-        Query query = msl.MQLtoQuery(command);
+        //will only be not null if it is a count_x_from dataset_request command
+        if (query == null)
+          query = msl.MQLtoQuery(command);
 
         FormatSpec fspec = null;
 
@@ -2238,22 +2281,21 @@ public class MartShell {
         } else
           fspec = FormatSpec.TABSEPARATEDFORMAT;
 
+        int hardLimit = INTERACTIVE_MAX_ROWS;
+        if (sessionOutputFileName != null) {
+          hardLimit = 0; // no hardLimit for file output
+          sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
+        }
+
         Engine engine = new Engine();
 
         if (countFocus)
           engine.countFocus(sessionOutput, query);
         else if (countRows)
           engine.countRows(sessionOutput, query);
-        else {
-          int hardLimit = INTERACTIVE_MAX_ROWS;
-          if (sessionOutputFileName != null) {
-            hardLimit = 0; // no hardLimit for file output
-            sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
-          }
-
+        else
           engine.execute(query, fspec, sessionOutput, hardLimit);
-        }
-        
+
         if (sessionOutputFileName != null)
           sessionOutput.close();
       }
