@@ -39,7 +39,8 @@ public class FilterDescription extends QueryFilterSettings {
 
 	private List Enables = new ArrayList();
 	private List Disables = new ArrayList();
-
+	private List PushActions = new ArrayList();
+	
 	private boolean hasBrokenOptions = false;
 	
 	//cache one supporting Option for call to supports
@@ -54,8 +55,9 @@ public class FilterDescription extends QueryFilterSettings {
     super( fd );
   	
   	Enable[] ens = fd.getEnables();
+	
   	for (int i = 0, n = ens.length; i < n; i++) {
-      addEnable( new Enable( ens[i] ) );
+  	  addEnable( new Enable( ens[i] ) );
     }
     
     Disable[] dsb = fd.getDisables();
@@ -67,6 +69,12 @@ public class FilterDescription extends QueryFilterSettings {
     for (int i = 0, n = os.length; i < n; i++) {
       addOption( new Option( os[i] ) );
     }
+    
+	//PushAction[] pa = fd.getPushActions();
+	//for (int i = 0, n = pa.length; i < n; i++) {
+	//   addPushAction( new PushAction( pa[i] ) );
+	//}
+    
   }
 
   /**
@@ -492,7 +500,9 @@ public class FilterDescription extends QueryFilterSettings {
     uiOptionNameMap.put(o.getInternalName(), o);
     hasOptions = true;
   }
+
   
+    
   /**
    * Insert an Option before a specified Option, named by internalName.
    * @param internalName -- String internalName of the Option before which the given Option should be inserted.
@@ -582,6 +592,14 @@ public class FilterDescription extends QueryFilterSettings {
 		Enables.add(e);
 	}
 
+	/**
+	 * Insert an Enable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
+	 * @param e, Enable Object to add.
+	 */
+	public void insertEnable(int position, Enable e) {
+		Enables.add(position, e);
+	}
+
   /**
    * Remove an Enable object from this FilterDescription.
    * @param e -- Enable Object to remove.
@@ -618,6 +636,15 @@ public class FilterDescription extends QueryFilterSettings {
 		Disables.add(e);
 	}
 
+	/**
+	 * Insert an Disable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
+	 * @param e, Disable Object to add.
+	 */
+	public void insertDisable(int position, Disable e) {
+		Disables.add(position, e);
+	}
+
+
   /**
    * Remove a Disable Object from the FilterDescription.
    * @param e -- Disable Object to remove.
@@ -645,6 +672,33 @@ public class FilterDescription extends QueryFilterSettings {
 		Disables.toArray(ret);
 		return ret;
 	}
+
+	/**
+	 * Add an PushAction object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
+	 * @param e, PushAction Object to add.
+	 */
+	//public void addPushAction(PushAction e) {
+	//	PushActions.add(e);
+	//}
+
+	/**
+	   * Get all PushAction objects available as an array.  Options are returned in the order they were added.
+	   * @return PushAction[]
+	   */
+	  //public PushAction[] getPushActions() {
+	///	  PushAction[] ret = new PushAction[PushActions.size()];
+	//	  PushActions.toArray(ret);
+	//	  return ret;
+	  //}
+
+
+	/**
+	 * Insert an PushAction object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
+	 * @param e, PushAction Object to add.
+	 */
+	//public void insertPushAction(int position, PushAction e) {
+	//	PushActions.add(position, e);
+	//}
 
   /**
    * Returns a List of String names that MartShell can display in its command completion system.
