@@ -65,10 +65,12 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class AdaptorManager extends Box {
 
+  
   private static final Logger logger =
     Logger.getLogger(AdaptorManager.class.getName());
   private Feedback feedback = new Feedback(this);
-  private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
+  private static final String DS_VIEW_FILE_KEY = "CONFIG_FILE_KEY";
+  private static final String REGISTRY_FILE_KEY = "REGISTRY_FILE_KEY";
   private static final String REGISTRY_KEY = "REGISTRY_KEY";
   private String none = "None";
 
@@ -82,8 +84,19 @@ public class AdaptorManager extends Box {
   private Cursor waitCursor = new Cursor(Cursor.WAIT_CURSOR);
   private Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
 
-  private JFileChooser configFileChooser;
-
+  private JFileChooser dsViewFileChooser = new JFileChooser();
+  private JFileChooser registryFileChooser = new JFileChooser();
+  private FileFilter xmlFilter = new FileFilter() {
+    public boolean accept(File f) {
+      return f != null
+        && (f.isDirectory() || f.getName().toLowerCase().endsWith(".xml"));
+    }
+    public String getDescription() {
+      return "XML Files";
+    }
+  };
+  
+  
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
 
   /**
@@ -105,11 +118,10 @@ public class AdaptorManager extends Box {
 
   }
 
-
   private void createUI() {
     combo.setEditable(false);
     //combo.setSelectedItem(none);
-    initConfigFileChooser();
+    initFileChoosers();
 
     JButton addDB = new JButton("Add Database");
     addDB.addActionListener(new ActionListener() {
@@ -118,12 +130,20 @@ public class AdaptorManager extends Box {
       }
     });
 
-    JButton addFile = new JButton("Add File");
-    addFile.addActionListener(new ActionListener() {
+    JButton importRegistry = new JButton("Import Registry");
+    importRegistry.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        doAddFile();
+        doImportRegistry();
       }
     });
+    
+    JButton addFile = new JButton("Add File");
+        addFile.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+            doAddFile();
+          }
+        });
+
     JButton delete = new JButton("Delete");
     delete.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -144,13 +164,60 @@ public class AdaptorManager extends Box {
     Box bottom = Box.createHorizontalBox();
     bottom.add(Box.createHorizontalGlue());
     bottom.add(addDB);
+    bottom.add(importRegistry);
     bottom.add(addFile);
     bottom.add(delete);
     bottom.add(deleteAll);
 
     add(top);
     add(bottom);
-    
+
+  }
+
+  /**
+   * Presents the user with a file chooser dialog with which she can 
+   * choose a registry file to import. 
+   */
+  protected void doImportRegistry() {
+    // user chooses file
+    int action = registryFileChooser.showOpenDialog(this);
+
+    // convert file contents into string
+    if (action == JFileChooser.APPROVE_OPTION) {
+
+      File f = registryFileChooser.getSelectedFile().getAbsoluteFile();
+      prefs.put(REGISTRY_FILE_KEY, f.toString());
+
+      try {
+
+        setCursor(waitCursor);
+          
+        RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(f.toURL());
+        DSViewAdaptor[] as = ra.getAdaptors();
+        for (int i = 0; i < as.length; i++) {
+          // TODO only add "leaf" node adaptors        
+          add(as[i]);
+        }
+
+
+      } catch (MalformedURLException e) {
+        JOptionPane.showMessageDialog(
+          this,
+          "File " + f.toString() + " not found: " + e.getMessage());
+      } catch (ConfigurationException e) {
+        JOptionPane.showMessageDialog(
+          this,
+          "Problem loading the Failed to load file: "
+            + f.toString()
+            + ": "
+            + e.getMessage());
+
+      } finally {
+        setCursor(defaultCursor);
+      }
+
+    }
+
   }
 
   /**
@@ -303,17 +370,21 @@ public class AdaptorManager extends Box {
    */
   protected void doAddFile() {
 
-    setCursor(waitCursor);
-
     // user chooses file
-    int action = configFileChooser.showOpenDialog(this);
+    int action = dsViewFileChooser.showOpenDialog(this);
 
     // convert file contents into string
     if (action == JFileChooser.APPROVE_OPTION) {
-      File f = configFileChooser.getSelectedFile().getAbsoluteFile();
-      prefs.put(CONFIG_FILE_KEY, f.toString());
+
+      
+
+      File f = dsViewFileChooser.getSelectedFile().getAbsoluteFile();
+      prefs.put(DS_VIEW_FILE_KEY, f.toString());
 
       try {
+      
+        setCursor(waitCursor);
+        
         URLDSViewAdaptor adaptor = new URLDSViewAdaptor(f.toURL(), false);
         // TODO resolve any name clashes, i.e. existing dsv with same name
         //				this.adaptor.add(adaptor);
@@ -321,10 +392,13 @@ public class AdaptorManager extends Box {
         combo.setSelectedItem(adaptor.getName());
 
       } catch (MalformedURLException e) {
+
         JOptionPane.showMessageDialog(
           this,
           "File " + f.toString() + " not found: " + e.getMessage());
+
       } catch (ConfigurationException e) {
+
         JOptionPane.showMessageDialog(
           this,
           "Problem loading the Failed to load file: "
@@ -332,11 +406,14 @@ public class AdaptorManager extends Box {
             + ": "
             + e.getMessage());
 
+      } finally {
+
+        setCursor(defaultCursor);
+        
       }
 
     }
 
-    setCursor(defaultCursor);
   }
 
   /**
@@ -372,29 +449,19 @@ public class AdaptorManager extends Box {
 
   }
 
-  /**
-   * Initialises _configFileChooser_. Sets the last loaded 
-   * config file if available and makes the 
-   * chooser only show XML files.
-   */
-  private void initConfigFileChooser() {
-    configFileChooser = new JFileChooser();
-    FileFilter xmlFilter = new FileFilter() {
-      public boolean accept(File f) {
-        return f != null
-          && (f.isDirectory() || f.getName().toLowerCase().endsWith(".xml"));
-      }
-      public String getDescription() {
-        return "XML Files";
-      }
-    };
+  private void initFileChoosers() {
 
-    String lastChosenFile = prefs.get(CONFIG_FILE_KEY, null);
-
+    String lastChosenFile = prefs.get(DS_VIEW_FILE_KEY, null);
     if (lastChosenFile != null) {
-      configFileChooser.setSelectedFile(new File(lastChosenFile));
+      dsViewFileChooser.setSelectedFile(new File(lastChosenFile));
     }
-    configFileChooser.addChoosableFileFilter(xmlFilter);
+    dsViewFileChooser.addChoosableFileFilter(xmlFilter);
+    
+    lastChosenFile = prefs.get(REGISTRY_FILE_KEY, null);
+    if (lastChosenFile != null) {
+      registryFileChooser.setSelectedFile(new File(lastChosenFile));
+    }
+    registryFileChooser.addChoosableFileFilter(xmlFilter);
 
   }
 
