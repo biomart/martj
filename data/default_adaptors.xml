@@ -2,18 +2,17 @@
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
 
-    <DatabaseLocation name="Ensembl" databaseType="mysql"
-    jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_1" user="anonymous"/>
-
-    <URLLocation name="ensembl_genes_file" url="file:data/XML/homo_sapiens__ensembl_genes.xml"/>
-
-    <DatabaseLocation name="MSD" databaseType="mysql"
-    jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_2" user="anonymous"/>
-
     <DatabaseLocation name="Uniprot" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
     host="martdb.ebi.ac.uk" port="3306" instanceName="proteome_mart_1" user="anonymous"/>
+
+    <DatabaseLocation name="MSD" databaseType="mysql"
+    jdbcDriverClassName="com.mysql.jdbc.Driver"
+    host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_2"
+    user="anonymous"/>
+
+    <DatabaseLocation name="Ensembl" databaseType="mysql"
+    jdbcDriverClassName="com.mysql.jdbc.Driver"
+    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_1" user="anonymous"/>
 
 </MartRegistry>
