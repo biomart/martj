@@ -119,9 +119,9 @@ public class TargetSchema {
 		reftable.setKey(new_table_key);
 		reftable.setExtension(new_table_extension);
 		reftable.setCardinality(new_table_cardinality);	
-	
+	    
 		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
-		
+		trans.transform();
 	
 }
 	
