@@ -89,6 +89,9 @@ public class QueryEditor extends JPanel {
 
   private QueryEditorContext editorManager;
 
+  private OutputStream os = null;
+  private PollingInputStream pis = null; 
+
   private static final Logger logger =
     Logger.getLogger(QueryEditor.class.getName());
 
@@ -416,6 +419,39 @@ public class QueryEditor extends JPanel {
   public void doExecute() {
     runQuery(false, false, 0);
   }
+  
+  
+  /**
+   * Stops running query. Does nothing if query not running.
+   *
+   */
+  public void doStop() {
+    
+    // Stop the query by closing the output stream. This is a little hacky 
+    // but is the only way to
+    // stop the execution (other than Thread.stop() ) becuase the engine does not 
+    // have any "stop" hooks.
+    
+    if (os!=null) {
+      try {
+        os.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      os = null;
+    }
+    
+    if (pis!=null) {
+      try {
+        pis.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      pis = null;
+    }
+    
+    outputPanel.setText("");
+  }
 
   /**
    * Executes query and stores the results in a temporary file. These results 
@@ -458,7 +494,7 @@ public class QueryEditor extends JPanel {
 
       // We use the PollingInputStream wrapper so that we keep trying to read from
       // file even reach end. Needed because we might read faster than we write to it.
-      final PollingInputStream pis =
+      pis =
         new PollingInputStream(new FileInputStream(tmpFile));
       pis.setLive(true);
 
@@ -469,6 +505,7 @@ public class QueryEditor extends JPanel {
       // MaximumBytesInputFilter() wrapper around the inputStream. 
       final InputStream is = new MaximumBytesInputFilter(pis, maxPreconfigBytes);
 
+      final PollingInputStream pisFinal = pis;
       new Thread() {
 
         public void run() {
@@ -482,7 +519,7 @@ public class QueryEditor extends JPanel {
           }
           // tell the inputStream to stop reading once a -1 has been read
           // from the file because we aren't writing any more.
-          pis.setLive(false);
+          pisFinal.setLive(false);
         }
       }
       .start();
@@ -512,7 +549,8 @@ public class QueryEditor extends JPanel {
       outputPanel.read(is, null);
       is.close();
     } catch (IOException e) {
-      feedback.warning(e);
+      if (pis!=null)
+        feedback.warning(e);
     }
   }
 
@@ -534,7 +572,7 @@ public class QueryEditor extends JPanel {
       // The preconfig pane loading system can't read bytes from tmpFile
       // until they are written to disk so we force the output memory buffer to
       // flush often.
-      final OutputStream os =
+      os =
         new AutoFlushOutputStream(
           new FileOutputStream(tmpFile),
           maxPreconfigBytes);
@@ -548,23 +586,18 @@ public class QueryEditor extends JPanel {
       engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
       os.close();
 
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-      
       if ( tmpFile.toURL().openConnection().getContentLength()<1 )
         feedback.warning("Empty result set.");
       
       if ( limit>0 ) query.setLimit( oldLimit );
 
-    } catch (SequenceException e) {
-      feedback.warning(e);
-    } catch (FormatException e) {
-      feedback.warning(e);
-    } catch (InvalidQueryException e) {
-      feedback.warning(e);
-    } catch (SQLException e) {
-      feedback.warning(e);
-    } catch (IOException e) {
-      feedback.warning(e);
+    } catch (Exception e) {
+      // if the os is null then it must have been set by doCancel() 
+      e.printStackTrace();
+      if (os!=null)
+        feedback.warning(e);
+    } finally {
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
     }
 
   }

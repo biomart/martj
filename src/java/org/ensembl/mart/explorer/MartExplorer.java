@@ -258,6 +258,13 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     }
   };
 
+  private Action stopAction =
+    new AbstractAction("Stop query", createImageIcon("stop.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      doStop();
+    }
+  };
+
   private Action saveResultsAction =
     new AbstractAction("Save Results", createImageIcon("save.gif")) {
     public void actionPerformed(ActionEvent event) {
@@ -272,7 +279,17 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     tb.add(new ExtendedButton(saveResultsAction, "Save Results to file"));
     tb.addSeparator();
     tb.add(new ExtendedButton(executeAction, "Execute Query"));
+    tb.add(new ExtendedButton(stopAction, "Stop running Query"));
     return tb;
+  }
+
+  /**
+   * 
+   */
+  protected void doStop() {    
+    if (isQueryEditorSelected())
+      getSelectedQueryEditor().doStop();
+    
   }
 
   /**
