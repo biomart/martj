@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.io.OutputStream;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
@@ -168,6 +169,20 @@ public class Engine {
 	public MartConfiguration getMartConfiguration(String system_id) throws ConfigurationException {
 		Connection conn = getDatabaseConnection();
 		return new MartConfigurationFactory().getInstance(conn, database, system_id);
+	}
+	
+	/**
+	 * Overloaded method allowing user to supply an alternate xml configuration stored on the file system, as a URL.
+	 * This requires that the DTD for the document is also available from the file system.  Users should make sure that
+	 * the DOCTYPE declaration correctly locates the DTD for the document supplied.
+	 * 
+	 * @param martConfURL - URL for the supplied MartConfiguration xml document
+	 * @return MartConfiguration object for the mart defined by this document.
+	 * @throws ConfigurationException for all underlying Exceptions encountered during the attempt to process the request.
+	 */
+	public MartConfiguration getMartConfiguration(URL martConfURL) throws ConfigurationException {
+	    Connection conn = getDatabaseConnection();
+	    return new MartConfigurationFactory().getInstance(conn, martConfURL);
 	}
 	
 	/**

@@ -64,6 +64,16 @@ public class MartXMLutils {
 		}
 	}
 
+	public static InputSource getInputSourceFor(URL systemID) throws ConfigurationException {
+		try {
+			InputSource is = new InputSource(systemID.toString()); // use the URL as the system id
+			is.setByteStream(systemID.openStream()); 
+			return is;
+		} catch (Exception e) {
+			throw new ConfigurationException("Caught Exception during fetch of requested InputSource: " + e.getMessage());
+		}
+	}
+	
 	public static void storeConfiguration(Connection conn, String systemID, Document doc) throws ConfigurationException {
 		Logger logger = Logger.getLogger(MartXMLutils.class.getName()); // may need to log some warnings
 		int rowsupdated = 0;

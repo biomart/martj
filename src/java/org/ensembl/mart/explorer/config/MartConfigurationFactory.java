@@ -18,10 +18,12 @@
 
 package org.ensembl.mart.explorer.config;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.util.Iterator;
 
-import org.jdom.*;
+import org.jdom.Document;
+import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 
 /**
@@ -91,6 +93,15 @@ public class MartConfigurationFactory {
 		return getInstance(conn, martName);
 	}
 
+    /**
+     * Default getInstance method.  Fetches the MartConfiguration.xml document from the mart database named by martName.
+     * 
+     * @param conn - A java.sql.Connection object
+     * @param martName - name of the mart database for which the configuration is requested
+     * 
+     * @return MartConfiguration object for the requested mart database
+     * @throws ConfigurationException.  Chains all Exceptions resulting from SQL, JDOM parsing, etc. into a ConfigurationException.
+     */
 	public MartConfiguration getInstance(Connection conn, String martName) throws ConfigurationException {
 
 		try {
@@ -122,6 +133,44 @@ public class MartConfigurationFactory {
 		}
 	}
 
+    /**
+     * Overloaded getInstance method allowing user to use an alternate xml configuration file stored on the file system, by
+     * supplying a URL.  Note, this requires that the DTD for the supplied document be available on the file system as well.
+     * Users should make sure that the DOCTYPE declaration correctly locates the DTD for their document.
+     *  
+     * @param conn - A java.sql.Connection object, used to fetch the dtd from the database, if not supplied as a URL.
+     * @param martConfFile - URL for the MartConfiguration xml document.
+     * 
+     * @return MartConfiguration object for the mart defined by this document
+     * @throws ConfigurationException.  Chains all Exceptions from URL, IO, etc. into ConfigurationExceptions
+     */
+	public MartConfiguration getInstance(Connection conn, URL martConfFile) throws ConfigurationException {
+
+		try {
+			SAXBuilder builder = new SAXBuilder();
+			builder.setValidation(true); // validate against the DTD
+
+			Document doc = builder.build(MartXMLutils.getInputSourceFor(martConfFile));
+
+			Element martconfElement = doc.getRootElement();
+			String martName = martconfElement.getAttributeValue(internalName, "");
+
+			String dispname = martconfElement.getAttributeValue(displayName, "");
+			String desc = martconfElement.getAttributeValue(description, "");
+
+			martconf = new MartConfiguration(martName, dispname, desc);
+
+			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(dataset)); iter.hasNext();) {
+				Element datasetElement = (Element) iter.next();
+				martconf.addDataset(getDataset(datasetElement));
+			}
+
+			return martconf;
+		} catch (Exception e) {
+			throw new ConfigurationException(e);
+		}
+	}
+	
 	private Dataset getDataset(Element thisElement) throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(internalName, "");
 		String dispname = thisElement.getAttributeValue(displayName, "");

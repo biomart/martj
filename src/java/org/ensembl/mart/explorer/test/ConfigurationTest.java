@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer.test;
 
 import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.sql.Connection;
 
 import junit.framework.Test;
@@ -579,5 +580,15 @@ public class ConfigurationTest extends Base {
 		}
 	}
 
+    public void testConfFile() throws Exception {    	
+		String confFile = "data/xmltest/test_file.xml";
+		URL confURL = org.apache.log4j.helpers.Loader.getResource(confFile);
+		MartConfiguration martconf = engine.getMartConfiguration(confURL);
+		
+		String testMartName = "test_file";
+		String martName = martconf.getInternalName();
+		assertEquals("martName from file "+confURL.toString()+" isnt correct", testMartName, martName);
+    }
+    
 	public final String xmlTestID = "test.xml";
 }
