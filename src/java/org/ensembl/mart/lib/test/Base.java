@@ -43,11 +43,14 @@ public abstract class Base extends TestCase {
 		"data/test_logging.properties";
 
 	private final String DEFAULTDBTYPE = "mysql";
+	
 	private final String DEFAULTHOST = "ensembldb.ensembl.org";
 	private final String DEFAULTPORT = "3306";
 	private final String DEFAULTDATABASE = "ensembl_mart_19_2";
 	private final String DEFAULTUSER = "anonymous";
-  private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	
+    
+    private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
 
 
@@ -135,13 +138,13 @@ public abstract class Base extends TestCase {
 		engine = new Engine();
     
 		genequery.setStarBases(
-			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
-		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+			new String[] { "hsapiens_ensemblgene__gene__main", "hsapiens_ensemblgene__transcript__main" });
+		genequery.setPrimaryKeys(new String[] { "gene_id_key", "transcript_id_key" });
     genequery.setDataSource( martJDataSource );
     genequery.setDataset( "hsapiens" );
-    
-		snpquery.setStarBases(new String[] { "hsapiens_snp" });
-		snpquery.setPrimaryKeys(new String[] { "snp_id" });
+      
+		snpquery.setStarBases(new String[] { "hsapiens_snp__snp__main" });
+		snpquery.setPrimaryKeys(new String[] { "snp_id_key" });
 	}
 
 	public Base(String name) {
