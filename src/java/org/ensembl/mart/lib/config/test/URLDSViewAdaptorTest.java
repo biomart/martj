@@ -59,7 +59,7 @@ public class URLDSViewAdaptorTest extends TestCase {
 		assertTrue(view.getAllFilterDescriptions().size() > 0);
 	}
 
-	public URL getSampleURLForADataset() throws Exception {
+	public static URL getSampleURLForADataset() throws Exception {
 
 		URL url = URLDSViewAdaptorTest.class.getClassLoader().getResource(SAMPLE_DATASET_FILE_URL);
     assertNotNull("Missing dataset file: " + SAMPLE_DATASET_FILE_URL, url);
@@ -67,7 +67,7 @@ public class URLDSViewAdaptorTest extends TestCase {
     return url;
 	}
   
-  public URLDSViewAdaptor getSampleDSViewAdaptor() throws Exception {
+  public static URLDSViewAdaptor getSampleDSViewAdaptor() throws Exception {
     URLDSViewAdaptor adaptor = new URLDSViewAdaptor( getSampleURLForADataset(), true);
     assertNotNull( adaptor );
     return adaptor;
