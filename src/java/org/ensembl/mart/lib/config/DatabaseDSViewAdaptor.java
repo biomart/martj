@@ -76,8 +76,6 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     String databaseName = ds.getDatabaseName();
 
     adaptorName = ds.getDisplayName();
-    logger.warning( "adaptorName = " + adaptorName );
-    
 
     try {
       //set up the preferences node with the datasource information as the root node
@@ -546,7 +544,6 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#setName(java.lang.String)
    */
   public void setName(String adaptorName) {
-    logger.warning("setName = " + adaptorName);
     this.adaptorName = adaptorName;
   }
 

@@ -21,7 +21,9 @@ package org.ensembl.mart.explorer;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,28 +75,27 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     add(chooser, BorderLayout.NORTH);
   }
 
-
   private void updateChooser() {
-    
-    List items = new ArrayList();
-    
+
+    Set items = new HashSet();
+
     try {
       DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
       for (int i = 0; i < as.length; i++) {
         DSViewAdaptor a = as[i];
-        if ( a.getDataSource()!=null ) {
+        if (a.getDataSource() != null) 
           items.add(a.getName());
-          logger.warning( "Adding adaptor to chooser : "+a.getName() );
-        }
       }
     } catch (ConfigurationException e) {
       feedback.warning(e);
     }
 
-    Collections.sort( items );
-    items.add(0, none);
+    List l = new ArrayList(items);
+    Collections.sort(l);
+
     chooser.removeAllItems();
-    chooser.addAll( items );
+    l.add(0, none);
+    chooser.addAll(l);
 
   }
 
@@ -160,10 +161,8 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
   public void stateChanged(ChangeEvent e) {
     String selected = (String) chooser.getSelectedItem();
 
-    logger.warning("selected  = " + selected);
-
     DataSource ds = null;
-    if (selected !=null && selected!=none)
+    if (selected != null && selected != none)
       try {
         ds =
           adaptorManager
