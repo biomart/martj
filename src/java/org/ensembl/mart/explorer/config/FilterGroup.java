@@ -300,6 +300,55 @@ public class FilterGroup {
 		return filts;
   }
   
+  /**
+   * Convenience method for non graphical UI to check if a FilterGroup contains a specific
+   * FilterSetDescription.
+   * 
+   * @param internalName - String name that internally represents the requested FilterSetDescription
+   * @return boolean, true if found within one of the filterSet objects contained in the filterGroup, false if not found
+   */
+  public boolean containsFilterSetDescription(String internalName) {
+  	if (! hasFilterSets)
+  	  return false;
+  	  
+  	boolean found = false;
+  	
+  	if (lastFSetDescription == null) {
+  		for (Iterator iter = filterSets.keySet().iterator(); iter.hasNext();) {
+				FilterSet fset = (FilterSet) iter.next();
+				if (fset.containsFilterSetDescription(internalName)) {
+					lastFSetDescription = fset.getFilterSetDescriptionByName(internalName);
+					found = true;
+					break;
+				}
+			}
+  	}
+  	else {
+  		if (lastFSetDescription.getInternalName().equals(internalName))
+  		  found = true;
+  		else {
+  			lastFSetDescription = null;
+  			found = containsFilterSetDescription(internalName);
+  		}
+  	}
+  	return found;
+  }
+  
+  /**
+   * Convenience method for non graphical UI to get a specific FilterSetDescription by name.
+   * 
+   * @param internalName - String name that internally represents the requested FilterSetDescription
+   * @return FilterSetDescription object requested, or null if not contained within this FilterGroup
+   */
+  public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
+  	if (! hasFilterSets)
+  	  return null;
+  	else if (containsFilterSetDescription(internalName))
+  	  return lastFSetDescription;
+  	else
+  	  return null;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -352,4 +401,7 @@ public class FilterGroup {
   
 	//cache one FilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
+	
+	//cache one FilterSetDescription for a call to containsFilterSetDescription or getFilterSetDescriptionByName
+	private FilterSetDescription lastFSetDescription = null;
 }

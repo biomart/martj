@@ -351,12 +351,9 @@ public class MartConfigurationFactory {
 			maxs = Integer.parseInt(thisElement.getAttributeValue(maxSelect));
 
 		AttributeCollection ac = new AttributeCollection(intName, maxs, dispname, desc);
-		for (Iterator iter = thisElement.getDescendants(new MartAttributeDescriptionFilter()); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributedescription)); iter.hasNext();) {
 			Element element = (Element) iter.next();
-		  if (element.getName().equals(attributedescription))
-			  ac.addUIAttribute(getUIAttributeDescription(element));
-			else if (element.getName().equals(dsattributedescription))
-					ac.addUIDSAttribute(getUIDSAttributeDescription(element));
+		  ac.addUIAttribute(getUIAttributeDescription(element));
 		}
 
 		return ac;
@@ -379,18 +376,4 @@ public class MartConfigurationFactory {
 		UIAttributeDescription a = new UIAttributeDescription(intName, fieldnm, dispname, maxl, tableconst, desc, src, hpage, link);
 		return a;
 	}
-	
-	private UIDSAttributeDescription getUIDSAttributeDescription(Element thisElement) throws ConfigurationException {
-		String intName = thisElement.getAttributeValue(internalName, "");
-		String dispname = thisElement.getAttributeValue(displayName, "");
-		String desc = thisElement.getAttributeValue(description, "");
-		String objCode = thisElement.getAttributeValue(objectCode, "");
-		String src = thisElement.getAttributeValue(source, "");
-		String hpage = thisElement.getAttributeValue(homepageURL, "");
-		String link = thisElement.getAttributeValue(linkoutURL, "");
-
-		UIDSAttributeDescription a = new UIDSAttributeDescription(intName, objCode, dispname, desc, src, hpage, link);
-		return a;		
-	}
-	
  }

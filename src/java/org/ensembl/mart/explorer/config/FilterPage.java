@@ -225,6 +225,50 @@ public class FilterPage {
 		return filts;  	
   }
   
+	/**
+	 * Convenience method for non graphical UI to check if a FilterPage contains a specific
+	 * FilterSetDescription.
+	 * 
+	 * @param internalName - String name that internally represents the requested FilterSetDescription
+	 * @return boolean, true if found within one of the filterSet objects contained in one of the filterGroups, false if not found
+	 */  
+  public boolean containsFilterSetDescription(String internalName) {
+  	boolean found = false;
+  	
+  	if (lastFSetDescription == null) {
+			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
+				FilterGroup group = (FilterGroup) filterGroups.get((Integer) iter.next());
+				if (group.containsFilterSetDescription(internalName)) {
+					lastFSetDescription = group.getFilterSetDescriptionByName(internalName);
+					found = true;
+					break;
+				}  		
+			}
+  	}
+  	else {
+  		if (lastFSetDescription.getInternalName().equals(internalName))
+  		 found = true;
+  		else {
+  			lastFSetDescription = null;
+  			found = containsFilterSetDescription(internalName);
+  		}
+  	}
+  	return found;
+  }
+  
+	/**
+	 * Convenience method for non graphical UI to get a specific FilterSetDescription by name.
+	 * 
+	 * @param internalName - String name that internally represents the requested FilterSetDescription
+	 * @return FilterSetDescription object requested, or null if not contained within this FilterPage
+	 */  
+  public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
+  	if (containsFilterSetDescription(internalName))
+  	  return lastFSetDescription;
+  	else
+  	  return null;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -265,4 +309,7 @@ public class FilterPage {
 
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
+	
+	//cache one FilterSetDescription for call to containsFilterSetDescription or getFilterSetDescrioptionByNae
+	private FilterSetDescription lastFSetDescription = null;
 }

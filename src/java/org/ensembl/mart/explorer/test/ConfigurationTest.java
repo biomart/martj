@@ -40,7 +40,6 @@ import org.ensembl.mart.explorer.config.MartConfiguration;
 import org.ensembl.mart.explorer.config.MartDTDEntityResolver;
 import org.ensembl.mart.explorer.config.MartXMLutils;
 import org.ensembl.mart.explorer.config.UIAttributeDescription;
-import org.ensembl.mart.explorer.config.UIDSAttributeDescription;
 import org.ensembl.mart.explorer.config.UIDSFilterDescription;
 import org.ensembl.mart.explorer.config.UIFilterDescription;
 import org.jdom.Document;
@@ -590,7 +589,7 @@ public class ConfigurationTest extends Base {
 
 		//UIAttributeDescription data correct
 		List as = ac.getUIAttributeDescriptions();
-		assertEquals("Warning, should get two attribute description\n", 2, as.size());
+		assertEquals("Warning, should get one attribute description\n", 1, as.size());
 
     // first AttributeDescription is a UIAttributeDescription
 		assertTrue("First AttributeDescription should be a UIAttributeDescription", as.get(0) instanceof UIAttributeDescription);
@@ -637,50 +636,6 @@ public class ConfigurationTest extends Base {
 		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
 		if (containsTest) {
 			testGetByName = ( (UIAttributeDescription) ap.getUIAttributeDescriptionByName(testIName) ).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
-
-			//test getPageFor functionality as well
-			assertEquals(
-				"Warning, Did not get the correct Page for the UIAttributeDescription\n",
-				"testAttributePage",
-				d.getPageForUIAttributeDescription(testIName).getInternalName());
-		}
-		
-		// second AttributeDescription is a UIAttributeDescription
-		assertTrue("Second AttributeDescription should be a UIDSAttributeDescription", as.get(1) instanceof UIDSAttributeDescription);
-		
-		UIDSAttributeDescription ads = (UIDSAttributeDescription) as.get(1);
-		testIName = "testUIDSAttributeDescription";
-		IName = ads.getInternalName();
-		testDName = "Test of a UIDSAttributeDescription";
-		DName = ads.getDisplayName();
-		Desc = ads.getDescription();
-		ObjectCode = ads.getObjectCode();;
-		Source = ads.getSource();
-		HPage = ads.getHomePageURL();
-		LPage = ads.getLinkoutURL();
-
-		assertEquals("Warning, Internal Name not correctly set for UIDSAttributeDescription\n", testIName, IName);
-		assertEquals("Warning, Display Name not correctly set for UIDSAttributeDescription\n", testDName, DName);
-		assertEquals("Warning, Description not correctly set for UIDSAttributeDescription\n", testDesc, Desc);
-		assertEquals("Warning, ObjectCode not correctly set for UIDSAttributeDescription\n", testObjectCode, ObjectCode);
-		assertEquals("Warning, Source not correctly set for UIDSAttributeDescription\n", testSource, Source);
-		assertEquals("Warning, HomepageURL not correctly set for UIDSAttributeDescription\n", testHPage, HPage);
-		assertEquals("Warning, LinkoutURL not correctly set for UIDSAttributeDescription\n", testLPage, LPage);
-
-		//	contains/get for AttributeCollection-UIAttributeDescription
-		containsTest = ac.containsUIAttributeDescription(testIName);
-		assertTrue("Warning, AttributeCollection should contain testUIAttributeDescription, but doesnt\n", containsTest);
-		if (containsTest) {
-			testGetByName = ( (UIDSAttributeDescription) ac.getUIAttributeDescriptionByName(testIName) ).getInternalName();
-			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
-		}
-
-		//	contains/get for AttributePage-UIAttributeDescription (Tests all lower groups getByName as well
-		containsTest = ap.containsUIAttributeDescription(testIName);
-		assertTrue("Warning, AttributePage should contain testUIAttributeDescription, but doesnt\n", containsTest);
-		if (containsTest) {
-			testGetByName = ( (UIDSAttributeDescription) ap.getUIAttributeDescriptionByName(testIName) ).getInternalName();
 			assertEquals("Warning, getUIAttributeDescriptionByName InternalName incorrect\n", testIName, testGetByName);
 
 			//test getPageFor functionality as well

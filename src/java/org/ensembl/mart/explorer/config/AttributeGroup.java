@@ -160,9 +160,9 @@ public final class AttributeGroup {
 		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		* 
 		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription object, or null
+		* @return UIAttributeDescription requested, or null
 		*/
-	public Object getUIAttributeDescriptionByName(String internalName) {
+	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -191,13 +191,7 @@ public final class AttributeGroup {
 			}    	
     }
     else {
-    	String lastAttName;
-    	if (lastAtt instanceof UIAttributeDescription)
-    	  lastAttName =  ( (UIAttributeDescription) lastAtt).getInternalName();
-    	else
-			  lastAttName =  ( (UIDSAttributeDescription) lastAtt).getInternalName();
-			
-			if (lastAttName.equals(internalName))
+			if (lastAtt.getInternalName().equals(internalName))
 			  found = true;
 			else {
 			  lastAtt = null;
@@ -208,10 +202,10 @@ public final class AttributeGroup {
 	}
 
   /**
-   * Convenience method. Returns all of the UIAttributeDescription/UIDSAttributeDescription objects 
+   * Convenience method. Returns all of the UIAttributeDescription objects 
    * contained in all of the AttributeCollections.
    * 
-   * @return List of UIAttributeDescription/UIDSAttributeDescription objects
+   * @return List of UIAttributeDescription objects
    */
   public List getAllUIAttributeDescriptions() {
   	List atts = new ArrayList();
@@ -263,6 +257,6 @@ public final class AttributeGroup {
 	private TreeMap attributeCollections = new TreeMap();
 	private Hashtable attributeCollectionNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription/UIDSAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private Object lastAtt = null;
+	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private UIAttributeDescription lastAtt = null;
 }

@@ -157,13 +157,13 @@ public class AttributePage {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular UIAttributeDescription.
-	 * Note, it is best to first call containsUIAttributeDescription,  
+	 *  Note, it is best to first call containsUIAttributeDescription,  
 		*  as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		*  
 		* @param internalName name of the requested UIAttributeDescription
-		* @return Object (either UIAttributeDescription or UIDSAttributeDescription), or null
+		* @return UIAttributeDescription requested, or null
 		*/
-	public Object getUIAttributeDescriptionByName(String internalName) {
+	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -192,13 +192,7 @@ public class AttributePage {
 			} 
 		}
 		else {
-			String lastAttName;
-			if (lastAtt instanceof UIAttributeDescription)
-			  lastAttName = ( (UIAttributeDescription) lastAtt).getInternalName();
-			else
-			  lastAttName = ( (UIDSAttributeDescription) lastAtt).getInternalName();
-			
-			if (lastAttName.equals(internalName))
+			if (lastAtt.getInternalName().equals(internalName))
 			  found = true;
 			else {
 				lastAtt = null;
@@ -211,7 +205,7 @@ public class AttributePage {
 	/**
 	 * Convenience method. Returns all of the UIAttributeDescriptions contained in all of the AttributeGroups.
 	 * 
-	 * @return List of UIAttributeDescription/UIDSAttributeDescription objects
+	 * @return List of UIAttributeDescription objects
 	 */
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
@@ -263,6 +257,6 @@ public class AttributePage {
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription/UIDSAttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private Object lastAtt = null;
+	//cache one UIAttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private UIAttributeDescription lastAtt = null;
 }

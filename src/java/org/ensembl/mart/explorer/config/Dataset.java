@@ -295,7 +295,7 @@ public class Dataset {
 		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		* 
 		* @param displayName name of the requested UIAttributeDescription
-		* @return Object (either UIAttributeDescription or UIDSAttributeDescription)
+		* @return UIAttributeDescription
 		*/
 	public Object getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
@@ -329,13 +329,7 @@ public class Dataset {
 			}
 		}
 		else {
-			String lastAttName;
-			if (lastAtt instanceof UIAttributeDescription)
-			  lastAttName =  ((UIAttributeDescription) lastAtt).getInternalName();
-			else
-			  lastAttName =  ((UIDSAttributeDescription) lastAtt).getInternalName();
-			
-			if (lastAttName.equals(internalName))
+			if (lastAtt.getInternalName().equals(internalName))
 			  found = true;
 			else {
 				lastAtt = null;
@@ -461,7 +455,7 @@ public class Dataset {
 	/**
 	 * Convenience Method to get all UIAttributeDescription objects in all Pages/Groups/Collections within a Dataset.
 	 * 
-	 * @return List of UIAttributeDescription/UIDSAttributeDescription objects
+	 * @return List of UIAttributeDescription objects
 	 */
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
@@ -561,8 +555,8 @@ public class Dataset {
 	private List primaryKeys = new ArrayList();
 	private final String internalName, displayName, description;
 
-	// cache one UIAttributeDescription/UIDSAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private Object lastAtt = null;
+	// cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private UIAttributeDescription lastAtt = null;
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
 }
