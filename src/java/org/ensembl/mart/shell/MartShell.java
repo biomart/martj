@@ -21,7 +21,6 @@ package org.ensembl.mart.shell;
 import gnu.getopt.Getopt;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,6 +36,7 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -553,12 +553,10 @@ public class MartShell {
 				mcl.AddAvailableCommandsTo("commands", availableCommands);
 				mcl.AddAvailableCommandsTo("commands", msl.availableCommands);
 
+        mcl.AddAvailableCommandsTo(LISTC, listRequests);
+        
 				// add sequences
 				mcl.AddAvailableCommandsTo(MartShellLib.QSEQUENCE, SequenceDescription.SEQS);
-
-				// add describe
-				//TODO: completer describe
-				//mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
 				if (helpLoaded)
 					mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
@@ -1054,6 +1052,181 @@ public class MartShell {
 		return ret;
 	}
 
+	private void PageOutput(String[] lines) {
+		int linesout = 0;
+		for (int i = 0, n = lines.length; i < n; i++) {
+			if (linesout > MAXLINECOUNT) {
+				linesout = 0;
+				try {
+					String quit = Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
+					if (quit.equals("q")) {
+						System.out.println();
+						break;
+					}
+
+					System.out.println("\n");
+				} catch (Exception e) {
+					// do nothing
+				}
+			}
+			String line = lines[i];
+			System.out.print(line);
+			linesout++;
+		}
+	}
+
+	private void ListRequest(String command) throws InvalidQueryException {
+		System.out.println();
+		String[] toks = command.split("\\s+");
+
+		if (toks.length == 2) {
+			String request = toks[1];
+			String[] lines = null;
+
+			if (request.equalsIgnoreCase("datasets"))
+				lines = ListDatasets();
+			else if (request.equalsIgnoreCase("filters"))
+				lines = ListFilters();
+			else if (request.equalsIgnoreCase("attributes"))
+				lines = ListAttributes();
+			else
+				throw new InvalidQueryException("Invalid list command recieved: " + command + "\n");
+
+			if (lines != null) {
+				PageOutput(lines);
+			}
+		} else
+			throw new InvalidQueryException("Invalid list command recieved: " + command + "\n");
+		System.out.println();
+	}
+
+	private String[] ListDatasets() {
+		Dataset[] ds = martconf.getDatasets();
+		String[] ret = new String[ds.length];
+
+		for (int i = 0, n = ds.length; i < n; i++)
+			ret[i] = ds[i].getInternalName() + "\n";
+
+		return ret;
+	}
+
+	private String[] ListFilters() throws InvalidQueryException {
+		if (envDataset != null) {
+			if (!martconf.containsDataset(envDataset))
+				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
+
+			int blen = 3; //3 filters/line
+			Dataset dset = martconf.getDatasetByName(envDataset);
+			List columns = new ArrayList();
+			String[] buffer = new String[blen];
+
+			int[] maxlengths = new int[] { 0, 0, 0 };
+
+			List names = dset.getFilterCompleterNames();
+			int pos = 0;
+			for (Iterator iter = names.iterator(); iter.hasNext();) {
+				String name = (String) iter.next();
+
+				if (pos == blen) {
+					columns.add(buffer);
+					buffer = new String[blen];
+					pos = 0;
+				}
+				buffer[pos] = name;
+				if (name.length() > maxlengths[pos])
+					maxlengths[pos] = name.length();
+				pos++;
+			}
+
+			if (pos > 0)
+				columns.add(buffer);
+
+			return formatColumns(columns, maxlengths);
+		} else
+			throw new InvalidQueryException("Must set a dataset with the use command to list filters\n");
+	}
+
+	private String[] ListAttributes() throws InvalidQueryException {
+		if (envDataset != null) {
+			if (!martconf.containsDataset(envDataset))
+				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
+
+			int blen = 3; //3 atts/line
+			Dataset dset = martconf.getDatasetByName(envDataset);
+			List columns = new ArrayList();
+			String[] buffer = new String[blen];
+
+			int[] maxlengths = new int[] { 0, 0, 0 };
+
+			List names = dset.getAttributeCompleterNames();
+			int pos = 0;
+			for (Iterator iter = names.iterator(); iter.hasNext();) {
+				String name = (String) iter.next();
+
+				if (pos == blen) {
+					columns.add(buffer);
+					buffer = new String[blen];
+					pos = 0;
+				}
+				buffer[pos] = name;
+
+				if (name.length() > maxlengths[pos])
+					maxlengths[pos] = name.length();
+				pos++;
+			}
+
+			if (pos > 0)
+				columns.add(buffer);
+
+			return formatColumns(columns, maxlengths);
+		} else
+			throw new InvalidQueryException("Must set a dataset with the use command to list attributes\n");
+	}
+
+	private String[] formatColumns(List columns, int[] maxlengths) {
+
+		int[] pos = new int[] { 0, 0, 0 }; // position matrix, change pos[0] to increase leftmost padding
+
+		int maxtotal = 0;
+		for (int i = 0, n = maxlengths.length; i < n; i++) {
+			maxtotal += maxlengths[i];
+		}
+
+		int minSpace = 5; //default
+		if (maxtotal < MAXCHARCOUNT)
+			minSpace = (MAXCHARCOUNT - maxtotal) / (maxlengths.length - 1);
+
+		//calculate positions 2 onward
+		for (int i = 1, n = maxlengths.length; i < n; i++) {
+			pos[i] = pos[i - 1] + maxlengths[i - 1] + minSpace;
+		}
+
+		List lines = new ArrayList();
+
+		for (Iterator iter = columns.iterator(); iter.hasNext();) {
+			String[] lc = (String[]) iter.next();
+			StringBuffer thisLine = new StringBuffer();
+			int len = thisLine.length();
+
+			for (int i = 0, n = lc.length; i < n; i++) {
+				if (lc[i] != null) {
+					while (len < pos[i]) {
+						thisLine.append(" ");
+						len++;
+					}
+					thisLine.append(lc[i]);
+					len = thisLine.length();
+				}
+			}
+			thisLine.append("\n");
+			lines.add(thisLine.toString());
+		}
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
 	private void DescribeRequest(String command) throws InvalidQueryException {
 		StringTokenizer toks = new StringTokenizer(command, " ");
 		int tokCount = toks.countTokens();
@@ -1070,27 +1243,7 @@ public class MartShell {
 			if (request.equalsIgnoreCase(DATASETKEY)) {
 				String[] lines = DescribeDataset(name);
 
-				int linesout = 0;
-				for (int i = 0, n = lines.length; i < n; i++) {
-					if (linesout > MAXLINECOUNT) {
-						linesout = 0;
-						try {
-							String quit =
-								Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
-							if (quit.equals("q")) {
-								System.out.println();
-								break;
-							}
-							
-						 System.out.println("\n");
-						} catch (Exception e) {
-							// do nothing
-						}
-					}
-					String line = lines[i];
-					System.out.print(line);
-					linesout++;
-				}
+				PageOutput(lines);
 			} else if (request.equalsIgnoreCase(FILTERKEY)) {
 				if (envDataset == null)
 					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
@@ -1165,7 +1318,8 @@ public class MartShell {
 			lines.add("\n");
 			lines.add("\n");
 			lines.add("The following Attributes can be querried together\n");
-			lines.add("numbers in perentheses denote groups of attributes that have limits on the number that can be queried together\n");
+			lines.add(
+				"numbers in perentheses denote groups of attributes that have limits on the number that can be queried together\n");
 			lines.add("\n");
 
 			List groups = page.getAttributeGroups();
@@ -1789,6 +1943,8 @@ public class MartShell {
 			System.out.print(Help(NormalizeCommand(command)));
 		else if (command.startsWith(DESCC))
 			DescribeRequest(NormalizeCommand(command));
+		else if (command.startsWith(LISTC))
+			ListRequest(NormalizeCommand(command));
 		else if (command.startsWith(SETCONSETSC))
 			setConnectionSettings(NormalizeCommand(command));
 		else if (command.startsWith(SHOWCONSETSC))
@@ -1936,8 +2092,18 @@ public class MartShell {
 	private final String LOADSCRIPTC = "loadScript";
 	private final String SAVETOSCRIPTC = "saveToScript";
 	private final String HISTORYC = "history";
-
-	protected List availableCommands =
+	private final String LISTC = "list";
+  
+  private final List listRequests = Collections.unmodifiableList( 
+                                                           new ArrayList( 
+                                                                 Arrays.asList ( 
+                                                                       new String[] { "datasets",
+                                                                       	                      "filters",
+                                                                       	                      "attributes"
+                                                                       } 
+  	)));
+  
+	protected List availableCommands = 
 		new ArrayList(
 			Arrays.asList(
 				new String[] {
@@ -1945,6 +2111,7 @@ public class MartShell {
 					QUITC,
 					HELPC,
 					DESCC,
+					LISTC,
 					SETCONSETSC,
 					SETOUTSETSC,
 					SHOWOUTSETSC,
@@ -1990,17 +2157,9 @@ public class MartShell {
 	private final String COMPLETIONQ = "CommandCompletionHelp";
 	private final String ASC = "as";
 
-	// variables for subquery
-	private ByteArrayOutputStream subqueryOutput = null;
-	private int nestedLevel = 0;
-	private final int MAXNESTING = 1;
-	// change this to allow deeper nesting of queries inside queries
 	private final int MAXLINECOUNT = 60;
 	// page prompt describe output line limit
-	private final int MAXCHARCOUNT = 80; // describe group output limit
-
-	private final String DASHES = "--------------------------------------------------------------------------------";
-	// describe output separator
+	private final int MAXCHARCOUNT = 80; // line length limit
 
 	private boolean continueQuery = false;
 	private StringBuffer conline = new StringBuffer();

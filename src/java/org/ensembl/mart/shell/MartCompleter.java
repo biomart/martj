@@ -88,6 +88,7 @@ public class MartCompleter implements ReadlineCompleter {
 	private SortedSet datasetSet = new TreeSet(); // will hold datasets
 	private SortedSet whereSet = new TreeSet(); // will hold filters 
 	private SortedSet helpSet = new TreeSet(); // will hold help keys available
+	private SortedSet listSet = new TreeSet(); // will hold list request keys
 
 	private final List NODATASETWARNING =
 		Collections.unmodifiableList(Arrays.asList(new String[] { "No dataset set", "!" }));
@@ -105,6 +106,7 @@ public class MartCompleter implements ReadlineCompleter {
 
 	private final String COMMANDS = "commands";
 	private final String DESCRIBE = "describe";
+	private final String LIST = "list";
 	private final String HELP = "help";
 	private final String USE = "use";
 	private final String DATASETS = "datasets";
@@ -142,6 +144,7 @@ public class MartCompleter implements ReadlineCompleter {
 		setMapper.put(MartShellLib.QSEQUENCE, sequenceSet);
 		setMapper.put(DATASETS, datasetSet);
 		setMapper.put(MartShellLib.QWHERE, whereSet);
+		setMapper.put(LIST, listSet);
 
 		this.martconf = martconf;
 
@@ -203,6 +206,8 @@ public class MartCompleter implements ReadlineCompleter {
 				}
 			} else if (currentCommand.startsWith(HELP))
 				SetHelpMode();
+		  else if (currentCommand.startsWith(LIST))
+		    SetListMode();
 			else if (currentCommand.startsWith(USE))
 				SetDatasetMode();
 			else {
@@ -444,9 +449,16 @@ public class MartCompleter implements ReadlineCompleter {
 		envDataset = martconf.getDatasetByName(datasetName); // might return null, but that is ok
 	}
 
+  /**
+   * Sets the MartCompleter into List Mode
+   */
+  public void SetListMode() {
+  	currentSet = new TreeSet();
+  	currentSet.addAll( (SortedSet) setMapper.get(LIST));
+  }
+  
 	/**
 	 * Sets the MartCompleter into Help Mode.
-	 *
 	 */
 	public void SetHelpMode() {
 		currentSet = new TreeSet();
@@ -695,8 +707,6 @@ public class MartCompleter implements ReadlineCompleter {
 			SortedSet set = (SortedSet) setMapper.get(key);
 			set.addAll((Collection) commands);
 			setMapper.put(key, set);
-		} else if (key.equals(DESCRIBE)) {
-			setMapper.put(key, commands);
 		} else {
 			if (logger.isLoggable(Level.WARNING))
 				logger.warning("Key " + key + " is not a member of the command completion system\n");
