@@ -455,7 +455,7 @@ public class DetailedDataSource implements DataSource {
   /**
    * @return
    */
-  public String getDisplayName() {
+  public String getName() {
     return name;
   }
 
