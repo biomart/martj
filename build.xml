@@ -464,23 +464,33 @@
       </zip>
   </target>
 
-  <!-- creates the dist-bin distribution set with linux jre  -->
-  <target name="dist-bin-jre-linux" 
-    description="Creates the dist-bin distribution set, with bundled jre for linux"
-    depends="jar, prepare-dist">
+  <!-- copies all JRE versions of the shell and bat scripts, renaming to make it easier to find -->
+  <target name="prepare-jre-dist" description="copies JRE versions of shell and bat scripts as normal versions" >
 
-      <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
-
-      <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
       <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
       <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
+      <copy file="${bin.dir}/martexplorer_JRE.bat" tofile="${dist.dir}/bin/martexplorer.bat" />
+      <copy file="${bin.dir}/martexplorer_JRE.sh" tofile="${dist.dir}/bin/martexplorer.sh" />
+      <copy file="${bin.dir}/marteditor_JRE.bat" tofile="${dist.dir}/bin/marteditor.bat" />
+      <copy file="${bin.dir}/marteditor_JRE.sh" tofile="${dist.dir}/bin/marteditor.sh" />
 
       <!-- now copy the other bin files without hardcoded info -->
       <copy todir="${dist.dir}/bin" >
         <fileset dir="${bin.dir}" >
           <exclude name="**/martshell*"/>
+          <exclude name="**/martexplorer*" />
+          <exclude name="**/marteditor*" />
         </fileset>
       </copy>
+
+  </target>
+
+  <!-- creates the dist-bin distribution set with linux jre  -->
+  <target name="dist-bin-jre-linux" 
+    description="Creates the dist-bin distribution set, with bundled jre for linux"
+    depends="jar, prepare-dist, prepare-jre-dist">
+
+      <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
       <tar destfile="${build.dir}/${name}-bin-jre-linux.tar">
         <!-- distribution files -->
@@ -584,20 +594,9 @@
   <!-- creates the dist-bin distribution set with windows jre  -->
   <target name="dist-bin-jre-windows" 
     description="Creates the dist-bin distribution set, with bundled jre for windows"
-    depends="jar, prepare-dist">
+    depends="jar, prepare-dist, prepare-jre-dist">
 
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
-
-      <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
-
-      <!-- now copy the other bin files without hardcoded info -->
-      <copy todir="${dist.dir}/bin" >
-        <fileset dir="${bin.dir}" >
-          <exclude name="**/martshell*"/>
-        </fileset>
-      </copy>
 
       <tar destfile="${build.dir}/${name}-bin-jre-windows.tar">
         <!-- distribution files -->
@@ -701,20 +700,9 @@
   <!-- creates the dist-bin distribution set with alpha jre  -->
   <target name="dist-bin-jre-alpha" 
     description="Creates the dist-bin distribution set, with bundled jre for alpha"
-    depends="jar, prepare-dist">
+    depends="jar, prepare-dist, prepare-jre-dist">
 
       <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
-
-      <!-- copy versions of the bat and shell martshell startup scripts with hardcoded initialization -->
-      <copy file="${bin.dir}/martshell_JRE.bat" tofile="${dist.dir}/bin/martshell.bat" />
-      <copy file="${bin.dir}/martshell_JRE.sh" tofile="${dist.dir}/bin/martshell.sh" />
-
-      <!-- now copy the other bin files without hardcoded info -->
-      <copy todir="${dist.dir}/bin" >
-        <fileset dir="${bin.dir}" >
-          <exclude name="**/martshell*"/>
-        </fileset>
-      </copy>
 
       <tar destfile="${build.dir}/${name}-bin-jre-alpha.tar">
         <!-- distribution files -->
