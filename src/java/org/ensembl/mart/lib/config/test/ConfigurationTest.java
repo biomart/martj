@@ -224,8 +224,7 @@ public class ConfigurationTest extends Base {
                                                             "A TEST ID, DOESNT EXIST", 
                                                             "gene_main", 
                                                             "", 
-                                                            TESTDESC, 
-                                                            "");
+                                                            TESTDESC);
                                                             
     assertEquals("Warning, value not correctly set for Dataset DefaultFilter\n", testValue, Value);
     assertEquals("Warning, UIFilterDescription not correct for Dataset DefaultFilter\n", testFDesc, df.getUIFilterDescription());
@@ -545,8 +544,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("Warning, Display Name not correctly set for FilterCollection\n", testDName, DName);
 		assertEquals("Warning, Description not correctly set for FilterCollection\n", TESTDESC, Desc);
 		assertEquals("Warning, Type not correctly set for FilterCollection\n", TESTTYPE, Type);
-		assertTrue("Third FilterCollection should have Options\n", fc.hasOptions());
-
+		
 		//  contains/get for FilterGroup-FilterCollection
 		boolean containsTest = fg.containsFilterCollection(testIName);
 		assertTrue("Warning, FilterGroup should contain testFiltersetCollection, but doesnt\n", containsTest);
@@ -557,13 +555,8 @@ public class ConfigurationTest extends Base {
 			assertEquals("Warning, getFilterCollectionByName InternalName incorrect\n", testIName, testGetByName);
 		}
 
-		// Option data correct
-		Option[] options = fc.getOptions();
-		assertEquals("Warning, should get two Options in Third FilterCollection\n", 2, options.length);
-
-		thirdFColFirstOptiontest(fc, options[0]);
-		thirdFColSecOptionTest(fc, options[1]);
-
+		
+		
 		//UIFilterDescription data correct
 		List fs = fc.getUIFilterDescriptions();
 		assertEquals("Warning, should get two filter descriptions\n", 2, fs.size());
@@ -813,15 +806,16 @@ public class ConfigurationTest extends Base {
 		assertTrue("First Option " + option + " should be selectable\n", option.isSelectable());
 		assertTrue("First Option " + option + "should not have Options\n", !option.hasOptions());
 	
-		//contains/get for FilterCollection-Option
-		boolean containsTest = fc.containsOption(testIName);
-		assertTrue("Warning, Third FilterCollection should contain testOption, but doesnt\n", containsTest);
-	
-		String testGetByName = null;
-		if (containsTest) {
-			testGetByName = fc.getOptionByName(testIName).getInternalName();
-			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);
-		}
+//  TODO move these tests to filter tests. 
+//		//contains/get for FilterCollection-Option
+//		boolean containsTest = fc.containsOption(testIName);
+//		assertTrue("Warning, Third FilterCollection should contain testOption, but doesnt\n", containsTest);
+//	
+//		String testGetByName = null;
+//		if (containsTest) {
+//			testGetByName = fc.getOptionByName(testIName).getInternalName();
+//			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);
+//		}
 	}
 
 	private void thirdFColSecOptionTest(FilterCollection fc, Option option) throws Exception {
@@ -838,16 +832,7 @@ public class ConfigurationTest extends Base {
 		assertTrue("Second Option" + option + " should not be selectable\n", !option.isSelectable());
 		assertTrue("Second Option" + option + " should have Options\n", option.hasOptions());
 	
-		//contains/get for FilterCollection-Option
-		boolean containsTest = fc.containsOption(testIName);
-		assertTrue("Warning, Third FilterCollection should contain testOptionWithOption, but doesnt\n", containsTest);
-	
-		String testGetByName = null;
-		if (containsTest) {
-			testGetByName = fc.getOptionByName(testIName).getInternalName();
-			assertEquals("Warning, getOptionByName InternalName incorrect\n", testIName, testGetByName);
-		}
-	
+
 		Option[] subOptions = option.getOptions();
 		assertEquals("Warning, second option should only contain one Option\n", 1, subOptions.length);
 	
@@ -893,7 +878,6 @@ public class ConfigurationTest extends Base {
     String FieldName = fField.getFieldName();
     String Qualifier = fField.getQualifier();
     String testOptionName = "testOption";
-    String OptionName = fField.getOptionName();
 
     assertEquals("Warning, Internal Name not correctly set for UIFilterDescription\n", testIName, IName);
     assertEquals("Warning, Display Name not correctly set for UIFilterDescription\n", testDName, DName);
@@ -901,8 +885,7 @@ public class ConfigurationTest extends Base {
     assertEquals("Warning, Type not set correctly for UIFilterDescription\n", TESTTYPE, Type);
     assertEquals("Warning, FieldName not set correctly for UIFilterDescription\n", testFieldName, FieldName);
     assertEquals("Warning, Qualifier not set correctly for UIFitlerDescription\n", TESTQUALIFIER, Qualifier);
-    assertEquals("Warning, optionName not correctly set for UIFilterDescription\n", testOptionName, OptionName);
-    assertTrue("Warning, Third FilterColletion should contain option refereced by UIFilterDescription but doesnt\n", fc.containsOption(OptionName));
+    
   }
   
   private void thirdFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, Object ob) throws Exception {
@@ -917,15 +900,12 @@ public class ConfigurationTest extends Base {
     String Type = dsf.getType();
     String Handler = dsf.getHandler();
     String testOptionName = "testOptionWithOption";
-    String OptionName = dsf.getOptionName();
-
+    
     assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
     assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
     assertEquals("Warning, Description not correctly set for UIDSFilterDescription\n", TESTDESC, Desc);
     assertEquals("Warning, Type not set correctly for UIDSFilterDescription\n", TESTTYPE, Type);
     assertEquals("Warning, Handler not set correctly for UIDSFilterDescription\n", TESTHANDLER, Handler);
-    assertEquals("Warning, optionName not set correctly for UIDSFilterDescription\n", testOptionName, OptionName);
-    assertTrue("Warning, Third FilterColletion should contain option refereced by UIDSFilterDescription but doesnt\n", fc.containsOption(OptionName));
   }
 
 	private void attributeCollectionFdescTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, Object ob) throws Exception {

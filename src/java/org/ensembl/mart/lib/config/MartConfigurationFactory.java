@@ -83,8 +83,7 @@ public class MartConfigurationFactory {
 	private final String FILTERSETREQ = "filterSetReq";
 	private final String HANDLER = "handler";
 	private final String ISSELECTABLE = "isSelectable";
-	private final String OPTIONNAME = "optionName";
-  private final String VALUE = "value";
+	private final String VALUE = "value";
 
 	private MartConfiguration martconf = null;
 
@@ -304,10 +303,7 @@ public class MartConfigurationFactory {
 				fc.addUIDSFilterDescription(getUIDSFilterDescription(element));
 		}
 
-		for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
-			Element option = (Element) iter.next();
-			fc.addOption(getOption(option));
-		}
+
 		
 		return fc;
 	}
@@ -338,9 +334,8 @@ public class MartConfigurationFactory {
 		String typeval = thisElement.getAttributeValue(TYPE, "");
 		String objCode = thisElement.getAttributeValue(HANDLER, "");
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
-		String optionName = thisElement.getAttributeValue(OPTIONNAME, "");
 
-		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc, optionName);
+		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, filterSetReq, dispname, desc);
 
 		return f;
 	}
@@ -352,13 +347,17 @@ public class MartConfigurationFactory {
 		String typeval = thisElement.getAttributeValue(TYPE, "");
 		String fieldnm = thisElement.getAttributeValue(FIELDNAME, "");
 		String tableconst = thisElement.getAttributeValue(TABLECONSTRAINT, "");
-		String optionName = thisElement.getAttributeValue(OPTIONNAME, "");
 
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 
 		String qual = thisElement.getAttributeValue(QUALIFIER, "");
 
-		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, filterSetReq, desc, optionName);
+		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, filterSetReq, desc);
+
+    for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
+      Element option = (Element) iter.next();
+      f.addOption(getOption(option));
+    }
 
 		return f;
 	}

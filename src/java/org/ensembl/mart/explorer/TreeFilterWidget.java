@@ -18,24 +18,74 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
+
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Represents a set of user selectable options arranged as a tree.
+ * Components consists of a label, text area and button. The text area
+ * contains the current selection and the tree causes the option
+ * tree to be displayed.
  */
-public class TreeFilterWidget extends InputPage {
+public class TreeFilterWidget extends FilterWidget {
+
+  private JTextField selected = new JTextField( 30 );
+  private JButton button = new JButton("change");
+  private JPopupMenu menu;
 
   /**
    * @param query
    * @param name
    */
-  public TreeFilterWidget(Query query, String name) {
-    super(query, name);
-    // TODO Auto-generated constructor stub
-    //JPopupMenu
+  public TreeFilterWidget(Query query, UIFilterDescription filterDescription) {
+    super(query, filterDescription);
+    
+    selected.setEditable( false );
+    button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				showMenu();		
+			}
+		});
+    
+    initMenu( filterDescription );
+    
+    add( new JLabel( filterDescription.getDisplayName() ) );
+    add( selected );
+    add( button );
+    
+    
   }
+
+  /**
+	 * @return
+	 */
+	private void initMenu( UIFilterDescription filterDescription ) {
+		menu = new JPopupMenu(); 
+		
+	}
+
+
+  private void showMenu() {
+    // TODO Auto-generated method stub
+        
+  }
+
+
+	/* (non-Javadoc)
+	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+	 */
+	public void propertyChange(PropertyChangeEvent evt) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
