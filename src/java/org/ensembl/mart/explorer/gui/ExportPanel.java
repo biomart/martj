@@ -84,7 +84,7 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
           String name = Tool.selected(windowName);
           if ( name==null ) name = "";
           ResultWindow rw
-            = queryPanel.getMartExplorerGUI().createResultWindow( name, r);
+            = queryPanel.getMartExplorerApplication().createResultWindow( name, r);
             query.setResultTarget( rw );
         }
         else if (exportToFileButton.isSelected()) {
