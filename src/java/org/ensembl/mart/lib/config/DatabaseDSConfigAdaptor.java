@@ -260,26 +260,6 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     updateThread.start();
   }
 
-  /**
-   * Allows client to store a single DatasetConfig object as a DatasetConfig.dtd compliant XML document into a Mart Database.
-   * Client can choose whether to compress (GZIP) the resulting XML before it is stored in the Database.
-   * @param user -- RDBMS user for meta_DatasetConfig_[user] table to store the document.  If null, or if meta_DatasetConfig_[user] does not exist, meta_DatasetConfig will be the target of the document.
-   * @param dsv -- DatasetConfig object to store
-   * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public void storeDatasetConfig(String user, DatasetConfig dsv, boolean compress)
-    throws ConfigurationException {
-    dbutils.storeDatasetConfiguration(
-      user,
-      dsv.getInternalName(),
-      dsv.getDisplayName(),
-      dsv.getDataset(),
-      dsv.getDescription(),
-      dscutils.getDocumentForDatasetConfig(dsv),
-      compress);
-  }
-
   private void lazyLoadWithDatabase(DatasetConfig dsv) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
       logger.fine("lazy loading from database\n");
