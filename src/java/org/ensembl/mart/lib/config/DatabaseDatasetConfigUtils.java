@@ -77,7 +77,7 @@ public class DatabaseDatasetConfigUtils {
 
   private HashMap configInfo = new HashMap();
   
-  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest from ";
+  private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible from ";
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
@@ -94,7 +94,7 @@ public class DatabaseDatasetConfigUtils {
   private final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
-    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
+    " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible) values (?, ?, ?, ?, ?, ?, ?, ?)";
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
@@ -242,13 +242,15 @@ public class DatabaseDatasetConfigUtils {
     String dataset,
     String description,
     Document doc,
-    boolean compress)
+    boolean compress,
+    String type,
+    String visible)
     throws ConfigurationException {
 
     int rowsupdated = 0;
 
     if (compress)
-      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc);
+      rowsupdated = storeCompressedXML(user, internalName, displayName, dataset, description, doc, type, visible);
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
@@ -413,10 +415,12 @@ public class DatabaseDatasetConfigUtils {
     String displayName,
     String dataset,
     String description,
-    Document doc)
+    Document doc,
+    String type,
+    String visible)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc);
+      return storeCompressedXMLOracle(user, internalName, displayName, dataset, description, doc, type, visible);
 
     Connection conn = null;
     try {
@@ -456,6 +460,8 @@ public class DatabaseDatasetConfigUtils {
       ps.setString(4, description);
       ps.setBinaryStream(5, new ByteArrayInputStream(xml), xml.length);
       ps.setBytes(6, md5);
+	  ps.setString(7, type);
+	  ps.setString(8, visible);
 
       int ret = ps.executeUpdate();
       ps.close();
@@ -481,7 +487,9 @@ public class DatabaseDatasetConfigUtils {
     String displayName,
     String dataset,
     String description,
-    Document doc)
+    Document doc,
+    String type,
+    String visible)
     throws ConfigurationException {
 
     Connection conn = null;
@@ -529,6 +537,8 @@ public class DatabaseDatasetConfigUtils {
       ps.setString(4, description);
       ps.setBlob(5, BLOB.empty_lob());
       ps.setBytes(6, md5);
+	  ps.setString(7,type);
+	  ps.setString(8,visible);
 
       int ret = ps.executeUpdate();
 
@@ -591,8 +601,10 @@ public class DatabaseDatasetConfigUtils {
         String dname = rs.getString(2);
         String dset = rs.getString(3);
         String description = rs.getString(4);
+        String type = rs.getString(6);
+        String visible = rs.getString(7);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description);
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible);
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);

@@ -823,7 +823,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 
 	public void export() throws ConfigurationException {
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
-		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(MartEditor.getUser(), dsConfig.getInternalName(), dsConfig.getDisplayName(), dsConfig.getDataset(), dsConfig.getDescription(), MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig), true);   	    
+		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(MartEditor.getUser(), dsConfig.getInternalName(), dsConfig.getDisplayName(), dsConfig.getDataset(), dsConfig.getDescription(), MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig), true, dsConfig.getType(), dsConfig.getVisible());   	    
 	}
 
     //public void lostOwnership(Clipboard c, Transferable t) {

@@ -50,6 +50,9 @@ import java.util.logging.Logger;
 public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private final String datasetKey = "dataset";
+  private final String typeKey = "type";
+  private final String visibleKey = "visible";
+  
   private DSConfigAdaptor adaptor = null;
   private byte[] digest = null;
 
@@ -199,11 +202,34 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description)
     throws ConfigurationException {
-    super(internalName, displayName, description);
+    //super(internalName, displayName, description);
+	this(internalName, displayName, dataset, description, "", "0");
+    //if (dataset == null)
+    //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
+    //setAttribute(datasetKey, dataset);
+  }
 
-    if (dataset == null)
-      throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
-    setAttribute(datasetKey, dataset);
+  /**
+   * Constructs a DatasetConfig named by internalName and displayName, with a description of
+   *  the dataset.
+   * 
+   * @param internalName String name to represent this DatasetConfig. Must not be null
+   * @param displayName String name to display in an UI.
+   * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
+   * @param description String description of the DatasetConfig.
+   * @param type String type of the DatasetConfig.
+   * @param pub String flag showing whether DatasetConfig is public or not.
+   * @throws ConfigurationException if required values are null.
+   */
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub)
+	throws ConfigurationException {
+	super(internalName, displayName, description);
+
+	if (dataset == null)
+	  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
+	setAttribute(datasetKey, dataset);
+	setAttribute(typeKey, type);
+	setAttribute(visibleKey, pub);
   }
 
   /**
@@ -219,6 +245,20 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public String getDataset() {
     return attributes.getProperty(datasetKey);
+  }
+  
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public String getType() {
+	return attributes.getProperty(typeKey);
+  }
+  
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public String getVisible() {
+	return attributes.getProperty(visibleKey);
   }
 
   /**
