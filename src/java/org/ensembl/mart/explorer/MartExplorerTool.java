@@ -56,7 +56,6 @@ public class MartExplorerTool {
 	private static String database = null;
 	private static String user = null;
 	private static String password = null;
-	private static String species = null;
 	private static String dataset = null;
 	private static boolean validQuery = true;
 	private static FormatSpec formatspec = new FormatSpec();
@@ -147,7 +146,7 @@ public class MartExplorerTool {
 			getConnProperties(defaultConf);
 
 		Getopt g =
-			new Getopt("MartExplorerApplication", args, COMMAND_LINE_SWITCHES);
+			new Getopt("MartExplorerTool", args, COMMAND_LINE_SWITCHES);
 		int c;
 
 		int argnum = 0;
@@ -192,10 +191,6 @@ public class MartExplorerTool {
 
 				case 'p' :
 					password = g.getOptarg();
-					break;
-
-				case 's' :
-					species = g.getOptarg();
 					break;
 
 				case 'c' :
@@ -332,7 +327,7 @@ public class MartExplorerTool {
 	    }
 	  
 		  Query q = new Query();
-		  q.setStarBases(ds.getStars());
+		  q.setStarBases(ds.getStarBases());
 		  q.setPrimaryKeys(ds.getPrimaryKeys());
 		
 		  q.setAttributes(attributes);
