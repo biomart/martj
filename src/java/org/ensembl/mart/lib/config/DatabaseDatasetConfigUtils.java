@@ -2943,8 +2943,8 @@ System.out.println("Going to null ");
               else { // update options if has any
 
               	// awaiting proper fix
-              	//                if (currFilt.hasOptions())
-                	if(false)
+              	                if (currFilt.hasOptions())
+                //	if(false)
                   updateDropDown(dsv, currFilt); 
               }
 
@@ -3092,13 +3092,19 @@ System.out.println("Going to null ");
 
     PushAction[] pas = ops[0].getPushActions();
 
-    
-    System.out.println ("Push size "+ pas.length);
-    Option[] paOps = pas[0].getOptions();
-    
-    
-    
-    PushAction[] pas2 = paOps[0].getPushActions();
+
+ PushAction[] pas2 = null;
+    if (pas.length > 0){
+      Option[] paOps = pas[0].getOptions();
+      if (paOps.length > 0)
+        pas2 = paOps[0].getPushActions();
+    }
+
+
+
+
+
+
 
     for (int i = 0; i < ops.length; i++) {
       fd1.removeOption(ops[i]);
