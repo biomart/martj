@@ -11,6 +11,7 @@ public class IDListFilter implements Filter {
   public final static int STRING_MODE = 0;
   public final static int FILE_MODE = 1;
   public final static int URL_MODE = 2;
+  public final static int STREAM_MODE = 3;
 
 
   public int getMode() {
@@ -42,6 +43,25 @@ public class IDListFilter implements Filter {
       mode = URL_MODE;
       // load entries from file into identifiers array
       BufferedReader in = new BufferedReader( new InputStreamReader( url.openStream() ) );
+      List lines = new ArrayList();
+      for( String line = in.readLine(); line!=null; line = in.readLine() )
+        lines.add( line );
+      identifiers = new String[ lines.size() ];
+      lines.toArray( identifiers );
+    }
+
+    /**
+     * Load identifiers from a InputStreamReader (eg., with STDIN) . Expect one identifier
+     * per line of Stream.
+     * Useful for piping martexplorer output into a new martexplorer as a filter
+     */
+    public IDListFilter(String field, InputStreamReader instream) throws IOException {
+      this.type = field;
+      this.instream = instream;
+      mode = STREAM_MODE;
+
+      // load entries from instream into identifiers array
+      BufferedReader in = new BufferedReader( instream );
       List lines = new ArrayList();
       for( String line = in.readLine(); line!=null; line = in.readLine() )
         lines.add( line );
@@ -122,5 +142,6 @@ public class IDListFilter implements Filter {
   private String[] identifiers = new String[0];
   private File file;
   private URL url;
+  private InputStreamReader instream;
   private int mode;
 }
