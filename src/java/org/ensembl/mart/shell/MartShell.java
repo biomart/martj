@@ -2147,11 +2147,14 @@ public class MartShell {
           fspec = FormatSpec.TABSEPARATEDFORMAT;
 
         Engine engine = new Engine();
-
-        if (sessionOutputFileName != null)
+        
+        int hardLimit = INTERACTIVE_MAX_ROWS;
+        if (sessionOutputFileName != null) {
+          hardLimit = 0; // no hardLimit for file output
           sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
+        }
 
-        engine.execute(query, fspec, sessionOutput);
+        engine.execute(query, fspec, sessionOutput, hardLimit);
 
         if (sessionOutputFileName != null)
           sessionOutput.close();
@@ -2174,6 +2177,7 @@ public class MartShell {
   }
 
   // MartShell instance variables
+  private final int INTERACTIVE_MAX_ROWS = 1000;
   private MartShellLib msl = null;
   private boolean verbose = false;
   private URL loggingConfURL = null;
