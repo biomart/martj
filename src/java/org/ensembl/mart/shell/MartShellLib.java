@@ -653,10 +653,10 @@ public class MartShellLib {
 					limitClause = true;
 				} else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
 					throw new InvalidQueryException(
-						"Invalid Query Recieved, " + GETQSTART + " clause after where clause, not in subquery: " + newquery + "\n");
+						"Invalid Query Recieved, " + GETQSTART + " clause after where clause: " + newquery + "\n");
 				else if (thisToken.equalsIgnoreCase(QWHERE))
 					throw new InvalidQueryException(
-						"Invalid Query Recieved, where clause after where clause, not in subquery: " + newquery + "\n");
+						"Invalid Query Recieved, where clause after where clause: " + newquery + "\n");
 
 				else if (thisToken.equalsIgnoreCase(FILTERDELIMITER)) {
 					whereFilterCond = false;
@@ -970,9 +970,6 @@ public class MartShellLib {
 
 		//validate, then call parseQuery on the subcommand
 		String[] tokens = nestedQuery.split("\\s");
-//		if (!tokens[0].trim().equals(USINGQSTART))
-//			throw new InvalidQueryException(
-//				"Invalid Nested Query Recieved: no using statement recieved " + tokens[0].trim() + " in " + nestedQuery + "\n");
 
 		for (int i = 1, n = tokens.length; i < n; i++) {
 			String tok = tokens[i];
@@ -1018,7 +1015,7 @@ public class MartShellLib {
 				throw new InvalidQueryException(
 					"Cannot request attribute "
 						+ element
-						+ " together with sequences in the same query.  Use show attributes for a list of attributes that can be selected with sequences\n");
+						+ " together with sequences in the same query.\n");
 		}
 
 		Query newQuery = new Query(inquery);
@@ -1095,7 +1092,7 @@ public class MartShellLib {
 								+ attname
 								+ " and "
 								+ element
-								+ " together in the same query.  Use show attributes for a list of attributes that can be selected together\n");
+								+ " together in the same query.  Use 'describe dataset " + dset.getInternalName() + "' for a list of attributes that can be selected together\n");
 				}
 			}
 		}
@@ -1298,7 +1295,7 @@ public class MartShellLib {
 								+ filterName
 								+ " and "
 								+ element
-								+ " together in the same query.  Use 'show filters' to get a list of filters that can be used in the same query.\n");
+								+ " together in the same query.  Use 'describe dataset " + dset.getInternalName()+"' to get a list of filters that can be used in the same query.\n");
 				}
 			}
 		}
