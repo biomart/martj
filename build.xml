@@ -253,6 +253,7 @@
       deprecation="false"
       depend="no"
       debug="true"
+      source="1.4"
     />
 
   </target>
@@ -858,6 +859,7 @@
      version="true"
      use="true"
      windowtitle="MartExplorer API"
+     source="1.4"
      doctitle="MartExplorer API" >
 
      <classpath>
