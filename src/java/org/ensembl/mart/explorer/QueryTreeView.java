@@ -40,6 +40,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 import javax.swing.AbstractAction;
@@ -457,19 +458,28 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     String newDatasetInternalName) {
 
     try {
-      dsv = dsvAdaptor.getDatasetViewByInternalName(newDatasetInternalName);
+      
+      // TODO handle multiple dsvs with same dataset
+      dsv = dsvAdaptor.getDatasetViewByDataset(newDatasetInternalName)[0];
 
-      if (dsv == null)
+      if (dsv == null){
+      
         feedback.warn(
           "Failed to load a Dataset "
             + " with internalName='"
             + newDatasetInternalName
             + "'.");
-      else
-        ((TreeNodeData) datasetViewNode.getUserObject()).setRightText(
-          dsv.getDisplayName());
-
+      
+      } else {
+      
+        String s = dsv.getDisplayName();
+        s = Pattern.compile("__").matcher(s).replaceAll(" ");
+        ((TreeNodeData) datasetViewNode.getUserObject()).setRightText(s);
+    
+      }
+    
       treeModel.reload();
+    
     } catch (ConfigurationException e) {
       feedback.warn(e);
     }
