@@ -130,10 +130,7 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
 	 */
 	public void update() throws ConfigurationException {
 		try {
-			if (dsvurl.getProtocol().matches("file"))
 				dsv = DatasetViewXMLUtils.XMLStreamToDatasetView(dsvurl.openStream(), validate);
-			else
-				throw new ConfigurationException("Non-file URLS are not currently Supported: " + dsvurl + "\n");
 		} catch (Exception e) {
 			throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl + " " + e.getMessage(), e);
 		}
