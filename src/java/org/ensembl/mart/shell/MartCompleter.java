@@ -731,7 +731,6 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setDatasetReqMode() {
-    currentSet = new TreeSet();
     if (envMart == null)
       setNoEnvMode();
     else
@@ -739,13 +738,13 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   private void setDatasetReqMode(String martName) {
+    currentSet = new TreeSet();
     try {
       if (adaptorManager.supportsAdaptor(martName))
         currentSet.addAll(Arrays.asList(adaptorManager.getAdaptorByName(martName).getDatasetNames()));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
-      if (logger.isLoggable(Level.INFO))
-        logger.info("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
+      setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
     }
   }
 
@@ -903,15 +902,7 @@ public class MartCompleter implements ReadlineCompleter {
         else
           setDatasetReqMode();
       } else {
-        if (toks[1].indexOf(".") > -1) {
-          String[] dsetreq = toks[1].split("\\.");
-
-          if (dsetreq.length == 1) {
-            setDatasetReqMode(dsetreq[0]);
-          } else if (dsetreq.length == 2) {
-            setDatasetViewReqMode(dsetreq[0], dsetreq[1]);
-          }
-        } else if (adaptorManager.supportsDataset(toks[1]))
+        if (adaptorManager.supportsDataset(toks[1]))
           setEmptyMode();
       }
     } catch (ConfigurationException e) {
