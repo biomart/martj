@@ -1718,7 +1718,7 @@ public class MartShellLib {
           }
 
           query.setDataset(thisDatasetConfig.getDataset());
-          query.setStarBases(thisDatasetConfig.getStarBases());
+          query.setMainTables(thisDatasetConfig.getStarBases());
           query.setPrimaryKeys(thisDatasetConfig.getPrimaryKeys());
 
           //favor using DataSource over envMart

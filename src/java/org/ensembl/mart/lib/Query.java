@@ -104,14 +104,14 @@ public class Query {
 			setSequenceDescription(
 				new SequenceDescription(oq.getSequenceDescription()));
 
-		if (oq.getStarBases().length > 0) {
-			String[] oStars = oq.getStarBases();
+		if (oq.getMainTables().length > 0) {
+			String[] oStars = oq.getMainTables();
 			String[] nStars = new String[oStars.length];
 			System.arraycopy(oStars, 0, nStars, 0, oStars.length);
 
-			setStarBases(nStars);
+			setMainTables(nStars);
 		} else {
-			setStarBases(null);
+			setMainTables(null);
 		}
 
 		if (oq.getPrimaryKeys().length > 0) {
@@ -325,7 +325,7 @@ public class Query {
 	 * get the starBases for the Query
 	 * @return String starBases
 	 */
-	public String[] getStarBases() {
+	public String[] getMainTables() {
 		return starBases;
 	}
 
@@ -333,7 +333,7 @@ public class Query {
 	 * set the starBases for the Query
 	 * @param String starBases
 	 */
-	public synchronized void setStarBases(String[] starBases) {
+	public synchronized void setMainTables(String[] starBases) {
 		String[] old = this.starBases;
 		this.starBases = starBases;
 
@@ -674,7 +674,7 @@ public class Query {
 		setLimit(0);
 
 		setPrimaryKeys(null);
-		setStarBases(null);
+		setMainTables(null);
 	}
 
 	public DatasetConfig getDatasetConfig() {

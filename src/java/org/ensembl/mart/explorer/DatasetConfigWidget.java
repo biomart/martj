@@ -127,7 +127,7 @@ public class DatasetConfigWidget
 			chooser.setSelectedUserObject(newDatasetConfig);
 			// set these to default values
 			query.setPrimaryKeys(newDatasetConfig.getPrimaryKeys());
-			query.setStarBases(newDatasetConfig.getStarBases());
+			query.setMainTables(newDatasetConfig.getStarBases());
 		} else {
 			chooser.setSelectedUserObject(null);
 		}
@@ -153,7 +153,7 @@ public class DatasetConfigWidget
 		if (dsv != null) {
 
 			query.setPrimaryKeys(dsv.getPrimaryKeys());
-			query.setStarBases(dsv.getStarBases());
+			query.setMainTables(dsv.getStarBases());
 			query.setDataset(dsv.getDataset());
       
       if ( dsv.getDSConfigAdaptor()!=null && dsv.getDSConfigAdaptor().getDataSource()!=null )

@@ -78,7 +78,7 @@ public class SimpleLibraryUsageExample {
 		query.setDataset("hsapiens_ensemblgene");
 
 		// prefixes for databases we want to use
-		query.setStarBases(
+		query.setMainTables(
 			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 
 		// primary keys available for sql table joins 

@@ -69,7 +69,7 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			String dset = null;
 
 			//resolve dataset, species, and focus
-			String[] mainTables = newQuery.getStarBases();
+			String[] mainTables = newQuery.getMainTables();
 
 			for (int i = 0; i < mainTables.length; i++) {
 				if (mainTables[i].matches(".*gene__main"))

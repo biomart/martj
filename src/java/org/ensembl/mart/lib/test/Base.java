@@ -104,13 +104,13 @@ public abstract class Base extends TestCase {
     
     engine = new Engine();
 
-    genequery.setStarBases(
+    genequery.setMainTables(
       new String[] { "hsapiens_gene_ensembl__gene__main", "hsapiens_gene_ensembl__transcript__main" });
     genequery.setPrimaryKeys(new String[] { "gene_id_key", "transcript_id_key" });
     genequery.setDataSource(martJDataSource);
     genequery.setDataset("hsapiens_gene_ensembl");
 
-    snpquery.setStarBases(new String[] { "hsapiens_snp__snp__main" });
+    snpquery.setMainTables(new String[] { "hsapiens_snp__snp__main" });
     snpquery.setPrimaryKeys(new String[] { "snp_id_key" });
     snpquery.setDataSource(martJDataSource);
     snpquery.setDataset("hsapiens_snp");

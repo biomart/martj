@@ -197,7 +197,7 @@ public class CompiledSQLQuery {
 
     HashSet relevantTables = new HashSet();
     joinTables = new HashMap();
-	String[] starNames = query.getStarBases();
+	String[] starNames = query.getMainTables();
 	String[] primaryKeys = query.getPrimaryKeys();
     // reverse cycle through primaryKeys
 	for (int k = primaryKeys.length - 1; k > -1 && (lowestLevelKey == null); k--) {

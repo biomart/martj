@@ -78,7 +78,7 @@ public final class TranscriptExonSeqQueryRunner extends BaseSeqQueryRunner {
     }
 
     //resolve dataset, species, and focus
-    String[] mainTables = query.getStarBases();
+    String[] mainTables = query.getMainTables();
 
     for (int i = 0; i < mainTables.length; i++) {
       if (Pattern.matches(".*gene__main", mainTables[i]))
