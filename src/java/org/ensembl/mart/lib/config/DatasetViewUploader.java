@@ -153,7 +153,7 @@ public class DatasetViewUploader {
         };
 
 		Getopt g =
-			new Getopt("DatasetViewUploader", args, "h:P:d:u:p:U:Hn", longopts);
+			new Getopt("DatasetViewUploader", args, "h:P:d:u:p:U:Hnt:D:", longopts);
 		int c;
 
 		while ((c = g.getopt()) != -1) {
