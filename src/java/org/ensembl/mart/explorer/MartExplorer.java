@@ -440,9 +440,9 @@ public class MartExplorer
     settings.add(addDB);
    
     
-    JMenuItem adaptors = new JMenuItem("Adaptors");
+    JMenuItem adaptors = new JMenuItem("Add File");
     settings.add(adaptors).setAccelerator(
-    		KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK));
+    		KeyStroke.getKeyStroke(KeyEvent.VK_F, Event.CTRL_MASK));
     final JFrame parent = this;
     adaptors.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
