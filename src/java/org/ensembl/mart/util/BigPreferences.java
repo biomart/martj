@@ -170,7 +170,7 @@ public class BigPreferences extends Preferences {
     byte[] curBytes = new byte[MAX_BYTE_LENGTH];
     int byteIter = 0;
     int listIter = 0;
-    Preferences curNode = subPrefs;
+    Preferences curNode = subPrefs.node(key);
     curNode.remove(HAS_MORE_NODES);
     curNode.remove(NEXT_NODE);
     try {
@@ -231,16 +231,19 @@ public class BigPreferences extends Preferences {
     int totalLength = 0;
     
     //loop over linkedlist
-    Preferences curNode = subPrefs;
+    Preferences curNode = subPrefs.node(key);
     byte[] curBytes = curNode.getByteArray(key, null);
     if (curBytes == null) {
       if (logger.isLoggable(Level.INFO))
-        logger.info("Did not get expected bytes from curNode, total bytes returned could be truncated\n"); 
+        logger.info("Did not get expected bytes from initial curNode, total bytes returned could be truncated\n"); 
     } else {
       bytes.add(curBytes);
       totalLength += curBytes.length;
     }
     
+    if (logger.isLoggable(Level.INFO))
+      logger.info("After initial node TotalLength is now " + totalLength + "\n");
+      
     //This could silently truncate the returned bytes if the backingstore
     //goes away, causing the getBoolean default value to be returned rather
     //than the actual true value.  Unfortunately, getBoolean(key, null) does not work.
@@ -255,10 +258,13 @@ public class BigPreferences extends Preferences {
       
         if (curBytes == null) {
           if (logger.isLoggable(Level.INFO))
-            logger.info("Did not get expected bytes from curNode, total bytes returned could be truncated\n"); 
+            logger.info("Did not get expected bytes from subsequent curNode "+ nextNode + ", total bytes returned could be truncated\n"); 
         } else {
           bytes.add(curBytes);
           totalLength += curBytes.length;
+          
+          if (logger.isLoggable(Level.INFO))
+            logger.info("After node "+ nextNode +" TotalLength is now " + totalLength + "\n");
         }
       }  
     }
