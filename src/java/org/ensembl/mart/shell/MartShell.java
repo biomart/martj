@@ -54,6 +54,7 @@ import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
+import org.ensembl.mart.lib.InputSourceUtil;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.LoggingUtils;
 import org.ensembl.mart.lib.Query;
@@ -162,8 +163,7 @@ public class MartShell {
 		Properties p = new Properties();
 
 		try {
-			confInfo = new File(connfile).toURL();
-			p.load(confInfo.openStream());
+			p.load( InputSourceUtil.getStreamForString(connfile) );
 
 			String tmp = p.getProperty(INITSCRIPT);
 			if (tmp != null && tmp.length() > 1 && mainInitScript == null)
@@ -332,7 +332,7 @@ public class MartShell {
 		// Initialise logging system
 		if (loggingURL != null) {
 			try {
-				LoggingUtils.setLoggingConfiguration(new URL(loggingURL).openStream());
+				LoggingUtils.setLoggingConfiguration( InputSourceUtil.getStreamForString(loggingURL) );
 			} catch (SecurityException e) {
 				System.out.println("Caught Security Exception when adding logger configuration URL");
 				e.printStackTrace();
@@ -727,15 +727,14 @@ public class MartShell {
 	 * 
 	 */
 	public void addMartRegistry(String confFile) throws ConfigurationException, MalformedURLException {
-		URL confURL = null;
-		if (confFile.indexOf(":") > 0) {
-			//URL
-			confURL = new URL(confFile);
-		} else {
-			//File
-			confURL = new File(confFile).toURL();
-		}
+    if (mainLogger.isLoggable(Level.INFO))
+      mainLogger.info("ADDING MARTREGISTRY FOR " + confFile );
+    
+		URL confURL = InputSourceUtil.getURLForString(confFile);
 
+    if (mainLogger.isLoggable(Level.INFO))
+      mainLogger.info("Recieved URL " + confURL + " from " + confFile + "\n");
+      
 		if (confURL == null)
 			throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
@@ -753,19 +752,7 @@ public class MartShell {
 
 		initializeMartShellLib();
 
-		URL scriptURL = null;
-		if (initScript.indexOf(":") > 0) {
-			//URL
-			scriptURL = new URL(initScript);
-		} else {
-			//File
-			scriptURL = new File(initScript).toURL();
-		}
-
-		if (scriptURL == null)
-			throw new ConfigurationException("Could not parse " + initScript + " into a URL\n");
-
-		reader = new BufferedReader(new InputStreamReader(scriptURL.openStream()));
+		reader = new BufferedReader(new InputStreamReader( InputSourceUtil.getStreamForString(initScript) ));
 
 		for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 			if (!line.startsWith("#"))
@@ -842,10 +829,6 @@ public class MartShell {
 
 	private void ExitShell() throws IOException {
 		Readline.cleanup();
-
-		// close the sessionwide FileOutputStream, if it isnt null
-		if (sessionOutputFileName != null)
-			sessionOutput.close();
 
 		// if history and completion are on, save the history file
 		if (readlineLoaded && historyOn)
@@ -1087,9 +1070,15 @@ public class MartShell {
 		if (msl.getStoredMQLCommandKeys().size() == 0)
 			return new String[] { "No Procedures Stored\n" };
 
-		Set names = msl.getStoredMQLCommandKeys();
-		String[] ret = new String[names.size()];
-		names.toArray(ret);
+    Set names = datasourceMap.keySet();
+    String[] ret = new String[names.size()];
+    
+    int i = 0;
+    for (Iterator iter = names.iterator(); iter.hasNext();) {
+      String sourceName = (String) iter.next();
+      ret[i] = sourceName + "\n";
+      i++;
+    }
 		Arrays.sort(ret);
 		return ret;
 	}
@@ -1100,7 +1089,14 @@ public class MartShell {
 
 		Set names = datasourceMap.keySet();
 		String[] ret = new String[names.size()];
-		names.toArray(ret);
+		
+    int i = 0;
+    for (Iterator iter = names.iterator(); iter.hasNext();) {
+			String sourceName = (String) iter.next();
+			ret[i] = sourceName + "\n";
+      i++;
+		}
+    
 		Arrays.sort(ret);
 		return ret;
 	}
@@ -1588,30 +1584,17 @@ public class MartShell {
 				} catch (Exception e) {
 					throw new InvalidQueryException("Could not create DatabaseDSViewAdaptor with DataSource " + source + " " + e.getMessage() + "\n", e);
 				}
-			} else if (source.indexOf(":") > 1) {
-				//add RegistryDSViewAdaptor from URL
-				try {
-					URL regURL = new URL(source);
-					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(regURL);
-					adaptorManager.add(adaptor);
-					adaptorMap.put(source, adaptor);
-				} catch (MalformedURLException e) {
-					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
-				} catch (ConfigurationException e) {
-					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
-				}
 			} else {
-				//add RegistryDSViewAdaptor from File
 				try {
-					URL regURL = new File(source).toURL();
+					URL regURL = InputSourceUtil.getURLForString(source);
 					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(regURL);
 					adaptorManager.add(adaptor);
-					adaptorMap.put(source, adaptor);
+					adaptorMap.put(source, adaptor);  
 				} catch (MalformedURLException e) {
-					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
+          throw new InvalidQueryException("Recieved MalformedURLException parsing " + source + " into a URL " + e.getMessage() + "\n", e);
 				} catch (ConfigurationException e) {
-					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
-				}
+          throw new InvalidQueryException("Recieved ConfigurationException loading DatasetViews from " + source + " " + e.getMessage() + "\n", e);
+				}      
 			}
 		} else
 			throw new InvalidQueryException("Recieved invalid add DatasetViews command. " + Help(ADDC) + "\n");
@@ -1621,31 +1604,17 @@ public class MartShell {
 		if (toks.hasMoreTokens()) {
 			String source = toks.nextToken();
 
-			if (source.indexOf(":") > 1) {
-				//add URLDSViewAdaptor from URL
-				try {
-					URL dsvURL = new URL(source);
-					URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
-					adaptorManager.add(adaptor);
-					adaptorMap.put(source, adaptor);
-				} catch (MalformedURLException e) {
-					throw new InvalidQueryException("Could not parse URL request for MartRegistry using " + source + " " + e.getMessage() + "\n", e);
-				} catch (ConfigurationException e) {
-					throw new InvalidQueryException("Could not create RegistryDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
-				}
-			} else {
-				//add URLDSViewAdaptor from File
-				try {
-					URL dsvURL = new File(source).toURL();
-					URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
-					adaptorManager.add(adaptor);
-					adaptorMap.put(source, adaptor);
-				} catch (MalformedURLException e) {
-					throw new InvalidQueryException("Could not parse URL request for DatasetView using " + source + " " + e.getMessage() + "\n", e);
-				} catch (ConfigurationException e) {
-					throw new InvalidQueryException("Could not create URLDSViewAdaptor for " + source + " " + e.getMessage() + "\n", e);
-				}
+			try {
+				URL dsvURL = InputSourceUtil.getURLForString(source);
+				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
+				adaptorManager.add(adaptor);
+				adaptorMap.put(source, adaptor);
+			} catch (MalformedURLException e) {
+        throw new InvalidQueryException("Recieved MalformedURLException parsing " + source + " into a URL " + e.getMessage() + "\n", e);
+			} catch (ConfigurationException e) {
+        throw new InvalidQueryException("Recieved ConfigurationException loading DatasetView from " + source + " " + e.getMessage() + "\n", e);
 			}
+      
 		} else
 			throw new InvalidQueryException("Recieved invalid add DatasetView command. " + Help(ADDC) + "\n");
 	}
@@ -1862,6 +1831,7 @@ public class MartShell {
 
 					if (key.equals(FILE)) {
 						sessionOutput = DEFOUTPUT;
+            appendToFile = false;
 						sessionOutputFileName = null;
 					} else if (key.equals(FORMAT))
 						sessionOutputFormat = DEFOUTPUTFORMAT;
@@ -1877,6 +1847,7 @@ public class MartShell {
 			sessionOutput = DEFOUTPUT;
 			sessionOutputFileName = null;
 			sessionOutputFormat = DEFOUTPUTFORMAT;
+      appendToFile = false;
 			sessionOutputSeparator = DEFOUTPUTSEPARATOR;
 		}
 	}
@@ -1985,16 +1956,17 @@ public class MartShell {
 
 					if (key.equals(FILE)) {
 						if (value.equals("-")) {
-							if (sessionOutputFileName != null)
-								sessionOutput.close();
 							sessionOutputFileName = null;
+              appendToFile = false;
 							sessionOutput = DEFOUTPUT;
 						} else {
-							if (sessionOutputFileName != null)
-								sessionOutput.close();
-							sessionOutput = new FileOutputStream(value);
+              if (value.startsWith(">>")) {
+                appendToFile = true;
+                value = value.substring(2);
+              } else
+                appendToFile = false;
 							sessionOutputFileName = value;
-						}
+            }
 					} else if (key.equals(FORMAT))
 						sessionOutputFormat = value;
 					else if (key.equals(SEPARATOR))
@@ -2034,21 +2006,23 @@ public class MartShell {
 				}
 
 				out = (sessionOutputFileName != null) ? sessionOutputFileName : DEFOUTPUTFILE;
+        out = (appendToFile) ? ">>"+out : out;
 				thisLine =
 					Readline.readline(
-						"\nPlease enter the File to output all MQL commands (use '-' for " + DEFOUTPUTFILE + ", hit enter to leave as " + out + "): ",
+						"\nPlease enter the File to output all MQL commands (use '-' for " + DEFOUTPUTFILE + ", hit enter to leave as " + out + ", prepend path with '>>' to append to an existing file): ",
 						false);
 				if (thisLine != null) {
 					if (thisLine.equals("-")) {
-						if (sessionOutputFileName != null)
-							sessionOutput.close();
 						sessionOutput = DEFOUTPUT;
+            appendToFile = false;
 						sessionOutputFileName = null;
 					} else {
-						if (sessionOutputFileName != null)
-							sessionOutput.close();
-						sessionOutput = new FileOutputStream(thisLine);
-						sessionOutputFileName = thisLine;
+            if (thisLine.startsWith(">>")) {
+              appendToFile = true;
+              thisLine = thisLine.substring(2);
+            } else
+              appendToFile = false;
+            sessionOutputFileName = thisLine;
 					}
 				}
 
@@ -2645,7 +2619,14 @@ public class MartShell {
 					fspec = FormatSpec.TABSEPARATEDFORMAT;
 
 				Engine engine = new Engine();
+        
+        if (sessionOutputFileName != null)
+          sessionOutput = new FileOutputStream(sessionOutputFileName, appendToFile);
+          
 				engine.execute(query, fspec, sessionOutput);
+        
+        if (sessionOutputFileName != null)
+          sessionOutput.close();
 			}
 		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
@@ -2695,6 +2676,8 @@ public class MartShell {
 	private final String DEFOUTPUTFORMAT = "tabulated";
 	private final String DEFOUTPUTSEPARATOR = "\t";
 	private final String DEFOUTPUTFILE = "STDOUT";
+  private final String DEFOUTPUTMODE = "overwrite";
+  private boolean appendToFile = false;
 
 	// this is set using the setOutputSettings command.
 
