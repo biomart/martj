@@ -7,7 +7,7 @@
 <!-- Ensembl Source, Homepage, and LinkoutURL for AttributeDescriptions -->
 
 <!-- Top-level Objects --> 
-<!ELEMENT MartConfiguration (Dataset+)>
+<!ELEMENT MartConfiguration (UIFilterDescription, Dataset+)>
 <!ATTLIST MartConfiguration %desc_data;>
                    
 <!ELEMENT Dataset (Option*, DefaultFilter*, StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
@@ -37,13 +37,13 @@
                        tableConstraintModifier CDATA #IMPLIED
                        fieldNameModifier CDATA #IMPLIED> 
 
-<!ELEMENT FilterCollection (Option|UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
+<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
                    filterSetName       CDATA #IMPLIED
                    type                CDATA #REQUIRED>
                     
-<!ELEMENT UIFilterDescription EMPTY>
+<!ELEMENT UIFilterDescription (Option)*>
 <!ATTLIST UIFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
@@ -53,7 +53,7 @@
                    tableConstraint    CDATA #IMPLIED
                    optionName         CDATA #IMPLIED>
 
-<!ELEMENT UIDSFilterDescription EMPTY>
+<!ELEMENT UIDSFilterDescription (Option)*>
 <!ATTLIST UIDSFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
@@ -86,10 +86,20 @@
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
 
-<!ELEMENT Option (Option*)>
+<!ELEMENT Option (Option|OptionPush|OptionPush|Option)*>
 <!ATTLIST Option 
                  %desc_data;
-                 isSelectable  CDATA #REQUIRED>
+                 isSelectable  CDATA #REQUIRED
+                 value         CDATA #IMPLIED
+		      ref           CDATA #IMPLIED
+                 field         CDATA #IMPLIED
+                 tableConstraint CDTATA #IMPLIED>
+
+<!ELEMENT OptionPush (Option)+>
+<!ATTLIST OptionPush
+				%desc_data;
+				ref CDATA #REQUIRED>
+
 
 <!ELEMENT DefaultFilter (UIFilterDescription)>
 <!ATTLIST DefaultFilter value CDATA #REQUIRED>

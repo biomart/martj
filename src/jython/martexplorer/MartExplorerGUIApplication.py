@@ -30,7 +30,7 @@
 # files being loaded in memory.
 
 # TODO validation: chr start>0, end>start,
-# TODO strand = -1, Unstranded +1
+# TODO strand = -1, Unstranded +1#
 # TODO fetch chromosomes from db and load into drop down list.
 
 # Handle tabs of queries / results

@@ -19,6 +19,6 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/java-getopt-1.0.9.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ensj-util.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jdom.jar
 
-java -Xmx200m -classpath ${TMP_CLASSPATH} org.ensembl.mart.explorer.MartExplorerTool $@
+java -Xmx200m -classpath ${TMP_CLASSPATH} org.ensembl.mart.explorer.shell.MartExplorerTool $@
 
 

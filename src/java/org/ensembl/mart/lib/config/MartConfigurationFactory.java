@@ -317,7 +317,7 @@ public class MartConfigurationFactory {
  		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 		
-  	Option o = new Option(intName, isSelectable, dispname, desc);
+  	Option o = new Option(intName, isSelectable, dispname, desc, "", "");
   	
   	for (Iterator iter = thisElement.getChildElements( OPTION ).iterator(); iter.hasNext();) {
 			Element suboption = (Element) iter.next();
