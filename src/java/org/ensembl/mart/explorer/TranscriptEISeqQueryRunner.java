@@ -211,17 +211,15 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 						  }
 						  lastGene = geneID;
 						  Hashtable atts = new Hashtable();
+							atts.put(Assembly, rs.getString(assemblyIndex));
 						  atts.put(Transcripts, new TreeMap());
 					    geneiDs.put(geneID, atts);
 					  }
 					  Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 					  TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 					
-					  if (! traniDs.containsKey(tranID)) { 
-						  Hashtable atts = new Hashtable();
-							atts.put(Assembly, rs.getString(assemblyIndex));
-							traniDs.put(tranID, atts);
-					  }
+					  if (! traniDs.containsKey(tranID)) 
+							traniDs.put(tranID, new Hashtable());
 				
 					  Hashtable tranatts = (Hashtable) traniDs.get(tranID);
 				
@@ -233,14 +231,14 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 						  int strand = rs.getInt(strandIndex);
 						
 						  // keep track of the lowest start and highest end for the gene, for caching
-						  if (! (tranatts.containsKey(Geneloc)) )
-						    tranatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
+						  if (! (geneatts.containsKey(Geneloc)) )
+						    geneatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
 						  else {
-							  SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
+							  SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 							  if (start < geneloc.getStart())
-							    tranatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
+							    geneatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
 							  if (end > geneloc.getEnd())
-							    tranatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
+							    geneatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand));
 						  }
 						
               // keep track of the lowest start and highest end for the transcript
@@ -320,6 +318,13 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 		  void writeSequences(Integer geneID) throws SequenceException {
 			  try {
 				  Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
+					SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
+					String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
+					String assemblyout = (String) geneatts.get(Assembly);
+					
+					// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
+					dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+									  
 				  TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 			
 				  for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
@@ -328,13 +333,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 					  String displayIDout = (String) tranatts.get(DisplayID);
 					  osr.write(displayIDout);
 					
-					  // cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
-					  SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
-					  dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-					
 					  SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
-					  String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
-					  String assemblyout = (String) tranatts.get(Assembly);
 					  osr.write(separator+"tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
 					  osr.flush();
 					
@@ -392,6 +391,13 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 			try {
 				// run through the geneiDs list, make and print the header, then get and print the sequences from the locations
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
+				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
+				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
+				String assemblyout = (String) geneatts.get(Assembly);
+				
+				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
+				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+								
 				TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 			
 				for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
@@ -401,13 +407,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 					String displayIDout = (String) tranatts.get(DisplayID);
 					osr.write(">"+displayIDout);
 					
-					// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
-					SequenceLocation geneloc = (SequenceLocation) tranatts.get(Geneloc);
-					dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-					
 					SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
-					String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
-					String assemblyout = (String) tranatts.get(Assembly);
 					osr.write("\tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
 					osr.flush();
 					
