@@ -511,7 +511,15 @@ public class MartShell {
 			System.out.println(startupMessage);
 		} catch (InvalidQueryException e2) {
 			System.out.println("Couldnt display startup information\n" + e2.getMessage());
-			e2.printStackTrace();
+			
+      StackTraceElement[] stacks = e2.getStackTrace();
+      StringBuffer stackout = new StringBuffer();
+      
+      for (int i = 0, n = stacks.length; i < n; i++) {
+				StackTraceElement element = stacks[i];
+				stackout.append(element.toString()).append("\n");
+			}
+      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 		}
 
 		try {
@@ -609,6 +617,15 @@ public class MartShell {
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 
+      StackTraceElement[] stacks = e1.getStackTrace();
+      StringBuffer stackout = new StringBuffer();
+      
+      for (int i = 0, n = stacks.length; i < n; i++) {
+        StackTraceElement element = stacks[i];
+        stackout.append(element.toString()).append("\n");
+      }
+      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+      
 			System.exit(1);
 		}
     
@@ -625,7 +642,16 @@ public class MartShell {
 				}
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
-				e.printStackTrace();
+				
+        StackTraceElement[] stacks = e.getStackTrace();
+        StringBuffer stackout = new StringBuffer();
+      
+        for (int i = 0, n = stacks.length; i < n; i++) {
+          StackTraceElement element = stacks[i];
+          stackout.append(element.toString()).append("\n");
+        }
+        mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+        
 				conline = new StringBuffer();
 				continueQuery = false;
 				thisline = null;
@@ -636,7 +662,15 @@ public class MartShell {
 			ExitShell();
 		} catch (IOException e) {
 			System.err.println("Warning, could not close Buffered Reader\n");
-			e.printStackTrace();
+      StackTraceElement[] stacks = e.getStackTrace();
+      StringBuffer stackout = new StringBuffer();
+      
+      for (int i = 0, n = stacks.length; i < n; i++) {
+        StackTraceElement element = stacks[i];
+        stackout.append(element.toString()).append("\n");
+      }
+      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
 			System.exit(1);
 		}
 	}
@@ -666,6 +700,14 @@ public class MartShell {
 			}
 		} catch (Exception e) {
 			setBatchError(e.getMessage());
+      StackTraceElement[] stacks = e.getStackTrace();
+      StringBuffer stackout = new StringBuffer();
+      
+      for (int i = 0, n = stacks.length; i < n; i++) {
+        StackTraceElement element = stacks[i];
+        stackout.append(element.toString()).append("\n");
+      }
+      mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
 			valid = false;
 		}
 		return valid;
@@ -709,6 +751,15 @@ public class MartShell {
 				parseCommand(querystring);
 			} catch (Exception e) {
 				setBatchError(e.getMessage());
+        StackTraceElement[] stacks = e.getStackTrace();
+        StringBuffer stackout = new StringBuffer();
+      
+        for (int i = 0, n = stacks.length; i < n; i++) {
+          StackTraceElement element = stacks[i];
+          stackout.append(element.toString()).append("\n");
+        }
+        mainLogger.info("\n\nStackTrace:\n" + stackout.toString());
+
 				validQuery = false;
 			}
 		}
