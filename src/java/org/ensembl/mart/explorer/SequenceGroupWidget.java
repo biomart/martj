@@ -27,6 +27,8 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -59,6 +61,9 @@ public class SequenceGroupWidget
   extends GroupWidget
   implements ActionListener {
 
+  private static final Logger logger =
+    Logger.getLogger(SequenceGroupWidget.class.getName());
+
   private class LabelledTextField extends JTextField {
     private LabelledTextField(String initialValue) {
       super(initialValue);
@@ -75,7 +80,7 @@ public class SequenceGroupWidget
   private final int IMAGE_WIDTH = 248;
 
   private final int IMAGE_HEIGHT = 69;
-  
+
   private final int UNSUPPORTED = -100;
   private final int NONE = -101;
 
@@ -322,6 +327,9 @@ public class SequenceGroupWidget
    */
   public static void main(String[] args) throws Exception {
 
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    logger.setLevel(Level.ALL);
+
     DSAttributeGroup g = new DSAttributeGroup("sequences");
     Query q = new Query();
     q.addQueryChangeListener(new DebugQueryListener(System.out));
@@ -344,9 +352,9 @@ public class SequenceGroupWidget
 
     if (src == clearButton) {
 
-      // a bit of hack; use this image because the method requires one. It will
-      // be replaced in the call to reset.
-      updateState("data/image/gene_schematic_gene_only.gif", NONE, 0,0);
+      // a bit of hack; use this image because the method requires one. The image on screen
+      // will be replaced by a blank one during reset().
+      updateState("data/image/gene_schematic_gene_only.gif", NONE, 0, 0);
       reset();
 
     } else if (transcript.isSelected()) {
@@ -355,12 +363,12 @@ public class SequenceGroupWidget
 
         reset();
         enableTranscriptButtons();
-      
+
       } else if (includeGeneSequence.isSelected()) {
 
         updateState(
-        "data/image/gene_schematic_gene_only.gif",
-          SequenceDescription.GENEEXONINTRON,
+          "data/image/gene_schematic_gene_only.gif",
+          SequenceDescription.TRANSCRIPTEXONINTRON,
           0,
           0);
 
@@ -378,17 +386,16 @@ public class SequenceGroupWidget
 
         updateState(
           "data/image/gene_schematic_gene_5.gif",
-          SequenceDescription.TRANSCRIPTFLANKS,
+          SequenceDescription.TRANSCRIPTEXONINTRON,
           flank5.getTextAsInt(),
           0);
         flank5.setEnabled(true);
 
       } else if (includeUpstream.isSelected()) {
 
-        //      TODO transcript upstream sequence support
         updateState(
           "data/image/gene_schematic_5_only.gif",
-          UNSUPPORTED,
+          SequenceDescription.TRANSCRIPTFLANKS,
           flank5.getTextAsInt(),
           0);
         flank5.setEnabled(true);
@@ -403,24 +410,27 @@ public class SequenceGroupWidget
 
       } else if (includeUpStreamAndUTR.isSelected()) {
 
-        updateState("data/image/gene_schematic_upstream_utr_5.gif", UNSUPPORTED, 0, 0);
+        updateState(
+          "data/image/gene_schematic_upstream_utr_5.gif",
+          SequenceDescription.UPSTREAMUTR,
+          flank5.getTextAsInt(),
+          0);
         flank5.setEnabled(true);
 
       } else if (includeGeneSequence_3.isSelected()) {
 
         updateState(
           "data/image/gene_schematic_gene_3.gif",
-          SequenceDescription.TRANSCRIPTFLANKS,
+          SequenceDescription.TRANSCRIPTEXONINTRON,
           0,
           flank3.getTextAsInt());
         flank3.setEnabled(true);
 
       } else if (includeDownStream.isSelected()) {
 
-        // TODO transcript downstream support
         updateState(
           "data/image/gene_schematic_3_only.gif",
-          UNSUPPORTED,
+          SequenceDescription.TRANSCRIPTFLANKS,
           0,
           flank3.getTextAsInt());
         flank3.setEnabled(true);
@@ -435,8 +445,11 @@ public class SequenceGroupWidget
 
       } else if (includeDownStreamAndUTR.isSelected()) {
 
-        //      TODO transcript downstream + UTR
-        updateState("data/image/gene_schematic_downstream_utr_3.gif", UNSUPPORTED, 0, 0);
+        updateState(
+          "data/image/gene_schematic_downstream_utr_3.gif",
+          SequenceDescription.DOWNSTREAMUTR,
+          0,
+          flank3.getTextAsInt());
         flank3.setEnabled(true);
 
       } else if (includeExonSequence.isSelected()) {
@@ -531,7 +544,7 @@ public class SequenceGroupWidget
 
         updateState(
           "data/image/gene_schematic_extent_gene_5.gif",
-          SequenceDescription.GENEFLANKS,
+          SequenceDescription.GENEEXONINTRON,
           flank5.getTextAsInt(),
           0);
         flank5.setEnabled(true);
@@ -550,7 +563,7 @@ public class SequenceGroupWidget
 
         updateState(
           "data/image/gene_schematic_extent_5_only.gif",
-          UNSUPPORTED,
+          SequenceDescription.GENEFLANKS,
           flank5.getTextAsInt(),
           0);
         flank5.setEnabled(true);
@@ -559,7 +572,7 @@ public class SequenceGroupWidget
 
         updateState(
           "data/image/gene_schematic_extent_3_only.gif",
-          UNSUPPORTED,
+          SequenceDescription.GENEFLANKS,
           0,
           flank3.getTextAsInt());
         flank3.setEnabled(true);
@@ -587,7 +600,7 @@ public class SequenceGroupWidget
 
         updateState(
           "data/image/gene_schematic_extent_exons_3.gif",
-          SequenceDescription.GENEEXONS,
+          SequenceDescription.GENEEXONINTRON,
           0,
           flank3.getTextAsInt());
 
@@ -661,6 +674,7 @@ public class SequenceGroupWidget
 
     oldAttribute = newAttribute;
 
+    logger.fine("Updated attribute: " + oldAttribute);
   }
 
   private void enableGeneButtons() {
