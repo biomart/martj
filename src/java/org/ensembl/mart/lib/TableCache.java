@@ -24,12 +24,17 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.sql.DataSource;
 
 /**
  * Caches Table arrays and uses Queries as the keys.
  *
  */
 public class TableCache {
+  
+  private Logger logger = Logger.getLogger(TableCache.class.getName());
 
 	public static TableCache instance = new TableCache();
 
@@ -52,35 +57,46 @@ public class TableCache {
 		mapperCache.put(queryHashcode(query), mappersValue);
 	}
 
-	public final Table[] get(Query query, Connection conn) throws SQLException {
+	public final Table[] get(Query query) throws SQLException {
 		Object tmp = mapperCache.get(queryHashcode(query));
 		if (tmp != null)
 			return (Table[]) tmp;
 		else
-			return loadFromDabase(query, conn);
+			return loadFromDabase(query);
 	}
 
 	public final void clear() {
 		mapperCache.clear();
 	}
 
-	public Table[] loadFromDabase(Query query, Connection conn)
+	public Table[] loadFromDabase(Query query)
 		throws SQLException {
 
 		ArrayList tablesTmp = new ArrayList();
 
 		// load all the tables that begin with one of the star names
-		ResultSet rs = conn.createStatement().executeQuery("show tables");
+    DataSource ds = query.getDataSource();
+    if ( ds==null ) throw new RuntimeException("query.dataset is null");
+    Connection conn = ds.getConnection();
+    String catalog = conn.getCatalog();
+		ResultSet rs = conn.getMetaData().getTables( catalog, null, null, null);
 		while (rs.next()) {
-			String tableName = rs.getString(1);
+      // 3rd column is the table name. See MetaData documentation for more info.
+			String tableName = rs.getString(3);
 			for (int i = 0; i < query.getStarBases().length; i++) {
 				if (tableName.startsWith(query.getStarBases()[i])) {
 					tablesTmp.add(new Table(tableName, columns(tableName, conn), ""));
 				}
 			}
+    
 		}
+    conn.close();
 
 		Table[] tables = new Table[tablesTmp.size()];
+    
+    logger.warning( "Catalog = " + catalog );
+    logger.warning("Num tables loaded = " + tables.length );
+    
 		tablesTmp.toArray(tables);
 		mapperCache.put(FieldMapperCache.instance.queryHashcode(query), tables);
 
