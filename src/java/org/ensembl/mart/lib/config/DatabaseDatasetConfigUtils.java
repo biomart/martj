@@ -3022,9 +3022,15 @@ public class DatabaseDatasetConfigUtils {
     Option op;
     while (rs.next()) {
       value = rs.getString(1);
-      // fix for an empty string, could possibly throw an exception
-      if (value.length() == 0){continue;}  
-      op = new Option();
+      
+      // fix for an empty string
+      	if (value.length() == 0)
+      	{	
+      		System.out.println("MAKE DROP DOWN WARNING: Detected empty string(s) in "+ tableName+"."+columnName);
+      continue;
+      }  
+      
+      	op = new Option();
       op.setDisplayName(value);
       String intName = value.replaceAll(" ", "_");
       op.setInternalName(intName.toLowerCase());
