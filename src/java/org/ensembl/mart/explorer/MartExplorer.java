@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -32,7 +33,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
-import  java.util.prefs.*;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -51,10 +51,10 @@ public class MartExplorer extends JPanel {
 	private static final Dimension PREFERRED_SIZE = new Dimension( 700, 700 );
 	private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	
-  private Preferences prefs = null;
- 	private JFileChooser configFileChooser = null;
-	private DatabaseSettingsDialog databaseSettings = null;
-	
+  private Preferences prefs;
+ 	private JFileChooser configFileChooser;
+	private DatabaseSettingsDialog databaseSettings;
+  
     
 	private QueryManager queryManager = new QueryManager();
 	//private Engine engine = new Engine();
@@ -113,6 +113,7 @@ public class MartExplorer extends JPanel {
     }
 		databaseSettings.setPrefs( prefs );
 	}
+
 
 	public void warn(String message) {
 		JOptionPane.showMessageDialog(

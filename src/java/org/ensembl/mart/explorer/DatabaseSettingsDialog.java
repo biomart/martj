@@ -119,7 +119,7 @@ public class DatabaseSettingsDialog extends Box {
 							JOptionPane.YES_NO_OPTION,
 							JOptionPane.QUESTION_MESSAGE,
 							null,
-							null,
+					    null,
 							null);
 					rememberPassword.setSelected(option == JOptionPane.YES_OPTION);
 				}
