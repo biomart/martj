@@ -2128,7 +2128,7 @@ public class MartShell {
 			String disp = "\t\t" + desc.getInternalName();
 			if (desc.getDisplayName().length() > 0)
 				disp += " - " + desc.getDisplayName();
-			disp += " (see 'help " + desc.getObjectCode() + "' for further information)";
+			disp += " (see 'help " + desc.getHandler() + "' for further information)";
 			lines.add(disp);
 		}
 

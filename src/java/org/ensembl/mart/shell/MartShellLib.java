@@ -231,7 +231,7 @@ public class MartShellLib {
 							fieldMaps.add(fieldMap);
 					} else {
 						UIDSFilterDescription uifilter = (UIDSFilterDescription) filter;
-						fieldMaps.add(new UIMapper(uifilter.getObjectCode(), uifilter.getInternalName()));
+						fieldMaps.add(new UIMapper(uifilter.getHandler(), uifilter.getInternalName()));
 					}
 				}
 				field_Attribute.put(datasetName, new ArrayList());
@@ -1320,7 +1320,7 @@ public class MartShellLib {
 						} else
 							thisHandlerParam = thisToken;
 
-						DomainSpecificFilter thisFilter = new DomainSpecificFilter(fds.getObjectCode(), thisHandlerParam);
+						DomainSpecificFilter thisFilter = new DomainSpecificFilter(fds.getHandler(), thisHandlerParam);
 						newQuery.addDomainSpecificFilter(thisFilter);
 						start = true;
 						value = false;
