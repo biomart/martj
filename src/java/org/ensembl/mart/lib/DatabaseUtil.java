@@ -138,13 +138,6 @@ public class DatabaseUtil {
     }
     
     
-		/* (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
-		public boolean equals(Object obj) {
-			return datasource.equals(obj);
-		}
-
 		/**
 		 * @return
 		 * @throws java.sql.SQLException
@@ -164,44 +157,37 @@ public class DatabaseUtil {
 			return datasource.getConnection(username, password);
 		}
 
-		/**
-		 * @return
-		 * @throws java.sql.SQLException
-		 */
-		public int getLoginTimeout() throws SQLException {
-			return datasource.getLoginTimeout();
-		}
+    /**
+     * @return
+     * @throws java.sql.SQLException
+     */
+    public int getLoginTimeout() throws SQLException {
+      return datasource.getLoginTimeout();
+    }
 
-		/**
-		 * @return
-		 * @throws java.sql.SQLException
-		 */
-		public PrintWriter getLogWriter() throws SQLException {
-			return datasource.getLogWriter();
-		}
+    /**
+     * @return
+     * @throws java.sql.SQLException
+     */
+    public PrintWriter getLogWriter() throws SQLException {
+      return datasource.getLogWriter();
+    }
 
-		/* (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
-		public int hashCode() {
-			return datasource.hashCode();
-		}
+    /**
+     * @param seconds
+     * @throws java.sql.SQLException
+     */
+    public void setLoginTimeout(int seconds) throws SQLException {
+      datasource.setLoginTimeout(seconds);
+    }
 
-		/**
-		 * @param seconds
-		 * @throws java.sql.SQLException
-		 */
-		public void setLoginTimeout(int seconds) throws SQLException {
-			datasource.setLoginTimeout(seconds);
-		}
-
-		/**
-		 * @param out
-		 * @throws java.sql.SQLException
-		 */
-		public void setLogWriter(PrintWriter out) throws SQLException {
-			datasource.setLogWriter(out);
-		}
+    /**
+     * @param out
+     * @throws java.sql.SQLException
+     */
+    public void setLogWriter(PrintWriter out) throws SQLException {
+      datasource.setLogWriter(out);
+    }
 
   }
 
