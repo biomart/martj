@@ -38,6 +38,7 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
+import org.ensembl.mart.util.TestFrame;
 
 /**
  * A boolean filter widget has a description and three radio buttons;
@@ -332,10 +333,7 @@ public class BooleanFilterWidget
     p.add(bfw2);
     p.add(bfw3);
 
-    JFrame f = new JFrame("Boolean Filter - test");
-    f.getContentPane().add(p);
-    f.setVisible(true);
-    f.pack();
+    new TestFrame("BooleanFilterWidget test", p);
 
   }
 

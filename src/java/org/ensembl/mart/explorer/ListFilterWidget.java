@@ -39,6 +39,7 @@ import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
+import org.ensembl.mart.util.TestFrame;
 
 /**
  * Represents a list of user options. Some options cause the
@@ -301,12 +302,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
     // use internalID>displayName?
     // fd.addOption( new Option("optionInternalName3","true") );           
 
-    ListFilterWidget lfw = new ListFilterWidget(fgw, q, fd, null);
-
-    JFrame f = new JFrame("Boolean Filter - test");
-    f.getContentPane().add(lfw);
-    f.pack();
-    f.setVisible(true);
+    new TestFrame("List Filter Widget",new ListFilterWidget(fgw, q, fd, null));
 
   }
 }
