@@ -16,32 +16,35 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-// TODO add clear button
-// TODO remove node from tree if cleared
 // TODO bring this page to front if node selected
 
 package org.ensembl.mart.explorer;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Widget with a label and text entry area which adds/removes
+ * a corresponding <code>Filter</code> object from the query. Entering text folled by
+ * <code>return</code> causes a filter to be added or changed. Clearing the text
+ * and pressing <code>return</code> removes the filter.
  */
-public class TextFilterWidget extends FilterDescriptionWidget 
-implements ChangeListener, PropertyChangeListener  {
+public class TextFilterWidget
+  extends FilterDescriptionWidget
+  implements ActionListener, PropertyChangeListener {
 
-  private LabelledComboBox combo;
+  private JTextField textField;
   private BasicFilter filter;
 
   /**
@@ -49,69 +52,110 @@ implements ChangeListener, PropertyChangeListener  {
    * @param filterDescription
    */
   public TextFilterWidget(Query query, UIFilterDescription filterDescription) {
-    
+
     super(query, filterDescription);
-    
-    
-    combo = new LabelledComboBox( filterDescription.getDisplayName() );
-    combo.addChangeListener( this ); // listen for user entered changes
-    query.addPropertyChangeListener( this ); // listen for changes to query
-    add( combo  );
+    setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+    textField = new JTextField(5);
+    textField.addActionListener(this); // listen for user entered changes
+    query.addPropertyChangeListener(this); // listen for changes to query
+    add(new JLabel(filterDescription.getDisplayName()));
+    add(textField);
+    add(Box.createHorizontalGlue());
   }
 
-  
-    /**
-     * Update query when text filter change. Adds filter to query
-     * when text entered first time, changes filter if text changed, 
-     * removes filter if text cleared.
-     * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
-     */
-    public void stateChanged(ChangeEvent e) {
-      
-      String value = combo.getSelectedItem().toString();
-      
-      // remove filter
-      if ( value==null || "".equals( value ) ) {
-        if ( filter!=null ) {
-          query.removeFilter( filter );
-          filter = null;
-          setField( null );
-        }
-        return;
-      } 
-      
-      // Add / change filter
-      BasicFilter old = filter;
-      filter = new BasicFilter( filterDescription.getFieldName(),
-                                filterDescription.getTableConstraint(),
-                                filterDescription.getQualifier(), 
-                                value);
-      setNodeLabel( null,
+  /**
+   * Update query when text filter change. Adds filter to query
+   * when text entered first time, changes filter if text changed, 
+   * removes filter if text cleared.
+   * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+   */
+  public void actionPerformed(ActionEvent e) {
+
+    String value = textField.getText();
+
+    // remove filter
+    if (value == null || "".equals(value)) {
+      if (filter != null) {
+        query.removeFilter(filter);
+        filter = null;
+        setField(null);
+        setNodeLabel(null, null);
+      }
+      return;
+    }
+
+    // Add / change filter
+    BasicFilter old = filter;
+    setFilter(
+      new BasicFilter(
+        filterDescription.getFieldName(),
+        filterDescription.getTableConstraint(),
+        filterDescription.getQualifier(),
+        value));
+
+    query.removePropertyChangeListener( this );
+    if (old == null) query.addFilter(filter);
+    else query.replaceFilter(old, filter);
+    query.addPropertyChangeListener( this );
+  }
+
+  /**
+   * Update text field when relevant Filter is added or
+   * removed from query. Filter is relevant if 
+   * <code>filter.getFieldName().equals(  )</code>
+   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+   */
+  public void propertyChange(PropertyChangeEvent evt) {
+
+    if (evt.getSource() == query && "filter".equals(evt.getPropertyName())) {
+
+      Object newValue = evt.getNewValue();
+      Object oldValue = evt.getOldValue();
+
+      // a relevant filter has been added to query 
+      if (newValue != null
+        && newValue instanceof BasicFilter
+        && oldValue == null) {
+
+        BasicFilter f = (BasicFilter) newValue;
+        if ( relevantFilter(f) ) setFilter(f);
+
+      }
+
+      // a relevant filter has been removed from the query
+      if (newValue == null
+        && oldValue != null
+        && oldValue instanceof BasicFilter) {
+
+        BasicFilter f = (BasicFilter) oldValue;
+        if ( relevantFilter(f) ) setFilter( null );
+
+      }
+
+    }
+  }
+
+  private boolean relevantFilter(BasicFilter f) {
+    return f.getField().equals( filterDescription.getFieldName() );
+  }
+
+  private void setFilter(BasicFilter filter) {
+
+    this.filter = filter;
+
+    String rhs = null;
+    if (filter != null)
+      rhs =
         filterDescription.getDisplayName()
           + filterDescription.getQualifier()
-          + value);
-      // Must do this BEFORE adding the filter
-      // to the query because the QueryEditor, which reponds
-      // to Query property changes, uses the field as a key 
-      // to look up THIS page in order to get it's node for
-      // displaying in the tree.
-      setField( filter );
-       
-      if ( old==null ) {
-        query.addFilter( filter );
-      } else {
-        query.replaceFilter(old, filter);
-      }
-    }
-
-
-    /**
-     * Update combo when query changes.
-     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-     */
-    public void propertyChange(PropertyChangeEvent evt) {
-      // TODO Auto-generated method stub
-      
-    }
-
+          + filter.getValue();
+    setNodeLabel(null, rhs);
+    
+    // Must do this BEFORE adding the filter
+    // to the query because the QueryEditor, which reponds
+    // to Query property changes, uses the field as a key 
+    // to look up THIS page in order to get it's node for
+    // displaying in the tree.
+    setField(filter);
+  }
 }
