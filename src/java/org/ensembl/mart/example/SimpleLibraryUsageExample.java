@@ -18,8 +18,6 @@
 
 package org.ensembl.mart.example;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -30,17 +28,32 @@ import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
+import org.ensembl.mart.lib.LoggingUtils;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
 
+
+/**
+ * Demonstrates how to construct a Query and execute it against a database.
+ */
 public class SimpleLibraryUsageExample {
 
+  /**
+   * Builds a query and executes it against a database.
+   * @param args ignored
+   * @throws SequenceException
+   * @throws FormatException
+   * @throws InvalidQueryException
+   * @throws SQLException
+   * @throws ConfigurationException
+   */
 	public static void main(String[] args)
 		throws SequenceException, FormatException, InvalidQueryException, SQLException, ConfigurationException {
 
-		// Configure the logging system.
-		Logger.getLogger("").setLevel(Level.INFO);
+		// Configure the logging system, don't show verbose messages
+    LoggingUtils.setVerbose(false);
+		
 
 		// Initialise an engine encapsualting a specific Mart database.
 		Engine engine = new Engine();
@@ -50,12 +63,15 @@ public class SimpleLibraryUsageExample {
 		query.setDatasetName("hsapiens");
 		DataSource ds =
 			DatabaseUtil.createDataSource(
-				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1",
+				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_17_1",
 				"anonymous",
 				null,
 				10,
 				"com.mysql.jdbc.Driver");
 		query.setDataSource(ds);
+    
+    // dataset query applies to
+    query.setDatasetName("hsapiens_ensemblgene");
 
 		// prefixes for databases we want to use
 		query.setStarBases(
