@@ -72,7 +72,7 @@ public class AttributesWidget extends InputPage {
       for (int i = 0; i < aps.length; i++)
       { 
       	// hack for skipping link pages
-      	if (aps[i].getInternalName().equals("link_attributes")) continue;
+      	if (aps[i].getInternalName().equals("link_attributes") || aps[i].getInternalName().equals("sequences")) continue;
         tabbedPane.add(
           new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree));
       add(tabbedPane);
