@@ -95,6 +95,7 @@ public class DatabaseDatasetConfigUtils {
   private final String DELETEOLDXML = "delete from "; //append table after user test
   private final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ? and dataset = ?";
   private final String DELETEDATASETCONFIG = " where dataset = ?";
+  private final String DELETEINTERNALNAME = " and internalName = ?";
   private final String INSERTXMLSQLA = "insert into "; //append table after user test
   private final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
@@ -1419,6 +1420,31 @@ public class DatabaseDatasetConfigUtils {
     } finally {
       DetailedDataSource.close(conn);
     }
+  }
+
+  /**
+	* Removes all records in a given metatable for the given dataset and internal name
+	* @param dataset - dataset for DatasetConfig entries to delete from metatable
+	* @param internalName - internal name for DatasetConfig entry to delete from metatable
+	* @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
+	*/
+
+  public void deleteDatasetConfigsForDatasetIntName(String dataset, String internalName) throws ConfigurationException {
+	String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
+
+	Connection conn = null;
+	try {
+	  conn = dsource.getConnection();
+	  PreparedStatement ds = conn.prepareStatement(deleteSQL);
+	  ds.setString(1, dataset);
+	  ds.setString(2,internalName);
+	  ds.executeUpdate();
+	  ds.close();
+	} catch (SQLException e) {
+	  throw new ConfigurationException("Caught SQLException during delete\n");
+	} finally {
+	  DetailedDataSource.close(conn);
+	}
   }
 
   /**
