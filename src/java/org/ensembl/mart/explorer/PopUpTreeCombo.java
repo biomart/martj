@@ -21,8 +21,10 @@ package org.ensembl.mart.explorer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -59,229 +61,247 @@ import org.ensembl.mart.lib.config.DatasetView;
  */
 public abstract class PopUpTreeCombo extends JPanel {
 
-	private String lastLabel;
-	private Object lastObject;
-	private JMenuItem oldItem;
-	// --- state
-	protected LabelledTreeNode rootNode = new LabelledTreeNode(null, null);
-	protected DefaultTreeModel model = new DefaultTreeModel(rootNode);
+  private String lastLabel;
+  private Object lastObject;
+  private JMenuItem oldItem;
+  // --- state
+  protected LabelledTreeNode rootNode = new LabelledTreeNode(null, null);
+  protected DefaultTreeModel model = new DefaultTreeModel(rootNode);
 
-	// --- UI
-	private JButton button = new JButton("change");
-	private JTextField selectedTextField = new JTextField(30);
-	private JMenuBar treeMenu = new JMenuBar();
-	private JMenu firstTier = new JMenu();
-	private Feedback feedback = new Feedback(this);
+  private List listeners = new ArrayList();
 
+  // --- UI
+  private JButton button = new JButton("change");
+  private JTextField selectedTextField = new JTextField(30);
+  private JMenuBar treeMenu = new JMenuBar();
+  private JMenu firstTier = new JMenu();
+  private Feedback feedback = new Feedback(this);
 
+  public PopUpTreeCombo(String label) {
+    super();
+    createUI(label);
 
-	public PopUpTreeCombo(String label) {
-		super();
-		createUI(label);
+  }
 
-	}
+  public void addActionListener(ActionListener listener) {
+    listeners.add(listener);
+  }
 
-	/** 
-	 * To be overidden be implementing classes who wish to changed the model
-	 * before the tree is displayed.
-	 */
-	public abstract void update();
+  public void removeActionListener(ActionListener listener) {
+    listeners.remove(listener);
+  }
 
-	private void createUI(String label) {
+  /** 
+   * To be overidden be implementing classes who wish to changed the model
+   * before the tree is displayed.
+   */
+  public abstract void update();
 
-		selectedTextField.setEditable(false);
-		selectedTextField.setMaximumSize(new Dimension(400, 27));
+  private void createUI(String label) {
 
-		button.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				showTree();
-			}
-		});
+    selectedTextField.setEditable(false);
+    selectedTextField.setMaximumSize(new Dimension(400, 27));
 
-		// make the menu appear beneath the row of components 
-		// containing the label, textField and button when displayed.
-		treeMenu.setMaximumSize(new Dimension(0, 100));
-		treeMenu.add(firstTier);
+    button.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        showTree();
+      }
+    });
 
-		add(new JLabel(label));
-		add(treeMenu);
-		add(button);
-		add(selectedTextField);
+    // make the menu appear beneath the row of components 
+    // containing the label, textField and button when displayed.
+    treeMenu.setMaximumSize(new Dimension(0, 100));
+    treeMenu.add(firstTier);
 
-	}
+    add(new JLabel(label));
+    add(treeMenu);
+    add(button);
+    add(selectedTextField);
 
-	public void showTree() {
-		if (model != null) {
+  }
 
-			update();
-			updateMenu();
-			firstTier.doClick();
-		}
+  public void showTree() {
+    if (model != null) {
 
-	}
+      update();
+      updateMenu();
+      firstTier.doClick();
+    }
 
-	/**
-	 * @param displayName display name of the selected datasetView.
-	 */
-	private void doSelect(String label, Object o) {
+  }
 
-    if ( label==lastLabel && o==lastObject ) return;
-    
+  /**
+   * @param displayName display name of the selected datasetView.
+   */
+  private void doSelect(String label, Object o) {
+
+    if (label == lastLabel && o == lastObject)
+      return;
+
     lastLabel = label;
     lastObject = o;
 
-		selectedTextField.setText(label);
-    System.out.println(label);
+    selectedTextField.setText(label);
 
+    ActionEvent event = new ActionEvent(this, 0, null);
+    for (Iterator iter = listeners.iterator(); iter.hasNext();) {
+      ActionListener l = (ActionListener) iter.next();
+      l.actionPerformed(event);
+    }
 
-	}
-	private JMenuItem noneMenuItem = new JMenuItem("None");
-	private Map datasetNameToDatasetView = new HashMap();
-	/**
-	 * Unpacks the datasetViews into several sets and maps that enable
-	 * easy lookup of information.
-	 * 
-	 * displayName -> shortName
-	 * datasetName -> datasetView | List-of-datasetViews
-	 * displayName -> datasetView | List-of-datasetViews
-	 * 
-	 * @param datasetViews dataset views, should be sorted by displayNames.
-	 */
-	private void unpack(DatasetView[] datasetViews) {
+  }
+  private JMenuItem noneMenuItem = new JMenuItem("None");
+  private Map datasetNameToDatasetView = new HashMap();
+  /**
+   * Unpacks the datasetViews into several sets and maps that enable
+   * easy lookup of information.
+   * 
+   * displayName -> shortName
+   * datasetName -> datasetView | List-of-datasetViews
+   * displayName -> datasetView | List-of-datasetViews
+   * 
+   * @param datasetViews dataset views, should be sorted by displayNames.
+   */
+  private void unpack(DatasetView[] datasetViews) {
 
-		Set availableDisplayNames = new HashSet();
-		Set availableDatasetNames = new HashSet();
-		Map displayNameToDatasetView = new HashMap();
-		Map displayNameToShortName = new HashMap();
+    Set availableDisplayNames = new HashSet();
+    Set availableDatasetNames = new HashSet();
+    Map displayNameToDatasetView = new HashMap();
+    Map displayNameToShortName = new HashMap();
 
-		if (datasetViews == null)
-			return;
+    if (datasetViews == null)
+      return;
 
-		Set clashingDisplayNames = new HashSet();
-		Set clashingDatasetNames = new HashSet();
+    Set clashingDisplayNames = new HashSet();
+    Set clashingDatasetNames = new HashSet();
 
-		for (int i = 0; i < datasetViews.length; i++) {
+    for (int i = 0; i < datasetViews.length; i++) {
 
-			DatasetView view = datasetViews[i];
+      DatasetView view = datasetViews[i];
 
-			String displayName = view.getDisplayName();
-			if (availableDisplayNames.contains(displayName))
-				clashingDisplayNames.add(view);
-			else
-				availableDisplayNames.add(displayName);
+      String displayName = view.getDisplayName();
+      if (availableDisplayNames.contains(displayName))
+        clashingDisplayNames.add(view);
+      else
+        availableDisplayNames.add(displayName);
 
-			String datasetName = view.getInternalName();
-			if (availableDatasetNames.contains(datasetName))
-				clashingDatasetNames.add(view);
-			else
-				availableDatasetNames.add(datasetName);
+      String datasetName = view.getInternalName();
+      if (availableDatasetNames.contains(datasetName))
+        clashingDatasetNames.add(view);
+      else
+        availableDatasetNames.add(datasetName);
 
-			String[] elements = displayName.split("__");
-			String shortName = elements[elements.length - 1];
-			displayNameToShortName.put(displayName, shortName);
-		}
+      String[] elements = displayName.split("__");
+      String shortName = elements[elements.length - 1];
+      displayNameToShortName.put(displayName, shortName);
+    }
 
-		for (int i = 0; i < datasetViews.length; i++) {
+    for (int i = 0; i < datasetViews.length; i++) {
 
-			DatasetView view = datasetViews[i];
+      DatasetView view = datasetViews[i];
 
-			String displayName = view.getDisplayName();
-			if (clashingDisplayNames.contains(view)) {
-				List list = (List) displayNameToDatasetView.get(displayName);
-				if (list == null) {
-					list = new LinkedList();
-					displayNameToDatasetView.put(displayName, list);
-				}
-				list.add(view);
-			} else {
-				displayNameToDatasetView.put(displayName, view);
-			}
+      String displayName = view.getDisplayName();
+      if (clashingDisplayNames.contains(view)) {
+        List list = (List) displayNameToDatasetView.get(displayName);
+        if (list == null) {
+          list = new LinkedList();
+          displayNameToDatasetView.put(displayName, list);
+        }
+        list.add(view);
+      } else {
+        displayNameToDatasetView.put(displayName, view);
+      }
 
-			String datasetName = view.getInternalName();
-			if (clashingDatasetNames.contains(view)) {
-				List list = (List) datasetNameToDatasetView.get(datasetName);
-				if (list == null) {
-					list = new LinkedList();
-					datasetNameToDatasetView.put(datasetName, list);
-				}
-				list.add(view);
-			} else {
-				datasetNameToDatasetView.put(datasetName, view);
-			}
+      String datasetName = view.getInternalName();
+      if (clashingDatasetNames.contains(view)) {
+        List list = (List) datasetNameToDatasetView.get(datasetName);
+        if (list == null) {
+          list = new LinkedList();
+          datasetNameToDatasetView.put(datasetName, list);
+        }
+        list.add(view);
+      } else {
+        datasetNameToDatasetView.put(datasetName, view);
+      }
 
-		}
+    }
 
-	}
-	/**
-	 * Update the menu to reflect the model. 
-	 */
-	private void updateMenu() {
+  }
+  /**
+   * Update the menu to reflect the model. 
+   */
+  private void updateMenu() {
 
-		firstTier.removeAll();
+    firstTier.removeAll();
 
-		int n = rootNode.getChildCount();
-		for (int i = 0; i < n; i++)
-			addToMenu(firstTier, (LabelledTreeNode) rootNode.getChildAt(i));
+    int n = rootNode.getChildCount();
+    for (int i = 0; i < n; i++)
+      addToMenu(firstTier, (LabelledTreeNode) rootNode.getChildAt(i));
 
-	}
+  }
 
-	/**
-	 * @param rootNode
-	 */
-	private void addToMenu(JMenu menu, final LabelledTreeNode node) {
-		if (node.getChildCount() == 0) {
+  /**
+   * @param rootNode
+   */
+  private void addToMenu(JMenu menu, final LabelledTreeNode node) {
+    if (node.getChildCount() == 0) {
 
-			JMenuItem item = new JMenuItem(node.getLabel());
+      JMenuItem item = new JMenuItem(node.getLabel());
       menu.add(item);
       item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent event) {
           doSelect(node.getLabel(), node.getUserObject());
         }
       });
-      
 
-		} else {
+    } else {
 
-			JMenu m = new JMenu(node.getLabel());
-			menu.add(m);
+      JMenu m = new JMenu(node.getLabel());
+      menu.add(m);
 
-			int n = node.getChildCount();
-			for (int i = 0; i < n; i++)
-				addToMenu(m, (LabelledTreeNode) node.getChildAt(i));
+      int n = node.getChildCount();
+      for (int i = 0; i < n; i++)
+        addToMenu(m, (LabelledTreeNode) node.getChildAt(i));
 
-		}
+    }
 
-	}
+  }
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		PopUpTreeCombo pu = new PopUpTreeCombo("Test") {
-			public void update() {
+    final PopUpTreeCombo pu = new PopUpTreeCombo("Test") {
+      public void update() {
         // Create a sample tree for rendering
-				rootNode.removeAllChildren();
-				rootNode.add(new LabelledTreeNode("a", "a"));
-				rootNode.add(new LabelledTreeNode("b", "b"));
-				LabelledTreeNode c = new LabelledTreeNode("c", "c");
-				c.add(new LabelledTreeNode("c1", "c1"));
-				rootNode.add(c);
+        rootNode.removeAllChildren();
+        rootNode.add(new LabelledTreeNode("a", "a"));
+        rootNode.add(new LabelledTreeNode("b", "b"));
+        LabelledTreeNode c = new LabelledTreeNode("c", "c");
+        c.add(new LabelledTreeNode("c1", "c1"));
+        rootNode.add(c);
 
-				rootNode.add(new LabelledTreeNode("d", "d"));
-			}
+        rootNode.add(new LabelledTreeNode("d", "d"));
+      }
 
-		};
+    };
 
-		Box p = Box.createVerticalBox();
-		p.add(pu);
+    // test the listener support
+    pu.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        System.out.println("Selection changed to : " + pu.getSelectedLabel());
+      }
+    });
 
-		JFrame f = new JFrame(PopUpTreeCombo.class.getName() + " (Test Frame)");
-		f.getContentPane().add(p);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		//f.setSize(250, 100);
-		f.pack();
-		f.setVisible(true);
+    Box p = Box.createVerticalBox();
+    p.add(pu);
 
-	}
+    JFrame f = new JFrame(PopUpTreeCombo.class.getName() + " (Test Frame)");
+    f.getContentPane().add(p);
+    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    //f.setSize(250, 100);
+    f.pack();
+    f.setVisible(true);
 
+  }
 
   /**
    * @return selected label, null if none selected.
@@ -289,12 +309,11 @@ public abstract class PopUpTreeCombo extends JPanel {
   public String getSelectedLabel() {
     return lastLabel;
   }
-  
-  
+
   /**
    * @return selected user object, null if none set.
    */
   public Object getSelectedUserObject() {
-   return lastObject;
-  }   
+    return lastObject;
+  }
 }
