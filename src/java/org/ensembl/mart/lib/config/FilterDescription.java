@@ -397,7 +397,7 @@ public class FilterDescription extends QueryFilterSettings {
 		if (supports(field, tableConstraint,condition)) {
 			if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) 
       &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint)
-      &&  getAttribute(condition) != null &&  getAttribute(condition).equals(condition)
+      &&  getAttribute(qualifierKey) != null &&  getAttribute(qualifierKey).equals(condition)
             )
 				ret = getAttribute(internalNameKey);
 			else
@@ -421,7 +421,7 @@ public class FilterDescription extends QueryFilterSettings {
     if (supports(field, tableConstraint, condition)) {
       if ( getAttribute(fieldKey) != null &&  getAttribute(fieldKey).equals(field) 
       &&  getAttribute(tableConstraintKey) != null &&  getAttribute(tableConstraintKey).equals(tableConstraint)
-      &&  getAttribute(condition) != null &&  getAttribute(condition).equals(condition))
+      &&  getAttribute(qualifierKey) != null &&  getAttribute(qualifierKey).equals(condition))
         ret = getAttribute(displayNameKey);
       else
         ret = lastSupportingOption.getDisplayNameByFieldNameTableConstraint(field, tableConstraint, condition);
