@@ -2000,7 +2000,7 @@
         </FilterDescription>
       </FilterCollection>
       <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
-        <FilterDescription field="" internalName="id_list_limit_filters" type="list">
+        <FilterDescription field="field_id" internalName="id_list_limit_filters" type="list">
           <Option description="filter to include genes with supplied list of AFFY-HG-U133-PLUS-2 ID(s)" displayName="AFFY-HG-U133-PLUS-2 ID(s):" field="display_id" internalName="affy_hg_u133_plus2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="xref_AFFY_HG_U133_PLUS_2_dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133_all_dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133A-2 ID(s)" displayName="AFFY-HG-U133A-2 ID(s):" field="display_id" internalName="affy_hg_u133a2_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="gene_xref_AFFY_HG_U133A_2_dm" type="list"/>
@@ -2245,7 +2245,7 @@
         <AttributeDescription description="Chromosomal Coordinate of the end of the Exon." displayName="Exon End (Chr bp)" field="exon_chrom_end" homepageURL="http://www.ensembl.org" internalName="exon_chromosome_end" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
         <AttributeDescription description="Chromosomal Coordinate of the Beginning of the Coding Sequence of the Exon." displayName="Exon Coding Start (Chr bp)" field="coding_start" homepageURL="http://www.ensembl.org" internalName="exon_coding_chromosome_start" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
         <AttributeDescription description="Chromosomal Coordinate of the End of the Coding Sequence of the Gene." displayName="Exon Coding End (Chr bp)" field="coding_end" homepageURL="http://www.ensembl.org" internalName="exon_coding_chromosome_end" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="9" source="EnsEMBL" tableConstraint="gene_structure_dm"/>
-        <AttributeDescription description="" displayName="Constitutive Exon" field="" homepageURL="http://www.ensembl.org" internalName="constitutive_exon" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="structure_dm"/>
+        <AttributeDescription description="" displayName="Constitutive Exon" field="constitutive" homepageURL="http://www.ensembl.org" internalName="constitutive_exon" linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE" maxLength="2" source="EnsEMBL" tableConstraint="structure_dm"/>
       </AttributeCollection>
     </AttributeGroup>
   </AttributePage>

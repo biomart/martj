@@ -2005,7 +2005,7 @@
         </FilterDescription>
       </FilterCollection>
       <FilterCollection description="Limit to genes with these IDs: (Paste ID list, or upload file)" displayName="Limit to genes with these IDs" internalName="id_list_limit">
-        <FilterDescription field="" internalName="id_list_limit_filters" type="list">
+        <FilterDescription field="display_id" internalName="id_list_limit_filters" type="list">
           <Option description="filter to include genes with supplied list of AFFY-HG-U133-all ID(s)" displayName="AFFY-HG-U133-all ID(s):" field="display_id" internalName="affy_hg_u133_all_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="AFFY_HG_U133_a__dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133A ID(s)" displayName="AFFY-HG-U133A ID(s):" field="display_id" internalName="affy_hg_u133a_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="AFFY_HG_U133A__dm" type="list"/>
           <Option description="filter to include genes with supplied list of AFFY-HG-U133B ID(s)" displayName="AFFY-HG-U133B ID(s):" field="display_id" internalName="affy_hg_u133b_id" isSelectable="true" legal_qualifiers="=,in" qualifier="=" tableConstraint="AFFY_HG_U133B__dm" type="list"/>
