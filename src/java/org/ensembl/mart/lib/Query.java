@@ -152,13 +152,13 @@ public class Query {
    * @param Filter filter
    */
   public void removeFilter(Filter filter) {
-    if (filters.contains(filter)) {
-
-      filters.remove(filter);
+    int index = filters.indexOf( filter );
+    if ( index>-1 ) {
+      filters.remove( index );
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).queryFilterRemoved(
           this,
-          0, filter);
+          index, filter);
     }
   }
 
@@ -226,12 +226,13 @@ public class Query {
    * @param Attribute attribute to be removed.
    */
   public void removeAttribute(Attribute attribute) {
-    if (attributes.contains(attribute)) {
-      attributes.remove(attribute);
+    int index = attributes.indexOf( attribute );
+    if ( index>-1 ) {
+      attributes.remove( index);
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).queryAttributeRemoved(
           this,
-          0, attribute);
+          index, attribute);
     }
   }
 
