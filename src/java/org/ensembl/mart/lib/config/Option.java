@@ -338,9 +338,9 @@ public class Option extends QueryFilterSettings {
 		return legalQualifiers;
 	}
 
-	public String getQualifiers(String refIname) {
+	public String getLegalQualifiers(String refIname) {
 		if (uiOptionNameMap.containsKey(refIname))
-			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getQualifiers(refIname);
+			return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getLegalQualifiers(refIname);
 		else {
 			if (uiOptionPushes.size() < 1)
 				return null;

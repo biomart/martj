@@ -342,7 +342,7 @@ public class FilterDescription extends QueryFilterSettings {
 		return legalQualifiers;
 	}
 
-	public String getQualifiers(String internalName) {
+	public String getLegalQualifiers(String internalName) {
 		if (this.internalName.equals(internalName))
 			return legalQualifiers;
 		else {
@@ -360,7 +360,7 @@ public class FilterDescription extends QueryFilterSettings {
 				if (uiOptionNameMap.containsKey(optionIname))
 					return (
 						(Option) uiOptions.get(
-							(Integer) uiOptionNameMap.get(optionIname))).getQualifiers(
+							(Integer) uiOptionNameMap.get(optionIname))).getLegalQualifiers(
 						refIname);
 				else
 					return null; // nothing found
