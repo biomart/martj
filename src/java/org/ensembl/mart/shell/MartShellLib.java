@@ -2044,9 +2044,11 @@ public class MartShellLib {
     return addSequenceDescription(query, dset, thisToken);
   }
 
-  private boolean domainSpecificHandlerAvailable(String keyword) {
+  private boolean domainSpecificHandlerAvailable(String keyword) throws InvalidQueryException {
     //modify this to add other domainSpecific keywords, or just replace it with a module
-    return keyword.equalsIgnoreCase(QSEQUENCE);
+    if (keyword.equalsIgnoreCase(QSEQUENCE))
+      throw new InvalidQueryException("Sequences are not currently supported\n");
+    return false;
   }
 
   private boolean domainSpecificSubQueryAllowed(String keyword) {
