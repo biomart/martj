@@ -148,7 +148,7 @@ public class FilterPage {
 			fcRank++;
 		}
 	}
-	
+
 	/**
 	 * Returns a List of FilterGroup/DSFilterGroup objects, in the order they were added.
 	 * 
@@ -190,7 +190,7 @@ public class FilterPage {
 		* @return UIFilterDescription object, or null.
 		*/
 	public Object getUIFilterDescriptionByName(String internalName) {
-  	if ( containsUIFilterDescription(internalName) )
+		if (containsUIFilterDescription(internalName))
 			return lastFilt;
 		else
 			return null;
@@ -207,171 +207,171 @@ public class FilterPage {
 	public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 
-		if (lastFilt == null){
+		if (lastFilt == null) {
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 				Object group = filterGroups.get((Integer) iter.next());
-				
-				if (group instanceof FilterGroup && ( (FilterGroup) group).containsUIFilterDescription(internalName)) {
-					lastFilt = ( (FilterGroup) group).getUIFilterDescriptionByName(internalName);
+
+				if (group instanceof FilterGroup && ((FilterGroup) group).containsUIFilterDescription(internalName)) {
+					lastFilt = ((FilterGroup) group).getUIFilterDescriptionByName(internalName);
 					found = true;
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			String lastIntName;
 			if (lastFilt instanceof UIFilterDescription)
-				lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
+				lastIntName = ((UIFilterDescription) lastFilt).getInternalName();
 			else if (lastFilt instanceof UIDSFilterDescription)
-				lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+				lastIntName = ((UIDSFilterDescription) lastFilt).getInternalName();
 			else
 				lastIntName = ""; // should not get here
-			  
-			if ( lastIntName.equals(internalName) )
-			 found = true;
+
+			if (lastIntName.equals(internalName))
+				found = true;
 			else {
-			 lastFilt = null;
-			 found = containsUIFilterDescription(internalName);			
+				lastFilt = null;
+				found = containsUIFilterDescription(internalName);
 			}
 		}
 		return found;
 	}
 
-  /**
-   * Convenience Method to get all UIFilterDescription/UIDSFilterDescription objects 
-   * in all Groups/Collections within a FilterPage.
-   * 
-   * @return List of UIFilterDescription/UIDSFilterDescription objects
-   */
-  public List getAllUIFilterDescriptions() {
+	/**
+	 * Convenience Method to get all UIFilterDescription/UIDSFilterDescription objects 
+	 * in all Groups/Collections within a FilterPage.
+	 * 
+	 * @return List of UIFilterDescription/UIDSFilterDescription objects
+	 */
+	public List getAllUIFilterDescriptions() {
 		List filts = new ArrayList();
-  	
+
 		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
 			Object fg = (FilterGroup) filterGroups.get((Integer) iter.next());
-  		if (fg instanceof FilterGroup)
-			  filts.addAll( ( (FilterGroup) fg).getAllUIFilterDescriptions() );
+			if (fg instanceof FilterGroup)
+				filts.addAll(((FilterGroup) fg).getAllUIFilterDescriptions());
 		}
-		
-		return filts;  	
-  }
-  
+
+		return filts;
+	}
+
 	/**
 	 * Convenience method for non graphical UI to check if a FilterPage contains a specific
 	 * FilterSetDescription.
 	 * 
 	 * @param internalName - String name that internally represents the requested FilterSetDescription
 	 * @return boolean, true if found within one of the filterSet objects contained in one of the filterGroups, false if not found
-	 */  
-  public boolean containsFilterSetDescription(String internalName) {
-  	boolean found = false;
-  	
-  	if (lastFSetDescription == null) {
+	 */
+	public boolean containsFilterSetDescription(String internalName) {
+		boolean found = false;
+
+		if (lastFSetDescription == null) {
 			for (Iterator iter = (Iterator) filterGroups.keySet().iterator(); iter.hasNext();) {
 				Object group = filterGroups.get((Integer) iter.next());
 				if (group instanceof FilterGroup) {
-  				if ( ( (FilterGroup) group ).containsFilterSetDescription(internalName)) {
-	  				lastFSetDescription = ( (FilterGroup) group ).getFilterSetDescriptionByName(internalName);
-		  			found = true;
-			  		break;
-				  }
+					if (((FilterGroup) group).containsFilterSetDescription(internalName)) {
+						lastFSetDescription = ((FilterGroup) group).getFilterSetDescriptionByName(internalName);
+						found = true;
+						break;
+					}
 				}
 			}
-  	}
-  	else {
-  		if (lastFSetDescription.getInternalName().equals(internalName))
-  		 found = true;
-  		else {
-  			lastFSetDescription = null;
-  			found = containsFilterSetDescription(internalName);
-  		}
-  	}
-  	return found;
-  }
-  
+		} else {
+			if (lastFSetDescription.getInternalName().equals(internalName))
+				found = true;
+			else {
+				lastFSetDescription = null;
+				found = containsFilterSetDescription(internalName);
+			}
+		}
+		return found;
+	}
+
 	/**
 	 * Convenience method for non graphical UI to get a specific FilterSetDescription by name.
 	 * 
 	 * @param internalName - String name that internally represents the requested FilterSetDescription
 	 * @return FilterSetDescription object requested, or null if not contained within this FilterPage
-	 */  
-  public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
-  	if (containsFilterSetDescription(internalName))
-  	  return lastFSetDescription;
-  	else
-  	  return null;
-  }
-  
-  public FilterSetDescription[] getAllFilterSetDescriptions() {
-  	List fsds = new ArrayList();
-  	
-  	for (Iterator iter = (Iterator) filterGroups.values().iterator(); iter.hasNext();) {
-  		Object group = iter.next();
-  		if (group instanceof FilterGroup) {
-  			fsds.addAll(Arrays.asList( ( (FilterGroup) group ).getAllFilterSetDescriptions() ) );
-  		}
-  	}
-  	FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
-  	fsds.toArray(f);
-  	return f;
-  }
-  
-  /**
-   * Returns a FilterGroup for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
-   * based on its internalName.
-   * 
-   * @param internalName - String internalname for which a group is requested
-   * @return FilterGroup object containing Filter Description with given internalName, or null.
-   */
-  public FilterGroup getGroupForFilter(String internalName) {
-  	if (! containsUIFilterDescription(internalName))
-  	  return null;
-  	else if (lastGroup == null) {
-  		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
-				FilterGroup group = (FilterGroup) iter.next();
-				
-				if (group.containsUIFilterDescription(internalName)) {
-				  lastGroup = group;
-				  break;
+	 */
+	public FilterSetDescription getFilterSetDescriptionByName(String internalName) {
+		if (containsFilterSetDescription(internalName))
+			return lastFSetDescription;
+		else
+			return null;
+	}
+
+	public FilterSetDescription[] getAllFilterSetDescriptions() {
+		List fsds = new ArrayList();
+
+		for (Iterator iter = (Iterator) filterGroups.values().iterator(); iter.hasNext();) {
+			Object group = iter.next();
+			if (group instanceof FilterGroup) {
+				fsds.addAll(Arrays.asList(((FilterGroup) group).getAllFilterSetDescriptions()));
+			}
+		}
+		FilterSetDescription[] f = new FilterSetDescription[fsds.size()];
+		fsds.toArray(f);
+		return f;
+	}
+
+	/**
+	 * Returns a FilterGroup for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a group is requested
+	 * @return FilterGroup object containing Filter Description with given internalName, or null.
+	 */
+	public FilterGroup getGroupForFilter(String internalName) {
+		if (!containsUIFilterDescription(internalName))
+			return null;
+		else if (lastGroup == null) {
+			for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+				Object groupo = iter.next();
+
+				if (groupo instanceof FilterGroup) {
+					FilterGroup group = (FilterGroup) groupo;
+					if (group.containsUIFilterDescription(internalName)) {
+						lastGroup = group;
+						break;
+					}
 				}
 			}
 			return lastGroup;
-  	}
-  	else {
-  		if (lastGroup.getInternalName().equals(internalName))
-  		  return lastGroup;
-  		else {
-  			lastGroup = null;
-  			return getGroupForFilter(internalName);
-  		}
-  	}  	
-  }
-  
-  /**
-   * Returns a FilterCollection for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
-   * based on its internalName.
-   * 
-   * @param internalName - String internalname for which a collection is requested
-   * @return FilterCollection object containing Filter Description with given internalName, or null.
-   */
-  public FilterCollection getCollectionForFilter(String internalName) {
-		if (! containsUIFilterDescription(internalName))
-					return null;
+		} else {
+			if (lastGroup.getInternalName().equals(internalName))
+				return lastGroup;
+			else {
+				lastGroup = null;
+				return getGroupForFilter(internalName);
+			}
+		}
+	}
+
+	/**
+	 * Returns a FilterCollection for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a collection is requested
+	 * @return FilterCollection object containing Filter Description with given internalName, or null.
+	 */
+	public FilterCollection getCollectionForFilter(String internalName) {
+		if (!containsUIFilterDescription(internalName))
+			return null;
 		else if (lastColl == null) {
 			lastColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
 			return lastColl;
 		} else {
 			if (lastColl.getInternalName().equals(internalName))
-			  return lastColl;
+				return lastColl;
 			else {
 				lastColl = null;
 				return getCollectionForFilter(internalName);
 			}
 		}
-  }
-  
-  /**
-   * debug output
-   */
+	}
+
+	/**
+	 * debug output
+	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -384,29 +384,29 @@ public class FilterPage {
 		return buf.toString();
 	}
 
-  /**
+	/**
 	 * Allows Equality Comparisons manipulation of FilterPage objects
 	 */
 	public boolean equals(Object o) {
 		return o instanceof FilterPage && hashCode() == ((FilterPage) o).hashCode();
 	}
-	
+
 	public int hashCode() {
-	  int tmp = internalName.hashCode();
+		int tmp = internalName.hashCode();
 		tmp = (31 * tmp) + displayName.hashCode();
 		tmp = (31 * tmp) + description.hashCode();
-		
+
 		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
 			Object element = iter.next();
 			if (element instanceof FilterGroup)
-			  tmp = (31 * tmp) + ( (FilterGroup) element ).hashCode();
+				tmp = (31 * tmp) + ((FilterGroup) element).hashCode();
 			else
-			  tmp = (31 * tmp) + ( (DSFilterGroup) element ).hashCode();
+				tmp = (31 * tmp) + ((DSFilterGroup) element).hashCode();
 		}
 
-	  return tmp;
+		return tmp;
 	}
-	
+
 	private final String displayName, description, internalName;
 
 	private int fcRank = 0;
@@ -415,13 +415,13 @@ public class FilterPage {
 
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
-	
+
 	//cache one FilterSetDescription for call to containsFilterSetDescription or getFilterSetDescrioptionByNae
 	private FilterSetDescription lastFSetDescription = null;
-	
+
 	//cache one FilterGroup for call to getGroupForFilter
 	private FilterGroup lastGroup = null;
-	
+
 	//cache one FilterCollection for call to getCollectionForFilter
 	private FilterCollection lastColl = null;
 }

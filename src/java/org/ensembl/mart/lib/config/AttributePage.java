@@ -250,19 +250,25 @@ public class AttributePage {
 	 * based on its internalName.
 	 * 
 	 * @param internalName - String internalname for which a group is requested
-	 * @return AttributeGroup object containing Attribute Description with given internalName, or null.
+	 * @return AttributeGroup containing Attribute Description with given internalName, or null.
 	 */
 	public AttributeGroup getGroupForAttribute(String internalName) {
 		if (! containsUIAttributeDescription(internalName))
 			return null;
 		else if (lastGroup == null) {
-			for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
-				AttributeGroup group = (AttributeGroup) iter.next();
+			for (Iterator iter = attributeGroups.values().iterator(); iter.hasNext();) {
+
+        Object groupo = iter.next();
+        
+        if (groupo instanceof AttributeGroup) {
+          
+				  AttributeGroup group = (AttributeGroup) groupo;
 				
-				if (group.containsUIAttributeDescription(internalName)) {
-					lastGroup = group;
-					break;
-				}
+				  if (group.containsUIAttributeDescription(internalName)) {
+					  lastGroup = group;
+					  break;
+				  }
+        }
 			}
 			return lastGroup;
 		}
