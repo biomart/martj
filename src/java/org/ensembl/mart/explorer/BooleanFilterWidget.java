@@ -20,8 +20,6 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -30,6 +28,7 @@ import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
 import org.ensembl.mart.lib.BooleanFilter;
+import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -41,7 +40,7 @@ import org.ensembl.mart.lib.config.FilterDescription;
  */
 public class BooleanFilterWidget
 	extends FilterWidget
-	implements PropertyChangeListener, ActionListener {
+	implements ActionListener {
 
 	private Box panel = Box.createHorizontalBox();
 
@@ -132,14 +131,6 @@ public class BooleanFilterWidget
 
 	}
 
-	/**
-	 * Respond to a change in the query if necessary.
-	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-	 */
-	public void propertyChange(PropertyChangeEvent evt) {
-		// TODO Auto-generated method stub
-		System.out.println("change " + evt);
-	}
 
 	/* (non-Javadoc)
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -201,5 +192,30 @@ public class BooleanFilterWidget
 		}
 
 	}
+
+
+
+  /**
+   * Sets one of the radio button depending on the filter provided.
+   * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
+   */
+  protected void setFilter(Filter filter) {
+    this.filter = (BooleanFilter)filter;
+    setNodeLabel(
+      null,
+      filterDescription.getField() + filter.getRightHandClause());
+      
+    if ( filter==null ) {
+      irrelevant.setSelected( true );
+    }
+    else if ( filter.getValue().equals( requireCondition ) ) {
+      require.setSelected( true );
+    }
+    else if ( filter.getValue().equals( excludeCondition ) ) {
+      exclude.setSelected( true );
+    } else {
+      throw new RuntimeException( "Unsupported value for a boolean filter: " +        filter.getValue() );
+    }
+  }
 
 }

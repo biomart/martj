@@ -20,7 +20,6 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.Box;
@@ -29,6 +28,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -135,51 +135,51 @@ public class TextFilterWidget
   }
 
 
-  /**
-   * Update text field when relevant Filter is added or
-   * removed from query. Filter is relevant if 
-   * <code>filter.getFieldName().equals(  )</code>
-   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-   */
-  public void propertyChange(PropertyChangeEvent evt) {
-
-    if (evt.getSource() == query && "filter".equals(evt.getPropertyName())) {
-
-      Object newValue = evt.getNewValue();
-      Object oldValue = evt.getOldValue();
-
-      // a relevant filter has been added to query 
-      if (newValue != null
-        && newValue instanceof BasicFilter
-        && oldValue == null) {
-
-        BasicFilter f = (BasicFilter) newValue;
-        if ( relevantFilter(f) ) setFilter(f);
-
-      }
-
-      // a relevant filter has been removed from the query
-      if (newValue == null
-        && oldValue != null
-        && oldValue instanceof BasicFilter) {
-
-        BasicFilter f = (BasicFilter) oldValue;
-        if ( relevantFilter(f) ) setFilter( null );
-
-      }
-
-    }
-  }
-
+//  /**
+//   * Update text field when relevant Filter is added or
+//   * removed from query. Filter is relevant if 
+//   * <code>filter.getFieldName().equals(  )</code>
+//   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+//   */
+//  public void propertyChange(PropertyChangeEvent evt) {
+//
+//    if (evt.getSource() == query && "filter".equals(evt.getPropertyName())) {
+//
+//      Object newValue = evt.getNewValue();
+//      Object oldValue = evt.getOldValue();
+//
+//      // a relevant filter has been added to query 
+//      if (newValue != null
+//        && newValue instanceof BasicFilter
+//        && oldValue == null) {
+//
+//        BasicFilter f = (BasicFilter) newValue;
+//        if ( relevantFilter(f) ) setFilter(f);
+//
+//      }
+//
+//      // a relevant filter has been removed from the query
+//      if (newValue == null
+//        && oldValue != null
+//        && oldValue instanceof BasicFilter) {
+//
+//        BasicFilter f = (BasicFilter) oldValue;
+//        if ( relevantFilter(f) ) setFilter( null );
+//
+//      }
+//
+//    }
+//  }
+//
 
 
   private boolean relevantFilter(BasicFilter f) {
     return f.getField().equals( filterDescription.getField() );
   }
 
-  private void setFilter(BasicFilter filter) {
+  protected void setFilter(Filter filter) {
 
-    this.filter = filter;
+    this.filter = (BasicFilter)filter;
 
     String rhs = null;
     if (filter != null)

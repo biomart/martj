@@ -271,6 +271,7 @@ public class QueryEditor
 
 	public static void main(String[] args) throws ConfigurationException {
 		String confFile = "data/XML/MartConfigurationTemplate.xml";
+    //String confFile = "data/XML/local_test.xml";
 		URL confURL = QueryEditor.class.getClassLoader().getResource(confFile);
 	   System.out.println( confURL );
     MartConfiguration config =
@@ -282,6 +283,9 @@ public class QueryEditor
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     f.setSize(950, 750);
     f.setVisible(true);
+    
+   // TODO support programmatically selecting homosapiens ensembl gene option
+    //editor.datasetSelectionPage.setOption();
     
 	}
 
