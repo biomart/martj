@@ -21,8 +21,9 @@
 # TODO fetch chromosomes from db and load into drop down list.
 
 from jarray import array
-from java.lang import System, String, ClassLoader
-from java.io import File
+from java.lang import System, String, ClassLoader, RuntimeException
+from java.lang import Thread
+from java.io import File, FileOutputStream
 from java.net import URL
 from java.util import Arrays, Vector
 from java.awt import CardLayout, Dimension, BorderLayout
@@ -34,6 +35,7 @@ from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
 from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, BasicFilter
+from org.ensembl.mart.explorer import InvalidQueryException, Engine, FormatSpec
 
 GAP = 5
 SPACE=" &nbsp;"
@@ -43,6 +45,10 @@ def toVector(list):
 
 def platformSpecificPath( path ):
     return path.replace("/", File.separator )
+
+def validate( value, name ):
+    if not value or value=="" or String("").equals(value):
+        raise InvalidQueryException(name + " must be set")
 
 class InputPage(Box, ChangeListener):
 
@@ -165,6 +171,8 @@ class LabelledComboBox(Box, ActionListener):
         if self.radioButton: return self.radioButton.selected
         else: 0
 
+    def getSelectedItem(self):
+        return self.box.selectedItem
 
 
 
@@ -175,20 +183,20 @@ class SpeciesInputPage(InputPage):
 
     def __init__(self):
         InputPage.__init__(self)
-        self.box = LabelledComboBox("Species", self)
-        self.add( self.box )
+        self.speciesBox = LabelledComboBox("Species", self)
+        self.add( self.speciesBox )
 
     def updateQuery(self, query):
-        item = self.box.selectedItem
+        item = self.speciesBox.getSelectedItem()
         if item: query.species = item
         else: raise InvalidQueryException("Species must be set")
 
     def updatePage(self, query):
-        self.box.setText( query.species )
+        self.speciesBox.setText( query.species )
         
     def htmlSummary(self):
 	desc = "<b>Species</b> "
-        tmp = self.box.getText()
+        tmp = self.speciesBox.getText()
         if tmp:
 	    desc = desc + tmp
 	return desc
@@ -205,7 +213,7 @@ class FocusInputPage(InputPage):
         self.add( self.box )
 
     def updateQuery(self, query):
-        item = self.box.selectedItem
+        item = self.box.getSelectedItem()
         if item: query.focus = item
         else: raise InvalidQueryException("Focus must be set")
 
@@ -234,9 +242,9 @@ class DatabaseInputPage(InputPage):
 
         self.add( self.host )
         self.add( self.port )
-        self.add( self.database )
         self.add( self.user )
         self.add( self.password )
+        self.add( self.database )
         self.add( Box.createVerticalGlue() )
         
         self.changeEvent = ChangeEvent( self )
@@ -276,8 +284,24 @@ class DatabaseInputPage(InputPage):
         return desc
 
         
+    def getHost(self):
+        return self.host.getText()
 
-class DestinationInputPage(InputPage):
+    def getPort(self):
+        return self.port.getText()
+
+    def getUser(self):
+        return self.user.getText()
+
+    def getPassword(self):
+        return self.password.getText()
+
+    def getDatabase(self):
+        return self.database.getText()
+
+    
+
+class DestinationPage(InputPage):
 
     def __init__(self):
         InputPage.__init__(self)
@@ -298,9 +322,22 @@ class DestinationInputPage(InputPage):
 	return desc
 
 
+    def getOutputStream(self):
 
+        if self.file.isSelected():
+            filename = self.file.getText()
+            validate(filename, "Filename")
+            return FileOutputStream(filename)
 
-class FormatInputPage(InputPage):
+        elif self.window.isSelected():
+            windowname = self.window.getText()
+            validate( windowname, "Window name" )
+            return WindowOutputStream.fetch( windowname )
+        
+        else:
+            raise InvalidQueryException("output destination not set.")
+
+class FormatPage(InputPage):
 
     def __init__(self):
         InputPage.__init__(self)
@@ -367,6 +404,19 @@ class FormatInputPage(InputPage):
 	elif self.fasta.selected:
 	    desc = desc + "Fasta"
 	return desc
+
+
+    def getFormatSpec(self):
+        if self.fasta.isSelected():
+            fs = FormatSpec()
+            fs.format = FormatSpec.FASTA
+            return fs
+        elif self.tabulated.isSelected():
+            if self.tab.selected: sep = "\t"
+            else: sep = ","
+            return FormatSpec( FormatSpec.TABULATED, sep )
+        else:
+            raise InvalidQueryException("Format not set")
 
 
 class OutputPage(InputPage):
@@ -479,6 +529,20 @@ class AttributeManagerPage(InputPage):
     def htmlSummary(self):
 	return "<html><b>Attributes</b></html>"
 
+
+    def updatePage(self, query):
+        for attribute in query.attributes:
+            if isinstance( attribute, FieldAttribute ):
+                self.selected( attribute.name )
+            # todo handle sequence attributes
+
+    def updateQuery(self, query):
+        for attributeName in self.selected:
+            query.addAttribute( FieldAttribute( attributeName ) )
+        # todo handle sequence attributes
+
+    def clear(self):
+        print "clear attribute pages"
 
 
 class FilterPage(InputPage):
@@ -618,6 +682,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
         self.tree.repaint()
 
 
+
 class QueryEditor(JPanel):
 
 
@@ -628,8 +693,8 @@ class QueryEditor(JPanel):
         cardContainer = CardContainer()
 
         self.databasePage = DatabaseInputPage()
-	self.formatPage = FormatInputPage()
-	self.destinationPage = DestinationInputPage()
+	self.formatPage = FormatPage()
+	self.destinationPage = DestinationPage()
 	
         dbNode = QueryTreeNode( tree, self.rootNode, 0, cardContainer,
 				self.databasePage, "DATABASE" )
@@ -676,7 +741,14 @@ class QueryEditor(JPanel):
     def updateQuery(self, query):
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
-                node.updateQuery( query )
+                print node
+                node.targetComponent.updateQuery( query )
+
+                
+    def updatePage(self, query):
+        for node in self.rootNode.depthFirstEnumeration():
+            if isinstance( node, QueryTreeNode ):
+                node.targetComponent.updateQuery( query )
 
                 
     def updatePage(self, query):
@@ -688,12 +760,32 @@ class QueryEditor(JPanel):
     def clear(self):
         pass
 
+    def getHost(self):
+        return self.databasePage.getHost()
+
+    def getPort(self):
+        return self.databasePage.getPort()
+
+    def getUser(self):
+        return self.databasePage.getUser()
+
+    def getPassword(self):
+        return self.databasePage.getPassword()    
+
+    def getDatabase(self):
+        return self.databasePage.getDatabase()
+
+    def getFormatSpec(self):
+        return self.formatPage.getFormatSpec()
+
+    def getOutputStream(self):
+        return self.destinationPage.getOutputStream()
 
 class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
-        self.queryPages = QueryEditor()
+        self.editor = QueryEditor()
         self.buildGUI()
         self.visible=1
 
@@ -704,7 +796,7 @@ class MartGUIApplication(JFrame):
         panel = JPanel()
         panel.layout = BoxLayout( panel, BoxLayout.Y_AXIS )
         panel.add( self.createToolBar() )
-        panel.add( self.queryPages )
+        panel.add( self.editor )
         self.contentPane.add( panel )
 
 
@@ -751,9 +843,9 @@ class MartGUIApplication(JFrame):
 
 
     def doInsertKakaQuery(self, event=None):
-        self.queryPages.databasePage.host.setText( "kaka.sanger.ac.uk" )
-        self.queryPages.databasePage.user.setText( "anonymous" )
-        self.queryPages.databasePage.database.setText( "ensembl_mart_11_1" )
+        self.editor.databasePage.host.setText( "kaka.sanger.ac.uk" )
+        self.editor.databasePage.user.setText( "anonymous" )
+        self.editor.databasePage.database.setText( "ensembl_mart_11_1" )
 
         q = Query(species = "homo_sapiens"
                   ,focus = "gene" )
@@ -774,27 +866,48 @@ class MartGUIApplication(JFrame):
         #q.resultTarget = ResultFile( "/tmp/kaka.txt", SeparatedValueFormatter("\t") )
         # TODO need a result window
         #q.resultTarget = ResultWindow( "Results_1", SeparatedValueFormatter ("\t") ) 
-        self.queryPages.updatePage( q )
+        self.editor.updatePage( q )
 
 
 
-    def executeQuery( self, query ):
-        Engine().execute(query)
+    def executeQuery( self ):
+
+        host = self.editor.getHost()
+        port = self.editor.getPort()
+        user = self.editor.getUser()
+        password = self.editor.getPassword()
+        database = self.editor.getDatabase()
+
+        query = Query()
+        formatSpec = None
+        # handles valildation and loads query
+        try:
+            validate(host, "Host")
+            validate(user, "User")
+            validate(database, "Database")
+            formatSpec = self.editor.getFormatSpec()
+            outputStream = self.editor.getOutputStream()
+        
+            self.editor.updateQuery( query )
+
+            engine = Engine(host,
+                            port,
+                            user,
+                            password,
+                            database)
+            engine.execute( query, formatSpec, outputStream )
+
+        except (InvalidQueryException), ex:
+            JOptionPane.showMessageDialog( self,
+                                           "Failed to execute query: " + ex.message,
+                                          "Error",
+                                          JOptionPane.ERROR_MESSAGE)
+
 
 
     def doExecute(self, event=None):
-        q = Query()
-        try:
-            self.queryPages.updateQuery( q )
-            import threading
-            threading.Thread(target=self.executeQuery(q)).start()
-
-        except (Exception,RuntimeException), e:
-            JOptionPane.showMessageDialog( self,
-                                           "Failed to execute query: " + e.getMessage(),
-                                           "Error",
-                                           JOptionPane.ERROR_MESSAGE)
-
+        # todo fix thread support
+        ThreadWrapper(self.executeQuery).start()
 
 
     def doAbout(self, event=None):
@@ -803,8 +916,17 @@ class MartGUIApplication(JFrame):
 
 
     def doClear(self, event=None):
-        self.queryPages.clear()
+        self.editor.clear()
 
+
+
+def ThreadWrapper(Thread):
+
+    def __init__(self, function):
+        self.function = function
+    
+    def run(self):
+        self.function
 
 def main(args, quitOnExit):
     usage = "Usage: MartExplorerGUIApplication [ [-h] [-v] [-l LOGGING_FILE_URL] ]"
