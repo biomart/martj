@@ -32,6 +32,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
@@ -52,7 +54,7 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
  * MartConfiguration object it is initialised with.
  * </p>
  */
-public class QueryEditor extends JPanel implements PropertyChangeListener {
+public class QueryEditor extends JPanel implements PropertyChangeListener, TreeSelectionListener  {
 
   private static final Logger logger = Logger.getLogger( QueryEditor.class.getName() );
 
@@ -102,6 +104,10 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
   }
 
 
+  private void showInputPage( InputPage page ) {
+    ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
+  }
+
   /**
    * Adds page to input panel and tree view.
    * @param page page to be added
@@ -111,7 +117,7 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
       
      //  Add page to input panel.
      inputPanel.add( page.getName(), page );
-     ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
+     showInputPage( page );
     
      // Add page's node and show it
      treeModel.insertNodeInto( page.getNode(), rootNode, treeIndex );
@@ -208,7 +214,7 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
     rootNode = new DefaultMutableTreeNode( "Query" );
     treeModel = new DefaultTreeModel( rootNode );
     treeView = new JTree( treeModel );
-
+    treeView.addTreeSelectionListener( this );
   }
 
   public static void main(String[] args) throws ConfigurationException {
@@ -262,15 +268,25 @@ public class QueryEditor extends JPanel implements PropertyChangeListener {
     
 	}
   
-  
+ 
 
-	
 
 	/**
-	 * @return
+   * Show input page corresponding to selected tree node. 
 	 */
-	public MartConfiguration getMartConfiguration() {
-		return martConfiguration;
+	public void valueChanged(TreeSelectionEvent e) {
+     DefaultMutableTreeNode node = (DefaultMutableTreeNode)e.getNewLeadSelectionPath().getLastPathComponent(); 
+		 InputPage page = (InputPage) node.getUserObject();
+     showInputPage( page );
 	}
+
+
+
+  /**
+   * @return
+   */
+  public MartConfiguration getMartConfiguration() {
+    return martConfiguration;
+  }
 
 }
