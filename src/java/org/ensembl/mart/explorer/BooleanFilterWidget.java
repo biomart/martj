@@ -82,8 +82,8 @@ implements PropertyChangeListener , ActionListener{
    * @param query
    * @param filterDescription
    */
-  public BooleanFilterWidget(Query query, FilterDescription filterDescription) {
-    super(query, filterDescription);
+  public BooleanFilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
+    super(filterGroupWidget, query, filterDescription);
     
     
     if ( "boolean".equals( filterDescription.getType() ) ) {

@@ -60,8 +60,8 @@ public class TreeFilterWidget extends FilterWidget {
 	 * @param query
 	 * @param filterDescription
 	 */
-	public TreeFilterWidget(Query query, FilterDescription filterDescription) {
-		super(query, filterDescription);
+	public TreeFilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
+		super(filterGroupWidget, query, filterDescription);
 
     // default property name.
     this.propertyName = filterDescription.getInternalName();

@@ -198,7 +198,7 @@ public class QueryEditor
     // don't want this widget to interact with 
     // the query
 		datasetSelectionPage =
-			new TreeFilterWidget(null, martConfiguration.getLayout());
+			new TreeFilterWidget(null, null, martConfiguration.getLayout());
 
 		lastDatasetOption = datasetSelectionPage.getOption();
 
@@ -341,11 +341,15 @@ public class QueryEditor
 
 			} else if ("filter".equals(propertyName)) {
 
-				if (newValue != null && oldValue == null)
+				if (newValue != null && oldValue == null) {
+          System.out.println( filtersPage );
+          System.out.println( filtersPage.getNode() );
+          System.out.println( ((InputPageAware) newValue).getInputPage() );
+          System.out.println( ((InputPageAware) newValue).getInputPage().getNode() );
 					insertNode(
 						filtersPage.getNode(),
 						((InputPageAware) newValue).getInputPage().getNode());
-
+        }
 				else if (newValue == null && oldValue != null)
 					treeModel.removeNodeFromParent(
 						((InputPageAware) oldValue).getInputPage().getNode());
@@ -389,8 +393,7 @@ public class QueryEditor
 	private void datasetChanged(Dataset dataset) {
 
     treeModel.nodeChanged( datasetSelectionPage.getNode() );
-    System.out.println( datasetSelectionPage.getNode() );
-
+    
 		// Basically we remove most things from the model and views before adding those things that should
 		// be present back in.
 
@@ -400,9 +403,8 @@ public class QueryEditor
 
 		// enables soon to be obsolete listeners to be garbage collected once they are removed from the views.
 		query.removeAllPropertyChangeListeners();
-		// but we still need to listen to changes keep tree up to date
-		query.addPropertyChangeListener(this);
-
+		
+    
 		// We need to remove all pages from the inputPanel so that we can add pages with the same
 		// name again later. e.g. attributesPage.
 		inputPanel.removeAll();
@@ -421,6 +423,10 @@ public class QueryEditor
 		// select the attributes page
 		treeView.setSelectionPath(
 			new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
+
+    //  but we still need to listen to changes keep tree up to date
+    query.addPropertyChangeListener(this);
+
 
 	}
 

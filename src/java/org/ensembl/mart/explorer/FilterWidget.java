@@ -31,17 +31,22 @@ import org.ensembl.mart.lib.config.FilterDescription;
 public abstract class FilterWidget extends InputPage
 implements PropertyChangeListener {
 
-  protected FilterDescription filterDescription;
+  protected String fieldName;
+
+	protected FilterGroupWidget filterGroupWidget;
+
+	protected FilterDescription filterDescription;
 
 	/**
 	 * @param query
 	 * @param name
 	 */
-	public FilterWidget(Query query, FilterDescription filterDescription) {
+	public FilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
 		
     super(query, filterDescription.getDisplayName() );
     this.filterDescription = filterDescription;
-    
+    this.filterGroupWidget = filterGroupWidget;
+    this.fieldName = filterDescription.getFieldName();
     
 	}
   

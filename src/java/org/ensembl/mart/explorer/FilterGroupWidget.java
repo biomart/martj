@@ -20,8 +20,10 @@ package org.ensembl.mart.explorer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.swing.Box;
@@ -44,6 +46,8 @@ public class FilterGroupWidget extends PageWidget {
   private Logger logger = Logger.getLogger(FilterGroupWidget.class.getName());
 
   private FilterGroup group;
+  
+  private Map internalNameToLeafWidget = new HashMap();
 
 	/**
 	 * @param name
@@ -94,7 +98,7 @@ public class FilterGroupWidget extends PageWidget {
     for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
       Object element = iter.next();
 
-      if (element instanceof FilterDescription) {
+      if (element instanceof FilterDescription || element instanceof MapFilterDescription) {
 
         FilterDescription a = (FilterDescription) element;
         FilterPageSetWidget.TYPES.add( a.getType() );
@@ -104,10 +108,6 @@ public class FilterGroupWidget extends PageWidget {
         if ( w!=null ) 
           pages.add(w);
       } 
-      else if (element instanceof MapFilterDescription) {
-
-        logger.warning("TODO Unsupported domain specific filter description: " + element.getClass().getName() + element);
-      }
       else {
         logger.severe(  "Unrecognised filter: " +  element.getClass().getName() + element); 
       }
@@ -127,26 +127,46 @@ public class FilterGroupWidget extends PageWidget {
 
     if ("text_entry".equals(type)) {
     
-      w = new TextFilterWidget( query, filterDescription );
+      w = new TextFilterWidget( this, query, filterDescription );
     
     } else if ("list".equals(type)) {
       
-      w = new ListFilterWidget( query, filterDescription );
+      w = new ListFilterWidget( this, query, filterDescription );
       
     } else if ("range".equals(type)) {
     
     } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
     
-      w = new BooleanFilterWidget( query, filterDescription );
+      w = new BooleanFilterWidget( this, query, filterDescription );
+    
+    } else if ("text_entry_basic_filter".equals(type) || "drop_down_basic_filter".equals(type) ) {
+    
+      w = new ListFilterWidget( this, query, filterDescription );
     
     }
     
-    if ( w==null ) 
+    
+    if ( w!=null ) {
+      
+      internalNameToLeafWidget.put( filterDescription.getInternalName(), w);
+       
+    }else {
+    
       logger.warning("Unsupported filter: " 
       + filterDescription.getClass().getName()
       + ", " + filterDescription );
-
+    
+    }
+    
     return w;   
   }
+
+	/**
+	 * @param string
+	 * @return
+	 */
+	public FilterWidget getFilterWidget( String internalName ) {
+    return (FilterWidget)internalNameToLeafWidget.get( internalName );
+	}
 
 }

@@ -90,9 +90,9 @@ public class TextFilterWidget
    * @param query
    * @param filterDescription
    */
-  public TextFilterWidget(Query query, FilterDescription filterDescription) {
+  public TextFilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
 
-    super(query, filterDescription);
+    super(filterGroupWidget, query, filterDescription);
     setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     textField = new JTextField(5);
     textField.addActionListener(this); // listen for user entered changes
