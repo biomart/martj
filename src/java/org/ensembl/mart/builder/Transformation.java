@@ -17,17 +17,29 @@ import java.util.*;
 public class Transformation {
 	
 	ArrayList units = new ArrayList();
+	ArrayList unwanted = new ArrayList();
 	
 	public Transformation (LinkedTables linked){
-		createUnits(linked);	
+		this.unwanted = createUnits(linked);	
+		//String [] b = new String [unwanted.size()];
+		//this.unwanted = (String []) unwanted.toArray(b);
+	
 	}
 	
 	
-	private void createUnits (LinkedTables linked) {
+	private ArrayList createUnits (LinkedTables linked) {
 		
 		Table temp_end = new Table();
+		ArrayList unwanted = new ArrayList();
 		
 		for (int i=0; i<linked.getReferencedTables().length; i++){
+
+			Table ref_table = linked.getReferencedTables()[i];
+			
+			if (ref_table.cardinality.equals("1n") || 
+					ref_table.cardinality.equals("0n")){
+				unwanted.add(ref_table.getName());
+			}
 			
 			TransformationUnit unit = new TransformationUnit();
 			Table temp_start = new Table();
@@ -38,7 +50,7 @@ public class Transformation {
 			
 			String temp_end_name ="TEMP"+i;
 			
-			Table ref_table = linked.getReferencedTables()[i];
+			
 			Table new_ref=copyTable(ref_table);
 			
 			assignAliases(temp_start, new_ref, temp_end_name);
@@ -56,6 +68,10 @@ public class Transformation {
 			unit.setJoinType("simple");
 			units.add(unit);
 		}
+	
+		
+		return unwanted;
+	
 	}
 	
 	
@@ -93,7 +109,7 @@ public class Transformation {
 	}
 	
 	public TransformationUnit [] getUnits() {
-		TransformationUnit [] b = new TransformationUnit[1];
+		TransformationUnit [] b = new TransformationUnit[units.size()];
 		return (TransformationUnit []) units.toArray(b);	
 	}
 	

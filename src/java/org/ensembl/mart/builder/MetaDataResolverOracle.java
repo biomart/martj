@@ -53,9 +53,8 @@ public class MetaDataResolverOracle {
 				
 				Table table = new Table();
 				table.setName(keys.getString(7));
-				table.setFK(keys.getString(8));
 				table.setKey(keys.getString(8));
-				table.setPK(keys.getString(8));
+				table.status="exported";
 				table.setColumns(getReferencedColumns(table));
 				exported_tabs.add(table);
 				i++;
@@ -64,15 +63,39 @@ public class MetaDataResolverOracle {
 			e.printStackTrace();
 		} 
 		
-		Table [] b = new Table[1];
-		return (Table []) exported_tabs.toArray(b);
+		Table [] b = new Table[exported_tabs.size()];
+		Table [] array_exp = (Table []) exported_tabs.toArray(b);
+		
+	return array_exp;
+	
 	}
 	
 	
 	public Table [] getImportedKeyTables (String maintable){
 		
-		Table [] tables = new Table [5];	
-		return tables;
+		ArrayList exported_tabs= new ArrayList();
+		
+		try {
+			int i = 0;
+			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().username,maintable);
+			while (keys.next()){
+				
+				Table table = new Table();
+				table.setName(keys.getString(3));
+				table.setKey(keys.getString(4));
+				table.status="imported";
+				table.setColumns(getReferencedColumns(table));
+				exported_tabs.add(table);
+				i++;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} 
+		
+		Table [] b = new Table[exported_tabs.size()];
+		Table [] array_exp = (Table []) exported_tabs.toArray(b);
+		
+	return array_exp;
 	}
 	
 	
@@ -96,7 +119,7 @@ public class MetaDataResolverOracle {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		Column [] b = new Column[1];
+		Column [] b = new Column[cols.size()];
 		return (Column []) cols.toArray(b);
 	}
 	
@@ -108,11 +131,10 @@ public class MetaDataResolverOracle {
 		
 		try {
 			DatabaseMetaData dmd = getConnection().getMetaData();
-			ResultSet keys = dmd.getExportedKeys(adaptor.catalog,adaptor.username,main_name);
-			keys.next();
-			table.setPK(keys.getString(8));
-			table.setKey(keys.getString(8));
-			
+			ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.username,main_name);
+			while (keys.next()){
+			table.setKey(keys.getString(4));
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}	

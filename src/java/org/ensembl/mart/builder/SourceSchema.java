@@ -6,7 +6,7 @@
  */
 package org.ensembl.mart.builder;
 
-import java.util.ArrayList;
+import java.util.*;
 
 
 /**
@@ -29,11 +29,19 @@ public class SourceSchema {
 		
 	}
 	
-	public Table [] getExportedKeyTables (String main_name){
-		
-		return resolver.getExportedKeyTables(main_name);
-		
+	/**
+	public ArrayList getExportedKeyTables(String main_name){
+
+		return resolver.getExportedKeyTables(main_name);		
 	}
+	
+	
+	public ArrayList getImportedKeyTables(String main_name){
+
+		return resolver.getImportedKeyTables(main_name);		
+	}
+	
+	*/
 	
 	
 	public LinkedTables createLinkedTables(String main_name,Table [] tables){
@@ -47,13 +55,37 @@ public class SourceSchema {
 	}
 	
 	
-	public LinkedTables addDimension (Table table, LinkedTables linked){
+	public LinkedTables addTableToLink (String name, String key, String extension, String cardinality, LinkedTables linked){
 		
+		Table table = new Table();
+		table.setName(name);
+		table.setKey(key);
+		table.setExtension(extension);
+		table.setCardinality(cardinality);		
 		table.setColumns(resolver.getReferencedColumns(table));
 		linked.addTable(table);
+		
 		return linked;
 	}
 	
+	
+	
+	public Table [] getKeyTables (String table_name){
+		
+		Table [] exp_key_tables;
+		Table [] imp_key_tables;
+			exp_key_tables=resolver.getExportedKeyTables(table_name);
+			imp_key_tables = resolver.getImportedKeyTables(table_name);
+	
+	   Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length];
+	   
+	   //System.out.println("join lenght " + join_tables.length);
+	   
+	   System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
+	   System.arraycopy(imp_key_tables,0,join_tables,exp_key_tables.length,imp_key_tables.length);
+					
+		return join_tables;
+	}
 	
 	
 	/**

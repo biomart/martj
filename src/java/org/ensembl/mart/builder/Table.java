@@ -17,12 +17,9 @@ public class Table  implements Cloneable {
 	
 	public String key=null;
 	public String cardinality = null;
-	public String reftype;
 	public String extension;
-	
+	public String status;
 	private  String Name = null;
-	private String PK = null;
-	private String FK = null;
 	private Column [] columns;
 	
 	
@@ -74,18 +71,10 @@ public class Table  implements Cloneable {
 		cardinality=card;
 	}
 	
-	/**
-	 * @return Returns the fK.
-	 */
-	public String getFK() {
-		return FK;
-	}
-	/**
-	 * @param fk The fK to set.
-	 */
-	public void setFK(String fk) {
-		FK = fk;
-	}
+	
+	
+	
+	
 	/**
 	 * @return Returns the name.
 	 */
@@ -98,30 +87,7 @@ public class Table  implements Cloneable {
 	public void setName(String name) {
 		Name = name;
 	}
-	/**
-	 * @return Returns the pK.
-	 */
-	public String getPK() {
-		return PK;
-	}
-	/**
-	 * @param pk The pK to set.
-	 */
-	public void setPK(String pk) {
-		PK = pk;
-	}
-	/**
-	 * @return Returns the reftype.
-	 */
-	public String getReftype() {
-		return reftype;
-	}
-	/**
-	 * @param reftype The reftype to set.
-	 */
-	public void setReftype(String reftype) {
-		this.reftype = reftype;
-	}
+	
 	
 	/**
 	 * @return Returns the key.

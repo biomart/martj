@@ -42,7 +42,7 @@ public class LinkedTables {
 	 * @return Returns the referenced_tables.
 	 */
 	public Table [] getReferencedTables() {
-		Table [] b = new Table[1];
+		Table [] b = new Table[referenced_tables.size()];
 		return (Table []) referenced_tables.toArray(b);	
 	}
 	/**
