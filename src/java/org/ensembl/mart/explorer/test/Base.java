@@ -71,8 +71,7 @@ public abstract class Base extends TestCase {
 
       engine = new Engine(host, port, user, password, database);
 
-      query.setSpecies( "homo_sapiens" );
-      query.setFocus( "gene" );
+      query.setStarBases(new String[] {"hsapiens_ensemblgene", "hsapiens_ensembltranscript"});
     }
 
     public Base(String name) {
