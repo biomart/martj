@@ -25,10 +25,10 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.ensembl.mart.lib.LoggingUtils;
 import org.jdom.Document;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
@@ -56,7 +56,7 @@ public class XMLLoader {
 	private static Logger logger = Logger.getLogger(XMLLoader.class.getName());
 			
 	public static void main(String[] args) {
-		defaultLoggingConfiguration(false);
+		LoggingUtils.setVerbose(false);
 		
 		try {
 			if (new File(conf).exists())
@@ -122,21 +122,6 @@ public class XMLLoader {
 	}
 	
 	/**
-	 * Initialise logging system to print to logging messages of level >= WARN
-	 * to console. Does nothing if system property log4j.configuration is set.
-	 */
-	public static void defaultLoggingConfiguration(boolean verbose) {
-		if (System.getProperty("log4j.configuration") == null) {
-
-			BasicConfigurator.configure();
-			if (verbose)
-				Logger.getRoot().setLevel(Level.INFO);
-			else
-				Logger.getRoot().setLevel(Level.WARN);
-		}
-	}
-	
-	/**
 	 * Parses java properties file to get mysql database connection parameters.
 	 * 
 	 * @param connfile -- String name of the configuration file containing mysql
@@ -157,13 +142,15 @@ public class XMLLoader {
 			password = p.getProperty("password");
       dbtype = p.getProperty("databaseType");
 		} catch (java.net.MalformedURLException e) {
-			logger.warn(
+			if (logger.isLoggable( Level.WARNING ))
+			logger.warning(
 				"Could not load connection file "
 					+ connfile
 					+ " MalformedURLException: "
 					+ e);
 		} catch (java.io.IOException e) {
-			logger.warn(
+			if (logger.isLoggable( Level.WARNING ))
+			logger.warning(
 				"Could not load connection file " + connfile + " IOException: " + e);
 		}
 		confinUse = connfile;
