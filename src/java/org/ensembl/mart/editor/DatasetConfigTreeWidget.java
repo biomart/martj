@@ -60,7 +60,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
 
     private DatasetConfig datasetConfig = null;
     private static int openFrameCount = 0;
-    private static final int xOffset = 30, yOffset = 30;
+    private static final int xOffset = 10, yOffset = 10;
     private JDesktopPane desktop;
     private GridBagConstraints constraints;
     private DatasetConfigTree tree;
@@ -142,17 +142,17 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                     treeScrollPane, tableScrollPane);
             splitPane.setOneTouchExpandable(true);
-            splitPane.setDividerLocation(150);
+            splitPane.setDividerLocation(350);
 
             //Provide minimum sizes for the two components in the split pane.
-            Dimension minimumSize = new Dimension(100, 50);
+            Dimension minimumSize = new Dimension(350, 450);
             treeScrollPane.setMinimumSize(minimumSize);
             tableScrollPane.setMinimumSize(minimumSize);
 
             this.getContentPane().add(splitPane);
 
             //...Then set the window size or call pack...
-            setSize(500, 400);
+            setSize(800, 400);
 
             //Set the window's location.
             setLocation(xOffset * openFrameCount, yOffset * openFrameCount);
