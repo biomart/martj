@@ -133,25 +133,23 @@ public class MartExplorer extends JFrame {
 		me.setVisible(true);
 
 		// test mode preloads datasets and sets up a query ready to use.
-		if (//true 
-		false) {
+		if (true) {
 
-			me.addDataSource(
-				DatabaseUtil.createDataSource(
-					"mysql",
-					"127.0.0.1",
-					"3313",
-					"ensembl_mart_17_1",
-					"ensro",
-					null,
-					10,
-					"com.mysql.jdbc.Driver"));
-			//me.doNewQuery();
-		} else if (true) {
-			//me.resolveAndAddDatasetVies(dsViews);
-			me.doNewQuery(QueryEditor.testDSViewAdaptor());
-		}
-	}
+//			me.addDataSource(
+//				DatabaseUtil.createDataSource(
+//					"mysql",
+//					"127.0.0.1",
+//					"3313",
+//					"ensembl_mart_17_1",
+//					"ensro",
+//					null,
+//					10,
+//					"com.mysql.jdbc.Driver"));
+      me.setDsvAdaptor(QueryEditor.testDSViewAdaptor());
+      me.doNewQuery();
+      
+		} 
+  }
 
 	public MartExplorer() {
 
@@ -274,7 +272,7 @@ public class MartExplorer extends JFrame {
 		JMenuItem newQuery = new JMenuItem("New Query");
 		newQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				doNewQuery(dsvAdaptor);
+				doNewQuery();
 			}
 		});
 		query.add(newQuery);
@@ -412,15 +410,10 @@ public class MartExplorer extends JFrame {
 	public void doLoadQueryFromMQL() {
 		QueryEditor qe = null;
 		try {
-			qe = new QueryEditor();
-			qe.setDataSetViewAdaptor(dsvAdaptor);
+			qe = new QueryEditor(dsvAdaptor);
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
-			feedback.warn(e);
-			if (qe != null)
-				queryEditorTabbedPane.remove(qe);
-		} catch (ConfigurationException e) {
 			feedback.warn(e);
 			if (qe != null)
 				queryEditorTabbedPane.remove(qe);
@@ -520,20 +513,19 @@ public class MartExplorer extends JFrame {
 	/**
 		 * 
 		 */
-	public void doNewQuery(DSViewAdaptor dsvAdaptor) {
+	public void doNewQuery() {
 
 		try {
 
-			if (dsvAdaptor.getDatasetViews().length == 0) {
+			if (dsvAdaptor==null || dsvAdaptor.getDatasetViews().length == 0) {
 				feedback.warn(
-					"No datasets available. You need load one or more "
+					"No dataset views available. You need load one or more "
 						+ "datasets before you can create a query.");
 
 			} else {
 
 				QueryEditor qe;
-				qe = new QueryEditor();
-				qe.setDataSetViewAdaptor(dsvAdaptor);
+				qe = new QueryEditor(dsvAdaptor);
 				qe.setName(nextQueryBuilderTabLabel());
 				addQueryEditor(qe);
 
