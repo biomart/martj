@@ -29,121 +29,124 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class DatabaseLocation extends MartLocationBase {
-  private final String host;
-  private final String port;
-  private final String databaseType;
-  private final String instanceName;
-  private final String user;
-  private final String password;
-  private final String jdbcDriverClassName;
 
-  private final int hashcode;
+  private final String HOST_KEY = "host";
+  private final String PORT_KEY = "port";
+  private final String DATABASE_TYPE_KEY = "databaseType";
+  private final String INSTANCE_NAME_KEY = "instanceName";
+  private final String USER_KEY = "user";
+  private final String PASSWORD_KEY = "password";
+  private final String JDBC_DRIVER_CLASS_NAME = "jdbcDriverClassName";
 
+  public DatabaseLocation() {
+    super();
+    type = MartLocationBase.DATABASE;
+  }
+  
   public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String jdbcDriverClassName, String name) throws ConfigurationException {
+    super(name, MartLocationBase.DATABASE);
+    
     if (host == null || instanceName == null || user == null)
       throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
       
-      this.type = MartLocationBase.DATABASE;
-      this.host = host;
-		  this.instanceName = instanceName;
-      this.user = user;
-      this.databaseType = databaseType;
-      this.port = port;
-      this.password = password;
-      this.jdbcDriverClassName = jdbcDriverClassName;
-      
-      int tmp = host.hashCode();
-		  tmp = (31 * tmp) + user.hashCode();
-      tmp = (31 * tmp) + instanceName.hashCode();
-      tmp = (port != null) ? (31 * tmp) + port.hashCode() : tmp;
-      tmp = (databaseType != null) ? (31 * tmp) + databaseType.hashCode() : tmp;
-      tmp = (password != null) ? (31 * tmp) + password.hashCode() : tmp;
-      tmp = (jdbcDriverClassName != null) ? (31 * tmp) + jdbcDriverClassName.hashCode() : tmp;
-      
-      if (name != null) {
-        this.name = name;
-        tmp = (31 * tmp) + name.hashCode();
-      }
-        
-      hashcode = tmp;
+      setAttribute(HOST_KEY, host);
+      setAttribute(INSTANCE_NAME_KEY, instanceName);
+      setAttribute(USER_KEY, user);
+      setAttribute(DATABASE_TYPE_KEY, databaseType);
+      setAttribute(PORT_KEY, port);
+      setAttribute(PASSWORD_KEY, password);
+      setAttribute(JDBC_DRIVER_CLASS_NAME, jdbcDriverClassName);
   }
-
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
-	 */
-	public String getType() {
-    return type;
-	}
 	
 	/**
 	 * Returns the type of RDBMS serving this location.  This may be null.
 	 * @return String databaseType
 	 */
 	public String getDatabaseType() {
-		return databaseType;
+		return getAttribute(DATABASE_TYPE_KEY);
 	}
 
+  public void setDatabaseType(String databaseType) {
+    setAttribute(DATABASE_TYPE_KEY, databaseType);
+  }
+  
 	/**
 	 * Returns the host for the RDBMS serving this location.
 	 * @return String host
 	 */
 	public String getHost() {
-		return host;
+		return getAttribute(HOST_KEY);
 	}
 
+  public void setHost(String host) {
+    setAttribute(HOST_KEY, host);
+  }
+  
 	/**
 	 * Returns the name of the Mart instance.
 	 * @return String instanceName
 	 */
 	public String getInstanceName() {
-		return instanceName;
+		return getAttribute(INSTANCE_NAME_KEY);
 	}
 
+  public void setInstanceName(String instanceName) {
+    setAttribute(INSTANCE_NAME_KEY, instanceName);
+  }
+  
 	/**
 	 * Returns the password for the RDBMS serving this location.  This may be null.
 	 * @return String password
 	 */
 	public String getPassword() {
-		return password;
+		return getAttribute(PASSWORD_KEY);
 	}
 
+  public void setPassword(String password) {
+    setAttribute(PASSWORD_KEY, password);
+  }
+  
 	/**
 	 * Returns the port for the RDBMS serving this location.  This may be null.
 	 * @return String port
 	 */
 	public String getPort() {
-		return port;
+		return getAttribute(PORT_KEY);
 	}
 
+  public void setPort(String port) {
+    setAttribute(PORT_KEY, port);
+  }
+  
 	/**
 	 * Returns the user for the RDBMS serving this location.
 	 * @return String user
 	 */
 	public String getUser() {
-		return user;
+		return getAttribute(USER_KEY);
 	}
 	
+  public void setUser(String user) {
+    setAttribute(USER_KEY, user);
+  }
+  
   /**
    * Returns the jdbcDriverClassName, if present.
    * @return String jdbcDriverClassName
    */
   public String getJDBCDriverClassName() {
-    return jdbcDriverClassName;
+    return getAttribute(JDBC_DRIVER_CLASS_NAME);
+  }
+  
+  public void setJDBCDriverClassName(String jdbcDriverClassName) {
+    setAttribute(JDBC_DRIVER_CLASS_NAME, jdbcDriverClassName);
   }
   
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("Location Type=").append(type);
-		buf.append(", host=").append(host);
-		buf.append(", user=").append(user);
-		buf.append(", instanceName=").append(instanceName);
-		buf.append(", databaseType").append(databaseType);
-		buf.append(", port=").append(port);
-		buf.append(", password=").append(password);
-    buf.append(", jdbcDriverClassName=").append(jdbcDriverClassName);
-		
+    buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
@@ -160,6 +163,6 @@ public class DatabaseLocation extends MartLocationBase {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-    return hashcode;
+    return super.hashCode();
 	}
 }

@@ -25,11 +25,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
+import org.jdom.Attribute;
 import org.jdom.DocType;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -56,15 +57,15 @@ public class MartRegistryXMLUtils {
   private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
   
 	//attribute names
-  private static final String NAME = "name";
-	private static final String HOST = "host";
-	private static final String PORT = "port";
-	private static final String DATABASETYPE = "databaseType";
-	private static final String INSTANCENAME = "instanceName";
-	private static final String USER = "user";
-	private static final String PASSWORD = "password";
-	private static final String URL = "url";
-  private static final String JDBCDRIVER = "jdbcDriverClassName";
+//  private static final String NAME = "name";
+//	private static final String HOST = "host";
+//	private static final String PORT = "port";
+//	private static final String DATABASETYPE = "databaseType";
+//	private static final String INSTANCENAME = "instanceName";
+//	private static final String USER = "user";
+//	private static final String PASSWORD = "password";
+//	private static final String URL = "url";
+//  private static final String JDBCDRIVER = "jdbcDriverClassName";
 
 	public static MartRegistry XMLStreamToMartRegistry(InputStream in) throws ConfigurationException {
 		return XMLStreamToMartRegistry(in, false);
@@ -121,46 +122,42 @@ public class MartRegistryXMLUtils {
   
 	// private static ElementToObject methods 
 	private static MartLocation getURLLocation(Element urlloc) throws ConfigurationException {
-		String urlstring = urlloc.getAttributeValue(URL);
-		URL url = null;
-
-		try {
-			url = new URL(urlstring);
-		} catch (MalformedURLException e) {
-			throw new ConfigurationException("Could not create URL for " + urlstring + " from URLLocation Element within MartRegistry " + e.getMessage(), e);
-		}
-
-    String name = urlloc.getAttributeValue(NAME);
-		return new URLLocation(url, name);
+    URLLocation loc = new URLLocation();
+    loadAttributesFromElement(urlloc, loc);
+    
+    //fail now if the url string is not valid
+		loc.getUrl();
+    
+    return loc;
 	}
 
 	private static MartLocation getDBLocation(Element dbloc) throws ConfigurationException {
-		String host = dbloc.getAttributeValue(HOST);
-		String port = dbloc.getAttributeValue(PORT);
-		String databaseType = dbloc.getAttributeValue(DATABASETYPE);
-		String instanceName = dbloc.getAttributeValue(INSTANCENAME);
-		String user = dbloc.getAttributeValue(USER);
-		String password = dbloc.getAttributeValue(PASSWORD);
-		String jdbcDriverClassName = dbloc.getAttributeValue(JDBCDRIVER);
-    String name = dbloc.getAttributeValue(NAME);
-
-		return new DatabaseLocation(host, port, databaseType, instanceName, user, password, jdbcDriverClassName, name);
+    DatabaseLocation loc = new DatabaseLocation();
+    loadAttributesFromElement(dbloc, loc);
+    return loc;
 	}
 
 	private static MartLocation getRegLocation(Element regloc) throws ConfigurationException {
-		String urlstring = regloc.getAttributeValue(URL);
-		URL url = null;
-
-		try {
-			url = new URL(urlstring);
-		} catch (MalformedURLException e) {
-			throw new ConfigurationException("Could not create URL from RegistryLocation Element within MartRegistry " + e.getMessage(), e);
-		}
-
-    String name = regloc.getAttributeValue(NAME);
-		return new RegistryLocation(url,name);
+    RegistryLocation loc = new RegistryLocation();
+    loadAttributesFromElement(regloc, loc);
+    
+    //fail now if the url string is not valid
+    loc.getUrl();
+    
+    return loc;
 	}
 
+  private static void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
+    List attributes = thisElement.getAttributes();
+    
+    for (int i = 0, n = attributes.size(); i < n; i++) {
+      Attribute att = (Attribute) attributes.get(i);
+      String name = att.getName();
+      
+      obj.setAttribute(name, thisElement.getAttributeValue(name));
+    }
+  }
+  
   /**
    * Writes a MartRegistry object as XML to the given File.  Handles opening and closing of the OutputStream.
    * @param dsv -- MartRegistry object
@@ -254,38 +251,37 @@ public class MartRegistryXMLUtils {
 	//private static ObjectToElement methods
 	private static Element getURLLocationElement(URLLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
-		location.setAttribute(URL, loc.getUrl().toExternalForm());
-    location.setAttribute(NAME, loc.getName() );
+    loadElementAttributesFromObject(loc, location);
 		return location;
 	}
 
 	private static Element getDatabaseLocationElement(DatabaseLocation loc) throws ConfigurationException {
 		Element location = new Element(DATABASELOCATION);
-
-		location.setAttribute(HOST, loc.getHost());
-		location.setAttribute(USER, loc.getUser());
-		location.setAttribute(INSTANCENAME, loc.getInstanceName());
-    location.setAttribute(NAME, loc.getName() );
-    
-		if (loc.getPort() != null)
-			location.setAttribute(PORT, loc.getPort());
-
-		if (loc.getDatabaseType() != null)
-			location.setAttribute(DATABASETYPE, loc.getDatabaseType());
-
-		if (loc.getPassword() != null)
-			location.setAttribute(PASSWORD, loc.getPassword());
-
-		if (loc.getJDBCDriverClassName() != null)
-			location.setAttribute(JDBCDRIVER, loc.getJDBCDriverClassName());
-
+    loadElementAttributesFromObject(loc, location);
 		return location;
 	}
 
 	private static Element getRegistryLocationElement(RegistryLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);
-		location.setAttribute(URL, loc.getUrl().toExternalForm());
-    location.setAttribute(NAME, loc.getName() );
+    loadElementAttributesFromObject(loc, location);
 		return location;
 	}
+  
+  private static void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
+    String[] titles = obj.getXmlAttributeTitles();
+    
+    //sort the attribute titles before writing them out, so that MD5SUM is supported
+    Arrays.sort(titles);
+    
+    for (int i = 0, n = titles.length; i < n; i++) {
+      String key = titles[i];
+      
+      if (validString( obj.getAttribute(key) ))
+        thisElement.setAttribute(key, obj.getAttribute(key));
+    }
+  }
+  
+  private static boolean validString(String test) {
+    return (test != null && test.length() > 0);
+  }
 }

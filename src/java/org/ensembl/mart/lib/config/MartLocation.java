@@ -37,4 +37,9 @@ public interface MartLocation {
    * @return String name of the location
    */
   public String getName();
+  
+  /**
+   * set the name of the Location
+   */
+  public void setName(String name);
 }

@@ -26,7 +26,7 @@ import java.util.List;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartRegistry {
+public class MartRegistry implements Comparable {
   private List martLocations = new ArrayList();
   
   public void addMartLocation(MartLocation dsvl) {
@@ -52,5 +52,33 @@ public class MartRegistry {
 		return buf.toString();
 	}
   
+  /**
+   * Based on the hashCode.
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  public int compareTo(Object o) {
+    return hashCode() - o.hashCode();
+  }
+  
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
+  public int hashCode() {
+    int hashcode = 0;
+    
+    //do not need to track order of locations
+    for (int i = 0, n = martLocations.size(); i < n; i++) {
+      MartLocation loc = (MartLocation) martLocations.get(i);
+      hashcode += loc.hashCode();
+    }
+    
+    return hashcode;
+  }
 
+  /**
+   * Allows Equality Comparisons manipulation of MartRegistry objects
+   */
+  public boolean equals(Object o) {
+    return o instanceof MartRegistry && hashCode() == o.hashCode();
+  }
 }

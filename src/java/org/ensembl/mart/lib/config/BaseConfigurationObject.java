@@ -28,7 +28,7 @@ import java.util.Properties;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public abstract class BaseConfigurationObject {
+public abstract class BaseConfigurationObject implements Comparable {
   //Properties Object holds values from XML attributes keyed to AttributeTitle returned by getXMLAttributeTitles.
   protected Properties attributes = new Properties();
   protected List xmlTitles = new ArrayList();
@@ -141,4 +141,12 @@ public abstract class BaseConfigurationObject {
     return tmp;
   }
 
+  /**
+   * allows any BaseConfigurationObject implimenting object to be compared to any other
+   * BaseConfigurationObject implimenting object, based on their hashCode.
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
+  public int compareTo(Object o) {
+    return hashCode() - o.hashCode();
+  }
 }

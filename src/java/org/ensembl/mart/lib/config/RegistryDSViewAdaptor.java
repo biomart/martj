@@ -321,5 +321,4 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
   public String getName() {
       return super.getName();
   }
-
 }

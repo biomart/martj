@@ -17,7 +17,10 @@
  */
 package org.ensembl.mart.lib.config;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *  Represents a RegistryLocation element in a MartRegistry.dtd compliant document.
@@ -25,58 +28,80 @@ import java.net.URL;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class RegistryLocation extends MartLocationBase {
-	private final URL url;
-	private final int hashcode;
-	
-	public RegistryLocation(URL url, String name) {
-    this.type = MartLocationBase.REGISTRY;
-		this.url = url;
-		int tmp = url.hashCode();
-    
-    if (name != null) {
-      this.name = name;
-      tmp += (31 * tmp) + name.hashCode();
+  private Logger logger = Logger.getLogger(URLLocation.class.getName());
+  private final String URL_KEY = "url";
+  private URL url;
+
+  public RegistryLocation() {
+    super();
+    type = MartLocationBase.REGISTRY;
+  }
+  
+  public RegistryLocation(String url, String name) throws ConfigurationException {
+    super(name, MartLocationBase.REGISTRY);
+    setURL(url);
+  }
+  
+  public RegistryLocation(URL url, String name) {
+    super(name, MartLocationBase.REGISTRY);
+    setURL(url);
+  }
+
+  /**
+   * Return the URL for this RegistryLocation
+   * @return URL
+   */
+  public URL getUrl() {
+    String urlS = getAttribute(URL_KEY);
+    if (url == null && !(urlS == null)) {
+      try {
+        url = new URL(urlS);
+      } catch (MalformedURLException e) {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Could not parse url " + urlS + " to proper URL\n returning null\n");
+      }
     }
-    hashcode = tmp;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
-	 */
-	public String getType() {
-    return type;
-	}
+    return url;
+  }
 
-	/**
-	 * Return the URL for this RegistryLocation
-	 * @return URL
-	 */
-	public URL getUrl() {
-		return url;
-	}
+  public void setURL(String url) throws ConfigurationException {
+    setAttribute(URL_KEY, url);
+    
+    try {
+      this.url = new URL(url);
+    } catch (MalformedURLException e) {
+      throw new ConfigurationException("Could not parse " + url + " to a proper URL: " + e.getMessage(), e);
+    }
+  }
+  
+  public void setURL(URL url) {
+    if (getAttribute(URL_KEY) == null)
+      setAttribute(URL_KEY, url.toExternalForm());
+    
+    this.url = url;
+  }
+  
+  public String toString() {
+    StringBuffer buf = new StringBuffer();
 
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
+    buf.append("[");
+    buf.append(super.toString());
+    buf.append("]");
 
-		buf.append("[");
-		buf.append("Location Type=").append(type);
-		buf.append("url=").append(url);
-		buf.append("]");
+    return buf.toString();
+  }
 
-		return buf.toString();
-	}
-	
-	/**
-	 * Allows Equality Comparisons manipulation of RegistryLocation objects
-	 */
-	public boolean equals(Object o) {
-		return o instanceof RegistryLocation && hashCode() == o.hashCode();
-	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	public int hashCode() {
-		 return hashcode;
-	}
+  /**
+   * Allows Equality Comparisons manipulation of RegistryLocation objects
+   */
+  public boolean equals(Object o) {
+    return o instanceof RegistryLocation && hashCode() == o.hashCode();
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
+  public int hashCode() {
+    return super.hashCode();
+  }
 }

@@ -18,7 +18,10 @@
  
 package org.ensembl.mart.lib.config;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Object representing a URLLocation element in a DatasetViewLocation element
@@ -29,20 +32,23 @@ import java.net.URL;
  */
 public class URLLocation extends MartLocationBase {
 
-  private final URL url;
-  private final int hashcode;
+  private Logger logger = Logger.getLogger(URLLocation.class.getName());
+  private final String URL_KEY = "url";
+  private URL url;
+  
+  public URLLocation() {
+    super();
+    type = MartLocationBase.URL;
+  }
+ 
+  public URLLocation(String url, String name) throws ConfigurationException {
+    super(name, MartLocationBase.URL);
+    setURL(url);
+  }
   
 	public URLLocation(URL url, String name) {
-    this.url = url;
-    this.type = MartLocationBase.URL;
-    
-    int tmp = url.hashCode();
-    
-    if (name != null) {
-      this.name = name;
-      tmp = (31 * tmp) + name.hashCode();
-    }    
-    hashcode = tmp;
+    super(name, MartLocationBase.URL);
+    setURL(url);
 	}
 
 	/**
@@ -50,16 +56,40 @@ public class URLLocation extends MartLocationBase {
 	 * @return URL
 	 */
 	public URL getUrl() {
+    String urlS = getAttribute(URL_KEY);
+    if ( url == null && ! ( urlS == null ) ) {
+      try {
+        url = new URL(urlS);
+      } catch (MalformedURLException e) {
+        if (logger.isLoggable(Level.INFO))
+          logger.info("Could not parse url " + urlS + " to proper URL\n returning null\n" );
+      }
+    }
 		return url;
 	}
 
- 
+  public void setURL(String url) throws ConfigurationException {
+    setAttribute(URL_KEY, url);
+    
+    try {
+      this.url = new URL(url);
+    } catch (MalformedURLException e) {
+      throw new ConfigurationException("Could not parse " + url + " to a proper URL: " + e.getMessage(), e);
+    }
+  }
+  
+  public void setURL(URL url) {
+    if (getAttribute(URL_KEY) == null)
+      setAttribute(URL_KEY, url.toExternalForm());
+    
+    this.url = url;
+  }
+  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("Location Type=").append(type);
-		buf.append("url=").append(url);
+    buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
@@ -76,14 +106,6 @@ public class URLLocation extends MartLocationBase {
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-     return hashcode;
+     return super.hashCode();
 	}
-
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
-	 */
-	public String getType() {
-    return type;
-	}
-
 }

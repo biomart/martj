@@ -23,24 +23,74 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public abstract class MartLocationBase implements MartLocation {
+public class MartLocationBase extends BaseConfigurationObject implements MartLocation {
 
   public static final String DATABASE = "database";
   public static final String URL = "url";
   public static final String REGISTRY = "registry";
   
-  protected String name;
+  protected final String NAME_KEY = "name";
   protected String type;
+  
+  public MartLocationBase() {
+    super();
+  }
+  
+  public MartLocationBase(String name, String type) {
+    super();
+    setAttribute(NAME_KEY, name);
+    this.type = type;
+  }
   
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
 	 */
-	public abstract String getType();
+	public String getType() {
+    return type;
+	}
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.MartLocation#getName()
    */
   public String getName() {
-    return name;
+    return getAttribute(NAME_KEY);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MartLocation#setName()
+   */  
+  public void setName(String name) {
+    setAttribute(NAME_KEY, name);
+  }
+  
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
+  public boolean equals(Object o) {
+    return o instanceof MartLocationBase && o.hashCode() == hashCode();
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
+  public int hashCode() {
+    int hash = super.hashCode();
+    hash = (31 * hash) + type.hashCode();
+    return hash;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.BaseConfigurationObject#isBroken()
+   */
+  public boolean isBroken() {
+    //never broken
+    return false;
+  }
+
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  public String toString() {
+    return super.toString() + ", type=" + type;
   }
 }
