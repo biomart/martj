@@ -21,6 +21,7 @@ public class Table  implements Cloneable {
 	public String status;
 	public String final_name;
 	public String temp_name;
+	public String type;
 	public boolean skip;
 	public boolean final_table;
 	private  String Name = null;
@@ -117,15 +118,15 @@ public class Table  implements Cloneable {
 	public void setExtension(String extension) {
 		this.extension = extension;
 	}
-
-public boolean hasExtension(){
 	
-	if (getExtension() != null){
+	public boolean hasExtension(){
 		
-		return true;
-	} else {return false;}
+		if (getExtension() != null){
+			
+			return true;
+		} else {return false;}
+		
+	}
 	
-}
-
-
+	
 }

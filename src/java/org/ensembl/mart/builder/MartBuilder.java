@@ -91,18 +91,13 @@ public class MartBuilder {
 			
 			String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].final_table_name+" TO: " );
 			if (newname != null && ! newname.equals("\n") && !newname.equals(""))
-				transformations[i].final_table_name=newname;
-		}
-		
-		
-		// Transform
-		for (int i=0;i<transformations.length;i++){	
-			transformations[i].transform();	
+				transformations[i].setFinalName(newname);
 		}
 		
 		
 		// Dump to SQL
 		for (int i=0;i<transformations.length;i++){
+			
 			TransformationUnit [] units = transformations[i].getUnits();
 			
 			System.out.println("");
@@ -138,6 +133,16 @@ public class MartBuilder {
 			
 			if (!cardinality.equals("S")){
 				ref_tab.setCardinality(cardinality);
+				if(cardinality.equals("11")){
+					ref_tab.type="simple";
+				} if (cardinality.equals("0n")){
+					ref_tab.type="left";
+				} if (cardinality.equals("n1")){
+					ref_tab.type="outer";
+				} if (cardinality.equals("1n")){
+					ref_tab.type="skip";
+				}
+					
 				list.add(ref_tab);
 			}
 		}

@@ -25,12 +25,15 @@ public class Transformation {
 	private LinkedTables linked;
 	Table main_table;
 	
-	public Transformation (){		
-	}
 	
-	public Transformation (Table [] referenced_tables){
+	public void create (Table [] referenced_tables){
 		
-		createUnits(referenced_tables);
+		if(type.equals("linked")){
+		createPrimaryTransUnits(referenced_tables);
+		} else { 
+			createSecondaryTransUnits(referenced_tables);
+		}
+		
 		
 	}
 	
@@ -38,8 +41,7 @@ public class Transformation {
 	
 	public void addAdditionalUnit(Table ref_table,String final_table_key,String final_table_extension){
 		
-		TransformationUnit unit = new TransformationUnit(ref_table);
-		unit.setJoinType("simple");
+		TransformationUnit unit = new TransformationUnitSimple(ref_table);
 		unit.extension_key=final_table_key;
 		unit.extension=final_table_extension;
 		unit.is_extension=true;
@@ -54,15 +56,59 @@ public class Transformation {
 		
 	}
 	
-	private void createUnits (Table [] tables) {
+	private void createPrimaryTransUnits (Table [] ref_tables) {
 		
 		Table temp_end = new Table();
-		for (int i=0; i<tables.length; i++){
+		for (int i=0; i<ref_tables.length; i++){
 			
-			TransformationUnit unit = new TransformationUnit(tables[i]);
-			units.add(unit);
+			if (ref_tables[i].type.equals("skip")) continue;
+			
+			if (ref_tables[i].type.equals("simple")){
+				TransformationUnit unit = new TransformationUnitSimple(ref_tables[i]);	
+				if (ref_tables[i].type.equals("outer"))
+					unit.useFK=true;
+				units.add(unit);
+			}
+			
+			/**
+			if (ref_tables[i].type.equals("left")){
+				TransformationUnit unit = new TransformationUnitLeft(ref_tables[i]);
+				if (ref_tables[i].type.equals("outer"))
+					unit.useFK=true;
+				units.add(unit);
+			}
+			*/
+			if (ref_tables[i].type.equals("main")){
+				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
+				if (ref_tables[i].type.equals("outer"))
+					unit.useFK=true;
+				units.add(unit);
+			}
 		}
 	}
+	
+	
+	
+	
+	private void createSecondaryTransUnits (Table [] ref_tables) {
+		
+		Table temp_end = new Table();
+		for (int i=0; i<ref_tables.length; i++){
+			
+			if (type.equals("main")){
+				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
+				units.add(unit);
+			}
+			
+			if (type.equals("central")){
+				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);	
+				units.add(unit);
+			}
+		}
+	}
+	
+	
+	
 	
 	
 	
@@ -92,6 +138,7 @@ public class Transformation {
 			
 			if (i== getUnits().length-1){
 				unit.temp_end.setName(final_table_name);
+			
 				final_table=true;
 			} else {
 				unit.temp_end.setName(temp_end_name);
@@ -105,9 +152,9 @@ public class Transformation {
 			
 			unit.temp_end.final_table=final_table;
 			unit.temp_end.temp_name=temp_end_name;
+			
 			temp_end=unit.temp_end;
 			
-			unit.setJoinType("simple");
 			units.set(i,unit);
 			
 		}
@@ -120,7 +167,11 @@ public class Transformation {
 	}
 	
 	
-	
+	public void setFinalName(String name){
+		
+	getFinalUnit().getTemp_end().setName(name);
+		
+	}
 	
 	
 	public TransformationUnit [] getUnits() {

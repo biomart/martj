@@ -39,13 +39,15 @@ public class TargetSchema {
 			LinkedTables linked = source_schema.getLinkedTables()[j];
 		    Table [] referenced_tables = linked.getReferencedTables();
 			
-		    Transformation final_table = new Transformation(referenced_tables);
-			final_table.final_table_type=linked.final_table_type;
-			final_table.final_table_name=linked.final_table_name;
-			final_table.main_table=linked.getMainTable();
-			final_table.type="linked";
+		    Transformation transformation = new Transformation();
+			transformation.final_table_type=linked.final_table_type;
+			transformation.final_table_name=linked.final_table_name;
+			transformation.main_table=linked.getMainTable();
+			transformation.type="linked";
+			transformation.create(referenced_tables);
 			
-			addTransformation(final_table);
+			transformation.transform();
+			addTransformation(transformation);
 		    
 			}
 	}
@@ -55,24 +57,31 @@ public class TargetSchema {
 		Transformation [] trans = getTransformations();
 		ArrayList mains = new ArrayList();
 		
-		for (int i=1;i<trans.length;i++){
+		for (int i=0;i<trans.length;i++){
 			if (trans[i].final_table_type.equals("MAIN")){
-				mains.add(trans[i].getFinalUnit().getTemp_end());
+				Table main = trans[i].getFinalUnit().getTemp_end();
+				mains.add(main);
 			}
 		}
+		
 		
 		ArrayList ref_tables = new ArrayList();
 		for (int i=1;i<mains.size();i++){
 			
             Table main = (Table) mains.get(0);
-            Table ref=(Table) mains.get(i);
+            Table ref = (Table) mains.get(i);
             ref_tables.add(ref);
             Table [] b = new Table [ref_tables.size()];
             Table [] tables = (Table []) ref_tables.toArray(b);
-            Transformation transformation = new Transformation(tables);
-            transformation.main_table=main;
-		    transformation.type="mains";
+            Transformation transformation = new Transformation();
+            transformation.final_table_name =ref.getName();
             
+            ref.setName(ref.temp_name);
+            transformation.main_table=main;
+		    transformation.type="main";
+            transformation.create(tables);
+		    
+            transformation.transform();
             addTransformation(transformation);
 		
 		}		
@@ -85,7 +94,14 @@ public class TargetSchema {
 		
 	}
 	
-	
+	private void transform(){
+		
+		Transformation [] trans = getTransformations();
+		
+		for (int i=0;i<trans.length;i++){
+			trans[i].transform();
+		}
+	}
 	
 	
 	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
