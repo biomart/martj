@@ -52,17 +52,12 @@ public class SourceSchema {
 	
 	public Table [] getReferencedTables (String table_name){
 		
-		Table [] exp_key_tables;
-		Table [] imp_key_tables;
-			exp_key_tables = resolver.getExportedKeyTables(table_name);
-			imp_key_tables = resolver.getImportedKeyTables(table_name);
-	
-	   Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
-	   System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
-	   System.arraycopy(imp_key_tables,0,join_tables,exp_key_tables.length,imp_key_tables.length);
-					
-		return join_tables;
+		return resolver.getReferencedTables(table_name);
 	}
+	
+	
+	
+	
 	
 	
 	/**

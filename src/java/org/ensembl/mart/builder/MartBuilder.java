@@ -19,7 +19,7 @@ import java.util.*;
 public class MartBuilder {
 	
 	private static SourceSchema source_schema;
-	private static String config ="data/builder_connection_oracle.properties";
+	private static String config ="data/builder_connection_mysql.properties";
 	
 	public static void main(String[] args) {
 		
