@@ -184,9 +184,9 @@ public class BooleanFilterWidget
 
     if (filter == null)
       irrelevant.setSelected(true);
-    else if (filter.getValue().equals(requireFilter.getValue()))
+    else if (filter.getCondition().equals(requireFilter.getCondition()))
       require.setSelected(true);
-    else if (filter.getValue().equals(excludeFilter.getValue()))
+    else if (filter.getCondition().equals(excludeFilter.getCondition()))
       exclude.setSelected(true);
 
   }
