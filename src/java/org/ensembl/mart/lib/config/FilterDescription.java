@@ -910,7 +910,7 @@ public class FilterDescription extends QueryFilterSettings {
 
 				String targetName = pushOption.getRef();
 				QueryFilterSettings parent = dataset.getFilterDescriptionByInternalName(targetName);
-
+                
 				if (parent == null)
 					throw new ConfigurationException(
 						"OptionPush.ref = " + targetName + " Refers to a FilterDescription that is not in dataset " + dataset.getInternalName());
@@ -920,9 +920,10 @@ public class FilterDescription extends QueryFilterSettings {
 				for (int k = 0; k < options2.length; k++) {
 					Option option2 = options2[k];
 					option2.setParent(parent);
-
-					// Recurse incase this option has any PushOptions
-					setParentsForAllPushOptionOptions(dataset, option2.getOptions());
+                    
+					setParentsForAllPushOptionOptions(dataset, options2);  
+					//}
+					
 				}
 			}
 		}
