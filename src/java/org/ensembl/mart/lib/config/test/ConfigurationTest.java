@@ -387,7 +387,7 @@ public class ConfigurationTest extends Base {
 			assertEquals(
 				"Warning, Did not get the correct Page for the UIFilterDescription\n",
 				"testFilterPage",
-				d.getPageForUIFilterDescription(testIName).getInternalName());
+				d.getPageForFilter(testIName).getInternalName());
 		}
 
     // second FilterDescription is a UIDSFilterDescription object
@@ -429,7 +429,7 @@ public class ConfigurationTest extends Base {
 			assertEquals(
 				"Warning, Did not get the correct Page for the UIFilterDescription\n",
 				"testFilterPage",
-				d.getPageForUIFilterDescription(testIName).getInternalName());
+				d.getPageForFilter(testIName).getInternalName());
 		}
 				 
 		//second FilterCollection is a member of the FilterSet
@@ -849,7 +849,7 @@ public class ConfigurationTest extends Base {
 			assertEquals(
 				"Warning, Did not get the correct Page for the UIAttributeDescription\n",
 				"testAttributePage",
-				d.getPageForUIAttributeDescription(testIName).getInternalName());
+				d.getPageForAttribute(testIName).getInternalName());
 		}
 	}
 
