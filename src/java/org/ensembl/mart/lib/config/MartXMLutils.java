@@ -34,6 +34,8 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import javax.sql.DataSource;
+
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
@@ -44,14 +46,19 @@ import org.xml.sax.InputSource;
  */
 public class MartXMLutils {
 
+	//TODO: Factor out old getInputSourceFor methods
 	private static final String GETSQL = "select stream, compressed_stream from _meta_martConfiguration_XML where system_id = ?";
+
+	private static final String GETALLDSVDATA = "select internalName, displayName, stream, compressed_stream from _meta_martConfiguration_XML"; //TODO: md5sum
+	private static final String GETBYDNAMESQL = "select stream, compressed_stream from _meta_martConfiguration_XML where displayName = ?";
+	private static final String GETBYINAMESQL = "select stream, compressed_stream from _meta_martConfiguration_XML where internalName = ?";
+
 	private static final String EXISTSQL = "select count(system_id) from _meta_martConfiguration_XML where system_id = ?";
 
 	//if EXISTSQL returns 1
 	private static final String DELETEOLDXML = "delete from _meta_martConfiguration_XML where system_id = ?";
 	private static final String INSERTXMLSQL = "insert into _meta_martConfiguration_XML (system_id, stream) values (?,?)";
-	private static final String INSERTCOMPRESSEDXMLSQL =
-		"insert into _meta_martConfiguration_XML (system_id, compressed_stream) values (?,?)";
+	private static final String INSERTCOMPRESSEDXMLSQL = "insert into _meta_martConfiguration_XML (system_id, compressed_stream) values (?,?)";
 	private static Logger logger = Logger.getLogger(MartXMLutils.class.getName());
 
 	public static InputSource getInputSourceFor(Connection conn, String systemID) throws ConfigurationException {
@@ -66,11 +73,11 @@ public class MartXMLutils {
 			byte[] cstream = rs.getBytes(2);
 			rs.close();
 
-      InputStream rstream = null;
-      if (cstream != null)
-				rstream = new GZIPInputStream( new ByteArrayInputStream(cstream) );
-      else
-        rstream = new ByteArrayInputStream(stream);
+			InputStream rstream = null;
+			if (cstream != null)
+				rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+			else
+				rstream = new ByteArrayInputStream(stream);
 
 			InputSource is = new InputSource(systemID); // allow the InputSource to carry the systemID with it
 			is.setByteStream(rstream);
@@ -92,8 +99,8 @@ public class MartXMLutils {
 		}
 	}
 
-	public static void storeConfiguration(Connection conn, String systemID, Document doc, boolean compress)
-		throws ConfigurationException {
+	//TODO: store by internalName, displayName, and MD5SUM
+	public static void storeConfiguration(Connection conn, String systemID, Document doc, boolean compress) throws ConfigurationException {
 		int rowsupdated = 0;
 
 		if (compress)
@@ -106,8 +113,7 @@ public class MartXMLutils {
 				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?	
 	}
 
-	private static int storeUncompressedXML(Connection conn, String systemID, Document doc)
-		throws ConfigurationException {
+	private static int storeUncompressedXML(Connection conn, String systemID, Document doc) throws ConfigurationException {
 		try {
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
@@ -194,15 +200,14 @@ public class MartXMLutils {
 		}
 	}
 
-	public static void storeDTD(Connection conn, String systemID, URL dtdurl, boolean compress)
-		throws ConfigurationException {
+	public static void storeDTD(Connection conn, String systemID, URL dtdurl, boolean compress) throws ConfigurationException {
 		int rowsupdated = 0;
 
-    if (compress)
-      rowsupdated = storeCompressedDTD(conn, systemID, dtdurl);
-    else
-      rowsupdated = storeUncompressedDTD(conn, systemID, dtdurl);
-      
+		if (compress)
+			rowsupdated = storeCompressedDTD(conn, systemID, dtdurl);
+		else
+			rowsupdated = storeUncompressedDTD(conn, systemID, dtdurl);
+
 		if (rowsupdated < 1)
 			if (logger.isLoggable(Level.WARNING))
 				logger.warning("Warning, xml for " + systemID + " not stored"); //throw an exception?						
@@ -298,6 +303,104 @@ public class MartXMLutils {
 			throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage());
 		} catch (SQLException e) {
 			throw new ConfigurationException("Caught SQLException updating xml for " + systemID + ": " + e.getMessage());
+		}
+	}
+
+	//TODO:impliment user/fallback tables
+  //TODO:impliment MD5SUM in DatasetView
+	public static InputStream getDatasetViewXMLStreamByInternalName(DataSource dsvsource, String user, String internalName) throws ConfigurationException {
+		try {
+			Connection conn = dsvsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GETBYINAMESQL);
+			ps.setString(1, internalName);
+
+			ResultSet rs = ps.executeQuery();
+			rs.next(); // will only get one result
+
+			byte[] stream = rs.getBytes(1);
+			byte[] cstream = rs.getBytes(2);
+			rs.close();
+      conn.close();
+      
+			InputStream rstream = null;
+			if (cstream != null)
+				rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+			else
+				rstream = new ByteArrayInputStream(stream);
+
+			return rstream;
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQL Exception during fetch of requested stream: " + e.getMessage());
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException during fetch of requested stream: " + e.getMessage());
+		}
+	}
+
+	//TODO:impliment user/fallback tables
+  //TODO:impliment MD5SUM in DatasetView
+	public static InputStream getDatasetViewXMLStreamByDisplayName(DataSource dsvsource, String user, String displayName) throws ConfigurationException {
+		try {
+			Connection conn = dsvsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GETBYDNAMESQL);
+			ps.setString(1, displayName);
+
+			ResultSet rs = ps.executeQuery();
+			rs.next(); // will only get one result
+
+			byte[] stream = rs.getBytes(1);
+			byte[] cstream = rs.getBytes(2);
+			rs.close();
+      conn.close();
+
+			InputStream rstream = null;
+			if (cstream != null)
+				rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+			else
+				rstream = new ByteArrayInputStream(stream);
+
+			return rstream;
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQL Exception during fetch of requested stream: " + e.getMessage());
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException during fetch of requested stream: " + e.getMessage());
+		}
+	}
+
+	//TODO:impliment user/fallback tables
+  //TODO:create stub DatasetViews instead of full DatasetViews
+  //TODO:impliment MD5SUM in DatasetView
+	public static DSViewDatabaseAdaptor getDSViewDatabaseAdaptorFor(DataSource dsource, String user) throws ConfigurationException {
+
+		try {
+			DSViewDatabaseAdaptor dsva = new DSViewDatabaseAdaptor(dsource, user);
+			Connection conn = dsource.getConnection();
+			PreparedStatement ps = conn.prepareStatement(GETALLDSVDATA);
+
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+        String internalName = rs.getString(1); // ignore for now, but will use
+        String displayName = rs.getString(2); // these to create stubs later
+				byte[] stream = rs.getBytes(3);
+				byte[] cstream = rs.getBytes(4);
+
+
+				InputStream rstream = null;
+				if (cstream != null)
+					rstream = new GZIPInputStream(new ByteArrayInputStream(cstream));
+				else
+					rstream = new ByteArrayInputStream(stream);
+        
+        DatasetView dsv = ConfigurationUtils.getDatasetView(rstream, false);
+        dsva.addDatasetView(dsv);
+			}
+      rs.close();
+      conn.close();
+      
+      return dsva;
+		} catch (SQLException e) {
+			throw new ConfigurationException("Caught SQL Exception during fetch of requested stream: " + e.getMessage());
+		} catch (IOException e) {
+			throw new ConfigurationException("Caught IOException during fetch of requested stream: " + e.getMessage());
 		}
 	}
 }
