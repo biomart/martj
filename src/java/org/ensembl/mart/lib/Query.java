@@ -25,14 +25,16 @@ import org.ensembl.util.StringUtil;
 /**
  * Object for storing the parameters to construct a query against a Mart
  * database.  Parameters consist of at least one Attribute (a requested field
- * from the database) implimenting object. Parameters can include Filter 
- * implimenting objects to restrict the Query on user supplied conditions.
- * Parameters can also include SequenceDescriptions.
+ * from the database) implimenting object or a SequenceDescription object. 
+ * Parameters can include Filter implimenting objects, or DSFilter objects
+ * to restrict the Query on user supplied conditions.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @see Attribute
+ * @see SequenceDescription 
  * @see Filter
+ * @see DSFilter
  */
 public class Query {
 	/**
@@ -76,6 +78,15 @@ public class Query {
       setFilters(nfs);
     }
   	
+  	if (oq.hasUnprocessedListFilters) {
+  		IDListFilter[] olfs = oq.getUnprocessedListFilters();
+  		IDListFilter[] nlfs = new IDListFilter[olfs.length];
+  		for (int i = 0, n = olfs.length; i < n; i++)
+  		  nlfs[i] = new IDListFilter(olfs[i]);
+  		
+  		setFilters(nlfs);
+  	}
+  	
   	if (oq.hasDomainSpecificFilters) {
   		DomainSpecificFilter[] odsfs = oq.getDomainSpecificFilters();
   		DomainSpecificFilter[] ndsfs = new DomainSpecificFilter[odsfs.length];
@@ -103,6 +114,9 @@ public class Query {
     	
     	setPrimaryKeys(nPkeys);
     }
+    
+    if (oq.hasLimit())
+      limit = oq.getLimit();
   }
   
 	/**
@@ -187,24 +201,42 @@ public class Query {
 			if (element.getName().equals(name))
 			  return element;
 		}
+		for (int i = 0, n = unprocessedfilters.size(); i < n; i++) {
+			Filter element = (Filter) unprocessedfilters.get(i);
+			if (element.getName().equals(name))
+			  return element;
+		}
 		return null;
   }
+  
 	/**
-	 * set an entire list of Filter objects
+	 * set an entire list of Filter objects.  Subsequent calls to setFilters will add to 
+	 * what was added with previous addFilter/setFilters calls.  This method handles the 
+	 * logic for collecting any non STRING type IDListFilter objects for later processing 
+	 * by IDListFilterHandler objects, and sets the hasUnprocessedListFilters flag to true 
+	 * when they are encountered
 	 * 
 	 * @param Filter[] filters
 	 */
 	public void setFilters(Filter[] filters) {
-		this.filters =  new ArrayList(Arrays.asList(filters));
+		for (int i = 0, n = filters.length; i < n; i++)
+      addFilter(filters[i]);
 	}
 
 	/**
-	 * add a single Filter object
+	 * add a single Filter object.  This method handles the logic for collecting any
+	 * non STRING type IDListFilter objects for later processing by IDListFilterHandler objects,
+	 * and sets the hasUnprocessedListFilters flag to true when they are encountered.
 	 * 
 	 * @param Filter filter
 	 */
 	public void addFilter(Filter filter) {
-		filters.add(filter);
+		if (filter instanceof IDListFilter && ( (IDListFilter) filter).getType() != IDListFilter.STRING ) {
+		  unprocessedfilters.add((IDListFilter) filter);
+		  hasUnprocessedListFilters = true;
+		}
+		else
+		  filters.add(filter);
 	}
 
   /**
@@ -220,12 +252,13 @@ public class Query {
   
   /**
    * set an entire list of DomainSpecificFilter objects
+   * subsequent calls to setDomainSpecificFilter will add to what was added before
    * 
    * @param DomainSpecificFilter[] dsfilters
    */
   public void setDomainSpecificFilters(DomainSpecificFilter[] dsfilters) {
   	hasDomainSpecificFilters = true;
-  	this.dsfilters = Arrays.asList(dsfilters);
+  	this.dsfilters.addAll(Arrays.asList(dsfilters));
   }
   
   /**
@@ -234,13 +267,30 @@ public class Query {
    * @param DomainSpecificFilter dsfilter
    */
   public void addDomainSpecificFilter(DomainSpecificFilter dsfilter) {
-  	if (! hasDomainSpecificFilters)
-  	  hasDomainSpecificFilters = true;
+  	hasDomainSpecificFilters = true;
    	dsfilters.add(dsfilter);
   }
   
+  /**
+   * Determine if the Query contains Domain Specific Filters to process
+   * @return true if it contains Domain Specific Filters, false if not
+   */
   public boolean hasDomainSpecificFilters() {
   	return hasDomainSpecificFilters;
+  }
+  
+  /**
+   * Determine if the Query contains unprocessed IDListFilter objects.
+   * @return true if it contains unprocessed IDListFilter objects, false if not
+   */
+  public boolean hasUnprocessedListFilters() {
+  	return hasUnprocessedListFilters;
+  }
+  
+  public IDListFilter[] getUnprocessedListFilters() {
+  	IDListFilter[] ret = new IDListFilter[unprocessedfilters.size()];
+  	unprocessedfilters.toArray(ret);
+  	return ret;
   }
   
 	/**
@@ -292,6 +342,29 @@ public class Query {
 		this.starBases = starBases;
 	}
 
+  /**
+   * Set a limit for the Query.
+   * @param inlimit - int limit to add to the Query
+   */
+  public void setLimit(int inlimit) {
+  	if (inlimit > 0)
+  	  this.limit = inlimit;
+  }
+	/**
+	 * Determine if the Query has a limit > 0.
+	 * @return true if limit > 0, false if not
+	 */
+	public boolean hasLimit() {
+		return (limit > 0);
+	}
+	/**
+	 * Returns the limit for the Query. limit == 0 means no limit
+	 * @return limit
+	 */
+	public int getLimit() {
+		return limit;
+	}
+	
 	/**
 	 * returns a description of the Query for logging purposes
 	 * 
@@ -307,12 +380,16 @@ public class Query {
 		buf.append(", attributes=").append(attributes);
 		buf.append(", filters=").append(filters);
 		
+		if (hasUnprocessedListFilters)
+		  buf.append(", unprocessedfilters=").append(unprocessedfilters);
+		  
 		if(hasDomainSpecificFilters)
 			buf.append(", dsfilters=").append(dsfilters);
 
 		if (seqd != null)
 			buf.append(", sequencedescription=").append(seqd);
 
+    buf.append(", limit=").append(limit);
 		buf.append("]");
 
 		return buf.toString();
@@ -328,6 +405,10 @@ public class Query {
 	
 	public int hashCode() {
 		int tmp = hasDomainSpecificFilters ? 1 : 0;
+		tmp = (31 * tmp);
+		tmp += hasUnprocessedListFilters ? 1 : 0;
+		tmp = (31 * tmp) + limit;
+		
 		if (querytype == Query.SEQUENCE) {
 		  tmp = (31 * tmp) + seqd.hashCode();
 			tmp = (31 * tmp) + querytype; 
@@ -354,6 +435,13 @@ public class Query {
 			  tmp = (31 * tmp) + ( (NullableFilter) element).hashCode();
 		}
 		
+		if (hasUnprocessedListFilters) {
+			for (int i = 0, n = unprocessedfilters.size(); i < n; i++) {
+				IDListFilter element = (IDListFilter) unprocessedfilters.get(i);
+				tmp = (31 * tmp) + element.hashCode();
+			}
+		}
+		
 		if (hasDomainSpecificFilters) {
 			for (int i = 0, n = dsfilters.size(); i < n; i++) {
 				DomainSpecificFilter element = (DomainSpecificFilter) dsfilters.get(i);
@@ -367,9 +455,12 @@ public class Query {
 	private List attributes = new Vector();
 	private List filters = new Vector();
   private List dsfilters = new Vector(); // will hold DomainSpecificFilter objects
+  private List unprocessedfilters = new Vector(); // will hold non STRING type IDListFilter objects
   private boolean hasDomainSpecificFilters = false; // will be set to true if a DomainSpecificFilterObject is added
+  private boolean hasUnprocessedListFilters = false; // will be set to true if a non STRING type IDListFilter Object is added
 	private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
 	private SequenceDescription seqd;
 	private String[] primaryKeys;
 	private String[] starBases;
+	private int limit = 0; // add a limit clause to the SQL with an int > 0
 }
