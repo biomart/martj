@@ -68,6 +68,8 @@ public class MartSettings extends Box {
 
     super(BoxLayout.Y_AXIS);
 
+    loadPrefs();
+
     this.datasetViewSettings = datasetViewSettings;
 
     databaseDialog.addDatabaseType("mysql");
@@ -99,7 +101,9 @@ public class MartSettings extends Box {
     add(b);
   }
 
-  /**
+
+
+	/**
    * 
    */
   public void doDelete() {
@@ -213,9 +217,28 @@ public class MartSettings extends Box {
           return o1.toString().compareTo(o2.toString());
       }
     });
+    
+    storePrefs();
   }
 
-  public boolean remove(DataSource mart) {
+  /**
+	 * TODO Store prefs in persistent storage.
+	 */
+	private void storePrefs() {
+    logger.warning("Should store");   
+		
+	}
+  
+  
+  /**
+   * 
+   * TODO Load prefs from persistent storage. 
+   */
+  private void loadPrefs() {
+    logger.warning("Should load");   
+  }
+
+	public boolean remove(DataSource mart) {
 
     int index = marts.indexOf(mart);
 
@@ -234,6 +257,8 @@ public class MartSettings extends Box {
     }
 
     initialiseCombo();
+
+    storePrefs();
 
     return true;
   }
