@@ -25,6 +25,10 @@ package org.ensembl.mart.explorer;
  */
 public class Constants {
 
+  /**
+   * Gap between components inside widgets.
+   */
+  public static final int GAP_BETWEEN_COMPONENTS_IN_WIDGET = 5;
 
   /**
    * Maximum width of list components.
