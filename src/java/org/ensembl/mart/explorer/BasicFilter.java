@@ -27,9 +27,6 @@ package org.ensembl.mart.explorer;
  */
 public class BasicFilter implements Filter {
 	
-	
-
-
 	/**
 	 * constructs a BasicFilter object, which can be added to a Query
 	 * 
@@ -38,7 +35,21 @@ public class BasicFilter implements Filter {
 	 * @param value -- parameter of the condition, applicable to the type.
 	 */
 	public BasicFilter(String field, String condition, String value) {
+		this(field, "", condition,value);
+	}
+
+
+	/**
+	 * constructs a BasicFilter object with a tableConstraint, which can be added to a Query
+	 * 
+	 * @param field -- String type.  The type of filter being applied
+	 * @param tableConstraint -- String table where field is found
+	 * @param condition -- String condition of the clause, eg. =<>
+	 * @param value -- parameter of the condition, applicable to the type.
+	 */
+	public BasicFilter(String field, String tableConstraint, String condition, String value) {
 		this.name = field;
+		this.tableConstraint = tableConstraint;
 		this.condition = condition;
 		this.value = value;
 	}

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified"
+    targetNamespace="file://org/ensembl/mart/explorer/XML"
+    xmlns="file://org/ensembl/mart/explorer/XML" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="MartConfiguration">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element maxOccurs="unbounded" minOccurs="1" name="Dataset">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element maxOccurs="unbounded"
+                                minOccurs="1" name="starName" type="xsd:string"/>
+                            <xsd:element maxOccurs="unbounded"
+                                minOccurs="1" name="primaryKey" type="xsd:string"/>
+                            <xsd:element maxOccurs="unbounded"
+                                minOccurs="1" name="FilterPage">
+                                <xsd:complexType>
+                                    <xsd:sequence>
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="FilterGroup">
+                                    <xsd:complexType>
+                                    <xsd:sequence>
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="FilterCollection">
+                                    <xsd:complexType>
+                                    <xsd:sequence>
+
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="UIFilterDescription">
+                                    <xsd:complexType>
+
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="fieldName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="tableConstraint"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="qualifier"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="type"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="description"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+
+                                    <xsd:attribute
+                                    name="type"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="description"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+                                    <xsd:attribute
+                                    name="Description"
+                                    type="xsd:string" use="optional"/>
+                                    <xsd:attribute
+                                    name="type"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+                                    <xsd:attribute name="displayName"
+                                    type="xsd:string" use="optional"/>
+                                    <xsd:attribute name="description"
+                                    type="xsd:string" use="optional"/>
+                                </xsd:complexType>
+                            </xsd:element>
+                            <xsd:element maxOccurs="unbounded"
+                                minOccurs="1" name="AttributePage">
+                                <xsd:complexType>
+                                    <xsd:sequence>
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="AttributeGroup">
+                                    <xsd:complexType>
+                                    <xsd:sequence>
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="AttributeCollection">
+                                    <xsd:complexType>
+                                    <xsd:sequence>
+
+                                    <xsd:element
+                                    maxOccurs="unbounded"
+                                    minOccurs="1" name="UIAttributeDescription">
+                                    <xsd:complexType>
+
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="fieldName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="tableConstraint"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="maxLength"
+                                    type="xsd:int" use="required"/>
+
+                                    <xsd:attribute
+                                    name="homepageURL"
+                                    type="xsd:string" use="optional"/>
+
+                                    <xsd:attribute
+                                    name="linkoutURL"
+                                    type="xsd:string" use="optional"/>
+
+                                    <xsd:attribute
+                                    name="description"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="type"
+                                    type="xsd:string" use="required"/>
+
+                                    <xsd:attribute
+                                    name="maxSelect"
+                                    type="xsd:int" use="required"/>
+
+                                    <xsd:attribute
+                                    name="description"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+                                    <xsd:attribute
+                                    name="displayName"
+                                    type="xsd:string" use="required"/>
+                                    <xsd:attribute
+                                    name="description"
+                                    type="xsd:string" use="optional"/>
+                                    </xsd:complexType>
+                                    </xsd:element>
+                                    </xsd:sequence>
+                                    <xsd:attribute name="displayName"
+                                    type="xsd:string" use="optional"/>
+                                    <xsd:attribute name="description"
+                                    type="xsd:string" use="optional"/>
+                                </xsd:complexType>
+                            </xsd:element>
+                        </xsd:sequence>
+                        <xsd:attribute name="displayName"
+                            type="xsd:string" use="required"/>
+                        <xsd:attribute name="description"
+                            type="xsd:string" use="optional"/>
+                        <xsd:attribute name="martName" type="xsd:string" use="required"/>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="martName" type="xsd:string" use="required"/>
+            <xsd:attribute name="description" type="xsd:string" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

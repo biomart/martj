@@ -18,9 +18,14 @@
  
 package org.ensembl.mart.explorer;
 
-import java.io.*;
-import java.sql.*;
-import org.apache.log4j.*;
+import java.io.OutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+import org.apache.log4j.Logger;
+import org.ensembl.mart.explorer.config.ConfigurationException;
+import org.ensembl.mart.explorer.config.MartConfiguration;
+import org.ensembl.mart.explorer.config.MartConfigurationFactory;
 
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
@@ -149,6 +154,19 @@ public class Engine {
 		  Connection conn = getDatabaseConnection();
 		  QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
 		  qr.execute(limit);
+	}
+	
+	/**
+	 * Returns a MartConfiguration object with all of the information needed to interact with
+	 * the mart defined by the connection parameters provided to this Engine.
+	 * 
+	 * @return MartConfiguration object
+	 */
+	public MartConfiguration getMartConfiguration() throws ConfigurationException {
+		// TODO Currently this returns minimal configuration information.  The fully implimented method will throw one or more exceptions.
+		// Also, the getInstance method of the MartConfigurationFactory will most likely take
+		// either a URL file, or Database Connection as an argument.
+		return MartConfigurationFactory.getInstance();
 	}
 
     public int countRows(Query query) {
