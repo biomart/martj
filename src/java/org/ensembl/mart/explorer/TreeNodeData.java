@@ -35,9 +35,6 @@ public class TreeNodeData {
   public static final TreeNodeData DATASET =
     new TreeNodeData("Dataset", ":", null);
   
-  public static final TreeNodeData DATASET_VIEW =
-    new TreeNodeData("DatasetView", ":", null);
-  
   public static final TreeNodeData ATTRIBUTES =
     new TreeNodeData("Attributes", null, null);
   

@@ -522,7 +522,7 @@ public class QueryEditor extends JPanel {
 
     DatasetView[] views = adaptor.getDatasetViews();
 
-    DataSource ds = new DetailedDataSource("mysql",
+    DetailedDataSource ds = new DetailedDataSource("mysql",
       //"127.0.0.1",
     //"3313",
   "ensembldb.ensembl.org", "3306", "ensembl_mart_17_1",

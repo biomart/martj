@@ -307,8 +307,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
       if (datasetViewSettings.getRootAdaptor().getDatasetViews().length == 0) {
         feedback.warning(
-          "No dataset views available. You need load one or more "
-            + "datasets before you can create a query.");
+          "You need to add an "
+            + "adaptor containing dataset views before you can create a query.");
 
       } else {
 

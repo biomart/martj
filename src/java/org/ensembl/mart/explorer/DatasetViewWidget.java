@@ -49,6 +49,8 @@ public class DatasetViewWidget
 	extends InputPage
 	implements ChangeListener {
 
+	private InputPageContainer container;
+
 	private DatasetView[] oldViews;
 
 	private Map optionToView = new HashMap();
@@ -70,17 +72,19 @@ public class DatasetViewWidget
 	 */
 	public DatasetViewWidget(
 		Query query,
-		AdaptorManager datasetViewSettings) {
+		AdaptorManager datasetViewSettings,
+    InputPageContainer container) {
 
 		super(query, "Dataset View");
 
 		this.adaptorManager = datasetViewSettings;
-
-		chooser.setEditable(false);
-		chooser.addChangeListener(this);
-		add(chooser, BorderLayout.NORTH);
+    this.container = container;
 
     initOptions();
+    
+    chooser.setEditable(false);
+		chooser.addChangeListener(this);
+		add(chooser, BorderLayout.NORTH);
 	}
 
 	/**
@@ -142,7 +146,7 @@ public class DatasetViewWidget
 
 		Query q = new Query();
 		DatasetViewWidget dvm =
-			new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings());
+			new DatasetViewWidget(q, QueryEditor.testDatasetViewSettings(), null);
 		dvm.setSize(950, 750);
 
 		JFrame f = new JFrame(dvm.getClass().getName() + " - test");
@@ -194,12 +198,17 @@ public class DatasetViewWidget
 	}
 
 	/**
-	 * Update datasetview if user selects a new one.
+	 * Handles user selection of an adaptor->dataset by setting the datasetView,
+   * and datasource if vailable.
 	 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
 	 */
 	public void stateChanged(ChangeEvent e) {
 
-		DatasetView dsv = (DatasetView)optionToView.get(chooser.getSelectedItem());
+    Object selected = chooser.getSelectedItem();
+    
+    if ( selected==null ) return;
+		
+    DatasetView dsv = (DatasetView)optionToView.get(selected);
 
 		query.clear();
 		query.setDatasetView(dsv);
@@ -209,7 +218,12 @@ public class DatasetViewWidget
 			query.setPrimaryKeys(dsv.getPrimaryKeys());
 			query.setStarBases(dsv.getStarBases());
 			query.setDataset(dsv.getDataset());
+      
+      if ( dsv.getDatasource()!=null )
+        query.setDataSource( dsv.getDatasource() );
 		}
+
+    container.toFront( TreeNodeData.ATTRIBUTES );
 
 	}
 

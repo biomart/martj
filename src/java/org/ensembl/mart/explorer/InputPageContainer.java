@@ -57,8 +57,8 @@ public class InputPageContainer
       tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
     add(
-      new DatasetViewWidget(query, datasetViewSettings),
-      TreeNodeData.DATASET_VIEW.getLabel());
+      new DatasetViewWidget(query, datasetViewSettings, this),
+      "DATASET_VIEW");
     add(
       new DatasourceWidget(query, datasetViewSettings.getMartSettings()),
       TreeNodeData.DATASOURCE.getLabel());
@@ -110,7 +110,7 @@ public class InputPageContainer
    * if no such page exists.
    * @param tnd tree node is a key for an input page.
    */
-  private void toFront(TreeNodeData tnd) {
+  void toFront(TreeNodeData tnd) {
     cardLayout.show(this, tnd.getLabel());
   }
 

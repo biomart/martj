@@ -282,9 +282,6 @@ public class DetailedDataSource implements DataSource {
 		return databaseName + "@" + host + ":" + port;
 	}
 
-	public String toString() {
-		return displayName;
-	}
 
 	/**
 	 * A connection pool is created when this merthod is first called

@@ -261,9 +261,6 @@ public class QueryTreeView extends JTree implements QueryListener {
 	private DefaultMutableTreeNode datasetNode =
 		new DefaultMutableTreeNode(TreeNodeData.DATASET);
 
-	private DefaultMutableTreeNode datasetViewNode =
-		new DefaultMutableTreeNode(TreeNodeData.DATASET_VIEW);
-
 	private DefaultMutableTreeNode attributesNode =
 		new DefaultMutableTreeNode(TreeNodeData.ATTRIBUTES);
 
@@ -301,7 +298,6 @@ public class QueryTreeView extends JTree implements QueryListener {
 		setModel(treeModel);
 		setRootVisible(false);
 
-    rootNode.add(datasetViewNode);
 		rootNode.add(dataSourceNode);
 		rootNode.add(datasetNode);
 		rootNode.add(attributesNode);
@@ -312,7 +308,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 			TreeSelectionModel.SINGLE_TREE_SELECTION);
 
 		// ensure the 1st level of nodes are visible
-		TreePath path = new TreePath(rootNode).pathByAddingChild(datasetViewNode);
+		TreePath path = new TreePath(rootNode).pathByAddingChild(dataSourceNode);
 		makeVisible(path);
 
 		getInputMap().put(
@@ -688,7 +684,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 	}
 
 	/**
-	 * Do nothing.
+   * Do nothing.
 	 * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
 	 */
 	public void primaryKeysChanged(
@@ -697,20 +693,15 @@ public class QueryTreeView extends JTree implements QueryListener {
 		String[] newPrimaryKeys) {
 	}
 
+  /**
+   * Do nothing. 
+   */
 	public void datasetViewChanged(
 		Query query,
 		DatasetView oldDatasetView,
 		DatasetView newDatasetView) {
 
-		String s = "";
-		if (newDatasetView != null) {
-			s = newDatasetView.getDisplayName();
-			// Remove separators before displaying
-			s = Pattern.compile("__").matcher(s).replaceAll(" ");
-		}
 
-		((TreeNodeData) datasetViewNode.getUserObject()).setRightText(s);
-		treeModel.reload();
 	}
 
 }

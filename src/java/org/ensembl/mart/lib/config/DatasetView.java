@@ -1140,6 +1140,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 	 */
 	public void setDatasource(DetailedDataSource source) {
 		datasource = source;
+    System.out.println( "set datasource="+datasource );
 	}
 
 	/**
