@@ -51,18 +51,17 @@ import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
-import org.ensembl.mart.util.*;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * Widget for selecting sequence information for inclusion in query.
+ * Widget for viewing the current sequence attribute on a query and enabling the user to
+ * add, remove or select a different one. This class implements the Model View Controller Design pattern where 
+ * the query is the model, actionPerformed(...) handles user control actions and 
+ * sequenceDescriptionChanged(...) updates the view when the model changes.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  *
- * TODO test that button -> correct filters being added to query
- * TODO add support for other sequence types
-  * TODO selecting button -> add/change filter on query
-  * 
- * TODO listen to changes in query e.g. deleted filter.
+  * TODO Modify SequenceDescription.left/right to use -1 for unset, then update this to reflect that.
  */
 public class SequenceGroupWidget
   extends GroupWidget
@@ -91,11 +90,7 @@ public class SequenceGroupWidget
   private final int UNSUPPORTED = -100;
   private final int NONE = -101;
 
-  private SequenceDescription oldAttribute = null;
-
   private Feedback feedback = new Feedback(this);
-
-  private DSAttributeGroup attributeGroup;
 
   private LabelledTextField flank5 = new LabelledTextField("1000");
   private LabelledTextField flank3 = new LabelledTextField("1000");
@@ -104,8 +99,7 @@ public class SequenceGroupWidget
 
   private JRadioButton transcript = new JRadioButton("Transcripts/proteins");
 
-  private JRadioButton gene =
-    new JRadioButton("Genes - transcript information ignored (one output per gene)");
+  private JRadioButton gene = new JRadioButton("Genes");
 
   private JRadioButton includeGeneSequence =
     new JRadioButton("Gene sequence only");
@@ -233,36 +227,240 @@ public class SequenceGroupWidget
     if (tree != null)
       tree.addTreeSelectionListener(this);
 
-    this.attributeGroup = attributeGroup;
-
-    loadSchematicSequenceImages();
     buildGUI();
-    configureWidgets();
-    reset();
+    sequenceDescriptionChanged(query, null, query.getSequenceDescription());
   }
 
-  private void configureWidgets() {
+  /**
+   * Updates the view (GUI state) to represent the sequence description.
+   * @param description
+   */
+  public void sequenceDescriptionChanged(
+    Query sourceQuery,
+    SequenceDescription oldSequenceDescription,
+    SequenceDescription sd) {
 
-    clearButton.setSelected(true);
-    ButtonGroup bg = new ButtonGroup();
-    for (int i = 0; i < typeButtons.length; i++) {
-      bg.add(typeButtons[i]);
-      typeButtons[i].addActionListener(this);
+    logger.fine("New sd: " + sd);
+
+    if (sd == null) {
+
+      includeNone.setSelected(true);
+      for (int i = 0; i < includeButtons.length; i++)
+        includeButtons[i].setEnabled(false);
+      schematicSequenceImageHolder.setIcon(blankIcon);
+
+      flank5.setEnabled(false);
+      flank3.setEnabled(false);
+
+    } else {
+
+      int f5 = sd.getLeftFlank();
+      int f3 = sd.getRightFlank();
+
+      switch (sd.getType()) {
+
+        case SequenceDescription.TRANSCRIPTCODING :
+          transcript.setSelected(true);
+          includeCodingSequence.setSelected(true);
+          schematicSequenceImageHolder.setIcon(
+            loadIcon("data/image/gene_schematic_coding.gif"));
+          break;
+
+        case SequenceDescription.TRANSCRIPTPEPTIDE :
+          transcript.setSelected(true);
+          includePeptide.setSelected(true);
+          schematicSequenceImageHolder.setIcon(
+            loadIcon("data/image/gene_schematic_coding.gif"));
+          break;
+
+        case SequenceDescription.TRANSCRIPTCDNA :
+          transcript.setSelected(true);
+          includecDNASequence.setSelected(true);
+          schematicSequenceImageHolder.setIcon(
+            loadIcon("data/image/gene_schematic_cdna.gif"));
+          break;
+
+        case SequenceDescription.TRANSCRIPTEXONS :
+          transcript.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeExonSequence.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_exons.gif"));
+          } else if (f5 != 0 && f3 == 0) {
+            includeExonsPlus5Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_exons_5.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeExonsPlus3Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_exons_3.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else if (f5 != 0 && f3 != 0) {
+            includeExonsPlus5And3Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_exons_5_3.gif"));
+            flank5.setText(Integer.toString(f5));
+            flank3.setText(Integer.toString(f3));
+          }
+          break;
+
+        case SequenceDescription.TRANSCRIPTEXONINTRON :
+          transcript.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeGeneSequence.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_gene_only.gif"));
+          } else if (f5 != 0 && f3 == 0) {
+            includeGeneSequence_5.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_gene_5.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeGeneSequence_3.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_gene_3.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else if (f5 != 0 && f3 != 0) {
+            includeGeneSequence_5_3.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_gene_5_3.gif"));
+            flank5.setText(Integer.toString(f5));
+            flank3.setText(Integer.toString(f3));
+          }
+          break;
+
+        case SequenceDescription.TRANSCRIPTFLANKS :
+          transcript.setSelected(true);
+          if (f5 != 0 && f3 == 0) {
+            includeUpstream.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_5_only.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeDownStream.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_3_only.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else {
+            throw new RuntimeException(
+              "Unsupported sequence description state: " + sd);
+          }
+          break;
+
+        case SequenceDescription.GENEEXONINTRON :
+          gene.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeGeneSequence.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_gene_only.gif"));
+          } else if (f5 != 0 && f3 == 0) {
+            includeGeneSequence_5.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_gene_5.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeGeneSequence_3.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_gene_3.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else if (f5 != 0 && f3 != 0) {
+            includeGeneSequence_5_3.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_gene_5_3.gif"));
+            flank5.setText(Integer.toString(f5));
+            flank3.setText(Integer.toString(f3));
+          }
+          break;
+
+        case SequenceDescription.GENEEXONS :
+          gene.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeExonSequence.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_exons.gif"));
+          } else if (f5 != 0 && f3 == 0) {
+            includeExonsPlus5Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_exons_5.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeExonsPlus3Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_exons_3.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else if (f5 != 0 && f3 != 0) {
+            includeExonsPlus5And3Flanks.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_exons_5_3.gif"));
+            flank5.setText(Integer.toString(f5));
+            flank3.setText(Integer.toString(f3));
+          }
+          break;
+
+        case SequenceDescription.GENEFLANKS :
+          gene.setSelected(true);
+          if (f5 != 0 && f3 == 0) {
+            includeUpstream.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_5_only.gif"));
+            flank5.setText(Integer.toString(f5));
+          } else if (f5 == 0 && f3 != 0) {
+            includeDownStream.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_extent_3_only.gif"));
+            flank3.setText(Integer.toString(f3));
+          } else {
+            throw new RuntimeException(
+              "Unsupported sequence description state: " + sd);
+          }
+          break;
+
+        case SequenceDescription.DOWNSTREAMUTR :
+          transcript.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeDownStreamUTROnly.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_downstream_utr.gif"));
+          } else if (f5 == 0 && f3 != 0) {
+            includeDownStreamAndUTR.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_downstream_utr_3.gif"));
+          } else {
+            throw new RuntimeException(
+              "Unsupported sequence description state: " + sd);
+          }
+          break;
+
+        case SequenceDescription.UPSTREAMUTR :
+          transcript.setSelected(true);
+          if (f5 == 0 && f3 == 0) {
+            includeUpStreamUTROnly.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_upstream_utr.gif"));
+          } else if (f5 != 0 && f3 == 0) {
+            includeUpStreamAndUTR.setSelected(true);
+            schematicSequenceImageHolder.setIcon(
+              loadIcon("data/image/gene_schematic_upstream_utr_5.gif"));
+          } else {
+            throw new RuntimeException(
+              "Unsupported sequence description state: " + sd);
+          }
+
+          break;
+
+        default :
+          throw new RuntimeException("Unsupported sequence type: " + sd);
+
+      }
     }
-
-    bg = new ButtonGroup();
-    for (int i = 0; i < includeButtons.length; i++) {
-      bg.add(includeButtons[i]);
-      includeButtons[i].addActionListener(this);
-    }
-    bg.add(includeNone);
-
-    flank5.addActionListener(this);
-    flank3.addActionListener(this);
 
   }
 
   private void buildGUI() {
+
+    gene.setToolTipText(
+      " Transcript information ignored (one output per gene)");
 
     Box b = Box.createVerticalBox();
 
@@ -300,6 +498,23 @@ public class SequenceGroupWidget
     g.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
     blankIcon = new ImageIcon(blank);
 
+    clearButton.setSelected(true);
+    ButtonGroup bg = new ButtonGroup();
+    for (int i = 0; i < typeButtons.length; i++) {
+      bg.add(typeButtons[i]);
+      typeButtons[i].addActionListener(this);
+    }
+
+    bg = new ButtonGroup();
+    for (int i = 0; i < includeButtons.length; i++) {
+      bg.add(includeButtons[i]);
+      includeButtons[i].addActionListener(this);
+    }
+    bg.add(includeNone);
+
+    flank3.addActionListener(this);
+    flank5.addActionListener(this);
+
   }
 
   private Box addAll(
@@ -313,16 +528,13 @@ public class SequenceGroupWidget
     return container;
   }
 
-  private void loadSchematicSequenceImages() {
-
-  }
-
   private ImageIcon loadIcon(String filepath) {
     ImageIcon icon = null;
     try {
       BufferedImage testImage = ImageIO.read(new File(filepath));
       icon = new ImageIcon(testImage);
     } catch (IOException e) {
+      System.err.println("Problem loading file: " + filepath);
       e.printStackTrace();
     }
 
@@ -341,7 +553,7 @@ public class SequenceGroupWidget
 
     DSAttributeGroup g = new DSAttributeGroup("sequences");
     Query q = new Query();
-    q.addQueryChangeListener(new DebugQueryListener(System.out));
+    //q.addQueryChangeListener(new DebugQueryListener(System.out));
 
     SequenceGroupWidget w = new SequenceGroupWidget("seq widget", q, null, g);
 
@@ -349,39 +561,34 @@ public class SequenceGroupWidget
   }
 
   /**
-   * Handles all user clicks on buttons in the widget. Causes the preview to update
-   * and adds / removes a filtter to/from query as necessary.
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+   * Updates the query in response to a user action (control part of model-control-view pattern).
+   * Adds / removes a filtter to/from query as necessary.
    */
   public void actionPerformed(ActionEvent e) {
 
     Object src = e.getSource();
 
-    disableFlanks();
+    flank5.setEnabled(false);
+    flank3.setEnabled(false);
 
     if (src == clearButton) {
 
-      reset();
+      changeQuery(NONE, 0, 0);
 
     } else if (transcript.isSelected()) {
 
       if (src == transcript) {
 
-        reset();
+        changeQuery(NONE, 0, 0);
         enableTranscriptButtons();
 
       } else if (includeGeneSequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_gene_only.gif",
-          SequenceDescription.TRANSCRIPTEXONINTRON,
-          0,
-          0);
+        changeQuery(SequenceDescription.TRANSCRIPTEXONINTRON, 0, 0);
 
       } else if (includeGeneSequence_5_3.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_gene_5_3.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTEXONINTRON,
           flank5.getTextAsInt(),
           flank3.getTextAsInt());
@@ -390,8 +597,7 @@ public class SequenceGroupWidget
 
       } else if (includeGeneSequence_5.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_gene_5.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTEXONINTRON,
           flank5.getTextAsInt(),
           0);
@@ -399,8 +605,7 @@ public class SequenceGroupWidget
 
       } else if (includeUpstream.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_5_only.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTFLANKS,
           flank5.getTextAsInt(),
           0);
@@ -408,25 +613,16 @@ public class SequenceGroupWidget
 
       } else if (includeUpStreamUTROnly.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_upstream_utr.gif",
-          SequenceDescription.UPSTREAMUTR,
-          0,
-          0);
+        changeQuery(SequenceDescription.UPSTREAMUTR, 0, 0);
 
       } else if (includeUpStreamAndUTR.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_upstream_utr_5.gif",
-          SequenceDescription.UPSTREAMUTR,
-          flank5.getTextAsInt(),
-          0);
+        changeQuery(SequenceDescription.UPSTREAMUTR, flank5.getTextAsInt(), 0);
         flank5.setEnabled(true);
 
       } else if (includeGeneSequence_3.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_gene_3.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTEXONINTRON,
           0,
           flank3.getTextAsInt());
@@ -434,8 +630,7 @@ public class SequenceGroupWidget
 
       } else if (includeDownStream.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_3_only.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTFLANKS,
           0,
           flank3.getTextAsInt());
@@ -443,16 +638,11 @@ public class SequenceGroupWidget
 
       } else if (includeDownStreamUTROnly.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_downstream_utr.gif",
-          SequenceDescription.DOWNSTREAMUTR,
-          0,
-          0);
+        changeQuery(SequenceDescription.DOWNSTREAMUTR, 0, 0);
 
       } else if (includeDownStreamAndUTR.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_downstream_utr_3.gif",
+        changeQuery(
           SequenceDescription.DOWNSTREAMUTR,
           0,
           flank3.getTextAsInt());
@@ -460,40 +650,23 @@ public class SequenceGroupWidget
 
       } else if (includeExonSequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_exons.gif",
-          SequenceDescription.TRANSCRIPTEXONS,
-          0,
-          0);
+        changeQuery(SequenceDescription.TRANSCRIPTEXONS, 0, 0);
 
       } else if (includecDNASequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_cdna.gif",
-          SequenceDescription.TRANSCRIPTCDNA,
-          0,
-          0);
+        changeQuery(SequenceDescription.TRANSCRIPTCDNA, 0, 0);
 
       } else if (includeCodingSequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_coding.gif",
-          SequenceDescription.TRANSCRIPTCODING,
-          0,
-          0);
+        changeQuery(SequenceDescription.TRANSCRIPTCODING, 0, 0);
 
       } else if (includePeptide.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_coding.gif",
-          SequenceDescription.TRANSCRIPTPEPTIDE,
-          0,
-          0);
+        changeQuery(SequenceDescription.TRANSCRIPTPEPTIDE, 0, 0);
 
       } else if (includeExonsPlus5And3Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_exons_5_3.gif",
+        changeQuery(
           SequenceDescription.TRANSCRIPTEXONS,
           flank5.getTextAsInt(),
           flank3.getTextAsInt());
@@ -502,20 +675,14 @@ public class SequenceGroupWidget
 
       } else if (includeExonsPlus3Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_exons_3.gif",
-          SequenceDescription.TRANSCRIPTEXONS,
-          0,
-          flank3.getTextAsInt());
+        changeQuery(
+        SequenceDescription.TRANSCRIPTEXONS, 0, flank3.getTextAsInt());
         flank3.setEnabled(true);
 
       } else if (includeExonsPlus5Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_exons_5.gif",
-          SequenceDescription.TRANSCRIPTEXONS,
-          flank5.getTextAsInt(),
-          0);
+        changeQuery(
+        SequenceDescription.TRANSCRIPTEXONS, flank5.getTextAsInt(), 0);
         flank5.setEnabled(true);
 
       }
@@ -524,21 +691,16 @@ public class SequenceGroupWidget
 
       if (src == gene) {
 
-        reset();
+        changeQuery(NONE, 0, 0);
         enableGeneButtons();
 
       } else if (includeGeneSequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_gene_only.gif",
-          SequenceDescription.GENEEXONINTRON,
-          0,
-          0);
+        changeQuery(SequenceDescription.GENEEXONINTRON, 0, 0);
 
       } else if (includeGeneSequence_5_3.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_gene_5_3.gif",
+        changeQuery(
           SequenceDescription.GENEEXONINTRON,
           flank5.getTextAsInt(),
           flank3.getTextAsInt());
@@ -548,8 +710,7 @@ public class SequenceGroupWidget
 
       } else if (includeGeneSequence_5.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_gene_5.gif",
+        changeQuery(
           SequenceDescription.GENEEXONINTRON,
           flank5.getTextAsInt(),
           0);
@@ -557,44 +718,29 @@ public class SequenceGroupWidget
 
       } else if (includeGeneSequence_3.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_gene_3.gif",
-          SequenceDescription.GENEFLANKS,
+        changeQuery(
+          SequenceDescription.GENEEXONINTRON,
           0,
           flank3.getTextAsInt());
-
         flank3.setEnabled(true);
 
       } else if (includeUpstream.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_5_only.gif",
-          SequenceDescription.GENEFLANKS,
-          flank5.getTextAsInt(),
-          0);
+        changeQuery(SequenceDescription.GENEFLANKS, flank5.getTextAsInt(), 0);
         flank5.setEnabled(true);
 
       } else if (includeDownStream.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_3_only.gif",
-          SequenceDescription.GENEFLANKS,
-          0,
-          flank3.getTextAsInt());
+        changeQuery(SequenceDescription.GENEFLANKS, 0, flank3.getTextAsInt());
         flank3.setEnabled(true);
 
       } else if (includeExonSequence.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_exons.gif",
-          SequenceDescription.GENEEXONS,
-          0,
-          0);
+        changeQuery(SequenceDescription.GENEEXONS, 0, 0);
 
       } else if (includeExonsPlus5And3Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_exons_5_3.gif",
+        changeQuery(
           SequenceDescription.GENEEXONS,
           flank5.getTextAsInt(),
           flank3.getTextAsInt());
@@ -604,22 +750,12 @@ public class SequenceGroupWidget
 
       } else if (includeExonsPlus3Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_exons_3.gif",
-          SequenceDescription.GENEEXONINTRON,
-          0,
-          flank3.getTextAsInt());
-
+        changeQuery(SequenceDescription.GENEEXONS, 0, flank3.getTextAsInt());
         flank3.setEnabled(true);
 
       } else if (includeExonsPlus5Flanks.isSelected()) {
 
-        updateState(
-          "data/image/gene_schematic_extent_exons_5.gif",
-          SequenceDescription.GENEEXONS,
-          flank5.getTextAsInt(),
-          0);
-
+        changeQuery(SequenceDescription.GENEEXONS, flank5.getTextAsInt(), 0);
         flank5.setEnabled(true);
 
       }
@@ -627,65 +763,47 @@ public class SequenceGroupWidget
 
   }
 
-  private void disableFlanks() {
-    flank5.setEnabled(false);
-    flank3.setEnabled(false);
-  }
-
   /**
-   * Removes filter if set and disables relevant widgets.
-   *
-   */
-  private void reset() {
-
-    // a bit of hack; use this image because the method requires one. The image on screen
-    // will be replaced if necessary by other methods.
-    updateState("data/image/gene_schematic_gene_only.gif", NONE, 0, 0);
-
-    includeNone.setSelected(true);
-    disableButtons();
-    schematicSequenceImageHolder.setIcon(blankIcon);
-    disableFlanks();
-  }
-
-  /**
-   * Updates the displayed image and adds a filter to the query if appropriatte.
+   * Updates sequence description on the query
    * @param imageFilePath image to be displayed
    * @param sequenceType sequence type (constant from SeequenceDescription), or UNSUPPORTED if unsupported
    * @param leftFlank left flank in base pairs
    * @param rightFlank rightt flank in base pairs
    */
-  private void updateState(
-    String imageFilePath,
-    int sequenceType,
-    int leftFlank,
-    int rightFlank) {
-    schematicSequenceImageHolder.setIcon(loadIcon(imageFilePath));
+  private void changeQuery(int sequenceType, int leftFlank, int rightFlank) {
+
+    logger.fine(
+      "type: " + sequenceType + "\t5': " + leftFlank + "\tf3': " + rightFlank);
 
     if (sequenceType == -1) {
       feedback.warning("Unsupported sequence type.");
       return;
-    }
+    } else if (sequenceType == NONE) {
 
-    SequenceDescription newAttribute = null;
+      query.setSequenceDescription(null);
 
-    if (sequenceType != NONE) {
+    } else {
 
       try {
-        newAttribute =
+
+        SequenceDescription newAttribute =
           new SequenceDescription(sequenceType, leftFlank, rightFlank);
+
+        SequenceDescription oldAttribute = query.getSequenceDescription();
+
+        if (oldAttribute != newAttribute
+          && !newAttribute.equals(oldAttribute)) {
+
+          query.setSequenceDescription(newAttribute);
+        }
+
       } catch (InvalidQueryException e) {
         feedback.warning("Invalid sequence attribute. " + e.getMessage());
         e.printStackTrace();
-        newAttribute = null;
       }
+
     }
 
-    query.setSequenceDescription(newAttribute);
-
-    oldAttribute = newAttribute;
-
-    logger.fine("Updated attribute: " + oldAttribute);
   }
 
   private void enableGeneButtons() {
@@ -697,11 +815,6 @@ public class SequenceGroupWidget
   private void enableTranscriptButtons() {
     for (int i = 0; i < includeButtons.length; i++)
       includeButtons[i].setEnabled(true);
-  }
-
-  private void disableButtons() {
-    for (int i = 0; i < includeButtons.length; i++)
-      includeButtons[i].setEnabled(false);
   }
 
   /**
