@@ -18,14 +18,18 @@ public class CommandLineFrontEnd {
   private String database = null;
   private String user = null;
   private String password = null;
+  private String species = null;
+  private String focus = null;
+  private boolean verbose = false;
   private ResultFile resultFile = new ResultFile();
   private Formatter formatter = null;
   private boolean validQuery = true;
   private IDListFilter idFilter = null;
 
-  public final static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:h";
+  public static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:o:F:i:I:t:hvs:c:";
 
   public CommandLineFrontEnd() {
+		System.out.println(COMMAND_LINE_SWITCHES);
   }
   
 
@@ -42,6 +46,8 @@ public class CommandLineFrontEnd {
       + "\n-u USER                        - database user name"
       + "\n-p PASSWORD                    - database password"
       + "\n-d DATABASE                    - database name"
+      + "\n-s SPECIES                     - species name"
+      + "\n-c FOCUS                       - focus of query"
       + "\n-a ATTRIBUTE                   - one or more attributes"
       + "\n-f FILTER                      - zero or more filters"
       + "\n-o OUTPUT_FILE                 - output file, default is standard out"
@@ -61,7 +67,12 @@ public class CommandLineFrontEnd {
     int c;
     String arg;
     while ((c = g.getopt()) != -1) {
+      System.out.println( "c=" +(char)c);
       switch (c) {
+
+			case 'v':
+        verbose = true;
+      	break;
 
       case 'l':
         // do nothing, should have been handled by MartExplorerApplication
@@ -85,11 +96,22 @@ public class CommandLineFrontEnd {
 
       case 'u':
         user = g.getOptarg();
+      	System.out.println("user="+user);
         break;
 
       case 'p':
         password = g.getOptarg();
         break;
+
+      case 's':
+        species = g.getOptarg() ;
+      	System.out.println("species="+species);
+      	break;
+
+			case 'c':
+        focus = g.getOptarg() ;
+      	System.out.println("focus="+focus);
+      	break;
 
       case 'a':
         addAttribute( g.getOptarg() );
@@ -119,6 +141,7 @@ public class CommandLineFrontEnd {
       case 't':
         identifierType( g.getOptarg() );
         break;
+
     }
     }            
 
@@ -136,7 +159,14 @@ public class CommandLineFrontEnd {
       validationError("User must be set (use -u).");
     else if (database == null) 
       validationError("Database must be set (use -d).");
-    else if ( attributes.size()==0 ) 
+
+    else if ( species == null)
+      validationError("Species must be set (use -s).");
+
+    else if ( focus == null)
+      validationError("Focus must be set (use -c).");
+
+    else if ( attributes.size()==0 )
       validationError("At least one attributes must be chosen (use -a).");
     else if ( idFilter!=null && idFilter.getType()==null ) 
       validationError("You must set id filter type if you use an id filter (use -t).");
@@ -167,9 +197,14 @@ public class CommandLineFrontEnd {
     q.setDatabase( database );
     q.setUser( user );
     q.setPassword( password );
+    q.setSpecies( species );
+    q.setFocus( focus );
     q.setAttributes( attributes );
     q.setFilters( filters );
     q.setResultTarget( resultFile );
+
+		if ( verbose )
+      System.out.println( "QUERY : "+ q );
 
     Engine e = new Engine();
     try {

@@ -96,6 +96,8 @@ public class Query {
       buf.append(" ,user=").append(user);
       buf.append(" ,password=").append(password);
       buf.append(" ,database=").append(database);
+      buf.append(" ,species=").append(species);
+      buf.append(" ,focus=").append(focus);
       buf.append(" ,attributes=").append(attributes);
       buf.append(" ,filters=").append(filters);
       buf.append(" ,resultTarget=").append(resultTarget);
@@ -113,11 +115,11 @@ public class Query {
         }
 
     public String getFocus(){
-            return Focus;
+            return focus;
         }
 
-    public void setFocus(String Focus){
-            this.Focus = Focus;
+    public void setFocus(String focus){
+            this.focus = focus;
         }
 
     private List attributes = new Vector();
@@ -137,5 +139,5 @@ public class Query {
   private String password;
   private ResultTarget resultTarget;
   private String species;
-  private String Focus;
+  private String focus;
 }
