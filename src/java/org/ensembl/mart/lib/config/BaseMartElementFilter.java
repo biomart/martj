@@ -17,7 +17,7 @@
  */
 package org.ensembl.mart.lib.config;
 
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 
 import org.jdom.Element;

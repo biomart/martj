@@ -21,7 +21,6 @@ package org.ensembl.mart.util;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
