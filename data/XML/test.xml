@@ -1,35 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
+<!DOCTYPE MartConfiguration SYSTEM "file://localhost/home/dlondon/src/head/martj/data/XML/MartConfiguration.dtd">
 <MartConfiguration description="For Testing Purposes Only" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
+  <FilterDescription description="For Testing Purposes Only" displayName="A Test MartConfiguration FilterDescription" internalName="testConfFilterDescription" type="list">
+    <Option description="For Testing Purposes Only" displayName="A Test Option" internalName="testOption" isSelectable="true"/>
+  </FilterDescription>
   <Dataset description="For Testing Purposes Only" displayName="Test of a Dataset" internalName="test_dataset">
     <Option description="For Testing Purposes Only" displayName="A Test Dataset Option" internalName="dataset option" isSelectable="true"/>
     <DefaultFilter value="1">
-      <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" fieldName="test_id" internalName="testDefaultFilterDescription" qualifier="in" tableConstraint="gene_main" type="list"/>
+      <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testDefaultFilterDescription" qualifiers="in,=" tableConstraint="gene_main" type="list"/>
     </DefaultFilter>
-    <StarBase>test_starbase</StarBase>
+    <StarBase> test_starbase</StarBase>
     <PrimaryKey>test_primaryKey</PrimaryKey>
     <FilterPage description="For Testing Purposes Only" displayName="Test A Filter Page" internalName="testFilterPage">
       <DSFilterGroup description="For Testing Purposes Only" displayName="Test A DSFilterGroup:" handler="testHandler" internalName="testDSFilterGroup"/>
       <FilterGroup description="For Testing Purposes Only" displayName="Test A FilterGroup:" internalName="testFilterGroup">
-        <FilterSet description="For Testing Purposes Only" displayName="Test of a Filter Set" internalName="testFilterSet" type="list">
-          <FilterSetDescription description="For Testing Purposes Only" displayName="Test of a FilterSetDescription" fieldNameModifier="ensembl" internalName="testFilterSetDescription" tableConstraintModifier="ensemblgene"/>
-        </FilterSet>
-        <FilterCollection description="For Testing Purposes Only" displayName="Test of a FilterCollection" internalName="testFilterCollection" type="list">
-          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" fieldName="test_id" internalName="testUIFilterDescription" qualifier="in" tableConstraint="gene_main" type="list"/>
-          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" handler="testHandler" internalName="testUIDSFilterDescription" type="list"/>
+        <FilterCollection description="For Testing Purposes Only" displayName="Test of a FilterCollection" internalName="testFilterCollection">
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="test_id" internalName="testFilterDescription" qualifiers="in,=" tableConstraint="gene_main" type="list"/>
+          <FilterDescription description="For Testing Purposes Only" displayName="Filter With Enable" field="enable_test_id" internalName="enableFilter" qualifiers="in,=" tableConstraint="gene_main" type="list">
+            <Enable ref="testFilterDescription" valueCondition="1"/>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="Filter With Disable" field="disable_test_id" internalName="disableFilter" qualifiers="in,=" tableConstraint="gene_main" type="list">
+            <Disable ref="testFilterDescription" valueCondition="1"/>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" field="handlerField" handler="testHandler" internalName="testHandlerFilterDescription" qualifiers="in,=" type="list"/>
         </FilterCollection>
-        <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF FILTER SETS" filterSetName="testFilterSet" internalName="testFilterSetCollection" type="list">
-          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST FIELD MODIFIER" fieldName="syn_exclusive" filterSetReq="field" internalName="filterSetUIFilterDescriptionField" qualifier="in" tableConstraint="gene_main" type="list"/>
-          <UIFilterDescription description="For Testing Purposes Only" displayName="A TEST TABLE MODIFIER" fieldName="gene_stable_id_v" filterSetReq="table" internalName="filterSetUIFilterDescriptionTable" qualifier="in" tableConstraint="_dm" type="list"/>
-          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" filterSetReq="table" handler="testHandler" internalName="filterSetUIDSFilterDescription" type="list"/>
-        </FilterCollection>
-        <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF Options" internalName="testOptionCollection" type="list">
-          <Option description="For Testing Purposes Only" displayName="A Test Option" internalName="testOption" isSelectable="true"/>
-          <Option description="For Testing Purposes Only" displayName="A Test Option With an Option" internalName="testOptionWithOption" isSelectable="false">
-            <Option description="For Testing Purposes Only" displayName="A Test Option In an Option" internalName="testOptionInOption" isSelectable="true"/>
-          </Option>
-          <UIFilterDescription description="For Testing Purposes Only" displayName="A FilterDescription With An Option" fieldName="test_id" internalName="OptionFilterDescription" optionName="testOption" qualifier="in" type="list"/>
-          <UIDSFilterDescription description="For Testing Purposes Only" displayName="A TEST ID, DOESNT EXIST" handler="testHandler" internalName="optionUIDSFilterDescription" optionName="testOptionWithOption" type="list"/>
+        <FilterCollection description="For Testing Purposes Only" displayName="A TEST OF Options" internalName="testOptionsCollection">
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST Value Option" field="value_option_id" internalName="filterDescriptionValueOption" qualifiers="in,=" tableConstraint="gene_main" type="list">
+            <Option internalName="valueOption" isSelectable="true" value="1"/>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST Tree Value Option" field="test_id" internalName="filterDescriptionTreeValueOption" qualifiers="in,=" tableConstraint="tree_value_dm" type="list">
+            <Option internalName="treeValueOption" isSelectable="false" value="">
+              <Option internalName="valueOption" isSelectable="true" value="1"/>
+            </Option>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST Option Filters" internalName="FilterDescriptionOptionFilters" type="list">
+            <Option description="For Testing Purposes Only" displayName="A Test Option Filter" field="test_id" internalName="filterOptionOne" isSelectable="true" qualifiers="in,=" tableConstraint="filterOne_dm" type="list"/>
+            <Option description="For Testing Purposes Only" displayName="A Test Option Filter" field="test_id" internalName="filterOptionTwo" isSelectable="true" qualifiers="in,=" tableConstraint="filterTwo_dm" type="list"/>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST OF OPTION WITH PUSHOPTIONS" internalName="FilterDescriptionOptionPushOptions" type="list">
+            <Option description="For Testing Purposes Only" displayName="A TEST OPTION WITH PUSHOPTIONS" field="pushOptionOption_id" internalName="pushOptionOption" isSelectable="true" qualifiers="in,=" tableConstraint="gene_main" type="list">
+              <PushOptions description="For Testing Purposes Only" displayName="A TEST PUSHOPTIONS" internalName="TestValuePushOptions" ref="testFilterDescription">
+                <Option description="For Testing Purposes Only" displayName="A TEST PUSHOPTIONS OPTION" internalName="testPushOptionOption" isSelectable="true" value="1"/>
+              </PushOptions>
+            </Option>
+          </FilterDescription>
+          <FilterDescription description="For Testing Purposes Only" displayName="A TEST OF A PUSHOPTION FILTER OPTION" internalName="testPushOptionOptionFilter" type="list">
+            <Option description="For Testing Purposes Only" displayName="A TEST OPTION WITH PUSHOPTION FILTER OPTION" internalName="PushOptionFilterOption" isSelectable="true">
+              <PushOptions description="For Testing Purposes Only" displayName="A TEST PUSHOPTIONS WITH OPTION FILTER" internalName="OptionFilterPushOption" ref="testFilterDescription">
+                <Option description="For Testing Purposes Only" displayName="A TEST FILTER OPTION IN A PUSHOPTION" field="pushOptionFilterOption_id" internalName="PushOptionFilterOption" isSelectable="true" qualifiers="in,=" tableConstraint="gene_main" type="list"/>
+              </PushOptions>
+            </Option>
+          </FilterDescription>
         </FilterCollection>
       </FilterGroup>
     </FilterPage>
@@ -37,7 +58,7 @@
       <DSAttributeGroup description="For Testing Purposes Only" displayName="test of an DSAttribute Group:" handler="testHandler" internalName="testDSAttributeGroup"/>
       <AttributeGroup description="For Testing Purposes Only" displayName="test of an Attribute Group:" internalName="testAttributeGroup">
         <AttributeCollection description="For Testing Purposes Only" displayName="Test of an AttributeCollection:" internalName="testAttributeCollection" maxSelect="1">
-          <UIAttributeDescription description="For Testing Purposes Only" displayName="Test of a UIAttributeDescription" fieldName="test_id" homepageURL="http://test.org" internalName="testUIAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>
+          <AttributeDescription description="For Testing Purposes Only" displayName="Test of a AttributeDescription" field="test_id" homepageURL="http://test.org" internalName="testAttributeDescription" linkoutURL="http://test.org?test" maxLength="1" source="test source" tableConstraint="gene_main"/>
         </AttributeCollection>
       </AttributeGroup>
     </AttributePage>
