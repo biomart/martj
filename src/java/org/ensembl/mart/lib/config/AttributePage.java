@@ -236,9 +236,10 @@ public class AttributePage {
 		List atts = new ArrayList();
   	
 		for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
-			AttributeGroup ag = (AttributeGroup) attributeGroups.get((Integer) iter.next());
+			Object ag = attributeGroups.get((Integer) iter.next());
   		
-			atts.addAll(ag.getAllUIAttributeDescriptions());
+  		if (ag instanceof AttributeGroup)
+			  atts.addAll(( (AttributeGroup) ag ).getAllUIAttributeDescriptions());
 		}
 		
 		return atts;
