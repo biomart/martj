@@ -37,7 +37,6 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -519,21 +518,15 @@ public class MartShell {
 			LoadHelpFile();
 
 			//display startup information
-			String startupMessage = Help(STARTUP);
-
-			if (historyOn)
-				startupMessage =
-					startupMessage.replaceAll(HISTORYQ, Help(HISTORYQ));
-			else
-				startupMessage = startupMessage.replaceAll(HISTORYQ, "");
-
-			if (completionOn)
-				startupMessage =
-					startupMessage.replaceAll(COMPLETIONQ, Help(COMPLETIONQ));
-			else
-				startupMessage = startupMessage.replaceAll(COMPLETIONQ, "");
-
-			System.out.println(startupMessage);
+			System.out.println(Help(STARTUP));
+			System.out.println(
+				"  connected to "
+					+ martDatabase
+					+ " on "
+					+ martHost
+					+ ":"
+					+ martPort
+					+ "\n");
 		} catch (InvalidQueryException e2) {
 			System.out.println(
 				"Couldnt display startup information\n" + e2.getMessage());
@@ -1030,9 +1023,8 @@ public class MartShell {
 				iter.hasNext();
 				) {
 				String element = (String) iter.next();
-				buf.append("\t\t" + element).append("\n");
+				buf.append("\t\tITEM: " + element).append("\n");
 			}
-			buf.append("\n");
 			return buf.toString();
 
 		} else if (command.startsWith(HELPC)) {
@@ -1044,19 +1036,33 @@ public class MartShell {
 			return Help(comm);
 		} else {
 			if (commandHelp.containsKey(command)) {
-				// if this is a help call, make sure and check for domain specific bits in the help input to substitute
 				String output = commandHelp.getProperty(command);
-				for (int i = 0, n = dsCommands.length; i < n; i++) {
-					Pattern pat = dsCommands[i];
-					Matcher m = pat.matcher(output);
 
-					if (m.matches())
-						buf.append(m.group(1)).append(Help(m.group(2))).append(
-							m.group(3)).append(
-							"\n");
+				//				check for domain specific bits in the help input to substitute
+				Matcher m = DOMAINSPP.matcher(output);
+
+				while (m.find()) {
+					String replacement = m.group(1);
+					if (commandHelp.containsKey(replacement))
+						m.appendReplacement(buf, Help(replacement));
 					else
-						buf.append(output).append("\n");
+						m.appendReplacement(buf, "");
 				}
+				m.appendTail(buf);
+
+				output = buf.toString();
+				buf = new StringBuffer();
+
+				// check for INSERT
+				m = INSERTP.matcher(output);
+				while (m.find()) {
+					String replacement = m.group(1);
+					if (commandHelp.containsKey(replacement))
+						m.appendReplacement(buf, Help(replacement));
+					else
+						m.appendReplacement(buf, "");
+				}
+				m.appendTail(buf);
 			} else
 				buf.append(
 					"Sorry, no information available for item: ").append(
@@ -1073,11 +1079,22 @@ public class MartShell {
 			commandHelp.load(help.openStream());
 			commandHelp.load(dshelp.openStream());
 
-			if (!historyOn)
+			if (!historyOn) {
 				commandHelp.remove(HISTORYQ);
+				commandHelp.remove(EXECC);
+				availableCommands.remove(EXECC);
+				commandHelp.remove(HISTORYC);
+				availableCommands.remove(HISTORYC);
+				commandHelp.remove(LOADSCRIPTC);
+				availableCommands.remove(LOADSCRIPTC);
+				commandHelp.remove(SAVETOSCRIPTC);
+				availableCommands.remove(SAVETOSCRIPTC);
+			}
 
-			if (!completionOn)
+			if (!completionOn) {
 				commandHelp.remove(COMPLETIONQ);
+				commandHelp.remove("COMPLETIONUSAGE");
+			}
 
 		} catch (IOException e) {
 			helpLoaded = false;
@@ -3084,9 +3101,9 @@ public class MartShell {
 			if (residual != null) {
 				continueQuery = true;
 				conline = new StringBuffer(residual);
-				
+
 				if (completionOn)
-				  mcl.SetModeForLine(residual);
+					mcl.SetModeForLine(residual);
 			} else {
 				continueQuery = false;
 				conline = new StringBuffer();
@@ -3260,15 +3277,9 @@ public class MartShell {
 	private final String DSHELPFILE = "data/dshelp.properties";
 	// contains help for domain specific aspects
 
-	private final Pattern[] dsCommands =
-		new Pattern[] {
-			 Pattern.compile(
-				"(.*)DOMAINSPECIFIC\\s(\\w+)(.+)",
-				Pattern.DOTALL)};
-
-	private final List dsHelpItems =
-		Collections.unmodifiableList(
-			Arrays.asList(new String[] { "selectSequence" }));
+	private final Pattern DOMAINSPP =
+		Pattern.compile("DOMAINSPECIFIC:(\\w+)", Pattern.DOTALL);
+	private Pattern INSERTP = Pattern.compile("INSERT:(\\w+)", Pattern.DOTALL);
 
 	// available commands
 	private final String EXITC = "exit";
@@ -3290,8 +3301,8 @@ public class MartShell {
 	private final String SAVETOSCRIPTC = "saveToScript";
 	private final String HISTORYC = "history";
 
-	protected final List availableCommands =
-		Collections.unmodifiableList(
+	protected List availableCommands =
+		new ArrayList(
 			Arrays.asList(
 				new String[] {
 					EXITC,
@@ -3302,6 +3313,7 @@ public class MartShell {
 					SETOUTSETSC,
 					SHOWOUTSETSC,
 					SHOWCONSETSC,
+					SHOWDATASETC,
 					SETVERBOSEC,
 					SHOWVERBOSEC,
 					SETPROMPT,
