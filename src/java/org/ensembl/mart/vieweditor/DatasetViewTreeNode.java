@@ -98,7 +98,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                                         Enable enable = enables[k];
                                         DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
                                         enableNode.setUserObject(enable);
-                                    }
+                                    }                                   
                                     for (int k = 0; k < disables.length; k++) {
                                         Disable disable = disables[k];
                                         DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
@@ -109,6 +109,23 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                                         String optionName = option.getInternalName();
                                         DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
                                         optionNode.setUserObject(option);
+                                        // new code to cycle through push actions
+										PushAction[] pushActions = option.getPushActions();
+										for (int l = 0; l < pushActions.length; l++) {
+											PushAction pa = pushActions[l];
+							                DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+						                    pushActionNode.setUserObject(pa);
+						                    
+											Option[] paOptions = pa.getOptions();
+											for (int m = 0; m < paOptions.length; m++) {
+												Option op = paOptions[m];
+												String paoptionName = op.getInternalName();
+												DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+												paOptionNode.setUserObject(op);
+											}
+						                    
+							            } 
+                                        //end of new code
                                     }
                                 }
                             }
@@ -175,6 +192,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                             Enable[] enables = fiDescription.getEnables();
                             Disable[] disables = fiDescription.getDisables();
                             Option[] options = fiDescription.getOptions();
+							
                             for (int k = 0; k < enables.length; k++) {
                                 Enable enable = enables[k];
                                 DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
@@ -190,6 +208,21 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                                 String optionName = option.getInternalName();
                                 DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
                                 optionNode.setUserObject(option);
+								// new code to cycle through push actions
+								PushAction[] pushActions = option.getPushActions();
+								for (int l = 0; l < pushActions.length; l++) {
+									PushAction pa = pushActions[l];
+									DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+									pushActionNode.setUserObject(pa);
+									Option[] paOptions = pa.getOptions();
+									for (int m = 0; m < paOptions.length; m++) {
+										Option op = paOptions[m];
+										String paoptionName = op.getInternalName();
+										DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+										paOptionNode.setUserObject(op);
+									}									
+								} 
+								//end of new code
                             }
                         }
                     }
@@ -257,6 +290,21 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         String optionName = option.getInternalName();
                         DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
                         optionNode.setUserObject(option);
+						// new code to cycle through push actions
+						PushAction[] pushActions = option.getPushActions();
+						for (int l = 0; l < pushActions.length; l++) {
+							PushAction pa = pushActions[l];
+							DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+							pushActionNode.setUserObject(pa);
+							Option[] paOptions = pa.getOptions();
+							for (int m = 0; m < paOptions.length; m++) {
+								Option op = paOptions[m];
+								String paoptionName = op.getInternalName();
+								DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+								paOptionNode.setUserObject(op);
+							}							
+						} 
+						//end of new code
                     }
                 }
             }
@@ -292,6 +340,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 Enable[] enables = fiDescription.getEnables();
                 Disable[] disables = fiDescription.getDisables();
                 Option[] options = fiDescription.getOptions();
+				
                 for (int k = 0; k < enables.length; k++) {
                     Enable enable = enables[k];
                     DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
@@ -307,6 +356,21 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                     String optionName = option.getInternalName();
                     DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
                     optionNode.setUserObject(option);
+					// new code to cycle through push actions
+					PushAction[] pushActions = option.getPushActions();
+					for (int l = 0; l < pushActions.length; l++) {
+						PushAction pa = pushActions[l];
+						DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+						pushActionNode.setUserObject(pa);
+						Option[] paOptions = pa.getOptions();
+						for (int m = 0; m < paOptions.length; m++) {
+							Option op = paOptions[m];
+							String paoptionName = op.getInternalName();
+							DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+							paOptionNode.setUserObject(op);
+						}						
+					} 
+					//end of new code
                 }
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
@@ -322,40 +386,86 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             }
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
             setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-            FilterDescription fiDescription = (FilterDescription) obj;
-            Enable[] enables = fiDescription.getEnables();
-            Disable[] disables = fiDescription.getDisables();
-            Option[] options = fiDescription.getOptions();
-            for (int k = 0; k < enables.length; k++) {
-                Enable enable = enables[k];
-                DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
-                enableNode.setUserObject(enable);
-                this.add(enableNode);
-            }
-            for (int k = 0; k < disables.length; k++) {
-                Disable disable = disables[k];
-                DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
-                disableNode.setUserObject(disable);
-                this.add(disableNode);
-            }
-            for (int k = 0; k < options.length; k++) {
-                Option option = options[k];
-                String optionName = option.getInternalName();
-                DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
-                optionNode.setUserObject(option);
-                this.add(optionNode);
-            }
-
-        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+            
+			//setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			FilterDescription fiDescription = (FilterDescription) obj;
+			Enable[] enables = fiDescription.getEnables();
+			Disable[] disables = fiDescription.getDisables();
+			Option[] ops = fiDescription.getOptions();
+			for (int k = 0; k < enables.length; k++) {
+				Enable enable = enables[k];
+				DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+				enableNode.setUserObject(enable);
+			}
+			for (int k = 0; k < disables.length; k++) {
+				Disable disable = disables[k];
+				DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+				disableNode.setUserObject(disable);
+			}
+			for (int y = 0; y < ops.length; y++) {
+				Option option = (Option) ops[y];
+				String desName = option.getInternalName();
+				DatasetViewTreeNode desNode = new DatasetViewTreeNode("Option:" + desName);
+				desNode.setUserObject(option);
+				this.add(desNode);
+//				new code to cycle through push actions
+				PushAction[] pushActions = option.getPushActions();
+				for (int l = 0; l < pushActions.length; l++) {
+					PushAction pa = pushActions[l];
+					DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+					pushActionNode.setUserObject(pa);
+					Option[] paOptions = pa.getOptions();
+					for (int m = 0; m < paOptions.length; m++) {
+						Option op = paOptions[m];
+						String paoptionName = op.getInternalName();
+						DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+						paOptionNode.setUserObject(op);
+					}					
+				} 
+				//end of new code
+			}
+        }  else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
             setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Enable")) {
             setName("Enable");
         } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {
             setName("Disable");
-        } else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Option")) {
+        } 
+        
+        //else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.PushAction")) {
+		//    setName("Push Action");
+        //}
+        
+        else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Option")) {
             setName("Option: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-        }
+			Option op = (Option) obj;			
+			PushAction[] pushActions = op.getPushActions();
+			for (int k = 0; k < pushActions.length; k++) {
+				PushAction pa = pushActions[k];
+				
+				DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+				pushActionNode.setUserObject(pa);
+				this.add(pushActionNode);
+				Option[] paOptions = pa.getOptions();
+				for (int m = 0; m < paOptions.length; m++) {
+					Option paop = paOptions[m];
+					String paoptionName = paop.getInternalName();
+					DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+					paOptionNode.setUserObject(paop);
+				}				
+			}
+        }else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.PushAction")) {
+			setName("Push Action: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			PushAction pa = (PushAction) obj;			
+			Option[] paOptions = pa.getOptions();
+			for (int k = 0; k < paOptions.length; k++) {
+				Option op = paOptions[k];
+				String paoptionName = op.getInternalName();
+				DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option" + paoptionName);
+				paOptionNode.setUserObject(op);
+				this.add(paOptionNode);			
+			}
+        
+    	}
     }
-
 }
