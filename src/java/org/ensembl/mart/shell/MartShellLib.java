@@ -239,7 +239,7 @@ public class MartShellLib {
 		StringBuffer mqlbuf = new StringBuffer();
 		boolean success = false;
 
-		String datasetName = query.getDatasetName();
+		String datasetName = query.getDatasetInternalName();
 
 		//	get datasetName first
 		if (datasetName == null)
@@ -611,7 +611,7 @@ public class MartShellLib {
 							dset = adaptor.getDatasetViewByInternalName(envDataset);
 						}
 					}
-          query.setDatasetName(dset.getInternalName());
+          query.setDatasetInternalName(dset.getInternalName());
 					query.setStarBases(dset.getStarBases());
 					query.setPrimaryKeys(dset.getPrimaryKeys());
 			

@@ -60,7 +60,7 @@ public class SimpleLibraryUsageExample {
 
 		// Create a Query object.
 		Query query = new Query();
-		query.setDatasetName("hsapiens");
+		query.setDatasetInternalName("hsapiens");
 		DataSource ds =
 			DatabaseUtil.createDataSource(
 				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_17_1",
@@ -71,7 +71,7 @@ public class SimpleLibraryUsageExample {
 		query.setDataSource(ds);
     
     // dataset query applies to
-    query.setDatasetName("hsapiens_ensemblgene");
+    query.setDatasetInternalName("hsapiens_ensemblgene");
 
 		// prefixes for databases we want to use
 		query.setStarBases(

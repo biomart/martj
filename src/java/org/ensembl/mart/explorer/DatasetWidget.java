@@ -253,7 +253,7 @@ public class DatasetWidget
   private void updateQueryDatasetName(String datasetName) {
 
     query.removePropertyChangeListener(this);
-    query.setDatasetName(datasetName);
+    query.setDatasetInternalName(datasetName);
     query.addPropertyChangeListener(this);
   }
 

@@ -143,7 +143,7 @@ public abstract class Base extends TestCase {
 			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
     genequery.setDataSource( martJDataSource );
-    genequery.setDatasetName( "hsapiens" );
+    genequery.setDatasetInternalName( "hsapiens" );
     
 		snpquery.setStarBases(new String[] { "hsapiens_snp" });
 		snpquery.setPrimaryKeys(new String[] { "snp_id" });
