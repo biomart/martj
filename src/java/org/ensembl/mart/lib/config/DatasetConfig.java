@@ -175,6 +175,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     super();
 
     setAttribute(datasetKey, null);
+    setAttribute(typeKey,null);
+    setAttribute(visibleKey,null);
   }
 
   /**

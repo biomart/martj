@@ -95,6 +95,7 @@ public class DatabaseDatasetConfigUtils {
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible) values (?, ?, ?, ?, ?, ?, ?, ?)";
+  private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned)";
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
@@ -1153,15 +1154,23 @@ public class DatabaseDatasetConfigUtils {
    */
   public String getDSConfigTableFor(String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
-
     //override if user not null
     if (datasetConfigUserTableExists(user))
       metatable += "_" + user;
     else {
       //if BASEMETATABLE doesnt exist, throw an exception
-      if (!baseDSConfigTableExists())
-        throw new ConfigurationException(
-          "Neither " + BASEMETATABLE + " or " + BASEMETATABLE + "_" + user + " exists in the Mart Database\n");
+      if (!baseDSConfigTableExists()){
+		Connection conn = null;
+			try {
+			  conn = dsource.getConnection();
+			  PreparedStatement ps = conn.prepareStatement(CREATEMETATABLESQL);
+			  ps.executeUpdate();	
+			  conn.close();
+			} catch (SQLException e) {
+			  throw new ConfigurationException("Caught SQLException during create meta_configuration table\n");
+			}
+      	
+      }
     }
 
     return metatable;
