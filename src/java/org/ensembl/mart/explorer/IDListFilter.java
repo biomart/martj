@@ -133,6 +133,11 @@ public class IDListFilter implements Filter {
 
   public void setUrl(URL url){ this.url = url; }
 
+  public InputStreamReader getStream() {
+	return instream;
+  }
+
+  public void setStream(InputStreamReader instream) { this.instream = instream; }
   
   public String getValue() {
     return null;
