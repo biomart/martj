@@ -978,11 +978,24 @@ public class MartShellLib {
 
       //returns all leaf adaptors (DatabaseDSConfigAdaptor, URLDSConfigAdaptor) from a CompositeDSViewAdaptor
       for (int i = 0, n = adaptors.length; i < n; i++)
-        adaptorManager.add(adaptors[i]);
+        addLeafAdaptor(adaptors[i]);
+    } else
+      addLeafAdaptor(adaptor);
+  }
+
+  private void addLeafAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
+    if (adaptor instanceof DatabaseDSConfigAdaptor) {
+      //test the connection
+        try {
+          ( ( DSConfigAdaptor ) adaptor).getDataSource().getConnection();
+          adaptorManager.add(adaptor);
+        } catch (SQLException e) {
+          //ignore this one, it cant connect to its underlying database
+        }
     } else
       adaptorManager.add(adaptor);
   }
-
+  
   public void addDatasetConfig(StringTokenizer toks) throws InvalidQueryException {
     if (toks.hasMoreTokens()) {
       String source = toks.nextToken();
