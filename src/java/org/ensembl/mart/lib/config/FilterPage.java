@@ -268,7 +268,7 @@ public class FilterPage extends BaseConfigurationObject {
 		List filts = new ArrayList();
 
 		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
-			Object fg = (FilterGroup) filterGroups.get((Integer) iter.next());
+			Object fg = filterGroups.get((Integer) iter.next());
 			if (fg instanceof FilterGroup)
 				filts.addAll(((FilterGroup) fg).getAllFilterDescriptions());
 		}
