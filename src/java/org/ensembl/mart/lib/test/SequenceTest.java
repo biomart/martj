@@ -68,6 +68,15 @@ public class SequenceTest extends Base {
 	}
 
 
+  private StringBuffer getSequence(StringTokenizer lines) {
+    StringBuffer martseq = new StringBuffer();
+      
+    while (lines.hasMoreTokens()) {
+      martseq.append(lines.nextToken());
+    } 
+    return martseq;
+  }
+  
 	public void testCodingSequence() throws Exception {
 		Query q = new Query(genequery);
 		
@@ -88,12 +97,13 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+			StringBuffer martseq = getSequence(lines);      
+      
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			String ensjseq = transcript.getTranslation().getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", martseq,ensjseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n",ensjseq, martseq.toString());
 		}
 	}
 	
@@ -117,16 +127,17 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
+            
       //for purposes of testing against ensj, the stop codon must be removed
-      if (martseq.endsWith("*"))
-        martseq = martseq.substring(0, martseq.indexOf("*"));
+      if (martseq.toString().endsWith("*"))
+        martseq = martseq.deleteCharAt(martseq.indexOf("*"));
         
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			String ensjseq = transcript.getTranslation().getPeptide();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}		
 	}
 	
@@ -150,12 +161,13 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
+      
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			String ensjseq = transcript.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}
 	}
 	
@@ -179,12 +191,12 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String exon_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Exon exon = ea.fetch(exon_stable_id);
 			
 			String ensjseq = exon.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}
 	}
 	
@@ -210,7 +222,7 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			AssemblyLocation first_exon_loc = (AssemblyLocation) ((Exon) transcript.getExons().get(0)).getLocation();
@@ -220,7 +232,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}		
 	}
 
@@ -247,7 +259,7 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Transcript transcript = ta.fetch(transcript_stable_id);
 			
 			AssemblyLocation last_exon_loc = (AssemblyLocation) ((Exon) transcript.getExons().get(transcript.getExons().size() - 1)).getLocation();
@@ -261,7 +273,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}		
 	}
 	
@@ -287,7 +299,7 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String gene_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), " ", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Gene gene = ga.fetch(gene_stable_id);
 			
 			AssemblyLocation first_exon_loc = (AssemblyLocation) ((Exon) gene.getExons().get(0)).getLocation();
@@ -297,7 +309,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}				
 	}
 	
@@ -324,7 +336,7 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String gene_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), " ", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Gene gene = ga.fetch(gene_stable_id);
 			
 			AssemblyLocation first_exon_loc = (AssemblyLocation) ((Exon) gene.getExons().get(0)).getLocation();
@@ -339,7 +351,7 @@ public class SequenceTest extends Base {
 			
 			String ensjseq = sa.fetch(newloc).getString();
 			    
-			assertEquals("WARNING: Mart Sequence for Gene " + gene_stable_id + " Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence for Gene " + gene_stable_id + " Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}				
 	}
 	
@@ -363,14 +375,15 @@ public class SequenceTest extends Base {
 			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
 			String exon_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
 			
-			String martseq = lines.nextToken();
+      StringBuffer martseq = getSequence(lines);
 			Exon exon = ea.fetch(exon_stable_id);
 			
 			String ensjseq = exon.getSequence().getString();
 			
-			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq.toString());
 		}
-	}	
+	}
+  	
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.test.Base#init()
 	 */
