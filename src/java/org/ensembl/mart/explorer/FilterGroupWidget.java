@@ -85,6 +85,7 @@ public class FilterGroupWidget extends PageWidget {
 			GridPanel p =
 				new GridPanel(attributes, 1, 400, 35, collection.getDisplayName());
 			panel.add(p);
+      panel.add(Box.createVerticalStrut(Constants.GAP_BETWEEN_COMPONENTS_IN_WIDGET));
 
 		}
 		return widgets;
