@@ -2322,6 +2322,7 @@ public class DatabaseDatasetConfigUtils {
     //primaryKeys should be in this same order
 
     List starbases = new ArrayList();
+    List finalStarbases = new ArrayList(); 
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
     List primaryKeys = new ArrayList();
 
@@ -2334,13 +2335,16 @@ public class DatabaseDatasetConfigUtils {
         String cname = column.name;
         //NN added uppercase   
         //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
-        if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname)))
+        if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname))){
           primaryKeys.add(cname);
+          // fix for Star schema - multiple keys per l main table
+          finalStarbases.add(starbases.get(i));
+        }
       }
     }
 
-    String[] sbases = new String[starbases.size()];
-    starbases.toArray(sbases);
+    String[] sbases = new String[finalStarbases.size()];
+    finalStarbases.toArray(sbases);
     dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
