@@ -102,15 +102,22 @@ public class MartExplorer extends JFrame {
 		me.setVisible(true);
 
 		// test mode preloads datasets and sets up a query ready to use.
-		if (//true 
-		false) {
+		if (true //false
+		) {
 
-			DatasetView[] dsViews = QueryEditor.testDSViews();
-			me.resolveAndAddDatasetVies(dsViews);
-			//      QueryEditor qe = new QueryEditor();
-			//      qe.setDatasetViews( dsViews );
-			//      qe.sel)
-			//      me.addQueryEditor( qe );
+			//			DatasetView[] dsViews = QueryEditor.testDSViews();
+			//			me.resolveAndAddDatasetVies(dsViews);
+
+			me.addDataSource(
+				DatabaseUtil.createDataSource(
+					"mysql",
+					"127.0.0.1",
+					"3313",
+					"ensembl_mart_17_1",
+					"ensro",
+					null,
+					10,
+					"com.mysql.jdbc.Driver"));
 			me.doNewQuery();
 		}
 	}
@@ -353,23 +360,32 @@ public class MartExplorer extends JFrame {
 						10,
 						databaseDialog.getDriver());
 
-				DatabaseDSViewAdaptor adaptor =
-					new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
-
-				databaseDSViewAdaptors.add(adaptor);
-
-				DatasetView[] views = adaptor.getDatasetViews();
-				if (views.length == 0) {
-					warn("No Views found in database: " + adaptor.toString());
-				} else {
-					resolveAndAddDatasetVies(views);
-				}
+				addDataSource(ds);
 
 			} catch (ConfigurationException e) {
 				e.printStackTrace();
 				warn("Failed to connect to database: " + e.getMessage());
 			}
 		}
+	}
+
+	/**
+	 * @param ds
+	 */
+	private void addDataSource(DataSource ds) throws ConfigurationException {
+
+		DatabaseDSViewAdaptor adaptor =
+			new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
+
+		databaseDSViewAdaptors.add(adaptor);
+
+		DatasetView[] views = adaptor.getDatasetViews();
+		if (views.length == 0) {
+			warn("No Views found in database: " + adaptor.toString());
+		} else {
+			resolveAndAddDatasetVies(views);
+		}
+
 	}
 
 	/**
@@ -392,33 +408,34 @@ public class MartExplorer extends JFrame {
 
 		} else {
 
-			QueryEditor qe = (QueryEditor) queryEditorTabbedPane.getSelectedComponent();
-			if ( qe==null ) {
+			QueryEditor qe =
+				(QueryEditor) queryEditorTabbedPane.getSelectedComponent();
+			if (qe == null) {
 
 				warn("Can not execute query because none selected. Select one of the queries. ");
-        
-      } else {
-        
-        try {
-					
-          qe.execute();
-          
+
+			} else {
+
+				try {
+
+					qe.execute();
+
 				} catch (SequenceException e) {
 					e.printStackTrace();
-          warn(e.getMessage());
+					warn(e.getMessage());
 				} catch (FormatException e) {
 					e.printStackTrace();
-          warn(e.getMessage());
+					warn(e.getMessage());
 				} catch (InvalidQueryException e) {
 					e.printStackTrace();
-          warn(e.getMessage());
+					warn(e.getMessage());
 				} catch (SQLException e) {
 					e.printStackTrace();
-          warn(e.getMessage());
+					warn(e.getMessage());
 				}
-        
-      }
-      
+
+			}
+
 		}
 	}
 
