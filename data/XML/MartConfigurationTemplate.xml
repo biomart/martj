@@ -52,15 +52,15 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="band_start" handler="Marker" internalName="marker_start" type="select"/>
-          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="band_end" handler="Marker" internalName="marker_end" type="select"/>
+          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="band_start" handler="Marker" internalName="marker_start" type="drop_down_basic_filter"/>
+          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="band_end" handler="Marker" internalName="marker_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
-          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
+          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
+          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
-          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
+          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="text_entry_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="GENE:" internalName="gene">
@@ -112,7 +112,7 @@
           <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="gnf" internalName="gnf" tableConstraintModifier="na"/>
         </FilterSet>
         <FilterCollection filterSetName="expression_type" internalName="expression">
-          <MapFilterDescription description="" displayName="" fieldName="expression_profile" filterSetReq="field" handler="Expression" internalName="expression_profile" type="select"/>
+          <MapFilterDescription description="" displayName="" fieldName="expression_profile" filterSetReq="field" handler="Expression" internalName="expression_profile" type="text_entry_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTISPECIES" internalName="multispecies">
@@ -502,15 +502,15 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
-          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
+          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
+          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
-          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
+          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
+          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
-          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
+          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="text_entry_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
@@ -773,15 +773,15 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
-          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
+          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
+          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
-          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
+          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
+          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
-          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="select"/>
+          <MapFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" fieldName="encode" handler="Encode" internalName="encode_region" type="text_entry_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup displayName="GENERAL SNP FILTERS:" internalName="snpfilters">
@@ -943,12 +943,12 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="select"/>
-          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="select"/>
+          <MapFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" fieldName="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
+          <MapFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" fieldName="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="select"/>
-          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="select"/>
+          <MapFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" fieldName="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
+          <MapFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" fieldName="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup internalName="gene">
