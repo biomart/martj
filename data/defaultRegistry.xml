@@ -4,15 +4,15 @@
 
     <DatabaseLocation name="Uniprot" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_1" user="anonymous"/>
+    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_7" user="anonymous"/>
 
     <DatabaseLocation name="MSD" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_1"
+    host="martdb.ebi.ac.uk" port="3306" instanceName="msd_mart_2"
     user="anonymous"/>
 
     <DatabaseLocation name="Ensembl" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_3" user="anonymous"/>
+    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_22_1" user="anonymous"/>
 
 </MartRegistry>

@@ -1,47 +1,48 @@
-# List mart databases
-list marts;
-
-# List all available datasets
-list datasets all;
-
-# List datasets for a given mart
-list datasets Ensembl
-
-# or
-set mart Ensembl;
-list datasets;
-
-# sets dataset;
-use Ensembl.ensembl_genes_homo_sapiens;
-
-# or, if mart is set
-use ensembl_genes_homo_sapiens;
-
-# now list availble attributes and filters;
-# <tab><tab> will do the same thing
-
-list attributes;
-list filters;
-
-# now a real query
-using MSD.structures get pdb_id where resolution_greater > 2; 
-
-# chain examples
-using MSD.structures  get pdb_id where resolution_greater > 3 and experiment_type and has_ec_info only as q;   
-using Ensembl.ensembl_genes_homo_sapiens get sequence transcript_flanks+1000 where pdb_id in q;
-
-using Ensembl.ensembl_genes_homo_sapiens get xref_swissprot_acc where disease_genes only and chromosome_name=22 as q;
-using Uniprot.proteomes get prot_seq where sprot_list in q;  
-
-using Ensembl.ensembl_genes_homo_sapiens get xref_swissprot_acc where nonsynonymous_snps only and disease_genes only as q;
-using Uniprot.proteomes get uniprot_ac ,protein_name where sprot_list in q;
-
-# homology chain from ensembl
-using Ensembl.ensembl_genes_homo_sapiens get mouse_homologue_ensembl_gene_id where chromosome_name=21 and  disease_genes only 
-and transmembrane_domains only as q;
-using Ensembl.ensembl_genes_mus_musculus get sequence coding where ensembl_gene_id in q and chromosome_name in (10,16);
-
-# outputting to a file
-set output file='myfile';
-using Ensembl.ensembl_genes_homo_sapiens get ensembl_gene_id; 
+ # List mart databases
+ list marts;
+  
+ # List all available datasets
+ list datasets all;
+  
+ # List datasets for a given mart
+ list datasets Ensembl
+  
+ # or
+ set mart Ensembl;
+ list datasets;
+  
+ # sets dataset;
+ use Ensembl.hsapiens_gene_ensembl;
+  
+ # or, if mart is set
+ use hsapiens_gene_ensembl;
+  
+ # now list availble attributes and filters;
+ list attributes;
+ list filters;
+   
+ # <tab><tab> will do the same thing
+ # eg. get <tab><tab> where <tab><tab>
+  
+ # now a real query
+ using MSD.msd get pdb_id where resolution_less < 0.9;
+  
+ # chain examples
+ using MSD.msd get pdb_id where resolution_less < 0.9 and experiment_type and has_ec_info only as q;
+ using Ensembl.hsapiens_gene_ensembl get sequence transcript_flanks+1000 where pdb in q;
+  
+ using Ensembl.hsapiens_gene_ensembl get uniprot_sptrembl where disease_gene_boolean only and chr_name=22 as q;
+ using Uniprot.uniprot get protein_sequence where sprot_id in q;
+  
+ using Ensembl.hsapiens_gene_ensembl get uniprot_sptrembl where has_nonsynsnp only and disease_gene_boolean only as q;
+ using Uniprot.uniprot get sptr_ac ,protein_name where sprot_id in q;
+  
+ # outputting to a file
+ set output file='myfile';
+ using Ensembl.hsapiens_gene_ensembl get gene_stable_id;
+  
+ # back to interactive mode
+ unset output file;
+ using Ensembl.hsapiens_gene_ensembl get gene_stable_id;
+ 
 
