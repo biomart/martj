@@ -3350,22 +3350,26 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       conn = dsource.getConnection();
-
-      String sql = "SELECT " + "count("+cname+")" + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL ";
-      //System.out.println("Offending SQL: "+ sql);
-      PreparedStatement ps = conn.prepareStatement(sql);
+       
+      StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + tableName + " WHERE " + cname + " IS NOT NULL");
+      
+      if (dsource.getDatabaseType().equals("oracle:thin")){
+      sql.append (" and rownum <=1");
+      } 
+      if (dsource.getDatabaseType().equals("mysql")) {
+      sql.append (" limit 1");
+      }
+      
+      PreparedStatement ps = conn.prepareStatement(sql.toString());
       ResultSet rs = ps.executeQuery();
-
       rs.next();
-      int ret = rs.getInt(1);
 
-      if (ret > 0 ) {
+      if (rs.isFirst()) {
         rs.close();
         conn.close();
-        System.out.println("Returning false, ret= "+ret);
         return false;
       } else {
-        System.out.println("ALL NULLS\t" + cname + "\t" + tableName+" ret= "+ret);
+        System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
         rs.close();
         conn.close();
         return true;
