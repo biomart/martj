@@ -226,8 +226,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					insert(new Importable("new"), "Importable:");
 				else if (e.getActionCommand().equals("insert exportable"))
 					insert(new Exportable("new"), "Exportable:");
-				else if (e.getActionCommand().equals("insert seq module"))
-					insert(new SeqModule("new"), "SeqModule:");
 				else if (e.getActionCommand().equals("insert filter page"))
 					insert(new FilterPage("new"), "FilterPage:");
 				else if (e.getActionCommand().equals("insert attribute page"))
@@ -254,10 +252,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					Option option = new Option();
 					option.setAttribute("internalName", "new");
 					insert(option, "Option");
-				} else if (e.getActionCommand().equals("insert enable")) {
-					Enable enable = new Enable();
-					enable.setAttribute("ref", "new");
-					insert(enable, "Enable");
 				} else if (e.getActionCommand().equals("insert push action")) {
 					PushAction pa = new PushAction();
 					pa.setAttribute("ref", "new");
@@ -634,9 +628,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new PushAction((PushAction) editingNode.getUserObject()));
-		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
-			copiedNode =
-				new DatasetConfigTreeNode(editingNode.toString(), new SeqModule((SeqModule) editingNode.getUserObject()));
+		
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			copiedNode =
 				new DatasetConfigTreeNode(editingNode.toString(), new Importable((Importable) editingNode.getUserObject()));

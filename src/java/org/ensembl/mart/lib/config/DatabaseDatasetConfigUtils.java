@@ -1230,29 +1230,12 @@ public class DatabaseDatasetConfigUtils {
     }
 
     boolean hasBrokenDefaultFilters = false;
-    DefaultFilter[] defaultFilters = dsv.getDefaultFilters();
+    
     List brokenFilters = new ArrayList();
 
-    //defaultFilter objects are not position sensitive
-    for (int i = 0, n = defaultFilters.length; i < n; i++) {
-      DefaultFilter dfilter = defaultFilters[i];
-      DefaultFilter validatedDefaultFilter = getValidatedDefaultFilter(schema, catalog, dfilter, dset);
+    
 
-      if (validatedDefaultFilter.isBroken()) {
-        hasBrokenDefaultFilters = true;
-        validatedDatasetConfig.removeDefaultFilter(dfilter);
-        brokenFilters.add(validatedDefaultFilter);
-      }
-    }
-
-    if (hasBrokenDefaultFilters) {
-      validatedDatasetConfig.setDefaultFiltersBroken();
-
-      for (int i = 0, n = brokenFilters.size(); i < n; i++) {
-        DefaultFilter brokenFilter = (DefaultFilter) brokenFilters.get(i);
-        validatedDatasetConfig.addDefaultFilter(brokenFilter);
-      }
-    }
+    
 
     boolean hasBrokenOptions = false;
     Option[] options = dsv.getOptions();
@@ -1331,21 +1314,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedDatasetConfig;
   }
 
-  private DefaultFilter getValidatedDefaultFilter(String schema, String catalog, DefaultFilter dfilter, String dset)
-    throws SQLException {
-    DefaultFilter validatedDefaultFilter = new DefaultFilter(dfilter);
-
-    FilterDescription validatedFilterDescription =
-      getValidatedFilterDescription(schema, catalog, dfilter.getFilterDescription(), dset);
-
-    if (validatedFilterDescription.isBroken()) {
-      validatedDefaultFilter.setFilterBroken();
-
-      validatedDefaultFilter.setFilterDescription(validatedFilterDescription);
-    }
-
-    return validatedDefaultFilter;
-  }
+  
 
   private String getValidatedStarBase(String schema, String catalog, String starbase) throws SQLException {
     String validatedStarBase = new String(starbase);

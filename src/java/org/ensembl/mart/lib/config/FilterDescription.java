@@ -53,17 +53,6 @@ public class FilterDescription extends QueryFilterSettings {
    */
   public FilterDescription(FilterDescription fd) {
     super( fd );
-  	
-  	Enable[] ens = fd.getEnables();
-	
-  	for (int i = 0, n = ens.length; i < n; i++) {
-  	  addEnable( new Enable( ens[i] ) );
-    }
-    
-    Disable[] dsb = fd.getDisables();
-    for (int i = 0, n = dsb.length; i < n; i++) {
-      addDisable( new Disable( dsb[i] ) );
-    }
     
     Option[] os = fd.getOptions();
     for (int i = 0, n = os.length; i < n; i++) {
@@ -588,94 +577,6 @@ public class FilterDescription extends QueryFilterSettings {
 		return hasOptions;
 	}
 
-	/**
-	 * Add an Enable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
-	 * @param e, Enable Object to add.
-	 */
-	public void addEnable(Enable e) {
-		Enables.add(e);
-	}
-
-	/**
-	 * Insert an Enable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
-	 * @param e, Enable Object to add.
-	 */
-	public void insertEnable(int position, Enable e) {
-		Enables.add(position, e);
-	}
-
-  /**
-   * Remove an Enable object from this FilterDescription.
-   * @param e -- Enable Object to remove.
-   */
-  public void removeEnable(Enable e) {
-    Enables.remove(e);
-  }
-  
-	/**
-	 * Add an array of Enable objects in one call, adds to what was added via previous calls to addEnable/setEnables methods.
-	 * @param e - Array of Enable Objects
-	 */
-	public void addEnables(Enable[] e) {
-		for (int i = 0, n = e.length; i < n; i++) {
-			Enables.add(e[i]);
-		}
-	}
-
-	/**
-	 * Get all Enable Objects for this FilterDescription in an Array.
-	 * @return Array of Enable Objects
-	 */
-	public Enable[] getEnables() {
-		Enable[] ret = new Enable[Enables.size()];
-		Enables.toArray(ret);
-		return ret;
-	}
-
-	/**
-	 * Add an Disable object to this FilterDescription, allowing it to Disable another FilterDescription in the GUI.
-	 * @param e, Disable Object to add.
-	 */
-	public void addDisable(Disable e) {
-		Disables.add(e);
-	}
-
-	/**
-	 * Insert an Disable object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.
-	 * @param e, Disable Object to add.
-	 */
-	public void insertDisable(int position, Disable e) {
-		Disables.add(position, e);
-	}
-
-
-  /**
-   * Remove a Disable Object from the FilterDescription.
-   * @param e -- Disable Object to remove.
-   */
-  public void removeDisable(Disable e) {
-    Disables.remove(e);
-  }
-  
-	/**
-	 * Add an array of Disable objects in one call, adds to what was added via previous calls to addDisable/setDisables methods.
-	 * @param e - Array of Disable Objects
-	 */
-	public void addDisables(Disable[] e) {
-		for (int i = 0, n = e.length; i < n; i++) {
-			Disables.add(e[i]);
-		}
-	}
-
-	/**
-	 * Get all Disable Objects for this FilterDescription in an Array.
-	 * @return Array of Disable Objects
-	 */
-	public Disable[] getDisables() {
-		Disable[] ret = new Disable[Disables.size()];
-		Disables.toArray(ret);
-		return ret;
-	}
 
 	/**
 	 * Add an PushAction object to this FilterDescription, allowing it to Enable another FilterDescription in the GUI.

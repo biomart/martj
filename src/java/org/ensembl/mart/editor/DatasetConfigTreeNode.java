@@ -29,8 +29,8 @@ import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.Disable;
-import org.ensembl.mart.lib.config.Enable;
+//import org.ensembl.mart.lib.config.Disable;
+//import org.ensembl.mart.lib.config.Enable;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -39,7 +39,7 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
-import org.ensembl.mart.lib.config.SeqModule;
+//import org.ensembl.mart.lib.config.SeqModule;
  
 
 /**
@@ -83,15 +83,15 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
       //AttributePages go after Importables, Exportables, and FilterPages within a DatasetConfig
       DatasetConfig dsc = (DatasetConfig) parent;
       hetOffset = dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
-    } else if (child instanceof org.ensembl.mart.lib.config.Disable) {
+    //} //else if (child instanceof org.ensembl.mart.lib.config.Disable) {
       //Disables go after Enables within a FilterDescription
-      FilterDescription fdesc = (FilterDescription) parent;
-      hetOffset = fdesc.getEnables().length;
+      //FilterDescription fdesc = (FilterDescription) parent;
+      //hetOffset = fdesc.getEnables().length;
     } else if (child instanceof org.ensembl.mart.lib.config.Option) {
       if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
         //Options go after Enables and Disables within a FilterDescription
         FilterDescription fdesc = (FilterDescription) parent;
-        hetOffset = fdesc.getEnables().length + fdesc.getDisables().length;
+        //hetOffset = fdesc.getEnables().length + fdesc.getDisables().length;
       } else {
         //Options go first within an Option
         hetOffset = 0;
@@ -150,14 +150,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				expNode.setUserObject(exportable);
 				this.add(expNode);
 			}
-			SeqModule[] sms = dsv.getSeqModules();
-			for (int i = 0; i < sms.length; i++) {
-				SeqModule sm = sms[i];
-				String smName = sm.getLinkName();
-				DatasetConfigTreeNode smNode = new DatasetConfigTreeNode("SeqModule:" + smName);
-				smNode.setUserObject(sm);
-				this.add(smNode);
-			}
+			
 			FilterPage[] fpages = dsv.getFilterPages();
 			for (int i = 0; i < fpages.length; i++) {
 				if (fpages[i].getClass().getName().equals("org.ensembl.mart.lib.config.FilterPage")) {
@@ -186,19 +179,9 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									String desName = fiDescription.getInternalName();
 									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
 									desNode.setUserObject(fiDescription);
-									Enable[] enables = fiDescription.getEnables();
-									Disable[] disables = fiDescription.getDisables();
+									
 									Option[] options = fiDescription.getOptions();
-									for (int k = 0; k < enables.length; k++) {
-										Enable enable = enables[k];
-										DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
-										enableNode.setUserObject(enable);
-									}
-									for (int k = 0; k < disables.length; k++) {
-										Disable disable = disables[k];
-										DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
-										disableNode.setUserObject(disable);
-									}
+									
 									for (int k = 0; k < options.length; k++) {
 										Option option = options[k];
 										String optionName = option.getInternalName();
@@ -299,20 +282,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							String desName = fiDescription.getInternalName();
 							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
 							desNode.setUserObject(fiDescription);
-							Enable[] enables = fiDescription.getEnables();
-							Disable[] disables = fiDescription.getDisables();
+							
 							Option[] options = fiDescription.getOptions();
 
-							for (int k = 0; k < enables.length; k++) {
-								Enable enable = enables[k];
-								DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
-								enableNode.setUserObject(enable);
-							}
-							for (int k = 0; k < disables.length; k++) {
-								Disable disable = disables[k];
-								DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
-								disableNode.setUserObject(disable);
-							}
+							
 							for (int k = 0; k < options.length; k++) {
 								Option option = options[k];
 								String optionName = option.getInternalName();
@@ -398,19 +371,9 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 					String desName = fiDescription.getInternalName();
 					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
 					desNode.setUserObject(fiDescription);
-					Enable[] enables = fiDescription.getEnables();
-					Disable[] disables = fiDescription.getDisables();
+					
 					Option[] options = fiDescription.getOptions();
-					for (int k = 0; k < enables.length; k++) {
-						Enable enable = enables[k];
-						DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
-						enableNode.setUserObject(enable);
-					}
-					for (int k = 0; k < disables.length; k++) {
-						Disable disable = disables[k];
-						DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
-						disableNode.setUserObject(disable);
-					}
+					
 					for (int k = 0; k < options.length; k++) {
 						Option option = options[k];
 						String optionName = option.getInternalName();
@@ -475,20 +438,10 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
 				desNode.setUserObject(fiDescription);
 				this.add(desNode);
-				Enable[] enables = fiDescription.getEnables();
-				Disable[] disables = fiDescription.getDisables();
+				
 				Option[] options = fiDescription.getOptions();
 
-				for (int k = 0; k < enables.length; k++) {
-					Enable enable = enables[k];
-					DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
-					enableNode.setUserObject(enable);
-				}
-				for (int k = 0; k < disables.length; k++) {
-					Disable disable = disables[k];
-					DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
-					disableNode.setUserObject(disable);
-				}
+				
 				for (int k = 0; k < options.length; k++) {
 					Option option = options[k];
 					String optionName = option.getInternalName();
@@ -537,21 +490,9 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 
 			//setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			FilterDescription fiDescription = (FilterDescription) obj;
-			Enable[] enables = fiDescription.getEnables();
-			Disable[] disables = fiDescription.getDisables();
+			
 			Option[] ops = fiDescription.getOptions();
-			for (int k = 0; k < enables.length; k++) {
-				Enable enable = enables[k];
-				DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
-				enableNode.setUserObject(enable);
-				this.add(enableNode);
-			}
-			for (int k = 0; k < disables.length; k++) {
-				Disable disable = disables[k];
-				DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
-				disableNode.setUserObject(disable);
-				this.add(disableNode);
-			}
+			
 			for (int y = 0; y < ops.length; y++) {
 				Option option = (Option) ops[y];
 				String desName = option.getInternalName();

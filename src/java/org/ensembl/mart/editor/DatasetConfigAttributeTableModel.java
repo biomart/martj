@@ -31,8 +31,6 @@ import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.DatasetConfig;
-import org.ensembl.mart.lib.config.Disable;
-import org.ensembl.mart.lib.config.Enable;
 import org.ensembl.mart.lib.config.Exportable;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -159,11 +157,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						fc.removeFilterDescription((FilterDescription) node.getUserObject());
 				} else if (parent instanceof FilterDescription) {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Enable)
-						fdesc.removeEnable((Enable) node.getUserObject());
-					else if (child instanceof Disable)
-						fdesc.removeDisable((Disable) node.getUserObject());
-					else if (child instanceof Option)
+					if (child instanceof Option)
 						fdesc.removeOption((Option) node.getUserObject());
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
@@ -215,11 +209,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						fc.insertFilterDescription(index, (FilterDescription) obj);
 				} else if (parent instanceof FilterDescription) {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Enable)
-						fdesc.insertEnable(index, (Enable) obj);
-					else if (child instanceof Disable)
-						fdesc.insertDisable(index, (Disable) obj);
-					else if (child instanceof Option)
+					if (child instanceof Option)
 						fdesc.insertOption(index, (Option) obj);
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

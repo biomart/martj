@@ -145,10 +145,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
       addMainTables(ds.getStarBases());
       addPrimaryKeys(ds.getPrimaryKeys());
 
-      DefaultFilter[] dfilts = ds.getDefaultFilters();
-      for (int i = 0, n = dfilts.length; i < n; i++) {
-        addDefaultFilter(new DefaultFilter(dfilts[i]));
-      }
 
       Option[] os = ds.getOptions();
       for (int i = 0, n = os.length; i < n; i++) {
@@ -375,34 +371,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     hasOptions = true;
   }
 
-  /**
-   * Add a DefaultFilter object to this DatasetConfig.
-   * @param df - A DefaultFilter object
-   */
-  public void addDefaultFilter(DefaultFilter df) {
-    hasDefaultFilters = true;
-    if (!defaultFilters.contains(df))
-      defaultFilters.add(df);
-  }
 
-  public void removeDefaultFilter(DefaultFilter df) {
-    lazyLoad();
-    defaultFilters.remove(df);
-    if (defaultFilters.size() < 1)
-      hasDefaultFilters = false;
-  }
-
-  /**
-   * Add a set of DefaultFilter objects in one call.
-   * Note, subsequent calls to addDefaultFilter or addDefaultFilters
-   * will add to what was added before.
-   * @param df - An Array of DefaultFilter objects
-   */
-  public void addDefaultFilters(DefaultFilter[] df) {
-    for (int i = 0, n = df.length; i < n; i++) {
-      addDefaultFilter(df[i]);
-    }
-  }
 
   /**
   * Adds a star name to the list for this DatasetConfig.  A star name is the
@@ -508,15 +477,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	exportables.remove(a);
   }
   
-  /**
-   * Remove an SeqModule from the DatasetConfig.
-   * @param a -- SeqModule to be removed.
-   */
-  public void removeSeqModule(SeqModule a) {
-	lazyLoad();
-//	attributePageNameMap.remove(a.getInternalName());
-	seqModules.remove(a);
-  }
 
   /**
    * Insert an AttributePage at a particular Position within the List
@@ -575,15 +535,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     }
   }
 
-  /**
-   * Add a SeqModule to the DatasetConfig.
-   * 
-   * @param f SeqModule object.
-   */
-  public void addSeqModule(SeqModule f) {
-	seqModules.add(f);
-	//seqModuleNameMap.put(f.getInternalName(), f);
-  }
 
   /**
    * Add an Importable to the DatasetConfig.
@@ -632,18 +583,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	//attributePageNameMap.put(a.getInternalName(), a);
   }
   
-  /**
-   * Insert an SeqModule at a particular Position within the List
-   * of SeqModules contained in the DatasetConfig. SeqModules at
-   * or after the given position are shifted right.
-   * @param position -- position to insert the SeqModule.
-   * @param a -- SeqModule to be inserted.
-   */
-  public void insertSeqModule(int position, SeqModule a) {
-	lazyLoad();
-	seqModules.add(position, a);
-	//attributePageNameMap.put(a.getInternalName(), a);
-  }
 
   /**
    * Add a FilterPage to the DatasetConfig.
@@ -747,16 +686,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     return hasDefaultFilters;
   }
 
-  /**
-   * Returns all DefaultFilter Objects added to the DatasetConfig.
-   * @return DefaultFilter[] array of DefaultFilter objects.
-   */
-  public DefaultFilter[] getDefaultFilters() {
-    lazyLoad();
-    DefaultFilter[] ret = new DefaultFilter[defaultFilters.size()];
-    defaultFilters.toArray(ret);
-    return ret;
-  }
+
 
   /**
    * Returns the list of star names for this DatasetConfig.
@@ -794,16 +724,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	return p;
   }
 
-  /**
-   * Returns a list of all SeqModule objects contained within the DatasetConfig, in the order they were added.
-   * @return FilterPage[]
-   */
-  public SeqModule[] getSeqModules() {
-	lazyLoad();
-	SeqModule[] fs = new SeqModule[seqModules.size()];
-	seqModules.toArray(fs);
-	return fs;
-  }
 
   /**
    * Returns a list of all Importable objects contained within the DatasetConfig, in the order they were added.
@@ -1522,10 +1442,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
         tmp = (31 * tmp) + element.hashCode();
       }
 
-      for (int i = 0, n = defaultFilters.size(); i < n; i++) {
-        DefaultFilter element = (DefaultFilter) defaultFilters.get(i);
-        tmp = (31 * tmp) + element.hashCode();
-      }
 
       for (Iterator iter = filterPages.iterator(); iter.hasNext();) {
         FilterPage element = (FilterPage) iter.next();

@@ -61,12 +61,9 @@ public class DatasetConfigXMLUtils {
   private final String DATASETCONFIG = "DatasetConfig";
   private final String STARBASE = "MainTable";
   private final String PRIMARYKEY = "Key";
-  private final String SEQMODULE = "SeqModule";
   private final String BATCHSIZE = "BatchSize";
   private final String IMPORTABLE = "Importable";
   private final String EXPORTABLE = "Exportable";
-  private final String ENABLE = "Enable";
-  private final String DISABLE = "Disable";
   private final String FILTERPAGE = "FilterPage";
   private final String FILTERGROUP = "FilterGroup";
   private final String DSFILTERGROUP = "DSFilterGroup";
@@ -79,7 +76,6 @@ public class DatasetConfigXMLUtils {
   private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
   private final String OPTION = "Option";
   private final String PUSHACTION = "PushAction";
-  private final String DEFAULTFILTER = "DefaultFilter";
 
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
@@ -240,12 +236,6 @@ public class DatasetConfigXMLUtils {
         dsv.addOption(getOption(option));
     }
 
-    for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DEFAULTFILTER));
-      iter.hasNext();
-      ) {
-      Element element = (Element) iter.next();
-      dsv.addDefaultFilter(getDefaultFilter(element));
-    }
 
     for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, STARBASE));
       iter.hasNext();
@@ -268,12 +258,6 @@ public class DatasetConfigXMLUtils {
 	  dsv.addBatchSize(element.getTextNormalize());
 	}
 
-	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, SEQMODULE));
-	  iter.hasNext();
-	  ) {
-	  Element element = (Element) iter.next();
-	  dsv.addSeqModule(getSeqModule(element));
-	}
 	
 	for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, IMPORTABLE));
 	  iter.hasNext();
@@ -312,21 +296,6 @@ public class DatasetConfigXMLUtils {
     }
   }
 
-  private DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
-    FilterDescription desc = getFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
-
-    DefaultFilter df = new DefaultFilter();
-    loadAttributesFromElement(thisElement, df);
-    df.setFilterDescription(desc);
-
-    return df;
-  }
-
-  private SeqModule getSeqModule(Element thisElement) throws ConfigurationException {
-	SeqModule sm = new SeqModule();
-	loadAttributesFromElement(thisElement, sm);
-	return sm;
-  }
 
   private Importable getImportable(Element thisElement) throws ConfigurationException {
 	Importable im = new Importable();
@@ -423,7 +392,7 @@ public class DatasetConfigXMLUtils {
 
     return pa;
   }
-
+  
   private FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
     FilterDescription f = new FilterDescription();
     loadAttributesFromElement(thisElement, f);
@@ -436,34 +405,7 @@ public class DatasetConfigXMLUtils {
         f.addOption(o);
       }
     }
-
-    for (Iterator iter = thisElement.getChildElements(ENABLE).iterator(); iter.hasNext();) {
-
-      Element enable = (Element) iter.next();
-      Enable e = getEnable(enable);
-      //e.setParent(f);
-      f.addEnable(e);
-
-      //f.addEnable(getEnable((Element) iter.next()));
-    }
-
-    for (Iterator iter = thisElement.getChildElements(DISABLE).iterator(); iter.hasNext();) {
-      f.addDisable(getDisable((Element) iter.next()));
-    }
-
     return f;
-  }
-
-  private Enable getEnable(Element thisElement) throws ConfigurationException {
-    Enable e = new Enable();
-    loadAttributesFromElement(thisElement, e);
-    return e;
-  }
-
-  private Disable getDisable(Element thisElement) throws ConfigurationException {
-    Disable d = new Disable();
-    loadAttributesFromElement(thisElement, d);
-    return d;
   }
 
   private AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
@@ -610,10 +552,6 @@ public class DatasetConfigXMLUtils {
     for (int i = 0, n = os.length; i < n; i++)
       root.addContent(getOptionElement(os[i]));
 
-    DefaultFilter[] dfilts = dsconfig.getDefaultFilters();
-    for (int i = 0, n = dfilts.length; i < n; i++)
-      root.addContent(getDefaultFilterElement(dfilts[i]));
-
     String[] starbases = dsconfig.getStarBases();
     for (int i = 0, n = starbases.length; i < n; i++)
       root.addContent(getStarBaseElement(starbases[i]));
@@ -626,9 +564,6 @@ public class DatasetConfigXMLUtils {
 	for (int i = 0, n = batchSizes.length; i < n; i++)
 	  root.addContent(getBatchSizeElement(batchSizes[i]));
 	
-	SeqModule[] seqmodules = dsconfig.getSeqModules();
-	for (int i = 0, n = seqmodules.length; i < n; i++)
-	  root.addContent(getSeqModuleElement(seqmodules[i]));
 
 	Importable[] imps = dsconfig.getImportables();
 	for (int i = 0, n = imps.length; i < n; i++)
@@ -765,11 +700,6 @@ public class DatasetConfigXMLUtils {
 	return bsize;
   }
 
-  private Element getSeqModuleElement(SeqModule smodule) {
-	Element module = new Element(SEQMODULE);
-	loadElementAttributesFromObject(smodule, module);
-	return module;
-  }
 
   private Element getImportableElement(Importable smodule) {
 	Element module = new Element(IMPORTABLE);
@@ -789,13 +719,7 @@ public class DatasetConfigXMLUtils {
     return sbase;
   }
 
-  private Element getDefaultFilterElement(DefaultFilter filter) {
-    Element def = new Element(DEFAULTFILTER);
-    loadElementAttributesFromObject(filter, def);
-    def.addContent(getFilterDescriptionElement(filter.getFilterDescription()));
 
-    return def;
-  }
 
   private Element getOptionElement(Option o) {
     Element option = new Element(OPTION);
@@ -827,14 +751,6 @@ public class DatasetConfigXMLUtils {
     Element fdesc = new Element(FILTERDESCRIPTION);
     loadElementAttributesFromObject(filter, fdesc);
 
-    Enable[] enables = filter.getEnables();
-    for (int i = 0, n = enables.length; i < n; i++)
-      fdesc.addContent(getEnableElement(enables[i]));
-
-    Disable[] disables = filter.getDisables();
-    for (int i = 0, n = disables.length; i < n; i++)
-      fdesc.addContent(getDisableElement(disables[i]));
-
     Option[] subops = filter.getOptions();
     for (int i = 0, n = subops.length; i < n; i++)
       fdesc.addContent(getOptionElement(subops[i]));
@@ -842,17 +758,6 @@ public class DatasetConfigXMLUtils {
     return fdesc;
   }
 
-  private Element getDisableElement(Disable disable) {
-    Element dsbl = new Element(DISABLE);
-    loadElementAttributesFromObject(disable, dsbl);
-    return dsbl;
-  }
-
-  private Element getEnableElement(Enable enable) {
-    Element enbl = new Element(ENABLE);
-    loadElementAttributesFromObject(enable, enbl);
-    return enbl;
-  }
 
   private boolean validString(String test) {
     return (test != null && test.length() > 0);
