@@ -195,150 +195,149 @@ public class MartShell {
 		confinUse = connfile;
 	}
 
-  private static String[] harvestArguments(String[] oargs) throws Exception {
-    Hashtable argtable = new Hashtable();
-    String key = null;
-    
-    for (int i = 0, n = oargs.length; i < n; i++) {
+	private static String[] harvestArguments(String[] oargs) throws Exception {
+		Hashtable argtable = new Hashtable();
+		String key = null;
+
+		for (int i = 0, n = oargs.length; i < n; i++) {
 			String arg = oargs[i];
-      
+
 			if (arg.startsWith("-")) {
-        key = arg;
-        
-        if (! argtable.containsKey(key))
-          argtable.put(key, new StringBuffer());         
+				key = arg;
+
+				if (!argtable.containsKey(key))
+					argtable.put(key, new StringBuffer());
+			} else {
+				if (key == null)
+					throw new Exception("Invalid Arguments Passed to MartShell\n");
+				StringBuffer value = (StringBuffer) argtable.get(key);
+				if (value.length() > 0)
+					value.append(" ");
+				value.append(arg);
+				argtable.put(key, value);
 			}
-      else {
-        if (key == null)
-          throw new Exception("Invalid Arguments Passed to MartShell\n");
-        StringBuffer value = (StringBuffer) argtable.get(key);
-        if (value.length() > 0)
-          value.append(" ");
-        value.append(arg);
-        argtable.put(key, value);
-      }        
 		}
-        
-    String[] ret = new String[argtable.size() * 2]; // one slot for each key, and one slot for each non null or non empty value
-    int argnum = 0;
-    
-    for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
+
+		String[] ret = new String[argtable.size() * 2]; // one slot for each key, and one slot for each non null or non empty value
+		int argnum = 0;
+
+		for (Iterator iter = argtable.keySet().iterator(); iter.hasNext();) {
 			String thiskey = (String) iter.next();
-      String thisvalue = ((StringBuffer) argtable.get(thiskey)).toString();
+			String thisvalue = ((StringBuffer) argtable.get(thiskey)).toString();
 
 			ret[argnum] = thiskey;
-      argnum++;
-      
-      // getOpt wants an empty string for switches
-      if (thisvalue.length() < 1)
-        thisvalue = "";
-        
-      ret[argnum] = thisvalue;
-      argnum++;
-		}    
+			argnum++;
 
-    return ret;
-  }
-  
+			// getOpt wants an empty string for switches
+			if (thisvalue.length() < 1)
+				thisvalue = "";
+
+			ret[argnum] = thisvalue;
+			argnum++;
+		}
+
+		return ret;
+	}
+
 	public static void main(String[] oargs) {
 		String loggingURL = null;
 		boolean help = false;
 		boolean verbose = false;
 		boolean commandComp = true;
 
-    String[] args = null;
-    if (oargs.length > 0) {
-		  try {
-			  args = harvestArguments(oargs);
-		  } catch (Exception e1) {
-			  System.out.println(e1.getMessage());
-			  e1.printStackTrace();
-        System.exit(1);
-		  }
-      
-      Getopt g = new Getopt("MartShell", args, COMMAND_LINE_SWITCHES);
-      int c;
+		String[] args = null;
+		if (oargs.length > 0) {
+			try {
+				args = harvestArguments(oargs);
+			} catch (Exception e1) {
+				System.out.println(e1.getMessage());
+				e1.printStackTrace();
+				System.exit(1);
+			}
 
-      while ((c = g.getopt()) != -1) {
+			Getopt g = new Getopt("MartShell", args, COMMAND_LINE_SWITCHES);
+			int c;
 
-        switch (c) {
+			while ((c = g.getopt()) != -1) {
 
-          case 'h' :
-            help = true;
-            break;
+				switch (c) {
 
-          case 'C' :
-            mainConfiguration = g.getOptarg();
-            break;
+					case 'h' :
+						help = true;
+						break;
 
-          case 'A' :
-            commandComp = false;
-            break;
+					case 'C' :
+						mainConfiguration = g.getOptarg();
+						break;
 
-            // get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
-          case 'M' :
-            getConnProperties(g.getOptarg());
-            break;
+					case 'A' :
+						commandComp = false;
+						break;
 
-          case 'H' :
-            mainHost = g.getOptarg();
-            break;
+						// get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
+					case 'M' :
+						getConnProperties(g.getOptarg());
+						break;
 
-          case 'T' :
-            mainDatabaseType = g.getOptarg();
-            break;
-          
-          case 'P' :
-            mainPort = g.getOptarg();
-            break;
+					case 'H' :
+						mainHost = g.getOptarg();
+						break;
 
-          case 'U' :
-            mainUser = g.getOptarg();
-            break;
+					case 'T' :
+						mainDatabaseType = g.getOptarg();
+						break;
 
-          case 'p' :
-            mainPassword = g.getOptarg();
-            break;
+					case 'P' :
+						mainPort = g.getOptarg();
+						break;
 
-          case 'd' :
-            mainDatabase = g.getOptarg();
-            break;
+					case 'U' :
+						mainUser = g.getOptarg();
+						break;
 
-          case 'v' :
-            verbose = true;
-            break;
+					case 'p' :
+						mainPassword = g.getOptarg();
+						break;
 
-          case 'l' :
-            loggingURL = g.getOptarg();
-            break;
+					case 'd' :
+						mainDatabase = g.getOptarg();
+						break;
 
-          case 'e' :
-            mainBatchSQL = g.getOptarg();
-            mainBatchMode = true;
-            break;
+					case 'v' :
+						verbose = true;
+						break;
 
-          case 'O' :
-            mainBatchFile = g.getOptarg();
-            break;
+					case 'l' :
+						loggingURL = g.getOptarg();
+						break;
 
-          case 'F' :
-            mainBatchFormat = g.getOptarg();
-            break;
+					case 'e' :
+						mainBatchSQL = g.getOptarg();
+						mainBatchMode = true;
+						break;
 
-          case 'R' :
-            mainBatchSeparator = g.getOptarg();
-            break;
+					case 'O' :
+						mainBatchFile = g.getOptarg();
+						break;
 
-          case 'E' :
-            mainBatchScriptFile = g.getOptarg();
-            mainBatchMode = true;
-            break;
-        }
-      }
-    } else {
-      args = new String[0];
-    }
-    
+					case 'F' :
+						mainBatchFormat = g.getOptarg();
+						break;
+
+					case 'R' :
+						mainBatchSeparator = g.getOptarg();
+						break;
+
+					case 'E' :
+						mainBatchScriptFile = g.getOptarg();
+						mainBatchMode = true;
+						break;
+				}
+			}
+		} else {
+			args = new String[0];
+		}
+
 		// check for the defaultConf file, and use it, if present.  Some values may be overridden with a user specified file with -g
 		if (new File(defaultConf).exists())
 			getConnProperties(defaultConf);
@@ -365,8 +364,8 @@ public class MartShell {
 		MartShell ms = new MartShell();
 		if (mainHost != null)
 			ms.setDBHost(mainHost);
-	  if (mainDatabaseType != null)
-	    ms.setDBType(mainDatabaseType);
+		if (mainDatabaseType != null)
+			ms.setDBType(mainDatabaseType);
 		if (mainPort != null)
 			ms.setDBPort(mainPort);
 		if (mainUser != null)
@@ -406,9 +405,8 @@ public class MartShell {
 			if (!validQuery) {
 				System.out.println("Invalid Batch command:" + ms.getBatchError() + "\n" + usage());
 				System.exit(0);
-			}
-      else
-        System.exit(0);
+			} else
+				System.exit(0);
 		} else {
 			if (!commandComp)
 				ms.UnsetCommandCompletion();
@@ -494,24 +492,24 @@ public class MartShell {
 
 				Readline.setCompleter(mcl);
 			}
-			
+
 			if (readlineLoaded && historyOn) {
-				File histFile = new File( history_file );
-				if ( ! histFile.exists() )
-          histFile.createNewFile();
-        else
-          LoadScriptFromFile(history_file);          			   			
+				File histFile = new File(history_file);
+				if (!histFile.exists())
+					histFile.createNewFile();
+				else
+					LoadScriptFromFile(history_file);
 			}
-			
+
 			// load help, this loads the help, and, if completionOn, adds them to Help Mode in the MartCompleter
 			LoadHelpFile();
-			
+
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
-			
+
 			System.exit(1);
 		}
-		
+
 		while (true) {
 			try {
 				thisline = Prompt();
@@ -553,15 +551,15 @@ public class MartShell {
 		historyOn = false;
 		completionOn = false;
 		readlineLoaded = false;
-		
+
 		boolean valid = true;
 		try {
 			Initialize();
 			reader = new BufferedReader(new InputStreamReader(new FileInputStream(batchScriptFile)));
 
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-				if (! line.startsWith("#") )
-				  parse(line);
+				if (!line.startsWith("#"))
+					parse(line);
 			}
 		} catch (Exception e) {
 			setBatchError(e.getMessage());
@@ -570,21 +568,21 @@ public class MartShell {
 		return valid;
 	}
 
-  /**
-   * Method for running a single command non-interactively.  This will
-   * attempt to parse/run the entire queryString provided.  It returns
-   * true if the command was executed successfully, false if exceptions
-   * occur (including connection exceptions, IO Exceptions, etc.).  When
-   * Exceptions occur, the message is stored in the BatchError message.
-   * 
-   * @param querystring - String Mart Query Languate String to be evaluated
-   * @return boolean true if querystring is executed successfully, false if not.
-   */
+	/**
+	 * Method for running a single command non-interactively.  This will
+	 * attempt to parse/run the entire queryString provided.  It returns
+	 * true if the command was executed successfully, false if exceptions
+	 * occur (including connection exceptions, IO Exceptions, etc.).  When
+	 * Exceptions occur, the message is stored in the BatchError message.
+	 * 
+	 * @param querystring - String Mart Query Languate String to be evaluated
+	 * @return boolean true if querystring is executed successfully, false if not.
+	 */
 	public boolean RunBatch(String querystring) {
 		historyOn = false;
 		completionOn = false;
 		readlineLoaded = false;
-		
+
 		boolean validQuery = true;
 
 		if (martHost == null || martHost.length() < 5) {
@@ -614,89 +612,89 @@ public class MartShell {
 		return validQuery;
 	}
 
-  /**
-   * Method allowing client scripts to specifically turn off command completion
-   *
-   */
+	/**
+	 * Method allowing client scripts to specifically turn off command completion
+	 *
+	 */
 	public void UnsetCommandCompletion() {
 		completionOn = false;
 	}
 
-  /**
-   * Method allowing client scripts to specify an alternate MartConfiguration.xml
-   * document to use in place of that provided by the Mart database.
-   * 
-   * @param confFile - String path to alternate MartConfiguration.xml file
-   */
+	/**
+	 * Method allowing client scripts to specify an alternate MartConfiguration.xml
+	 * document to use in place of that provided by the Mart database.
+	 * 
+	 * @param confFile - String path to alternate MartConfiguration.xml file
+	 */
 	public void setAlternateMartConfiguration(String confFile) {
 		altConfigurationFile = confFile;
 	}
 
-  /**
-   * Set the Database Host name of the RDBMS.
-   * 
-   * @param dbhost - String host name of the RDBMS.
-   */
+	/**
+	 * Set the Database Host name of the RDBMS.
+	 * 
+	 * @param dbhost - String host name of the RDBMS.
+	 */
 	public void setDBHost(String dbhost) {
 		this.martHost = dbhost;
 	}
 
-  /**
-   * Set the Type of the RDBMS.  Defaults to mysql
-   * @param dbtype - String type of rdbms, to pass in a Connection URL
-   */
-  public void setDBType(String dbtype) {
-  	this.martDatabaseType = dbtype;
-  }
-  
-  /**
-   * Set the port for the RDBMS.
-   * 
-   * @param dbport - String Port that the RDBMS is running on
-   */
+	/**
+	 * Set the Type of the RDBMS.  Defaults to mysql
+	 * @param dbtype - String type of rdbms, to pass in a Connection URL
+	 */
+	public void setDBType(String dbtype) {
+		this.martDatabaseType = dbtype;
+	}
+
+	/**
+	 * Set the port for the RDBMS.
+	 * 
+	 * @param dbport - String Port that the RDBMS is running on
+	 */
 	public void setDBPort(String dbport) {
 		this.martPort = dbport;
 	}
 
-  /**
-   * Set the username to use to connect to the specified RDBMS.
-   * 
-   * @param dbuser - String user name for RDBMS connection
-   */
+	/**
+	 * Set the username to use to connect to the specified RDBMS.
+	 * 
+	 * @param dbuser - String user name for RDBMS connection
+	 */
 	public void setDBUser(String dbuser) {
 		this.martUser = dbuser;
 	}
 
-  /**
-   * Set the password to use to connect to the specified RDBMS.
-   * 
-   * @param dbpass - String password for RDBMS connection.
-   */
+	/**
+	 * Set the password to use to connect to the specified RDBMS.
+	 * 
+	 * @param dbpass - String password for RDBMS connection.
+	 */
 	public void setDBPass(String dbpass) {
 		martPass = dbpass;
 	}
 
-  /**
-   * Set the name of the mart database to query.
-   * 
-   * @param db - String name of the mart database
-   */
+	/**
+	 * Set the name of the mart database to query.
+	 * 
+	 * @param db - String name of the mart database
+	 */
 	public void setDBDatabase(String db) {
 		martDatabase = db;
 	}
 
-  /**
-   * Set the name of a file to output a batch Mart Query command using the -e flag
-   * 
-   * @param batchFile - String path to output file.
-   * @throws IOException when the specified file cannot be created.
-   */
+	/**
+	 * Set the name of a file to output a batch Mart Query command using the -e flag
+	 * 
+	 * @param batchFile - String path to output file.
+	 * @throws IOException when the specified file cannot be created.
+	 */
 	public void setBatchOutputFile(String batchFileName) throws IOException {
 		try {
-			File batchFile = new File( batchFileName );
-			if (! batchFile.exists())
-			  batchFile.createNewFile();
-			  
+			File batchFile = new File(batchFileName);
+			if (!batchFile.exists())
+				batchFile.createNewFile();
+
 			sessionOutputFile = new FileOutputStream(batchFile);
 		} catch (FileNotFoundException e) {
 			setBatchError("Could not open file " + batchFileName + "\n" + e.getMessage());
@@ -704,31 +702,31 @@ public class MartShell {
 		}
 	}
 
-  /**
-   * Set the format for output of a batch Mart Query command using the -e flag
-   * 
-   * @param outputFormat - String format, must be either tabulated or fasta, or an exception will be thrown when the query executes.
-   */
+	/**
+	 * Set the format for output of a batch Mart Query command using the -e flag
+	 * 
+	 * @param outputFormat - String format, must be either tabulated or fasta, or an exception will be thrown when the query executes.
+	 */
 	public void setBatchOutputFormat(String outputFormat) {
 		this.sessionOutputFormat = outputFormat;
 	}
 
-  /**
-   * Set the output separator for tabulated output of a batch Mart Query command
-   * using the -e flag.
-   * 
-   * @param outputSeparator - String field separator (defaults to tab separated if none specified)
-   */
+	/**
+	 * Set the output separator for tabulated output of a batch Mart Query command
+	 * using the -e flag.
+	 * 
+	 * @param outputSeparator - String field separator (defaults to tab separated if none specified)
+	 */
 	public void setBatchOutputSeparator(String outputSeparator) {
 		this.sessionOutputSeparator = outputSeparator;
 	}
 
-  /**
-   * Get any error message, if the runBatch or runBatchScript command returns
-   * false.
-   * 
-   * @return String error message
-   */
+	/**
+	 * Get any error message, if the runBatch or runBatchScript command returns
+	 * false.
+	 * 
+	 * @return String error message
+	 */
 	public String getBatchError() {
 		return batchErrorMessage;
 	}
@@ -739,7 +737,7 @@ public class MartShell {
 
 	private void Initialize() throws MalformedURLException, ConfigurationException, SQLException {
 		engine = new Engine("mysql", martHost, martPort, martDatabase, martUser, martPass);
-    
+
 		if (altConfigurationFile != null)
 			martconf = new MartConfigurationFactory().getInstance(new URL(altConfigurationFile));
 		else
@@ -748,19 +746,19 @@ public class MartShell {
 		if (msl == null)
 			msl = new MartShellLib(martconf);
 		else
-		  msl.setMartConfiguration(martconf);
+			msl.setMartConfiguration(martconf);
 	}
 
 	private void ExitShell() throws IOException {
 		Readline.cleanup();
-		
+
 		// close the sessionwide FileOutputStream, if it isnt null
 		if (sessionOutputFile != null)
 			sessionOutputFile.close();
-		
+
 		// if history and completion are on, save the history file
 		if (readlineLoaded && historyOn)
-		  Readline.writeHistoryFile( history_file );
+			Readline.writeHistoryFile(history_file);
 
 		System.exit(0);
 	}
@@ -840,7 +838,8 @@ public class MartShell {
 			else
 				buf.append("Sorry, no information available for item: ").append(command).append("\n");
 		}
-		return buf.toString();
+    
+    return buf.toString();
 	}
 
 	private void LoadHelpFile() throws InvalidQueryException {
@@ -890,11 +889,13 @@ public class MartShell {
 	}
 
 	private void DescribeRequest(String command) throws InvalidQueryException {
-		String[] toks = command.split(" ");
-		String dataset = null, pagetype = null, pagename = null, groupname = null;
+		StringTokenizer toks = new StringTokenizer(command, " ");
+		int tokCount = toks.countTokens();
+		toks.nextToken(); // skip describe
+
 		System.out.println();
 
-		if (toks.length == 1) {
+		if (tokCount == 1) {
 			String output = "This mart contains the following datasets:\n";
 			Dataset[] dsets = martconf.getDatasets();
 			for (int i = 0, n = dsets.length; i < n; i++) {
@@ -902,70 +903,34 @@ public class MartShell {
 				output += "\t" + dset.getInternalName() + "   (" + dset.getDisplayName() + ")\n";
 			}
 			System.out.println(output);
-		} else if (toks.length == 2) {
-			dataset = toks[1].trim();
-			DescribeDataset(dataset);
-		} else if (toks.length == 4) {
-			//describe datasetname page pagename
-			dataset = toks[1].trim();
-			pagetype = toks[2].trim();
-			pagename = toks[3].trim();
+		} else if (tokCount == 2) {
+			String dsetName = toks.nextToken();
 
-			if (pagetype.equals(FILTERPAGE))
-				DescribeFilterPage(dataset, pagename);
-			else if (pagetype.equals(ATTRIBUTEPAGE))
-				DescribeAttributePage(dataset, pagename);
-			else
-				throw new InvalidQueryException("Invalid describe command " + command + "\n");
-		} else if (toks.length == 5) {
-			//describe datasetname page pagename group groupname
-			dataset = toks[1].trim();
-			if (!martconf.containsDataset(dataset))
-				throw new InvalidQueryException("Dataset " + dataset + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+			if (!martconf.containsDataset(dsetName))
+				throw new InvalidQueryException("Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
 
-			Dataset dset = martconf.getDatasetByName(dataset);
+			DescribeDataset(martconf.getDatasetByName(dsetName));
+		} else if (tokCount > 2) {
 
-			pagetype = toks[2].trim();
-			pagename = toks[3].trim();
-			groupname = toks[4].trim();
+			int mod = tokCount % 2; // must be even number of elements
+			if (mod > 0)
+				throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
 
-			if (pagetype.equals(FILTERPAGE)) {
-				if (!dset.containsFilterPage(pagename))
-					throw new InvalidQueryException("Dataset " + dataset + " does not contain FilterPage " + pagename + "\n");
+			List args = new ArrayList();
 
-				FilterPage page = dset.getFilterPageByName(pagename);
-				if (!page.containsFilterGroup(groupname))
-					throw new InvalidQueryException("Dataset " + dataset + " FilterPage " + pagename + "does not contain FilterGroup " + groupname + "\n");
+			String dsetName = toks.nextToken();
+			if (!martconf.containsDataset(dsetName))
+				throw new InvalidQueryException("Dataset " + dsetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
 
-				Object group = page.getFilterGroupByName(groupname);
-				String[] lines = DescribeFilterGroup(group);
-				for (int i = 0, n = lines.length; i < n; i++)
-					System.out.println("\t" + lines[i]);
-				System.out.println();
-			} else if (pagetype.equals(ATTRIBUTEPAGE)) {
-				if (!dset.containsAttributePage(pagename))
-					throw new InvalidQueryException("Dataset " + dataset + " does not contain AttributePage " + pagename + "\n");
+			while (toks.hasMoreTokens()) {
+				args.add(new String[] { toks.nextToken(), toks.nextToken()});
+			}
 
-				AttributePage page = dset.getAttributePageByName(pagename);
-				if (!page.containsAttributeGroup(groupname))
-					throw new InvalidQueryException("Dataset " + dataset + " AttributePage " + pagename + "does not contain AttributeGroup " + groupname + "\n");
-
-				Object group = page.getAttributeGroupByName(groupname);
-				String[] lines = DescribeAttributeGroup(group);
-				for (int i = 0, n = lines.length; i < n; i++)
-					System.out.println("\t" + lines[i]);
-				System.out.println();
-			} else
-				throw new InvalidQueryException("Recieved Invalid describe command " + command + "\n");
-		} else
-			throw new InvalidQueryException("Recieved invalid describe command: " + command + "\n");
+			DescribeDataset(martconf.getDatasetByName(dsetName), args);
+		}
 	}
 
-	private void DescribeDataset(String datasetName) throws InvalidQueryException {
-		if (!martconf.containsDataset(datasetName))
-			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-
-		Dataset dset = martconf.getDatasetByName(datasetName);
+	private void DescribeDataset(Dataset dset) throws InvalidQueryException {
 		System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n");
 
 		String[] dlines = ColumnIze(dset.getDescription());
@@ -982,25 +947,13 @@ public class MartShell {
 
 			FilterPage page = fpages[i];
 
-			String[] lines = ColumnIze(page.getInternalName() + " - " + page.getDisplayName());
+			String filtPageDesc = page.getInternalName() + " - " + page.getDisplayName();
+			if (!page.getDescription().equals(""))
+				filtPageDesc += ": " + page.getDescription();
+
+			String[] lines = ColumnIze(filtPageDesc);
 			for (int j = 0, k = lines.length; j < k; j++)
 				System.out.print("\t" + lines[j] + "\n");
-
-			System.out.print("\n\tFilterGroups:\n");
-
-			List groups = page.getFilterGroups();
-			for (int j = 0, k = groups.size(); j < k; j++) {
-				Object groupo = groups.get(j);
-				if (groupo instanceof FilterGroup) {
-					FilterGroup group = (FilterGroup) groupo;
-
-					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName());
-					for (int y = 0, g = glines.length; y < g; y++)
-						System.out.print("\t\t" + glines[y] + "\n");
-				} else {
-					// do nothing, but could do something special for DSFilterGroups.  add hooks here
-				}
-			}
 		}
 
 		System.out.println(DASHES);
@@ -1017,102 +970,698 @@ public class MartShell {
 
 			AttributePage page = apages[i];
 
-			String[] alines = ColumnIze(page.getInternalName() + " - " + page.getDisplayName());
+			String atPageDesc = page.getInternalName() + " - " + page.getDisplayName();
+			if (!page.getDescription().equals(""))
+				atPageDesc += ": " + page.getDescription();
+
+			String[] alines = ColumnIze(atPageDesc);
 			for (int j = 0, k = alines.length; j < k; j++)
 				System.out.print("\t" + alines[j] + "\n");
-
-			System.out.print("\n\tAttributeGroups:\n");
-
-			List agroups = page.getAttributeGroups();
-			for (int j = 0, k = agroups.size(); j < k; j++) {
-				if (j > 0)
-					System.out.println();
-
-				Object groupo = agroups.get(j);
-				if (groupo instanceof AttributeGroup) {
-					AttributeGroup group = (AttributeGroup) groupo;
-					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName() + " " + group.getDescription());
-					for (int l = 0, m = glines.length; l < m; l++)
-						System.out.print("\t\t" + glines[l] + "\n");
-				} else {
-					DSAttributeGroup group = (DSAttributeGroup) groupo;
-					String[] glines = ColumnIze(group.getInternalName() + " - " + group.getDisplayName() + " " + group.getDescription());
-					for (int l = 0, m = glines.length; l < m; l++)
-						System.out.print("\t\t" + glines[l] + "\n");
-				}
-			}
 		}
 		System.out.println(DASHES);
 	}
 
-	private void DescribeFilterPage(String datasetName, String pageName) throws InvalidQueryException {
-		if (!martconf.containsDataset(datasetName))
-			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
+	private void DescribeDataset(Dataset dset, List args) throws InvalidQueryException {
+		int argCount = args.size();
+		String[] arg1 = null;
+		String arg1key = null;
+		String arg1value = null;
 
-		Dataset dset = martconf.getDatasetByName(datasetName);
-		if (!dset.containsFilterPage(pageName))
-			throw new InvalidQueryException("Dataset " + datasetName + " does not contain FilterPage " + pageName + "\n");
+		switch (argCount) {
+			case 1 :
+				arg1 = (String[]) args.get(0);
+				arg1key = arg1[0];
+				arg1value = arg1[1];
 
-		FilterPage page = dset.getFilterPageByName(pageName);
-		System.out.print("Dataset: " + dset.getInternalName() + " - FilterPage: " + pageName + " contains the following FilterGroups\n");
+				if (arg1key.equals(FILTERPAGE)) {
+					if (!dset.containsFilterPage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+
+					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nFilterPage: ");
+
+					DescribeFilterPage(dset.getFilterPageByName(arg1value));
+				} else if (arg1key.equals(FILTER)) {
+					if (!dset.containsUIFilterDescription(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Filter " + arg1value + "\n");
+
+					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
+
+					String[] lines = DescribeFilter(dset.getUIFilterDescriptionByName(arg1value));
+					for (int i = 0, n = lines.length; i < n; i++)
+						System.out.println(lines[i]);
+
+					System.out.println();
+				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+					if (!dset.containsAttributePage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+
+					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\nAttributePage: ");
+					DescribeAttributePage(dset.getAttributePageByName(arg1value));
+
+				} else if (arg1key.equals(ATTRIBUTE)) {
+					if (!dset.containsUIAttributeDescription(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain Attribute " + arg1value + "\n");
+
+					System.out.print("Dataset " + dset.getInternalName() + " - " + dset.getDisplayName() + "\n\n");
+					String[] lines = DescribeAttribute(dset.getUIAttributeDescriptionByName(arg1value));
+					for (int i = 0, n = lines.length; i < n; i++)
+						System.out.println(lines[i]);
+
+					System.out.println();
+				} else {
+					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+				}
+				break;
+
+			case 2 :
+				arg1 = (String[]) args.get(0);
+				arg1key = arg1[0];
+				arg1value = arg1[1];
+
+				String[] arg2 = null;
+				if (arg1key.equals(FILTERPAGE)) {
+					if (!dset.containsFilterPage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					FilterPage fpage = dset.getFilterPageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(FILTERGROUP)) {
+						if (!fpage.containsFilterGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+
+						System.out.print(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " - "
+								+ dset.getDisplayName()
+								+ "\nFilterPage: "
+								+ fpage.getInternalName()
+								+ " - "
+								+ fpage.getDisplayName()
+								+ "\n\n");
+
+						String[] lines = DescribeFilterGroup(fpage.getFilterGroupByName(arg2value));
+						for (int i = 0, n = lines.length; i < n; i++)
+							System.out.println("\t\t" + lines[i]);
+
+            System.out.println();
+            
+					} else if (arg2key.equals(FILTER)) {
+						if (!fpage.containsUIFilterDescription(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain Filter " + arg2value + "\n");
+
+						System.out.print(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " - "
+								+ dset.getDisplayName()
+								+ "\nFilterPage: "
+								+ fpage.getInternalName()
+								+ " - "
+								+ fpage.getDisplayName()
+								+ "\n");
+
+            System.out.println();
+						String[] lines = DescribeFilter(fpage.getUIFilterDescriptionByName(arg2value));
+						for (int i = 0, n = lines.length; i < n; i++)
+							System.out.println("\t\t" + lines[i]);
+
+            System.out.println();
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+					}
+
+				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+					if (!dset.containsAttributePage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					AttributePage apage = dset.getAttributePageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(ATTRIBUTEGROUP)) {
+						if (!apage.containsAttributeGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+
+						System.out.print(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " - "
+								+ dset.getDisplayName()
+								+ "\nAttributePage: "
+								+ apage.getInternalName()
+								+ " - "
+								+ apage.getDisplayName()
+								+ "\n\n");
+
+						String[] lines = DescribeAttributeGroup(apage.getAttributeGroupByName(arg2value));
+						for (int i = 0, n = lines.length; i < n; i++)
+							System.out.println("\t\t" + lines[i]);
+
+					} else if (arg2key.equals(ATTRIBUTE)) {
+						if (!apage.containsUIAttributeDescription(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " AttributePage: " + apage.getInternalName() + " does not contain Attribute " + arg2value + "\n");
+
+						System.out.print(
+							"Dataset "
+								+ dset.getInternalName()
+								+ " - "
+								+ dset.getDisplayName()
+								+ "\nAttributePage: "
+								+ apage.getInternalName()
+								+ " - "
+								+ apage.getDisplayName()
+								+ "\n");
+
+            System.out.println();
+						String[] lines = DescribeAttribute(apage.getUIAttributeDescriptionByName(arg2value));
+						for (int i = 0, n = lines.length; i < n; i++)
+							System.out.println("\t\t" + lines[i]);
+              
+            System.out.println();
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+					}
+
+				} else {
+					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+				}
+				break;
+
+			case 3 :
+				arg1 = (String[]) args.get(0);
+				arg1key = arg1[0];
+				arg1value = arg1[1];
+
+				arg2 = null;
+				String[] arg3 = null;
+				if (arg1key.equals(FILTERPAGE)) {
+					if (!dset.containsFilterPage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					FilterPage fpage = dset.getFilterPageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(FILTERGROUP)) {
+						if (!fpage.containsFilterGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+
+						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
+							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
+
+							arg3 = (String[]) args.get(2);
+							String arg3key = arg3[0];
+							String arg3value = arg3[1];
+
+							if (arg3key.equals(FILTERCOLLECTION)) {
+								if (!group.containsFilterCollection(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " FilterPage "
+											+ fpage.getInternalName()
+											+ " FilterGroup "
+											+ group.getInternalName()
+											+ " does not contain FilterCollection "
+											+ arg3value
+											+ "\n");
+
+								System.out.print(
+									"Dataset "
+										+ dset.getInternalName()
+										+ " - "
+										+ dset.getDisplayName()
+										+ "\nFilterPage: "
+										+ fpage.getInternalName()
+										+ " - "
+										+ fpage.getDisplayName()
+										+ "\n\tFilterGroup: "
+										+ group.getInternalName()
+										+ " - "
+										+ group.getDisplayName()
+										+ "\n\n");
+
+								String[] lines = DescribeFilterCollection(group.getFilterCollectionByName(arg3value));
+								for (int i = 0, n = lines.length; i < n; i++)
+									System.out.println("\t\t" + lines[i]);
+
+                System.out.println();
+                
+							} else if (arg3key.equals(FILTER)) {
+								if (!group.containsUIFilterDescription(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " FilterPage "
+											+ fpage.getInternalName()
+											+ " FilterGroup "
+											+ group.getInternalName()
+											+ " does not contain Filter "
+											+ arg3value
+											+ "\n");
+
+								System.out.print(
+									"Dataset "
+										+ dset.getInternalName()
+										+ " - "
+										+ dset.getDisplayName()
+										+ "\nFilterPage: "
+										+ fpage.getInternalName()
+										+ " - "
+										+ fpage.getDisplayName()
+										+ "\n\tFilterGroup: "
+										+ group.getInternalName()
+										+ " - "
+										+ group.getDisplayName()
+										+ "\n\n");
+
+								String[] lines = DescribeFilter(group.getUIFilterDescriptionByName(arg3value));
+								for (int i = 0, n = lines.length; i < n; i++)
+									System.out.println("\t\t" + lines[i]);
+
+                System.out.println();
+                
+							} else {
+								throw new InvalidQueryException(
+									"Recieved describe command with request key: "
+										+ arg1key
+										+ " and second request key: "
+										+ arg2key
+										+ " with invalid third request key: "
+										+ arg3key
+										+ "\n");
+							}
+
+						} //else
+						// DSFilterGroup code goes here, if needed
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request key: " + arg2key + "\n");
+					}
+
+				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+					if (!dset.containsAttributePage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					AttributePage apage = dset.getAttributePageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(ATTRIBUTEGROUP)) {
+						if (!apage.containsAttributeGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+
+						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
+							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
+							arg3 = (String[]) args.get(2);
+							String arg3key = arg3[0];
+							String arg3value = arg3[1];
+
+							if (arg3key.equals(ATTRIBUTECOLLECTION)) {
+								if (!group.containsAttributeCollection(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " AttributePage "
+											+ apage.getInternalName()
+											+ " AttributeGroup "
+											+ group.getInternalName()
+											+ " does not contain AttributeCollection "
+											+ arg3value
+											+ "\n");
+
+								System.out.print(
+									"Dataset "
+										+ dset.getInternalName()
+										+ " - "
+										+ dset.getDisplayName()
+										+ "\nAttributePage: "
+										+ apage.getInternalName()
+										+ " - "
+										+ apage.getDisplayName()
+										+ "\n\tAttributeGroup: "
+										+ group.getInternalName()
+										+ " - "
+										+ group.getDisplayName()
+										+ "\n\n");
+
+								String[] lines = DescribeAttributeCollection(group.getAttributeCollectionByName(arg3value));
+								for (int i = 0, n = lines.length; i < n; i++)
+									System.out.println("\t\t" + lines[i]);
+                  
+                System.out.println();
+
+							} else if (arg3key.equals(ATTRIBUTE)) {
+								if (!group.containsUIAttributeDescription(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " AttributePage "
+											+ apage.getInternalName()
+											+ " AttributeGroup "
+											+ group.getInternalName()
+											+ " does not contain Attribute "
+											+ arg2value
+											+ "\n");
+
+								System.out.print(
+									"Dataset "
+										+ dset.getInternalName()
+										+ " - "
+										+ dset.getDisplayName()
+										+ "\nAttributePage: "
+										+ apage.getInternalName()
+										+ " - "
+										+ apage.getDisplayName()
+										+ "\n\tAttributeGroup: "
+										+ group.getInternalName()
+										+ " - "
+										+ group.getDisplayName()
+										+ "\n\n");
+
+								String[] lines = DescribeAttribute(group.getUIAttributeDescriptionByName(arg3value));
+								for (int i = 0, n = lines.length; i < n; i++)
+									System.out.println("\t\t" + lines[i]);
+
+                System.out.println();
+							} else {
+								throw new InvalidQueryException(
+									"Recieved describe command with request key: "
+										+ arg1key
+										+ " and second request key: "
+										+ arg2key
+										+ " with invalid third request key: "
+										+ arg3key
+										+ "\n");
+							}
+						} //else
+						// describe individual sequences or other DSAttributeGroup things?
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+					}
+
+				} else {
+					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+				}
+				break;
+
+			case 4 :
+				arg1 = (String[]) args.get(0);
+				arg1key = arg1[0];
+				arg1value = arg1[1];
+
+				arg2 = null;
+				arg3 = null;
+				String[] arg4 = null;
+				if (arg1key.equals(FILTERPAGE)) {
+					if (!dset.containsFilterPage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain FilterPage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					FilterPage fpage = dset.getFilterPageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(FILTERGROUP)) {
+						if (!fpage.containsFilterGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " FilterPage " + fpage.getInternalName() + " does not contain FilterGroup " + arg2value + "\n");
+
+						if (fpage.getFilterGroupByName(arg2value) instanceof FilterGroup) {
+							FilterGroup group = (FilterGroup) fpage.getFilterGroupByName(arg2value);
+
+							arg3 = (String[]) args.get(2);
+							String arg3key = arg3[0];
+							String arg3value = arg3[1];
+
+							if (arg3key.equals(FILTERCOLLECTION)) {
+								if (!group.containsFilterCollection(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " FilterPage "
+											+ fpage.getInternalName()
+											+ " FilterGroup "
+											+ group.getInternalName()
+											+ " does not contain FilterCollection "
+											+ arg3value
+											+ "\n");
+
+								arg4 = (String[]) args.get(3);
+								FilterCollection collection = group.getFilterCollectionByName(arg3value);
+								String arg4key = arg4[0];
+								String arg4value = arg4[1];
+
+								if (arg4key.equals(FILTER)) {
+									if (!collection.containsUIFilterDescription(arg4value))
+										throw new InvalidQueryException(
+											"Dataset "
+												+ dset.getInternalName()
+												+ " FilterPage "
+												+ fpage.getInternalName()
+												+ " FilterGroup "
+												+ group.getInternalName()
+												+ " FilterCollection "
+												+ collection.getInternalName()
+												+ " does not contain Filter "
+												+ arg4value
+												+ "\n");
+
+									System.out.print(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " - "
+											+ dset.getDisplayName()
+											+ "\nFilterPage: "
+											+ fpage.getInternalName()
+											+ " - "
+											+ fpage.getDisplayName()
+											+ "\n\tFilterGroup: "
+											+ group.getInternalName()
+											+ " - "
+											+ group.getDisplayName()
+											+ "\n\t\tFilterCollection: "
+											+ collection.getInternalName()
+											+ " - "
+											+ collection.getDisplayName());
+
+									if (collection.inFilterSet())
+										System.out.print("\n\t\tMust be qualified with a FilterSetDescription from FilterSet: " + collection.getFilterSetName());
+
+									System.out.print("\n\n");
+
+									String[] lines = DescribeFilter(collection.getUIFilterDescriptionByName(arg4value));
+									for (int i = 0, n = lines.length; i < n; i++)
+										System.out.println("\t\t\t" + lines[i]);
+
+                  System.out.println();
+
+								} else {
+									throw new InvalidQueryException(
+										"Recieved describe command with request key: "
+											+ arg1key
+											+ " and second request key: "
+											+ arg2key
+											+ " with third request key: "
+											+ arg3key
+											+ " and invalid fourth request key: "
+											+ arg4key
+											+ "\n");
+								}
+
+							} else {
+								throw new InvalidQueryException(
+									"Recieved describe command with request key: "
+										+ arg1key
+										+ " and second request key: "
+										+ arg2key
+										+ " with invalid third request key: "
+										+ arg3key
+										+ "\n");
+							}
+						} //else
+						// DSFilterGroup code goes here, if needed
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+					}
+
+				} else if (arg1key.equals(ATTRIBUTEPAGE)) {
+					if (!dset.containsAttributePage(arg1value))
+						throw new InvalidQueryException("Dataset " + dset.getInternalName() + " does not contain AttributePage " + arg1value + "\n");
+
+					arg2 = (String[]) args.get(1);
+					AttributePage apage = dset.getAttributePageByName(arg1value);
+					String arg2key = arg2[0];
+					String arg2value = arg2[1];
+
+					if (arg2key.equals(ATTRIBUTEGROUP)) {
+						if (!apage.containsAttributeGroup(arg2value))
+							throw new InvalidQueryException(
+								"Dataset " + dset.getInternalName() + " AttributePage " + apage.getInternalName() + " does not contain AttributeGroup " + arg2value + "\n");
+
+						if (apage.getAttributeGroupByName(arg2value) instanceof AttributeGroup) {
+							AttributeGroup group = (AttributeGroup) apage.getAttributeGroupByName(arg2value);
+							arg3 = (String[]) args.get(2);
+							String arg3key = arg3[0];
+							String arg3value = arg3[1];
+
+							if (arg3key.equals(ATTRIBUTECOLLECTION)) {
+								if (!group.containsAttributeCollection(arg3value))
+									throw new InvalidQueryException(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " AttributePage "
+											+ apage.getInternalName()
+											+ " AttributeGroup "
+											+ group.getInternalName()
+											+ " does not contain AttributeCollection "
+											+ arg2value
+											+ "\n");
+
+								arg4 = (String[]) args.get(3);
+								AttributeCollection collection = group.getAttributeCollectionByName(arg3value);
+								String arg4key = arg4[0];
+								String arg4value = arg4[1];
+
+								if (arg4key.equals(ATTRIBUTE)) {
+									if (!collection.containsUIAttributeDescription(arg4value))
+										throw new InvalidQueryException(
+											"Dataset "
+												+ dset.getInternalName()
+												+ " AttributePage "
+												+ apage.getInternalName()
+												+ " AttributeGroup "
+												+ group.getInternalName()
+												+ " AttributeCollection "
+												+ collection.getInternalName()
+												+ " does not contain Attribute "
+												+ arg4value
+												+ "\n");
+
+									System.out.print(
+										"Dataset "
+											+ dset.getInternalName()
+											+ " - "
+											+ dset.getDisplayName()
+											+ "\nAttributePage: "
+											+ apage.getInternalName()
+											+ " - "
+											+ apage.getDisplayName()
+											+ "\n\tAttributeGroup: "
+											+ group.getInternalName()
+											+ " - "
+											+ group.getDisplayName()
+											+ "\n\t\tAttributeCollection: "
+											+ collection.getInternalName()
+											+ " - "
+											+ collection.getDisplayName()
+											+ "\n\n");
+
+									String[] lines = DescribeAttribute(collection.getUIAttributeDescriptionByName(arg4value));
+									for (int i = 0, n = lines.length; i < n; i++)
+										System.out.println("\t\t\t\t" + lines[i]);
+                    
+                  System.out.println();
+
+								} else {
+									throw new InvalidQueryException(
+										"Recieved describe command with request key: "
+											+ arg1key
+											+ " and second request key: "
+											+ arg2key
+											+ " with third request key: "
+											+ arg3key
+											+ " and invalid fourth request key: "
+											+ arg4key
+											+ "\n");
+								}
+
+							} else {
+								throw new InvalidQueryException(
+									"Recieved describe command with request key: "
+										+ arg1key
+										+ " and second request key: "
+										+ arg2key
+										+ " with invalid third request key: "
+										+ arg3key
+										+ "\n");
+							}
+						} //else
+						//DSAttributeGroup Code goes here
+
+					} else {
+						throw new InvalidQueryException("Recieved describe command with request key: " + arg1key + " and invalid second request: " + arg2key + "\n");
+					}
+
+				} else {
+					throw new InvalidQueryException("Recieved describe command with invalid request key: " + arg1key + "\n");
+				}
+				break;
+
+			default :
+				throw new InvalidQueryException("Recieved invalid describe command: wrong number of arguments after dateset\n");
+		}
+	}
+
+	private void DescribeFilterPage(FilterPage page) throws InvalidQueryException {
+		System.out.print(page.getInternalName() + " contains the following FilterGroups:\n\n");
 
 		List groups = page.getFilterGroups();
 		for (int i = 0, n = groups.size(); i < n; i++) {
 			if (i > 0) {
 				try {
-					String quit = Readline.readline("\nHit Enter to continue with next group, q to return to prompt: ", false);
+					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
 					if (quit.equals("q"))
 						break;
 
 				} catch (Exception e) {
 					// do nothing
 				}
+				System.out.println();
 			}
 
-			for (int j = 0; j < MAXCHARCOUNT; j++)
-				System.out.print("-");
-			System.out.println();
-
-			Object groupo = groups.get(i);
-			if (groupo instanceof FilterGroup) {
-				FilterGroup group = (FilterGroup) groupo;
-				String[] lines = DescribeFilterGroup(group);
-				for (int j = 0, n2 = lines.length; j < n2; j++) {
-					String string = lines[j];
-					System.out.print("\t" + string + "\n");
-				}
+			Object group = groups.get(i);
+			String[] lines = DescribeFilterGroup(group);
+			for (int j = 0, n2 = lines.length; j < n2; j++) {
+				String string = lines[j];
+				System.out.print("\t" + string + "\n");
 			}
 		}
 	}
 
-	private void DescribeAttributePage(String datasetName, String pageName) throws InvalidQueryException {
-		if (!martconf.containsDataset(datasetName))
-			throw new InvalidQueryException("Dataset " + datasetName + " Not found in mart configuration for " + martconf.getInternalName() + "\n");
-
-		Dataset dset = martconf.getDatasetByName(datasetName);
-		if (!dset.containsAttributePage(pageName))
-			throw new InvalidQueryException("Dataset " + datasetName + " does not contain AttributePage " + pageName + "\n");
-
-		AttributePage page = dset.getAttributePageByName(pageName);
-		System.out.print("Dataset: " + dset.getInternalName() + " - AttributePage: " + pageName + " contains the following AttributeGroups\n");
+	private void DescribeAttributePage(AttributePage page) throws InvalidQueryException {
+		System.out.print(page.getInternalName() + " contains the following AttributeGroups:\n\n");
 
 		List groups = page.getAttributeGroups();
 		for (int i = 0, n = groups.size(); i < n; i++) {
 			if (i > 0) {
 				try {
-					String quit = Readline.readline("\nHit Enter to continue with next group, q to return to prompt: ", false);
+					String quit = Readline.readline("\n\nHit Enter to continue with next group, q to return to prompt: ", false);
 					if (quit.equals("q"))
 						break;
 
 				} catch (Exception e) {
 					// do nothing
 				}
+				System.out.println();
 			}
-
-			for (int j = 0; j < MAXCHARCOUNT; j++)
-				System.out.print("-");
-
-			System.out.println();
 
 			Object groupo = groups.get(i);
 			String[] lines = DescribeAttributeGroup(groupo);
@@ -1128,11 +1677,10 @@ public class MartShell {
 
 		if (groupo instanceof FilterGroup) {
 			FilterGroup group = (FilterGroup) groupo;
-			lines.add("FilterGroup: " + group.getInternalName() + " - " + group.getDisplayName());
+			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
 			lines.add(DASHES);
 
 			if (group.hasFilterSets()) {
-				lines.add("Contains FilterSets:");
 				FilterSet[] fsets = group.getFilterSets();
 				for (int i = 0, n = fsets.length; i < n; i++) {
 					if (i > 0)
@@ -1142,8 +1690,9 @@ public class MartShell {
 					String thisSetInfo = "\tFilterSet: " + set.getInternalName();
 					if (set.getDisplayName().length() > 0)
 						thisSetInfo += " - " + set.getDisplayName();
+
+					thisSetInfo += " Contains the following FilterSetDescriptions:\n";
 					lines.add(thisSetInfo);
-					lines.add("\tContains the following FilterSetDescriptions:");
 
 					FilterSetDescription[] fsds = set.getFilterSetDescriptions();
 					for (int j = 0, n2 = fsds.length; j < n2; j++) {
@@ -1152,46 +1701,16 @@ public class MartShell {
 					}
 				}
 				lines.add("");
+				lines.add(DASHES);
 			}
 
 			FilterCollection[] fcs = group.getFilterCollections();
-			lines.add(DASHES);
 
 			for (int i = 0, n = fcs.length; i < n; i++) {
 				if (i > 0)
 					lines.add(DASHES);
 
-				FilterCollection collection = fcs[i];
-				lines.add("\tCollection: " + collection.getDisplayName());
-				lines.add("");
-
-				if (collection.inFilterSet()) {
-					String[] clines =
-						ColumnIze(
-							"Filters from this collection must be qualified with the internalName of one of the FilterSetsDescriptions from FilterSet '"
-								+ collection.getFilterSetName()
-								+ "' above");
-					for (int j = 0, k = clines.length; j < k; j++)
-						lines.add("\t" + clines[j]);
-
-					lines.add("");
-				}
-
-				List fdescs = collection.getUIFilterDescriptions();
-				for (int j = 0, n2 = fdescs.size(); j < n2; j++) {
-					Object desco = fdescs.get(j);
-					if (desco instanceof UIFilterDescription) {
-						UIFilterDescription desc = (UIFilterDescription) desco;
-						lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
-					} else {
-						UIDSFilterDescription desc = (UIDSFilterDescription) desco;
-						String disp = "\t\t" + desc.getInternalName();
-						if (desc.getDisplayName().length() > 0)
-							disp += " - " + desc.getDisplayName();
-						disp += " (see 'help " + desc.getObjectCode() + "' for further information)";
-						lines.add(disp);
-					}
-				}
+				lines.addAll(Arrays.asList(DescribeFilterCollection(fcs[i])));
 			}
 			lines.add(DASHES);
 		} else {
@@ -1208,8 +1727,9 @@ public class MartShell {
 
 		if (groupo instanceof DSAttributeGroup) {
 			DSAttributeGroup group = (DSAttributeGroup) groupo;
+
 			if (group.getInternalName().equals("sequences")) {
-				lines.add("AttributeGroup: " + group.getInternalName() + " - " + group.getDisplayName());
+				lines.add("\t" + group.getInternalName() + " - " + group.getDisplayName());
 				lines.add("");
 
 				for (int i = 0, n = SequenceDescription.SEQS.size(); i < n; i++) {
@@ -1222,41 +1742,109 @@ public class MartShell {
 			else {
 				//do nothing
 			}
-
 		} else {
 			AttributeGroup group = (AttributeGroup) groupo;
-			lines.add("AttributeGroup: " + group.getInternalName() + " - " + group.getDisplayName());
-
+			lines.add("Group: " + group.getInternalName() + " - " + group.getDisplayName());
+      lines.add(DASHES);
+      
 			AttributeCollection[] attcs = group.getAttributeCollections();
 			for (int i = 0, n = attcs.length; i < n; i++) {
 				if (i > 0)
-					lines.add("");
+					lines.add(DASHES);
 
-				AttributeCollection collection = attcs[i];
-				if (collection.getDisplayName() != null) {
-					lines.add("\t" + collection.getDisplayName());
-					lines.add("");
-				}
-
-				if (collection.getMaxSelect() > 0) {
-					lines.add("\tOnly " + collection.getMaxSelect() + " of the following attributes can be selected in the same query");
-					lines.add("");
-				}
-
-				List adescs = collection.getUIAttributeDescriptions();
-				for (int j = 0, k = adescs.size(); i < k; i++) {
-					if (j > 0)
-						lines.add("");
-
-					Object desco = adescs.get(i);
-					if (desco instanceof UIAttributeDescription) {
-						UIAttributeDescription desc = (UIAttributeDescription) desco;
-						lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName());
-					} else {
-						// for now, do nothing.  If we add UIDSAttributeDescriptions to the config, add hooks here
-					}
-				}
+				lines.addAll(Arrays.asList(DescribeAttributeCollection(attcs[i])));
 			}
+      lines.add(DASHES);
+		}
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private String[] DescribeFilterCollection(FilterCollection collection) {
+		List lines = new ArrayList();
+
+		String colheader = "\tCollection: " + collection.getInternalName();
+		if (!collection.getDisplayName().equals(""))
+			colheader += " - " + collection.getDisplayName();
+
+		lines.add(colheader);
+
+		if (collection.inFilterSet()) {
+			String[] clines =
+				ColumnIze(
+					"(Note: Filters from this collection must be qualified with the internalName of one of the FilterSetsDescriptions from FilterSet '"
+						+ collection.getFilterSetName()
+						+ "' above)");
+			for (int j = 0, k = clines.length; j < k; j++)
+				lines.add("\t" + clines[j]);
+
+			lines.add("");
+		}
+
+		List fdescs = collection.getUIFilterDescriptions();
+		for (int j = 0, n2 = fdescs.size(); j < n2; j++)
+			lines.addAll(Arrays.asList(DescribeFilter(fdescs.get(j))));
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+  private String[] DescribeAttributeCollection(AttributeCollection collection) {
+    List lines = new ArrayList();
+
+    String colheader = "\tCollection: " + collection.getInternalName();
+    if (!collection.getDisplayName().equals(""))
+      colheader += " - " + collection.getDisplayName();
+    
+    lines.add(colheader);
+
+    if (collection.getMaxSelect() > 0) {
+      String[] clines = ColumnIze("(Note: Only " + collection.getMaxSelect() + " of the following attributes can be selected in the same query)");
+      for (int j = 0, k = clines.length; j < k; j++)
+        lines.add("\t" + clines[j]);
+      lines.add("");
+    }
+
+    List adescs = collection.getUIAttributeDescriptions();
+    for (int i = 0, n = adescs.size(); i < n; i++)
+      lines.addAll(Arrays.asList(DescribeAttribute(adescs.get(i))));
+
+    String[] ret = new String[lines.size()];
+    lines.toArray(ret);
+    return ret;
+  }
+
+	private String[] DescribeFilter(Object filtero) {
+		List lines = new ArrayList();
+
+		if (filtero instanceof UIFilterDescription) {
+			UIFilterDescription desc = (UIFilterDescription) filtero;
+			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName() + " (Type " + desc.getType() + ")");
+		} else {
+			UIDSFilterDescription desc = (UIDSFilterDescription) filtero;
+			String disp = "\t\t" + desc.getInternalName();
+			if (desc.getDisplayName().length() > 0)
+				disp += " - " + desc.getDisplayName();
+			disp += " (see 'help " + desc.getObjectCode() + "' for further information)";
+			lines.add(disp);
+		}
+
+		String[] ret = new String[lines.size()];
+		lines.toArray(ret);
+		return ret;
+	}
+
+	private String[] DescribeAttribute(Object attributeo) {
+		List lines = new ArrayList();
+
+		if (attributeo instanceof UIAttributeDescription) {
+			UIAttributeDescription desc = (UIAttributeDescription) attributeo;
+			lines.add("\t\t" + desc.getInternalName() + " - " + desc.getDisplayName());
+		} else {
+			// for now, do nothing.  If we add UIDSAttributeDescriptions to the config, add hooks here
 		}
 
 		String[] ret = new String[lines.size()];
@@ -1296,7 +1884,7 @@ public class MartShell {
 				if (key.equals(DBHOST))
 					martHost = value;
 				else if (key.equals(DATABASETYPE))
-				  martDatabaseType = value;
+					martDatabaseType = value;
 				else if (key.equals(DBPORT))
 					martPort = value;
 				else if (key.equals(DBUSER))
@@ -1317,7 +1905,7 @@ public class MartShell {
 			String thisLine = null;
 
 			try {
-				
+
 				String myHost = (martHost == null) ? "" : martHost;
 				thisLine = Readline.readline("\nPlease enter the host address of the mart database (press enter to leave as '" + myHost + "'): ", false);
 				if (thisLine != null)
@@ -1327,36 +1915,38 @@ public class MartShell {
 				thisLine = Readline.readline("\nPlease enter the type of RDBMS hosting the mart database (press enter to leave as '" + myDBType + "'): ", false);
 				if (thisLine != null)
 					martDatabaseType = thisLine;
-					
-        String myPort = (martPort == null) ? "" : martPort;
+
+				String myPort = (martPort == null) ? "" : martPort;
 				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave as '" + myPort + "'): ", false);
 				if (thisLine != null)
 					martPort = thisLine;
 
-        String myUser = (martUser == null) ? "" : martUser;
+				String myUser = (martUser == null) ? "" : martUser;
 				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database (press enter to leave as '" + myUser + "'): ", false);
 				if (thisLine != null)
 					martUser = thisLine;
 
-        String myPass = "";
-        if (martPass != null) {
-        	for(int i = 0, n = martPass.length(); i < n; i++)
-        	  myPass += "*";
-        }
-        
+				String myPass = "";
+				if (martPass != null) {
+					for (int i = 0, n = martPass.length(); i < n; i++)
+						myPass += "*";
+				}
+
 				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database (press enter to leave as '" + myPass + "'): ", false);
 				if (thisLine != null)
 					martPass = thisLine;
 
-        String myDb = (martDatabase == null) ? "" : martDatabase; 
+				String myDb = (martDatabase == null) ? "" : martDatabase;
 				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query (press enter to leave as '" + myDb + "'): ", false);
 				if (thisLine != null)
 					martDatabase = thisLine;
 
-        String myAltFile = (altConfigurationFile == null) ? "-" : altConfigurationFile;
+				String myAltFile = (altConfigurationFile == null) ? "-" : altConfigurationFile;
 				thisLine =
 					Readline.readline(
-						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave as '" + myAltFile + "',\n enter '-' to use configuration provided by "
+						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave as '"
+							+ myAltFile
+							+ "',\n enter '-' to use configuration provided by "
 							+ martDatabase
 							+ "):",
 						false);
@@ -1405,7 +1995,7 @@ public class MartShell {
 			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
 
 		String val = command.split("\\s")[1];
-	  verbose = (val.equals("on")) ? true : false;
+		verbose = (val.equals("on")) ? true : false;
 
 		System.out.println("Logging now " + val + "\n");
 		defaultLoggingConfiguration(verbose);
@@ -1480,7 +2070,7 @@ public class MartShell {
 			com.nextToken(); // skip commmand start
 
 			String req = null;
-			
+
 			String outPutFileName = null;
 			File outPutFile = null;
 
@@ -1489,11 +2079,11 @@ public class MartShell {
 			else if (tokCount == 2) {
 				//file
 				outPutFileName = com.nextToken();
-				outPutFile = new File( outPutFileName );
+				outPutFile = new File(outPutFileName);
 			} else if (tokCount == 3) {
 				req = com.nextToken();
 				outPutFileName = com.nextToken();
-				outPutFile = new File( outPutFileName );
+				outPutFile = new File(outPutFileName);
 			} else
 				throw new InvalidQueryException("Recieved invalid WriteHistory request " + command + "\n");
 
@@ -1508,7 +2098,7 @@ public class MartShell {
 		String[] lines = GetHistoryLines(req); // will throw an exception if GetHistoryLines requirements are not satisfied
 
 		try {
-			OutputStreamWriter hisout = new OutputStreamWriter( new FileOutputStream( outPutFile ) );
+			OutputStreamWriter hisout = new OutputStreamWriter(new FileOutputStream(outPutFile));
 			for (int i = 0, n = lines.length; i < n; i++) {
 				String thisline = lines[i];
 				if (!thisline.startsWith(SAVETOSCRIPTC))
@@ -1526,12 +2116,12 @@ public class MartShell {
 			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
 
 		com.nextToken(); // skip command start
-		
+
 		String scriptFileName = null;
 		File scriptFile = null;
 		try {
 			scriptFileName = com.nextToken();
-			scriptFile = new File( scriptFileName );
+			scriptFile = new File(scriptFileName);
 			ExecScriptFromFile(scriptFile);
 		} catch (Exception e) {
 			throw new InvalidQueryException("Could not execute script: " + scriptFileName + " " + e.getMessage());
@@ -1540,7 +2130,7 @@ public class MartShell {
 
 	private void ExecScriptFromFile(File scriptFile) throws InvalidQueryException {
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream( scriptFile ) ) );
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile)));
 
 			for (String line = reader.readLine(); line != null; line = reader.readLine()) {
 				if (historyOn)
@@ -1558,8 +2148,8 @@ public class MartShell {
 			throw new InvalidQueryException("Recieved invalid LoadScript command, must supply a URL\n");
 
 		com.nextToken(); // skip command start
-		
-		String scriptFile = null;		
+
+		String scriptFile = null;
 		try {
 			scriptFile = com.nextToken();
 			LoadScriptFromFile(scriptFile);
@@ -1709,7 +2299,7 @@ public class MartShell {
 			conline = new StringBuffer();
 			if (completionOn)
 				mcl.SetCommandMode();
-				
+
 			parseCommand(command);
 		} else if (line.endsWith(LINEEND)) {
 			String command = conline.append(" " + line).toString().trim();
@@ -1774,31 +2364,31 @@ public class MartShell {
 			ExitShell();
 		else if (command.startsWith(QSTART)) {
 			Query query = msl.MQLtoQuery(command);
-			
+
 			OutputStream os = null;
 			if (sessionOutputFile != null)
 				os = sessionOutputFile;
-		  else
-		    os = System.out;
+			else
+				os = System.out;
 
 			FormatSpec fspec = null;
-			
+
 			if (sessionOutputFormat != null) {
-				if ( sessionOutputFormat.equals("fasta") )
-				  fspec = FormatSpec.FASTAFORMAT;
+				if (sessionOutputFormat.equals("fasta"))
+					fspec = FormatSpec.FASTAFORMAT;
 				else {
 					fspec = new FormatSpec(FormatSpec.TABULATED);
-									  
-				  if (sessionOutputSeparator != null)
-					  fspec.setSeparator(sessionOutputSeparator);
-				  else
-					  fspec.setSeparator(DEFOUTPUTSEPARATOR);
+
+					if (sessionOutputSeparator != null)
+						fspec.setSeparator(sessionOutputSeparator);
+					else
+						fspec.setSeparator(DEFOUTPUTSEPARATOR);
 				}
-			  
+
 			} else
-			  fspec = FormatSpec.TABSEPARATEDFORMAT;
-      
-      engine.execute(query, fspec, os);
+				fspec = FormatSpec.TABSEPARATEDFORMAT;
+
+			engine.execute(query, fspec, os);
 
 		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
@@ -1810,10 +2400,10 @@ public class MartShell {
 	private MartConfiguration martconf;
 	private MartShellLib msl = null;
 	private BufferedReader reader;
-  private boolean verbose = false;
-  
-  private final String history_file = System.getProperty("user.home") + "/.martshell_history";
-  
+	private boolean verbose = false;
+
+	private final String history_file = System.getProperty("user.home") + "/.martshell_history";
+
 	private String martHost = null;
 	private String martPort = null;
 	private String martUser = null;
@@ -1886,9 +2476,17 @@ public class MartShell {
 
 	// describe instructions
 	private final String FILTERPAGE = "FilterPage";
+	private final String FILTERGROUP = "FilterGroup";
+	private final String FILTERCOLLECTION = "FilterCollection";
+	private final String FILTER = "Filter";
 	private final String ATTRIBUTEPAGE = "AttributePage";
+	private final String ATTRIBUTEGROUP = "AttributeGroup";
+	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
+	private final String ATTRIBUTE = "Attribute";
 
-	private final List describeCommands = Collections.unmodifiableList(Arrays.asList(new String[] { FILTERPAGE, ATTRIBUTEPAGE }));
+	private final List describeCommands =
+		Collections.unmodifiableList(
+			Arrays.asList(new String[] { FILTERPAGE, FILTERGROUP, FILTERCOLLECTION, FILTER, ATTRIBUTEPAGE, ATTRIBUTEGROUP, ATTRIBUTECOLLECTION, ATTRIBUTE }));
 
 	// strings used to show/set output format settings
 	private final String FILE = "file";
