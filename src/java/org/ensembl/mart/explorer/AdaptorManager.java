@@ -389,7 +389,7 @@ public class AdaptorManager extends Box {
 			feedback.warning(e);
 		}
 	}
-	public DSViewAdaptor getRootAdaptor() {
+	public RegistryDSViewAdaptor getRootAdaptor() {
 		return rootAdaptor;
 	}
 	public void setAdvancedOptionsEnabled(boolean b) {
