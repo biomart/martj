@@ -89,33 +89,6 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     return (DSViewAdaptor[]) adaptors.toArray(new DSViewAdaptor[adaptors.size()]);
   }
 
-  /** 
-   * @return dataset display names for all managed adaptors.
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
-   */
-  public String[] getDatasetDisplayNames() throws ConfigurationException {
-    List names = new ArrayList();
-    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
-      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
-      names.addAll(Arrays.asList(adaptor.getDatasetDisplayNames()));
-    }
-    return (String[]) names.toArray(new String[names.size()]);
-  }
-
-  /**
-   * @return dataset internal names for all managed adaptors.
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
-   */
-  public String[] getDatasetInternalNames() throws ConfigurationException {
-    List names = new ArrayList();
-    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
-      DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
-      names.addAll(Arrays.asList(adaptor.getDatasetInternalNames()));
-    }
-
-    return (String[]) names.toArray(new String[names.size()]);
-  }
-
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
    */
@@ -193,7 +166,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
     for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
       DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
-      if (adaptor.supportsInternalName(dsv.getInternalName())) {
+      if (adaptor.supportsDataset(dsv.getDataset())) {
         adaptor.lazyLoad(dsv);
         break;
       }
@@ -215,7 +188,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
             ((MultiDSViewAdaptor) adaptor).removeDatasetView(
               adaptor.getDatasetViewByDatasetInternalName(dsv.getDataset(), dsv.getInternalName()));
         } else {
-          DatasetView thisDSV = adaptor.getDatasetViewByInternalName(dsv.getInternalName());
+          DatasetView thisDSV = adaptor.getDatasetViewByDatasetInternalName(dsv.getDataset(), dsv.getInternalName());
           if (thisDSV.equals(dsv))
             removed = adaptors.remove(adaptor);
         }
@@ -331,6 +304,27 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     return view;
   }
 
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetDisplayName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetDisplayName(String dataset, String displayName)
+    throws ConfigurationException {
+      DatasetView view = null;
+      DatasetView[] dsviews = getDatasetViews();
+      for (int i = 0; i < dsviews.length; ++i) {
+
+        DatasetView dsv = dsviews[i];
+        if (StringUtil.compare(dataset, dsv.getDataset()) == 0
+          && StringUtil.compare(displayName, dsv.getDisplayName()) == 0) {
+          view = dsv;
+          break;
+        }
+
+      }
+
+      return view;
+  }
+  
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames()
    */

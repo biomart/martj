@@ -75,62 +75,10 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   }
 
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
-   */
-  public String[] getDatasetDisplayNames() throws ConfigurationException {
-    return dnames;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
-   */
-  public String[] getDatasetInternalNames() throws ConfigurationException {
-    return inames;
-  }
-
-  /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
    */
   public DatasetView[] getDatasetViews() throws ConfigurationException {
     return new DatasetView[] { dsv };
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
-   */
-  public boolean supportsDisplayName(String name) {
-    if (dnames[0].equals(name))
-      return true;
-    else
-      return false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
-   */
-  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
-    if (!supportsDisplayName(name))
-      throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
-    return dsv;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
-   */
-  public boolean supportsInternalName(String name) {
-    if (inames[0].equals(name))
-      return true;
-    else
-      return false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
-   */
-  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
-    if (!supportsInternalName(name))
-      throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
-    return dsv;
   }
 
   /* (non-Javadoc)
@@ -260,6 +208,20 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
       return null;
   }
 
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetDisplayName(java.lang.String, java.lang.String)
+   */
+  public DatasetView getDatasetViewByDatasetDisplayName(String dataset, String displayName)
+    throws ConfigurationException {
+      boolean same = StringUtil.compare(dataset, dsv.getDataset()) == 0;
+      same = same && StringUtil.compare(displayName, dsv.getDisplayName()) == 0;
+
+      if (same)
+        return dsv;
+      else
+        return null;
+  }
+  
   /**
    * URLDSViewAdaptor Objects do not contain child DSViewAdaptor Objects.
    * @return null

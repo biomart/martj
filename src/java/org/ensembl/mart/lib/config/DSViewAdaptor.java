@@ -43,67 +43,12 @@ public interface DSViewAdaptor {
   public String getName();
   
   /**
-   * Returns a String[] consisting of the displayNames of all DatasetView objects provided by
-   * a particular DSViewAdaptor object. 
-   * @return String[] displayNames
-   * @throws ConfigurationException for all underlying exceptions
-   */
-  public String[] getDatasetDisplayNames() throws ConfigurationException;
-
-  /**
-   * Returns a String[] consisting of the internalNames of all DatasetView objects provided by
-   * a particular DSViewAdaptor object.
-   * @return String[] internalNames
-   * @throws ConfigurationException
-   */
-  public String[] getDatasetInternalNames() throws ConfigurationException;
-
-  /**
    * Returns a DatasetView[] consisting of all DatasetView objects provided by a particular
    * DSViewAdaptor object.
    * @return DatasetView[] dsetviews
    * @throws ConfigurationException  for all underlying exceptions
    */
   public DatasetView[] getDatasetViews() throws ConfigurationException;
-
-  /**
-   * Determine if a DSViewAdaptor object contains a DatasetView with the given
-   * displayName.
-   * @param name -- String displayName of requested DatasetView
-   * @return true if supported, false otherwise
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public boolean supportsDisplayName(String name)
-    throws ConfigurationException;
-
-  /**
-   * Returns a specific DatasetView object, named by the given displayName 
-   * @param name -- String displayName
-   * @return DatasetView named by the given displayName
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public DatasetView getDatasetViewByDisplayName(String name)
-    throws ConfigurationException;
-
-  /**
-   * Determine if a DSViewAdaptor object contains a DatasetView with the given
-   * internalName.
-   * @param name -- String internalName of requested DatasetView.
-   * @return true if supported, false otherwise
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public boolean supportsInternalName(String name)
-    throws ConfigurationException;
-
-  /**
-   * Returns a specific DatasetView object, named by the given internalName.
-   * @param name -- String internalName
-   * @return DatasetView named by the given internalName
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public DatasetView getDatasetViewByInternalName(String name)
-    throws ConfigurationException;
-
 
   /**
    * Returns a specific DatasetView object, named by the given dataset
@@ -119,6 +64,19 @@ public interface DSViewAdaptor {
     String internalName)
     throws ConfigurationException;
 
+  /**
+   * Returns a specific DatasetView object, named by the given dataset
+   * and displayName.
+   * @param dataset
+   * @param internalName
+   * @return DatasetView named by the given dataset
+   * and internalName.
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public DatasetView getDatasetViewByDatasetDisplayName(
+    String dataset,
+    String displayName)
+    throws ConfigurationException;
 
   /**
    * Determine if the DSViewAdaptor contains a DatasetView with the given

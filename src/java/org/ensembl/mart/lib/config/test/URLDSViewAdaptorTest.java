@@ -40,6 +40,7 @@ import org.ensembl.mart.lib.config.URLLocation;
 public class URLDSViewAdaptorTest extends TestCase {
 
   private final String TESTFILEPATH = "URLDSViewAdaptorTestFile.xml";
+  private final String TESTFILENAME = "URLTESTFILE";
   
 	/**
 	 * Constructor for DSViewAdaptors.
@@ -83,6 +84,9 @@ public class URLDSViewAdaptorTest extends TestCase {
     assertEquals("MartLocation type should be " + MartLocationBase.URL + "\n", MartLocationBase.URL, thisLoc.getType());
     assertTrue("MartLocation returned from getMartLocations should be a URLLocation\n", thisLoc instanceof URLLocation);
     assertEquals("URL returned by MartLocation differs from original test dataset url\n", getTestDatasetURL(), ( (URLLocation) thisLoc).getUrl());
+    
+    adaptor.setName( TESTFILENAME );
+    assertEquals("adaptor.setName doesnt appear to work: " + TESTFILENAME, adaptor.getName());
 	}
 
 	public static URL getTestDatasetURL() throws Exception {
