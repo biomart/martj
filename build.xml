@@ -269,7 +269,6 @@
     <jar
       jarfile="${build.dir}/${name}.jar"
       basedir="${build.classes}"
-      manifest="${manifest.file}"
       includes="org/**">
       <fileset dir=".">
         <include name="data/**" />
