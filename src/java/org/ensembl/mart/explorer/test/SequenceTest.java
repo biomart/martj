@@ -1,16 +1,15 @@
 package org.ensembl.mart.explorer.test;
 
-import java.util.List;
+import java.io.ByteArrayOutputStream;
+import java.util.StringTokenizer;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.ensembl.datamodel.AssemblyLocation;
-import org.ensembl.datamodel.Gene;
 import org.ensembl.datamodel.Transcript;
-import org.ensembl.driver.GeneAdaptor;
 import org.ensembl.driver.TranscriptAdaptor;
+import org.ensembl.mart.explorer.*;
 
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
@@ -34,25 +33,38 @@ public class SequenceTest extends Base {
 
 
 	public void testCodingSequence() throws Exception {
-		GeneAdaptor ga = ensjDriver.getGeneAdaptor();
-		System.out.println("Fetching genes... ");
-		List genes = ga.fetch( AssemblyLocation.valueOf("12:14m-15m") );
-		System.out.println("Found " +genes.size()+ " genes.");
-		for (int g=0; g<genes.size(); ++g) {
-			Gene gene = (Gene)genes.get(g);
-			List transcripts = gene.getTranscripts();
-			for (int t=0; t<transcripts.size(); ++t) {
-				Transcript transcript = (Transcript)transcripts.get(t);
-				String codingSeq = transcript.getTranslation().getSequence().getString();
-				System.out.println( "Transcript: "  + transcript.getAccessionID() 
-									+ " " + codingSeq);
-			}
-		}
-
-
-		TranscriptAdaptor ta = ensjDriver.getTranscriptAdaptor();
-		Transcript transcript = ta.fetch("ENST00000303221");
-		System.out.println(transcript);
+		//test one forward strand gene and one revearse strand gene
+		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		query.addSequenceDescription(new SequenceDescription("coding"));
+		
+		executeQuery(query);
 	}
 	
+	public void executeQuery(Query query) throws Exception {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		
+		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		String results = out.toString();
+		out.close();
+		
+		TranscriptAdaptor ta = ensjDriver.getTranscriptAdaptor();
+		StringTokenizer sequences = new StringTokenizer(results, ">", false);
+		
+		while (sequences.hasMoreTokens()) {
+			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
+			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
+			
+			String martseq = lines.nextToken();
+			Transcript transcript = ta.fetch(transcript_stable_id);
+			
+			String ensjseq = transcript.getTranslation().getSequence().getString();
+			
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", martseq,ensjseq);
+		}
+		    
+		    
+		    
+			
+		
+	}
 }

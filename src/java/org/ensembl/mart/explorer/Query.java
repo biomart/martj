@@ -25,6 +25,7 @@ import java.util.*;
  * database.  Parameters consist of at least one Attribute (a requested field
  * from the database) implimenting object. Parameters can include Filter 
  * implimenting objects to restrict the Query on user supplied conditions.
+ * Parameters can also include SequenceDescriptions.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -40,9 +41,6 @@ public class Query {
      */
     public final static int ATTRIBUTE = 1;
     public final static int SEQUENCE = 2;
-
-    // TODO, when implement SEQUENCE, over ride this during the addSequenceDescription method call
-    private int querytype = 1;
 
     /**
      * returns the query type (one of ATTRIBUTE or SEQUENCE)
@@ -133,6 +131,53 @@ public class Query {
              filters.add( filter );
      }
 
+    /**
+     * Adds a SequenceDescription to the Query, and sets querytype = 2.
+     * Adds the SequenceDesciption QueryID and DisplayID attributes to
+     * the front of the attribute list.
+     * Warns if more than one SequenceDescription is added. 
+	 * @param s
+	 */
+    public void addSequenceDescription(SequenceDescription s) {
+        this.seqd = s;
+        this.querytype = 2;
+
+        /*
+         *  add the DisplayIDAttributes to the beginning of the attributes List,
+         *  and then add the QueryIDAttribute to the beginning of the new List.
+         *  Finally, push the descriptionAttributes onto the end of the List.
+         *  While adding the displayIDAttributes, keep track of their final
+         *  position in an int array to set the SequenceDescription displayIDAttributeindices
+         *  with (they will ultimately start at the position in the attributes List
+         *  after the QueryIDAttribute.
+         */
+        List d = seqd.getDisplayIDAttributes();
+        int[] indices = new int[d.size()];
+        int thisindex = 2;
+        
+        for (int i = 0; i < d.size(); i++) {
+        	attributes.add(i, (Attribute) d.get(i));
+        	indices[i] = thisindex++;
+        }
+        
+		attributes.add(0, seqd.getQueryIDAttribute());
+		d = seqd.getDescriptionAttributes();
+		for (int i = 0; i < d.size(); i++) {
+			this.addAttribute((Attribute) d.get(i));
+		}
+		
+		// set the displayIDAttributeindices in the sequence description
+		seqd.setDisplayIDAttributeIndices(indices);
+    }
+     
+    /**
+     * returns the SequenceDescription for this Query.
+	 * @return SequenceDescription
+	 */
+	public SequenceDescription getSequenceDescription(){
+    	return seqd;
+    }
+    
      /**
       * returns a description of the Query for logging purposes
       * 
@@ -144,6 +189,7 @@ public class Query {
 		 buf.append("[");
          buf.append(" ,species=").append(species);
          buf.append(" ,focus=").append(focus);
+         buf.append(" , querytype=").append(stringquerytype);
          buf.append(" ,attributes=").append(attributes);
          buf.append(" ,filters=").append(filters);
          buf.append("]");
@@ -181,7 +227,7 @@ public class Query {
      */
     public void setFocus(String focus){
             this.focus = focus;
-        }
+    }
 
     private List attributes = new Vector();
     private List filters = new Vector();
@@ -193,6 +239,10 @@ public class Query {
     /** @link dependency */
 
   /*# Filter lnkFilter; */
+  
+  private int querytype = 1;
+  private SequenceDescription seqd;
   private String species;
   private String focus;
+  private String stringquerytype;
 }

@@ -1,8 +1,14 @@
 package org.ensembl.mart.explorer;
 
-import java.io.*;
-import java.sql.*;
-import org.apache.log4j.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.apache.log4j.Logger;
 
 /**
  * Implimentation of the QueryRunner for executing a Query and 
@@ -58,7 +64,7 @@ public class TabulatedQueryRunner implements QueryRunner {
             }
             
             ResultSet rs = ps.executeQuery();
-            
+   
             while ( rs.next() ) {
               int nColumns = rs.getMetaData().getColumnCount();
               for (int i = 1; i <= nColumns; ++i) {
@@ -68,6 +74,7 @@ public class TabulatedQueryRunner implements QueryRunner {
                 logger.debug( v );
               }
               osr.write("\n");
+              osr.flush();
             }
             osr.close();
         }

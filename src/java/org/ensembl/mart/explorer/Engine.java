@@ -39,8 +39,7 @@ public class Engine {
     private String user;
     private String password;
     private String database;
-    private QueryRunnerFactory qrunnerfactory = new QueryRunnerFactory();
-
+    
     /**
      * Creates an Engine object for a connection to a specific mart
      * database running on a specific mySQL database instance.
@@ -122,7 +121,7 @@ public class Engine {
         throws SQLException, IOException, FormatException, InvalidQueryException {
     
           Connection conn = getDatabaseConnection();
-	      QueryRunner qr = qrunnerfactory.createQueryRunner(query, formatspec);
+	      QueryRunner qr = QueryRunnerFactory.createQueryRunner(query, formatspec);
           qr.execute(conn, os);
     }
 

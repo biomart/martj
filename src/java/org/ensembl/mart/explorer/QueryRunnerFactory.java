@@ -17,6 +17,7 @@
  */
 package org.ensembl.mart.explorer;
 
+
 /**
  * Factory class for generating QueryRunner implimenting objects 
  * based upon the specified Query and FormatSpec.
@@ -37,26 +38,27 @@ public class QueryRunnerFactory {
      *  @see Query
      *  @see FormatSpec
      */
-    public QueryRunner createQueryRunner(Query q, FormatSpec f) throws FormatException {
-		/*
-		TODO, implement SEQUENCE switching
-		 
-		switch (q.getType) {
+    public static QueryRunner createQueryRunner(Query q, FormatSpec f) throws FormatException {
+    	QueryRunner thisQueryRunner = null;
+		switch (q.getType()) {
  
 		case Query.ATTRIBUTE:
-            if (f.getFormat == FormatSpec.TABULATED)
-				return new TabulatedQueryRunner(q,f);
+            if (f.getFormat() == FormatSpec.TABULATED) {
+				thisQueryRunner = new TabulatedQueryRunner(q,f);
+				break;
+            }
             else 
-               throw new FormatException("Cannot create Fasta output on attributes");
-            break;
+               throw new FormatException("Fasta format can only be applied to Sequence output");
 
         case Query.SEQUENCE:
-            if (f.getFormat == FormatSpec.TABULATED)
-				return new TabulatedSeqQueryRunner(q,f);
+            if (f.getFormat() == FormatSpec.TABULATED) {
+				thisQueryRunner = new TabulatedSeqQueryRunner(q,f);
+				break;
+            }
             else 
-               return new FastaSeqQueryRunner(q,f);
-            break;
-			}*/
-        return new TabulatedQueryRunner(q,f);
+               thisQueryRunner = new FastaSeqQueryRunner(q,f);
+               break;
+		}
+		return thisQueryRunner;
 	}
 }

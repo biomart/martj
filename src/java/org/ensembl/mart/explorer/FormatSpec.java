@@ -60,6 +60,15 @@ public class FormatSpec {
      }
      
      /**
+      * Constructor for when you just want to set FASTA, or 
+      * you want to set the separator later.
+      * 
+      * @param int format
+      */
+     public FormatSpec(int format) {
+     	this.format = format;
+     }
+     /**
       * set the Format for the FormatSpec.
       * Formats can be set with explicit use of the static TABULATED and FASTA
       * variables.

@@ -1,10 +1,41 @@
+/*
+	Copyright (C) 2003 EBI, GRL
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ */
+ 
 package org.ensembl.mart.explorer;
 
-import org.apache.log4j.*;
-import java.util.*;
-import gnu.getopt.*;
-import java.io.*;
-import java.net.*;
+import gnu.getopt.Getopt;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  * CommandLine Tool for extraction of data from a mart database.
@@ -27,6 +58,7 @@ public class MartExplorerTool {
   private static boolean validQuery = true;
   private static FormatSpec formatspec = new FormatSpec();
   private static OutputStream os = null;
+  private static SequenceDescription seqDescription = null;
 
   private static Logger logger = Logger.getLogger(MartExplorerTool.class.getName());
   private static List attributes = new ArrayList();
@@ -34,7 +66,8 @@ public class MartExplorerTool {
 
   private static IDListFilter idFilter = null;
 
-  private static String COMMAND_LINE_SWITCHES = "l:H:P:u:p:d:a:f:O:F:i:I:St:hvs:c:g:R:";
+  private static String COMMAND_LINE_SWITCHES = "l:H:P:U:p:d:a:f:O:F:i:I:S:t:hvs:c:M:R:";
+  private static final String seqdelimiter = "+";
 
   public MartExplorerTool() {
   }
@@ -64,10 +97,10 @@ public class MartExplorerTool {
       "MartExplorerTool <OPTIONS>"
       + "\n"
       + "\n-h                             - this screen"
-      + "\n-g                             - mysql connection configuration file"
+      + "\n-M                             - mysql connection configuration file"
       + "\n-H HOST                        - database host"
       + "\n-P PORT                        - database port" 
-      + "\n-u USER                        - database user name"
+      + "\n-U USER                        - database user name"
       + "\n-p PASSWORD                    - database password"
       + "\n-d DATABASE                    - database name"
       + "\n-s SPECIES                     - species name"
@@ -78,8 +111,8 @@ public class MartExplorerTool {
       + "\n-F OUTPUT_FORMAT               - output format, either tabulated or fasta"
       + "\n-R OUTPUT_SEPARATOR            - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated" 
       + "\n-i IDENTIFIER_FILTER           - zero or more identifiers "
-      + "\n-I URL_CONTAINING_IDENTIFIERS  - url with one or more identifiers"
-      + "\n-S                             - if given, reads STDIN for list of ids (newline separated)"
+      + "\n-I URL_CONTAINING_IDENTIFIERS  - url with one or more identifiers, use - to pipe in from STDIN (newline separated)"
+      + "\n-S SEQUENCE_TYPE               - sequnce request description <left-flank length+>seqtype<+right-flank length>"
       + "\n-t IDENTIFIER_TYPE             - type of identifiers (necessary if -i, -I, or -S)"
       + "\n-v                             - verbose logging output"
       + "\n-l LOGGING_FILE_URL            - logging file, defaults to console if none specified"
@@ -90,6 +123,12 @@ public class MartExplorerTool {
       + "\nUsers specifying a mysql connection configuration file with -g,"
       + "\nor using a .martexplorer file, can use -H, -P, -p, -u, or -d to specify"
       + "\nparameters not specified in the configuration file, or over-ride those that are specified."
+      + "\n\nSequences:"
+      + "\nrequest descriptions can be of the form intb+type+intb, where inta+ and +intb are optional flank length modifiers."
+      + "\nThe following sequence types are supported:"
+      + "\n"
+      + SequenceDescription.getAvailableSequences()
+      + "\n"
 	  + "\n";
   }
 
@@ -128,7 +167,7 @@ public class MartExplorerTool {
             break;
 
  	    // get everything that is specified in the provided configuration file, then fill in rest with other options, if provided
-        case 'g':
+        case 'M':
 		  getConnProperties(g.getOptarg());
           break;
 
@@ -144,7 +183,7 @@ public class MartExplorerTool {
           database = g.getOptarg();
           break;
 
-        case 'u':
+        case 'U':
           user = g.getOptarg();
           break;
 
@@ -181,7 +220,7 @@ public class MartExplorerTool {
             break;
 
         case 'I':
-          addIdFilterURL( g.getOptarg() ); 
+              addIdFilterURL( g.getOptarg() ); 
           break;
 
         case 'i':
@@ -189,7 +228,7 @@ public class MartExplorerTool {
           break;
 
 	    case 'S':
-		  addIdFilterStream(System.in);
+		  addSequenceDescription( g.getOptarg());
 		  break;
         
         case 't':
@@ -235,8 +274,8 @@ public class MartExplorerTool {
     else if ( focus == null)
       validationError("Focus must be set\n"+usage());
 
-    else if ( attributes.size()==0 )
-      validationError("At least one attributes must be chosen (use -a).");
+    else if ( seqDescription == null && attributes.size()==0 )
+      validationError("If not requesting Sequences, at least one attributes must be chosen (use -a).");
 
     else if ( idFilter!=null && idFilter.getType()==null ) 
       validationError("You must set id filter type if you use an id filter (use -t).");
@@ -286,6 +325,8 @@ public class MartExplorerTool {
     q.setAttributes( attributes );
 
     q.setFilters( (Filter[])filters.toArray( new Filter[]{}) );
+    
+    if (seqDescription!=null ) q.addSequenceDescription(seqDescription);
 
     Engine e = new Engine(host, port, user, password, database);
     try {
@@ -404,7 +445,9 @@ public class MartExplorerTool {
   }
   
   /**
-   * Gets identifiers from a URL, and creates an IDListFilter from them
+   * If url is '-', calls addIDFilterStream(System.in)
+   * else Gets identifiers from a URL, and creates an 
+   * IDListFilter from them
    * 
    * @param url
    * @see Query
@@ -412,16 +455,21 @@ public class MartExplorerTool {
    */
   public static void addIdFilterURL( String url ) {
     
-    try {
+        if (url.equals("-")) {
+			addIdFilterStream(System.in);
+        }
+        else {
+            try {
 
-      // retain current filterType if set
-      String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
+                // retain current filterType if set
+                String filterType =  ( idFilter!=null ) ? idFilter.getType() : null;
 
-      idFilter = new IDListFilter(filterType, new URL( url ));
+                idFilter = new IDListFilter(filterType, new URL( url ));
 
-    } catch ( Exception e ){
-      validationError("Problem loading from url: " + url + " : " + e.getMessage());
-    }
+            } catch ( Exception e ){
+                validationError("Problem loading from url: " + url + " : " + e.getMessage());
+            }
+        }
   }
 
   /**
@@ -462,4 +510,45 @@ public class MartExplorerTool {
       validationError("ID Filter type already set, can't set it again: " + type);
   }
 
+  public static void addSequenceDescription(String seqrequest) {
+  	  String type = "";
+  	  int left = 0;
+  	  int right = 0;
+  	  
+  	  StringTokenizer tokens = new StringTokenizer(seqrequest, seqdelimiter, true);
+	  int n = tokens.countTokens();
+	  switch (n) {
+	  	 case 5:
+	  	     // left+type+right
+	  	     left = Integer.parseInt(tokens.nextToken());
+	  	     tokens.nextToken(); // skip plus
+	  	     type = tokens.nextToken();
+	  	     tokens.nextToken();
+	  	     right = Integer.parseInt(tokens.nextToken());
+	  	     break;
+	  	 case 3:
+	  	     // left+type || type+right
+	  	     String tmp = tokens.nextToken();
+	  	     if (SequenceDescription.isValidType(tmp)) {
+	  	         type =  tmp;
+	  	         tokens.nextToken();
+	  	         right = Integer.parseInt(tokens.nextToken());
+	  	     }
+	  	     else {
+	  	         left = Integer.parseInt(tmp);
+	  	         tokens.nextToken();
+	  	         type = tokens.nextToken();
+	  	     }
+	  	     break;
+	  	 case 1:
+	  	     // type
+	  	     type = seqrequest;
+	  	     break;
+	  }
+  	  try {
+  	  	seqDescription = new SequenceDescription(type, left, right);
+  	  } catch (SequenceException e) {
+  	  	logger.info("Couldnt add Sequence Description"+e.getMessage());
+  	  }
+  }
 }
