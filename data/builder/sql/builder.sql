@@ -2,11 +2,11 @@ CREATE TABLE TEMP0  SELECT gene.gname,gene.gene_id,gene.fref,gene.fstart,gene.fs
 ALTER TABLE TEMP0 ADD INDEX (gene_id);
 
 
-CREATE TABLE kegg__path__dm  SELECT path.gname,path.note,path.name,gene_path_link_left.gene_id,gene_path_link_left.gname AS gname_DTEMP0 FROM gene_path_link_left LEFT JOIN path ON path.gname = gene_path_link_left.gname;
+CREATE TABLE kegg__path__dm  SELECT path.gname,gene_path_link_left.gene_id,gene_path_link_left.gname AS gname_DTEMP0 FROM gene_path_link_left LEFT JOIN path ON path.gname = gene_path_link_left.gname;
 ALTER TABLE kegg__path__dm ADD INDEX (gname);
 
 
-CREATE TABLE kegg__ec__dm  SELECT ec.gname,ec.note,ec.name,gene_ec_link_left.gene_id,gene_ec_link_left.gname AS gname_DTEMP0 FROM gene_ec_link_left LEFT JOIN ec ON ec.gname = gene_ec_link_left.gname;
+CREATE TABLE kegg__ec__dm  SELECT ec.gname,gene_ec_link_left.gene_id,gene_ec_link_left.gname AS gname_DTEMP0 FROM gene_ec_link_left LEFT JOIN ec ON ec.gname = gene_ec_link_left.gname;
 ALTER TABLE kegg__ec__dm ADD INDEX (gname);
 
 
