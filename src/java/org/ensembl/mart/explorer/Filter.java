@@ -5,7 +5,5 @@ package org.ensembl.mart.explorer;
 public interface Filter {
     String getField();
 
-    String getCondition();
-
-    String getValue();
+    String sqlRepr();
 }

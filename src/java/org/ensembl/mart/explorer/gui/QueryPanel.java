@@ -16,10 +16,6 @@ public class QueryPanel extends JPanel {
         this.martExplorerGUI = martExplorerGUI;
     }
 
-	private void clear() {
-		query = new Query();
-
-  }
 
     /** This method is called from within the constructor to initialize the form. */
     private void initGUI() {
@@ -27,8 +23,8 @@ public class QueryPanel extends JPanel {
         setLayout(new java.awt.BorderLayout());
         add(queryTabs, java.awt.BorderLayout.CENTER);
         queryTabs.add(databaseTab, "Database");
-        queryTabs.add(regionTab, "Region");
-        queryTabs.add(includeTab, "Include");
+        queryTabs.add(filterTab, "Filters");
+        queryTabs.add(attributeTab, "Attributes");
         queryTabs.add(exportTab, "Export");
     }
 
@@ -40,12 +36,11 @@ public class QueryPanel extends JPanel {
     }
 
     /** Returns the query defined by the user. */
-    public Query retrieveQuery() {
+    public void updateQuery( Query query) throws InvalidQueryException {
 			for (int i=0; i<inputPages.length; i++) {
 				inputPages[i].updateQuery( query );
       }
 
-      return query;
     }
 
     public MartExplorerGUI getMartExplorerGUI(){
@@ -59,14 +54,11 @@ public class QueryPanel extends JPanel {
     private JTabbedPane queryTabs = new JTabbedPane();
     private DatabaseConfigPage databaseTab = new DatabaseConfigPage();
     private ExportPanel exportTab = new ExportPanel( this );
-    private RegionPanel regionTab = new RegionPanel();
-    private IncludePanel includeTab = new IncludePanel();
+    private FilterPanel filterTab = new FilterPanel ();
+    private AttributePanel attributeTab = new AttributePanel ();
     private QueryInputPage[] inputPages = new QueryInputPage[] {
 			databaseTab
       ,exportTab
-      ,regionTab
-			,includeTab
-    };
-    private Query query = new Query();
+      ,filterTab,attributeTab };
     private MartExplorerGUI martExplorerGUI;
 }

@@ -71,7 +71,7 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
         jPanel1.add(exportToFileButton);
     }
 
-    public void updateQuery(Query query) {
+    public void updateQuery(Query query)  throws InvalidQueryException  {
         Formatter r = null;
         if (tsvFormatButton.isSelected()) r = new SeparatedValueFormatter ("\t");
         if (exportToWindowButton.isSelected()) {

@@ -3,4 +3,8 @@
 package org.ensembl.mart.explorer;
 
 public class SequenceAttribute implements Attribute {
+    public String sqlRepr(){
+        // Write your code here
+        return null;
+    }
 }

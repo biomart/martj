@@ -26,10 +26,6 @@ public class BasicFilter implements Filter {
             return field;
         }
 
-    public void setField(String field){
-            this.field = field;
-        }
-
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
@@ -40,6 +36,10 @@ public class BasicFilter implements Filter {
       buf.append("]");
 
       return buf.toString();
+    }
+
+    public String sqlRepr(){
+			return field+condition+value;
     }
 
     private String field;

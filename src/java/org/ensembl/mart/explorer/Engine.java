@@ -23,13 +23,16 @@ public class Engine {
         this.password = password;
     }
 
-    public Connection getDatabaseConnection() {
+    public Connection getDatabaseConnection( Query query) {
+/*
         if (databaseConnection == null) {
             if (database == null)
                 throw new IllegalStateException("database not set.");
             databaseConnection = createConnection(database);
         }
         return databaseConnection;
+*/
+			return createConnection( query );
     }
 
     public Connection getServerConnection() {
@@ -42,14 +45,16 @@ public class Engine {
      * Creates connection to database server. If database is set the connection
      * is to the specific database on the server, otherwise it is to the server itself.
      */
-    public Connection createConnection(String database) {
+    public Connection createConnection(Query query) {
         StringBuffer connStr = new StringBuffer();
         connStr.append("jdbc:mysql://");
-        connStr.append(host).append("/");
-        if (port != null)
-            connStr.append(":").append(port);
-        if (database != null && !database.equals(""))
-            connStr.append(database);
+        connStr.append( query.getHost() ).append("/");
+        String p = query.getPort();
+        if ( p != null)
+            connStr.append(":").append( p );
+        String db = query.getDatabase();
+        if ( db != null && !db.equals(""))
+            connStr.append( db );
         else
             connStr.append("mysql"); // default table - we have to connect to one table
         connStr.append("?autoReconnect=true");
@@ -57,7 +62,7 @@ public class Engine {
         try {
             Class.forName("org.gjt.mm.mysql.Driver").newInstance();
             logger.info(connStr.toString());
-            conn = DriverManager.getConnection(connStr.toString(), user, password);
+            conn = DriverManager.getConnection(connStr.toString(), query.getUser(), query.getPassword() );
         } catch (Exception e) {
             logger.error("failed to connect to " + connStr.toString(), e);
             throw new RuntimeException(e.getMessage());
@@ -65,14 +70,19 @@ public class Engine {
         return conn;
     }
 
-    public void execute(Query query) throws SQLException, FormatterException {
-      logger.warn( "Pretending to execute query : " + query );
+    public void execute(Query query)
+      throws SQLException, FormatterException, InvalidQueryException {
+
+      logger.warn( "Executing query : " + query );
 
 
       init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
       // test query!
-      Connection conn = createConnection(null);
-      ResultSet rs = conn.createStatement().executeQuery("show databases");
+      CompiledSQLQuery csql = new CompiledSQLQuery( query );
+      String sql = csql.toSQL();
+      logger.warn( "SQL = " +sql );
+      Connection conn = getDatabaseConnection( query );
+      ResultSet rs = conn.createStatement().executeQuery( sql );
       query.getResultTarget().output( rs );
     }
 
@@ -100,9 +110,9 @@ public class Engine {
         this.database = database;
     }
 
-    public List tables() throws SQLException {
+    public List tables(Query q) throws SQLException {
         ArrayList tables = new ArrayList();
-        Connection conn = getDatabaseConnection();
+        Connection conn = getDatabaseConnection( q );
         ResultSet rs = conn.createStatement().executeQuery("show tables");
         while (rs.next()) {
             tables.add(rs.getString(1));

@@ -95,6 +95,7 @@ public class Query {
       buf.append(" ,port=").append(port);
       buf.append(" ,user=").append(user);
       buf.append(" ,password=").append(password);
+      buf.append(" ,database=").append(database);
       buf.append(" ,attributes=").append(attributes);
       buf.append(" ,filters=").append(filters);
       buf.append(" ,resultTarget=").append(resultTarget);

@@ -3,4 +3,5 @@
 package org.ensembl.mart.explorer;
 
 public interface Attribute {
+    String sqlRepr();
 }

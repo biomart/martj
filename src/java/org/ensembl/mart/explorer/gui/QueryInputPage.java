@@ -2,10 +2,11 @@
 
 package org.ensembl.mart.explorer.gui;
 
-import org.ensembl.mart.explorer.Query;
+import org.ensembl.mart.explorer.*;
+
 public interface QueryInputPage {
     /** Copyies parameters from this input page into the query. */
-    void updateQuery(Query query);
+    void updateQuery(Query query)  throws InvalidQueryException ;
 
     /** Copies relevant parameters from the query into this page. */
     void updatePage(Query query);

@@ -68,7 +68,7 @@ public class DatabaseConfigPage extends JPanel implements org.ensembl.mart.explo
         password.setSize(new java.awt.Dimension(431, 21));
     }
 
-    public void updateQuery(Query query){
+    public void updateQuery(Query query)  throws InvalidQueryException {
         query.setHost( Tool.selected ( host ) );
         query.setPort( Tool.selected ( port ) );
         query.setUser( Tool.selected ( user ) );

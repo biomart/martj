@@ -33,5 +33,9 @@ public class FieldAttribute implements Attribute {
       return buf.toString();
     }
 
+    public String sqlRepr(){
+			return field;
+    }
+
     private String field;
 }

@@ -7,9 +7,9 @@ import javax.swing.JCheckBox;
 import org.ensembl.mart.explorer.*;
 
 /** Input panel where user specifies what data is to be exported. */
-public class IncludePanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
+public class AttributePanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
     /** Creates new form OutputPanel */
-    public IncludePanel() {
+    public AttributePanel() {
         initGUI();
     }
 
@@ -17,11 +17,10 @@ public class IncludePanel extends JPanel implements org.ensembl.mart.explorer.gu
     private void initGUI() {
         setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
         add(ensemblGeneIDCheckBox);
-        ensemblGeneIDCheckBox.setText("jCheckBox1");
         ensemblGeneIDCheckBox.setLabel("Ensembl Gene ID");
     }
 
-    public void updateQuery(Query query) {
+    public void updateQuery(Query query)  throws InvalidQueryException {
         if (ensemblGeneIDCheckBox.isSelected())
             query.addAttribute(ensemblGeneID);
         else
@@ -41,5 +40,5 @@ public class IncludePanel extends JPanel implements org.ensembl.mart.explorer.gu
     }
 
     private JCheckBox ensemblGeneIDCheckBox = new JCheckBox();
-    private FieldAttribute ensemblGeneID = new FieldAttribute("ensembl_gene_id");
+    private FieldAttribute ensemblGeneID = new FieldAttribute("gene_stable_id");
 }

@@ -2,23 +2,71 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.*;
+import org.apache.log4j.Logger;
+
 public class CompiledSQLQuery {
-    public CompiledSQLQuery(Query query) {
-      this.query = query;
+  public CompiledSQLQuery(Query query) {
+    this.query = query;
+  }
+
+  public Query getQuery(){
+    return query;
+  }
+
+  public String toSQL() throws InvalidQueryException {
+    // select gene_stable_id from homo_sapiens_core_gene where
+    // chromosome_id="3" limit 3;
+    if ( sql==null ) sql = compileSQL();
+    return sql;
+  }
+  
+  private String compileSQL() throws InvalidQueryException{
+    StringBuffer buf = new StringBuffer();
+    selectClause( buf);
+    fromClause( buf );
+    whereClause( buf );
+    return buf.toString();
+  }
+
+
+  private void selectClause( StringBuffer buf ) throws InvalidQueryException {
+
+    final List attributes = query.getAttributes();
+    final int nAttributes = attributes.size();
+
+		if ( nAttributes==0 ) throw new InvalidQueryException("No attributes selected.");
+
+    buf.append( "SELECT " );
+    for( int i=0; i<nAttributes; ++i ) {
+      Attribute a = (Attribute)attributes.get(i);
+      buf.append( a.sqlRepr() );
+      if ( i+1 < nAttributes ) buf.append( ", " );
     }
+  }
 
-    public Query getQuery(){
-            return query;
-        }
+  private void fromClause( StringBuffer buf ) {
+    buf.append( " FROM " );
+    // tmp
+		buf.append( " homo_sapiens_core_gene " );
+  }
 
-    public void setQuery(Query query){
-            this.query = query;
-        }
+  private void whereClause( StringBuffer buf ) {
 
-    public String toSQL() {
-      return null;
+		final List filters = query.getFilters();
+    final int nFilters = filters.size();
+
+		if ( nFilters==0 ) return;
+
+    buf.append( " WHERE " );
+    for( int i=0; i<nFilters; ++i ) {
+      Filter f = (Filter)filters.get(i);
+      buf.append( f.sqlRepr() );
+      if ( i+1 < nFilters ) buf.append( " AND " );
     }
+  }
 
-    private String sql;
-    private Query query;
+  private String sql;
+  private Query query;
+  private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
 }

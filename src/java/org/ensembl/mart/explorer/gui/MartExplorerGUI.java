@@ -10,11 +10,12 @@ import java.awt.event.*;
 import org.ensembl.mart.explorer.*;
 import java.awt.*;
 import java.sql.*;
+import java.io.*;
 
 
 public class MartExplorerGUI extends JFrame {
 	private final static int WIDTH = 600;
-	private final static int HEIGHT = 400;
+	private final static int HEIGHT = 600;
 
 
     /** Creates new form JFrame */
@@ -122,13 +123,19 @@ public class MartExplorerGUI extends JFrame {
     }
 
 		private void executeQuery() {
-			Query q = queryPanel.retrieveQuery();
-      logger.warn( "Executing query: " + q );
+
       try {
+
+				Query q = new Query();
+        queryPanel.updateQuery( q );
+        logger.warn( "Executing query: " + q );
 				engine.execute( q );
+
       } catch( Exception e ) {
+
 				logger.warn( "Failed to execute query", e );
 				JOptionPane.showMessageDialog( this, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
       }
     }
 
@@ -136,6 +143,14 @@ public class MartExplorerGUI extends JFrame {
 			Query q = new Query();
       q.setHost( "kaka.sanger.ac.uk" );
       q.setUser( "anonymous" );
+      q.setDatabase( "ensembl_mart_10_1" );
+      //q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000170057"}) );
+      try {
+				q.addFilter( new IDListFilter("gene_stable_id", new File( System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) );
+      }catch( IOException e ) {
+				logger.warn("Failed to construct partial kaka query", e );
+      }
+      //query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE).toURL() ) );
       //q.setResultTarget( new ResultFile( "/tmp/kaka.txt", new SeparatedValueFormatter("\t") ) );
       q.setResultTarget( new ResultWindow( "Results_1", new SeparatedValueFormatter ("\t") ) );
       logger.warn( "Initialising partial kaka query: " + q );
