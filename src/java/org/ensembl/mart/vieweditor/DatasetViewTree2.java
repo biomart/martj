@@ -23,29 +23,65 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
-public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener,TreeModelListener,ActionListener,TreeSelectionListener{
+public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener, TreeModelListener, ActionListener, TreeSelectionListener {
 
     public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
     protected Insets scrollInsets = defaultScrollInsets;
-
-
+    protected DatasetViewTreeNode lastSelectedNode;
+    protected TreePath clickedPath;
+    protected DatasetViewTreeModel model;
     public DatasetViewTree2(DatasetView dsView) {
         super((TreeModel) null);			// Create the JTree itself
-         addMouseListener(this);
-         addTreeSelectionListener(this);
+        addMouseListener(this);
+        addTreeSelectionListener(this);
         // Use horizontal and vertical lines
         putClientProperty("JTree.lineStyle", "Angled");
         setEditable(true);
         // Create the first node
         DatasetViewTreeNode rootNode = new DatasetViewTreeNode(dsView.getDisplayName());
+        rootNode.setUserObject(dsView);
         AttributePage[] attributePages = dsView.getAttributePages();
         FilterPage[] filterPages = dsView.getFilterPages();
+
+        for (int i = 0; i < filterPages.length; i++) {
+            FilterPage fiPage = filterPages[i];
+            String fiName = fiPage.getInternalName();
+            DatasetViewTreeNode fiNode = new DatasetViewTreeNode("FilterPage:" + fiName);
+            fiNode.setUserObject(fiPage);
+            rootNode.add(fiNode);
+            List groups = fiPage.getFilterGroups();
+            for (int j = 0; j < groups.size(); j++) {
+                if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
+                    FilterGroup fiGroup = (FilterGroup) groups.get(j);
+                    String grName = fiGroup.getInternalName();
+                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("FilterGroup:" + grName);
+                    grNode.setUserObject(fiGroup);
+                    fiNode.add(grNode);
+                    FilterCollection[] collections = fiGroup.getFilterCollections();
+                    for (int z = 0; z < collections.length; z++) {
+                        FilterCollection fiCollection = (FilterCollection) collections[z];
+                        String colName = fiCollection.getInternalName();
+                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
+                        colNode.setUserObject(fiCollection);
+                        grNode.add(colNode);
+                        List descriptions = fiCollection.getFilterDescriptions();
+                        for (int y = 0; y < descriptions.size(); y++) {
+                            FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
+                            String desName = fiDescription.getInternalName();
+                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                            desNode.setUserObject(fiDescription);
+                            colNode.add(desNode);
+                        }
+                    }
+                }
+            }
+        }
 
         // Process the contents
         for (int i = 0; i < attributePages.length; i++) {
             AttributePage atPage = attributePages[i];
             String atName = atPage.getInternalName();
-            DatasetViewTreeNode atNode = new DatasetViewTreeNode(atName);
+            DatasetViewTreeNode atNode = new DatasetViewTreeNode("AttributePage:" + atName);
             atNode.setUserObject(atPage);
             rootNode.add(atNode);
             List groups = atPage.getAttributeGroups();
@@ -53,21 +89,21 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
                 if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.AttributeGroup")) {
                     AttributeGroup atGroup = (AttributeGroup) groups.get(j);
                     String grName = atGroup.getInternalName();
-                    DatasetViewTreeNode grNode = new DatasetViewTreeNode(grName);
+                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("AttributeGroup:" + grName);
                     grNode.setUserObject(atGroup);
                     atNode.add(grNode);
                     AttributeCollection[] collections = atGroup.getAttributeCollections();
                     for (int z = 0; z < collections.length; z++) {
                         AttributeCollection atCollection = (AttributeCollection) collections[z];
                         String colName = atCollection.getInternalName();
-                        DatasetViewTreeNode colNode = new DatasetViewTreeNode(colName);
+                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
                         grNode.add(colNode);
                         colNode.setUserObject(atCollection);
                         List descriptions = atCollection.getAttributeDescriptions();
                         for (int y = 0; y < descriptions.size(); y++) {
                             AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
                             String desName = atDescription.getInternalName();
-                            DatasetViewTreeNode desNode = new DatasetViewTreeNode(desName);
+                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
                             desNode.setUserObject(atDescription);
                             colNode.add(desNode);
                         }
@@ -76,42 +112,10 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
             }
         }
 
-        for (int i = 0; i < filterPages.length; i++) {
-            FilterPage fiPage = filterPages[i];
-            String fiName = fiPage.getInternalName();
-            DatasetViewTreeNode fiNode = new DatasetViewTreeNode(fiName);
-            fiNode.setUserObject(fiPage);
-            rootNode.add(fiNode);
-            List groups = fiPage.getFilterGroups();
-            for (int j = 0; j < groups.size(); j++) {
-                if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
-                    FilterGroup fiGroup = (FilterGroup) groups.get(j);
-                    String grName = fiGroup.getInternalName();
-                    DatasetViewTreeNode grNode = new DatasetViewTreeNode(grName);
-                    grNode.setUserObject(fiGroup);
-                    fiNode.add(grNode);
-                    FilterCollection[] collections = fiGroup.getFilterCollections();
-                    for (int z = 0; z < collections.length; z++) {
-                        FilterCollection fiCollection = (FilterCollection) collections[z];
-                        String colName = fiCollection.getInternalName();
-                        DatasetViewTreeNode colNode = new DatasetViewTreeNode(colName);
-                        colNode.setUserObject(fiCollection);
-                        grNode.add(colNode);
-                        List descriptions = fiCollection.getFilterDescriptions();
-                        for (int y = 0; y < descriptions.size(); y++) {
-                            FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
-                            String desName = fiDescription.getInternalName();
-                            DatasetViewTreeNode desNode = new DatasetViewTreeNode(desName);
-                            desNode.setUserObject(fiDescription);
-                            colNode.add(desNode);
-                        }
-                    }
-                }
-            }
-        }
+
         // Populate the root node with its subdirectories
         //boolean addedNodes = rootNode.populateDirectories(true);
-        DefaultTreeModel model = new DefaultTreeModel(rootNode);
+        model = new DatasetViewTreeModel(rootNode);
         model.addTreeModelListener(this);
         setModel(model);
 
@@ -146,15 +150,14 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
         return i;
     }
 
-    public void valueChanged(TreeSelectionEvent e){
-        DatasetViewTreeNode node = (DatasetViewTreeNode)
-                                   this.getLastSelectedPathComponent();
-        if (node == null) return;
+    public void valueChanged(TreeSelectionEvent e) {
+        lastSelectedNode = (DatasetViewTreeNode)
+                this.getLastSelectedPathComponent();
+        if (lastSelectedNode == null) return;
 
-        Object nodeInfo = node.getUserObject();
-        if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
-        //((AttributePage)nodeInfo).setInternalName();
-        System.out.println(nodeInfo.getClass());
+        Object nodeInfo = lastSelectedNode.getUserObject();
+
+            System.out.println(nodeInfo.getClass());
 
     }
 
@@ -186,98 +189,117 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
     }
 
     public void mousePressed(MouseEvent e) {
+    }
+
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+    public void mouseClicked(MouseEvent e) {
+        if (e.getButton() == 3) {
+            //Create the popup menu.
+            JPopupMenu popup = new JPopupMenu();
+            JMenuItem menuItem = new JMenuItem("copy");
+            menuItem.addActionListener(this);
+            popup.add(menuItem);
+            menuItem = new JMenuItem("cut");
+            menuItem.addActionListener(this);
+            popup.add(menuItem);
+            menuItem = new JMenuItem("paste");
+            menuItem.addActionListener(this);
+            popup.add(menuItem);
+            menuItem = new JMenuItem("insert");
+            menuItem.addActionListener(this);
+            popup.add(menuItem);
+            menuItem = new JMenuItem("delete");
+            menuItem.addActionListener(this);
+            popup.add(menuItem);
+            popup.show(e.getComponent(),
+                    e.getX(), e.getY());
+
+           clickedPath = this.getClosestPathForLocation(e.getX(),e.getY());
+           System.out.println("here"+((DatasetViewTreeNode) clickedPath.getLastPathComponent()).getUserObject().getClass());
         }
 
-        public void mouseReleased(MouseEvent e) {
+    }
 
-        }
+    public void actionPerformed(ActionEvent e) {
+        if (e.getActionCommand().equals("cut"))
+            cut();
+        else if (e.getActionCommand().equals("copy"))
+            copy();
+        else if (e.getActionCommand().equals("paste"))
+            paste();
+        else if (e.getActionCommand().equals("insert"))
+            insert();
+        else if (e.getActionCommand().equals("delete"))
+            delete();
+    }
 
-        public void mouseEntered(MouseEvent e) {
+    private void cut() {
 
-        }
+    }
 
-        public void mouseExited(MouseEvent e) {
+    private void copy() {
 
-        }
+    }
 
-        public void mouseClicked(MouseEvent e) {
-           if(e.getButton()==3){
-               //Create the popup menu.
-               JPopupMenu popup = new JPopupMenu();
-               JMenuItem menuItem = new JMenuItem("copy");
-               menuItem.addActionListener(this);
-               popup.add(menuItem);
-               menuItem = new JMenuItem("cut");
-               menuItem.addActionListener(this);
-               popup.add(menuItem);
-               menuItem = new JMenuItem("paste");
-               menuItem.addActionListener(this);
-               popup.add(menuItem);
-               menuItem = new JMenuItem("insert");
-               menuItem.addActionListener(this);
-               popup.add(menuItem);
-               menuItem = new JMenuItem("delete");
-               menuItem.addActionListener(this);
-               popup.add(menuItem);
-               popup.show(e.getComponent(),
-                       e.getX(), e.getY());
-                          }
-        }
+    private void paste() {
 
-      public void actionPerformed(ActionEvent e){
-            if(e.getActionCommand().equals("cut"))
-                cut();
-            else if(e.getActionCommand().equals("copy"))
-                copy();
-            else if(e.getActionCommand().equals("paste"))
-                paste();
-            else if(e.getActionCommand().equals("insert"))
-                insert();
-           else if(e.getActionCommand().equals("delete"))
-                delete();
-        }
+    }
 
-       private void cut(){
+    private void insert() {
+        System.out.println("I'm inserting...");
+        DatasetViewTreeNode node =  new DatasetViewTreeNode("newNode");
+        model.insertNodeInto(node,(DatasetViewTreeNode)clickedPath.getLastPathComponent(),clickedPath.getPathCount()+1);
 
-       }
+    }
 
-    private void copy(){
+    private void delete() {
+        System.out.println("I'm deleting...");
+        DatasetViewTreeNode node =  (DatasetViewTreeNode)clickedPath.getLastPathComponent();
+        model.removeNodeFromParent(node);
+        //node.removeFromParent();
 
-       }
+    }
 
-    private void paste(){
+    public void treeNodesChanged(TreeModelEvent e) {
+        System.out.println("treeNodesChanged");
 
-       }
-    private void insert(){
-
-       }
-
-    private void delete(){
-
-       }
-        public void treeNodesChanged(TreeModelEvent e){
-            System.out.println("treeNodesChanged");
-            Object [] children = e.getChildren();
-            int [] childIndices = e.getChildIndices();
-            for(int i=0;i<children.length;i++){
-            System.out.println("Index "+childIndices[i]+",changed value: "+children[0]);
-            }
-        }
+          /* if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+            ((AttributePage)nodeInfo).setInternalName();
+           else if nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+            ((AttributePage)nodeInfo).setInternalName();
+            */
+      /*  Object[] children = e.getChildren();
+        int[] childIndices = e.getChildIndices();
+        for (int i = 0; i < children.length; i++) {
+            System.out.println("Index " + childIndices[i] + ",changed value: " + children[0]);
+        }  */
+    }
 
 
+    public void treeStructureChanged(TreeModelEvent e) {
+           System.out.println("tree structure changed");
+    }
 
-        public void treeStructureChanged(TreeModelEvent e){
+    public void treeNodesInserted(TreeModelEvent e) {
+        TreePath tPath = e.getTreePath();
+        System.out.println("tree nodes inserted");
+        //tPath.getPathComponent();
+    }
 
-        }
-
-        public void treeNodesInserted(TreeModelEvent e){
-            TreePath tPath = e.getTreePath();
-            //tPath.getPathComponent();
-        }
-
-        public void treeNodesRemoved(TreeModelEvent e){
-
-        }
+    public void treeNodesRemoved(TreeModelEvent e) {
+        System.out.println("tree nodes removed");
+    }
 
 }
 

@@ -151,7 +151,7 @@ public class DatasetViewTree extends JTree implements Autoscroll {
             int tokens = st.countTokens();
             order = tokens - 1;
             if (tokens == 5)
-                    isFolder = false;
+                isFolder = false;
             if (tokens == 1)
                 type = "root";
             else {
@@ -240,39 +240,39 @@ public class DatasetViewTree extends JTree implements Autoscroll {
                         }
                     }
                 } else if (type.equals("attribute")) {
-                    if(order == 1){
+                    if (order == 1) {
 
                     }
 
                 }
-                    if (addedNodes == true) {
-                        // Now sort the list of contained files and directories
-                        Object[] nodes = list.toArray();
-                        Arrays.sort(nodes, new Comparator() {
-                            public boolean equals(Object o) {
-                                return false;
-                            }
-
-                            public int compare(Object o1, Object o2) {
-                                DatasetTreeNode node1 = (DatasetTreeNode) o1;
-                                DatasetTreeNode node2 = (DatasetTreeNode) o2;
-
-                                // Directories come first
-                                if (node1.isFolder != node2.isFolder) {
-                                    return node1.isFolder ? -1 : +1;
-                                }
-
-                                // Both directories or both files -
-                                // compare based on pathname
-                                return node1.fullName.compareTo(node2.fullName);
-                            }
-                        });
-
-                        // Add sorted items as children of this node
-                        for (int j = 0; j < nodes.length; j++) {
-                            this.add((DatasetTreeNode) nodes[j]);
+                if (addedNodes == true) {
+                    // Now sort the list of contained files and directories
+                    Object[] nodes = list.toArray();
+                    Arrays.sort(nodes, new Comparator() {
+                        public boolean equals(Object o) {
+                            return false;
                         }
+
+                        public int compare(Object o1, Object o2) {
+                            DatasetTreeNode node1 = (DatasetTreeNode) o1;
+                            DatasetTreeNode node2 = (DatasetTreeNode) o2;
+
+                            // Directories come first
+                            if (node1.isFolder != node2.isFolder) {
+                                return node1.isFolder ? -1 : +1;
+                            }
+
+                            // Both directories or both files -
+                            // compare based on pathname
+                            return node1.fullName.compareTo(node2.fullName);
+                        }
+                    });
+
+                    // Add sorted items as children of this node
+                    for (int j = 0; j < nodes.length; j++) {
+                        this.add((DatasetTreeNode) nodes[j]);
                     }
+                }
 
                 // If we were scanning to get all subdirectories,
                 // or if we found no content, there is no
