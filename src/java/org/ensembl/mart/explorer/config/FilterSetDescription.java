@@ -18,6 +18,10 @@
  
 package org.ensembl.mart.explorer.config;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Description for a specific FilterSet instance.
  * 
@@ -154,6 +158,8 @@ public class FilterSetDescription {
 	
 	private final String internalName, tableConstraintModifier, fieldNameModifier, displayName, description;
 	private int thisHashCode = 0;
+	
+	public static final List SUPPORTED_MOD = Collections.unmodifiableList(Arrays.asList( new String[] {"field", "table" } ) );
 	
 	//static enums for UIFilterDescription FilterSetRequirements
 	public static final String MODFIELDNAME = "field";
