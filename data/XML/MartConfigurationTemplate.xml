@@ -23,14 +23,14 @@
           <FilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list">
             <Option displayName="1" internalName="1" isSelectable="true" value="1">
               <OptionPush internalName="band_start_push_chr1" ref="band_start">
-                <Option displayName="p36.33" internalName="p36.33" isSelectable="true"/>
-                <Option displayName="p36.32" internalName="p36.32" isSelectable="true"/>
-                <Option displayName="p36.31" internalName="p36.31" isSelectable="true"/>
+                <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
+                <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
+                <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
               </OptionPush>
               <OptionPush internalName="band_end_push_chr_1" ref="band_end">
-                <Option displayName="p36.33" internalName="p36.33" isSelectable="true"/>
-                <Option displayName="p36.32" internalName="p36.32" isSelectable="true"/>
-                <Option displayName="p36.31" internalName="p36.31" isSelectable="true"/>
+                <Option displayName="p36.33" internalName="p36.33" isSelectable="true" value="p36.33"/>
+                <Option displayName="p36.32" internalName="p36.32" isSelectable="true" value="p36.32"/>
+                <Option displayName="p36.31" internalName="p36.31" isSelectable="true" value="p36.31"/>
               </OptionPush>
             </Option>
             <Option displayName="2" internalName="2" isSelectable="true" value="2">
