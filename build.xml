@@ -65,6 +65,25 @@
 
   <!-- classpath set to include jars -->
   <fileset id="lib.classpath" dir="${lib.dir}" >
+    <include name="ecp1_0beta.jar" />
+    <include name="ensj.jar" />
+    <include name="ensj-util.jar" />
+    <include name="java-getopt-1.0.9.jar" />
+    <include name="jdbc2_0-stdext.jar" />
+    <include name="jdom.jar" />
+    <include name="junit.jar" />
+    <include name="jython.jar" />
+    <include name="libreadline-java.jar" />
+    <include name="log4j-1.2.6.jar" />
+    <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
+    <include name="optional.jar" />
+    <include name="xalan.jar" />
+  </fileset>
+
+  <!-- patternsets to use in various zip and tar filesets during the dist-* targets -->
+
+  <!-- binary distribution jars -->
+  <patternset id="dist.bin.jars" >
      <include name="ecp1_0beta.jar" />
      <include name="ensj-util.jar" />
      <include name="java-getopt-1.0.9.jar" />
@@ -73,13 +92,41 @@
      <include name="libreadline-java.jar" />
      <include name="martj.jar" />
      <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
-     <include name="log4j-1.2.6.jar" />
-  </fileset>
+  </patternset>
+
+  <!-- test distribution jars -->
+  <patternset id="dist.test.jars" >
+    <include name= "*.jar" />
+     <exclude name="ecp1_0beta.jar" />
+     <exclude name="ensj-util.jar" />
+     <exclude name="java-getopt-1.0.9.jar" />
+     <exclude name="jdbc2_0-stdext.jar" /> 
+     <exclude name="jdom.jar" />
+     <exclude name="libreadline-java.jar" />
+     <exclude name="martj.jar" />
+     <exclude name="mysql-connector-java-3.0.7-stable-bin.jar" />
+  </patternset>
+
+  <!-- readline platform dependant libraries -->
+  <patternset id="readline.libs" >
+    <include name="alpha/**" />
+    <include name="linux/**" />
+  </patternset>
+
+  <!-- binary distribution data files -->
+  <patternset id="dist.bin.data" >
+    <include name="**" />
+    <exclude name="*.conf" />
+    <exclude name="xmltest/**" />
+  </patternset>
+
+  <!-- test distribution data files -->
+  <patternset id="dist.test.data" >
+    <include name="xmltest/**" />
+  </patternset>
 
   <!-- Prepend library files to front of classpath -->
   <property name="build.classpath" value="last"/>
-
-
 
   <target name="init">
 
@@ -93,7 +140,7 @@
 
 
 
-  <target name="all" depends="clean, jar, api, dist"
+  <target name="all" depends="clean, jar, api, dist-all"
   description="Cleans, compiles and creates distribution files.">
 
   </target>
@@ -113,7 +160,8 @@
 
 
   <target name="clean" 
-   description="Removes generated directories and files.">
+   description="Removes generated directories and files."
+  >
 
     <delete dir="${api.dir}" />
 
@@ -122,10 +170,6 @@
     <delete dir="${reports.dir}" />
 
   </target>
-
-
-
-
 
   <!-- Compiles the source directory -->
   <target name="compile" depends="prepare"
@@ -248,10 +292,18 @@
 
   </target>
 
+  <target name="dist-clean"
+   description="Removes directories and files from the distribution directory before a new dist target build."
+  >
 
+    <delete dir="${dist.dir}" />
 
-  <!-- fills dist directory tree -->
-  <target name="prepare-dist" depends="jar">
+  </target>
+
+  <!-- cleans, creates, and fills dist directory tree -->
+  <target name="prepare-dist" depends="dist-clean">
+      
+    <mkdir dir="${dist.dir}" />
 
     <copy todir="${dist.dir}/lib" >
       <fileset refid="lib.classpath"/>
@@ -274,7 +326,7 @@
     <copy file="${install}" todir="${dist.dir}" />
     <copy file="${buildfile}" todir="${dist.dir}" />
 
-    <copy todir="${dist.dir}/src">
+    <copy todir="${dist.dir}/${src.dir}">
       <fileset  dir="${src.dir}" >
         <exclude name="**/*.dfPackage"/>
         <exclude name="**/?akefile"/>
@@ -286,57 +338,136 @@
 
     </copy>
 
-    <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
-
-    <copy todir="${dist.dir}/docs" >
-        <fileset dir="${docs.dir}" />
-    </copy>
-
     <copy todir="${dist.dir}/bin" >
         <fileset dir="${bin.dir}" />
     </copy>
     
   </target>
 
+  <!-- creates all distribution sets -->
+  <target name="dist-all" depends="dist-bin, dist-src, dist-api" 
+    description="Build all file sets for distribution." />
 
+  <!-- creates the dist-bin distribution set -->
+  <target name="dist-bin" 
+    description="Creates the dist-bin distribution set"
+    depends="jar, prepare-dist">
 
-  <target name="dist" depends="dist-bin, dist-src, dist-api" 
-   description="Build files for distribution." />
-
-
-
-  <target name="dist-bin" depends="prepare-dist">
+      <copy file="${build.dir}/${name}.jar" todir="${dist.dir}/lib" />
 
       <tar destfile="${build.dir}/${name}-bin.tar">
+
+        <!-- bin/*.sh with correct unix file mode -->
         <tarfileset dir="${dist.dir}"
           prefix="${build.name}"
           mode="755"
           preserveLeadingSlashes="true">
             <include name="**/bin/*.sh"/>
         </tarfileset>
+
+        <!-- bin/martshell.bat -->
         <tarfileset dir="${dist.dir}"
           prefix="${build.name}"
           preserveLeadingSlashes="true">
-            <exclude name="**/bin/*.sh"/>
-            <exclude name="**/docs/api"/>
-            <exclude name="**/src/**"/>
-            <include name="**"/>
+            <include name="**/bin/*.bat"/>
         </tarfileset>
+        
+        <!-- dist.bin.jars -->    
+        <tarfileset dir="${dist.dir}/${lib.dir}"
+          prefix="${build.name}/lib"
+          preserveLeadingSlashes="true">
+            <patternset refid="dist.bin.jars"/>
+        </tarfileset>
+
+        <!-- readline.libs -->
+        <tarfileset dir="${dist.dir}/${lib.dir}"
+          prefix="${build.name}/lib"
+          preserveLeadingSlashes="true">
+            <patternset refid="readline.libs"/>
+        </tarfileset>
+
+        <!-- dist.bin.data -->
+        <tarfileset dir="${dist.dir}/${data.dir}"
+          prefix="${build.name}/data"
+          preserveLeadingSlashes="true">
+            <patternset refid="dist.bin.data"/>
+        </tarfileset>
+         
       </tar>
       <gzip zipfile="${build.dir}/${name}-bin.tgz" src="${build.dir}/${name}-bin.tar" />
       <delete file="${build.dir}/${name}-bin.tar"/>
 
       <zip destfile="${build.dir}/${name}-bin.zip" >
-        <zipfileset dir="${dist.dir}" includes="**/bin/*.sh" filemode="755" prefix="${build.name}"/>
-        <zipfileset dir="${dist.dir}" includes="**" excludes="**/bin/*.sh,**/docs/api,**/src/**/*" prefix="${build.name}"/>
+        <!-- shell files with correct unix file mode -->
+        <zipfileset dir="${dist.dir}" filemode="755" prefix="${build.name}">
+            <include name="**/bin/*.sh"/>
+        </zipfileset>
+
+        <!-- bin/martshell.bat -->
+        <zipfileset dir="${dist.dir}"
+          prefix="${build.name}">
+            <include name="**/bin/*.bat"/>
+        </zipfileset>
+        
+        <!-- dist.bin.jars -->    
+        <zipfileset dir="${dist.dir}/${lib.dir}"
+          prefix="${build.name}/lib">
+            <patternset refid="dist.bin.jars"/>
+        </zipfileset>
+
+        <!-- readline.libs -->
+        <zipfileset dir="${dist.dir}/${lib.dir}"
+          prefix="${build.name}/lib">
+            <patternset refid="readline.libs"/>
+        </zipfileset>
+
+        <!-- dist.bin.data -->
+        <zipfileset dir="${dist.dir}/${data.dir}"
+          prefix="${build.name}/data">
+            <patternset refid="dist.bin.data"/>
+        </zipfileset>
+
       </zip>
   </target>
 
+  <target name="dist-test" depends="prepare-dist">
 
-  <target name="dist-src" depends="prepare">
+    <tar destfile="${build.dir}/${name}-test.tar">
+      <tarfileset dir="${dist.dir}/lib"
+          prefix="${build.name}/lib"
+          preserveLeadingSlashes="true" >
+            <patternset refid="dist.test.jars" />
+      </tarfileset>
+
+      <tarfileset dir="${dist.dir}/data"
+          prefix="${build.name}/data"
+          preserveLeadingSlashes="true" >
+            <patternset refid="dist.test.data" />
+      </tarfileset>
+    </tar>
+
+    <gzip zipfile="${build.dir}/${name}-test.tgz" src="${build.dir}/${name}-test.tar" />
+    <delete file="${build.dir}/${name}-test.tar"/>
+
+    <zip destfile="${build.dir}/${name}-test.zip" >
+      <zipfileset dir="${dist.dir}/lib"
+          prefix="${build.name}/lib" >
+            <patternset refid="dist.test.jars" />
+      </zipfileset>
+
+      <zipfileset dir="${dist.dir}/data"
+          prefix="${build.name}/data" >
+            <patternset refid="dist.test.data" />
+      </zipfileset>
+    </zip>
+
+  </target>
+
+
+  <target name="dist-src" depends="prepare-dist">
 
     <tar destfile="${build.dir}/${name}-src.tar">
-      <tarfileset dir="${src.dir}"
+      <tarfileset dir="${dist.dir}/src/java"
                   prefix="${build.name}/src/java"
                   preserveLeadingSlashes="true">
         <include name="**"/>
@@ -346,20 +477,32 @@
     <delete file="${build.dir}/${name}-src.tar"/>
 
     <zip destfile="${build.dir}/${name}-src.zip" >
-      <zipfileset dir="${src.dir}" includes="**/*" prefix="${build.name}/src/java"/>
+      <zipfileset dir="${dist.dir}/src/java" includes="**/*" prefix="${build.name}/src/java"/>
     </zip>
   </target>
 
 
-<!-- CRAIG MAKE THIS WORK CORRECTLY -->
-  <target name="dist-api" depends="prepare,api">
+  <target name="dist-api" depends="api,prepare-dist">
 
-    <tar tarfile="${build.dir}/${name}-api.tar" basedir="${api.dir}" includes="**" />
+    <copy todir="${dist.dir}/docs" >
+        <fileset dir="${docs.dir}" />
+    </copy>
+
+    <tar destfile="${build.dir}/${name}-api.tar" >
+
+      <tarfileset dir="${dist.dir}/docs/api" 
+                  prefix="${build.name}/docs/api" 
+                  includes="**/*" />
+    </tar>
+
     <gzip zipfile="${build.dir}/${name}-api.tgz" src="${build.dir}/${name}-api.tar" />
     <delete file="${build.dir}/${name}-api.tar"/>
 
+    <zip destfile="${build.dir}/${name}-api.zip" >
 
-    <zip zipfile="${build.dir}/${name}-api.zip" basedir="${api.dir}" includes="**" />
+      <zipfileset dir="${dist.dir}/docs/api" prefix="${build.name}/docs/api" includes="**/*" />
+
+    </zip>
 
   </target>
 
