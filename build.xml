@@ -61,8 +61,20 @@
   <property name="dist.root" value="./dist" />
   <property name="dist.dir" value="${dist.root}/${build.name}"    />
 
+
+
   <!-- classpath set to include jars -->
-  <fileset id="lib.classpath" dir="${lib.dir}" includes= "*.jar"/>
+  <fileset id="lib.classpath" dir="${lib.dir}" >
+     <include name="ecp1_0beta.jar" />
+     <include name="ensj-util.jar" />
+     <include name="java-getopt-1.0.9.jar" />
+     <include name="jdbc2_0-stdext.jar" /> 
+     <include name="jdom.jar" />
+     <include name="libreadline-java.jar" />
+     <include name="martj.jar" />
+     <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
+     <include name="log4j-1.2.6.jar" />
+  </fileset>
 
   <!-- Prepend library files to front of classpath -->
   <property name="build.classpath" value="last"/>
@@ -239,7 +251,7 @@
 
 
   <!-- fills dist directory tree -->
-  <target name="prepare-dist" depends="jar, api">
+  <target name="prepare-dist" depends="jar">
 
     <copy todir="${dist.dir}/lib" >
       <fileset refid="lib.classpath"/>
@@ -253,8 +265,8 @@
        <fileset dir="${lib.dir}/alpha"/> 
     </copy>
     
-    <copy todir="${dist.dir}/data/XML">
-      <fileset dir="${data.dir}/XML"/>
+    <copy todir="${dist.dir}/data">
+      <fileset dir="${data.dir}"/>
     </copy>
 
     <copy file="${readme}" todir="${dist.dir}" />
@@ -288,13 +300,66 @@
 
 
 
-  <target name="dist" depends="prepare-dist" 
-   description="Build files for distribution." >
+  <target name="dist" depends="dist-bin, dist-src, dist-api" 
+   description="Build files for distribution." />
 
-    <tar tarfile="${build.dir}/${name}.tar" basedir="${dist.root}" includes="**" />
-    <gzip zipfile="${build.dir}/${name}.tgz" src="${build.dir}/${name}.tar" />
-    <delete file="${build.dir}/${name}.tar"/>
-    <zip zipfile="${build.dir}/${name}.zip" basedir="${dist.root}" includes="**" />
+
+
+  <target name="dist-bin" depends="prepare-dist">
+
+      <tar destfile="${build.dir}/${name}-bin.tar">
+        <tarfileset dir="${dist.dir}"
+          prefix="${build.name}"
+          mode="755"
+          preserveLeadingSlashes="true">
+            <include name="**/bin/*.sh"/>
+        </tarfileset>
+        <tarfileset dir="${dist.dir}"
+          prefix="${build.name}"
+          preserveLeadingSlashes="true">
+            <exclude name="**/bin/*.sh"/>
+            <exclude name="**/docs/api"/>
+            <exclude name="**/src/**"/>
+            <include name="**"/>
+        </tarfileset>
+      </tar>
+      <gzip zipfile="${build.dir}/${name}-bin.tgz" src="${build.dir}/${name}-bin.tar" />
+      <delete file="${build.dir}/${name}-bin.tar"/>
+
+      <zip destfile="${build.dir}/${name}-bin.zip" >
+        <zipfileset dir="${dist.dir}" includes="**/bin/*.sh" filemode="755" prefix="${build.name}"/>
+        <zipfileset dir="${dist.dir}" includes="**" excludes="**/bin/*.sh,**/docs/api,**/src/**/*" prefix="${build.name}"/>
+      </zip>
+  </target>
+
+
+  <target name="dist-src" depends="prepare">
+
+    <tar destfile="${build.dir}/${name}-src.tar">
+      <tarfileset dir="${src.dir}"
+                  prefix="${build.name}/src/java"
+                  preserveLeadingSlashes="true">
+        <include name="**"/>
+      </tarfileset>
+    </tar>
+    <gzip zipfile="${build.dir}/${name}-src.tgz" src="${build.dir}/${name}-src.tar" />
+    <delete file="${build.dir}/${name}-src.tar"/>
+
+    <zip destfile="${build.dir}/${name}-src.zip" >
+      <zipfileset dir="${src.dir}" includes="**/*" prefix="${build.name}/src/java"/>
+    </zip>
+  </target>
+
+
+<!-- CRAIG MAKE THIS WORK CORRECTLY -->
+  <target name="dist-api" depends="prepare,api">
+
+    <tar tarfile="${build.dir}/${name}-api.tar" basedir="${api.dir}" includes="**" />
+    <gzip zipfile="${build.dir}/${name}-api.tgz" src="${build.dir}/${name}-api.tar" />
+    <delete file="${build.dir}/${name}-api.tar"/>
+
+
+    <zip zipfile="${build.dir}/${name}-api.zip" basedir="${api.dir}" includes="**" />
 
   </target>
 
@@ -305,8 +370,8 @@
 
     <javadoc 
      sourcepath="${src.dir}"
-     packagenames="org.ensembl.mart.explorer
-	     ,org.ensembl.mart.explorer.config"
+     packagenames="org.ensembl.mart.lib
+	     ,org.ensembl.mart.lib.config"
      destdir="${api.dir}"
      author="true"
      version="true"
