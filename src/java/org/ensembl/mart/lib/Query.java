@@ -90,7 +90,7 @@ public class Query {
     if (oq.hasLimit())
       limit = oq.getLimit();
 
-    setDatasetName( oq.getDatasetName() );
+    setDatasetInternalName( oq.getDatasetInternalName() );
     setDataSource( oq.getDataSource() );
 
   }
@@ -325,7 +325,7 @@ public class Query {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-    buf.append( " datasetName=").append(datasetName);
+    buf.append( " datasetInternalName=").append(datasetInternalName);
     buf.append(", dataSource=").append( dataSource );
 		buf.append(", starBases=[").append(StringUtil.toString(starBases));
 		buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));
@@ -391,7 +391,7 @@ public class Query {
 	/**
 	 * Name of dataset this query applies to.
 	 */
-	private String datasetName;
+	private String datasetInternalName;
 
   /**
    * @param listener
@@ -529,25 +529,25 @@ public class Query {
     changeSupport.firePropertyChange("dataSource", oldDatasource, dataSource );
 	}
 
-	public String getDatasetName() {
-		return datasetName;
+	public String getDatasetInternalName() {
+		return datasetInternalName;
 	}
 
   /**
    * Sets the value and propagates a PropertyChange event to listeners. The 
-   * property name is in the event is "datasetName". No event is propagated 
-   * if the parameter is equal to the current datasetName.
-   * @param datasetName new datasetName.
+   * property name is in the event is "datasetInternalName". No event is propagated 
+   * if the parameter is equal to the current datasetInternalName.
+   * @param datasetInternalName new datasetInternalName.
    */
-	public void setDatasetName(String datasetName) {
+	public void setDatasetInternalName(String datasetName) {
     
-    if ( this.datasetName==datasetName 
-        || datasetName!=null && datasetName.equals(this.datasetName) )
+    if ( this.datasetInternalName==datasetName 
+        || datasetName!=null && datasetName.equals(this.datasetInternalName) )
         return;
          
-    String oldDatasetName = this.datasetName;
-		this.datasetName = datasetName;
-    changeSupport.firePropertyChange("datasetName", oldDatasetName, datasetName );
+    String oldDatasetName = this.datasetInternalName;
+		this.datasetInternalName = datasetName;
+    changeSupport.firePropertyChange("datasetInternalName", oldDatasetName, datasetName );
 	}
 
 }
