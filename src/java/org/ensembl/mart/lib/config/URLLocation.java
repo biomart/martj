@@ -108,4 +108,16 @@ public class URLLocation extends MartLocationBase {
 	public int hashCode() {
      return super.hashCode();
 	}
+  
+  
+  
+	/**
+   * @return "name" attribute if set, otherwise defaults to url.toString()
+	 * @see org.ensembl.mart.lib.config.MartLocation#getName()
+	 */
+	public String getName() {
+    String name = super.getName();
+    if ( name==null ) name = url.toString();
+    return name; 
+	}
 }

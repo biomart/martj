@@ -42,7 +42,7 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   private String[] inames;
   private String[] dnames;
   private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
-  private String adaptorName = null;
+  private String adaptorName;
 
   /**
    * Construct a DSViewAdaptor from a url containing a DatasetView.dtd compliant XML Document.
@@ -66,7 +66,7 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
       throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
     dsvurl = url;
     
-    adaptorName = dsvurl.toString();
+    setName(dsvurl.toString());
     
     this.validate = validate;
 

@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,15 +54,10 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * Widget representing the availabled adaptors.
- * Enables the user to select add and delete 
- * adaptors.
+ * Widget representing availabled adaptors and 
+ * enabling user to add, and delete 
+ * them.
  *
- * TODO add file
- * TODO delete
- * TODO delete all
- * TODO add database
- * TODO adaptor.toString() -> adaptor.getName()
  */
 public class AdaptorManager extends Box {
 
@@ -188,34 +184,43 @@ public class AdaptorManager extends Box {
 			File f = registryFileChooser.getSelectedFile().getAbsoluteFile();
 			prefs.put(REGISTRY_FILE_KEY, f.toString());
 
-			try {
-
-				setCursor(waitCursor);
-
-				RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(f.toURL());
-				DSViewAdaptor[] as = ra.getAdaptors();
-				for (int i = 0; i < as.length; i++) {
-					// TODO only add "leaf" node adaptors        
-					add(as[i]);
-				}
-
+      try {
+				importRegistry( f.toURL() );
 			} catch (MalformedURLException e) {
-				JOptionPane.showMessageDialog(
-					this,
-					"File " + f.toString() + " not found: " + e.getMessage());
-			} catch (ConfigurationException e) {
-				JOptionPane.showMessageDialog(
-					this,
-					"Problem loading the Failed to load file: "
-						+ f.toString()
-						+ ": "
-						+ e.getMessage());
-
-			} finally {
-				setCursor(defaultCursor);
+				feedback.warning(e);
 			}
-
+      
+			
 		}
+
+	}
+
+	/**
+	 * @param url
+	 */
+	public void importRegistry(URL url) {
+    try {
+
+      setCursor(waitCursor);
+
+      RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(url);
+      DSViewAdaptor[] as = ra.getAdaptors();
+      for (int i = 0; i < as.length; i++) {
+        // TODO only add "leaf" node adaptors        
+        add(as[i]);
+      }
+
+    } catch (ConfigurationException e) {
+      JOptionPane.showMessageDialog(
+        this,
+        "Problem loading the url: "
+          + url
+          + ": "
+          + e.getMessage());
+
+    } finally {
+      setCursor(defaultCursor);
+    }
 
 	}
 
