@@ -408,22 +408,22 @@ public class MartRegistryXMLUtils {
 
 		MartRegistry martreg = new MartRegistry();
 
-		for (Iterator iter = thisElement.getChildElements(URLLOCATION).iterator(); iter.hasNext();) {
+		for (Iterator iter = thisElement.getChildren(URLLOCATION).iterator(); iter.hasNext();) {
 			Element urlloc = (Element) iter.next();
 			martreg.addMartLocation(getURLLocation(urlloc));
 		}
 
-		for (Iterator iter = thisElement.getChildElements(DATABASELOCATION).iterator(); iter.hasNext();) {
+		for (Iterator iter = thisElement.getChildren(DATABASELOCATION).iterator(); iter.hasNext();) {
 			Element dbloc = (Element) iter.next();
 			martreg.addMartLocation(getDBLocation(dbloc));
 		}
 
-		for (Iterator iter = thisElement.getChildElements(REGISTRYLOCATION).iterator(); iter.hasNext();) {
+		for (Iterator iter = thisElement.getChildren(REGISTRYLOCATION).iterator(); iter.hasNext();) {
 			Element regloc = (Element) iter.next();
 			martreg.addMartLocation(getRegLocation(regloc));
 		}
 
-		for (Iterator iter = thisElement.getChildElements(REGISTRYDBLOCATION).iterator(); iter.hasNext();) {
+		for (Iterator iter = thisElement.getChildren(REGISTRYDBLOCATION).iterator(); iter.hasNext();) {
 			Element regloc = (Element) iter.next();
 			martreg.addMartLocation(getRegDBLocation(regloc));
 		}

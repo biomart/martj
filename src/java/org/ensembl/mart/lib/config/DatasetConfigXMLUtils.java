@@ -230,7 +230,7 @@ public class DatasetConfigXMLUtils {
     if (!intName.equals(dsv.getInternalName()))
       throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
 
-    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
+    for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue()))
         dsv.addOption(getOption(option));
@@ -357,7 +357,7 @@ public class DatasetConfigXMLUtils {
     Option o = new Option();
     loadAttributesFromElement(thisElement, o);
 
-    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
+    for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element suboption = (Element) iter.next();
 
       if (!(Boolean.valueOf(suboption.getAttributeValue(HIDDEN)).booleanValue())) {
@@ -367,7 +367,7 @@ public class DatasetConfigXMLUtils {
       }
     }
 
-    for (Iterator iter = thisElement.getChildElements(PUSHACTION).iterator(); iter.hasNext();) {
+    for (Iterator iter = thisElement.getChildren(PUSHACTION).iterator(); iter.hasNext();) {
       o.addPushAction(getPushOptions((Element) iter.next()));
     }
 
@@ -378,7 +378,7 @@ public class DatasetConfigXMLUtils {
     PushAction pa = new PushAction();
     loadAttributesFromElement(thisElement, pa);
 
-    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
+    for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue()))
         pa.addOption(getOption(option));
@@ -391,7 +391,7 @@ public class DatasetConfigXMLUtils {
     FilterDescription f = new FilterDescription();
     loadAttributesFromElement(thisElement, f);
 
-    for (Iterator iter = thisElement.getChildElements(OPTION).iterator(); iter.hasNext();) {
+    for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
       if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue())) {
         Option o = getOption(option);
