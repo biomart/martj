@@ -3022,6 +3022,8 @@ public class DatabaseDatasetConfigUtils {
     Option op;
     while (rs.next()) {
       value = rs.getString(1);
+      // fix for an empty string, could possibly throw an exception
+      if (value.length() == 0){continue;}  
       op = new Option();
       op.setDisplayName(value);
       String intName = value.replaceAll(" ", "_");
