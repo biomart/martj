@@ -27,8 +27,6 @@ import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JRadioButton;
 
 import org.ensembl.mart.guiutils.QuickFrame;
