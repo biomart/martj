@@ -680,12 +680,12 @@ class SequencePage(Page):
             for b in self.includeButtons:
                 b.enabled = 0
 
-        flank5Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_5.selected
+        flank5Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_5.selected or self.includeUpstream.selected or self.includeUpStreamAndUTR.selected
         self.flank5.enabled = flank5Enabled
         self.flank5Label.enabled = flank5Enabled
 
 
-        flank3Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_3.selected
+        flank3Enabled = self.includeGeneSequence_5_3.selected or self.includeGeneSequence_3.selected or self.includeDownStream.selected or self.includeDownStreamAndUTR.selected
         self.flank3.enabled = flank3Enabled
         self.flank3Label.enabled = flank3Enabled
 
@@ -703,14 +703,15 @@ class SequencePage(Page):
 
 
     def htmlSummary(self):
-        if self.gene.selected: focus = "gene"
-        elif self.transcript.selected: focus = "transcript"
+        if self.gene.selected: focus = " - gene "
+        elif self.transcript.selected: focus = " - transcript "
         else: focus = ""
 
-        if self.includeGeneSequence.selected: include="gene sequence"
-        else : include=""
+        include=""
+        for b in self.includeButtons:
+            if b.selected: include = " - " +b.text
         
-        return sequence + " - "  + focus + " - "+ include
+        return "sequence"  + focus + include
 
 
 
@@ -845,7 +846,8 @@ class AttributeManagerPage(Page):
         for attribute in query.attributes:
             if isinstance( attribute, FieldAttribute ):
                 self.select( attribute.name )
-            # todo handle sequence attributes
+        # todo handle sequence attributes
+
 
 
 
@@ -983,6 +985,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
         DefaultMutableTreeNode.__init__(self)
 	self.cardContainer = cardContainer
 	self.targetComponent = targetComponent
+        
         if targetComponent==None:
             self.targetComponent = DummyPage( targetCardName )
 	self.targetCardName = targetComponent.name
