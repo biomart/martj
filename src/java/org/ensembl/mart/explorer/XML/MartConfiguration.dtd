@@ -33,7 +33,7 @@
                        tableConstraintModifier CDATA #REQUIRED
                        fieldNameModifier CDATA #REQUIRED> 
 
-<!ELEMENT FilterCollection (UIFilterDescription+)>
+<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
                    filterSetName       CDATA #IMPLIED
@@ -47,6 +47,12 @@
                    qualifier          CDATA #IMPLIED
                    filterSetReq       CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED>
+
+<!ELEMENT UIDSFilterDescription EMPTY>
+<!ATTLIST UIDSFilterDescription
+                   %desc_data;
+                   type               CDATA #REQUIRED
+                   objectCode         CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
 <!ATTLIST AttributePage %desc_data;>

@@ -30,13 +30,9 @@
 
 		     <FilterCollection internalName="testFilterCollection" displayName="Test of a FilterCollection" description="For Testing Purposes Only" type="list">
 
-		       <UIFilterDescription internalName="testUIFilterDescription" 
-                                    displayName="A TEST ID, DOESNT EXIST"
-                                    description="For Testing Purposes Only"
-                                    type="list" 
-                                    fieldName="test_id"
-                                    qualifier="in" 
-                                    tableConstraint="gene_main"/>
+		       <UIFilterDescription internalName="testUIFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" fieldName="test_id" qualifier="in" tableConstraint="gene_main"/>
+
+		       <UIDSFilterDescription internalName="testUIDSFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" objectCode="1"/>
 
 		     </FilterCollection>
 

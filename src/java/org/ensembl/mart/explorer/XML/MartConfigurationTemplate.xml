@@ -18,21 +18,39 @@
 
 		 <FilterCollection internalName="chromosomeFilter" type="select">
 
-		 <UIFilterDescription internalName="chr_name" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
+		 <UIFilterDescription internalName="chr" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="Start" displayName="From" type="select">
 
+		 <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp, marker, or band starts that you have chosen" type="value" fieldName="chr_name"/>
+
 		 <UIFilterDescription internalName="bp_start" displayName="Base Pair" description="Determine which base pair on the specified chromosome to begin range" type="range" fieldName="gene_chrom_start" qualifier="&gt;=" tableConstraint="gene_main"/>
+
+		  <UIDSFilterDescription internalName="marker_start" displayName="Marker" description="Choose the first marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_start" displayName="Band" description="Choose the first band to bound a group of genes between two bands" type="range" objectCode="1"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="End" displayName="To" type="select">
 
+		  <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp_end, marker_end, or band_end filters" type="value" fieldName="chr_name"/>
+
 		 <UIFilterDescription internalName="bp_end" displayName="Base Pair" description="Determine which base pair on the specified chromosome to end range" type="range" fieldName="gene_chrom_end" qualifier="&lt;=" tableConstraint="gene_main"/>
 
+		  <UIDSFilterDescription internalName="marker_end" displayName="Marker" description="Choose the end Marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_end" displayName="Band" description="Choose the end Band to bound a group of genes between two bands" type="range" objectCode="1"/>
+
 		 </FilterCollection>
+
+		<FilterCollection internalName="encode" displayName="Limit to Encode Region" type="limit">
+
+		  <UIDSFilterDescription internalName="encode" displayName="Region" description="Choose an Encode Region to limit genes" type="select" objectCode="2"/>
+
+		</FilterCollection>
 
 	 </FilterGroup>
 
@@ -763,21 +781,39 @@
 
 		 <FilterCollection internalName="chromosomeFilter" type="select">
 
-		 <UIFilterDescription internalName="chr_name" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
+		 <UIFilterDescription internalName="chr" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="Start" displayName="From" type="select">
 
+		 <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp, marker, or band starts that you have chosen" type="value" fieldName="chr_name"/>
+
 		 <UIFilterDescription internalName="bp_start" displayName="Base Pair" description="Determine which base pair on the specified chromosome to begin range" type="range" fieldName="gene_chrom_start" qualifier="&gt;=" tableConstraint="gene_main"/>
+
+		  <UIDSFilterDescription internalName="marker_start" displayName="Marker" description="Choose the first marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_start" displayName="Band" description="Choose the first band to bound a group of genes between two bands" type="range" objectCode="1"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="End" displayName="To" type="select">
 
+		  <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp_end, marker_end, or band_end filters" type="value" fieldName="chr_name"/>
+
 		 <UIFilterDescription internalName="bp_end" displayName="Base Pair" description="Determine which base pair on the specified chromosome to end range" type="range" fieldName="gene_chrom_end" qualifier="&lt;=" tableConstraint="gene_main"/>
 
+		  <UIDSFilterDescription internalName="marker_end" displayName="Marker" description="Choose the end Marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_end" displayName="Band" description="Choose the end Band to bound a group of genes between two bands" type="range" objectCode="1"/>
+
 		 </FilterCollection>
+
+		<FilterCollection internalName="encode" displayName="Limit to Encode Region" type="limit">
+
+		  <UIDSFilterDescription internalName="encode" displayName="Region" description="Choose an Encode Region to limit genes" type="select" objectCode="2"/>
+
+		</FilterCollection>
 
 	 </FilterGroup>
 
@@ -1224,21 +1260,39 @@
 
 		 <FilterCollection internalName="chromosomeFilter" type="select">
 
-		 <UIFilterDescription internalName="chr_name" displayName="Chromosome name" description="Filter for SNPs on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="chr" displayName="Chromosome name" description="Filter for SNPs on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="snp_main"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="Start" displayName="From" type="select">
 
-		 <UIFilterDescription internalName="bp_start" displayName="Base Pair" description="Determine which base pair on the specified chromosome to begin range" type="range" fieldName="snp_chrom_start" qualifier="&gt;=" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp, marker, or band starts that you have chosen" type="value" fieldName="chr_name"/>
+
+		 <UIFilterDescription internalName="bp_start" displayName="Base Pair" description="Determine which base pair on the specified chromosome to begin range" type="range" fieldName="gene_chrom_start" qualifier="&gt;=" tableConstraint="gene_main"/>
+
+		  <UIDSFilterDescription internalName="marker_start" displayName="Marker" description="Choose the first marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_start" displayName="Band" description="Choose the first band to bound a group of genes between two bands" type="range" objectCode="1"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="End" displayName="To" type="select">
 
-		 <UIFilterDescription internalName="bp_end" displayName="Base Pair" description="Determine which base pair on the specified chromosome to end range" type="range" fieldName="snp_chrom_end" qualifier="&lt;=" tableConstraint="snp_main"/>
+		  <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp_end, marker_end, or band_end filters" type="value" fieldName="chr_name"/>
+
+		 <UIFilterDescription internalName="bp_end" displayName="Base Pair" description="Determine which base pair on the specified chromosome to end range" type="range" fieldName="gene_chrom_end" qualifier="&lt;=" tableConstraint="gene_main"/>
+
+		  <UIDSFilterDescription internalName="marker_end" displayName="Marker" description="Choose the end Marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_end" displayName="Band" description="Choose the end Band to bound a group of genes between two bands" type="range" objectCode="1"/>
 
 		 </FilterCollection>
+
+		<FilterCollection internalName="encode" displayName="Limit to Encode Region" type="limit">
+
+		  <UIDSFilterDescription internalName="encode" displayName="Region" description="Choose an Encode Region to limit genes" type="select" objectCode="2"/>
+
+		</FilterCollection>
 
 	 </FilterGroup>
 
@@ -1542,19 +1596,31 @@
 
 		 <FilterCollection internalName="chromosomeFilter" type="select">
 
-		 <UIFilterDescription internalName="chr_name" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
+		 <UIFilterDescription internalName="chr" displayName="Chromosome name" description="Filter for Genes on a specified Chromosome" type="list" fieldName="chr_name" qualifier="in" tableConstraint="gene_main"/>
 
 		 </FilterCollection>
 
-	 <FilterCollection internalName="Start" displayName="From" type="select">
+		 <FilterCollection internalName="Start" displayName="From" type="select">
+
+		 <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp, marker, or band starts that you have chosen" type="value" fieldName="chr_name"/>
 
 		 <UIFilterDescription internalName="bp_start" displayName="Base Pair" description="Determine which base pair on the specified chromosome to begin range" type="range" fieldName="gene_chrom_start" qualifier="&gt;=" tableConstraint="gene_main"/>
 
+		  <UIDSFilterDescription internalName="marker_start" displayName="Marker" description="Choose the first marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_start" displayName="Band" description="Choose the first band to bound a group of genes between two bands" type="range" objectCode="1"/>
+
 		 </FilterCollection>
 
-	 <FilterCollection internalName="End" displayName="To" type="select">
+		 <FilterCollection internalName="End" displayName="To" type="select">
+
+		  <UIFilterDescription internalName="chromosome" displayName="Chromosome" description="Choose this to disable any bp_end, marker_end, or band_end filters" type="value" fieldName="chr_name"/>
 
 		 <UIFilterDescription internalName="bp_end" displayName="Base Pair" description="Determine which base pair on the specified chromosome to end range" type="range" fieldName="gene_chrom_end" qualifier="&lt;=" tableConstraint="gene_main"/>
+
+		  <UIDSFilterDescription internalName="marker_end" displayName="Marker" description="Choose the end Marker to bound a group of genes between two markers" type="range" objectCode="1"/>
+
+		  <UIDSFilterDescription internalName="band_end" displayName="Band" description="Choose the end Band to bound a group of genes between two bands" type="range" objectCode="1"/>
 
 		 </FilterCollection>
 
