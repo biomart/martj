@@ -61,7 +61,7 @@ public class DatasetConfigCacheTest extends TestCase {
     assertTrue("Orig should not be cached at this point!\n", !cache.cacheExists(orig.getDataset(), orig.getInternalName()));
     
     //add new copy
-    DatasetConfig lazyLoadedDSC = new DatasetConfig(orig, true);
+    DatasetConfig lazyLoadedDSC = new DatasetConfig(orig, false, true);
     lazyLoadedDSC.setDSConfigAdaptor(null);
     cache.addDatasetConfig(lazyLoadedDSC);
     DatasetConfig lazyLoadedFromCache = cache.getDatasetConfig(lazyLoadedDSC.getDataset(), lazyLoadedDSC.getInternalName(), null);
@@ -70,7 +70,7 @@ public class DatasetConfigCacheTest extends TestCase {
     
     //lazyLoadFromCache
     lazyLoadedDSC.setDSConfigAdaptor(adaptor); //so that we can get a non lazyLoaded copy to lazyLoad from cache
-    lazyLoadedFromCache = new DatasetConfig(lazyLoadedDSC, false);
+    lazyLoadedFromCache = new DatasetConfig(lazyLoadedDSC, false, false);
     lazyLoadedDSC.setDSConfigAdaptor(null); //now equals will run through everything
     lazyLoadedFromCache.setDSConfigAdaptor(null); //now equals will run through everything
     cache.lazyLoadWithCache(lazyLoadedFromCache);
@@ -81,7 +81,7 @@ public class DatasetConfigCacheTest extends TestCase {
     lazyLoadedFromCache = null; //gc
     
     cache.addDatasetConfig(orig);
-    DatasetConfig newDigestDSC = new DatasetConfig(orig);
+    DatasetConfig newDigestDSC = new DatasetConfig(orig, false, false);
     newDigestDSC.setDescription("THIS IS A TOTALLY NEW DESCRIPTION");
     byte[] newDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(newDigestDSC);
     
@@ -113,7 +113,7 @@ public class DatasetConfigCacheTest extends TestCase {
      if (!iter.hasNext())
        throw new ConfigurationException("Couldnt get original DatasetConfig from URLDSViewAdaptorTest\n");
      
-     orig = new DatasetConfig((DatasetConfig) iter.next(), false); //non lazyLoad copy
+     orig = new DatasetConfig((DatasetConfig) iter.next(), false, false); //non lazyLoad copy
      orig.setMessageDigest(DatasetConfigXMLUtils.DatasetConfigToMessageDigest(orig));
      cache = new DatasetConfigCache(adaptor, keys);
      clearCache();

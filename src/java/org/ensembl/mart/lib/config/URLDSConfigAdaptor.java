@@ -213,7 +213,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
     same = same && StringUtil.compare(internalName, dsv.getInternalName()) == 0;
 
     if (same)
-      return new DatasetConfig(dsv, true); // lazyLoaded copy
+      return new DatasetConfig(dsv, false, true); // lazyLoaded copy
     else
       return null;
   }
@@ -227,7 +227,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
       same = same && StringUtil.compare(displayName, dsv.getDisplayName()) == 0;
 
       if (same)
-        return new DatasetConfig(dsv, true); // lazyLoaded copy
+        return new DatasetConfig(dsv, false, true); // lazyLoaded copy
       else
         return null;
   }

@@ -109,7 +109,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             }
           }
           else{
-          	config = new DatasetConfig(dsv);
+          	config = new DatasetConfig(dsv, false, false);
           }
             this.setTitle(config.getInternalName());
 

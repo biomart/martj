@@ -63,7 +63,12 @@ public class DatasetConfigIterator implements Iterator {
     if (!hasNext())
       throw new NoSuchElementException("There Are no more DatasetConfigs in this DatasetConfigIterator\n");
 
-    DatasetConfig next = new DatasetConfig((DatasetConfig) current.next(), true); //lazyloaded copy
+    DatasetConfig next = null;
+    try {
+      next = new DatasetConfig((DatasetConfig) current.next(), false, true);
+    } catch (ConfigurationException e) {
+      //ignore, because we are not violating the contract for the exception
+    } //lazyloaded copy
     return (Object) next;
   }
 

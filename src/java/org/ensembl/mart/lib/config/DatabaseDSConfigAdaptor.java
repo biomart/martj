@@ -376,7 +376,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     for (int i = 0, n = dsviews.size(); i < n; i++) {
       DatasetConfig view = (DatasetConfig) dsviews.get(i);
       if (view.getDataset().equals(dataset)) {
-        l.add(new DatasetConfig(view));
+        l.add(new DatasetConfig(view, false, false));
         //return copy of datasetview, so that lazyLoad doesnt expand reference to original
       }
     }
@@ -406,7 +406,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
       DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
       if (dsv.getDataset().equals(dataset) && dsv.getInternalName().equals(internalName))
-        view = new DatasetConfig(dsv, true); //lazyLoaded copy
+        view = new DatasetConfig(dsv, false, true); //lazyLoaded copy
     }
 
     return view;
@@ -425,7 +425,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
       if (StringUtil.compare(dataset, dsv.getDataset()) == 0
         && StringUtil.compare(displayName, dsv.getDisplayName()) == 0)
-        view = new DatasetConfig(dsv, true); //lazyLoaded copy
+        view = new DatasetConfig(dsv, false, true); //lazyLoaded copy
     }
 
     return view;

@@ -1428,7 +1428,7 @@ public class DatabaseDatasetConfigUtils {
     return metatable;
   }
   
-  public static DatasetConfig getValidatedDatasetConfig(DetailedDataSource dsource, DatasetConfig dsv) throws SQLException {
+  public static DatasetConfig getValidatedDatasetConfig(DetailedDataSource dsource, DatasetConfig dsv) throws SQLException, ConfigurationException {
     String schema = null;
     String catalog = null;
 	Connection conn = dsource.getConnection();
@@ -1441,7 +1441,7 @@ public class DatabaseDatasetConfigUtils {
         logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
     }
     conn.close();
-    DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv);
+    DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false); //want to copy existing Elements to the new Object as is
     String dset = validatedDatasetConfig.getDataset();
     boolean hasBrokenStars = false;
     String[] starbases = dsv.getStarBases();

@@ -106,11 +106,19 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
    * than defering to a call to getXXX.
    * @param ds -- DatasetConfig to copy
-   * @param lazyLoad - boolean, if true, copy will lazyLoad, if false, copy will defer lazyLoading until a getXXX method is called.
+   * @param propogateExistingElements -- specifies that the copy should have any existing Elements copied to the
+   *        new Copy. If this is false, then the system may defer this to the lazyLoad system if an adaptor has
+   *        been set on the DatasetConfig object being copied. This option cannot be true if lazyLoad is true
+   * @param preLazyLoad - boolean, if true, copy will automatically lazyLoad, if false, copy will defer lazyLoading until a getXXX method is called. 
+   *        This cannot be set to true if propogateExistingElements is set to true.
+   * @throws ConfigurationException if both propogateExistingElements is true, and lazyLoad is true.
    */
-  public DatasetConfig(DatasetConfig ds, boolean lazyLoad) {
+  public DatasetConfig(DatasetConfig ds, boolean propogateExistingElements, boolean preLazyLoad) throws ConfigurationException {
     super(ds);
 
+    if (propogateExistingElements && preLazyLoad)
+      throw new ConfigurationException("You can not copy an existing DatasetConfig using both propogateExistingElements and lazyLoad\n");
+      
     setDataset(ds.getDataset());
     byte[] digest = ds.getMessageDigest();
     if (digest != null)
@@ -121,7 +129,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //all DSConfigAdaptor implementing objects either implement a lazyLoad method and insert themselves into every
     //DatasetConfig that they manage, or, in the absence of a sensible lazyLoad method, ensure that all content is
     //is loaded, and __NOT__ insert themselves into the DatasetConfig that they manage.
-    if (ds.getAdaptor() == null) {
+    if (ds.getAdaptor() == null || propogateExistingElements) {
 
       addStarBases(ds.getStarBases());
       addPrimaryKeys(ds.getPrimaryKeys());
@@ -148,20 +156,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     } else
       setDSConfigAdaptor(ds.getAdaptor());
 
-    if (lazyLoad)
+    if (preLazyLoad)
       lazyLoad();
-  }
-
-  /**
-   * Copy Constructor. Creates a new copy of an existing DatasetConfig object.
-   * Note, if the existing DatasetConfig object has a DatasetConfigAdaptor set to it, 
-   * this is transferred instead of the actual filterPages and attributePages, deferring
-   * the population of these objects to the lazyLoad method called when a getXXX method is
-   * called.
-   * @param ds DatasetConfig to copy
-   */
-  public DatasetConfig(DatasetConfig ds) {
-    this(ds, false);
   }
 
   /**
