@@ -42,6 +42,8 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 		inames = new String[] { dset.getInternalName()};
 		dnames = new String[] { dset.getDisplayName()};
 		dsv = dset;
+    
+    dsv.setDSViewAdaptor(this);
 	}
 
 	/* (non-Javadoc)
@@ -134,4 +136,12 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor {
 		return dsv.hashCode();
 	}
 
+/**
+ * Currently doesnt do anything, as Simple DatasetView objects are fully loaded
+ * at instantiation.  Could change in the future.
+ * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad()
+ */
+	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+		// Doesnt do anything, should be fully instantiated
+	}
 }

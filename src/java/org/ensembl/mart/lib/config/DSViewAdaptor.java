@@ -93,5 +93,14 @@ public interface DSViewAdaptor {
    * @throws ConfigurationException for all underlying Exceptions
    */
   public void update() throws ConfigurationException;
+  
+  /**
+   * Method to allow DatasetView objects to be instantiated with a minimum of information, but then be lazy loaded with the rest of their
+   * XML data when needed.  This method is intended primarily to be used by the DatasetView object itself, which automatically lazy loads itself
+   * using the adaptor that it was instantiated with.
+   * @param dsv -- DatasetView Object to be lazy loaded.  Input reference is modified by the method.
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public void lazyLoad(DatasetView dsv) throws ConfigurationException;
 
 }

@@ -20,6 +20,7 @@ package org.ensembl.mart.lib.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -39,7 +40,7 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	/**
 	 * Adds adaptor.  
 	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSViewAdaptor
-   * to this instance or you will cause circular references when the getXXX() methods are called.
+	 * to this instance or you will cause circular references when the getXXX() methods are called.
 	 */
 	public void add(DSViewAdaptor adaptor) {
 		adaptors.add(adaptor);
@@ -51,9 +52,9 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	 * @return true if adaptor was removed, otherwise false.
 	 */
 	public boolean remove(DSViewAdaptor adaptor) {
-    System.out.println( adaptor );
-    System.out.println( adaptors.indexOf( adaptor ));
-    System.out.println(adaptors);
+		System.out.println(adaptor);
+		System.out.println(adaptors.indexOf(adaptor));
+		System.out.println(adaptors);
 		return adaptors.remove(adaptor);
 	}
 
@@ -70,8 +71,7 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	 * if non available.
 	 */
 	public DSViewAdaptor[] getAdaptors() {
-		return (DSViewAdaptor[]) adaptors.toArray(
-			new DSViewAdaptor[adaptors.size()]);
+		return (DSViewAdaptor[]) adaptors.toArray(new DSViewAdaptor[adaptors.size()]);
 	}
 
 	/** 
@@ -115,16 +115,14 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	/**
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
 	 */
-	public boolean supportsDisplayName(String name)
-		throws ConfigurationException {
-		return null!=getDatasetViewByDisplayName( name );
+	public boolean supportsDisplayName(String name) throws ConfigurationException {
+		return null != getDatasetViewByDisplayName(name);
 	}
 
 	/**
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
 	 */
-	public DatasetView getDatasetViewByDisplayName(String name)
-		throws ConfigurationException {
+	public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
 
 		DatasetView result = null;
 		DatasetView[] views = getDatasetViews();
@@ -141,16 +139,14 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
 	 */
-	public boolean supportsInternalName(String name)
-		throws ConfigurationException {
+	public boolean supportsInternalName(String name) throws ConfigurationException {
 		return getDatasetViewByInternalName(name) != null;
 	}
 
 	/**
 	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
 	 */
-	public DatasetView getDatasetViewByInternalName(String name)
-		throws ConfigurationException {
+	public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
 
 		DatasetView result = null;
 
@@ -171,8 +167,20 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	public void update() throws ConfigurationException {
 		for (int i = 0, n = adaptors.size(); i < n; i++) {
 			DSViewAdaptor adaptor = (DSViewAdaptor) adaptors.get(i);
-		  adaptor.update();	
+			adaptor.update();
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetView)
+	 */
+	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+		for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+			DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
+			if (adaptor.supportsInternalName(dsv.getInternalName())) {
+        adaptor.lazyLoad(dsv);
+        break;
+			}				
+    }
+	}
 }

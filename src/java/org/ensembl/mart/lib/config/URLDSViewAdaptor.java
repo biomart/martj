@@ -118,9 +118,14 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
     }
     
     inames = new String[] { dsv.getInternalName()};
-    dnames = new String[] { dsv.getDisplayName()}; 
+    dnames = new String[] { dsv.getDisplayName()};
+    
+    dsv.setDSViewAdaptor(this); 
   }
   
+  /**
+   * Useful debug output
+   */
   public String toString() {
     StringBuffer buf = new StringBuffer();
 
@@ -148,5 +153,13 @@ public class URLDSViewAdaptor implements DSViewAdaptor {
     if ( dsv!=null ) hshcode = ( 31 * hshcode ) + dsv.hashCode();
     return hshcode;
   }
+
+	/**
+   * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
+	 */
+	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+		// Currently does not do anything, as URL DSViews are fully loaded at instantiation.  Could change in the future.
+
+	}
 
 }

@@ -31,7 +31,12 @@ import javax.sql.DataSource;
  * Container for a mart dataset.   A dataset contains information about the
  *  main (or star) table(s) that it provides, the primary key(s) for these table(s),
  * and a List of AttributePages and FilterPages containing all of the attributes 
- * and filters that it provides.
+ * and filters that it provides. DatasetView Objects support a lazy load optimization strategy.
+ * They can be instantiated with a miniumum of information (internalName), and lazy loaded when
+ * the rest of the information is needed.  Any call to a get method will cause the object to attempt
+ * to lazy load.  Lazy loading is only attempted when there are no FilterPage or AttributePage objects
+ * loaded into the DatasetView.  Note that any call to toString, equals, and hashCode will cause lazy 
+ * loading to occur, which can lead to some issues (see the documentation for each of these methods below).
  *   
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -830,7 +835,7 @@ public class DatasetView extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Set the DataSource for this DatasetView.
+	 * Set the DataSource and user for this DatasetView.
 	 * @param source -- DataSource
 	 */
 	public void setDatasource(DataSource source) {
@@ -868,10 +873,43 @@ public class DatasetView extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Provides output useful for debugging purposes.
+	 * set the DSViewAdaptor used to instantiate a particular DatasetView object.
+	 * @param dsva -- DSViewAdaptor implimenting object.
+	 */
+	public void setDSViewAdaptor(DSViewAdaptor dsva) {
+		adaptor = dsva;
+	}
+
+	/**
+	 * Get the DSViewAdaptor implimenting object used to instantiate this DatasetView object.
+	 * @return DSViewAdaptor used to instantiate this DatasetView
+	 */
+	public DSViewAdaptor getDSViewAdaptor() {
+		return adaptor;
+	}
+
+	private void lazyLoad() throws ConfigurationException {
+		if (filterPages.size() == 0 && attributePages.size() == 0) {
+			if (adaptor == null)
+				throw new ConfigurationException("DatasetView objects must be provided a DSViewAdaptor to facilitate lazyLoading\n");
+			adaptor.lazyLoad(this);
+		}
+	}
+
+	/**
+	 * Provides output useful for debugging purposes.  If the underlying lazy load fails, the toString
+   * output will reflect this.
 	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
+
+		try {
+			lazyLoad();
+		} catch (ConfigurationException e) {
+			buf.append("Could not lazyLoad DatasetView object\n" + e.getMessage() + "\n");
+			return buf.toString();
+		}
+
 		buf.append("[");
 		buf.append(super.toString());
 		buf.append(", starnames=").append(starBases);
@@ -887,17 +925,28 @@ public class DatasetView extends BaseConfigurationObject {
 
 	/**
 	 * Allows Equality Comparisons manipulation of DatasetView objects.
-   * Note, currently does not use Message Digest information
+	 * Note, currently does not use Message Digest information.
+   * Also, If the lazy load fails, a RuntimeException is thrown.
 	 */
 	public boolean equals(Object o) {
 		return o instanceof DatasetView && hashCode() == ((DatasetView) o).hashCode();
 	}
 
-  /**
-   * hashCode for DatasetView
-   * Note, currently does not compare digest data, even if present
-   */
+	/**
+	 * hashCode for DatasetView
+	 * Note, currently does not compare digest data, even if present.
+	 * Also Note that this method calls the underlying lazyLoad() function, using the lazyLoad(DatasetView dsv) method from the DSViewAdaptor implimenting Object
+	 * that it was instantiated with.  Depending upon the DSViewAdaptor implimentation being used, if DatasetView objects are stored in Hash based collections immediately
+	 * upon instantiation, this could remove the speed optimization that the lazy loading system is designed to provide.  Also, if any Exceptions are encountered by
+	 * a particular implimenation during lazyLoad, this will lead to a RuntimeException when hashCode is called.
+	 */
 	public int hashCode() {
+		try {
+			lazyLoad();
+		} catch (ConfigurationException e) {
+			throw new RuntimeException("Could not lazyLoad DatasetView in call to hashCode\n" + e.getMessage() + "\n", e);
+		}
+
 		int tmp = super.hashCode();
 
 		if (datasource != null)
@@ -926,9 +975,10 @@ public class DatasetView extends BaseConfigurationObject {
 		return tmp;
 	}
 
-	DataSource datasource = null;
-	byte[] digest = null;
-	String digestAlgorithm = null;
+	private DSViewAdaptor adaptor = null;
+	private DataSource datasource = null;
+	private byte[] digest = null;
+	private String digestAlgorithm = null;
 
 	//keep track of ordering of filter and attribute pages
 	private int apageRank = 0;
