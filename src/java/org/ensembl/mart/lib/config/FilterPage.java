@@ -59,8 +59,7 @@ public class FilterPage extends BaseNamedConfigurationObject {
        Object group = groups.get(i);
        if (group instanceof FilterGroup)
          addFilterGroup( new FilterGroup( (FilterGroup) group ) );
-       else
-			  addDSFilterGroup( new DSFilterGroup( (DSFilterGroup) group ) );      
+       
     }
   }
   
@@ -161,73 +160,7 @@ public class FilterPage extends BaseNamedConfigurationObject {
 		}
 	}
 
-	/**
-	 * Adds a DSFilterGroup to the FilterPage.
-	 * 
-	 * @param fg a DSFilterGroup object.
-	 */
-	public void addDSFilterGroup(DSFilterGroup fg) {
-		filterGroups.add(fg);
-		filterGroupNameMap.put(fg.getInternalName(), fg);
-	}
 
-  /**
-   * Removes a DSFilterGroup from the List of FilterGroups/DSFilterGroups.
-   * @param fg -- DSFilterGroup to be removed.
-   */
-  public void removeDSFilterGroup(DSFilterGroup fg) {
-    filterGroupNameMap.remove(fg.getInternalName());
-    filterGroups.remove(fg);
-  }
-  
-  /**
-   * Inserts a DSFilterGroup object at a specific position within the list of FilterGroup/DSFilterGroup objects.
-   * FilterGroups/DSFilterGroups occuring at or after the given position are shifted right.
-   * @param position -- position at which to insert the DSFilterGroup
-   * @param fg -- DSFilterGroup to insert.
-   */
-  public void insertDSFilterGroup(int position, DSFilterGroup fg) {
-    filterGroups.add(position, fg);
-    filterGroupNameMap.put(fg.getInternalName(), fg);
-  }
-  
-  /**
-   * Insert a DSFilterGroup object before a specific FilterGroup/DSFilterGroup named by internalName.
-   * @param internalName -- String internalName of the FilterGroup/DSFilterGroup before which the given DSFilterGroup should be inserted.
-   * @param fg -- DSFilterGroup to be inserted.
-   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup/DSFilterGroup named by internalName
-   */
-  public void insertDSFilterGroupBeforeFilterGroup(String internalName, DSFilterGroup fg) throws ConfigurationException {
-    if (!filterGroupNameMap.containsKey(internalName))
-      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n");
-    insertDSFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ) , fg);
-  }
-  
-  /**
-   * Insert a DSFilterGroup object after a specific FilterGroup/DSFilterGroup named by internalName.
-   * @param internalName -- String internalName of the FilterGroup/DSFilterGroup after which the given DSFilterGroup should be inserted.
-   * @param fg -- DSFilterGroup to be inserted.
-   * @throws ConfigurationException when the FilterPage does not contain a FilterGroup/DSFilterGroup named by internalName
-   */
-  public void insertDSFilterGroupAfterFilterGroup(String internalName, DSFilterGroup fg) throws ConfigurationException {
-    if (!filterGroupNameMap.containsKey(internalName) )
-      throw new ConfigurationException("FilterPage does not contain FilterGroup " + internalName + "\n");
-    insertDSFilterGroup( filterGroups.indexOf( filterGroupNameMap.get(internalName) ) + 1, fg);
-  }
-  
-	/**
-	 * Adds a group of DSFilterGroup objects in one call.
-	 * Note, subsequent calls to addFilterGroup/addDSFilterGroup and addFilterGroups/addDSFilterGroups will add to what
-	 * has already been aded.
-	 * 
-	 * @param fg An Array of DSFilterGroup objects.
-	 */
-	public void addDSFilterGroups(DSFilterGroup[] fg) {
-		for (int i = 0, n = fg.length; i < n; i++) {
-			filterGroups.add(fg[i]);
-			filterGroupNameMap.put(fg[i].getInternalName(), fg[i]);
-		}
-	}
 
 	/**
 	 * Returns a List of FilterGroup/DSFilterGroup objects, in the order they were added.
@@ -536,10 +469,8 @@ public class FilterPage extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = filterGroups.iterator(); iter.hasNext();) {
 			Object element = iter.next();
-			if (element instanceof FilterGroup)
-				tmp = (31 * tmp) + ((FilterGroup) element).hashCode();
-			else
-				tmp = (31 * tmp) + ((DSFilterGroup) element).hashCode();
+		    tmp = (31 * tmp) + ((FilterGroup) element).hashCode();
+			
 		}
 
 		return tmp;

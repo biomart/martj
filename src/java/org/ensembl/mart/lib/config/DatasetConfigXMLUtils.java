@@ -317,8 +317,7 @@ public class DatasetConfigXMLUtils {
       Element element = (Element) iter.next();
       if (element.getName().equals(FILTERGROUP))
         fp.addFilterGroup(getFilterGroup(element));
-      else
-        fp.addDSFilterGroup(getDSFilterGroup(element));
+      
     }
 
     return fp;
@@ -338,12 +337,7 @@ public class DatasetConfigXMLUtils {
     return fg;
   }
 
-  private DSFilterGroup getDSFilterGroup(Element thisElement) throws ConfigurationException {
-    DSFilterGroup fg = new DSFilterGroup();
-    loadAttributesFromElement(thisElement, fg);
 
-    return fg;
-  }
 
   private FilterCollection getFilterCollection(Element thisElement) throws ConfigurationException {
     FilterCollection fc = new FilterCollection();
@@ -416,8 +410,7 @@ public class DatasetConfigXMLUtils {
       Element element = (Element) iter.next();
       if (element.getName().equals(ATTRIBUTEGROUP))
         ap.addAttributeGroup(getAttributeGroup(element));
-      else
-        ap.addDSAttributeGroup(getDSAttributeGroup(element));
+      
     }
 
     return ap;
@@ -437,11 +430,7 @@ public class DatasetConfigXMLUtils {
     return ag;
   }
 
-  private DSAttributeGroup getDSAttributeGroup(Element thisElement) throws ConfigurationException {
-    DSAttributeGroup ag = new DSAttributeGroup();
-    loadAttributesFromElement(thisElement, ag);
-    return ag;
-  }
+
 
   private AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
     AttributeCollection ac = new AttributeCollection();
@@ -597,18 +586,13 @@ public class DatasetConfigXMLUtils {
       Object group = iter.next();
       if (group instanceof AttributeGroup)
         page.addContent(getAttributeGroupElement((AttributeGroup) group));
-      else
-        page.addContent(getDSAttributeGroupElement((DSAttributeGroup) group));
+      
     }
 
     return page;
   }
 
-  private Element getDSAttributeGroupElement(DSAttributeGroup group) {
-    Element dsag = new Element(DSATTRIBUTEGROUP);
-    loadElementAttributesFromObject(group, dsag);
-    return dsag;
-  }
+
 
   private Element getAttributeGroupElement(AttributeGroup group) {
     Element ag = new Element(ATTRIBUTEGROUP);
@@ -648,18 +632,12 @@ public class DatasetConfigXMLUtils {
       Object group = iter.next();
       if (group instanceof FilterGroup)
         page.addContent(getFilterGroupElement((FilterGroup) group));
-      else
-        page.addContent(getDSFilterGroupElement((DSFilterGroup) group));
+      
     }
 
     return page;
   }
 
-  private Element getDSFilterGroupElement(DSFilterGroup group) {
-    Element dsfg = new Element(DSFILTERGROUP);
-    loadElementAttributesFromObject(group, dsfg);
-    return dsfg;
-  }
 
   /**
    * @param group

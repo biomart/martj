@@ -57,10 +57,8 @@ public class AttributePage extends BaseNamedConfigurationObject {
   	List agroups = ap.getAttributeGroups();
   	for (int i = 0, n = agroups.size(); i < n; i++) {
       Object group = agroups.get(i);
-      if (group instanceof AttributeGroup)
-        addAttributeGroup( new AttributeGroup( (AttributeGroup) group ));
-      else
-			  addDSAttributeGroup( new DSAttributeGroup( (DSAttributeGroup) group ));
+      addAttributeGroup( new AttributeGroup( (AttributeGroup) group ));
+      
     }
   }
    
@@ -164,75 +162,6 @@ public class AttributePage extends BaseNamedConfigurationObject {
 		}
 	}
 
-	/**
-	 * Add a single DSAttributeGroup to the AttributePage.
-	 * 
-	 * @param a A DSAttributeGroup object
-	 */
-	public void addDSAttributeGroup(DSAttributeGroup a) {
-		attributeGroups.add(a);
-		attGroupNameMap.put(a.getInternalName(), a);
-	}
-
-  /**
-   * Remove a DSAttributeGroup from the AttributePage.
-   * @param a -- DSAttributeGroup to be removed.
-   */
-  public void removeDSAttributeGroup(DSAttributeGroup a) {
-    attGroupNameMap.remove(a.getInternalName());
-    attributeGroups.remove(a);
-  }
-  
-  /**
-   * Insert a DSAttributeGroup into the List of AttributeGroups/DSAttributeGroups contained within
-   * the AttributePage.  AttributeGroup/DSAttributeGroup objects at or after the specified position will be
-   * shifted right.
-   * @param position -- position to be inserted
-   * @param a -- DSAttributeGroup to insert
-   */
-  public void insertDSAttributeGroup(int position, DSAttributeGroup a) {
-    attributeGroups.add(position, a);
-    attGroupNameMap.put(a.getInternalName(), a);
-  }
-  
-  /**
-   * Insert an DSAttributeGroup before a specific AttributeGroup/DSAttributeGroup, named by internalName.
-   * @param internalName -- name of the AttributeGroup/DSAttributeGroup before which the given AttributeGroup should be inserted.
-   * @param a -- DSAttributeGroup to insert.
-   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
-   */
-  public void insertDSAttributeGroupBeforeAttributeGroup(String internalName, DSAttributeGroup a) throws ConfigurationException {
-    if (!attGroupNameMap.containsKey(internalName))
-      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
-    
-    insertDSAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ), a );
-  }
-  
-  /**
-   * Insert an DSAttributeGroup after a specific AttributeGroup/DSAttributeGroup, named by internalName.
-   * @param internalName -- name of the AttributeGroup/DSAttributeGroup after which the given AttributeGroup should be inserted.
-   * @param a -- DSAttributeGroup to insert.
-   * @throws ConfigurationException when the AttributePage does not contain an AttributeGroup/DSAttributeGroup named by internalName.
-   */
-  public void insertDSAttributeGroupAfterAttributeGroup(String internalName, DSAttributeGroup a) throws ConfigurationException {
-    if (!attGroupNameMap.containsKey(internalName))
-      throw new ConfigurationException("AttributePage does not contain AttributeGroup " + internalName + "\n");
-    
-    insertDSAttributeGroup( attributeGroups.indexOf( attGroupNameMap.get(internalName) ) + 1, a );
-  }
-   
-	/**
-	 * Add a group of DSAttributeGroup objects at once.  Note, subsequent calls
-	 * to addAttributeGroup/addDSAttributeGroup or setAttributeGroup/setDSAttributeGroup will add to what has already been added.
-	 * 
-	 * @param a an array of DSAttributeGroup objects
-	 */
-	public void addDSAttributeGroups(DSAttributeGroup[] a) {
-		for (int i = 0, n = a.length; i < n; i++) {
-			attributeGroups.add(a[i]);
-			attGroupNameMap.put(a[i].getInternalName(), a[i]);
-		}
-	}
 
 	/**
 	 * Returns a List of AttributeGroup/DSAttributeGroup objects contained in the AttributePage, in the order they were added.
@@ -468,10 +397,8 @@ public class AttributePage extends BaseNamedConfigurationObject {
 
 		for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
 			Object element = iter.next();
-			if (element instanceof AttributeGroup)
-				tmp = (31 * tmp) + ((AttributeGroup) element).hashCode();
-			else
-				tmp = (31 * tmp) + ((DSAttributeGroup) element).hashCode();
+		    tmp = (31 * tmp) + ((AttributeGroup) element).hashCode();
+			
 		}
 
 		return tmp;

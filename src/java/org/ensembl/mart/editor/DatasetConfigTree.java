@@ -234,8 +234,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					insert(new FilterGroup("new"), "FilterGroup:");
 				else if (e.getActionCommand().equals("insert attribute group"))
 					insert(new AttributeGroup("new"), "AttributeGroup:");
-				else if (e.getActionCommand().equals("insert DSAttribute group"))
-					insert(new DSAttributeGroup("new"), "DSAttributeGroup:");
+		
 				else if (e.getActionCommand().equals("insert filter collection"))
 					insert(new FilterCollection("new"), "FilterCollection:");
 				else if (e.getActionCommand().equals("insert attribute collection"))
@@ -495,7 +494,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"insert attribute page",
 					"insert importable",
 					"insert exportable",
-					"insert seq module",
 					};
 		else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter group" };
@@ -507,8 +505,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"paste",
 					"delete",
 					"hide toggle",
-					"insert attribute group",
-					"insert DSAttribute group" };
+					"insert attribute group", };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter collection" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
@@ -526,7 +523,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"delete",
 					"hide toggle",
 					"insert option",
-					"insert enable",
 					"make drop down",
 					"automate push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
@@ -537,8 +533,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle" };
-		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete" };
+		
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))

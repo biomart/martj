@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.DSAttributeGroup;
 
 /**
  * Widget representing an AttributePage.
@@ -64,28 +63,29 @@ public class AttributePageWidget extends PageWidget {
         tabbedPane.add(groupName, w);
         leafWidgets.addAll(w.getLeafWidgets());
    
-      } else if (element instanceof DSAttributeGroup) {
+      } //else if (element instanceof DSAttributeGroup) {
    
         // currently hard coded support for sequence attributes
-        DSAttributeGroup g = (DSAttributeGroup) element;
+        //DSAttributeGroup g = (DSAttributeGroup) element;
    
-        if (g.getHandler().toLowerCase().equals("sequence")) {
+        //if (g.getHandler().toLowerCase().equals("sequence")) {
   
-          SequenceGroupWidget w = new SequenceGroupWidget(g.getDisplayName(),query,tree,g);
-          tabbedPane.add(g.getDisplayName(), w);
-          leafWidgets.addAll(w.getLeafWidgets());
+         // SequenceGroupWidget w = new SequenceGroupWidget(g.getDisplayName(),query,tree,g);
+          //tabbedPane.add(g.getDisplayName(), w);
+          //leafWidgets.addAll(w.getLeafWidgets());
   
-        } else {
+        //} else {
 
           // TODO handle other DSAttributeGroups
-          logger.warning(
-            "TODO: handle DSAttributeGroup: "
-              + element.getClass().getName()
-              + element);
+          //logger.warning(
+            //"TODO: handle DSAttributeGroup: "
+            //  + element.getClass().getName()
+              //+ element);
           // create page
           // add pag as tab
-        }
-      } else {
+        //}
+      //}
+      else {
         throw new RuntimeException(
           "Unrecognised type in attribute group list: " + element);
       }

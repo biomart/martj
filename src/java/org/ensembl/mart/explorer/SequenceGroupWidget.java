@@ -51,7 +51,6 @@ import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
-import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -223,8 +222,7 @@ public class SequenceGroupWidget
   public SequenceGroupWidget(
     String name,
     Query query,
-    QueryTreeView tree,
-    DSAttributeGroup attributeGroup) {
+    QueryTreeView tree) {
 
     super(name, query, tree);
     if (tree != null)
@@ -563,11 +561,11 @@ public class SequenceGroupWidget
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     logger.setLevel(Level.ALL);
 
-    DSAttributeGroup g = new DSAttributeGroup("sequences");
+    //DSAttributeGroup g = new DSAttributeGroup("sequences");
     Query q = new Query();
     //q.addQueryChangeListener(new DebugQueryListener(System.out));
 
-    SequenceGroupWidget w = new SequenceGroupWidget("seq widget", q, null, g);
+    SequenceGroupWidget w = new SequenceGroupWidget("seq widget", q, null);
 
     new QuickFrame("Sequence Attribute Widget test", w);
   }

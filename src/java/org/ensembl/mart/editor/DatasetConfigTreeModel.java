@@ -121,10 +121,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (childClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
 				AttributePage ap = (AttributePage) parentNode.getUserObject();
 				ap.addAttributeGroup((AttributeGroup) editingNode.getUserObject());
-			} else if (childClassName.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
-				AttributePage ap = (AttributePage) parentNode.getUserObject();
-				ap.addDSAttributeGroup((DSAttributeGroup) editingNode.getUserObject());
-			}
+			} 
 		} else if (parentClassName.equals("org.ensembl.mart.lib.config.AttributeGroup")) {
 			if (childClassName.equals("org.ensembl.mart.lib.config.AttributeCollection")) {
 				AttributeGroup ag = (AttributeGroup) parentNode.getUserObject();
@@ -233,9 +230,6 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 				AttributePage ap = (AttributePage) parentNode.getUserObject();
 				ap.insertAttributeGroup(objIndex, (AttributeGroup) editingNode.getUserObject());
-			} else if (child instanceof org.ensembl.mart.lib.config.DSAttributeGroup) {
-				AttributePage ap = (AttributePage) parentNode.getUserObject();
-				ap.insertDSAttributeGroup(objIndex, (DSAttributeGroup) editingNode.getUserObject());
 			} else {
 				String error_string = "Error: " + childName + " cannot be inserted in an AttributePage.";
 				return error_string;
@@ -318,10 +312,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 				AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
-			} else if (child instanceof org.ensembl.mart.lib.config.DSAttributeGroup) {
-				AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-				ap.removeDSAttributeGroup((DSAttributeGroup) node.getUserObject());
-			}
+			} 
 		} else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
 			if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 				AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();

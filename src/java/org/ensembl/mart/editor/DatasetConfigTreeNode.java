@@ -27,7 +27,6 @@ import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
-import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DatasetConfig;
 //import org.ensembl.mart.lib.config.Disable;
 //import org.ensembl.mart.lib.config.Enable;
@@ -249,12 +248,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 									desNode.setUserObject(atDescription);
 								}
 							}
-						} else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
-							DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
-							String grName = atGroup.getInternalName();
-							DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("DSAttributeGroup:" + grName);
-							grNode.setUserObject(atGroup);
-						}
+						} 
 					}
 
 				}
@@ -346,13 +340,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 							desNode.setUserObject(atDescription);
 						}
 					}
-				} else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
-					DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
-					String grName = atGroup.getInternalName();
-					DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("DSAttributeGroup:" + grName);
-					grNode.setUserObject(atGroup);
-					this.add(grNode);
-				}
+				} 
 			}
 
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterGroup")) {

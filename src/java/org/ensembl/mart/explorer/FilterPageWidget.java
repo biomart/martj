@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.DSFilterGroup;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 
@@ -41,12 +40,12 @@ public class FilterPageWidget extends PageWidget {
             tabbedPane.add( groupName, w);  
             leafWidgets.addAll( w.getLeafWidgets() );
           }
-          else if ( element instanceof DSFilterGroup ) {
+          //else if ( element instanceof DSFilterGroup ) {
             // TODO handle DSAttributeGroup
-            logger.warning( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
+            //logger.warning( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
             // create filterPage
             // add pag as tab
-          }
+          //}
           else {
             throw new RuntimeException( "Unrecognised type in filter group list: " 
                                         + element);

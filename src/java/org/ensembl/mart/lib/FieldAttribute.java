@@ -125,8 +125,8 @@ public class FieldAttribute implements Attribute {
       String tc = getTableConstraint();
       String tc2 = attribute.getTableConstraint();
     
-      if ( f==null ) {
-        logger.warning("Datasetconfig bug, field missing in FieldAttribute :" + this);
+      if ( f==null ) {//some atts don't have a field in new XML - turn off warning
+        //logger.warning("Datasetconfig bug, field missing in FieldAttribute :" + this);
         return false;
       }
     
