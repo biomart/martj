@@ -58,7 +58,6 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
-		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
 			case FormatSpec.TABULATED :
@@ -125,17 +124,13 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
+			Connection conn = query.getDataSource().getConnection();
+
 			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  "
-				+ structure_table
-				+ ".gene_id, "
-				+ structure_table
-				+ ".transcript_id, "
-				+ structure_table
-				+ ".rank";
+			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -198,7 +193,7 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 						if (geneiDs.size() > 0) {
 							// write the previous genes data, and refresh the geneiDs TreeMap
 							if (lastGene.intValue() > 0)
-								seqWriter.writeSequences(lastGene);
+								seqWriter.writeSequences(lastGene, conn);
 							geneiDs = new TreeMap();
 						}
 						lastGene = geneID;
@@ -274,12 +269,15 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 				}
 				// write the last genes data, if present
 				if (lastGene.intValue() > 0)
-					seqWriter.writeSequences(lastGene);
+					seqWriter.writeSequences(lastGene, conn);
 
 				if (rows < batchLength)
 					moreRows = false;
 				// on the odd chance that the last result set has equal rowcount with the batchLength, it will need to make an extra attempt
+
+				rs.close();
 			}
+			conn.close();
 		} catch (SQLException e) {
 			throw new InvalidQueryException(e + ":" + sql);
 		} catch (IOException e) {
@@ -290,27 +288,20 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 	// SeqWriter object
 	SeqWriter seqWriter;
 	abstract class SeqWriter {
-		abstract void writeSequences(Integer geneID) throws SequenceException;
+		abstract void writeSequences(Integer geneID, Connection conn) throws SequenceException;
 	}
 
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 
 				osr.print((String) geneatts.get(DisplayID));
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print(
-					separator
-						+ "strand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ (String) geneatts.get(Assembly));
+				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(Assembly));
 
 				if (osr.checkError())
 					throw new IOException();
@@ -349,9 +340,7 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					geneloc = geneloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.write(
-						SequenceUtil.reverseComplement(
-							dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
 					osr.write(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 
@@ -373,22 +362,16 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 	};
 
 	private final SeqWriter fastaWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 
 				osr.print(">" + (String) geneatts.get(DisplayID));
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print(
-					"\tstrand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ (String) geneatts.get(Assembly));
+				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(Assembly));
 
 				if (osr.checkError())
 					throw new IOException();
@@ -427,9 +410,7 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 					geneloc = geneloc.getRightFlankOnly(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.writeSequence(
-						SequenceUtil.reverseComplement(
-							dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
 					osr.writeSequence(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 
@@ -461,13 +442,11 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private FormattedSequencePrintStream osr = null;
-	private Connection conn = null;
 
 	private TreeMap geneiDs = new TreeMap();
 	// holds each objects information, in order
 	private List fields = new ArrayList();
 	// holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
 
 	private String queryID;
 	private String AssemblyColumn = "assembly_type";

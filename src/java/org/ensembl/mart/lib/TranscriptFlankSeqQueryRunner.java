@@ -59,7 +59,6 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
-		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
 			case FormatSpec.TABULATED :
@@ -131,16 +130,12 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
+			Connection conn = query.getDataSource().getConnection();
+
 			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  "
-				+ structure_table
-				+ ".gene_id, "
-				+ structure_table
-				+ ".transcript_id, "
-				+ structure_table
-				+ ".rank";
+			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -209,7 +204,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						if (geneiDs.size() > 0) {
 							// write the previous genes data, and refresh the geneiDs TreeMap
 							if (lastGene.intValue() > 0)
-								seqWriter.writeSequences(lastGene);
+								seqWriter.writeSequences(lastGene, conn);
 							geneiDs = new TreeMap();
 						}
 						lastGene = geneID;
@@ -299,11 +294,14 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 				}
 				// write the last genes data, if present
 				if (lastGene.intValue() > 0)
-					seqWriter.writeSequences(lastGene);
+					seqWriter.writeSequences(lastGene, conn);
 
 				if (rows < batchLength)
 					moreRows = false;
+
+				rs.close();
 			}
+			conn.close();
 		} catch (IOException e) {
 			throw new SequenceException(e);
 		} catch (SQLException e) {
@@ -314,12 +312,14 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 	// SeqWriter object
 	SeqWriter seqWriter;
 	abstract class SeqWriter {
-		abstract void writeSequences(Integer geneID) throws SequenceException;
+		abstract void writeSequences(Integer geneID, Connection conn) throws SequenceException;
 	}
 
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
@@ -336,16 +336,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 					SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 					SequenceDescription seqd = query.getSequenceDescription();
 
-					osr.print(
-						separator
-							+ "strand="
-							+ strandout
-							+ separator
-							+ "chr="
-							+ tranloc.getChr()
-							+ separator
-							+ "assembly="
-							+ assemblyout);
+					osr.print(separator + "strand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -383,9 +374,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						tranloc = tranloc.getRightFlankOnly(seqd.getRightFlank());
 
 					if (tranloc.getStrand() < 0)
-						osr.write(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
+						osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
 					else
 						osr.write(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()));
 
@@ -407,8 +396,10 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 	};
 
 	private final SeqWriter fastaWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
@@ -425,8 +416,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 					SequenceLocation tranloc = (SequenceLocation) tranatts.get(Location);
 					SequenceDescription seqd = query.getSequenceDescription();
 
-					osr.print(
-						"\tstrand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
+					osr.print("\tstrand=" + strandout + separator + "chr=" + tranloc.getChr() + separator + "assembly=" + assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -464,9 +454,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 						tranloc = tranloc.getRightFlankOnly(seqd.getRightFlank());
 
 					if (tranloc.getStrand() < 0)
-						osr.writeSequence(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
+						osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd())));
 					else
 						osr.writeSequence(dna.getSequence(species, tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()));
 
@@ -498,13 +486,11 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private FormattedSequencePrintStream osr = null;
-	private Connection conn = null;
 
 	private TreeMap geneiDs = new TreeMap();
 	// holds each objects information, in order
 	private List fields = new ArrayList();
 	// holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
 
 	// Used for colating required fields
 	private String queryID;

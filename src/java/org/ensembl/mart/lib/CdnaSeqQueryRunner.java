@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,6 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
-		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
 			case FormatSpec.TABULATED :
@@ -125,6 +125,8 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
+			Connection conn = query.getDataSource().getConnection();
+
 			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
@@ -196,7 +198,7 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 						if (traniDs.size() > 0) {
 							//	process the previous tranID, if this isnt the first time through, then refresh the traniDs TreeMap
 							if (lastTran.intValue() > 0)
-								seqWriter.writeSequences(lastTran);
+								seqWriter.writeSequences(lastTran, conn);
 							traniDs = new TreeMap();
 						}
 						lastTran = tranID;
@@ -276,12 +278,15 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 				}
 				// write the last transcripts data, if present
 				if (lastTran.intValue() > 0)
-					seqWriter.writeSequences(lastTran);
+					seqWriter.writeSequences(lastTran, conn);
 
 				if (rows < batchLength)
 					moreRows = false;
-				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.	      	     
+				// on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
+
+				rs.close();
 			}
+			conn.close();
 		} catch (IOException e) {
 			throw new SequenceException(e);
 		} catch (SQLException e) {
@@ -292,12 +297,14 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 	// SeqWriter object
 	SeqWriter seqWriter;
 	abstract class SeqWriter {
-		abstract void writeSequences(Integer tranID) throws SequenceException;
+		abstract void writeSequences(Integer tranID, Connection conn) throws SequenceException;
 	}
 
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
-		void writeSequences(Integer tranID) throws SequenceException {
+		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable tranatts = (Hashtable) traniDs.get(tranID);
 
 				// write the header, starting with the displayID
@@ -353,18 +360,22 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 				if (osr.checkError())
 					throw new IOException();
 			} catch (SequenceException e) {
-				logger.warning(e.getMessage());
+        if (logger.isLoggable(Level.WARNING))
+				  logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+        if (logger.isLoggable(Level.WARNING))
+				  logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
 	};
 
 	private final SeqWriter fastaWriter = new SeqWriter() {
-		void writeSequences(Integer tranID) throws SequenceException {
+		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable tranatts = (Hashtable) traniDs.get(tranID);
 
 				// write the header, starting with the displayID
@@ -422,10 +433,12 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 			} catch (SequenceException e) {
-				logger.warning(e.getMessage());
+        if (logger.isLoggable(Level.WARNING))
+				  logger.warning(e.getMessage());
 				throw e;
 			} catch (IOException e) {
-				logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
+        if (logger.isLoggable(Level.WARNING))
+				  logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
 				throw new SequenceException(e);
 			}
 		}
@@ -441,13 +454,11 @@ public final class CdnaSeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private FormattedSequencePrintStream osr;
-	private Connection conn = null;
 
 	private TreeMap traniDs = new TreeMap();
 	// holds each objects information, in order
 	private List fields = new ArrayList();
 	// holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
 
 	// Used for colating required fields
 	private String queryID;

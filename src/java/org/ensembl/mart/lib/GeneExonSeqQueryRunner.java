@@ -58,7 +58,6 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 		this.query = query;
 		this.format = format;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
-		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
 			case FormatSpec.TABULATED :
@@ -127,17 +126,13 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
+			Connection conn = query.getDataSource().getConnection();
+
 			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";
-			sqlbase += " order by  "
-				+ structure_table
-				+ ".gene_id, "
-				+ structure_table
-				+ ".transcript_id, "
-				+ structure_table
-				+ ".rank";
+			sqlbase += " order by  " + structure_table + ".gene_id, " + structure_table + ".transcript_id, " + structure_table + ".rank";
 
 			while (moreRows) {
 				sql = sqlbase;
@@ -206,7 +201,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 						if (geneiDs.size() > 0) {
 							// write the previous genes data, and refresh the geneiDs TreeMap
 							if (lastGene.intValue() > 0)
-								seqWriter.writeSequences(lastGene);
+								seqWriter.writeSequences(lastGene, conn);
 							geneiDs = new TreeMap();
 						}
 						// only do each exon once
@@ -296,12 +291,15 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 				}
 				// write the last genes data, if present
 				if (lastGene.intValue() > 0)
-					seqWriter.writeSequences(lastGene);
+					seqWriter.writeSequences(lastGene, conn);
 
 				if (rows < batchLength)
 					moreRows = false;
 				// on the odd chance that the last batch rowcount is the same as the batchLength, it will need to make an extra attempt
+
+				rs.close();
 			}
+			conn.close();
 		} catch (SQLException e) {
 			throw new InvalidQueryException(e + ":" + sql);
 		} catch (IOException e) {
@@ -312,12 +310,14 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 	// SeqWriter object
 	SeqWriter seqWriter;
 	abstract class SeqWriter {
-		abstract void writeSequences(Integer geneID) throws SequenceException;
+		abstract void writeSequences(Integer geneID, Connection conn) throws SequenceException;
 	}
 
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String assemblyout = (String) geneatts.get(Assembly);
@@ -334,16 +334,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 					osr.print((String) exonatts.get(DisplayID));
 
 					String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
-					osr.print(
-						separator
-							+ "strand="
-							+ strandout
-							+ separator
-							+ "chr="
-							+ exonloc.getChr()
-							+ separator
-							+ "assembly="
-							+ assemblyout);
+					osr.print(separator + "strand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -386,9 +377,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 
 					// write out the sequence
 					if (exonloc.getStrand() < 0)
-						osr.write(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
+						osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
 					else
 						osr.write(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()));
 
@@ -410,8 +399,10 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 	};
 
 	private final SeqWriter fastaWriter = new SeqWriter() {
-		void writeSequences(Integer geneID) throws SequenceException {
+		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String assemblyout = (String) geneatts.get(Assembly);
@@ -428,8 +419,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 					osr.print(">" + (String) exonatts.get(DisplayID));
 
 					String strandout = exonloc.getStrand() > 0 ? "forward" : "revearse";
-					osr.print(
-						"\tstrand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
+					osr.print("\tstrand=" + strandout + separator + "chr=" + exonloc.getChr() + separator + "assembly=" + assemblyout);
 
 					if (osr.checkError())
 						throw new IOException();
@@ -472,9 +462,7 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 
 					// write out the sequence
 					if (exonloc.getStrand() < 0)
-						osr.writeSequence(
-							SequenceUtil.reverseComplement(
-								dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
+						osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd())));
 					else
 						osr.writeSequence(dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()));
 
@@ -506,13 +494,11 @@ public final class GeneExonSeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private FormattedSequencePrintStream osr = null;
-	private Connection conn = null;
 
 	private TreeMap geneiDs = new TreeMap();
 	// holds each objects information, in order
 	private List fields = new ArrayList();
 	// holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
 
 	// Used for colating required fields
 	private String queryID;

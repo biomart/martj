@@ -60,7 +60,6 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		this.format = format;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true);
 		//autoflush true
-		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
 			case FormatSpec.TABULATED :
@@ -127,6 +126,8 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
+			Connection conn = query.getDataSource().getConnection();
+
 			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
@@ -197,7 +198,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 						if (traniDs.size() > 0) {
 							//					  process the previous tranID, if this isnt the first time through, then refresh the traniDs TreeMap
 							if (lastTran.intValue() > 0)
-								seqWriter.writeSequences(lastTran);
+								seqWriter.writeSequences(lastTran, conn);
 							traniDs = new TreeMap();
 						}
 						lastTran = tranID;
@@ -278,12 +279,15 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				}
 				// write the last transcripts data, if present
 				if (lastTran.intValue() > 0)
-					seqWriter.writeSequences(lastTran);
+					seqWriter.writeSequences(lastTran, conn);
 
 				if (rows < batchLength)
 					moreRows = false;
 				// on the odd chance that the last resultset has equal rowcount with batchLength, an extra attempt will be made
+
+				rs.close();
 			}
+			conn.close();
 		} catch (IOException e) {
 			throw new InvalidQueryException(e);
 		} catch (SQLException e) {
@@ -294,12 +298,14 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	// SeqWriter object
 	SeqWriter seqWriter;
 	abstract class SeqWriter {
-		abstract void writeSequences(Integer tranID) throws SequenceException;
+		abstract void writeSequences(Integer tranID, Connection conn) throws SequenceException;
 	}
 
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
-		void writeSequences(Integer tranID) throws SequenceException {
+		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable atts = (Hashtable) traniDs.get(tranID);
 
 				osr.print((String) atts.get(DisplayID));
@@ -307,16 +313,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
-				osr.print(
-					separator
-						+ "strand="
-						+ strandout
-						+ separator
-						+ "chr="
-						+ geneloc.getChr()
-						+ separator
-						+ "assembly="
-						+ assemblyout);
+				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
 
 				if (osr.checkError())
 					throw new IOException();
@@ -358,8 +355,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
-						theseBytes =
-							SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
 						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
 
@@ -396,8 +392,10 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	};
 
 	private final SeqWriter fastaWriter = new SeqWriter() {
-		void writeSequences(Integer tranID) throws SequenceException {
+		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
+				DNAAdaptor dna = new DNAAdaptor(conn);
+
 				Hashtable atts = (Hashtable) traniDs.get(tranID);
 
 				// write the header, starting with the displayID
@@ -407,8 +405,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
-				osr.print(
-					"\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
 
 				if (osr.checkError())
 					throw new IOException();
@@ -450,8 +447,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
-						theseBytes =
-							SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
 						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
 
@@ -499,13 +495,11 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	private String species = null;
 	private FormatSpec format = null;
 	private FormattedSequencePrintStream osr = null;
-	private Connection conn = null;
 
 	private TreeMap traniDs = new TreeMap();
 	// holds each objects information, in order
 	private List fields = new ArrayList();
 	// holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
 
 	// Used for colating required fields
 	private String queryID;
