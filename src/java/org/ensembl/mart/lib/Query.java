@@ -466,9 +466,7 @@ public class Query {
   }
 
   /**
-   * Replace the oldFilter with the new one. Fires a property change event
-   * where event.name="filters", event.oldValue=filter array before change, 
-   * event.newValue=filter array after change.
+   * Replace the oldFilter with the new one. 
    * @param oldFilter
    * @param newFilter
    * @throws RuntimeException if oldFilter is not currently in the query.
