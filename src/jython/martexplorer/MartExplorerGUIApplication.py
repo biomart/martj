@@ -464,9 +464,14 @@ class AttributeManagerPage(InputPage):
 
     def refreshView(self):
         self.cardContainer.show( self.node.targetCardName )
-        # must convert to vector explicitly to work on macs
-        list = Vector( Arrays.asList(self.available) )
-        self.availableWidget.listData = list
+
+        # must convert to Vector explicitly to work on macs
+        available = Vector( Arrays.asList(self.available) )
+        
+        # must explicitly call setListData() rather than .listData=
+        # to avoid conversion problems on linux and windows
+        self.availableWidget.setListData( available ) 
+
         self.tree.expandPath( self.path )
 
 
