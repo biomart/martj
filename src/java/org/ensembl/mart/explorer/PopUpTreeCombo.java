@@ -16,6 +16,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 package org.ensembl.mart.explorer;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,6 +36,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.tree.DefaultTreeModel;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -65,8 +67,9 @@ public abstract class PopUpTreeCombo extends JPanel {
 	private JButton button = new JButton("change");
 	private JTextField selectedTextField = new JTextField(30);
 	private JMenuBar treeMenu = new JMenuBar();
-	private JMenu firstTier = new JMenu();
+	private JPopupMenu firstTier = new JPopupMenu();
 	private Feedback feedback = new Feedback(this);
+	private JLabel jlabel;
 	public PopUpTreeCombo(String label) {
 		super();
 		createUI(label);
@@ -94,7 +97,8 @@ public abstract class PopUpTreeCombo extends JPanel {
 		// containing the label, textField and button when displayed.
 		treeMenu.setMaximumSize(new Dimension(0, 100));
 		treeMenu.add(firstTier);
-		add(new JLabel(label));
+		jlabel = new JLabel(label);
+		add(jlabel);
 		add(treeMenu);
 		add(button);
 		add(selectedTextField);
@@ -102,13 +106,28 @@ public abstract class PopUpTreeCombo extends JPanel {
 	public void showTree() {
 		update();
 		updateMenu();
+		final Component parent = this;
 		if (rootNode.getChildCount() > 0) {
 			new Thread() {
 				public void run() {
 					try {
-						while (!isShowing())
+						while (!parent.isShowing())
 							Thread.sleep(100);
-						firstTier.doClick();
+                        
+						// Most of these are "apparently" 
+            // pointless lines
+						// of code but are needed to make
+						// the popup menu appear in the
+						// correct place on screen.
+						firstTier.updateUI();
+						firstTier.setVisible(true);
+						firstTier.setVisible(false);
+						firstTier.updateUI();
+						firstTier.show(parent, button.getX()
+								+ button.getWidth() + 5, button.getY()
+								+ button.getHeight() + 5);
+						firstTier.repaint();
+                        
 					} catch (InterruptedException e) {
 						// do nothing
 					}
@@ -224,6 +243,23 @@ public abstract class PopUpTreeCombo extends JPanel {
 				addToMenu(m, (LabelledTreeNode) node.getChildAt(i));
 		}
 	}
+	private void addToMenu(JPopupMenu menu, final LabelledTreeNode node) {
+		if (node.getChildCount() == 0) {
+			JMenuItem item = new JMenuItem(node.getLabel());
+			menu.add(item);
+			item.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent event) {
+					doSelect(node.getLabel(), node.getUserObject());
+				}
+			});
+		} else {
+			JMenu m = new JMenu(node.getLabel());
+			menu.add(m);
+			int n = node.getChildCount();
+			for (int i = 0; i < n; i++)
+				addToMenu(m, (LabelledTreeNode) node.getChildAt(i));
+		}
+	}
 	public static void main(String[] args) {
 		final PopUpTreeCombo pu = new PopUpTreeCombo("Test") {
 			public void update() {
@@ -240,7 +276,8 @@ public abstract class PopUpTreeCombo extends JPanel {
 		// test the listener support
 		pu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Selection changed to : " + pu.getSelectedLabel());
+				System.out.println("Selection changed to : "
+						+ pu.getSelectedLabel());
 			}
 		});
 		Box p = Box.createVerticalBox();
