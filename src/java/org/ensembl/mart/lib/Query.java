@@ -54,13 +54,27 @@ public class Query {
   }
   
   public Query(Query oq) {
-  	if (oq.getAttributes().length > 0) {
+    
+    initialise(oq);
+  }
+
+
+  /**
+   * Inititise this query by removing all current properties
+   * and copying all the properties from oq.
+   * @param oq
+   */
+  public void initialise(Query oq) {
+    
+    removeAllAttributes();
+    if (oq.getAttributes().length > 0) {
       Attribute[] oatts = oq.getAttributes();
       Attribute[] natts = new Attribute[oatts.length];
       System.arraycopy(oatts, 0, natts, 0, oatts.length);
       setAttributes(natts);
-  	}
+    }
     
+    removeAllFilters();
     if (oq.getFilters().length > 0) {
       Filter[] ofilts = oq.getFilters();
       Filter[] nfilts = new Filter[ofilts.length];
@@ -68,28 +82,32 @@ public class Query {
       setFilters(nfilts);
     }
     
+    // TODO copy other querytypes?
     if (oq.querytype == Query.SEQUENCE)
       setSequenceDescription(new SequenceDescription(oq.getSequenceDescription()));
       
     if (oq.getStarBases().length > 0) {
-    	String[] oStars = oq.getStarBases();
-    	String[] nStars = new String[oStars.length];
-    	System.arraycopy(oStars, 0, nStars, 0, oStars.length);
-    	
-    	setStarBases(nStars);
+      String[] oStars = oq.getStarBases();
+      String[] nStars = new String[oStars.length];
+      System.arraycopy(oStars, 0, nStars, 0, oStars.length);
+      
+      setStarBases(nStars);
+    } else {
+      setStarBases(null);
     }
+    
     
     if (oq.getPrimaryKeys().length > 0) {
-    	String[] oPkeys = oq.getPrimaryKeys();
-    	String[] nPkeys = new String[oPkeys.length];
-    	System.arraycopy(oPkeys, 0, nPkeys, 0, oPkeys.length);
-    	
-    	setPrimaryKeys(nPkeys);
+      String[] oPkeys = oq.getPrimaryKeys();
+      String[] nPkeys = new String[oPkeys.length];
+      System.arraycopy(oPkeys, 0, nPkeys, 0, oPkeys.length);
+      
+      setPrimaryKeys(nPkeys);
+    } else {
+      setPrimaryKeys(null);
     }
     
-    if (oq.hasLimit())
-      limit = oq.getLimit();
-
+    limit = oq.getLimit();
     setDatasetInternalName( oq.getDatasetInternalName() );
     setDataSource( oq.getDataSource() );
 
