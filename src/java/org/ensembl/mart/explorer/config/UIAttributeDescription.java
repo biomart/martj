@@ -47,7 +47,7 @@ public UIAttributeDescription(String internalName, String fieldName) throws Conf
  * Constructor for a UIAttributeDescription.
  * 
  * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty.
-* @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
+ * @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
  * @param displayName String name of the UIAttributeDescription.
  * @param maxLength Int maximum possible length of the field in the mart.
  * @param tableConstraint String base name of a specific table containing this UIAttribute.

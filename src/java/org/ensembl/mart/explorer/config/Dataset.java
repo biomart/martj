@@ -237,11 +237,13 @@ public class Dataset {
 	 * Returns a particular AttributePage named by a given displayName.
 	 * 
 	 * @param displayName String name of a particular AttributePage
-	 * @return AttributePage object named by the given displayName
+	 * @return AttributePage object named by the given displayName, or null.
 	 */
 	public AttributePage getAttributePageByName(String internalName) {
-		return (AttributePage) attributePages.get(
-			(Integer) attributePageNameMap.get(internalName));
+		if (attributePageNameMap.containsKey(internalName))
+		  return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
+		else
+		  return null;
 	}
 
 	/**
@@ -268,11 +270,13 @@ public class Dataset {
 	 * Returns a particular FilterPage object named by a given displayName.
 	 * 
 	 * @param displayName String name of a particular FilterPage
-	 * @return FilterPage object named by the given displayName
+	 * @return FilterPage object named by the given displayName, or null
 	 */
 	public FilterPage getFilterPageByName(String internalName) {
-		return (FilterPage) filterPages.get(
-			(Integer) filterPageNameMap.get(internalName));
+		if (filterPageNameMap.containsKey(internalName))
+		  return (FilterPage) filterPages.get((Integer) filterPageNameMap.get(internalName));
+		else
+		  return null;
 	}
 
 	/**
@@ -287,14 +291,13 @@ public class Dataset {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular UIAttributeDescription.
+		* Note, it is best to first call containsUIAttributeDescription,
+		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		* 
 		* @param displayName name of the requested UIAttributeDescription
 		* @return UIAttributeDescription object
-		* @throws ConfigurationException when the UIAttributeDescription is not found.  Note, it is best to first call containsUIAttributeDescription,
-		*                   as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName)
-		throws ConfigurationException {
+	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		boolean found = false;
 
 		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
@@ -315,10 +318,7 @@ public class Dataset {
 		if (found)
 			return lastAtt;
 		else
-			throw new ConfigurationException(
-				"Could not find UIAttributeDescription "
-					+ internalName
-					+ " in this dataset");
+			return null;
 	}
 
 	/**
@@ -329,8 +329,7 @@ public class Dataset {
 		* @param displayName name of the requested UIAttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIAttributeDescription(String internalName)
-		throws ConfigurationException {
+	public boolean containsUIAttributeDescription(String internalName) {
 		boolean found = false;
 
 		if (lastAtt != null && lastAtt.getInternalName().equals(internalName)) {
@@ -353,14 +352,13 @@ public class Dataset {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular UIFilterDescription.
+		* Note, it is best to first call containsUIFilterDescription,
+		* as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 		* 
 		* @param displayName name of the requested UIFilterDescription
 		* @return UIFilterDescription object
-		* @throws ConfigurationException when the UIFilterDescription is not found.  Note, it is best to first call containsUIFilterDescription,
-		*                   as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
 		*/
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName)
-		throws ConfigurationException {
+	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
 		boolean found = false;
 
 		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
@@ -380,10 +378,7 @@ public class Dataset {
 		if (found)
 			return lastFilt;
 		else
-			throw new ConfigurationException(
-				"Could not find UIFilterDescription "
-					+ internalName
-					+ " in this dataset");
+			return null;
 	}
 
 	/**
@@ -394,8 +389,7 @@ public class Dataset {
 		* @param displayName name of the requested UIFilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
-	public boolean containsUIFilterDescription(String internalName)
-		throws ConfigurationException {
+	public boolean containsUIFilterDescription(String internalName) {
 		boolean found = false;
 
 		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
@@ -422,9 +416,8 @@ public class Dataset {
 	 * @param internalName -- String name of the FilterPage containing the requested UIFilterDescription
 	 * 
 	 * @return FilterPage object containing the requested UIFilterDescription
-	 * @throws ConfigurationException when the requested UIFilterDescription is not found in any FilterPage.
 	 */
-	public FilterPage getPageForUIFilterDescription(String internalName) throws ConfigurationException {
+	public FilterPage getPageForUIFilterDescription(String internalName) {
 	  boolean found = false;
 		FilterPage page = null;
 		
@@ -440,7 +433,7 @@ public class Dataset {
 		if (found)
 		  return page;
 		else
-		  throw new ConfigurationException("Could not find "+internalName+" filter in any FilterPage.");
+		  return null;
 	}
 
 /**
@@ -448,9 +441,8 @@ public class Dataset {
  * 
  * @param internalName -- String internalName of the requested UIAttributeDescription
  * @return AttributePage containing requested UIAttributeDescription
- * @throws ConfigurationException when the UIAttributeDescription is not found in any AttributePage in the Dataset.
  */
-  public AttributePage getPageForUIAttributeDescription(String internalName) throws ConfigurationException {
+  public AttributePage getPageForUIAttributeDescription(String internalName) {
     boolean found = false;
     AttributePage page = null;
     
@@ -466,9 +458,47 @@ public class Dataset {
     if (found)
       return page;
     else
-      throw new ConfigurationException("Could not find "+internalName+" UIAttributeDescription in any AttributePage in Dataset");
+      return null;
   }
   
+	/**
+	 * Convenience Method to get all UIFilterDescription objects in all Pages/Groups/Collections within a Dataset.
+	 * 
+	 * @return UIFilterDescription[]
+	 */
+	public UIFilterDescription[] getAllUIFilterDescriptions() {
+		List filts = new ArrayList();
+  	
+		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
+			FilterPage fp = (FilterPage) filterPages.get((Integer) iter.next());
+  		
+			filts.addAll(Arrays.asList(fp.getAllUIFilterDescriptions()));
+		}
+		
+		UIFilterDescription[] f = new UIFilterDescription[filts.size()];
+		filts.toArray(f);
+		return f;  	
+	}
+
+	/**
+	 * Convenience Method to get all UIAttributeDescription objects in all Pages/Groups/Collections within a Dataset.
+	 * 
+	 * @return UIAttributeDescription[]
+	 */
+	public UIAttributeDescription[] getAllUIAttributeDescriptions() {
+		List atts = new ArrayList();
+  	
+		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
+			AttributePage ap = (AttributePage) filterPages.get((Integer) iter.next());
+  		
+			atts.addAll(Arrays.asList(ap.getAllUIAttributeDescriptions()));
+		}
+		
+		UIAttributeDescription[] a = new UIAttributeDescription[atts.size()];
+		atts.toArray(a);
+		return a;  	
+	}
+		  
 	/**
 	 * Provides output useful for debugging purposes.
 	 */
