@@ -1,0 +1,52 @@
+# NOTES:
+#
+# Specify all settings on command line
+# use ~/.martexplorer for db settings (and -g option)
+
+# get accession for genes from chr3, print to stdout (default)
+martcl.sh -H kaka.sanger.ac.uk -u anonymous -d ensembl_mart_11_1 -s homo_sapiens -a gene_stable_id  -a chr_name -f chr_name=3 -c gene -v
+
+# output to file
+martcl.sh -H kaka.sanger.ac.uk -u anonymous -d ensembl_mart_11_1 -s homo_sapiens -a gene_stable_id  -a chr_name -f chr_name=3 -c gene -o /tmp/chr3genes.txt
+
+martcl.sh -s homo_sapiens -c gene -a gene_stable_id -a chr_name -a gene_chrom_start -a gene_chrom_end -f chr_name=X
+
+############
+# ID FILTERS
+############
+
+# what chromosome is a gene on (filter on gene name "-t" + "-i")
+martcl.sh -s homo_sapiens -a gene_stable_id  -a chr_name -t gene_stable_id -i ENSG00000177346 -c gene
+
+# filter on gene ids from a url, this could be a local or remote file
+martcl.sh -s homo_sapiens -a gene_stable_id  -a chr_name -t gene_stable_id -I file:$HOME/dev/mart-explorer/data/gene_stable_id.test -c gene
+
+# What transcripts are on gene ENSG00000177346
+martcl.sh -s homo_sapiens -a transcript_stable_id  -a chr_name -c transcript -i ENSG00000177346 -t gene_stable_id
+
+# reading ids from stdin "-S" (useful for includin in *nix pipeline bacuae prints to stdout as well)
+cat $HOME/dev/mart-explorer/data/gene_stable_id.test | martcl.sh -s homo_sapiens -a gene_stable_id -c gene -S -t gene_stable_id
+
+# filter genes by xrefs (not implemented yet)
+*#martcl.sh -s homo_sapiens -a gene_stable_id  -a chr_name -t xref_RefSeq.display_id -i NM_000014 -c gene
+
+#################
+# SATELITE TABLES
+#################
+
+# Get interpro description for spewcified gene. This kinda works- returns 4 hits for the same gene (need to look at the sql)
+*#martcl.sh -s homo_sapiens -a gene_stable_id  -t gene_stable_id -i ENSG00000177346 -c gene -a homo_sapiens_core_gene_prot_interpro.description
+
+
+# use transcript table (ok, so long as all attributes in that table otherwise currently joins to non-existant tables) ...
+martcl.sh -s homo_sapiens -a transcript_stable_id  -a chr_name -f chr_name=3 -c transcript -v
+
+# ... e.g. broken because treats transcript as focus and looks for
+#  'transcript-satelites' instead of using gene satelites
+*#martcl.sh -H kaka.sanger.ac.uk -u anonymous -d ensembl_mart_10_1 -s homo_sapiens -a transcript_stable_id  -a chr_name -f chr_name=3 -c transcript -v -a pfam
+
+
+
+# show me the sql (send output to /dev/null- could make this -V option?)
+martcl.sh -H kaka.sanger.ac.uk -u anonymous -d ensembl_mart_10_1 -s homo_sapiens -a transcript_stable_id  -a chr_name -f chr_name=3 -c transcript -o /dev/null -v
+
