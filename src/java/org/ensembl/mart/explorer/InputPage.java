@@ -6,6 +6,8 @@
  */
 package org.ensembl.mart.explorer;
 
+import java.awt.BorderLayout;
+
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
@@ -13,7 +15,7 @@ import javax.swing.tree.MutableTreeNode;
 import org.ensembl.mart.lib.Query;
 
 /**
- * Base class for user input pages.
+ * Base class for user input pages. Uses a BorderLayout by default.
  */
 public abstract class InputPage extends JPanel {
 
@@ -29,7 +31,9 @@ public abstract class InputPage extends JPanel {
     this.query = query;
     setNodeLabel(name, null );
     node = new DefaultMutableTreeNode(this);
-        
+     
+    //  use border layout so that a single item added to InputPage fills all available space in panel
+    setLayout(new BorderLayout());   
   }
 
   public MutableTreeNode getNode() {

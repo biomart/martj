@@ -6,6 +6,8 @@
  */
 package org.ensembl.mart.explorer;
 
+import java.awt.FlowLayout;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -67,6 +69,8 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
     for (int i = 0, n = datasets.length; i < n; i++) {
       combo.addItem( new DatasetWrapper( datasets[i])  );
 		}
+    
+    setLayout( new FlowLayout() );
     
     // Add Box to page
     add( combo );

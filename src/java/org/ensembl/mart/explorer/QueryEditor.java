@@ -141,9 +141,9 @@ public class QueryEditor extends JPanel implements PropertyChangeListener, TreeS
   /**
    * Adds attribute, filter and output settings pages to panel. 
    */
-  private void addAttributePages() {
-    // TODO Auto-generated method stub
-    //martConfiguration.
+  private void addAttributePages( Dataset dataset ) {
+    AttributePageSetWidget attributesPage = new AttributePageSetWidget( query, dataset );
+    addPage( attributesPage, 1 );
   }
   
   
@@ -155,7 +155,7 @@ public class QueryEditor extends JPanel implements PropertyChangeListener, TreeS
     outputSettingsPage = new OutputSettingsPage();
     outputSettingsPage.addPropertyChangeListener( this );
     
-    addPage( outputSettingsPage, 1 );
+    addPage( outputSettingsPage, 2 );
   }
 
 
@@ -246,11 +246,13 @@ public class QueryEditor extends JPanel implements PropertyChangeListener, TreeS
               
         if ( query.getStarBases()!=null && query.getPrimaryKeys()!=null ) {
         
-          addAttributePages();   
+          currentDataset =  datasetSelectionPage.getSelectedDataset();
+          
+          addAttributePages( currentDataset );   
           addFilterPages();
           addOutputSettingsPage();
         
-          currentDataset =  datasetSelectionPage.getSelectedDataset(); 
+           
         }     
       }
       
