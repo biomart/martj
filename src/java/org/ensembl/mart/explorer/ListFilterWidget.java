@@ -35,7 +35,6 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.PushOptions;
 
 /**
  * Represents a list of user options. Some options cause the
@@ -43,309 +42,267 @@ import org.ensembl.mart.lib.config.PushOptions;
  */
 public class ListFilterWidget extends FilterWidget implements ActionListener {
 
-  /**
-   * BasicFilter containing an InputPage, this page is used by the QueryEditor
-   * when it detects the filter has been added or removed from the query.
-   */
-  private class InputPageAwareBasicFilter
-    extends BasicFilter
-    implements InputPageAware {
-
-    private InputPage inputPage;
-
-    public InputPageAwareBasicFilter(
-      String field,
-      String condition,
-      String value,
-      InputPage inputPage) {
-      this(field, null, condition, value, inputPage);
-    }
-
-    public InputPageAwareBasicFilter(
-      String field,
-      String tableConstraint,
-      String condition,
-      String value,
-      InputPage inputPage) {
-      super(field, tableConstraint, condition, value);
-      this.inputPage = inputPage;
-    }
-
-    public InputPage getInputPage() {
-      return inputPage;
-    }
-  }
-
-  private Filter filter;
-
-  private Map filterValueToItem;
-
-  private PushOptionsHandler[] pushOptionHandlers;
-
-  private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
-
-  private JComboBox list;
-  private Object lastSelectedItem;
-  /**
-   * @param query model to bv synchronised
-   * @param filterDescription parameters for this widget
-   */
-  public ListFilterWidget(
-    FilterGroupWidget filterGroupWidget,
-    Query query,
-    FilterDescription filterDescription) {
-    super(filterGroupWidget, query, filterDescription);
-
-    list = new JComboBox();
-    list.addActionListener(this);
-
-    configureList(list, filterDescription);
-
-    setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-    add(new JLabel(filterDescription.getDisplayName()));
-    add(Box.createHorizontalStrut(5));
-    add(list);
-  }
-
-  /**
-   * Configures the options based on the filterDescription.
-   * @param list
-   * @param filterDescription
-   */
-  private void configureList(
-    JComboBox list,
-    FilterDescription filterDescription) {
-
-    String field = filterDescription.getField();
-
-    if (isInvalid(field) && !filterDescription.hasOptions())
-      throw new RuntimeException(
-        "Invalid filterDescription: " + filterDescription);
-
-    setOptions(filterDescription.getOptions());
-
-  }
-
-  /**
-   * Responds to the removal or addition of relevant filters from the query. Updates the state of
-   * this widget by changing the currently selected item in the list.
-   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-   */
-  public void propertyChange(PropertyChangeEvent evt) {
-
-    if (evt.getSource() == query) {
-
-      if (evt.getPropertyName().equals("filter")) {
-
-        Object oldValue = evt.getOldValue();
-        Filter f;
-        if (oldValue != null
-          && oldValue instanceof Filter
-          && (f = (Filter) oldValue).getField().equals(fieldName)) {
-          removeFilter(f);
-        }
-
-        Object newValue = evt.getNewValue();
-        if (newValue != null
-          && newValue instanceof Filter
-          && (f = (Filter) newValue).getField().equals(fieldName)) {
-          setFilter(f);
-        }
-      }
-    }
-
-  }
-
-  /**
-   * Sets this,filter=filter and selects the appropriate item in the list.
-   * @param filter
-   */
-  private void setFilter(Filter filter) {
-
-    this.filter = filter;
-    setSelectedItem((OptionWrapper) filterValueToItem.get(filter.getValue()));
-
-  }
-
-  /**
-   * @param emptySelection
-   */
-  private void setSelectedItem(OptionWrapper wrapper) {
-    list.removeActionListener(this);
-    list.setSelectedItem(wrapper);
-    list.addActionListener(this);
-  }
-
-  /**
-   * Remove the filter; sets this.filter to null and resets the 
-   * selected item to "No Filter".
-   * @param filter
-   */
-  private void removeFilter(Filter filter) {
-
-    if (filter != this.filter)
-      throw new RuntimeException("Widget is out of sync with query, filters should be the same");
-
-    this.filter = null;
-
-    setSelectedItem(emptySelection);
-
-  }
-
-  /**
-   * Handles user selecting an item from the list.
-   * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
-   */
-  public void actionPerformed(ActionEvent e) {
-
-    Object selectedItem = list.getSelectedItem();
-
-    if (selectedItem == lastSelectedItem
-      || (lastSelectedItem == null && selectedItem == emptySelection))
-      return;
-
-
-    if (lastSelectedItem != emptySelection) {
-
-      if ( filter!=null ) {
-        query.removeFilter(filter);
-      }
-      
-      removePushOptions(pushOptionHandlers);
-    }
-
-    lastSelectedItem = selectedItem;
+	/**
+	 * BasicFilter containing an InputPage, this page is used by the QueryEditor
+	 * when it detects the filter has been added or removed from the query.
+	 */
+	private class InputPageAwareBasicFilter
+		extends BasicFilter
+		implements InputPageAware {
+
+		private InputPage inputPage;
+
+		public InputPageAwareBasicFilter(
+			String field,
+			String condition,
+			String value,
+			InputPage inputPage) {
+			this(field, null, condition, value, inputPage);
+		}
+
+		public InputPageAwareBasicFilter(
+			String field,
+			String tableConstraint,
+			String condition,
+			String value,
+			InputPage inputPage) {
+			super(field, tableConstraint, condition, value);
+			this.inputPage = inputPage;
+		}
+
+		public InputPage getInputPage() {
+			return inputPage;
+		}
+	}
+
+	private Filter filter;
+
+	private Map filterValueToItem;
+
+	private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
+
+	private JComboBox list;
+	private Object lastSelectedItem;
+	/**
+	 * @param query model to bv synchronised
+	 * @param filterDescription parameters for this widget
+	 */
+	public ListFilterWidget(
+		FilterGroupWidget filterGroupWidget,
+		Query query,
+		FilterDescription filterDescription) {
+		super(filterGroupWidget, query, filterDescription);
+
+		list = new JComboBox();
+		list.addActionListener(this);
+
+		configureList(list, filterDescription);
+
+		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+		add(new JLabel(filterDescription.getDisplayName()));
+		add(Box.createHorizontalStrut(5));
+		add(list);
+	}
+
+	/**
+	 * Configures the options based on the filterDescription.
+	 * @param list
+	 * @param filterDescription
+	 */
+	private void configureList(
+		JComboBox list,
+		FilterDescription filterDescription) {
+
+		String field = filterDescription.getField();
+
+		if (isInvalid(field) && !filterDescription.hasOptions())
+			throw new RuntimeException(
+				"Invalid filterDescription: " + filterDescription);
+
+		setOptions(filterDescription.getOptions());
+
+	}
+
+	/**
+	 * Responds to the removal or addition of relevant filters from the query. Updates the state of
+	 * this widget by changing the currently selected item in the list.
+	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+	 */
+	public void propertyChange(PropertyChangeEvent evt) {
+
+		if (evt.getSource() == query) {
+
+			if (evt.getPropertyName().equals("filter")) {
+
+				Object oldValue = evt.getOldValue();
+				Filter f;
+				if (oldValue != null
+					&& oldValue instanceof Filter
+					&& (f = (Filter) oldValue).getField().equals(fieldName)) {
+
+					// unselect in display
+					this.filter = null;
+					setSelectedItem(emptySelection);
 
-    if (selectedItem != emptySelection) {
+					// remove pushOptions
+					unassignPushOptions();
+				}
 
-      String value = null;
-      Option option = ((OptionWrapper) selectedItem).option;
-      if ( option!=null ) {
-        String tmp = option.getValue();
-        if ( tmp!=null && !"".equals( tmp ) ) {
-          value = tmp;
-        }
-      }
-              
-      if ( value!=null ) {
+				Object newValue = evt.getNewValue();
+				if (newValue != null
+					&& newValue instanceof Filter
+					&& (f = (Filter) newValue).getField().equals(fieldName)) {
 
-        filter =
-          new InputPageAwareBasicFilter(
-            filterDescription.getField(),
-            option.getTableConstraint(),
-            "=",
-            value,
-            this);
-        query.addFilter(filter);
-      }
-      
-      
-      setNodeLabel(
-        null,
-        filterDescription.getField() + " = " + option.getValue());
+					// select in display
+					this.filter = (Filter) newValue;
+          OptionWrapper ow = (OptionWrapper) filterValueToItem.get(filter.getValue());
+					setSelectedItem( ow );
+					
+          // add PushOptions  
+          assignPushOptions( ow.option.getPushOptions() );
+					
+				}
+			}
+		}
 
-      pushOptions(option.getPushOptions());
-    }
+	}
 
-  }
 
-  /**
-   * Removes all options from the push targets.
-   */
-  private void removePushOptions(PushOptionsHandler[] optionPushers) {
 
-    int n = (optionPushers == null) ? 0 : optionPushers.length;
-    for (int i = 0; i < n; i++)
-      optionPushers[i].remove();
+	/**
+	 * @param emptySelection
+	 */
+	private void setSelectedItem(OptionWrapper wrapper) {
+		list.removeActionListener(this);
+		list.setSelectedItem(wrapper);
+		list.addActionListener(this);
+	}
 
-  }
 
-  /**
-   * @param pushs
-   */
-  private void pushOptions(PushOptions[] optionPushes) {
+	/**
+	 * Handles user selecting an item from the list.
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
+	public void actionPerformed(ActionEvent e) {
 
-    pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
+		Object selectedItem = list.getSelectedItem();
 
-    for (int i = 0; i < optionPushes.length; i++) {
-      pushOptionHandlers[i] =
-        new PushOptionsHandler(optionPushes[i], filterGroupWidget);
-      pushOptionHandlers[i].push();
-    }
-  }
+		if (selectedItem == lastSelectedItem)
+			return;
 
-  private void removeFilter() {
+		unassignPushOptions();
 
-    if (filter != null) {
+		Filter oldFilter = filter;
 
-      query.removePropertyChangeListener(this);
-      query.removeFilter(filter);
-      query.addPropertyChangeListener(this);
-      filter = null;
+		if (selectedItem == emptySelection) {
 
-    }
+			filter = null;
 
-  }
+		} else if (selectedItem != emptySelection) {
 
-  /**
-   * Removes items from list and adds the empty selection to the empty selection.
-   * @param list list to reset
-   * @param options array of options to add to list. If null the list is reset to
-   * contain just the emptySelection entry.
-   * @return map from option.value to the item in the list it corresponds to. 
-   */
-  private Map resetList(JComboBox list, Option[] options) {
+			String value = null;
+			Option option = ((OptionWrapper) selectedItem).option;
+			if (option != null) {
+				String tmp = option.getValue();
+				if (tmp != null && !"".equals(tmp)) {
+					value = tmp;
+				}
 
-    Map valueToItem = new HashMap();
+				if (value != null) {
 
-    //  must stop listening otherwise propertyChange() is called fore every change we make
-    // to the list.
-    list.removeActionListener(this);
+					filter =
+						new InputPageAwareBasicFilter(
+							filterDescription.getField(),
+							option.getTableConstraint(),
+							"=",
+							value,
+							this);
+				}
 
-    list.removeAllItems();
+				setNodeLabel(
+					null,
+					filterDescription.getField() + " = " + option.getValue());
 
-    // make first option be empty
-    list.addItem(emptySelection);
+				assignPushOptions(option.getPushOptions());
+			}
+		}
 
-    // Add any options to list
-    if (options != null && options.length > 0) {
+		lastSelectedItem = selectedItem;
+		updateQueryFilters(oldFilter, filter);
+	}
 
-      valueToItem = new HashMap();
+	private void removeFilter() {
 
-      for (int i = 0; i < options.length; i++) {
+		if (filter != null) {
 
-        Option option = options[i];
+			query.removePropertyChangeListener(this);
+			query.removeFilter(filter);
+			query.addPropertyChangeListener(this);
+			filter = null;
 
-        String value = option.getValue();
-        String field = option.getField();
-        if (isInvalid(value) && isInvalid(field))
-          throw new RuntimeException("Invalid option = " + option);
+		}
 
-        // add each option, via a surrogate, to the list. 
-        OptionWrapper ow = new OptionWrapper(option);
-        valueToItem.put(value, ow);
-        list.addItem(ow);
+	}
 
-      }
+	/**
+	 * Removes items from list and adds the empty selection to the empty selection.
+	 * @param list list to reset
+	 * @param options array of options to add to list. If null the list is reset to
+	 * contain just the emptySelection entry.
+	 * @return map from option.value to the item in the list it corresponds to. 
+	 */
+	private Map resetList(JComboBox list, Option[] options) {
 
-    }
+		Map valueToItem = new HashMap();
 
-    list.addActionListener(this);
+		//  must stop listening otherwise propertyChange() is called fore every change we make
+		// to the list.
+		list.removeActionListener(this);
 
-    return valueToItem;
-  }
+		list.removeAllItems();
 
-  /**
-   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
-   */
-  public void setOptions(Option[] options) {
+		// make first option be empty
+		list.addItem(emptySelection);
 
-    removePushOptions(pushOptionHandlers);
+		// Add any options to list
+		if (options != null && options.length > 0) {
 
-    removeFilter();
+			valueToItem = new HashMap();
 
-    filterValueToItem = resetList(list, options);
+			for (int i = 0; i < options.length; i++) {
 
-  }
+				Option option = options[i];
+
+				String value = option.getValue();
+				String field = option.getField();
+				if (isInvalid(value) && isInvalid(field))
+					throw new RuntimeException("Invalid option = " + option);
+
+				// add each option, via a surrogate, to the list. 
+				OptionWrapper ow = new OptionWrapper(option);
+				valueToItem.put(value, ow);
+				list.addItem(ow);
+
+			}
+
+		}
+
+		list.addActionListener(this);
+
+		return valueToItem;
+	}
+
+	/**
+	 * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+	 */
+	public void setOptions(Option[] options) {
+
+		unassignPushOptions();
+
+		removeFilter();
+
+		filterValueToItem = resetList(list, options);
+
+	}
 
 }

@@ -24,6 +24,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.PushOptions;
 
 /**
  * Base class for FilterWidgets.
@@ -108,4 +109,33 @@ implements PropertyChangeListener {
   public static final boolean isInvalid(String s) {
   	return s == null && "".equals(s);
   }
+
+
+	protected PushOptionsHandler[] pushOptionHandlers;
+
+	/**
+	   * Removes all options from the push targets.
+	   */
+	protected void unassignPushOptions() {
+	
+	  int n = ( pushOptionHandlers == null) ? 0 : pushOptionHandlers.length;
+	  for (int i = 0; i < n; i++)
+	    pushOptionHandlers[i].remove();
+	
+	}
+
+
+	/**
+	   * @param pushs
+	   */
+	protected void assignPushOptions(PushOptions[] optionPushes) {
+	
+	  pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
+	
+	  for (int i = 0; i < optionPushes.length; i++) {
+	    pushOptionHandlers[i] =
+	      new PushOptionsHandler(optionPushes[i], filterGroupWidget);
+	    pushOptionHandlers[i].push();
+	  }
+	}
 }
