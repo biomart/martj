@@ -425,12 +425,16 @@ public class MartShell {
         else
           LoadScriptFromFile(history_file);          			   			
 			}
+			
+			// load help, this loads the help, and, if completionOn, adds them to Help Mode in the MartCompleter
+			LoadHelpFile();
+			
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
 			e1.printStackTrace();
 			System.exit(1);
 		}
-
+		
 		while (true) {
 			try {
 				thisline = Prompt();
@@ -720,9 +724,6 @@ public class MartShell {
 	}
 
 	private String Help(String command) throws InvalidQueryException {
-		if (!helpLoaded)
-			LoadHelpFile();
-
 		StringBuffer buf = new StringBuffer();
 
 		if (command.equals(HELPC)) {
@@ -1233,29 +1234,41 @@ public class MartShell {
 			String thisLine = null;
 
 			try {
-				thisLine = Readline.readline("\nPlease enter the host address of the mart database (press enter to leave unchaged): ", false);
+				
+				String myHost = (martHost == null) ? "" : martHost;
+				thisLine = Readline.readline("\nPlease enter the host address of the mart database (press enter to leave as '" + myHost + "'): ", false);
 				if (thisLine != null)
 					martHost = thisLine;
 
-				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave unchaged): ", false);
+        String myPort = (martPort == null) ? "" : martPort;
+				thisLine = Readline.readline("\nPlease enter the port on which the mart database is running (press enter to leave as '" + myPort + "'): ", false);
 				if (thisLine != null)
 					martPort = thisLine;
 
-				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database (press enter to leave unchaged): ", false);
+        String myUser = (martUser == null) ? "" : martUser;
+				thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database (press enter to leave as '" + myUser + "'): ", false);
 				if (thisLine != null)
 					martUser = thisLine;
 
-				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database (press enter to leave unchaged): ", false);
+        String myPass = "";
+        if (martPass != null) {
+        	for(int i = 0, n = martPass.length(); i < n; i++)
+        	  myPass += "*";
+        }
+        
+				thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database (press enter to leave as '" + myPass + "'): ", false);
 				if (thisLine != null)
 					martPass = thisLine;
 
-				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query (press enter to leave unchaged): ", false);
+        String myDb = (martDatabase == null) ? "" : martDatabase; 
+				thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query (press enter to leave as '" + myDb + "'): ", false);
 				if (thisLine != null)
 					martDatabase = thisLine;
 
+        String myAltFile = (altConfigurationFile == null) ? "-" : altConfigurationFile;
 				thisLine =
 					Readline.readline(
-						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave unchaged,\n enter '-' to use configuration provided by "
+						"\nPlease enter the URL for the XML Configuration File for the new mart (press enter to leave as '" + myAltFile + "',\n enter '-' to use configuration provided by "
 							+ martDatabase
 							+ "):",
 						false);
@@ -1748,6 +1761,7 @@ public class MartShell {
 					QUITC,
 					HELPC,
 					DESCC,
+					SETCONSETSC,
 					SETOUTSETSC,
 					SHOWOUTSETSC,
 					SHOWCONSETSC,
