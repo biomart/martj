@@ -18,8 +18,20 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
+
+import javax.swing.Box;
+import javax.swing.JScrollPane;
+
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.UIDSFilterDescription;
+import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
  * @author craig
@@ -29,13 +41,77 @@ import org.ensembl.mart.lib.config.FilterGroup;
  */
 public class FilterGroupWidget extends PageWidget {
 
+  private Logger logger = Logger.getLogger(FilterGroupWidget.class.getName());
+
+  private FilterGroup group;
+
 	/**
 	 * @param name
 	 * @param query
 	 */
 	public FilterGroupWidget(Query query, String name, FilterGroup group) {
 		super(query, name);
-		// TODO Auto-generated constructor stub
+		
+    this.group = group;
+
+    Box panel = Box.createVerticalBox();
+    leafWidgets = addCollections(panel, group.getFilterCollections());
+    panel.add(Box.createVerticalGlue());
+    
+    add(new JScrollPane(panel));
+    
+	}
+
+	/**
+	 * @param panel
+	 * @param collections
+	 * @return
+	 */
+	private List addCollections(Box panel, FilterCollection[] collections) {
+    List widgets = new ArrayList();
+
+    for (int i = 0; i < collections.length; i++) {
+
+      FilterCollection collection = collections[i];
+      InputPage[] attributes = getFilterWidgets(collection);
+      widgets.addAll(Arrays.asList(attributes));
+      GridPanel p =
+        new GridPanel(attributes, 2, 25, collection.getDisplayName());
+      panel.add(p);
+
+    }
+    return widgets;
+	}
+
+	/**
+	 * @param collection
+	 * @return
+	 */
+	private InputPage[] getFilterWidgets(FilterCollection collection) {
+    List filterDescriptions = collection.getUIFilterDescriptions();
+    List pages = new ArrayList();
+
+    for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
+      Object element = iter.next();
+
+      if (element instanceof UIFilterDescription) {
+
+        UIFilterDescription a = (UIFilterDescription) element;
+        FilterPageSetWidget.TYPES.add( a.getType() );
+        FilterDescriptionWidget w = new FilterDescriptionWidget(query, a);
+        pages.add(w);
+      } 
+      else if (element instanceof UIDSFilterDescription) {
+
+        logger.warning("TODO Unsupported domain specific filter description: " + element.getClass().getName() + element);
+      }
+      else {
+        logger.severe(  "Unrecognised filter: " +  element.getClass().getName() + element); 
+      }
+      
+    }
+
+    return (InputPage[]) pages.toArray(new InputPage[pages.size()]);
 	}
 
 }

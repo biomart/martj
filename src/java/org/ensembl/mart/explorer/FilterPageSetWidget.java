@@ -19,50 +19,51 @@
 package org.ensembl.mart.explorer;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.FilterPage;
 
 /**
  * Holds all filter pages.
  */
 public class FilterPageSetWidget extends PageSetWidget {
 
-  private List filterDescriptionWidgets;
-  
+	private List filterDescriptionWidgets;
+
+  final static Set TYPES = new HashSet();
+
 	/**
 	 * @param query
 	 */
 	public FilterPageSetWidget(Query query, Dataset dataset) {
 		super(query, "Filters");
 
+		filterDescriptionWidgets = new ArrayList();
 
-    
-    filterDescriptionWidgets = new ArrayList();
-    
 		FilterPage[] filterPages = dataset.getFilterPages();
 		for (int i = 0, n = filterPages.length; i < n; i++) {
 			FilterPage page = filterPages[i];
-      String name = page.getDisplayName();
-      FilterPageWidget p = new FilterPageWidget(query, name, page); 
-			tabbedPane.add( name, p );
-      filterDescriptionWidgets.addAll( p.getLeafWidgets() );
+			String name = page.getDisplayName();
+			FilterPageWidget p = new FilterPageWidget(query, name, page);
+			tabbedPane.add(name, p);
+			filterDescriptionWidgets.addAll(p.getLeafWidgets());
 		}
-    resetTabColors(); 
-    
-    
-    
+		resetTabColors();
+
+		
+		System.out.println("TYPES: " + TYPES);
+
 	}
 
-  /**
-   * 
-   * @return all filterDescriptionWidgets contained in sub pages.
-   */
-  public List getFilterDescriptionWidgets() {
-    return filterDescriptionWidgets;
-  }
-
-
+	/**
+	 * 
+	 * @return all filterDescriptionWidgets contained in sub pages.
+	 */
+	public List getFilterDescriptionWidgets() {
+		return filterDescriptionWidgets;
+	}
 }

@@ -32,6 +32,7 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.UIAttributeDescription;
+import org.ensembl.mart.lib.config.UIDSFilterDescription;
 
 /**
  * Widget representing an AttibuteGroup. 
@@ -57,7 +58,6 @@ public class AttributeGroupWidget extends GroupWidget {
 
     this.group = group;
 
-    //setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     Box panel = Box.createVerticalBox();
     leafWidgets = addCollections(panel, group.getAttributeCollections());
     panel.add(Box.createVerticalGlue());
@@ -107,9 +107,12 @@ public class AttributeGroupWidget extends GroupWidget {
         UIAttributeDescription a = (UIAttributeDescription) element;
         AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a);
         pages.add(w);
-      } else {
+      } else if ( element instanceof UIDSFilterDescription ){
+        logger.warning("TODO Unsupported domain specific attribute description: " + element.getClass().getName() + element);
+      }
+      else {
 
-        logger.warning("Unsupported attribute description: " + element);
+        logger.severe("Unsupported attribute description: " +  element.getClass().getName() + element);
       }
     }
 
