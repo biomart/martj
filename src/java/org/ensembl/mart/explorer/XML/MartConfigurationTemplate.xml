@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
+<!DOCTYPE MartConfiguration SYSTEM "http://www.ensembl.org/EnsMart/MartConfiguration.dtd" >
 
 <MartConfiguration internalName="ensembl_mart_14_1"
                    displayName="Ensembl Mart version 14.1"
@@ -46,7 +46,7 @@
                                     description="Determine which base pair on the specified chromosome to begin range" 
                                     type="range" 
                                     fieldName="gene_chrom_start" 
-                                    qualifier=">=" 
+                                    qualifier="&gt;=" 
                                     tableConstraint="gene_main"/>
 
 		     </FilterCollection>
@@ -58,7 +58,7 @@
                                     description="Determine which base pair on the specified chromosome to end range" 
                                     type="range" 
                                     fieldName="gene_chrom_end" 
-                                    qualifier="<=" 
+                                    qualifier="&lt;=" 
                                     tableConstraint="gene_main"/>
 
 		     </FilterCollection>
@@ -160,7 +160,7 @@
 
        	       	    <UIFilterDescription internalName="zfish_Homolog_B" 
                                          displayName="Entries associated with homologous zebrafish genes" 
-                                         description="Filter for Genes having zebrafish homologous Genes" 
+                                         description="Filter for Genes having zebrafish homologous Genes"
                                          type="boolean" 
                                          fieldName="drerio_homolog" 
                                          qualifier="" 
@@ -207,7 +207,8 @@
                                    maxSelect="all">
 
 		         <UIAttributeDescription internalName="chromosome" 
-                                         displayName="Chromosome Name" description='"Chromsome Name"' 
+                                         displayName="Chromosome Name" 
+                                         description="Chromsome Name"
                                          fieldName="chr_name" 
                                          tableConstraint="gene_main" 
                                          maxLength="12"/>
@@ -216,7 +217,8 @@
                                          displayName="Start Position (bp)" 
                                          description="Start Coordinate of the gene in chromosomal coordinates." 
                                          fieldName="gene_chrom_start" 
-                                         tableConstraint="gene_main" maxLength="9"/>
+                                         tableConstraint="gene_main" 
+                                         maxLength="9"/>
 
 		         <UIAttributeDescription internalName="chrom_end" 
                                          displayName="End Position (bp)" 
@@ -224,6 +226,13 @@
                                          fieldName="gene_chrom_end" 
                                          tableConstraint="gene_main" 
                                          maxLength="9"/>
+                                         
+		         <UIAttributeDescription internalName="chrom_strand" 
+                                         displayName="Strand" 
+                                         description="Orientation of genes on chromosome."
+                                         fieldName="chrom_strand" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="2"/>                                         
 
 		         <UIAttributeDescription internalName="chrom_band" 
                                          displayName="Band" 
@@ -231,13 +240,6 @@
                                          fieldName="band" 
                                          tableConstraint="gene_main" 
                                          maxLength="7"/>
-
-		         <UIAttributeDescription internalName="chrom_strand" 
-                                         displayName="Strand" 
-                                         description="Strand (Orientation) of genes on chromosome."£
-                                         fieldName="chrom_strand" 
-                                         tableConstraint="gene_main" 
-                                         maxLength="2"/>
 
 		      </AttributeCollection>
 
@@ -258,7 +260,9 @@
                                         fieldName="gene_stable_id_v" 
                                         tableConstraint="gene_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="enstranid" 
                                         displayName="Ensembl Transcript ID" 
@@ -266,56 +270,72 @@
                                         fieldName="transcript_stable_id_v" 
                                         tableConstraint="transcript_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="external_id" 
                                         displayName="External Gene ID" 
                                         fieldName="display_id" 
                                         tableConstraint="gene_main" 
                                         maxLength="10"
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="cds_length" 
                                         displayName="Ensembl CDS Length" 
                                         fieldName="cds_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="5"
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
    			    <UIAttributeDescription internalName="peptide_length" 
                                         displayName="Ensembl Peptide Length" 
                                         fieldName="peptide_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="5" 
-                                        &ensembl_data;/> 
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/> 
 
                 <UIAttributeDescription internalName="gene_description" 
                                         displayName="Description" 
                                         fieldName="description" 
                                         tableConstraint="gene_main" 
                                         maxLength="536" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="translation" 
                                         displayName="Ensembl Peptide ID" 
                                         fieldName="translation_stable_id_v" 
                                         tableConstraint="transcript_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="external_db" 
                                         displayName="External Gene DB" 
                                         fieldName="db_name" 
                                         tableConstraint="gene_main" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="cdna_length" 
                                         displayName="Ensembl cDNA Length" 
                                         fieldName="cdna_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="6" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		      </AttributeCollection>
 
@@ -338,7 +358,7 @@
        	            	                displayName="GO ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_GO_dm"
-       	            	                maxLength=10
+       	            	                maxLength="10"
        	            	                source=""
        	            	                description="Gene Ontology accession"
        	            	                homepageURL=""
@@ -348,7 +368,7 @@
        	            	                displayName="SPTrEMBL ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_SPTREMBL_dm"
-       	            	                maxLength=6
+       	            	                maxLength="6"
        	            	                source=""
        	            	                description="SPTrEMBL IDs"
        	            	                homepageURL=""
@@ -358,7 +378,7 @@
        	            	                displayName="SWISSPROT ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="_xref_SWISSPROT_dm"
-       	            	                maxLength=10
+       	            	                maxLength="10"
        	            	                source="Swiss-Prot Group"
        	            	                description="a curated protein sequence database which strives to provide a high level of annotations (such as the description of the function of a protein, its domains structure, post-translational modifications, variants, etc.), a minimal level of redundancy and high level of integration with other databases"
        	            	                homepageURL="http://us.expasy.org/sprot/"
@@ -368,7 +388,7 @@
        	            	                displayName="MIM ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_MIM_dm"
-       	            	                maxLength=6
+       	            	                maxLength="6"
        	            	                source=""
        	            	                description="MIM Accessions"
        	            	                homepageURL=""
@@ -378,7 +398,7 @@
        	            	                displayName="LocusLink ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_LOCUSLINK_dm"
-       	            	                maxLength=6
+       	            	                maxLength="6"
        	            	                source=""
        	            	                description="Locus Link Accessions"
        	            	                homepageURL=""
@@ -388,7 +408,7 @@
        	            	                displayName="HUGO ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_HUGO_dm"
-       	            	                maxLength=9
+       	            	                maxLength="9"
        	            	                source=""
        	            	                description="HUGO Accessions"
        	            	                homepageURL=""
@@ -398,7 +418,7 @@
        	            	                displayName="GO Description"
        	            	                fieldName="description"
       	            	                tableConstraint="gene_xref_GO_dm"
-       	            	                maxLength=184
+       	            	                maxLength="184"
        	            	                source=""
        	            	                description="GO Descriptions"
        	            	                homepageURL=""
@@ -408,7 +428,7 @@
        	            	                displayName="EMBL ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_EMBL_dm"
-       	            	                maxLength=8
+       	            	                maxLength="8"
        	            	                source=""
        	            	                description="EMBL Accessions"
        	            	                homepageURL=""
@@ -418,7 +438,7 @@
        	            	                displayName="PDB ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_PDB_dm"
-       	            	                maxLength=4
+       	            	                maxLength="4"
        	            	                source=""
        	            	                description="Protein Database Accessions"
        	            	                homepageURL=""
@@ -428,7 +448,7 @@
        	            	                displayName="RefSeq ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_REFSEQ_dm"
-       	            	                maxLength=9
+       	            	                maxLength="9"
        	            	                source=""
        	            	                description="RefSeq Accessions"
        	            	                homepageURL=""
@@ -438,7 +458,7 @@
        	            	                displayName="GKB ID"
        	            	                fieldName="display_id"
       	            	                tableConstraint="gene_xref_GKB_dm"
-       	            	                maxLength=15
+       	            	                maxLength="15"
        	            	                source=""
        	            	                description="Genome Knowledge Base Accessions"
        	            	                homepageURL=""
@@ -472,7 +492,8 @@
                                          displayName="Start Position (bp)" 
                                          description="Start Coordinate of the gene in chromosomal coordinates." 
                                          fieldName="gene_chrom_start" 
-                                         tableConstraint="gene_main" maxLength="9"/>
+                                         tableConstraint="gene_main" 
+                                         maxLength="9"/>
 
 		         <UIAttributeDescription internalName="chrom_end" 
                                          displayName="End Position (bp)" 
@@ -481,19 +502,19 @@
                                          tableConstraint="gene_main" 
                                          maxLength="9"/>
 
+		         <UIAttributeDescription internalName="chrom_strand" 
+                                         displayName="Strand" 
+                                         description="Orientation of genes on chromosome."
+                                         fieldName="chrom_strand" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="2"/>
+                                         
 		         <UIAttributeDescription internalName="chrom_band" 
                                          displayName="Band" 
                                          description="Band of chromosome where genes occur." 
                                          fieldName="band" 
                                          tableConstraint="gene_main" 
                                          maxLength="7"/>
-
-		         <UIAttributeDescription internalName="chrom_strand" 
-                                         displayName="Strand" 
-                                         description="Strand (Orientation) of genes on chromosome."£
-                                         fieldName="chrom_strand" 
-                                         tableConstraint="gene_main" 
-                                         maxLength="2"/>
 
 		      </AttributeCollection>
 
@@ -514,7 +535,9 @@
                                         fieldName="gene_stable_id_v" 
                                         tableConstraint="gene_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="enstranid" 
                                         displayName="Ensembl Transcript ID" 
@@ -522,56 +545,72 @@
                                         fieldName="transcript_stable_id_v" 
                                         tableConstraint="transcript_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="external_id" 
                                         displayName="External Gene ID" 
                                         fieldName="display_id" 
                                         tableConstraint="gene_main" 
                                         maxLength="10"
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="cds_length" 
                                         displayName="Ensembl CDS Length" 
                                         fieldName="cds_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="5"
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                    homepageURL="http://www.ensembl.org"
+                    linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
    			    <UIAttributeDescription internalName="peptide_length" 
                                         displayName="Ensembl Peptide Length" 
                                         fieldName="peptide_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="5" 
-                                        &ensembl_data;/> 
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/> 
 
                 <UIAttributeDescription internalName="gene_description" 
                                         displayName="Description" 
                                         fieldName="description" 
                                         tableConstraint="gene_main" 
                                         maxLength="536" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="translation" 
                                         displayName="Ensembl Peptide ID" 
                                         fieldName="translation_stable_id_v" 
                                         tableConstraint="transcript_main" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="external_db" 
                                         displayName="External Gene DB" 
                                         fieldName="db_name" 
                                         tableConstraint="gene_main" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
                 <UIAttributeDescription internalName="cdna_length" 
                                         displayName="Ensembl cDNA Length" 
                                         fieldName="cdna_length" 
                                         tableConstraint="transcript_main" 
                                         maxLength="6" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		      </AttributeCollection>
 
@@ -588,7 +627,9 @@
                                         fieldName="exon_stable_id_v" 
                                         tableConstraint="gene_structure_dm" 
                                         maxLength="17" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		        <UIAttributeDescription internalName="exon_chrom_start" 
                                         displayName="Exon Start (Chr bp)" 
@@ -596,7 +637,9 @@
                                         fieldName="exon_chrom_start" 
                                         tableConstraint="gene_structure_dm" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		        <UIAttributeDescription internalName="exon_chrom_end" 
                                         displayName="Exon End (Chr bp)" 
@@ -604,7 +647,9 @@
                                         fieldName="eon_chrom_end" 
                                         tableConstraint="gene_structure_dm" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		        <UIAttributeDescription internalName="exon_coding_chrom_start" 
                                         displayName="Exon Coding Start (Chr bp)" 
@@ -612,7 +657,9 @@
                                         fieldName="coding_start" 
                                         tableConstraint="gene_structure_dm" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		        <UIAttributeDescription internalName="exon_coding_chrom_end" 
                                         displayName="Exon Coding End (Chr bp)" 
@@ -620,7 +667,9 @@
                                         fieldName="coding_end" 
                                         tableConstraint="gene_structure_dm" 
                                         maxLength="9" 
-                                        &ensembl_data;/>
+                                        source="EnsEMBL" 
+                                        homepageURL="http://www.ensembl.org"
+                                        linkoutURL="http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&amp;db=DBTYPE"/>
 
 		      </AttributeCollection>
 

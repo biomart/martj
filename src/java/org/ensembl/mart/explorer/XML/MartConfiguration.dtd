@@ -5,17 +5,10 @@
 >
 
 <!-- Ensembl Source, Homepage, and LinkoutURL for AttributeDescriptions -->
-<!ENTITY ensembl_data
-                   "source=&quot;EnsEMBL&quot; 
-                    homepageURL=&quot;http://www.ensembl.org&quot;
-                    linkoutURL=&quot;http://www.ensembl.org/SPECIES/VIEWTYPE?IDTYPE=IDV&db=DBTYPE&quot;"
->
 
-                   
 <!-- Top-level Objects --> 
 <!ELEMENT MartConfiguration (Dataset+)>
-<!ATTLIST MartConfiguration  
->
+<!ATTLIST MartConfiguration %desc_data;>
                    
 <!ELEMENT Dataset (StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
 <!ATTLIST Dataset  
@@ -41,20 +34,19 @@
 
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
-                   %desc_data
+                   %desc_data;
                    type CDATA #REQUIRED>
                     
 <!ELEMENT UIFilterDescription EMPTY>
 <!ATTLIST UIFilterDescription
-                   %desc_data
+                   %desc_data;
                    type                   CDATA #REQUIRED
                    fieldName          CDATA #REQUIRED
                    qualifier              CDATA #IMPLIED
                    tableConstraint  CDATA #IMPLIED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
-<!ATTLIST AttributePage 
-%desc_data>
+<!ATTLIST AttributePage %desc_data;>
 
 <!ELEMENT AttributeGroup (AttributeCollection+)>
 <!ATTLIST AttributeGroup 
@@ -64,12 +56,12 @@
 
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection
-                  %desc_data
+                  %desc_data;
                    maxSelect    CDATA #REQUIRED>
 
 <!ELEMENT UIAttributeDescription EMPTY>
 <!ATTLIST UIAttributeDescription
-                    %desc_data
+                    %desc_data;
                     fieldName          CDATA #REQUIRED
                     tableConstraint  CDATA #IMPLIED
                     maxLength         NMTOKEN #IMPLIED
