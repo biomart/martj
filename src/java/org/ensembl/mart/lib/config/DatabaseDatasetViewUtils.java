@@ -49,15 +49,11 @@ import java.util.StringTokenizer;
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
 
-import org.ensembl.mart.explorer.DatasetViewTree;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
-import org.ensembl.mart.vieweditor.DatasetViewTreeNode;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
-
-import com.ziclix.python.sql.handler.UpdateCountDataHandler;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -101,6 +97,7 @@ public class DatabaseDatasetViewUtils {
   private static final String EXISTWHERE = " where internalName = ? and displayName = ? and dataset = ?";
   private static final String DELETEOLDXML = "delete from "; //append table after user test
   private static final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ? and dataset = ?";
+    private static final String DELETEDATASETVIEW = " where dataset = ?";
   private static final String INSERTXMLSQLA = "insert into "; //append table after user test
   private static final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
@@ -1258,6 +1255,39 @@ public class DatabaseDatasetViewUtils {
         "Did not delete old XML data rows for " + internalName + ", " + displayName + "\n");
   }
 
+
+
+
+ /**
+   * Removes all records in a given metatable for the given dataset   
+   * @param dsrc - DetailedDataSource for Mart Database
+   * @param dataset - dataset for DatasetView entries to delete from metatable
+   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSViewEntryCountFor()
+   */
+
+  public static void deleteDatasetView(
+    DetailedDataSource dsrc,
+    String dataset)
+    throws ConfigurationException {
+    String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETVIEW;
+
+    try {
+      Connection conn = dsrc.getConnection();
+      PreparedStatement ds = conn.prepareStatement(deleteSQL);
+      ds.setString(1, dataset);
+      ds.executeUpdate();
+      ds.close();
+      conn.close();
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQLException during delete\n");
+   }
+  }
+
+
+
+
+
   /**
    * Get the correct DatasetView table for a given user in the Mart Database
    * stored in the given DetailedDataSource.
@@ -1284,8 +1314,6 @@ public class DatabaseDatasetViewUtils {
   }
   
   public static DatasetView getValidatedDatasetView(DetailedDataSource dsource, DatasetView dsv) throws SQLException {
-    
-    
     String schema = null;
     String catalog = null;
 	Connection conn = dsource.getConnection();
@@ -1389,8 +1417,6 @@ public class DatabaseDatasetViewUtils {
 
         validatedDatasetView.removeOption(options[position.intValue()]);
         validatedDatasetView.insertOption(position.intValue(), brokenOption);
-		
-
       }
     }
 
@@ -1416,22 +1442,24 @@ public class DatabaseDatasetViewUtils {
 
         validatedDatasetView.removeAttributePage(apages[position.intValue()]);
         validatedDatasetView.insertAttributePage(position.intValue(), brokenAPage);
-		
       }
     }
+
     boolean hasBrokenFilterPages = false;
     HashMap brokenFPages = new HashMap();
     FilterPage[] allPages = dsv.getFilterPages();
     for (int i = 0, n = allPages.length; i < n; i++) {
       FilterPage validatedPage = getValidatedFilterPage(dsource, allPages[i], dset);
-      if (validatedPage.isBroken()) {
 
+      if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
         brokenFPages.put(new Integer(i), validatedPage);
       }
     }
+
     if (hasBrokenFilterPages) {
       validatedDatasetView.setFilterPagesBroken();
+
       for (Iterator iter = brokenFPages.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         FilterPage brokenPage = (FilterPage) brokenFPages.get(position);
@@ -1440,6 +1468,7 @@ public class DatabaseDatasetViewUtils {
         validatedDatasetView.insertFilterPage(position.intValue(), brokenPage);
       }
     }
+
     return validatedDatasetView;
   }
 
@@ -1522,24 +1551,23 @@ public class DatabaseDatasetViewUtils {
 
   public static FilterPage getValidatedFilterPage(DetailedDataSource dsource, FilterPage page, String dset) throws SQLException {
     FilterPage validatedPage = new FilterPage(page);
+
     boolean hasBrokenGroups = false;
     HashMap brokenGroups = new HashMap();
 
     List allGroups = page.getFilterGroups();
     for (int i = 0, n = allGroups.size(); i < n; i++) {
       Object group = allGroups.get(i);
-	  
+
       if (group instanceof FilterGroup) {
-      	FilterGroup gr = (FilterGroup) group;
-		if ((gr.getInternalName().equals("expression")))
-			continue;// hack for expression - breaks current code - needs fixing
         FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group, dset);
-        
+
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
           brokenGroups.put(new Integer(i), validatedGroup);
         }
       } // else not needed yet
+
       if (hasBrokenGroups) {
         validatedPage.setGroupsBroken();
 
@@ -1548,17 +1576,16 @@ public class DatabaseDatasetViewUtils {
           Object brokenGroup = brokenGroups.get(position);
 
           if (brokenGroup instanceof FilterGroup) {
-          	FilterGroup test = (FilterGroup) allGroups.get(position.intValue());
-			
             validatedPage.removeFilterGroup((FilterGroup) allGroups.get(position.intValue()));
+            
             validatedPage.insertFilterGroup(position.intValue(), (FilterGroup) brokenGroup);
-			// need to add the new brokenGroup object into allGroups list so can get removed if in loop twice
-			allGroups.remove(position.intValue());
-			allGroups.add(position.intValue(),brokenGroup);
+            allGroups.remove(position.intValue());
+	    allGroups.add(position.intValue(),brokenGroup);
           } //else not needed yet
         }
       }
     }
+
     return validatedPage;
   }
 
@@ -1589,7 +1616,6 @@ public class DatabaseDatasetViewUtils {
         validatedGroup.removeFilterCollection(collections[position.intValue()]);
 		
         validatedGroup.insertFilterCollection(position.intValue(), brokenCollection);
-		
       }
     }
 
@@ -1650,11 +1676,8 @@ public class DatabaseDatasetViewUtils {
           validatedFilterCollection.removeFilterDescription((FilterDescription) allFilts.get(position.intValue()));
 		  
           validatedFilterCollection.insertFilterDescription(position.intValue(), (FilterDescription) brokenFilter);
-        
-		  allFilts.remove(position.intValue());
-		  allFilts.add(position.intValue(),brokenFilter);
-
-        
+          allFilts.remove(position.intValue());
+	  allFilts.add(position.intValue(),brokenFilter);
         } //else not needed yet
       }
     }
@@ -1670,6 +1693,7 @@ public class DatabaseDatasetViewUtils {
     String dset)
     throws SQLException {
     FilterDescription validatedFilter = new FilterDescription(filter);
+	//System.out.println("CHecking FILTER\t" + validatedFilter);
     if (filter.getField() != null) {
       //test
       boolean fieldValid = false;
@@ -1694,6 +1718,7 @@ public class DatabaseDatasetViewUtils {
 		
 
         if (valid[0] && valid[1]){
+			//System.out.println(columnName + "\t" + tableName + "\t" + field);
           break;
         }
       }
@@ -1776,6 +1801,7 @@ public class DatabaseDatasetViewUtils {
       conn.close();
       
 	  if (!(fieldValid) || !(tableValid)){
+		  System.out.println("CHNAGING OPTION\t" + validatedOption);
 		  validatedOption.setHidden("true");
 		
 	  }
@@ -1915,11 +1941,9 @@ public class DatabaseDatasetViewUtils {
 				 
           validatedPage.removeAttributeGroup((AttributeGroup) allGroups.get(position.intValue()));
           validatedPage.insertAttributeGroup(position.intValue(), (AttributeGroup) brokenGroup);
-        
-		  allGroups.remove(position.intValue());
-		  allGroups.add(position.intValue(),brokenGroup);
+          allGroups.remove(position.intValue());
+	  allGroups.add(position.intValue(),brokenGroup);
 
-        
         } //else not needed
       }
     }
@@ -2008,9 +2032,8 @@ public class DatabaseDatasetViewUtils {
           validatedAttributeCollection.removeAttributeDescription(
             (AttributeDescription) allAtts.get(position.intValue()));
           validatedAttributeCollection.insertAttributeDescription(position.intValue(), (AttributeDescription) brokenAtt);
-		  allAtts.remove(position.intValue());
-		  allAtts.add(position.intValue(),brokenAtt);
-        
+          allAtts.remove(position.intValue());
+	  allAtts.add(position.intValue(),brokenAtt);
         } //else not needed yet
       }
     }
@@ -2162,8 +2185,9 @@ public class DatabaseDatasetViewUtils {
     Set potentials = new TreeSet();
 
     Connection conn = dsource.getConnection();
+
     DatabaseMetaData dmd = conn.getMetaData();
-    
+
     //Note: currently this isnt cross platform,
     //as some RDBMS capitalize all names of tables
     //Either need to find a capitalization scheme general
@@ -2176,6 +2200,50 @@ public class DatabaseDatasetViewUtils {
     String capTablePattern = tablePattern.toUpperCase();
 
     //get all main tables
+
+    if (dsource.getDatabaseType().equals("oracle:thin"))
+        {
+
+System.out.println("database type: "+ dsource.getDatabaseType());
+
+
+    ResultSet rsSch = dmd.getSchemas();
+    while (rsSch.next()) {
+      String databaseName2 = rsSch.getString(1);
+
+    //first search for tablePattern    
+      ResultSet rsTab = dmd.getTables(null, databaseName2, tablePattern, null);
+
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      potentials.add(tableName);
+    }
+    rsTab.close();
+
+    //now try capitals, should NOT get mixed results
+    rsTab = dmd.getTables(null, databaseName2, capTablePattern, null);
+    while (rsTab.next()) {
+      String tableName = rsTab.getString(3);
+      //NN
+      System.out.println(tableName);
+
+      if (!potentials.contains(tableName))
+        potentials.add(tableName);
+    }
+    rsTab.close();
+    }
+    rsSch.close();
+}
+    else
+        {
+
+
+
+
+
+
+
+    //====
     //first search for tablePattern    
     ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
 
@@ -2194,6 +2262,8 @@ public class DatabaseDatasetViewUtils {
         potentials.add(tableName);
     }
     rsTab.close();
+
+        }
     conn.close();
 
     String[] retList = new String[potentials.size()];
@@ -2225,7 +2295,9 @@ public class DatabaseDatasetViewUtils {
             for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
 			  ColumnDescription column = table.columnDescriptions[j];
               String cname = column.name;
-              if (cname.endsWith("_key"))
+              //NN
+              if (cname.endsWith("_KEY") || cname.endsWith("_key"))
+              //if (cname.endsWith("_key"))
                 numberKeys++;
 			}
 			if (numberKeys == resolution){
@@ -2470,8 +2542,10 @@ public class DatabaseDatasetViewUtils {
 	  for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
-        if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
-          primaryKeys.add(cname);
+        //NN added uppercase   
+        //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+        if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname)))
+            primaryKeys.add(cname);
 	  }	
 	}
 	
@@ -2544,7 +2618,9 @@ public class DatabaseDatasetViewUtils {
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         
-        String cname = column.name;
+        //NN 
+        String cname = column.name.toLowerCase();
+        //String cname = column.name;
         
         // ignore the key columns as atts and filters
         if (cname.endsWith("_key"))
@@ -2885,6 +2961,8 @@ public class DatabaseDatasetViewUtils {
   private static void updateDropDown(DatasetView dsView, DetailedDataSource dsource, FilterDescription fd1)
 	  throws ConfigurationException, SQLException {
       
+      
+      System.out.println("UPDATING DROP DOWN" + fd1.getInternalName());
       Option[] ops = fd1.getOptions();
       if (ops[0].getTableConstraint() != null)
           return;// drop down lists of options shouldn't be updated
@@ -2908,6 +2986,7 @@ public class DatabaseDatasetViewUtils {
 	  // update push actions if any
 	  
 	  for (int k = 0; k < pas.length; k++){
+	    //String internalName = "band_start";
 	    String ref = pas[k].getRef();
 	    FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(ref);
 	    updatePushAction(dsView, fd1, fd2, dsource);
@@ -2918,9 +2997,15 @@ public class DatabaseDatasetViewUtils {
 
   private static void updatePushAction(DatasetView dsView, BaseConfigurationObject bo, FilterDescription fd2, DetailedDataSource ds)
 	  throws ConfigurationException, SQLException {
+	  
+	  //dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+	  //FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
 		
 	  fd2.setType("drop_down_basic_filter");
-
+        
+	  // set FilterDescription fd1 = to current node
+	  //DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		
 	  String pushField = fd2.getField();
 	  String pushInternalName = fd2.getInternalName();
 	  String pushTableName = fd2.getTableConstraint();
@@ -2945,6 +3030,10 @@ public class DatabaseDatasetViewUtils {
 		}
 		options = pa1.getOptions();
 	  }
+        
+        
+		
+	  //DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
 	   	
 	  for (int i = 0; i < options.length; i++ ){
 		  Option op = options[i];
@@ -2954,7 +3043,18 @@ public class DatabaseDatasetViewUtils {
 		  pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,ds));
 			
 		  if (pa.getOptions().length > 0){  
+		  	System.out.println("ADDING PA\t" + op.getInternalName());
 		  	op.addPushAction(pa);
+		  	
+			//Enumeration children = parentNode.children();
+			//DatasetViewTreeNode childNode = null;
+			//while (children.hasMoreElements()){
+			//  childNode = (DatasetViewTreeNode) children.nextElement();
+			//  if (op.equals(childNode.getUserObject()))
+			//	break;
+			//}
+			//DatasetViewTreeNode newNode = new DatasetViewTreeNode("PushAction:newNode", pa);
+			//String result = DatasetViewTree.treemodel.insertNodeInto(newNode, childNode, 0);
 			  
 		  }
 	  }
@@ -3055,7 +3155,7 @@ public class DatabaseDatasetViewUtils {
 	  
 	  List options = new ArrayList();
 	  
-	  if (tableName.equals("main")){
+	  if (tableName.equalsIgnoreCase("main")){
 	    String[] starNames = dsView.getStarBases();
 	    String[] primaryKeys = dsView.getPrimaryKeys();
 		   for (int k = 0; k < primaryKeys.length; k++) {
@@ -3075,7 +3175,9 @@ public class DatabaseDatasetViewUtils {
 	    op = new Option();
 	    op.setDisplayName(value);
 		op.setInternalName(value);
-		if (!columnName.startsWith("silent_"))
+  //NN
+		if (!(columnName.startsWith("silent_") || columnName.startsWith("SILENT_"))) //prob. not needed, to check
+      //if (!columnName.startsWith("silent_"))
 		  op.setValue(value);
 		op.setSelectable("true");
 		options.add(op);
