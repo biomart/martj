@@ -102,7 +102,7 @@ public class AttributeGroupWidget extends GroupWidget {
       if (element instanceof AttributeDescription) {
 
         AttributeDescription a = (AttributeDescription) element;
-        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree);
+        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree, collection);
         pages.add(w);
       }
       else {

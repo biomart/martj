@@ -35,6 +35,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 
 /**
@@ -47,6 +48,7 @@ public class AttributeDescriptionWidget
 	extends InputPage
 	implements TreeSelectionListener {
 
+	private AttributeCollection attrbuteCollection;
 	private final static Logger logger =
 		Logger.getLogger(AttributeDescriptionWidget.class.getName());
 	private AttributeDescription attributeDescription;
@@ -84,13 +86,15 @@ public class AttributeDescriptionWidget
 	public AttributeDescriptionWidget(
 		final Query query,
 		AttributeDescription attributeDescription,
-		QueryTreeView tree) {
+		QueryTreeView tree,
+    AttributeCollection attributeCollection) {
 
 		super(query, attributeDescription.getDisplayName(), tree);
 		if (tree != null)
 			tree.addTreeSelectionListener(this);
 		this.attributeDescription = attributeDescription;
 		this.query = query;
+    this.attrbuteCollection = attributeCollection;
 
 		attribute =
 			new InputPageAwareAttribute(
@@ -104,10 +108,7 @@ public class AttributeDescriptionWidget
 
 			public void actionPerformed(ActionEvent event) {
 
-				if (button.isSelected())
-					query.addAttribute(attribute);
-				else
-					query.removeAttribute(attribute);
+				doClick();
 
 			}
 		});
@@ -115,6 +116,19 @@ public class AttributeDescriptionWidget
 		query.addQueryChangeListener(this);
 
 		add(button);
+	}
+
+	/**
+	 * 
+	 */
+	private void doClick() {
+		//TODO use attributeCollection.maxSelect to determine if this can
+		// be set.
+
+		if (button.isSelected())
+			query.addAttribute(attribute);
+		else
+			query.removeAttribute(attribute);
 	}
 
 	public Attribute getAttribute() {
@@ -131,8 +145,8 @@ public class AttributeDescriptionWidget
 		int index,
 		Attribute attribute) {
 
-    if ( this.attribute.sameFieldTableConstraint(attribute) )
-      button.setSelected(true);
+		if (this.attribute.sameFieldTableConstraint(attribute))
+			button.setSelected(true);
 
 	}
 
@@ -146,7 +160,7 @@ public class AttributeDescriptionWidget
 		int index,
 		Attribute attribute) {
 
-		if ( this.attribute.sameFieldTableConstraint(attribute) )
+		if (this.attribute.sameFieldTableConstraint(attribute))
 			button.setSelected(false);
 	}
 
