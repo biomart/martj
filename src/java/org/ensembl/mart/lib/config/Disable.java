@@ -17,6 +17,9 @@
  */
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
  /** 
   * Allows a FilterDescription Object to code whether to disable another FilterDescription Object
   * in the UI, possibly based on a particular value of the disabling FilterDescription.
@@ -26,7 +29,18 @@ package org.ensembl.mart.lib.config;
 public class Disable {
 	private String ref;
 	private String valueCondition;
-  
+	private List xmlAttributeTitles = new ArrayList();
+	
+	/**
+	 * Copy Constructor. Constructs a new Disable that is a
+	 * exact copy of an existing Disable.
+	 * @param d Disable Object to copy.
+	 */
+	public Disable(Disable d) {
+		ref = d.getRef(); 
+		valueCondition = d.getValueCondition(); 
+	}
+	
   /**
    * Empty Constructor should only be used by DatasetViewEditor
    */
@@ -87,7 +101,30 @@ public class Disable {
   public void setValueCondition(String string) {
     valueCondition = string;
   }
-  
+
+	/**
+	 * Get the XML Attribute Titles for this object. This is meant for use
+	 * by DatasetViewEditor.
+	 * @return String[] List of XMLAttribute Titles.
+	 */
+	public String[] getXmlAttributeTitles() {
+		String[] titles = new String[xmlAttributeTitles.size()];
+		xmlAttributeTitles.toArray(titles);
+		return titles;
+	}
+
+	/**
+	 * Sets the XML Attribute Titles for this object.  This should equal
+	 * the titles of all XML Attributes for the element. This is meant for use
+	 * by DatasetViewEditor.
+	 * @param list
+	 */
+	public void setXmlAttributeTitles(String[] list) {
+		for (int i = 0, n = list.length; i < n; i++) {
+			xmlAttributeTitles.add(list[i]);
+		}
+	}
+	  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 

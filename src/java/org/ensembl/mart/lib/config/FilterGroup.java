@@ -44,6 +44,20 @@ public class FilterGroup extends BaseConfigurationObject {
   //cache one FilterDescription for call to supports
   private FilterDescription lastSupportingFilter = null;
   
+  /**
+   * Copy constructor.  Constructs a new FilterGroup which is an exact copy
+   * of an existing FilterGroup.
+   * @param fg FilterGroup to copy.
+   */
+  public FilterGroup(FilterGroup fg) {
+  	super(fg);
+  	
+  	FilterCollection[] fcs = fg.getFilterCollections();
+  	for (int i = 0, n = fcs.length; i < n; i++) {
+      addFilterCollection( new FilterCollection( fcs[i] ) );
+    }
+  }
+  
   public FilterGroup() {
     super();
   }

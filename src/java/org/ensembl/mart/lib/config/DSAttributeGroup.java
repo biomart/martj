@@ -29,6 +29,15 @@ public class DSAttributeGroup extends BaseConfigurationObject {
 
   private String handler;
   
+  /**
+   * Copy constructor.  Constructs an exact copy of an existing DSAttributeGroup.
+   * @param dsag DSAttributeGroup to copy.
+   */
+  public DSAttributeGroup(DSAttributeGroup dsag) {
+  	super(dsag);
+  	handler = dsag.getHandler();
+  }
+  
 	/**
 	 * Empty Constructor should really only be used by the DatasetViewEditory
 	 */

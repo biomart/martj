@@ -33,12 +33,27 @@ public class AttributeCollection extends BaseConfigurationObject {
   private List uiAttributes = new ArrayList();
   private Hashtable uiAttributeNameMap = new Hashtable();
 
-  //cache one AttributeDescription for call to containsAttributeDescriptionDescription or getAttributeDescriptionByInternalName
-  private AttributeDescription lastAtt = null;
-  
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
-  
+
+  /**
+   * Copy constructor.  Constructs a new AttributeCollection which
+   * is an exact copy of an existing AttributeCollection.
+   * @param ac AttributeCollection to copy
+   */
+  public AttributeCollection(AttributeCollection ac) {
+  	super(ac);
+  	
+  	maxSelect = ac.getMaxSelect();
+  	
+  	List ads = ac.getAttributeDescriptions();
+  	for (int i = 0, n = ads.size(); i < n; i++) {
+      Object ad = ads.get(i);
+      if (ad instanceof AttributeDescription)
+        addAttributeDescription( new AttributeDescription( (AttributeDescription) ad ) );
+      //else not needed      
+    }  
+  }
   /**
    * Empty Constructor should only be used by DatasetViewEditor.
    *

@@ -18,6 +18,9 @@
  
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
  /** 
   * Allows a FilterDescription Object to code whether to enable another FilterDescription Object
   * in the UI, possibly based on a particular value of the enabling FilterDescription.
@@ -27,6 +30,17 @@ package org.ensembl.mart.lib.config;
 public class Enable {
   private String ref;
   private String valueCondition;
+	private List xmlAttributeTitles = new ArrayList();
+
+	/**
+	 * Copy Constructor. Constructs a new Enable that is a
+	 * exact copy of an existing Enable.
+	 * @param e Enable Object to copy.
+	 */ 
+  public Enable(Enable e) {
+  	ref = e.getRef(); 
+  	valueCondition = e.getValueCondition(); 
+  }
   
   public Enable() {
   }
@@ -85,7 +99,30 @@ public class Enable {
   public void setValueCondition(String string) {
     valueCondition = string;
   }
-  
+
+	/**
+	 * Get the XML Attribute Titles for this object. This is meant for use
+	 * by DatasetViewEditor.
+	 * @return String[] List of XMLAttribute Titles.
+	 */
+	public String[] getXmlAttributeTitles() {
+		String[] titles = new String[xmlAttributeTitles.size()];
+		xmlAttributeTitles.toArray(titles);
+		return titles;
+	}
+
+	/**
+	 * Sets the XML Attribute Titles for this object.  This should equal
+	 * the titles of all XML Attributes for the element. This is meant for use
+	 * by DatasetViewEditor.
+	 * @param list
+	 */
+	public void setXmlAttributeTitles(String[] list) {
+		for (int i = 0, n = list.length; i < n; i++) {
+			xmlAttributeTitles.add(list[i]);
+		}
+	}
+	  
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 

@@ -46,6 +46,23 @@ public class FilterPage extends BaseConfigurationObject {
   //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
   private FilterDescription lastSupportingFilter = null;
   
+  /**
+   * Copy constructor. Creates an exact copy of an existing FilterPage.
+   * @param fp FilterPage to copy
+   */
+  public FilterPage(FilterPage fp) {
+  	super(fp);
+  	
+  	List groups = fp.getFilterGroups();
+  	for (int i = 0, n = groups.size(); i < n; i++) {
+       Object group = groups.get(i);
+       if (group instanceof FilterGroup)
+         addFilterGroup( new FilterGroup( (FilterGroup) group ) );
+       else
+			  addDSFilterGroup( new DSFilterGroup( (DSFilterGroup) group ) );      
+    }
+  }
+  
  /**
   * Empty Constructor should only be used by DatasetViewEditory
   */

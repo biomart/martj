@@ -58,6 +58,7 @@ public class DatasetView extends BaseConfigurationObject {
   private Hashtable filterPageNameMap = new Hashtable();
   private List starBases = new ArrayList();
   private List primaryKeys = new ArrayList();
+  private List xmlAttributeTitles = new ArrayList();
 
   private List defaultFilters = new ArrayList();
   private boolean hasDefaultFilters = false;
@@ -89,6 +90,39 @@ public class DatasetView extends BaseConfigurationObject {
 
   //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
   private FilterDescription lastSupportingFilter = null;
+  
+  /**
+   * Copy Constructor. Creates a new, exact copy of an existing DatasetView object.
+   * @param ds DatasetView to copy
+   */
+  public DatasetView(DatasetView ds) {
+   super(ds);
+  	
+  	setDataset(ds.getDataset());
+  	addStarBases(ds.getStarBases());
+  	addPrimaryKeys(ds.getPrimaryKeys());
+  	
+  	
+  	DefaultFilter[] dfilts = ds.getDefaultFilters();
+  	for (int i = 0, n = dfilts.length; i < n; i++) {
+      addDefaultFilter( new DefaultFilter( dfilts[i] ) );
+    }
+    
+    Option[] os = ds.getOptions();
+    for (int i = 0, n = os.length; i < n; i++) {
+      addOption( new Option (os[i] ) );
+    }
+    
+    AttributePage[] apages = ds.getAttributePages();
+    for (int i = 0, n = apages.length; i < n; i++) {
+      addAttributePage(new AttributePage(apages[i]));
+    }
+    
+    FilterPage[] fpages = ds.getFilterPages();
+    for (int i = 0, n = fpages.length; i < n; i++) {
+      addFilterPage(new FilterPage(fpages[i]));
+    }
+  }
   
   /**
    * Empty constructor.  Should really only be used by the DatasetViewEditor
@@ -1205,5 +1239,28 @@ public class DatasetView extends BaseConfigurationObject {
 		}
 
 		return tmp;
+	}
+	
+  /**
+   * Get the XML Attribute Titles for this object. This is meant for use
+   * by DatasetViewEditor.
+   * @return String[] List of XMLAttribute Titles.
+   */
+  public String[] getXmlAttributeTitles() {
+    String[] titles = new String[xmlAttributeTitles.size()];
+    xmlAttributeTitles.toArray(titles);
+    return titles;
+  }
+
+  /**
+   * Sets the XML Attribute Titles for this object.  This should equal
+   * the titles of all XML Attributes for the element. This is meant for use
+   * by DatasetViewEditor.
+   * @param list
+   */
+	public void setXmlAttributeTitles(String[] list) {
+		for (int i = 0, n = list.length; i < n; i++) {
+			xmlAttributeTitles.add(list[i]);
+		}
 	}
 }

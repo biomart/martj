@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -31,9 +30,7 @@ import java.util.logging.Logger;
  */
 public class Option extends QueryFilterSettings {
 
-	private Logger logger = Logger.getLogger(Option.class.getName());
-
-	private String qualifier;
+  private String qualifier;
 	private QueryFilterSettings parent;
 	private String field;
 	private String tableConstraint;
@@ -54,6 +51,64 @@ public class Option extends QueryFilterSettings {
 	// cache one Option per call to supports/getOptionByFieldNameTableConstraint
 	private Option lastSupportingOption = null;
 
+  /**
+   * Copy Constructor.  Creates a copy of an existing Option.
+   * @param o - Option to copy
+   */
+  public Option(Option o) {
+    super(o);
+    
+  	isSelectable = o.isSelectable();
+  	field = o.getField();
+  	tableConstraint = o.getTableConstraint();
+  	value = o.getValue();
+  	ref = o.getRef();
+  	type = o.getType();
+  	qualifier = o.getQualifier();
+  	legalQualifiers = o.getLegalQualifiers();
+  	handler = o.getHandler();
+  	
+  	Option[] os = o.getOptions();
+  	for (int i = 0, n = os.length; i < n; i++) {
+      addOption( new Option( os[i] ) );
+    }
+    
+    PushAction[] pas = o.getPushActions();
+    for (int i = 0, n = pas.length; i < n; i++) {
+      addPushAction( new PushAction(pas[i] ) );
+    }
+  }
+
+  /**
+   * Special Copy constructor allowing a FilterDescription to
+   * be converted to an Option based upon their common fields.
+   * This is a destructive operation, in that not all fields and
+   * child objects of the Option are supported by the FilterDescription,
+   * and vice versa.  In particular, the isSelectable field is set to
+   * true. For these reasons, this method is reserved for use by
+   * the DatasetViewEditor application to facilitate the conversion
+   * between these two objects, with subsequent editing by the user.
+   * @param fd - FilterDescription to be converted to an Option
+   */
+  public Option(FilterDescription fd) {
+  	super(fd);
+  	
+		isSelectable = true;
+		field = fd.getField();
+		tableConstraint = fd.getTableConstraint();
+		value = fd.getValue();
+		type = fd.getType();
+		qualifier = fd.getQualifier();
+		legalQualifiers = fd.getLegalQualifiers();
+		handler = fd.getHandler();
+  	
+		Option[] os = fd.getOptions();
+		for (int i = 0, n = os.length; i < n; i++) {
+			addOption( new Option( os[i] ) );
+		}
+  	  
+  }
+  
 	/**
 	 * Empty Constructor should only be used by DatasetViewEditor.
 	 *
@@ -788,5 +843,4 @@ public class Option extends QueryFilterSettings {
 		else
 			return getParent().getQualifierFromContext();
 	}
-
 }

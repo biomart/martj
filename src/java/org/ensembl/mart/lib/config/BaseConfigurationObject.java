@@ -18,6 +18,9 @@
 
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Basic Object from which all Configuration Objects inherit.
  * 
@@ -29,6 +32,7 @@ public class BaseConfigurationObject {
   protected String internalName;
   protected String displayName;
   protected String description;
+  protected List xmlAttributeTitles = new ArrayList();
   
 	/**
 	 * Determines if string is an invalid attribute value.
@@ -49,6 +53,18 @@ public class BaseConfigurationObject {
     return s!=null && !"".equals(s);
   }
 
+  /**
+   * Copy constructor.  Creates an exact copy of an existing object.
+   * @param bo - BaseConfigurationObject to copy.
+   */
+  public BaseConfigurationObject(BaseConfigurationObject bo) {
+  	internalName = bo.getInternalName(); 
+  	displayName = bo.getDisplayName();
+  	description = bo.getDescription();
+  	
+  	setXmlAttributeTitles(bo.getXmlAttributeTitles());
+  }
+  
   public BaseConfigurationObject() {
     //doesnt do anything, but returns an empty object
   }
@@ -114,6 +130,29 @@ public class BaseConfigurationObject {
     internalName = string;
   }
   
+	/**
+	 * Get the XML Attribute Titles for this object. This is meant for use
+	 * by DatasetViewEditor.
+	 * @return String[] List of XMLAttribute Titles.
+	 */
+	public String[] getXmlAttributeTitles() {
+		String[] titles = new String[xmlAttributeTitles.size()];
+		xmlAttributeTitles.toArray(titles);
+		return titles;
+	}
+
+	/**
+	 * Sets the XML Attribute Titles for this object.  This should equal
+	 * the titles of all XML Attributes for the element. This is meant for use
+	 * by DatasetViewEditor.
+	 * @param list
+	 */
+	public void setXmlAttributeTitles(String[] list) {
+		for (int i = 0, n = list.length; i < n; i++) {
+			xmlAttributeTitles.add(list[i]);
+		}
+	}
+	
 	public int hashCode() {
     int tmp = 17;
     tmp = tmp * 37 + ((internalName != null) ? internalName.hashCode() : 0);

@@ -46,12 +46,70 @@ public class FilterDescription extends QueryFilterSettings {
 	private String legalQualifiers;
 	private String tableConstraint;
 	private String value;
-
+	
 	//cache one supporting Option for call to supports
 	Option lastSupportingOption = null;
 
 	private String qualifier;
 
+  /**
+   * Copy Constructor. Constructs a new FilterDescription which is an
+   * exact copy of the given FilterDescription.
+   * @param fd - FilterDescription to be copied.
+   */
+  public FilterDescription(FilterDescription fd) {
+    super( fd );
+    
+  	field = fd.getField();
+  	type = fd.getType();
+  	qualifier = fd.getQualifier();
+  	legalQualifiers = fd.getLegalQualifiers();
+  	tableConstraint = fd.getTableConstraint();
+  	handler = fd.getHandler();
+  	
+  	Enable[] ens = fd.getEnables();
+  	for (int i = 0, n = ens.length; i < n; i++) {
+      addEnable( new Enable( ens[i] ) );
+    }
+    
+    Disable[] dsb = fd.getDisables();
+    for (int i = 0, n = dsb.length; i < n; i++) {
+      addDisable( new Disable( dsb[i] ) );
+    }
+    
+    Option[] os = fd.getOptions();
+    for (int i = 0, n = os.length; i < n; i++) {
+      addOption( new Option( os[i] ) );
+    }
+  }
+
+  /**
+   * Special Copy constructor that allows an Option to be converted
+   * to a FilterDescription based upon their common fields. This is
+   * a destructive action, in that not all fields in an Option are 
+   * represented in a FilterDescription, and FilterDescription objects
+   * do not contain PushAction objects, whild Option objects do not
+   * contain Enable or Disable objects.  For this reason, this method
+   * is strictly reserved for use for the DatasetViewEditor application,
+   * to facilitate conversions between these objects, with subsequent editing by the user. 
+   * @param o - Option to be converted to a FilterDescription.
+   */
+  public FilterDescription(Option o) {
+  	super(o);
+  	
+		field = o.getField();
+		type = o.getType();
+		qualifier = o.getQualifier();
+		legalQualifiers = o.getLegalQualifiers();
+		tableConstraint = o.getTableConstraint();
+		handler = o.getHandler();
+		
+		Option[] os = o.getOptions();
+		for (int i = 0, n = os.length; i < n; i++) {
+			addOption( new Option( os[i] ) );
+		}
+  }
+  
 	/**
 	 * Empty Constructor should only be used by DatasetViewEditor
 	 *

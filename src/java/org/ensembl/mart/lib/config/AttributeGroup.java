@@ -41,6 +41,19 @@ public final class AttributeGroup extends BaseConfigurationObject {
   //cache one AttributeDescription for call to supports/getAttributeDescriptionByFieldNameTableConstraint
   private AttributeDescription lastSupportingAttribute = null;
   
+  /**
+   * Copy constructor. Constructs an exact copy of an existing AttributeGroup.
+   * @param ag AttributeGroup to copy.
+   */
+  public AttributeGroup(AttributeGroup ag) {
+  	super(ag);
+  	
+  	 AttributeCollection[] acs = ag.getAttributeCollections();
+  	 for (int i = 0, n = acs.length; i < n; i++) {
+      addAttributeCollection( new AttributeCollection( acs[i] ) );
+    }
+  }
+  
  /**
   * Empty Constructor should only be used by DatasetViewEditory
   */

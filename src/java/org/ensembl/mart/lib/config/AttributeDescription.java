@@ -32,6 +32,21 @@ public class AttributeDescription extends BaseConfigurationObject {
   private String homepageURL;
   private String linkoutURL;
   private int maxLength = 0;
+
+  /**
+   * Copy constructor. Constructs an exact copy of an existing AttributeDescription.
+   * @param a AttributeDescription to copy.
+   */
+  public AttributeDescription(AttributeDescription a) {
+  	super(a);
+  	
+  	field = a.getField();
+  	tableConstraint = a.getTableConstraint();
+  	maxLength = a.getMaxLength();
+  	source = a.getSource();
+  	linkoutURL = a.getLinkoutURL();
+  	homepageURL = a.getHomepageURL();  
+  }
   
   /**
    * Empty Constructor should only be used by DatasetViewEditor

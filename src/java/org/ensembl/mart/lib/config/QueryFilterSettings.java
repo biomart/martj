@@ -26,6 +26,14 @@ package org.ensembl.mart.lib.config;
  */
 public abstract class QueryFilterSettings extends BaseConfigurationObject {
   
+	/**
+	 * Copy constructor.  Creates an exact copy of an existing object.
+	 * @param bo - BaseConfigurationObject to copy.
+	 */
+  public QueryFilterSettings(BaseConfigurationObject bo) {
+  	super(bo);
+  }
+  
   /**
    * Empty Constructor should only be used by DatasetViewEditor
    *

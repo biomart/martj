@@ -29,6 +29,17 @@ package org.ensembl.mart.lib.config;
 public class DSFilterGroup extends BaseConfigurationObject {
 
   /**
+   * Copy constructor.  Constructs an exact copy of an existing
+   * DSFilterGroup.
+   * @param dsfg DSFilterGroup to copy.
+   */
+  public DSFilterGroup(DSFilterGroup dsfg) {
+  	super(dsfg);
+  	
+  	handler = dsfg.getHandler();
+  }
+  
+  /**
    *  Empty Constructor should only be used by DatasetViewEditor
    */
   public DSFilterGroup() {

@@ -18,6 +18,9 @@
  
 package org.ensembl.mart.lib.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Default Filter for a DatasetView.  Holds a FilterDescription, and
  * the value to apply for that filter.  This allows the DatasetView to
@@ -29,6 +32,17 @@ package org.ensembl.mart.lib.config;
 public class DefaultFilter {
   private String value;
   private FilterDescription fdesc;
+	private List xmlAttributeTitles = new ArrayList();
+  
+  /**
+   * Copy constructor. Creates an exact copy of an existing DefaultFilter.
+   * @param df DefaultFilter to copy.
+   */
+  public DefaultFilter(DefaultFilter df) {
+  	value = df.getValue();
+  	
+  	setFilterDescription(new FilterDescription( df.getFilterDescription() ) );
+  }
   
    /**
     * Empty Constructor.  Should really only be used by the DatasetViewEditor
@@ -77,6 +91,29 @@ public class DefaultFilter {
     return fdesc;
   }
 
+	/**
+	 * Get the XML Attribute Titles for this object. This is meant for use
+	 * by DatasetViewEditor.
+	 * @return String[] List of XMLAttribute Titles.
+	 */
+	public String[] getXmlAttributeTitles() {
+		String[] titles = new String[xmlAttributeTitles.size()];
+		xmlAttributeTitles.toArray(titles);
+		return titles;
+	}
+
+	/**
+	 * Sets the XML Attribute Titles for this object.  This should equal
+	 * the titles of all XML Attributes for the element. This is meant for use
+	 * by DatasetViewEditor.
+	 * @param list
+	 */
+	public void setXmlAttributeTitles(String[] list) {
+		for (int i = 0, n = list.length; i < n; i++) {
+			xmlAttributeTitles.add(list[i]);
+		}
+	}
+	
   /**
    * Returns the value for the filter
    * @return String value

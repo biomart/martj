@@ -41,6 +41,22 @@ public class FilterCollection extends BaseConfigurationObject {
   //cache one FilterDescription for call to supports
   private FilterDescription lastSupportFilt = null;
   
+  /**
+   * Copy Constructor. Constructs an exact copy of an existing
+   * FilterCollection.
+   * @param fc FilterCollection to copy.
+   */
+  public FilterCollection(FilterCollection fc) {
+  	super(fc);
+  	
+  	List fds = fc.getFilterDescriptions();
+  	for (int i = 0, n = fds.size(); i < n; i++) {
+      Object fd = fds.get(i);
+      if (fd instanceof FilterDescription)
+        addFilterDescription( new FilterDescription( (FilterDescription) fd) );
+      //else not needed      
+    }  
+  }
   
   /**
    * Empty Constructor should only be used by DatasetViewEditor.

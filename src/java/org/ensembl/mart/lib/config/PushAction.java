@@ -31,11 +31,21 @@ import java.util.List;
  */
 public class PushAction extends BaseConfigurationObject {
 
-	private String ref;
+  private String ref;
 	private List options = new ArrayList();
 	private Option lastOption = null; // cache one Option for call to containsOption/getOptionByInternalName
 	private Option lastSupportingOption = null; // cache one Option for call to supports/getOptionByFieldNameTableConstraint
 
+  public PushAction(PushAction pa) {
+    super(pa);
+  	ref = pa.getRef();
+  	
+  	Option[] ops = pa.getOptions();
+  	for (int i = 0, n = ops.length; i < n; i++) {
+      addOption(new Option( ops[i] ));
+    }
+  }
+  
   /**
    * Empty Constructor should only be used by DatasetViewEditor
    */

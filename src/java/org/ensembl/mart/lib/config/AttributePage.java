@@ -46,6 +46,23 @@ public class AttributePage extends BaseConfigurationObject {
   //cache one AttributeCollection for call to getCollectionForAttribute
   private AttributeCollection lastColl = null;
   
+  /**
+   * Copy constructor. Constructs an exact copy of an existing AttributePage.
+   * @param ap AttributePage to copy.
+   */
+  public AttributePage(AttributePage ap) {
+  	super (ap);
+  	
+  	List agroups = ap.getAttributeGroups();
+  	for (int i = 0, n = agroups.size(); i < n; i++) {
+      Object group = agroups.get(i);
+      if (group instanceof AttributeGroup)
+        addAttributeGroup( new AttributeGroup( (AttributeGroup) group ));
+      else
+			  addDSAttributeGroup( new DSAttributeGroup( (DSAttributeGroup) group ));
+    }
+  }
+   
 /**
  * Empty Constructor should really only be used by the DatasetViewEditor
  */

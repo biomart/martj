@@ -28,10 +28,13 @@ import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -201,7 +204,18 @@ public class DatasetViewXMLUtils {
 
     if (digest != null)
         d.setMessageDigest(digest);
+    
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+      Attribute att = (Attribute) attributes.get(i);
+      String name = att.getName();
         
+      xmlAttributeTitles[i] = name;
+    }
+    
+    d.setXmlAttributeTitles(xmlAttributeTitles);
     return d;    
   }
 
@@ -263,8 +277,22 @@ public class DatasetViewXMLUtils {
   
 	private static DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
 		FilterDescription desc = getFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
-		String value = thisElement.getAttributeValue(VALUE);
-		return new DefaultFilter(desc, value);
+		String value = thisElement.getAttributeValue(VALUE);		
+		
+		DefaultFilter df = new DefaultFilter(desc, value);
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		df.setXmlAttributeTitles(xmlAttributeTitles);
+		
+		return df;
 	}
 
 	private static FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
@@ -281,6 +309,18 @@ public class DatasetViewXMLUtils {
 				fp.addDSFilterGroup(getDSFilterGroup(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		fp.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return fp;
 	}
 
@@ -296,6 +336,18 @@ public class DatasetViewXMLUtils {
 			fg.addFilterCollection(getFilterCollection(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		fg.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return fg;
 	}
 
@@ -307,6 +359,18 @@ public class DatasetViewXMLUtils {
 
 		DSFilterGroup fg = new DSFilterGroup(intName, dispname, desc, handler);
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		fg.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return fg;
 	}
 
@@ -322,6 +386,18 @@ public class DatasetViewXMLUtils {
 			fc.addFilterDescription(getFilterDescription(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		fc.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return fc;
 	}
 
@@ -355,6 +431,18 @@ public class DatasetViewXMLUtils {
 			o.addPushAction(getPushOptions((Element) iter.next()));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		o.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return o;
 	}
 
@@ -370,6 +458,18 @@ public class DatasetViewXMLUtils {
 			op.addOption(getOption((Element) iter.next()));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		op.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return op;
 	}
 
@@ -401,19 +501,60 @@ public class DatasetViewXMLUtils {
 			f.addDisable(getDisable((Element) iter.next()));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		f.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return f;
 	}
 
 	private static Enable getEnable(Element thisElement) throws ConfigurationException {
 		String ref = thisElement.getAttributeValue(REF, "");
 		String valueCondition = thisElement.getAttributeValue(VALUECONDITION, "");
-		return new Enable(ref, valueCondition);
+		
+		Enable e = new Enable(ref, valueCondition);
+		
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		e.setXmlAttributeTitles(xmlAttributeTitles);
+		
+		return e;
 	}
 
 	private static Disable getDisable(Element thisElement) throws ConfigurationException {
 		String ref = thisElement.getAttributeValue(REF, "");
 		String valueCondition = thisElement.getAttributeValue(VALUECONDITION, "");
-		return new Disable(ref, valueCondition);
+		
+		Disable d = new Disable(ref, valueCondition);
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		d.setXmlAttributeTitles(xmlAttributeTitles);
+				
+		return d;
 	}
 
 	private static AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
@@ -431,6 +572,18 @@ public class DatasetViewXMLUtils {
 				ap.addDSAttributeGroup(getDSAttributeGroup(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		ap.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return ap;
 	}
 
@@ -445,6 +598,18 @@ public class DatasetViewXMLUtils {
 			ag.addAttributeCollection(getAttributeCollection(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		ag.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return ag;
 	}
 
@@ -456,6 +621,18 @@ public class DatasetViewXMLUtils {
 
 		DSAttributeGroup ag = new DSAttributeGroup(intName, dispname, desc, objCode);
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		ag.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return ag;
 	}
 
@@ -470,13 +647,25 @@ public class DatasetViewXMLUtils {
 		AttributeCollection ac = new AttributeCollection(intName, maxs, dispname, desc);
 		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEDESCRIPTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			ac.addAttributeDescription(getUIAttributeDescription(element));
+			ac.addAttributeDescription(getAttributeDescription(element));
 		}
 
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		ac.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return ac;
 	}
 
-	private static AttributeDescription getUIAttributeDescription(Element thisElement) throws ConfigurationException {
+	private static AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
@@ -491,6 +680,19 @@ public class DatasetViewXMLUtils {
 		String link = thisElement.getAttributeValue(LINKOUTURL, "");
 
 		AttributeDescription a = new AttributeDescription(intName, fieldnm, dispname, maxl, tableconst, desc, src, hpage, link);
+		
+		List attributes = thisElement.getAttributes();
+		String[] xmlAttributeTitles = new String[attributes.size()];
+		
+		for (int i = 0, n = attributes.size(); i < n; i++) {
+			Attribute att = (Attribute) attributes.get(i);
+			String name = att.getName();
+        
+			xmlAttributeTitles[i] = name;
+		}
+    
+		a.setXmlAttributeTitles(xmlAttributeTitles);
+		
 		return a;
 	}
   
