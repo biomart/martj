@@ -179,13 +179,13 @@ public class MartShell {
 			confInfo = new File(connfile).toURL();
 			p.load(confInfo.openStream());
 
-			mainHost = p.getProperty("host");
-			mainPort = p.getProperty("port");
-			mainDatabase = p.getProperty("databaseName");
-			mainUser = p.getProperty("user");
-			mainPassword = p.getProperty("password");
-			mainDatabaseType = p.getProperty("databaseType");
-			mainConfiguration = p.getProperty("alternateConfigurationFile");
+			mainHost = p.getProperty("host").trim();
+			mainPort = p.getProperty("port").trim();
+			mainDatabase = p.getProperty("databaseName").trim();
+			mainUser = p.getProperty("user").trim();
+			mainPassword = p.getProperty("password").trim();
+			mainDatabaseType = p.getProperty("databaseType").trim();
+			mainConfiguration = p.getProperty("alternateConfigurationFile").trim();
 
 		} catch (java.net.MalformedURLException e) {
 			mainLogger.warn("Could not load connection file " + connfile + " MalformedURLException: " + e);
