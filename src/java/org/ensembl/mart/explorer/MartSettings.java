@@ -134,7 +134,7 @@ public class MartSettings extends Box {
 					// TODO bind a and ds so that can recreate the link after persistence
 					datasetViewSettings.add( a );
 				} catch (ConfigurationException e1) {
-          feedback.warn("Couldn not load DatasetViews from \"" 
+          feedback.warning("Couldn not load DatasetViews from \"" 
             + ds
             + "\". It might be possible to execute queries against this database.",e1, false);
 				}
@@ -145,7 +145,7 @@ public class MartSettings extends Box {
 
       } catch (ConfigurationException e) {
         e.printStackTrace();
-        feedback.warn("Failed to connect to database: " + e.getMessage());
+        feedback.warning("Failed to connect to database: " + e.getMessage());
       }
     }
 

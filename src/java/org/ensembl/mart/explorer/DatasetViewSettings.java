@@ -251,7 +251,7 @@ public class DatasetViewSettings extends Box {
 				doSelect(newSelectedName);
 
 			} catch (ConfigurationException e) {
-				feedback.warn(
+				feedback.warning(
 					"Failed to delete dataset view " + selected.getDisplayName(),
 					e);
 			}
@@ -260,7 +260,7 @@ public class DatasetViewSettings extends Box {
     try {
 			storePrefs();
 		} catch (ConfigurationException e1) {
-			feedback.warn(e1);
+			feedback.warning(e1);
 		}
 	}
 
@@ -314,7 +314,7 @@ public class DatasetViewSettings extends Box {
 				treeTopMenu.doClick();
 			}
 		} catch (ConfigurationException e) {
-			feedback.warn(e);
+			feedback.warning(e);
 		}
 
 	}
@@ -584,7 +584,7 @@ public class DatasetViewSettings extends Box {
 			return dsv != null && adaptor.supportsInternalName(dsv.getInternalName());
 		} catch (ConfigurationException e) {
 			// Shouldn't happen
-			feedback.warn(e);
+			feedback.warning(e);
 		}
 
 		return false;
@@ -634,7 +634,7 @@ public class DatasetViewSettings extends Box {
     try {
       prefs.flush();
     } catch (BackingStoreException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     }
 	}
 

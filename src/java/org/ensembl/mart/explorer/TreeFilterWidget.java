@@ -351,7 +351,7 @@ public class TreeFilterWidget extends FilterWidget {
               + filterDescription;
 
           logger.warning(s2);
-          feedback.warn(s);
+          feedback.warning(s);
 
           // tidy up after disovering problem. Force the selected item
           // to be removed.

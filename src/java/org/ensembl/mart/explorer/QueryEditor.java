@@ -356,9 +356,9 @@ public class QueryEditor extends JPanel {
       logger.fine("Loaded Query:" + getQuery());
 
     } catch (InvalidQueryException e) {
-      feedback.warn(e.getMessage());
+      feedback.warning(e.getMessage());
     } catch (IOException e) {
-      feedback.warn(e.getMessage());
+      feedback.warning(e.getMessage());
     }
 
   }
@@ -632,7 +632,7 @@ public class QueryEditor extends JPanel {
             if (save)
               FileUtil.copyFile(tmpFile, resultsFileChooser.getSelectedFile());
           } catch (IOException e) {
-            feedback.warn(e);
+            feedback.warning(e);
           }
           // tell the inputStream to stop reading once a -1 has been read
           // from the file because we aren't writing any more.
@@ -652,7 +652,7 @@ public class QueryEditor extends JPanel {
       .start();
 
     } catch (FileNotFoundException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     }
 
   }
@@ -666,7 +666,7 @@ public class QueryEditor extends JPanel {
       outputPanel.read(is, null);
       is.close();
     } catch (IOException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     }
   }
 
@@ -676,10 +676,10 @@ public class QueryEditor extends JPanel {
   private void execute() {
 
     if (query.getDataSource() == null) {
-      feedback.warn("Data base must be set before executing query.");
+      feedback.warning("Data base must be set before executing query.");
       return;
     } else if (query.getAttributes().length == 0) {
-      feedback.warn("Attributes must be set before executing query.");
+      feedback.warning("Attributes must be set before executing query.");
       return;
     }
 
@@ -703,15 +703,15 @@ public class QueryEditor extends JPanel {
       resultsStatus.setStale(false);
 
     } catch (SequenceException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     } catch (FormatException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     } catch (InvalidQueryException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     } catch (SQLException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     } catch (IOException e) {
-      feedback.warn(e);
+      feedback.warning(e);
     }
 
   }
@@ -769,9 +769,9 @@ public class QueryEditor extends JPanel {
       os.close();
 
     } catch (InvalidQueryException e) {
-      feedback.warn(e.getMessage());
+      feedback.warning(e.getMessage());
     } catch (IOException e) {
-      feedback.warn(e.getMessage());
+      feedback.warning(e.getMessage());
     }
   }
 

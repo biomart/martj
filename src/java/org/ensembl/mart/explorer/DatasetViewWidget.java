@@ -155,7 +155,7 @@ public class DatasetViewWidget
 			try {
 				datasetViewSettings.add(newDatasetView);
 			} catch (ConfigurationException e) {
-				feedback.warn(e);
+				feedback.warning(e);
 			}
 		setDatasetView(newDatasetView);
     

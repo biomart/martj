@@ -304,7 +304,7 @@ public class MartExplorer extends JFrame {
 			addQueryEditor(qe);
 			qe.doLoadQuery();
 		} catch (IOException e) {
-			feedback.warn(e);
+			feedback.warning(e);
 			if (qe != null)
 				queryEditorTabbedPane.remove(qe);
 		}
@@ -325,7 +325,7 @@ public class MartExplorer extends JFrame {
 		try {
 
 			if (datasetViewSettings.getAdaptor().getDatasetViews().length == 0) {
-				feedback.warn(
+				feedback.warning(
 					"No dataset views available. You need load one or more "
 						+ "datasets before you can create a query.");
 
@@ -338,9 +338,9 @@ public class MartExplorer extends JFrame {
 
 			}
 		} catch (ConfigurationException e) {
-			feedback.warn(e);
+			feedback.warning(e);
 		} catch (IOException e) {
-			feedback.warn(e);
+			feedback.warning(e);
 		}
 
 	}

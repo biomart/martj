@@ -30,7 +30,7 @@ public class Feedback {
 	 * Displays message in warning dialog box.
 	 * @param message
 	 */
-	public void warn(String message) {
+	public void warning(String message) {
     
       // split long mesages onto multiple lines with of approximately
       // max chars
@@ -64,8 +64,8 @@ public class Feedback {
    * @param message message to display
    * @param e exception
 	 */
-	public void warn(String message, Exception e) {
-      warn( message, e, true);
+	public void warning(String message, Exception e) {
+      warning( message, e, true);
 		}
 
 
@@ -75,10 +75,10 @@ public class Feedback {
    * @param e exception
    * @param includeExceptionInWarning whether e.getMessage() should be displayed in warning dialog.
    */
-  public void warn(String message, Exception e, boolean includeExceptionInWarning) {
+  public void warning(String message, Exception e, boolean includeExceptionInWarning) {
     e.printStackTrace();
     if ( includeExceptionInWarning ) message = message  + ":" + e.getMessage(); 
-    warn(message);
+    warning(message);
     
   }
 
@@ -86,14 +86,14 @@ public class Feedback {
 		 * Displays warning dialog and prints stack trace to console.
 		 * @param e exception
 		 */
-		public void warn(Exception e) {
-			warn(e.getMessage());
+		public void warning(Exception e) {
+			warning(e.getMessage());
 			e.printStackTrace();
 		}
     
     public static void main(String[] args) {
       Feedback f = new Feedback(null);
-      f.warn("A very long test message that goes on and on. It should have been reformated for better display. If not the code needs fixing!");
+      f.warning("A very long test message that goes on and on. It should have been reformated for better display. If not the code needs fixing!");
     }
 
 
