@@ -52,7 +52,7 @@ public class Help extends Box {
 		pane.setEditable(false);
 	}
 	public void showDialog(Frame parent) {
-		JDialog d = new JDialog(parent, "MartExplorer Documentation", true);
+		JDialog d = new JDialog(parent, "MartExplorer Documentation", false);
 		d.getContentPane().add(new JScrollPane(this));
 		d.setSize(400, 500);
 		d.setVisible(true);
