@@ -14,7 +14,7 @@ TMP_ROOT=`dirname $0`/..
  
 TMP_CLASSPATH=${TMP_ROOT}
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/build/classes
-TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/mysql-connector-java-3.0.7-stable-bin.jar
+TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/mysql-connector-java-3.0.16-ga-bin.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/log4j-1.2.6.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/jython.jar
 TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/ensj-util.jar
