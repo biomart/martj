@@ -3,7 +3,13 @@
 
 # copyright EBI, GRL 2003
 
-# TODO scroll results to top
+# "active" bar / cursor whilst loading data
+
+# cache results so don't reload if query unchanged Query.equals()? or
+# stateChanged -> dirty flag via state changed.
+
+# clicking view results multiple times while already loading should
+# pop up dialog box: "Already executing query, stop?"
 
 # handle gene_chrom_start / end, strand
 
@@ -18,8 +24,6 @@
 
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
 # stubs to InputPage
-
-# TODO 2 - implement execute query.
 
 # TODO implement results window. Clicking on it in tree cause EXECUTE
 # and results to be displayed in page (buffer to avoid blowing up) and
@@ -213,6 +217,8 @@ class LabelledComboBox(Box, ActionListener):
 
 class SpeciesPage(Page):
 
+    name = "speciesPage"
+
     """ Input component manages display and communication between
     "species" drop down list <-> query.species."""
 
@@ -242,6 +248,8 @@ class FocusPage(Page):
     """ Input component manages display and communication between
     "focus" drop down list <-> query.focus."""
 
+    name = "focus_page"
+
     def __init__(self):
         Page.__init__(self)
         self.box = LabelledComboBox("Focus", self)
@@ -265,6 +273,8 @@ class FocusPage(Page):
 
 
 class DatabasePage(Page):
+
+    name = "databasePage"
 
     def __init__(self):
         Page.__init__(self)
@@ -338,6 +348,8 @@ class DatabasePage(Page):
 
 class ResultsPage(Page):
 
+    name = "results_page"
+
     def __init__(self):
         Page.__init__(self)
 
@@ -372,6 +384,8 @@ class GUIOutputStream( ByteArrayOutputStream ):
 
 
 class FormatPage(Page):
+
+    name = "format_page"
 
     def __init__(self):
         Page.__init__(self)
@@ -471,6 +485,9 @@ class FormatPage(Page):
         self.dependencies()
         
 class OutputPage(Page):
+
+    name = "output_page"
+    
     def htmlSummary(self):
 	return "<html><b>Output</b></html>"
 
@@ -485,7 +502,7 @@ class SimpleAttributePage(Page):
         self.field = field
         self.add( JLabel( self.field ) )
         self.add( JButton("remove", actionPerformed=self.actionPerformed) )
-
+	self.name = field + "_attribute_page"
 
     def actionPerformed( self, event=None ):
         self.attributeManager.deselect( self )
@@ -505,6 +522,7 @@ class AttributeManagerPage(Page):
     removed from the tree (via the "remove" button on the
     SimpleAttribute page are readded to the available list."""
 
+    name = "attribute_manager_page"
 
     def __init__(self):
         Page.__init__(self)
@@ -550,8 +568,7 @@ class AttributeManagerPage(Page):
                               self.node,
                               self.node.childCount,
                               self.cardContainer,
-                              attributePage,
-                              value)
+                              attributePage)
         attributePage.node = node
         self.refreshView()
 
@@ -597,10 +614,15 @@ class AttributeManagerPage(Page):
 
 
 class FilterPage(Page):
+
+    name = "filter_page"
+
     def htmlSummary(self):
 	return "<html><b>Filters</b></html>"
 
 class RegionPage(Page):
+
+    name = "region_page"
 
     def __init__(self):
 	Page.__init__(self)
@@ -666,6 +688,8 @@ class RegionPage(Page):
 
 class GeneTypeFilterPage(Page):
 
+    name = "gene_type_filter_page"
+
     def __init__(self):
 	Page.__init__(self)
 	self.id = LabelledComboBox("Gene Type", self)
@@ -704,7 +728,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
 
 
 
-    def __init__(self, tree, parent, position, cardContainer, targetComponent, targetCardName):
+    def __init__(self, tree, parent, position, cardContainer, targetComponent):
         
         """ Adds targetComponent to cardContainer with the name
         targetCardName. Makes this a tree listener and inserts self as
@@ -715,7 +739,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
 	self.targetComponent = targetComponent
         if targetComponent==None:
             self.targetComponent = DummyPage( targetCardName )
-	self.targetCardName = targetCardName
+	self.targetCardName = targetComponent.name
         self.tree = tree
         self.tree.addTreeSelectionListener( self )
         self.tree.model.insertNodeInto( self, parent, position)
@@ -748,33 +772,30 @@ class QueryEditor(JPanel):
         self.rootNode = DefaultMutableTreeNode( "Query" )
         treeModel = DefaultTreeModel( self.rootNode )
         tree = JTree( treeModel )
-        cardContainer = CardContainer()
+        self.cardContainer = CardContainer()
 
         self.databasePage = DatabasePage()
 	self.formatPage = FormatPage()
-	self.resultsPage = ResultsPage()
 	
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, cardContainer,
-				self.databasePage, "DATABASE" )
-        speciesNode = QueryTreeNode( tree, self.rootNode, 1, cardContainer,
-				     SpeciesPage(),"SPECIES" )
-        focusNode = QueryTreeNode( tree, self.rootNode, 2, cardContainer,
-				   FocusPage(),"focus" )
-        filtersNode = QueryTreeNode( tree, self.rootNode, 3, cardContainer,
-				     FilterPage(),"filter" )
-        regionNode = QueryTreeNode( tree, filtersNode, 0, cardContainer,
-				    RegionPage(),"region" )
-	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, cardContainer,
-						GeneTypeFilterPage(), "gene_type" )
-        outputNode = QueryTreeNode( tree, self.rootNode, 4, cardContainer,
-				    OutputPage(),"output" )
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, self.cardContainer,
+				self.databasePage )
+        speciesNode = QueryTreeNode( tree, self.rootNode, 1, self.cardContainer,
+				     SpeciesPage())
+        focusNode = QueryTreeNode( tree, self.rootNode, 2, self.cardContainer,
+				   FocusPage())
+        filtersNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
+				     FilterPage())
+        regionNode = QueryTreeNode( tree, filtersNode, 0, self.cardContainer,
+				    RegionPage())
+	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, self.cardContainer,
+						GeneTypeFilterPage())
+        outputNode = QueryTreeNode( tree, self.rootNode, 4, self.cardContainer,
+				    OutputPage())
         attributesPage = AttributeManagerPage()
-        attributesNode = QueryTreeNode( tree, outputNode, 0, cardContainer,
-					attributesPage,"attribute" )
-        formatNode = QueryTreeNode( tree, outputNode, 1, cardContainer,
-				    self.formatPage,"format" )
-        resultsNode = QueryTreeNode( tree, outputNode, 2, cardContainer,
-                                         self.resultsPage,"results" )
+        attributesNode = QueryTreeNode( tree, outputNode, 0, self.cardContainer,
+					attributesPage)
+        formatNode = QueryTreeNode( tree, outputNode, 1, self.cardContainer,
+				    self.formatPage)
         
         # expand branches in tree
 	path = TreePath(self.rootNode).pathByAddingChild( filtersNode )
@@ -787,19 +808,24 @@ class QueryEditor(JPanel):
         attributesPage.node = attributesNode
         attributesPage.path = path
         attributesPage.tree = tree
-        attributesPage.cardContainer = cardContainer
+        attributesPage.cardContainer = self.cardContainer
 
         self.layout = BorderLayout()
 	scrollPane = JScrollPane(tree)
 	scrollPane.setPreferredSize( Dimension(350,300) )
         self.add(  scrollPane, BorderLayout.WEST )
-	self.add( cardContainer , BorderLayout.CENTER )
+	self.add( self.cardContainer , BorderLayout.CENTER )
 
+    def addPage( self, page ):
+	self.cardContainer.add( page, page.name )
+
+
+    def showPage( self, pageName ):
+	self.cardContainer.show( pageName )
 
     def updateQuery(self, query):
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
-                print node
                 node.targetComponent.updateQuery( query )
 
                 
@@ -846,6 +872,8 @@ class MartGUIApplication(JFrame):
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
         self.editor = QueryEditor()
+	self.resultsPage = ResultsPage()
+	self.editor.addPage( self.resultsPage )
         self.buildGUI()
         self.visible=1
 
@@ -948,8 +976,9 @@ class MartGUIApplication(JFrame):
 
 
     def viewResults( self ):
+	self.editor.showPage( ResultsPage.name )
         # execute query in new thread and pipe results to window.
-        os = self.editor.resultsPage.getOutputStream()
+        os = self.resultsPage.getOutputStream()
 	thread.start_new_thread( self.executeQuery, (self, os) )
         os.close()
 
