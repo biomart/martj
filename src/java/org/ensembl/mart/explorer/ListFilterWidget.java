@@ -160,9 +160,9 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
           filter =
             new BasicFilter(
-              filterDescription.getField(),
-              option.getTableConstraint(),
-			  option.getKey(),
+              filterDescription.getFieldFromContext(),
+              option.getTableConstraintFromContext(),
+			  option.getKeyFromContext(),
               "=",
               value,
               filterDescription.getHandlerFromContext());
