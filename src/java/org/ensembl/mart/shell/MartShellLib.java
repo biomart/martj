@@ -2482,7 +2482,7 @@ public class MartShellLib {
    * @return String canonicalized Mart Name
    */
   public String canonicalizeMartName(String cMartName) {
-    return cMartName.replaceAll("\\s", "_");
+    return cMartName.replaceAll(" ", "_");
   }
   
   private boolean advancedFeaturesOn = false;
