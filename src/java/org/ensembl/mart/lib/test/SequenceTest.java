@@ -81,7 +81,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCODING));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -111,7 +111,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTPEPTIDE));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -145,7 +145,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCDNA));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -175,7 +175,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -204,7 +204,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTEXONINTRON));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -240,7 +240,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		int rightflank = 1000;
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTFLANKS, 0, rightflank));
 		
@@ -281,7 +281,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONINTRON));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -317,7 +317,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000111960", "ENSG00000161929"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		int leftflank = 1000;
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEFLANKS, leftflank, 0));
 		
@@ -359,7 +359,7 @@ public class SequenceTest extends Base {
 		Query q = new Query(genequery);
 		
 		//test one forward strand gene and one revearse strand gene
-		q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+    q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000100379", "ENSG00000161929", "ENSG00000111960"}) );
 		q.setSequenceDescription(new SequenceDescription(SequenceDescription.GENEEXONS));
 		
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

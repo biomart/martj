@@ -325,9 +325,6 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) geneatts.get(Assembly);
 
-				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-
 				TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 				for (Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext();) {
 					Hashtable tranatts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
@@ -404,9 +401,6 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) geneatts.get(Assembly);
-
-				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 				for (Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext();) {

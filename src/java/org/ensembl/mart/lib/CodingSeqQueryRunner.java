@@ -349,7 +349,6 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) tranatts.get(Locations);
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
@@ -422,7 +421,6 @@ public final class CodingSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) tranatts.get(Locations);
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());

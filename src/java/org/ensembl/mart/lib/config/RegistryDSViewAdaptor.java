@@ -28,6 +28,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.InputSourceUtil;
 
 /**
  * DSViewAdaptor implimentation for working with MartRegistry Objects.
@@ -134,7 +135,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 	private void loadMartRegistryFromURL() throws ConfigurationException {
 		try {
-			martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(url.openStream());
+			martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry( InputSourceUtil.getStreamForURL( url ) );
 		} catch (ConfigurationException e) {
 			throw e;
 		} catch (IOException e) {
@@ -167,11 +168,10 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 			if (location.getType().equals(MartLocationBase.REGISTRY)) {
 				//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
 
-				URL regloc = ((RegistryLocation) location).getUrl();
 				MartRegistry subreg = null;
 
 				try {
-					subreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(regloc.openStream());
+					subreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(  InputSourceUtil.getStreamForURL( ( (RegistryLocation) location).getUrl() ) );
 				} catch (ConfigurationException e) {
 					throw e;
 				} catch (IOException e) {

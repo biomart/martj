@@ -22,6 +22,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.logging.Logger;
 
+import org.ensembl.mart.lib.InputSourceUtil;
+
 /**
  * DSViewAdaptor implimenting object designed to provide a DatasetView object from
  * from an URL.
@@ -130,9 +132,9 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
 	 */
 	public void update() throws ConfigurationException {
 		try {
-				dsv = DatasetViewXMLUtils.XMLStreamToDatasetView(dsvurl.openStream(), validate);
+				dsv = DatasetViewXMLUtils.XMLStreamToDatasetView( InputSourceUtil.getStreamForURL(dsvurl), validate);
 		} catch (Exception e) {
-			throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl + " " + e.getMessage(), e);
+			throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl.toString() + " " + e.getMessage(), e);
 		}
 
 		inames = new String[] { dsv.getInternalName()};

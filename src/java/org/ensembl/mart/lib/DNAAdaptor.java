@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,84 +37,131 @@ import java.util.logging.Logger;
  */
 public class DNAAdaptor {
 
+	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());
+	private Connection conn;
+
+	private final String SPECSQL = "select mart_species from _meta_release_info";
+	private int chunkSize = 100000; // Size of dna chunks in sgp_chunks table
+
+	//some prepared statements for later use
+	private PreparedStatement specStmt;
+	private Hashtable specSQLFull = new Hashtable();
+	private Hashtable specSQLSub = new Hashtable();
+
 	/**
 	 * DNAAdaptors require a database connection to get sequence from the mart database.
 	 * 
 	 * @param Connection
 	 */
-	public DNAAdaptor(Connection conn) {
+	public DNAAdaptor(Connection conn) throws SequenceException {
 		this.conn = conn;
-	}
 
-	/**
-	 * For sequence operations working with smaller subsets of a sequence
-	 * (usually portions of a single gene) this method allows an entire sequence
-	 * to be fetched and cached.  Subsequen calls to getSequence will attempt 
-	 * to work on this sequence, before fetching new sequence from the database.
-	 *   
-	 * @param species
-	 * @param chr
-	 * @param start
-	 * @param end
-	 */
-	public void CacheSequence(String species, String chr, int start, int end) throws SequenceException {
-		// if first time called, or required DNA is not from same big seg get a new big seg
-		if ((sql == null)
-			|| (!lastChr.equals(chr))
-			|| (start < cachedSeqStart)
-			|| (start > cachedSeqEnd)
-			|| (end > cachedSeqEnd)) {
-			List bytes = new ArrayList();
-			int seqLength = 0;
-
-			int tmp = start - 1;
-			// exact coord of a chunk start
-			cachedSeqStart = tmp - (tmp % chunkSize) + 1;
-
-			try {
-				sql =
-					"select sequence from " + species + "_dna_chunks_support where chr_start between ? and ? and chr_name = ?";
-				PreparedStatement ps = conn.prepareStatement(sql);
-				ps.setInt(1, cachedSeqStart);
-				ps.setInt(2, end);
-				ps.setString(3, chr);
-
-				//logger.info("SQL: "+sql+"\nparameter1="+cachedSeqStart+"\nparameter2="+end+"\nparameter3="+chr);
-
-				ResultSet rs = ps.executeQuery();
-				while (rs.next()) {
-					int nColumns = rs.getMetaData().getColumnCount();
-
-					if (nColumns > 0) {
-						for (int i = 1; i <= nColumns; ++i) {
-							byte[] theseBytes = rs.getBytes(i);
-							bytes.add(theseBytes);
-							seqLength += theseBytes.length;
-						}
-					} else {
-						if (logger.isLoggable(Level.WARNING))
-							logger.warning("No Sequence Returned for chromosome " + chr + "\n");
-					}
-				}
-
-				cachedSeq = new byte[seqLength];
-				int nextPos = 0;
-				for (int i = 0, n = bytes.size(); i < n; i++) {
-					byte[] theseBytes = (byte[]) bytes.get(i);
-					System.arraycopy(theseBytes, 0, cachedSeq, nextPos, theseBytes.length);
-					nextPos += theseBytes.length;
-				}
-
-				bytes = null;
-
-				lastChr = chr;
-				cachedSeqEnd = cachedSeqStart + cachedSeq.length - 1;
-			} catch (SQLException e) {
-				throw new SequenceException("Could not cache Sequence for chromosome " + chr + " " + e.getMessage());
-			}
+		try {
+			specStmt = conn.prepareStatement(SPECSQL);
+			populateSpeciesSQL();
+		} catch (SQLException e) {
+			throw new SequenceException("Could not initialize DNAAdaptor Species Statements: " + e.getMessage(), e);
 		}
 	}
 
+	private void populateSpeciesSQL() throws SQLException {
+		ResultSet rs = specStmt.executeQuery();
+
+		while (rs.next()) {
+			String species = rs.getString(1);
+			String sqlFull = "select sequence from " + species + "_dna_chunks_support where chr_start = ? and chr_name = ?";
+			String sqlSub = "select substring(sequence, ?, ?) from " + species + "_dna_chunks_support where chr_start = ? and chr_name = ?";
+
+			specSQLFull.put(species, conn.prepareStatement(sqlFull));
+			specSQLSub.put(species, conn.prepareStatement(sqlSub));
+		}
+		rs.close();
+	}
+
+  private byte[] fetchFullChunk(String species, String chr, int start) throws SequenceException {
+    if (!specSQLFull.containsKey(species))
+      throw new SequenceException("Species " + species + " is not a supported species\n");
+      
+    try {
+      PreparedStatement ps = (PreparedStatement) specSQLFull.get(species);
+      ps.setInt(1, start);
+      ps.setString(2, chr);
+
+      ResultSet rs = ps.executeQuery();
+      rs.next();
+
+      byte[] ret = rs.getBytes(1);
+      rs.close();
+      return ret;
+    } catch (SQLException e) {
+      throw new SequenceException("Could not fetch full sequence chunk " + e.getMessage(), e);
+    }          
+  }
+  
+  private byte[] fetchChunkSubstring(String species, String chr, int start, int chunkStart, int length) throws SequenceException {
+    if (!specSQLSub.containsKey(species))
+      throw new SequenceException("Species " + species + " is not a supported species\n");
+    
+    try {
+      int coord = start - chunkStart + 1;
+        
+      PreparedStatement ps = (PreparedStatement) specSQLSub.get(species);
+      ps.setInt(1, coord);
+      ps.setInt(2, length);
+      ps.setInt(3, chunkStart);
+      ps.setString(4, chr);
+
+      ResultSet rs = ps.executeQuery();
+      rs.next();
+
+      byte[] ret = rs.getBytes(1);
+      rs.close();
+      return ret;
+    } catch (SQLException e) {
+      throw new SequenceException("Could not fetch chunk substring " + e.getMessage(), e);
+    }
+  }
+  
+  private byte[] fetchSequence(String species, String chr, int start, int length) throws SequenceException {
+    int chunkStart = start - ( ( start - 1 ) % chunkSize );
+    
+    if (start == chunkStart && length == chunkSize)
+      return fetchFullChunk(species, chr, chunkStart);
+    else
+      return fetchChunkSubstring(species, chr, start, chunkStart, length);
+  }
+
+  private byte[] fetchResidualSequence(String species, String chr, int start, int length, byte[] initialSeq) throws SequenceException {
+    List bytes = new ArrayList();
+    bytes.add(initialSeq);
+    int currentLength = initialSeq.length;
+    int currentStart = start + currentLength;
+    
+    while (currentLength < length) {
+      int residual = length - currentLength;
+      byte[] currentBytes = fetchSequence(species, chr, currentStart, residual);
+      
+      if (currentBytes.length < 1)
+        break;
+      
+      bytes.add(currentBytes);
+      currentLength += currentBytes.length;
+      currentStart = start + currentLength;
+    }
+    
+    //iterate through bytes to fill sequence byte[]
+    byte[] sequence = new byte[currentLength];
+    int nextPos = 0;
+    for (int i = 0, n = bytes.size(); i < n; i++) {
+      byte[] thisChunk = (byte[]) bytes.get(i);
+      System.arraycopy(thisChunk, 0, sequence, nextPos, thisChunk.length);
+      nextPos += thisChunk.length;
+    }
+
+    bytes = null;
+    return sequence;
+  }
+  
 	/**
 	 * Gets the Sequence for a given species, chr, start and end.
 	 * Checks to see if there is cached sequence applicable for
@@ -122,33 +170,21 @@ public class DNAAdaptor {
 	 * @return String sequence
 	 */
 	public byte[] getSequence(String species, String chr, int start, int end) throws SequenceException {
-		CacheSequence(species, chr, start, end);
-		// may not do anything if cachedSeq is sufficient
-
 		int len = (end - start) + 1;
-		if (cachedSeq.length < 1) {
-			if (logger.isLoggable(Level.WARNING))
-				logger.warning("failed to get DNA for chr " + chr + "\n");
-			return Npad(len);
-		}
-
-		// cut out the requested section from the big segment
-		int seqstart = start - cachedSeqStart;
-		int seqend = seqstart + len;
-		int cacheLen = cachedSeq.length;
-
-		byte[] retBytes = null;
+  	byte[] retBytes = fetchSequence(species, chr, start, len);
+    
+    if (retBytes.length < 1) {
+      if (logger.isLoggable(Level.INFO))
+        logger.info("No Sequence Returned for request: species = " + species + ", chromosome = " + chr + ", start = " + start + " end = " + end + "\n");
+      return Npad(len);
+    }
+    
+    if (retBytes.length < len)
+      retBytes = fetchResidualSequence(species, chr, start, len, retBytes);
+    
 		//user may ask for more sequence than is available, return as much as possible
-		if (len > cacheLen - seqstart - 1) {
-
-			logger.info("Warning, not enough sequence to satisfy request, returning as much as possible\n");
-
-			retBytes = new byte[cacheLen - seqstart + 1];
-			System.arraycopy(cachedSeq, seqstart, retBytes, 0, retBytes.length);
-		} else {
-			retBytes = new byte[len];
-			System.arraycopy(cachedSeq, seqstart, retBytes, 0, len);
-		}
+		if (retBytes.length < len && logger.isLoggable(Level.INFO))
+			logger.info("Warning, not enough sequence to satisfy request: requested " + len + " returning " + retBytes.length + "\n");
 
 		return retBytes;
 	}
@@ -165,16 +201,4 @@ public class DNAAdaptor {
 
 		return nseq;
 	}
-
-	// variables to determine if we need to fetch more sequence for a given request
-	private String lastChr = null;
-	private int cachedSeqStart = 0;
-	private int cachedSeqEnd = 0;
-	private byte[] cachedSeq = null;
-	// will cache a sequence after calls to CacheSequence for use by getSequence
-
-	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());
-	private Connection conn;
-	private String sql = null;
-	private int chunkSize = 100000; // Size of dna chunks in sgp_chunks table
 }

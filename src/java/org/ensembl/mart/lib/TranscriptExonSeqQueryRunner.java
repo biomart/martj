@@ -327,9 +327,6 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String assemblyout = (String) geneatts.get(Assembly);
 
-				// cache the gene sequence
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-
 				for (Iterator tranIter = ((TreeMap) geneatts.get(Transcripts)).keySet().iterator(); tranIter.hasNext();) {
 					Hashtable tranatts = (Hashtable) ((TreeMap) geneatts.get(Transcripts)).get(tranIter.next());
 
@@ -414,9 +411,6 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
 				String assemblyout = (String) geneatts.get(Assembly);
-
-				// cache the gene sequence
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				for (Iterator tranIter = ((TreeMap) geneatts.get(Transcripts)).keySet().iterator(); tranIter.hasNext();) {
 					Hashtable tranatts = (Hashtable) ((TreeMap) geneatts.get(Transcripts)).get(tranIter.next());

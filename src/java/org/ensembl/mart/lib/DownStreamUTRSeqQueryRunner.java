@@ -369,7 +369,6 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 							throw new IOException();
 
 						TreeMap locations = (TreeMap) tranatts.get(Locations);
-						dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 						ArrayList seqout = new ArrayList();
 						int seqLen = 0;
@@ -500,7 +499,6 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 							throw new IOException();
 
 						TreeMap locations = (TreeMap) tranatts.get(Locations);
-						dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 						ArrayList seqout = new ArrayList();
 						int seqLen = 0;

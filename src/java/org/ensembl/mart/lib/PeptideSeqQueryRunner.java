@@ -345,7 +345,6 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				List locbytes = new ArrayList();
 				int seqLen = 0;
@@ -437,7 +436,6 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 					throw new IOException();
 
 				TreeMap locations = (TreeMap) atts.get(Locations);
-				dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
 				List locbytes = new ArrayList();
 				int seqLen = 0;
