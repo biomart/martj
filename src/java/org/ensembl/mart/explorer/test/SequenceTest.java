@@ -7,11 +7,15 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.ensembl.datamodel.AssemblyLocation;
 import org.ensembl.datamodel.Exon;
 import org.ensembl.datamodel.Transcript;
-import org.ensembl.driver.TranscriptAdaptor;
 import org.ensembl.driver.ExonAdaptor;
-import org.ensembl.mart.explorer.*;
+import org.ensembl.driver.SequenceAdaptor;
+import org.ensembl.driver.TranscriptAdaptor;
+import org.ensembl.mart.explorer.FormatSpec;
+import org.ensembl.mart.explorer.IDListFilter;
+import org.ensembl.mart.explorer.SequenceDescription;
 
 /**
  * Tests that Mart Explorer Sequence retrieval works by comparing it's output to that of ensj.
@@ -149,5 +153,39 @@ public class SequenceTest extends Base {
 			
 			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
 		}
+	}
+	
+	public void testTranscriptExonIntronSequence() throws Exception {
+		//test one forward strand gene and one revearse strand gene
+		query.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000161929", "ENSG00000111960"}) );
+		query.setSequenceDescription(new SequenceDescription(SequenceDescription.TRANSCRIPTCDNA));
+		
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		
+		engine.execute(query, new FormatSpec(FormatSpec.FASTA), out);
+		String results = out.toString();
+		out.close();
+		
+		TranscriptAdaptor ta = ensjDriver.getTranscriptAdaptor();
+		SequenceAdaptor sa = ensjDriver.getSequenceAdaptor();
+		
+		StringTokenizer sequences = new StringTokenizer(results, ">", false);
+		
+		while (sequences.hasMoreTokens()) {
+			StringTokenizer lines = new StringTokenizer(sequences.nextToken(), "\n", false);
+			String transcript_stable_id = new StringTokenizer(new StringTokenizer(lines.nextToken(), "|", false).nextToken(), ".", false).nextToken();
+			
+			String martseq = lines.nextToken();
+			Transcript transcript = ta.fetch(transcript_stable_id);
+			
+			AssemblyLocation first_exon_loc = (AssemblyLocation) ((Exon) transcript.getExons().get(0)).getLocation();
+			AssemblyLocation last_exon_loc = (AssemblyLocation) ((Exon) transcript.getExons().get(transcript.getExons().size() - 1)).getLocation();
+			
+			AssemblyLocation newloc = new AssemblyLocation(first_exon_loc.getChromosome(), Math.min(first_exon_loc.getStart(), last_exon_loc.getStart()), Math.max(first_exon_loc.getEnd(), last_exon_loc.getEnd()), first_exon_loc.getStrand() );
+			
+			String ensjseq = sa.fetch(newloc).getString();
+			
+			assertEquals("WARNING: Mart Sequence Doesnt match ENSJ Sequence\n", ensjseq, martseq);
+		}		
 	}
 }

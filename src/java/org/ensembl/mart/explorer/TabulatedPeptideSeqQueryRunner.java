@@ -290,7 +290,7 @@ public final class TabulatedPeptideSeqQueryRunner implements QueryRunner {
 				
 				// add the description, if necessary
 				if (! ( tranatts.containsKey(Description) ) )
-					tranatts.put( Description, separator+seqd.getDescription() );
+					tranatts.put( Description, seqd.getDescription() );
 			}
 			writeSequence();
 		} catch (SQLException e) {

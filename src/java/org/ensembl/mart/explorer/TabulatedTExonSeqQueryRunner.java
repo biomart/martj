@@ -325,7 +325,7 @@ public final class TabulatedTExonSeqQueryRunner implements QueryRunner {
 				
 				// add the description, if necessary
 				if (! exonatts.containsKey(Description))
-					exonatts.put( Description, separator+seqd.getDescription() );
+					exonatts.put( Description, seqd.getDescription() );
 			}
 			writeSequence();
 		} catch (SQLException e) {

@@ -45,7 +45,7 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 
     /**
      * Constructs a FastaTranscriptEISeqQueryRunner object to print 
-     *  Transcripts (exons and introns) in fasta format.
+     *  Transcripts (exons and introns), with optional flanking sequences, in fasta format.
      * 
      * @param query
      * @param format
@@ -72,10 +72,83 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
 		}
 	}
-    
+
+	private void writeSequence() throws SequenceException, IOException {
+		OutputStreamWriter osr =  new OutputStreamWriter(os);
+		try {
+			// run through the idS list, make and print the header, then get and print the sequences from the locations
+			
+			for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
+				Hashtable atts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
+				
+				// write the header, starting with the displayID
+				String displayIDout = (String) atts.get(DisplayID);
+				osr.write(">"+displayIDout);
+					
+				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
+				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
+				dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+					
+				SequenceLocation tranloc = (SequenceLocation) atts.get(Location);
+				String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
+				String assemblyout = (String) atts.get(Assembly);
+				osr.write("\tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
+				osr.flush();
+					
+				for (int j = 0, n = fields.size(); j < n; j++) {
+					osr.write(separator);
+					String field = (String) fields.get(j);
+					if (atts.containsKey(field)) {
+						ArrayList values = (ArrayList) atts.get(field);
+							
+						if (values.size() > 1)
+							osr.write(field+" in ");
+						else
+							osr.write(field+"=");
+							    
+						for (int vi = 0; vi < values.size(); vi++) {
+							if (vi > 0) osr.write(",");
+							osr.write((String) values.get(vi));
+						}
+					}
+					else
+						osr.write(field+"= ");
+					osr.flush();
+				}
+					
+				osr.write(separator+(String) atts.get(Description));
+				osr.write("\n");
+				osr.flush();
+        
+				//extend flanks, if necessary, and write sequence
+				if (query.getSequenceDescription().getLeftFlank() > 0)
+					tranloc = tranloc.extendLeftFlank(query.getSequenceDescription().getLeftFlank());
+				if (query.getSequenceDescription().getRightFlank() > 0)
+					tranloc = tranloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
+                        
+				if (tranloc.getStrand() < 0)
+					osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) ) );
+				else
+					osr.write( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) );
+				osr.flush();
+				osr.write("\n");
+				osr.flush();
+			}
+			osr.close();			
+		} catch (SequenceException e) {
+		    logger.warn(e.getMessage());
+		    throw e;
+	    } catch (IOException e) {
+		    logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+		    throw e;
+	    }	    
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.explorer.QueryRunner#execute(int)
+	 */    
 	public void execute(int limit)
 		throws SQLException, IOException, InvalidQueryException {
-			OutputStreamWriter osr =  new OutputStreamWriter(os);
 			SequenceDescription seqd = query.getSequenceDescription();
 			dna = new DNAAdaptor(conn);
 
@@ -101,8 +174,12 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 
 			CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 			String sql = csql.toSQL();
+			
+			String structure_table = query.getSpecies()+"_core_"+query.getFocus()+"_structure";
+			sql += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
+			
 			if (limit > 0)
-				sql = sql+" limit "+limit;
+				sql += " limit "+limit;
 
 			logger.info( "QUERY : " + query );
 			logger.info( "SQL : " +sql );
@@ -227,74 +304,10 @@ public final class FastaTranscriptEISeqQueryRunner implements QueryRunner {
 				
 					// add the description, if necessary
 					if (! atts.containsKey(Description) )
-						atts.put( Description, separator+seqd.getDescription() );
+						atts.put( Description, seqd.getDescription() );
 				}
-			
-				// run through the idS list, make and print the header, then get and print the sequences from the locations
-			
-				for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
-					Hashtable atts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
-				
-					// write the header, starting with the displayID
-					String displayIDout = (String) atts.get(DisplayID);
-					osr.write(">"+displayIDout);
-					
-					// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
-					SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
-					dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-					
-					SequenceLocation tranloc = (SequenceLocation) atts.get(Location);
-					String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
-					String assemblyout = (String) atts.get(Assembly);
-					osr.write("\tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
-					osr.flush();
-					
-					for (int j = 0, n = fields.size(); j < n; j++) {
-						osr.write(separator);
-						String field = (String) fields.get(j);
-						if (atts.containsKey(field)) {
-							ArrayList values = (ArrayList) atts.get(field);
-							
-							if (values.size() > 1)
-								osr.write(field+" in ");
-							else
-								osr.write(field+"=");
-							    
-							for (int vi = 0; vi < values.size(); vi++) {
-								if (vi > 0) osr.write(",");
-								osr.write((String) values.get(vi));
-							}
-						}
-						else
-							osr.write(field+"= ");
-						osr.flush();
-					}
-					
-					osr.write(separator+(String) atts.get(Description));
-					osr.write("\n");
-					osr.flush();
-        
-                    //extend flanks, if necessary, and write sequence
-                    if (seqd.getLeftFlank() > 0)
-                        tranloc = tranloc.extendLeftFlank(seqd.getLeftFlank());
-                    if (seqd.getRightFlank() > 0)
-                        tranloc = tranloc.extendRightFlank(seqd.getRightFlank());
-                        
-			        if (tranloc.getStrand() < 0)
-						osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) ) );
-					else
-						osr.write( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) );
-					osr.flush();
-					osr.write("\n");
-					osr.flush();
-				}
-				osr.close();
-			}
-			catch (IOException e) {
-				logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
-				throw e;
-			} 
-			catch (SQLException e) {
+			    writeSequence();
+			} catch (SQLException e) {
 				logger.warn(e.getMessage()+ " : " + sql);
 				throw e;
 			}

@@ -16,7 +16,7 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
  
-package org.ensembl.mart.explorer;
+ package org.ensembl.mart.explorer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,32 +36,30 @@ import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
 
 /**
- * This object prints out Transcripts )Exons and Introns) in tabulated format,
- *  with the sequence as the last field in each line.
+ * Writes out upstream or downstream sequences of transcripts in tabulated format,
+ * with the sequence as the last field in the output.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public final class TabulatedTranscriptEISeqQueryRunner implements QueryRunner {
+public final class TabulatedTFlankSeqQueryRunner implements QueryRunner {
 
-    /**
-     * Constructs a TabulatedTranscriptEISeqQueryRunner object
-     *  to print Transcripts (exons and introns), with optional
-     *  flanking sequence, in tabulated format.
-     * 
-     * @param query
-     * @param format
-     * @param conn
-     * @param os
-     */
-    public TabulatedTranscriptEISeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
-	    this.query = query;
-	    this.format = format;
-	    this.conn = conn;
-	    this.os = os;
-	    this.separator = format.getSeparator();
-    }
-
+	/**
+	  * Constructs a TabulatedTFlankSeqQueryRunner object to print 
+	  *  transcript upstream or downstream flanking sequences, in tabulated format.
+	  * 
+	  * @param query
+	  * @param format
+	  * @param conn
+	  * @param os
+	  */
+	 public TabulatedTFlankSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
+		 this.query = query;
+		 this.format = format;
+		 this.conn = conn;
+		 this.os = os;
+	 }
+	 
 	private void updateQuery() {
 		query.addAttribute(new FieldAttribute(queryID));
 		query.addAttribute(new FieldAttribute(Rank));
@@ -79,25 +77,23 @@ public final class TabulatedTranscriptEISeqQueryRunner implements QueryRunner {
 	private void writeSequence() throws SequenceException, IOException {
 		OutputStreamWriter osr =  new OutputStreamWriter(os);
 		try {
-			// run through the traniDs list, make and print the header, then get and print the sequences from the locations
+			// run through the idS list, make and print the header, then get and print the sequences from the locations
 			
 			for ( Iterator tranIDiter = traniDs.keySet().iterator(); tranIDiter.hasNext(); ) {
 				Hashtable atts = (Hashtable) traniDs.get((Integer) tranIDiter.next());
 				
 				// write the header, starting with the displayID
 				String displayIDout = (String) atts.get(DisplayID);
-				osr.write(displayIDout);
+				osr.write(">"+displayIDout);
 					
 				// cache the gene seq, if necessary (note, this doesnt do anything if the location has already been cached)
 				SequenceLocation geneloc = (SequenceLocation) atts.get(Geneloc);
 				dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 					
 				SequenceLocation tranloc = (SequenceLocation) atts.get(Location);
-				SequenceDescription seqd = query.getSequenceDescription();
-								
 				String strandout = tranloc.getStrand() > 0 ? "forward" : "revearse";
 				String assemblyout = (String) atts.get(Assembly);
-				osr.write(separator+"strand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
+				osr.write("\tstrand="+strandout+separator+"chr="+tranloc.getChr()+separator+"assembly="+assemblyout);
 				osr.flush();
 					
 				for (int j = 0, n = fields.size(); j < n; j++) {
@@ -122,22 +118,14 @@ public final class TabulatedTranscriptEISeqQueryRunner implements QueryRunner {
 				}
 					
 				osr.write(separator+(String) atts.get(Description));
-				osr.write(separator);
+				osr.write("\n");
 				osr.flush();
         
-				// modify transcript location coordinates depending on flank requested
-				if (seqd.getLeftFlank() > 0) {
-					if (tranloc.getStrand() > 0)		
-						tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getStart() - 1, tranloc.getStart() - seqd.getLeftFlank(), tranloc.getStrand());
-					else
-						tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getEnd() + 1, tranloc.getEnd() + seqd.getLeftFlank(), tranloc.getStrand());
-				} 
-				else {
-					if (tranloc.getStrand() > 0)
-						tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getEnd() + 1, tranloc.getEnd() + seqd.getRightFlank(), tranloc.getStrand());
-					else
-						tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getStart() - 1, tranloc.getStart() - seqd.getRightFlank(), tranloc.getStrand());
-				}
+				//extend flanks, if necessary, and write sequence
+				if (query.getSequenceDescription().getLeftFlank() > 0)
+					tranloc = tranloc.extendLeftFlank(query.getSequenceDescription().getLeftFlank());
+				if (query.getSequenceDescription().getRightFlank() > 0)
+					tranloc = tranloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
                         
 				if (tranloc.getStrand() < 0)
 					osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) ) );
@@ -147,24 +135,24 @@ public final class TabulatedTranscriptEISeqQueryRunner implements QueryRunner {
 				osr.write("\n");
 				osr.flush();
 			}
-			osr.close();			
+			osr.close();						
 		} catch (SequenceException e) {
-			logger.warn(e.getMessage());
-			throw e;
-		} catch (IOException e) {
-			logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
-			throw e;
-		}	    
+		    logger.warn(e.getMessage());
+		    throw e;
+	    } catch (IOException e) {
+		    logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
+		    throw e;
+	    }	    
 	}
-		
+	
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.QueryRunner#execute(int)
 	 */
 	public void execute(int limit)
-		throws SQLException, IOException, InvalidQueryException {
+		throws SQLException, SequenceException, IOException, InvalidQueryException {
 			SequenceDescription seqd = query.getSequenceDescription();
 			dna = new DNAAdaptor(conn);
-			
+
 			// need to know these indexes specifically
 			int queryIDindex = 0;
 			int rankIndex = 0;
@@ -315,13 +303,12 @@ public final class TabulatedTranscriptEISeqQueryRunner implements QueryRunner {
 					if (! atts.containsKey(Description) )
 						atts.put( Description, seqd.getDescription() );
 				}
-			    writeSequence();
+				writeSequence();
 			} catch (SQLException e) {
 				logger.warn(e.getMessage()+ " : " + sql);
 				throw e;
 			}
 	}
-
 	private Logger logger = Logger.getLogger(FastaCodingSeqQueryRunner.class.getName());
 	private Query query = null;
 	private FormatSpec format = null;
