@@ -125,7 +125,7 @@ public class TreeNodeData {
     // Try to get a user friendly fieldName, 
     // otherwise use the raw one from filter
     if (query.getDatasetConfig() != null) {
-
+//TODO: fix faulty search for Boolean filters
       FilterDescription fd =
         query
           .getDatasetConfig()
