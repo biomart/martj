@@ -3,12 +3,12 @@
 
 # copyright EBI, GRL 2003
 
-# TODO "save to file" <NAME> and "copy to window" <NAME>
+# TODO "copy to window" <NAME>
 
 # TODO impl all updateQuery(), updatePage(), clear() methods. add
 # stubs to InputPage. incl attr from query -> page!
 
-# Move database to menu
+# Handle invalid port- currently freezes app.
 
 # editor.queryChanged / only execute if queryChanged or db settings changed.
 
@@ -54,8 +54,14 @@ from org.ensembl.mart.explorer import InvalidQueryException, Engine, FormatSpec
 from org.apache.log4j import Logger, Level, PropertyConfigurator
 
 # uncomment to use this logging conf file
-PropertyConfigurator.configure( System.getProperty("user.home")
-				+"/dev/mart-explorer/data/logging.conf" )
+#PropertyConfigurator.configure( System.getProperty("user.home")
+#				+"/dev/mart-explorer/data/logging.conf" )
+
+DEFAULT_HOST = "kaka.sanger.ac.uk"
+DEFAULT_DATABASE = "ensembl_mart_11_1"
+DEFAULT_PORT = ""
+DEFAULT_USER  = "anonymous"
+DEFAULT_PASSWORD = ""
 
 GAP = 5
 SPACE=" &nbsp;"
@@ -287,17 +293,27 @@ class DatabasePage(Page):
         self.database = LabelledComboBox("Database", self)
         self.user = LabelledComboBox("User", self)
         self.password = LabelledComboBox("Password", self)
+	defaultsButton = JButton("Default Database Settings"
+				 ,actionPerformed=self.defaultSettings)
 
         self.add( self.host )
         self.add( self.port )
         self.add( self.user )
         self.add( self.password )
         self.add( self.database )
+	self.add( defaultsButton )
         self.add( Box.createVerticalGlue() )
         
         self.changeEvent = ChangeEvent( self )
         self.changeListeners = []
 
+    def defaultSettings(self, event=None):
+	self.host.setText( DEFAULT_HOST )
+	self.port.setText( DEFAULT_PORT )
+	self.database.setText( DEFAULT_DATABASE )
+	self.user.setText( DEFAULT_USER )
+	self.password.setText( DEFAULT_PASSWORD )
+	
 
     def updateQuery(self, query):
         # todo
@@ -777,22 +793,19 @@ class QueryEditor(JPanel):
         tree = JTree( treeModel )
         self.cardContainer = CardContainer()
 
-        self.databasePage = DatabasePage()
 	self.formatPage = FormatPage()
 	
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, self.cardContainer,
-				self.databasePage )
-        speciesNode = QueryTreeNode( tree, self.rootNode, 1, self.cardContainer,
+        speciesNode = QueryTreeNode( tree, self.rootNode, 0, self.cardContainer,
 				     SpeciesPage())
-        focusNode = QueryTreeNode( tree, self.rootNode, 2, self.cardContainer,
+        focusNode = QueryTreeNode( tree, self.rootNode, 1, self.cardContainer,
 				   FocusPage())
-        filtersNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
+        filtersNode = QueryTreeNode( tree, self.rootNode, 2, self.cardContainer,
 				     FilterPage())
         regionNode = QueryTreeNode( tree, filtersNode, 0, self.cardContainer,
 				    RegionPage())
 	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, self.cardContainer,
 						GeneTypeFilterPage())
-        outputNode = QueryTreeNode( tree, self.rootNode, 4, self.cardContainer,
+        outputNode = QueryTreeNode( tree, self.rootNode, 3, self.cardContainer,
 				    OutputPage())
         attributesPage = AttributeManagerPage()
         attributesNode = QueryTreeNode( tree, outputNode, 0, self.cardContainer,
@@ -844,29 +857,9 @@ class QueryEditor(JPanel):
                 node.targetComponent.updatePage( query )
 
 
-    def clear(self):
-        pass
-
-    def getHost(self):
-        return self.databasePage.getHost()
-
-    def getPort(self):
-        return self.databasePage.getPort()
-
-    def getUser(self):
-        return self.databasePage.getUser()
-
-    def getPassword(self):
-        return self.databasePage.getPassword()    
-
-    def getDatabase(self):
-        return self.databasePage.getDatabase()
-
     def getFormatSpec(self):
         return self.formatPage.getFormatSpec()
 
-    def getOutputStream(self):
-        return self.resultsPage.getOutputStream()
 
 
 
@@ -874,13 +867,21 @@ class MartGUIApplication(JFrame):
 
     def __init__(self, closeOperation=JFrame.DISPOSE_ON_CLOSE):
         JFrame.__init__(self, "MartExplorer", defaultCloseOperation=closeOperation, size=(1000,600))
-        self.editor = QueryEditor()
-	self.resultsPage = ResultsPage()
-	self.editor.addPage( self.resultsPage )
-        self.buildGUI()
-        self.visible=1
+
 	self.cursorUtil = CursorUtil()
 	self.chooser = JFileChooser( System.getProperty("user.home") )
+
+        self.editor = QueryEditor()
+	self.databasePage = DatabasePage()
+	self.resultsPage = ResultsPage()
+
+	self.editor.addPage( self.databasePage )
+	self.editor.addPage( self.resultsPage )
+
+        self.buildGUI()
+        self.visible=1
+	self.editor.showPage( self.databasePage.name )
+
 
     def buildGUI(self):
         self.JMenuBar = self.createMenuBar()
@@ -895,6 +896,9 @@ class MartGUIApplication(JFrame):
     def createMenuBar(self):
 
         fileMenu = JMenu("File")
+	fileMenu.add( JMenuItem("Configure Database"
+				,toolTipText="Database paramaters"
+				,actionPerformed=self.doDatabaseSettings) )
 	fileMenu.add( JMenuItem("Save Results"
                                  ,toolTipText="Saves results to file"
                                  ,actionPerformed=self.doSaveResults) )
@@ -937,6 +941,9 @@ class MartGUIApplication(JFrame):
         toolBar.add( JButton("Test Query", actionPerformed=self.doInsertKakaQuery) )
         return toolBar
 
+    def doDatabaseSettings(self, event=None):
+	self.editor.showPage( self.databasePage.name )
+
 
     def doViewResults(self, event=None):
         self.viewResults()
@@ -965,9 +972,9 @@ class MartGUIApplication(JFrame):
 
 
     def doInsertKakaQuery(self, event=None):
-        self.editor.databasePage.host.setText( "kaka.sanger.ac.uk" )
-        self.editor.databasePage.user.setText( "anonymous" )
-        self.editor.databasePage.database.setText( "ensembl_mart_11_1" )
+        self.databasePage.host.setText( "kaka.sanger.ac.uk" )
+        self.databasePage.user.setText( "anonymous" )
+        self.databasePage.database.setText( "ensembl_mart_11_1" )
 
         self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, ",") )
 
@@ -1007,11 +1014,11 @@ class MartGUIApplication(JFrame):
     def executeQuery( self, dummy=None, outputStream=None ):
 
 
-        host = self.editor.getHost()
-        port = self.editor.getPort()
-        user = self.editor.getUser()
-        password = self.editor.getPassword()
-        database = self.editor.getDatabase()
+        host = self.databasePage.getHost()
+        port = self.databasePage.getPort()
+        user = self.databasePage.getUser()
+        password = self.databasePage.getPassword()
+        database = self.databasePage.getDatabase()
 
         query = Query()
         formatSpec = None
