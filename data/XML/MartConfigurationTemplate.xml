@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
 <MartConfiguration description="First Ensembl Mart Built upon Ensembl version 15 datasets" displayName="Ensembl Mart version 15.1" internalName="ensembl_mart_15_1">
+  <UIFilterDescription description="All available datasets" displayName="Datasets" fieldName="none" internalName="dataset_layout" type="tree">
+    <Option displayName="Homo sapiens (NCBI 31) " internalName="homo_sapiens" isSelectable="false">
+      <Option displayName="Ensembl Genes" internalName="homo_sapiens_ensembl_genes" isSelectable="true" ref="homo_sapiens_ensembl_genes"/>
+      <Option displayName="VEGA Genes" internalName="homo_sapiens_vega_genes" isSelectable="true" ref="homo_sapiens_vega_genes"/>
+      <Option displayName="EST Genes" internalName="homo_sapiens_est_genes" isSelectable="true" ref="homo_sapiens_est_genes"/>
+      <Option displayName="SNP" internalName="homo_sapiens_snp" isSelectable="true" ref="homo_sapiens_snp"/>
+    </Option>
+    <Option displayName="Mus musculus (NCBIM 30)" internalName="mus_musculus" isSelectable="false">
+      <Option displayName="Ensembl Genes" internalName="mus_musculus_ensembl_genes" isSelectable="true" ref="mus_musculus_ensembl_genes"/>
+    </Option>
+  </UIFilterDescription>
   <Dataset description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Homo sapiens (NCBI 31) -- Ensembl Genes" internalName="homo_sapiens_ensembl_genes">
     <StarBase>hsapiens_ensemblgene</StarBase>
     <StarBase>hsapiens_ensembltranscript</StarBase>
@@ -9,7 +20,32 @@
     <FilterPage description="" displayName="Filter" internalName="default_page">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list">
+            <Option displayName="1" internalName="1" isSelectable="true" value="1">
+              <OptionPush internalName="band_start_push_chr1" ref="band_start">
+                <Option displayName="p36.33" internalName="p36.33" isSelectable="true"/>
+                <Option displayName="p36.32" internalName="p36.32" isSelectable="true"/>
+                <Option displayName="p36.31" internalName="p36.31" isSelectable="true"/>
+              </OptionPush>
+              <OptionPush internalName="band_end_push_chr_1" ref="band_end">
+                <Option displayName="p36.33" internalName="p36.33" isSelectable="true"/>
+                <Option displayName="p36.32" internalName="p36.32" isSelectable="true"/>
+                <Option displayName="p36.31" internalName="p36.31" isSelectable="true"/>
+              </OptionPush>
+            </Option>
+            <Option displayName="2" internalName="2" isSelectable="true" value="2">
+              <OptionPush internalName="band_start_push_chr2" ref="band_start">
+                <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
+                <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
+                <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
+              </OptionPush>
+              <OptionPush internalName="band_end_push_chr2" ref="band_end">
+                <Option displayName="p25.3" internalName="p25.3" isSelectable="true" value="p25.3"/>
+                <Option displayName="p25.2" internalName="p25.2" isSelectable="true" value="p25.2"/>
+                <Option displayName="p25.1" internalName="p25.1" isSelectable="true" value="p25.1"/>
+              </OptionPush>
+            </Option>
+          </UIFilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
           <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
