@@ -57,7 +57,7 @@ public class DatabaseDatasetViewUtils {
 
   private static final String DIGESTTYPE = "MD5";
 
-  private static final String BASEMETATABLE = "_meta_DatasetView"; // append user if necessary
+  private static final String BASEMETATABLE = "meta_DatasetView"; // append user if necessary
 
   /*
    * _meta_DatasetView<_username>
