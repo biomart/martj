@@ -20,8 +20,18 @@
 <!ELEMENT FilterPage (FilterGroup+)>
 <!ATTLIST FilterPage %desc_data;>
 
-<!ELEMENT FilterGroup (FilterCollection+)>
+<!ELEMENT FilterGroup (FilterSet*, FilterCollection+)>
 <!ATTLIST FilterGroup %desc_data;>
+
+<!ELEMENT FilterSet (FilterSetDescription+)>
+<!ATTLIST FilterSet 
+                       %desc_data;                       
+                       type   CDATA #REQUIRED>
+
+<!ELEMENT FilterSetDescription EMPTY>
+<!ATTLIST FilterSetDescription %desc_data;
+                       tableConstraintModifier CDATA #REQUIRED
+                       fieldNameModifier CDATA #REQUIRED> 
 
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
@@ -31,10 +41,12 @@
 <!ELEMENT UIFilterDescription EMPTY>
 <!ATTLIST UIFilterDescription
                    %desc_data;
-                   type                   CDATA #REQUIRED
+                   type               CDATA #REQUIRED
                    fieldName          CDATA #REQUIRED
-                   qualifier              CDATA #IMPLIED
-                   tableConstraint  CDATA #IMPLIED>
+                   qualifier          CDATA #IMPLIED
+                   fieldSetName       CDATA #IMPLIED
+                   fieldSetReq        CDATA #IMPLIED
+                   tableConstraint    CDATA #IMPLIED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
 <!ATTLIST AttributePage %desc_data;>
@@ -45,7 +57,7 @@
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection
                   %desc_data;
-                   maxSelect    CDATA #REQUIRED>
+                   maxSelect    CDATA #IMPLIED>
 
 <!ELEMENT UIAttributeDescription EMPTY>
 <!ATTLIST UIAttributeDescription
