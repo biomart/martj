@@ -35,6 +35,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 	private List filterDescriptionWidgets;
 
   final static Set TYPES = new HashSet();
+  final static Set UNSUPPORTED_TYPES = new HashSet();
 
 	/**
 	 * @param query
@@ -57,7 +58,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 
 		
 		System.out.println("TYPES: " + TYPES);
-
+    System.out.println("UNSUPPORTED_TYPES: " + UNSUPPORTED_TYPES);
 	}
 
 	/**

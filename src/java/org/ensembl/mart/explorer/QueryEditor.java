@@ -271,8 +271,9 @@ public class QueryEditor
 
 	public static void main(String[] args) throws ConfigurationException {
 		String confFile = "data/XML/MartConfigurationTemplate.xml";
-		URL confURL = ClassLoader.getSystemResource(confFile);
-		MartConfiguration config =
+		URL confURL = QueryEditor.class.getClassLoader().getResource(confFile);
+	   System.out.println( confURL );
+    MartConfiguration config =
 			new MartConfigurationFactory().getInstance(confURL);
 
 		QueryEditor editor = new QueryEditor(config);

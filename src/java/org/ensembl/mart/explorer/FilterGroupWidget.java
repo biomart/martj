@@ -100,7 +100,6 @@ public class FilterGroupWidget extends PageWidget {
       if (element instanceof FilterDescription ) {
 
         FilterDescription a = (FilterDescription) element;
-        FilterPageSetWidget.TYPES.add( a.getType() );
         
         //FilterWidget w = new FilterWidget(query, a);
         FilterWidget w = createFilterWidget(query, a);
@@ -124,7 +123,7 @@ public class FilterGroupWidget extends PageWidget {
     String type = filterDescription.getType();
     FilterWidget w = null;
 
-    if ("text_entry".equals(type)) {
+    if ("text".equals(type)) {
     
       w = new TextFilterWidget( this, query, filterDescription );
     
@@ -132,8 +131,6 @@ public class FilterGroupWidget extends PageWidget {
       
       w = new ListFilterWidget( this, query, filterDescription );
       
-    } else if ("range".equals(type)) {
-    
     } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
     
       w = new BooleanFilterWidget( this, query, filterDescription );
@@ -148,9 +145,12 @@ public class FilterGroupWidget extends PageWidget {
     if ( w!=null ) {
       
       internalNameToLeafWidget.put( filterDescription.getInternalName(), w);
+      FilterPageSetWidget.TYPES.add( type );
+        
        
     }else {
-    
+      FilterPageSetWidget.UNSUPPORTED_TYPES.add( type );
+      
       logger.warning("Unsupported filter: " 
       + filterDescription.getClass().getName()
       + ", " + filterDescription );
