@@ -20,7 +20,7 @@ package org.ensembl.mart.lib;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import org.ensembl.util.FormattedSequencePrintStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,7 +59,7 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 	public UpStreamUTRSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
 		this.query = query;
 		this.format = format;
-		this.osr = new OutputStreamWriter(os);
+		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); // autoflush true
 		this.dna = new DNAAdaptor(conn);
 
 		switch (format.getFormat()) {
@@ -333,87 +333,108 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 					if (((Boolean) tranatts.get(hasUTR)).booleanValue()) {
 						String assemblyout = (String) geneatts.get(Assembly);
 						String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-						osr.write((String) tranatts.get(DisplayID));
+						osr.print((String) tranatts.get(DisplayID));
 
-						osr.write(
-							separator
-								+ "strand="
-								+ strandout
-								+ separator
-								+ "chr="
-								+ geneloc.getChr()
-								+ separator
-								+ "assembly="
-								+ assemblyout);
-						osr.flush();
+						osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+
+						if (osr.checkError())
+							throw new IOException();
 
 						for (int j = 0, n = fields.size(); j < n; j++) {
-							osr.write(separator);
+							osr.print(separator);
 							String field = (String) fields.get(j);
 							if (tranatts.containsKey(field)) {
 								List values = (ArrayList) tranatts.get(field);
 
 								if (values.size() > 1)
-									osr.write(field + " in ");
+									osr.print(field + " in ");
 								else
-									osr.write(field + "=");
+									osr.print(field + "=");
 
 								for (int vi = 0; vi < values.size(); vi++) {
 									if (vi > 0)
-										osr.write(",");
-									osr.write((String) values.get(vi));
+										osr.print(",");
+									osr.print((String) values.get(vi));
 								}
 							} else
-								osr.write(field + "= ");
-							osr.flush();
+								osr.print(field + "= ");
+							if (osr.checkError())
+								throw new IOException();
 						}
 
-						osr.write(separator + (String) tranatts.get(Description));
-						osr.write(separator);
-						osr.flush();
+						osr.print(separator + (String) tranatts.get(Description));
+						osr.print(separator);
+
+            if (osr.checkError())
+              throw new IOException();
+
 
 						TreeMap locations = (TreeMap) tranatts.get(Locations);
 						dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
-						StringBuffer sequence = new StringBuffer();
-						// to collect all sequence before appending flanks
 
-						for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
-							SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
-							if (loc.getStrand() < 0)
-								sequence.append(
-									SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd())));
-							else
-								sequence.append(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
-						}
+            ArrayList sequence = new ArrayList();
+            int seqLen = 0;
 
-						if (query.getSequenceDescription().getRightFlank() > 0) {
-							// extend flanking sequence
-							SequenceLocation first_loc = (SequenceLocation) locations.get((Integer) locations.firstKey());
-							SequenceLocation last_loc = (SequenceLocation) locations.get((Integer) locations.lastKey());
+            // to collect all sequence before appending flanks
+            for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
+              SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
+              byte[] theseBytes = null;
 
-							SequenceLocation flank_loc;
-							if (first_loc.getStrand() < 0) {
-								flank_loc = first_loc.getRightFlankOnly(query.getSequenceDescription().getRightFlank());
-								// right flank of first location
-								sequence.append(
-									SequenceUtil.reverseComplement(
-										dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd())));
-							} else {
-								flank_loc = last_loc.getRightFlankOnly(query.getSequenceDescription().getRightFlank());
-								// right flank of last location
-								sequence.append(dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));
-							}
-						}
-						osr.write(sequence.toString());
-						osr.write("\n");
-						osr.flush();
+              if (loc.getStrand() < 0)
+                theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+              else
+                theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
+
+              seqLen = theseBytes.length;
+              sequence.add(theseBytes);
+            }
+
+            if (query.getSequenceDescription().getLeftFlank() > 0) {
+              // extend flanking sequence
+              SequenceLocation first_loc = (SequenceLocation) locations.get((Integer) locations.firstKey());
+              SequenceLocation last_loc = (SequenceLocation) locations.get((Integer) locations.lastKey());
+
+              SequenceLocation flank_loc;
+              byte[] theseBytes = null;
+
+              if (first_loc.getStrand() < 0) {
+                flank_loc = last_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
+
+                // left flank of last location
+                theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));
+              } else {
+                flank_loc = first_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
+
+                // left flank of first location
+                theseBytes = dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd());
+              }
+
+              sequence.add(0, theseBytes);
+              seqLen += theseBytes.length;
+            }
+
+            //iterate through sequence bytes to fill seqout byte[]
+            byte[] seqout = new byte[seqLen];
+            int nextPos = 0;
+            for (int i = 0, n = sequence.size(); i < n; i++) {
+              byte[] thisChunk = (byte[]) sequence.get(i);
+              System.arraycopy(thisChunk, 0, seqout, nextPos, thisChunk.length);
+              nextPos += thisChunk.length;
+            }
+
+            sequence = null;
+            osr.writeSequence(seqout);            
+						osr.print("\n");
+            if (osr.checkError())
+              throw new IOException();
 					} else {
-						osr.write((String) tranatts.get(DisplayID));
-						osr.write(separator + (String) tranatts.get(Description));
-						osr.write(separator);
-						osr.write(noUTRmessage);
-						osr.write("\n");
-						osr.flush();
+						osr.print((String) tranatts.get(DisplayID));
+						osr.print(separator + (String) tranatts.get(Description));
+						osr.print(separator);
+						osr.print(noUTRmessage);
+						osr.print("\n");
+            if (osr.checkError())
+              throw new IOException();
 					}
 				}
 			} catch (SequenceException e) {
@@ -442,50 +463,58 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 						String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 
 						// write the header, starting with the displayID
-						osr.write(">" + (String) tranatts.get(DisplayID));
+						osr.print(">" + (String) tranatts.get(DisplayID));
 
-						osr.write(
-							"\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
-						osr.flush();
+						osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+
+            if (osr.checkError())
+              throw new IOException();
 
 						for (int j = 0, n = fields.size(); j < n; j++) {
-							osr.write(separator);
+							osr.print(separator);
 							String field = (String) fields.get(j);
 							if (tranatts.containsKey(field)) {
 								List values = (ArrayList) tranatts.get(field);
 
 								if (values.size() > 1)
-									osr.write(field + " in ");
+									osr.print(field + " in ");
 								else
-									osr.write(field + "=");
+									osr.print(field + "=");
 
 								for (int vi = 0; vi < values.size(); vi++) {
 									if (vi > 0)
-										osr.write(",");
-									osr.write((String) values.get(vi));
+										osr.print(",");
+									osr.print((String) values.get(vi));
 								}
 							} else
-								osr.write(field + "= ");
-							osr.flush();
+								osr.print(field + "= ");
+              if (osr.checkError())
+                throw new IOException();
 						}
 
-						osr.write(separator + (String) tranatts.get(Description));
-						osr.write("\n");
-						osr.flush();
+						osr.print(separator + (String) tranatts.get(Description));
+						osr.print("\n");
+            if (osr.checkError())
+              throw new IOException();
 
 						TreeMap locations = (TreeMap) tranatts.get(Locations);
 						dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 
-						StringBuffer sequence = new StringBuffer();
-						// to collect all sequence before appending flanks
+						ArrayList sequence = new ArrayList();
+						int seqLen = 0;
 
+						// to collect all sequence before appending flanks
 						for (Iterator lociter = locations.keySet().iterator(); lociter.hasNext();) {
 							SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
+							byte[] theseBytes = null;
+
 							if (loc.getStrand() < 0)
-								sequence.append(
-									SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd())));
+								theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
 							else
-								sequence.append(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+								theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
+
+							seqLen = theseBytes.length;
+							sequence.add(theseBytes);
 						}
 
 						if (query.getSequenceDescription().getLeftFlank() > 0) {
@@ -494,31 +523,46 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 							SequenceLocation last_loc = (SequenceLocation) locations.get((Integer) locations.lastKey());
 
 							SequenceLocation flank_loc;
+							byte[] theseBytes = null;
+
 							if (first_loc.getStrand() < 0) {
 								flank_loc = last_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
+
 								// left flank of last location
-								sequence.insert(
-									0,
-									SequenceUtil.reverseComplement(
-										dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd())));
+								theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));
 							} else {
 								flank_loc = first_loc.getLeftFlankOnly(query.getSequenceDescription().getLeftFlank());
+
 								// left flank of first location
-								sequence.insert(
-									0,
-									dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd()));
+								theseBytes = dna.getSequence(species, flank_loc.getChr(), flank_loc.getStart(), flank_loc.getEnd());
 							}
+
+							sequence.add(0, theseBytes);
+							seqLen += theseBytes.length;
 						}
-						osr.write(sequence.toString());
-						osr.write("\n");
-						osr.flush();
+
+						//iterate through sequence bytes to fill seqout byte[]
+						byte[] stmpCHANGEME = new byte[seqLen];
+						int nextPos = 0;
+						for (int i = 0, n = sequence.size(); i < n; i++) {
+							byte[] thisChunk = (byte[]) sequence.get(i);
+							System.arraycopy(thisChunk, 0, stmpCHANGEME, nextPos, thisChunk.length);
+							nextPos += thisChunk.length;
+						}
+
+						sequence = null;
+						osr.writeSequence(stmpCHANGEME);
+						osr.print("\n");
+            if (osr.checkError())
+              throw new IOException();
 					} else {
-						osr.write(">" + (String) tranatts.get(DisplayID));
-						osr.write("\t" + (String) tranatts.get(Description));
-						osr.write("\n");
-						osr.write(noUTRmessage);
-						osr.write("\n");
-						osr.flush();
+						osr.print(">" + (String) tranatts.get(DisplayID));
+						osr.print("\t" + (String) tranatts.get(Description));
+						osr.print("\n");
+						osr.print(noUTRmessage);
+						osr.print("\n");
+            if (osr.checkError())
+              throw new IOException();
 					}
 				}
 			} catch (SequenceException e) {
@@ -533,6 +577,7 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 		}
 	};
 
+	private final int maxColumnLen = 80;
 	private int batchLength = 200000;
 	// number of records to process in each batch
 	private String separator;
@@ -541,7 +586,7 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 	private String dataset = null;
 	private String species = null;
 	private FormatSpec format = null;
-	private OutputStreamWriter osr = null;
+	private FormattedSequencePrintStream osr = null;
 	private Connection conn = null;
 
 	private TreeMap geneiDs = new TreeMap();
