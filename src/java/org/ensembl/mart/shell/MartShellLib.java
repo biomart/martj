@@ -2146,6 +2146,7 @@ public class MartShellLib {
   private Filter getIDFilterForSubQuery(
     String fieldName,
     String tableConstraint,
+    String key,
     String handler,
     String storedCommandName)
     throws InvalidQueryException {
@@ -2210,9 +2211,9 @@ public class MartShellLib {
 
     Filter f = null;
     if (handler != null)
-      f = new IDListFilter(fieldName, tableConstraint, subQuery, handler);
+      f = new IDListFilter(fieldName, tableConstraint, key, subQuery, handler);
     else
-      f = new IDListFilter(fieldName, tableConstraint, subQuery);
+      f = new IDListFilter(fieldName, tableConstraint, key, subQuery);
 
     nestedLevel--;
     return f;
@@ -2275,7 +2276,7 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
     AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
-    Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint());
+    Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
     newQuery.addAttribute(attr);
 
     return newQuery;
@@ -2353,7 +2354,7 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
     newQuery.addFilter(
-      new BooleanFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), thisCondition, handler));
+      new BooleanFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), fdesc.getKey(filterName), thisCondition, handler));
     return newQuery;
   }
 
@@ -2374,12 +2375,13 @@ public class MartShellLib {
         new BasicFilter(
           fdesc.getField(filterName),
           fdesc.getTableConstraint(filterName),
+		  fdesc.getKey(filterName),
           filterCondition,
           filterValue,
           fdesc.getHandler(filterName)));
     } else {
       newQuery.addFilter(
-        new BasicFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), filterCondition, filterValue));
+        new BasicFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), fdesc.getKey(filterName), filterCondition, filterValue));
     }
     return newQuery;
   }
@@ -2397,6 +2399,7 @@ public class MartShellLib {
         new IDListFilter(
           fdesc.getField(filterName),
           fdesc.getTableConstraint(filterName),
+          fdesc.getKey(filterName),
           (String[]) filterValues.toArray(new String[filterValues.size()]),
           fdesc.getHandler(filterName)));
     else
@@ -2404,6 +2407,7 @@ public class MartShellLib {
         new IDListFilter(
           fdesc.getField(filterName),
           fdesc.getTableConstraint(filterName),
+          fdesc.getKey(filterName),
           (String[]) filterValues.toArray(new String[filterValues.size()])));
 
     return newQuery;
@@ -2422,10 +2426,11 @@ public class MartShellLib {
         new IDListFilter(
           fdesc.getField(filterName),
           fdesc.getTableConstraint(filterName),
+          fdesc.getKey(filterName),
           fileloc,
           fdesc.getHandler(filterName)));
     else
-      newQuery.addFilter(new IDListFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), fileloc));
+      newQuery.addFilter(new IDListFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), fdesc.getKey(filterName), fileloc));
 
     return newQuery;
   }
@@ -2443,10 +2448,11 @@ public class MartShellLib {
         new IDListFilter(
           fdesc.getField(filterName),
           fdesc.getTableConstraint(filterName),
+          fdesc.getKey(filterName),
           urlLoc,
           fdesc.getHandler(filterName)));
     else
-      newQuery.addFilter(new IDListFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), urlLoc));
+      newQuery.addFilter(new IDListFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), fdesc.getKey(filterName), urlLoc));
 
     return newQuery;
   }
@@ -2469,6 +2475,7 @@ public class MartShellLib {
       getIDFilterForSubQuery(
         fdesc.getField(filterName),
         fdesc.getTableConstraint(filterName),
+        fdesc.getKey(filterName),
         fdesc.getHandler(filterName),
         storedQueryName));
 
