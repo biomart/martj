@@ -30,6 +30,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
+import  java.util.prefs.*;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -45,29 +46,72 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
  */
 public class MartExplorer extends JFrame {
 	
-	private static final int WIDTH = 300;
-	private static final int HEIGHT = 400;
+	private static final int WIDTH = 700;
+	private static final int HEIGHT = 700;
+  private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	
+	private JFileChooser configFileChooser = null;
+	private Preferences prefs = null;
+ 
+    
 	private QueryManager queryManager = new QueryManager();
 	//private Engine engine = new Engine();
-	
+	  
+    
 	public MartExplorer() {
 		super("Mart Explorer");
-		setJMenuBar( createMenuBar() );
+        
+    prefs = Preferences.userNodeForPackage( this.getClass() );
+        
+    initConfigFileChooser();    
+		setJMenuBar(createMenuBar());
+
+		setSize(WIDTH, HEIGHT);
+
 		
-		setSize( WIDTH, HEIGHT);
+
 	}
 
 
+	/**
+	 * Initialises _configFileChooser_. Sets the last loaded 
+   * config file if available and makes the 
+   * chooser only show XML files.
+	 */
+	private void initConfigFileChooser() {
+    configFileChooser = new JFileChooser();
+		FileFilter xmlFilter = new FileFilter() {
+			public boolean accept(File f) {
+				return f != null
+					&& (f.isDirectory()
+						|| f.getName().toLowerCase().endsWith(".xml"));
+			}
+			public String getDescription() {
+				return "XML Files";
+			}
+		};
+
+		String lastChosenFile = prefs.get(CONFIG_FILE_KEY, null);
+
+		if (lastChosenFile != null) {
+			configFileChooser.setSelectedFile(new File(lastChosenFile));
+		}
+		configFileChooser.addChoosableFileFilter(xmlFilter);
+
+	}
+
 	public void warn(String message) {
-		JOptionPane.showMessageDialog(this, message, "Warning", 
-																	JOptionPane.WARNING_MESSAGE );
+		JOptionPane.showMessageDialog(
+			this,
+			message,
+			"Warning",
+			JOptionPane.WARNING_MESSAGE);
 	}
 
 	public void warn(String message, Exception e) {
-			warn(message + ":" + e.getMessage() );
-			e.printStackTrace();
-		}
+		warn(message + ":" + e.getMessage());
+		e.printStackTrace();
+	}
 
 	public void connectToDatabase() {
 		// TODO
@@ -80,25 +124,12 @@ public class MartExplorer extends JFrame {
 	public void loadConfigFromFile() {
 		// user chooses file
 		
-		FileFilter xmlFilter = new FileFilter() {
-			public boolean accept(File f) {
-				return f!=null && 
-					( f.isDirectory()
-						|| f.getName().toLowerCase().endsWith(".xml") );  
-			}
-			public String getDescription() {
-				return "XML Files";
-			}
-		};
-		
-		JFileChooser chooser = new JFileChooser();
-		chooser.addChoosableFileFilter( xmlFilter );
-		int action = chooser.showOpenDialog(this);
+		int action = configFileChooser.showOpenDialog(this);
 
 		// convert file contents into string
 		if (action == JFileChooser.APPROVE_OPTION) {
-			File f = chooser.getSelectedFile().getAbsoluteFile();
-			
+			File f = configFileChooser.getSelectedFile().getAbsoluteFile();
+			prefs.put( CONFIG_FILE_KEY, f.toString() ) ;
 			try {
 				MartConfiguration config = new MartConfigurationFactory().getInstance( f.toURL() );
 			} catch (MalformedURLException e) {
