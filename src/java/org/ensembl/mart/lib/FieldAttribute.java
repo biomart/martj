@@ -40,7 +40,7 @@ public class FieldAttribute implements Attribute {
 	 * corresponds to a field of a table in the mart database).
 	 */
     public FieldAttribute(String field) {
-      this(field, null);
+      this(field, null, null);
     }
     
     
@@ -50,13 +50,14 @@ public class FieldAttribute implements Attribute {
 	 * @param field - String name of attribute to retrieve (roughly
 	 * corresponds to a field of a table in the mart database).
 	 */
-		public FieldAttribute(String field, String tableConstraint) {
+		public FieldAttribute(String field, String tableConstraint,String key) {
 			this.field = field;
 			this.tableConstraint = tableConstraint;
-
+            this.key = key;
       hashcode = 17;
       hashcode = 37*hashcode + ((field == null) ? 0 : field.hashCode()); 
       hashcode = 37*hashcode + ((tableConstraint == null) ? 0 : tableConstraint.hashCode());
+	  hashcode = 37*hashcode + ((key == null) ? 0 : key.hashCode());
 		}
     
   /**
@@ -75,6 +76,10 @@ public class FieldAttribute implements Attribute {
     public String getTableConstraint() {
       return tableConstraint;
     }
+    
+	public String getKey() {
+	  return key;
+	}
       
     public int hashCode() { 
         return hashcode;
@@ -95,15 +100,17 @@ public class FieldAttribute implements Attribute {
     public String toString() {
       StringBuffer buf = new StringBuffer();
 
-			buf.append("[");
+	  buf.append("[");
       buf.append(" field=").append(field);
-			buf.append(" ,tableConstraint=").append(tableConstraint);
+	  buf.append(" ,tableConstraint=").append(tableConstraint);
+	  buf.append(" ,key=").append(key);
       buf.append(" ]");
 
       return buf.toString();
     }
 
-		private final String tableConstraint;
+	private final String tableConstraint;
+	private final String key;
     private final String field;
     private int hashcode = 0;
 

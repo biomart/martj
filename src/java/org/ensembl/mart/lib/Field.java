@@ -41,4 +41,9 @@ public interface Field {
 	 * @return null or part of a tablename.
 	 */
 	String getTableConstraint();
+	
+	/**
+	 * @return join field key.
+	 */
+	String getKey();
 }
