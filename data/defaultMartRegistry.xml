@@ -13,6 +13,6 @@
 
     <DatabaseLocation name="Ensembl" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="ensembldb.ensembl.org" port="3306" instanceName="ensembl_mart_23_1" user="anonymous"/>
+    host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_22_1" user="anonymous"/>
 
 </MartRegistry>
