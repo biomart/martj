@@ -19,12 +19,11 @@
  */
  
 package org.ensembl.mart.lib;
-import java.rmi.RemoteException;
 
 /**
  * Signals that an Invalid Query has been specified. 
  */
-public class InvalidQueryException extends RemoteException {
+public class InvalidQueryException extends Exception {
     public InvalidQueryException() {
       super();
     }
