@@ -85,6 +85,7 @@
     <include name="optional.jar" />
     <include name="xalan.jar" />
     <include name="p6spy.jar" />
+    <include name="ojdbc14.jar" />
   </fileset>
 
   <!-- patternsets to use in various zip and tar filesets during the dist-* targets -->
