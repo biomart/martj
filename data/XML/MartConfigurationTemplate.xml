@@ -54,8 +54,8 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
-          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="range"/>
-          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="range"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="text"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="text"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" qualifiers="=" type="text_entry_basic_filter"/>
@@ -1772,7 +1772,7 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
-          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="range"/>
+          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="text"/>
         </FilterCollection>
         <FilterCollection internalName="snpid">
           <FilterDescription internalName="snpid_filters" type="boolean">
@@ -2145,8 +2145,8 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
-          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="range"/>
-          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="range"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="text"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="text"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" qualifiers="=" type="text_entry_basic_filter"/>
@@ -2248,7 +2248,7 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
-          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="range"/>
+          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="text"/>
         </FilterCollection>
         <FilterCollection internalName="snpid">
           <FilterDescription internalName="snpid_filters" type="boolean">
@@ -2496,8 +2496,8 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
-          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="range"/>
-          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="range"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;=,&gt;" type="text"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=,&lt;" type="text"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" qualifiers="=" type="text_entry_basic_filter"/>
@@ -2552,21 +2552,21 @@
             <Enable ref="minor_allele_frequency_filter" valueCondition="true"/>
             <Option displayName="ANY" field="overall_min_freq" internalName="any_population" isSelectable="true" qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
               <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
-                <Option field="overall_min_freq" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="range"/>
+                <Option field="overall_min_freq" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="text"/>
               </PushOptions>
             </Option>
             <Option description="Include/exclude SNPs with Central Asia Population Allele Frequency Data." displayName="Central Asia" field="central_asia" internalName="central_asia" isSelectable="true" qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
               <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
-                <Option field="central_asia" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="range"/>
+                <Option field="central_asia" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="text"/>
               </PushOptions>
             </Option>
             <Option description="Include/Exclude SNPs with Central/South African Population Allele Frequency Data" displayName="Central/South Africa" field="central_south_america" internalName="central_south_africa" isSelectable="true" qualifiers="exclusive,excluded" tableConstraint="snp_main" type="boolean">
               <PushOptions internalName="minor_allele_frequency_push" ref="minor_allele_frequency_filter">
-                <Option field="central_south_africa" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="range"/>
+                <Option field="central_south_africa" internalName="minor_allele_frequency" isSelectable="true" qualifiers="&gt;,&gt;=,&lt;,&lt;=" tableConstraint="snp_main" type="text"/>
               </PushOptions>
             </Option>
           </FilterDescription>
-          <FilterDescription displayName="freq of the minor allele" internalName="minor_allele_frequency_filter" type="range"/>
+          <FilterDescription displayName="freq of the minor allele" internalName="minor_allele_frequency_filter" type="text"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for SNPS based on Gene Relationships" displayName="GENE ASSOCIATED SNP FILTERS:" internalName="genefilters">
@@ -2766,8 +2766,8 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
-          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;,&gt;=" type="range"/>
-          <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;,&lt;=" type="range"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" field="gene_chrom_start" internalName="base_pair_start" qualifiers="&gt;,&gt;=" type="text"/>
+          <FilterDescription description="Determine which base pair on the specified chromosome to end text" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;,&lt;=" type="text"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
           <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" type="text_entry_basic_filter"/>
@@ -2869,7 +2869,7 @@
           </FilterDescription>
         </FilterCollection>
         <FilterCollection internalName="ka_ks_ratio">
-          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="range"/>
+          <FilterDescription description="Filter for Genes meeting a minimum non-synonymous:synonymous snp ratio" displayName="Entries with a non-syn:syn ratio greater than:" field="ka_ks_ratio" internalName="snp_ka_ks_ratio" qualifiers="&gt;,&lt;,&gt;=,&lt;=,=" tableConstraint="transcript_main" type="text"/>
         </FilterCollection>
         <FilterCollection internalName="snpid">
           <FilterDescription internalName="snpid_filters" type="boolean">
