@@ -46,11 +46,11 @@ public class AttributeTest extends Base {
 	public void testKakaQuery()  throws Exception {
 		Query q = new Query(genequery);
 		
-		q.addAttribute(new FieldAttribute("chr_name"));
-		q.addAttribute(new FieldAttribute("gene_chrom_start"));
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new BasicFilter("chr_name", "=", "22"));
-		q.addFilter(new BasicFilter("gene_chrom_start", "<", "15000000"));
+		q.addAttribute(new FieldAttribute("chr_name","main","gene_id_key"));
+		q.addAttribute(new FieldAttribute("gene_chrom_start","main","gene_id_key"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
+		q.addFilter(new BasicFilter("gene_chrom_start","main","gene_id_key", "<", "15000000"));
     
 
 		StatOutputStream stats = new StatOutputStream();
@@ -64,9 +64,9 @@ public class AttributeTest extends Base {
 	public void testSimpleQueries() throws Exception {
 		Query q = new Query(genequery);
 		
-		q.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new BasicFilter("chr_name", "=", "22"));
+		q.setPrimaryKeys(new String[] { "gene_id_key", "transcript_id_key" });
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
 		StatOutputStream stats = new StatOutputStream();
 		engine.execute(q, new FormatSpec(FormatSpec.TABULATED), stats);
 
@@ -78,9 +78,9 @@ public class AttributeTest extends Base {
 	public void testSimpleSNPQueries() throws Exception {
 		Query q = new Query(snpquery);
 
-		q.addAttribute(new FieldAttribute("external_id"));
-		q.addAttribute(new FieldAttribute("allele"));
-		q.addFilter(new BasicFilter("chr_name", "=", "21"));
+		q.addAttribute(new FieldAttribute("external_id","main","snp_id_key"));
+		q.addAttribute(new FieldAttribute("allele","main","snp_id_key"));
+		q.addFilter(new BasicFilter("chr_name","main","snp_id_key", "=", "21"));
 		StatOutputStream stats = new StatOutputStream();
 		engine.execute(q, new FormatSpec(FormatSpec.TABULATED), stats);
 		assertTrue("No text returned from query", stats.getCharCount() > 0);
@@ -94,7 +94,7 @@ public class AttributeTest extends Base {
 		Query q = new Query(genequery);
 		
 		q.addAttribute(new FieldAttribute("display_id", "xref_SWISSPROT", "transcript_id_key"));
-		q.addFilter(new BasicFilter("gene_stable_id", "=", geneID));
+		q.addFilter(new BasicFilter("gene_stable_id", "main", "gene_id_key","=", geneID));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		engine.execute(q, new FormatSpec(FormatSpec.TABULATED), out);
 		out.close();

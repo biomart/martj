@@ -65,8 +65,8 @@ public class CompiledSQLQueryTest extends Base {
 	public void testChrQuery() throws Exception {
 		Query q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new BasicFilter("chromosome_id", "=", "3"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "3"));
 
 		executeQuery(q);
 	}
@@ -74,8 +74,8 @@ public class CompiledSQLQueryTest extends Base {
 	public void testStableIDQuery() throws Exception {
 		Query q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new IDListFilter("gene_stable_id", new String[] { "ENSG00000005175" }));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", new String[] { "ENSG00000005175" }));
 		executeQuery(q);
 	}
 
@@ -85,8 +85,8 @@ public class CompiledSQLQueryTest extends Base {
 	public void testStableIDsFromFileQuery() throws Exception {
 		Query q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addFilter(new IDListFilter("gene_stable_id", new File(PropertiesUtil.class.getClassLoader().getResource(STABLE_ID_REL).getFile())));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", new File(PropertiesUtil.class.getClassLoader().getResource(STABLE_ID_REL).getFile())));
 		executeQuery(q);
 	}
 
@@ -97,31 +97,31 @@ public class CompiledSQLQueryTest extends Base {
 		// implementations work differently.
 		Query q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
 		URL stableidurl = CompiledSQLQueryTest.class.getClassLoader().getResource(STABLE_ID_REL);
-		q.addFilter(new IDListFilter("gene_stable_id", stableidurl));
+		q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", stableidurl));
 		executeQuery(q);
 	}
 
 	public void testJoinToPFAM() throws Exception {
 		Query q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
-		q.addAttribute(new FieldAttribute("pfam"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+		q.addAttribute(new FieldAttribute("pfam","main","gene_id_key"));
 		executeQuery(q);
 	}
 
 	public void testUnprocessedFilterHandlers() throws Exception {
-		Filter chrFilter = new BasicFilter("chr_name", "gene_main",  "gene_id_key", "=", "1");
+		Filter chrFilter = new BasicFilter("chr_name", "main",  "gene_id_key", "=", "1");
 
 		//Marker
 		Query q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 		q.addFilter(chrFilter);
 
-		Filter start = new BasicFilter("marker_start", null, "=", "AFMA272XC9", "org.ensembl.mart.lib.MarkerFilterHandler");
-	  Filter end = new BasicFilter("marker_end", null, "=", "RH10794", "org.ensembl.mart.lib.MarkerFilterHandler");
+		Filter start = new BasicFilter("marker_start","main","gene_id_key", "=", "AFMA272XC9", "org.ensembl.mart.lib.MarkerFilterHandler");
+	  Filter end = new BasicFilter("marker_end","main","gene_id_key", "=", "RH10794", "org.ensembl.mart.lib.MarkerFilterHandler");
 		
 		q.addFilter(start);
 		q.addFilter(end);
@@ -130,11 +130,11 @@ public class CompiledSQLQueryTest extends Base {
 
 		//Band
 		q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id", "main","gene_id_key"));
 		q.addFilter(chrFilter);
 		
-		start = new BasicFilter("band_start", null, "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
-		end = new BasicFilter("band_end", null, "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
+		start = new BasicFilter("band_start","main","gene_id_key", "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
+		end = new BasicFilter("band_end","main","gene_id_key", "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
 
 		q.addFilter(start);
 		q.addFilter(end);
@@ -143,33 +143,44 @@ public class CompiledSQLQueryTest extends Base {
 		//Encode
 		q = new Query(genequery);
 
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
-		Filter test = new BasicFilter("encode", null, "=", "13:29450016:29950015", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
+		Filter test = new BasicFilter("encode","main","gene_id_key", "=", "13:29450016:29950015", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
 
 		q.addFilter(test);
 		executeQuery(q);
 
 		//Qtl
 		q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
-		test = new BasicFilter("qtl", null, "=", "4:82189556:83189556", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
+		test = new BasicFilter("qtl","main","gene_id_key", "=", "4:82189556:83189556", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
 
 		q.addFilter(test);
 		executeQuery(q);
 
 		//Expression
 		q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id"));
+		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
-		Filter anatomical_filter = new BasicFilter("est.anatomical_site", null, "=", "ovary", "org.ensembl.mart.lib.ExpressionFilterHandler");
-		Filter development_filter = new BasicFilter("est.development_stage", null, "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		Filter anatomical_filter = new BasicFilter("est.anatomical_site","main","gene_id_key", "=", "ovary", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		Filter development_filter = new BasicFilter("est.developmental_stage","main","gene_id_key", "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
 		
 		q.addFilter(anatomical_filter);
 		q.addFilter(development_filter);
 		executeQuery(q);
 		
+		//GO
+		//q = new Query(genequery);
+		//q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+
+        //Filter evidence_code = new BasicFilter("go_evidence_code:IEA","main","gene_id_key", "only", null, "org.ensembl.mart.lib.GOFilterHandler");
+		//Filter mol_function_filter = new BasicFilter("go_molecular_function","main","gene_id_key", "=", "GO:0003673", "org.ensembl.mart.lib.GOFilterHandler");
+		
+		//q.addFilter(evidence_code);
+		//q.addFilter(mol_function_filter);
+		
+		//executeQuery(q);
 		//TODO:GO
 		/*
     mol Function          GO:0003673
