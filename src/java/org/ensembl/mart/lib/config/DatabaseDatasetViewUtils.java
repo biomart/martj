@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -42,6 +43,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import oracle.sql.BLOB;
+import oracle.sql.CLOB;
 
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
@@ -69,8 +73,7 @@ public class DatabaseDatasetViewUtils {
    * xml            longblob
    * compressed_xml longblob
    * MessageDigest  blob
-   */  
-
+   */
 
   private static final String GETALLNAMESQL =
     "select internalname, displayName, dataset, description, MessageDigest from ";
@@ -95,6 +98,8 @@ public class DatabaseDatasetViewUtils {
   private static final String INSERTXMLSQLA = "insert into "; //append table after user test
   private static final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
+  private static final String SELECTXMLFORUPDATE = "select xml from ";  
+  private static final String SELECTCOMPRESSEDXMLFORUPDATE = "select compressed_xml from ";  
   private static final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private static final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
@@ -122,7 +127,7 @@ public class DatabaseDatasetViewUtils {
   public static boolean DSViewUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
     boolean exists = true;
     String table = BASEMETATABLE + "_" + user;
-    
+
     if (user == null)
       return false;
 
@@ -132,12 +137,12 @@ public class DatabaseDatasetViewUtils {
       //try upper casing the name
       exists = tableExists(dsource, table.toUpperCase());
     }
-    
+
     if (!exists) {
       //try lower casing the name
       exists = tableExists(dsource, table.toLowerCase());
     }
-    
+
     return exists;
   }
 
@@ -161,7 +166,7 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (tcheck == null) {
-        logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
+      logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
       return false;
     }
 
@@ -170,10 +175,10 @@ public class DatabaseDatasetViewUtils {
         logger.warning("Returned Wrong table for verifyTable: wanted " + table + " got " + tcheck + "\n");
       return false;
     }
-    
+
     return true;
   }
-  
+
   /**
    * Determine if meta_DatasetView exists in a Mart Database defined by the given DetailedDataSource.
    * @param dsource -- DetailedDataSource for the Mart Database being querried.
@@ -183,13 +188,13 @@ public class DatabaseDatasetViewUtils {
   public static boolean BaseDSViewTableExists(DetailedDataSource dsource) throws ConfigurationException {
     String table = BASEMETATABLE;
     boolean exists = true;
-    
+
     exists = tableExists(dsource, table);
     if (!exists)
       exists = tableExists(dsource, table.toUpperCase());
     if (!exists)
       exists = tableExists(dsource, table.toLowerCase());
-      
+
     return exists;
   }
 
@@ -238,6 +243,9 @@ public class DatabaseDatasetViewUtils {
     String description,
     Document doc)
     throws ConfigurationException {
+    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+      return storeUncompressedXMLOracle(dsource, user, internalName, displayName, dataset, description, doc);
+
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
@@ -269,10 +277,92 @@ public class DatabaseDatasetViewUtils {
       ps.setString(2, displayName);
       ps.setString(3, dataset);
       ps.setString(4, description);
-      ps.setBytes(5, xml);
+      ps.setBinaryStream(5, new ByteArrayInputStream(xml), xml.length);
       ps.setBytes(6, md5);
 
       int ret = ps.executeUpdate();
+      ps.close();
+      conn.close();
+
+      return ret;
+    } catch (IOException e) {
+      throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQLException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
+        e);
+    } catch (NoSuchAlgorithmException e) {
+      throw new ConfigurationException(
+        "Caught NoSuchAlgorithmException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
+        e);
+    }
+  }
+
+  private static int storeUncompressedXMLOracle(
+    DetailedDataSource dsource,
+    String user,
+    String internalName,
+    String displayName,
+    String dataset,
+    String description,
+    Document doc)
+    throws ConfigurationException {
+    try {
+      String metatable = getDSViewTableFor(dsource, user);
+      String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
+      String oraclehackSQL = SELECTXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
+
+      if (logger.isLoggable(Level.INFO))
+        logger.info("\ninserting with SQL " + insertSQL + "\n");
+
+      Connection conn = dsource.getConnection();
+      conn.setAutoCommit(false);
+      
+      MessageDigest md5digest = MessageDigest.getInstance(DIGESTTYPE);
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      DigestOutputStream dout = new DigestOutputStream(bout, md5digest);
+      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+      xout.output(doc, dout);
+
+      byte[] xml = bout.toByteArray();
+      byte[] md5 = md5digest.digest();
+
+      bout.close();
+      dout.close();
+
+      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+
+      if (rowstodelete > 0)
+        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+
+      PreparedStatement ps = conn.prepareStatement(insertSQL);
+      PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
+      
+      ps.setString(1, internalName);
+      ohack.setString(1, internalName);
+      ps.setString(2, displayName);
+      ps.setString(3, dataset);
+      ohack.setString(2, dataset);
+      ps.setString(4, description);
+      ps.setClob(5, CLOB.empty_lob());
+      ps.setBytes(6, md5);
+
+      int ret = ps.executeUpdate();
+      
+      ResultSet rs = ohack.executeQuery();
+
+      if (rs.next()) {
+        CLOB clob = (CLOB) rs.getClob(1);
+
+        OutputStream clobout = clob.getAsciiOutputStream();
+        clobout.write(xml);
+        clobout.close();
+      }
+
+      conn.commit();
+      rs.close();
+      ohack.close();
       ps.close();
       conn.close();
 
@@ -299,6 +389,9 @@ public class DatabaseDatasetViewUtils {
     String description,
     Document doc)
     throws ConfigurationException {
+    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+      return storeCompressedXMLOracle(dsource, user, internalName, displayName, dataset, description, doc);
+
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
@@ -334,7 +427,7 @@ public class DatabaseDatasetViewUtils {
       ps.setString(2, displayName);
       ps.setString(3, dataset);
       ps.setString(4, description);
-      ps.setBytes(5, xml);
+      ps.setBinaryStream(5, new ByteArrayInputStream(xml), xml.length);
       ps.setBytes(6, md5);
 
       int ret = ps.executeUpdate();
@@ -354,6 +447,92 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
+  private static int storeCompressedXMLOracle(
+    DetailedDataSource dsource,
+    String user,
+    String internalName,
+    String displayName,
+    String dataset,
+    String description,
+    Document doc)
+    throws ConfigurationException {
+    try {
+      String metatable = getDSViewTableFor(dsource, user);
+      String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
+      String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
+
+      if (logger.isLoggable(Level.INFO))
+        logger.info("\ninserting with SQL " + insertSQL + "\nOracle: " + oraclehackSQL + "\n");
+
+      Connection conn = dsource.getConnection();
+      conn.setAutoCommit(false);
+      
+      MessageDigest md5digest = MessageDigest.getInstance(DIGESTTYPE);
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      GZIPOutputStream gout = new GZIPOutputStream(bout);
+      DigestOutputStream out = new DigestOutputStream(gout, md5digest);
+      // should calculate digest on unzipped data, eg, bytes before they are sent to gout.write
+
+      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+
+      xout.output(doc, out);
+      gout.finish();
+
+      byte[] xml = bout.toByteArray();
+      byte[] md5 = md5digest.digest();
+      bout.close();
+      gout.close();
+      out.close();
+
+      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+
+      if (rowstodelete > 0)
+        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+
+      PreparedStatement ps = conn.prepareStatement(insertSQL);
+      PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
+      
+      ps.setString(1, internalName);
+      ohack.setString(1, internalName);
+      ps.setString(2, displayName);
+      ps.setString(3, dataset);
+      ohack.setString(2, dataset);
+      ps.setString(4, description);
+      ps.setBlob(5, BLOB.empty_lob());
+      ps.setBytes(6, md5);
+
+      int ret = ps.executeUpdate();
+      
+      ResultSet rs = ohack.executeQuery();
+
+      if (rs.next()) {
+        BLOB blob = (BLOB) rs.getBlob(1);
+
+        OutputStream blobout = blob.getBinaryOutputStream();
+        blobout.write(xml);
+        blobout.close();
+      }
+
+      conn.commit();
+      rs.close();
+      ohack.close();
+      ps.close();
+      conn.close();
+
+      return ret;
+    } catch (IOException e) {
+      throw new ConfigurationException("Caught IOException writing out xml to OutputStream: " + e.getMessage(), e);
+    } catch (SQLException e) {
+      throw new ConfigurationException(
+        "Caught SQLException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
+        e);
+    } catch (NoSuchAlgorithmException e) {
+      throw new ConfigurationException(
+        "Caught NoSuchAlgorithmException updating xml for " + internalName + ", " + displayName + ": " + e.getMessage(),
+        e);
+    }
+  }
+
   /**
    * Returns all dataset names from the meta_DatasetView table for the given user.
    * @param ds -- DetailedDataSource for mart database
@@ -365,14 +544,14 @@ public class DatabaseDatasetViewUtils {
     SortedSet names = new TreeSet();
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETALLDATASETSQL + metatable;
-    
+
     if (logger.isLoggable(Level.INFO))
       logger.info("Getting all dataset names with sql: " + sql + "\n");
 
     try {
       Connection conn = ds.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
-      
+
       ResultSet rs = ps.executeQuery();
 
       while (rs.next()) {
@@ -384,12 +563,12 @@ public class DatabaseDatasetViewUtils {
     } catch (SQLException e) {
       throw new ConfigurationException("Caught SQLException during attempt to fetch InternalNames for " + sql + "\n", e);
     }
-    
+
     String[] ret = new String[names.size()];
     names.toArray(ret);
     return ret;
   }
-  
+
   /**
    * Returns all of the internalNames for the given dataset, as stored in the meta_DatasetView table for
    * the Mart Database for the given user.
@@ -399,7 +578,8 @@ public class DatabaseDatasetViewUtils {
    * @return String[] containing all of the internalNames for the requested dataset.
    * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
-  public static String[] getAllInternalNamesForDataset(DetailedDataSource ds, String user, String dataset) throws ConfigurationException {
+  public static String[] getAllInternalNamesForDataset(DetailedDataSource ds, String user, String dataset)
+    throws ConfigurationException {
     List names = new ArrayList();
     String metatable = getDSViewTableFor(ds, user);
     String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDATASET;
@@ -411,7 +591,7 @@ public class DatabaseDatasetViewUtils {
       Connection conn = ds.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
       ps.setString(1, dataset);
-      
+
       ResultSet rs = ps.executeQuery();
 
       while (rs.next()) {
@@ -439,10 +619,11 @@ public class DatabaseDatasetViewUtils {
    * @return String[] containing all of the displayNames for the requested dataset
    * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
-  public static String[] getAllDisplayNamesForDataset(DetailedDataSource ds, String user, String dataset) throws ConfigurationException {
+  public static String[] getAllDisplayNamesForDataset(DetailedDataSource ds, String user, String dataset)
+    throws ConfigurationException {
     List names = new ArrayList();
     String metatable = getDSViewTableFor(ds, user);
-    String sql = GETDNAMESQL + metatable+ GETANYNAMESWHEREDATASET;
+    String sql = GETDNAMESQL + metatable + GETANYNAMESWHEREDATASET;
 
     if (logger.isLoggable(Level.INFO))
       logger.info("Getting all displayNames with sql: " + sql + "\n");
@@ -451,7 +632,7 @@ public class DatabaseDatasetViewUtils {
       Connection conn = ds.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
       ps.setString(1, dataset);
-      
+
       ResultSet rs = ps.executeQuery();
 
       while (rs.next()) {
@@ -480,14 +661,19 @@ public class DatabaseDatasetViewUtils {
    * @return DatasetView defined by given internalName
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
+  public static DatasetView getDatasetViewByDatasetInternalName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHERINAME;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get displayName for internalName " + internalName + " and dataset " + dataset + "\n");
+        logger.info(
+          "Using " + sql + " to get displayName for internalName " + internalName + " and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -528,14 +714,22 @@ public class DatabaseDatasetViewUtils {
    * @return DatasetView JDOM Document defined by given displayName and dataset
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static Document getDatasetViewDocumentByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
+  public static Document getDatasetViewDocumentByDatasetInternalName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String internalName)
     throws ConfigurationException {
+    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+      return getDatasetViewDocumentByDatasetInternalNameOracle(dsource, user, dataset, internalName);
+        
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+        logger.info(
+          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -552,6 +746,7 @@ public class DatabaseDatasetViewUtils {
 
       byte[] stream = rs.getBytes(1);
       byte[] cstream = rs.getBytes(2);
+      
       rs.close();
       conn.close();
 
@@ -571,6 +766,56 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
+  private static Document getDatasetViewDocumentByDatasetInternalNameOracle(
+      DetailedDataSource dsource,
+      String user,
+      String dataset,
+      String internalName)
+      throws ConfigurationException {
+        try {
+          String metatable = getDSViewTableFor(dsource, user);
+          String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
+
+          if (logger.isLoggable(Level.INFO))
+            logger.info(
+              "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+
+          Connection conn = dsource.getConnection();
+          PreparedStatement ps = conn.prepareStatement(sql);
+          ps.setString(1, internalName);
+          ps.setString(2, dataset);
+
+          ResultSet rs = ps.executeQuery();
+          if (!rs.next()) {
+            // will only get one result
+            rs.close();
+            conn.close();
+            return null;
+          }
+
+          CLOB stream = (CLOB) rs.getClob(1);
+          BLOB cstream = (BLOB) rs.getBlob(2);
+
+          InputStream rstream = null;
+          if (cstream != null) {
+            rstream = new GZIPInputStream( cstream.getBinaryStream() );
+          } else
+            rstream = stream.getAsciiStream();
+
+          Document ret =  DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+          rstream.close();
+          rs.close();
+          conn.close();
+          return ret;
+        } catch (SQLException e) {
+          throw new ConfigurationException(
+            "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+            e);
+        } catch (IOException e) {
+          throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+        }
+      }
+      
   /**
    * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given dataset and displayName
@@ -581,14 +826,19 @@ public class DatabaseDatasetViewUtils {
    * @return DatasetView with given displayName and dataset
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByDatasetDisplayName(DetailedDataSource dsource, String user, String dataset, String displayName)
+  public static DatasetView getDatasetViewByDatasetDisplayName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHEREDNAME;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
+        logger.info(
+          "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -619,14 +869,28 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static Document getDatasetViewDocumentByDatasetDisplayName(DetailedDataSource dsource, String user, String dataset, String displayName)
+  public static Document getDatasetViewDocumentByDatasetDisplayName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String displayName)
     throws ConfigurationException {
+    if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
+      return getDatasetViewDocumentByDatasetDisplayNameOracle(dsource, user, dataset, displayName);
+      
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get DatasetView Document for displayName " + displayName + " and dataset " + dataset + "\n");
+        logger.info(
+          "Using "
+            + sql
+            + " to get DatasetView Document for displayName "
+            + displayName
+            + " and dataset "
+            + dataset
+            + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -665,6 +929,56 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
+  private static Document getDatasetViewDocumentByDatasetDisplayNameOracle(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String displayName)
+    throws ConfigurationException {
+      try {
+        String metatable = getDSViewTableFor(dsource, user);
+        String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
+
+        if (logger.isLoggable(Level.INFO))
+          logger.info(
+            "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
+
+        Connection conn = dsource.getConnection();
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, displayName);
+        ps.setString(2, dataset);
+
+        ResultSet rs = ps.executeQuery();
+        if (!rs.next()) {
+          // will only get one result
+          rs.close();
+          conn.close();
+          return null;
+        }
+
+        CLOB stream = (CLOB) rs.getClob(1);
+        BLOB cstream = (BLOB) rs.getBlob(2);
+
+        InputStream rstream = null;
+        if (cstream != null) {
+          rstream = new GZIPInputStream( cstream.getBinaryStream() );
+        } else
+          rstream = stream.getAsciiStream();
+
+        Document ret =  DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+        rstream.close();
+        rs.close();
+        conn.close();
+        return ret;
+      } catch (SQLException e) {
+        throw new ConfigurationException(
+          "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+          e);
+      } catch (IOException e) {
+        throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+      }
+    }
+    
   /**
    * Get a message digest for a given DatasetView, given by dataset and internalName
    * @param dsource -- connection to mart database
@@ -674,14 +988,19 @@ public class DatabaseDatasetViewUtils {
    * @return byte[] digest for given dataset and displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
+  public static byte[] getDSViewMessageDigestByDatasetInternalName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYINAMEWHERE;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get Digest for internalName " + internalName + " and dataset " + dataset + "\n");
+        logger.info(
+          "Using " + sql + " to get Digest for internalName " + internalName + " and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -715,14 +1034,19 @@ public class DatabaseDatasetViewUtils {
    * @return String displayName for given dataset and internalName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewDisplayNameByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
+  public static String getDSViewDisplayNameByDatasetInternalName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String internalName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
       String sql = GETDNAMESQL + metatable + GETANYNAMESWHERINAME;
 
       if (logger.isLoggable(Level.INFO))
-        logger.info("Using " + sql + " to get displayName for internalName " + internalName + "and dataset " + dataset + "\n");
+        logger.info(
+          "Using " + sql + " to get displayName for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -755,7 +1079,11 @@ public class DatabaseDatasetViewUtils {
    * @return byte[] digest for given displayName and dataset
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByDatasetDisplayName(DetailedDataSource dsource, String user, String dataset, String displayName)
+  public static byte[] getDSViewMessageDigestByDatasetDisplayName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -796,7 +1124,11 @@ public class DatabaseDatasetViewUtils {
    * @return String internalName for given displayName and dataset
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewInternalNameByDatasetDisplayName(DetailedDataSource dsource, String user, String dataset, String displayName)
+  public static String getDSViewInternalNameByDatasetDisplayName(
+    DetailedDataSource dsource,
+    String user,
+    String dataset,
+    String displayName)
     throws ConfigurationException {
     try {
       String metatable = getDSViewTableFor(dsource, user);
@@ -828,7 +1160,12 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static int getDSViewEntryCountFor(DetailedDataSource ds, String metatable, String dataset, String internalName, String displayName)
+  public static int getDSViewEntryCountFor(
+    DetailedDataSource ds,
+    String metatable,
+    String dataset,
+    String internalName,
+    String displayName)
     throws ConfigurationException {
     String existSQL = EXISTSELECT + metatable + EXISTWHERE;
     if (logger.isLoggable(Level.INFO))
@@ -1140,7 +1477,11 @@ public class DatabaseDatasetViewUtils {
     return validatedStarBase;
   }
 
-  public static String getValidatedPrimaryKey(DetailedDataSource dsource, String schema, String catalog, String primaryKey)
+  public static String getValidatedPrimaryKey(
+    DetailedDataSource dsource,
+    String schema,
+    String catalog,
+    String primaryKey)
     throws SQLException {
     String validatedPrimaryKey = new String(primaryKey);
 
@@ -1450,7 +1791,11 @@ public class DatabaseDatasetViewUtils {
     return validatedOption;
   }
 
-  public static PushAction getValidatedPushAction(DetailedDataSource dsource, String schema, String catalog, PushAction action)
+  public static PushAction getValidatedPushAction(
+    DetailedDataSource dsource,
+    String schema,
+    String catalog,
+    PushAction action)
     throws SQLException {
     PushAction validatedPushAction = new PushAction(action);
 
@@ -1481,7 +1826,8 @@ public class DatabaseDatasetViewUtils {
     return validatedPushAction;
   }
 
-  public static AttributePage getValidatedAttributePage(DetailedDataSource dsource, AttributePage page) throws SQLException {
+  public static AttributePage getValidatedAttributePage(DetailedDataSource dsource, AttributePage page)
+    throws SQLException {
     AttributePage validatedPage = new AttributePage(page);
 
     boolean hasBrokenGroups = false;
@@ -1518,7 +1864,8 @@ public class DatabaseDatasetViewUtils {
     return validatedPage;
   }
 
-  public static AttributeGroup getValidatedAttributeGroup(DetailedDataSource dsource, AttributeGroup group) throws SQLException {
+  public static AttributeGroup getValidatedAttributeGroup(DetailedDataSource dsource, AttributeGroup group)
+    throws SQLException {
     AttributeGroup validatedGroup = new AttributeGroup(group);
 
     boolean hasBrokenCollections = false;
@@ -1549,7 +1896,9 @@ public class DatabaseDatasetViewUtils {
     return validatedGroup;
   }
 
-  public static AttributeCollection getValidatedAttributeCollection(DetailedDataSource dsource, AttributeCollection collection)
+  public static AttributeCollection getValidatedAttributeCollection(
+    DetailedDataSource dsource,
+    AttributeCollection collection)
     throws SQLException {
     String schema = null;
     String catalog = null;
@@ -1689,14 +2038,14 @@ public class DatabaseDatasetViewUtils {
    */
   public static String[] getNieveDatasetNamesFor(DetailedDataSource dsource, String databaseName) throws SQLException {
     String[] potentials = getNieveMainTablesFor(dsource, databaseName, null);
-    
+
     //now weed them to a subset, attempting to unionize conformed dimension names
     List retList = new ArrayList();
 
     for (int i = 0, n = potentials.length; i < n; i++) {
       String curval = potentials[i];
 
-      retList.add( curval.replaceFirst("_[Mm][Aa][Ii][Nn]", "") );
+      retList.add(curval.replaceFirst("_[Mm][Aa][Ii][Nn]", ""));
     }
 
     String[] dsList = new String[retList.size()];
@@ -1754,7 +2103,7 @@ public class DatabaseDatasetViewUtils {
     }
     rsTab.close();
     conn.close();
-    
+
     String[] retList = new String[potentials.size()];
     potentials.toArray(retList);
     return retList;
@@ -1809,7 +2158,7 @@ public class DatabaseDatasetViewUtils {
     }
     rsTab.close();
     conn.close();
-    
+
     String[] retList = new String[potentials.size()];
     potentials.toArray(retList);
     return retList;
@@ -1824,7 +2173,10 @@ public class DatabaseDatasetViewUtils {
    * @return TableDescription object describing the table
    * @throws SQLException
    */
-  public static TableDescription getTableDescriptionFor(DetailedDataSource dsource, String databaseName, String tableName)
+  public static TableDescription getTableDescriptionFor(
+    DetailedDataSource dsource,
+    String databaseName,
+    String tableName)
     throws SQLException {
     Connection conn = dsource.getConnection();
     DatabaseMetaData dmd = conn.getMetaData();
@@ -1844,7 +2196,7 @@ public class DatabaseDatasetViewUtils {
     }
     rset.close();
     conn.close();
-    
+
     ColumnDescription[] cols = new ColumnDescription[columns.size()];
     columns.toArray(cols);
 
@@ -1872,13 +2224,13 @@ public class DatabaseDatasetViewUtils {
     DatasetView dsv = new DatasetView();
 
     List starbases = new ArrayList();
-    String[] primaryKeys = new String[] { "!!! MUST ADD PRIMARY KEYS MANUALLY !!!"};
+    String[] primaryKeys = new String[] { "!!! MUST ADD PRIMARY KEYS MANUALLY !!!" };
 
     dsv.setInternalName(datasetName);
     dsv.setDisplayName(datasetName + " ( " + databaseName + " )");
     dsv.setDataset(datasetName);
     dsv.addPrimaryKeys(primaryKeys);
-    
+
     AttributePage ap = new AttributePage();
     ap.setInternalName(DEFAULTPAGE);
     ap.setDisplayName(DEFAULTPAGE);
