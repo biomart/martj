@@ -663,6 +663,7 @@ public class MartViewEditor extends JFrame {
 		}	  
 	  }
 	  catch (Exception e){
+	  	e.printStackTrace();
 	  }		
 	}
 
