@@ -300,7 +300,7 @@ public class AdaptorManager extends Box {
 	 * Runs a test; an instance of this class is shown in a Frame.
 	 */
 	public static void main(String[] args) throws Exception {
-    //Preferences.userNodeForPackage(AdaptorManager.class).remove( REGISTRY_KEY );
+    Preferences.userNodeForPackage(AdaptorManager.class).remove( REGISTRY_KEY );
     
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     logger.setLevel( Level.FINE); 

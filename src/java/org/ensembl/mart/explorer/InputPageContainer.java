@@ -27,7 +27,6 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
@@ -39,6 +38,8 @@ import org.ensembl.mart.lib.config.DatasetView;
 public class InputPageContainer
   extends JPanel
   implements TreeSelectionListener {
+
+  private Query query;
 
   private final static Logger logger =
     Logger.getLogger(InputPageContainer.class.getName());
@@ -52,6 +53,7 @@ public class InputPageContainer
     AdaptorManager datasetViewSettings) {
 
     super();
+    this.query = query;
 
     if (tree != null)
       tree.addTreeSelectionListener(this);
@@ -79,9 +81,14 @@ public class InputPageContainer
   }
 
   /**
-   * Show input page corresponding to selected tree node. 
+   * Show input page corresponding to selected tree node.
+   * Does nothing if query.datasetView==null because we should
+   * only show the datasetViewWidget in that case. 
    */
   public void valueChanged(TreeSelectionEvent e) {
+  
+    if ( query.getDatasetView()==null ) return;
+
 
     if (e.getNewLeadSelectionPath() != null
       && e.getNewLeadSelectionPath().getLastPathComponent() != null) {

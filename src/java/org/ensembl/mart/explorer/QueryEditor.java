@@ -20,7 +20,6 @@ package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -48,7 +47,6 @@ import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -301,54 +299,9 @@ public class QueryEditor extends JPanel {
     
     toolBar.add(Box.createHorizontalStrut(4*gap));
     
-    toolBar.add(new JLabel("Query"));
-    
     toolBar.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
-    toolBar.add(createButton("Execute", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doExecute();
-      }
-    }, true));
-
-    toolBar.add(createButton("Load", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doLoadQuery();
-      }
-    }, true));
-
-    toolBar.add(createButton("Save", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doSaveQuery();
-      }
-    }, true));
-
-
     toolBar.add(Box.createHorizontalStrut(4*gap));
-
-    toolBar.add(new JLabel("Results"));
-
-    toolBar.add(createButton("Save", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doSaveResults();
-      }
-    }, true));
-
-    toolBar.add(createButton("Save As", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doSaveResultsAs();
-      }
-    }, true));
-
-    
-    toolBar.add( Box.createHorizontalGlue() );
-    
-    toolBar.add(createButton("Close", new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doClose();
-      }
-    }, true));
-
 
     return toolBar;
   }
@@ -408,14 +361,14 @@ public class QueryEditor extends JPanel {
   /**
    * Save results to file, user must select file if no output file selected. 
    */
-  private void doSaveResults() {
+  public void doSaveResults() {
     runQuery(true, false);
   }
 
   /**
    * Save results to file, user must select output file.
    */
-  private void doSaveResultsAs() {
+  public void doSaveResultsAs() {
 
     runQuery(true, true);
   }
