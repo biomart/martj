@@ -35,7 +35,7 @@ import org.ensembl.mart.lib.Query;
 public class AttributeQueryRunnerTest extends Base {
 
   private final int NO_HARD_LIMIT = 0;
-  private final int SMALL_HARD_LIMIT = 1000;
+  private final int SMALL_HARD_LIMIT = 100;
   private final int BIG_HARD_LIMIT = 200000;
   
   /**
@@ -84,7 +84,7 @@ public class AttributeQueryRunnerTest extends Base {
     int hardLimit = NO_HARD_LIMIT;
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("hgbaseid", "hsapiens_gene_ensembl__snp__dm", "transcript_id_key"));
-    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
 
     executeQuery(q, hardLimit);
   }
@@ -97,7 +97,7 @@ public class AttributeQueryRunnerTest extends Base {
     int hardLimit = SMALL_HARD_LIMIT;
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("hgbaseid", "hsapiens_gene_ensembl__snp__dm", "transcript_id_key"));
-    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
 
     executeQuery(q, hardLimit);
   }
@@ -110,7 +110,7 @@ public class AttributeQueryRunnerTest extends Base {
     int hardLimit = BIG_HARD_LIMIT;
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("hgbaseid", "hsapiens_gene_ensembl__snp__dm", "transcript_id_key"));
-    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
 
     executeQuery(q, hardLimit);
   }
@@ -125,11 +125,11 @@ public class AttributeQueryRunnerTest extends Base {
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
     q.addFilter(new BooleanFilter("disease_gene_bool","main","gene_id_key", BooleanFilter.isNotNULL_NUM));
-    
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
+        
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -145,11 +145,11 @@ public class AttributeQueryRunnerTest extends Base {
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
     q.addFilter(new BooleanFilter("disease_gene_bool","main","gene_id_key", BooleanFilter.isNotNULL_NUM));
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -165,11 +165,11 @@ public class AttributeQueryRunnerTest extends Base {
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
     q.addFilter(new BooleanFilter("disease_gene_bool","main","gene_id_key", BooleanFilter.isNotNULL_NUM));
+    q.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -188,7 +188,8 @@ public class AttributeQueryRunnerTest extends Base {
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
+    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
+    
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -207,7 +208,8 @@ public class AttributeQueryRunnerTest extends Base {
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
+    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
+
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -226,7 +228,8 @@ public class AttributeQueryRunnerTest extends Base {
     //create a small resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
+    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
+
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -246,7 +249,7 @@ public class AttributeQueryRunnerTest extends Base {
     //create a big resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "22"));
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -267,6 +270,7 @@ public class AttributeQueryRunnerTest extends Base {
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
     subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -287,6 +291,7 @@ public class AttributeQueryRunnerTest extends Base {
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
     subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
 
     executeQuery(q, hardLimit);
@@ -301,12 +306,12 @@ public class AttributeQueryRunnerTest extends Base {
     int hardLimit = NO_HARD_LIMIT;
     Query q = new Query(genequery);
     q.addAttribute(new FieldAttribute("hgbaseid", "hsapiens_gene_ensembl__snp__dm", "transcript_id_key"));
-    q.addFilter(new BooleanFilter("transmembrane_bool", "main", "gene_id_key", BooleanFilter.isNULL));
     
     //create a big resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "18"));
+
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
     
     executeQuery(q, hardLimit);
@@ -326,7 +331,8 @@ public class AttributeQueryRunnerTest extends Base {
     //create a big resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    subq.addFilter(new BooleanFilter("disease_gene_bool","main","gene_id_key", BooleanFilter.isNotNULL));
+    
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
     
     executeQuery(q, hardLimit);
@@ -346,7 +352,8 @@ public class AttributeQueryRunnerTest extends Base {
     //create a big resultset subquery and add it to main q
     Query subq = new Query(genequery);
     subq.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-    subq.addFilter(new BasicFilter("chr_name","main","gene_id_key", "=", "1"));
+    subq.addFilter(new BooleanFilter("disease_gene_bool","main","gene_id_key", BooleanFilter.isNotNULL));
+    
     q.addFilter(new IDListFilter("gene_stable_id","main","gene_id_key", subq));
     
     executeQuery(q, hardLimit);
