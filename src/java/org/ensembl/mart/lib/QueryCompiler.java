@@ -372,6 +372,11 @@ public class QueryCompiler {
     for (int i = 0; i < nAttributes; ++i) {
 
       Attribute a = query.getSortByAttributes()[i];
+      
+      //hack for AE
+      lowestLevelKey = a.getField();
+      qualifiedLowestLevelKey = a.getTableConstraint()+"."+lowestLevelKey;
+      
       buf.append(a.getTableConstraint()).append(".").append(a.getField());
 
       if (i + 1 < nAttributes)

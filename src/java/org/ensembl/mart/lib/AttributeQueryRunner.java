@@ -166,15 +166,19 @@ public final class AttributeQueryRunner implements QueryRunner {
       conn = ds.getConnection();
 
       while (moreRows) {
-        sql = sqlbase;
+        StringBuffer sqlBuf = new StringBuffer(sqlbase);
 
-        if (sqlbase.indexOf("WHERE") >= 0)
-          sql += " AND " + primaryKey + " >= " + lastID;
-        else
-          sql += " WHERE " + primaryKey + " >= " + lastID;
+        if (sqlbase.indexOf("WHERE") >= 0) {
+          String insert = primaryKey + " >= " + lastID + " AND ";
+          sqlBuf.insert(sqlbase.indexOf("WHERE") + 6, insert);
+        } else
+          sqlBuf.append(" WHERE " + primaryKey + " >= " + lastID);
 
-        sql += " ORDER BY " + primaryKey;
+        if (!( curQuery.hasSort() ) )
+          sqlBuf.append(" ORDER BY " + primaryKey);
 
+        sql = sqlBuf.toString();
+        
         int maxRows = 0;
         if (hardLimit > 0)
           maxRows = Math.min(batchLimit, hardLimit - totalRows);
