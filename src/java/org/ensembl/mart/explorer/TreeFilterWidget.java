@@ -185,7 +185,7 @@ public class TreeFilterWidget extends FilterWidget {
 		if (option != null && option != nullOption)
 			name = option.getDisplayName();
 		currentSelectedText.setText(name);
-		setNodeLabel(null, name);
+		setNodeLabel(fieldName, name);
 	}
 
 	/**
