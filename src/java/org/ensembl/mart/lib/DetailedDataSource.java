@@ -83,7 +83,7 @@ public class DetailedDataSource implements DataSource {
   public static final String DEFAULTPORT = "3306";
 
   private static final String ORACLEAT = "@";
-  public static final String ORACLETHIN = "oracle:thin";
+  public static final String ORACLETHIN = "oracle";
   public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
   private static final String SYBASE = "sybase:Tds";
 
@@ -305,6 +305,8 @@ public class DetailedDataSource implements DataSource {
     }
 
     StringBuffer dbURL = new StringBuffer();
+    //defaults to oracle:thin, the driver settings needs to be done nicer
+    if (dbType.equals("oracle"))dbType="oracle:thin";
     dbURL.append("jdbc:").append(dbType).append(":");
     dbURL.append(host);
     if (port != null && !"".equals(port))
@@ -385,6 +387,8 @@ public class DetailedDataSource implements DataSource {
     if (dataSource == null) {
       try {
         // load driver
+        
+        //System.out.println ("lodading ..."+jdbcDriverClassName);
         Class.forName(jdbcDriverClassName).newInstance();
 
         dataSource =
@@ -484,6 +488,7 @@ public class DetailedDataSource implements DataSource {
    * @return String databaseType
    */
   public String getDatabaseType() {
+    if (databaseType.equals("oracle")) databaseType="oracle:thin";
     return databaseType;
   }
 
