@@ -49,7 +49,7 @@ public class TextFilterWidget
 
 
 	/**
-	   * NullableFilter that has contains a tree node.
+	   * BooleanFilter that has contains a tree node.
 	   */
 	private class InputPageAwareBasicFilter
 		extends BasicFilter

@@ -47,7 +47,7 @@ public class AttributeDescriptionWidget
 
 
   /**
-   * NullableFilter that has contains an InputPage, this page is used by the QueryEditor
+   * BooleanFilter that has contains an InputPage, this page is used by the QueryEditor
    * when it detects the filter has been added or removed from the query.
    */
   private class InputPageAwareAttribute extends FieldAttribute implements InputPageAware {

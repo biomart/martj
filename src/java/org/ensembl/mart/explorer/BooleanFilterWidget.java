@@ -28,7 +28,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 
-import org.ensembl.mart.lib.NullableFilter;
+import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
@@ -46,16 +46,16 @@ implements PropertyChangeListener , ActionListener{
   
   private Object currentButton = null;
   
-  private NullableFilter filter;
+  private BooleanFilter filter;
   private String requireCondition;
   private String excludeCondition;
   
 
   /**
-   * NullableFilter that has contains an InputPage, this page is used by the QueryEditor
+   * BooleanFilter that has contains an InputPage, this page is used by the QueryEditor
    * when it detects the filter has been added or removed from the query.
    */
-  private class InputPageAwareNullableFilter extends NullableFilter implements InputPageAware {
+  private class InputPageAwareNullableFilter extends BooleanFilter implements InputPageAware {
     private InputPage inputPage;
 
 		public InputPageAwareNullableFilter(String field, String condition, InputPage inputPage) {
@@ -86,11 +86,11 @@ implements PropertyChangeListener , ActionListener{
     
     
     if ( "boolean".equals( filterDescription.getType() ) ) {
-      requireCondition = NullableFilter.isNotNULL;
-      excludeCondition = NullableFilter.isNULL;
+      requireCondition = BooleanFilter.isNotNULL;
+      excludeCondition = BooleanFilter.isNULL;
     } else {
-      requireCondition = NullableFilter.isNotNULL_NUM;
-      excludeCondition = NullableFilter.isNULL_NUM;
+      requireCondition = BooleanFilter.isNotNULL_NUM;
+      excludeCondition = BooleanFilter.isNULL_NUM;
     }
     
     irrelevant.setSelected( true );
@@ -136,7 +136,7 @@ implements PropertyChangeListener , ActionListener{
 
 		currentButton = evt.getSource();
 
-		NullableFilter oldFilter = filter;
+		BooleanFilter oldFilter = filter;
 
 		if (currentButton == require) resetFilter( requireCondition );
     else if (currentButton == exclude) resetFilter( excludeCondition );

@@ -27,7 +27,7 @@ package org.ensembl.mart.lib;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
-public class NullableFilter implements Filter {
+public class BooleanFilter implements Filter {
 
 	public static final String isNULL = " is null";
 	public static final String isNotNULL = " is not null";
@@ -35,17 +35,17 @@ public class NullableFilter implements Filter {
 	public static final String isNotNULL_NUM = " = 1";
 
 /**
- * Constructor for a basic NullableFilter, with field and condition set.
+ * Constructor for a basic BooleanFilter, with field and condition set.
  * 
 	 * @param field - String, field of filter
 	 * @param condition - String, one of isNULL or isNotNull
  */
-	public NullableFilter(String field, String condition) {
+	public BooleanFilter(String field, String condition) {
     this(field, null, condition);
 	}
 
 	/**
-	 * constructor for a fully defined NullableFilter.
+	 * constructor for a fully defined BooleanFilter.
 	 * static isNULL and isNotNull variables can be used
 	 * to set the condition
 	 * 
@@ -53,7 +53,7 @@ public class NullableFilter implements Filter {
 	 * @param tableConstraint - String, tableConstraint for the Filter
 	 * @param condition - String, one of isNULL or isNotNull
 	 */	
-	public NullableFilter(String field, String tableConstraint, String condition) {
+	public BooleanFilter(String field, String tableConstraint, String condition) {
 		this.field = field;
 		this.tableConstraint = tableConstraint;
 		this.condition = condition;
@@ -110,10 +110,10 @@ public class NullableFilter implements Filter {
 	}
 	
 	/**
-	 * Allows Equality Comparisons manipulation of NullableFilter objects
+	 * Allows Equality Comparisons manipulation of BooleanFilter objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof NullableFilter && hashCode() == ((NullableFilter) o).hashCode();
+		return o instanceof BooleanFilter && hashCode() == ((BooleanFilter) o).hashCode();
 	}
 	
 	/* (non-Javadoc)

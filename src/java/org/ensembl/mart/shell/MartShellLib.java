@@ -36,7 +36,7 @@ import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.IDListFilter;
 import org.ensembl.mart.lib.InvalidQueryException;
-import org.ensembl.mart.lib.NullableFilter;
+import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeCollection;
@@ -598,9 +598,9 @@ public class MartShellLib {
 	private boolean mapBasicFilter(Filter filter, StringBuffer mqlbuf) {
 		boolean success = true;
 
-		if (filter instanceof NullableFilter) {
-			String condition = ((NullableFilter) filter).getRightHandClause();
-			if (condition.equals(NullableFilter.isNULL) || condition.equals(NullableFilter.isNULL_NUM))
+		if (filter instanceof BooleanFilter) {
+			String condition = ((BooleanFilter) filter).getRightHandClause();
+			if (condition.equals(BooleanFilter.isNULL) || condition.equals(BooleanFilter.isNULL_NUM))
 				mqlbuf.append("excluded");
 			else
 				mqlbuf.append("exclusive");
@@ -1076,23 +1076,23 @@ public class MartShellLib {
 					if (fds.getType().equals("boolean")) {
 						String thisCondition = null;
 						if (thisToken.equalsIgnoreCase("exclusive"))
-							thisCondition = NullableFilter.isNotNULL;
+							thisCondition = BooleanFilter.isNotNULL;
 						else if (thisToken.equalsIgnoreCase("excluded"))
-							thisCondition = NullableFilter.isNULL;
+							thisCondition = BooleanFilter.isNULL;
 						else
 							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
 
-						thisFilter = new NullableFilter(thisFieldName, thisTableConstraint, thisCondition);
+						thisFilter = new BooleanFilter(thisFieldName, thisTableConstraint, thisCondition);
 					} else if (fds.getType().equals("boolean_num")) {
 						String thisCondition;
 						if (cond.equalsIgnoreCase("exclusive"))
-							thisCondition = NullableFilter.isNULL_NUM;
+							thisCondition = BooleanFilter.isNULL_NUM;
 						else if (cond.equalsIgnoreCase("excluded"))
-							thisCondition = NullableFilter.isNotNULL_NUM;
+							thisCondition = BooleanFilter.isNotNULL_NUM;
 						else
 							throw new InvalidQueryException("Invalid Query Recieved, Filter Name, Condition with no value: " + filterName + " " + thisToken + "\n");
 
-						thisFilter = new NullableFilter(thisFieldName, thisTableConstraint, thisCondition);
+						thisFilter = new BooleanFilter(thisFieldName, thisTableConstraint, thisCondition);
 					} else
 						throw new InvalidQueryException("Recieved invalid exclusive/excluded query\n");
 

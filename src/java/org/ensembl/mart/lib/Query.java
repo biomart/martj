@@ -465,7 +465,7 @@ public class Query {
 			else if (element instanceof IDListFilter)
 			  tmp = (31 * tmp) + ( (IDListFilter) element).hashCode();
 			else
-			  tmp = (31 * tmp) + ( (NullableFilter) element).hashCode();
+			  tmp = (31 * tmp) + ( (BooleanFilter) element).hashCode();
 		}
 		
 		if (hasUnprocessedListFilters) {
