@@ -385,7 +385,7 @@ public class Engine {
     String port,
     String databaseName) {
     StringBuffer connStr = new StringBuffer();
-    connStr.append("jdbc:").append( databaseType ).append("//");
+    connStr.append("jdbc:").append( databaseType ).append("://");
     connStr.append(host);
     if (port != null && !"".equals(port))
       connStr.append(":").append(port);
