@@ -48,6 +48,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Enumeration;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
@@ -70,6 +72,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.config.*;
+import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
  * Class DatasetViewTree extends JTree.
@@ -239,6 +242,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     Option option = new Option();
                     option.setAttribute("internalName", "new");
                     insert(option, "Option");
+                }else if (e.getActionCommand().equals("insert enable")) {
+				    Enable enable = new Enable();
+				    enable.setAttribute("ref", "new");
+				    insert(enable, "Enable");
+				}else if (e.getActionCommand().equals("add push action")) {
+				    addPushAction();  
+				}else if (e.getActionCommand().equals("make drop down")) {
+				    makeDropDown();       
                 }else if (e.getActionCommand().equals("delete"))
                     delete();
                 else if (e.getActionCommand().equals("save"))
@@ -463,7 +474,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
             menuItems = new String[]{"copy", "cut", "paste", "insert attribute description", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            menuItems = new String[]{"copy", "cut", "paste", "insert option", "delete", "save","save as"};
+            menuItems = new String[]{"copy", "cut", "paste", "insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
+		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
+			menuItems = new String[]{"copy", "cut", "paste", "insert option", "make drop down", "insert enable", "add push action", "delete", "save","save as"};
         else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
             menuItems = new String[]{"copy", "cut", "paste", "delete", "save","save as"};
 
@@ -547,8 +560,8 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     public void insert(BaseConfigurationObject obj, String name) {
-
-        DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		
+		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
 
         DatasetViewTreeNode newNode = new DatasetViewTreeNode(name + "newNode", obj);
         String result = new String();
@@ -561,6 +574,96 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             return;
         }
     }
+
+	public void addPushAction()
+	    throws ConfigurationException, SQLException {
+	    	
+		String filter2 = JOptionPane.showInputDialog("Filter Description to set:");	
+	    	
+		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+		FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+        
+        // set FilterDescription fd1 = to current node
+	    DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		FilterDescription fd1 = (FilterDescription) node.getUserObject();
+
+        String pushField = fd2.getField();
+        String pushInternalName = fd2.getInternalName();
+        String pushTableName = fd2.getTableConstraint();
+        String field = fd1.getField();
+        
+        // eventually will have dsource open already
+        DetailedDataSource dsource = new DetailedDataSource(
+            "mysql",
+            "web27.ebi.ac.uk",
+            "3327",
+            "ensembl_mart_test",
+            "admin",
+            ">fc9i9m92",
+            DetailedDataSource.DEFAULTPOOLSIZE,
+            "com.mysql.jdbc.Driver");
+	            
+        
+		Option[] options = fd1.getOptions();
+		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		
+	    for (int i = 0; i < options.length; i++ ){
+			Option op = options[i];
+			String opName = op.getInternalName();
+			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
+			
+			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,dsource));
+			
+			if (pa.getOptions().length > 0){  
+			  Enumeration children = parentNode.children();
+			  DatasetViewTreeNode childNode = null;
+			  while (children.hasMoreElements()){
+			  	childNode = (DatasetViewTreeNode) children.nextElement();
+			  	if (op.equals(childNode.getUserObject()))
+			  	  break;
+			  }
+			  DatasetViewTreeNode newNode = new DatasetViewTreeNode("PushAction:newNode", pa);
+			  String result = treemodel.insertNodeInto(newNode, childNode, 0);
+			  if (result.startsWith("Error")) {
+				JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			  }
+			}
+	    }
+        
+	}
+
+	public void makeDropDown()
+		throws ConfigurationException, SQLException {
+		
+		DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		FilterDescription fd1 = (FilterDescription) node.getUserObject();
+        
+		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+        
+		// eventually will have dsource open already
+		DetailedDataSource dsource = new DetailedDataSource(
+				"mysql",
+				"web27.ebi.ac.uk",
+				"3327",
+				"ensembl_mart_test",
+				"admin",
+				">fc9i9m92",
+				DetailedDataSource.DEFAULTPOOLSIZE,
+				"com.mysql.jdbc.Driver");
+        
+        String field = fd1.getField();
+        String tableName = fd1.getTableConstraint();
+        String joinKey = fd1.getKey();
+		fd1.setType("list");
+		fd1.setQualifier("=");
+		fd1.setLegalQualifiers("=");
+
+		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, dsource, dsView);
+		for (int k = options.length - 1; k > -1; k-- ){
+			insert(options[k], "Option");
+		}
+	}
 
     public void delete() {
         DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
