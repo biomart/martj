@@ -36,6 +36,7 @@ public class DatabaseLocation extends MartLocationBase {
 	private final String PORT_KEY = "port";
 	private final String DATABASE_TYPE_KEY = "databaseType";
 	private final String INSTANCE_NAME_KEY = "instanceName";
+	private final String SCHEMA_KEY = "schemaKey";
 	private final String USER_KEY = "user";
 	private final String PASSWORD_KEY = "password";
 
@@ -103,6 +104,19 @@ public class DatabaseLocation extends MartLocationBase {
 		setAttribute(INSTANCE_NAME_KEY, instanceName);
 	}
 
+	
+	public String getSchema() {
+		return getAttribute(SCHEMA_KEY);
+	}
+
+	public void setSchema(String Schema) {
+		setAttribute (SCHEMA_KEY, Schema);
+	}
+	
+	
+	
+	
+	
 	/**
 	 * Returns the password for the RDBMS serving this location.  This may be null.
 	 * @return String password
@@ -170,7 +184,7 @@ public class DatabaseLocation extends MartLocationBase {
 	public String getName() {
 		String name = super.getName();
 		if (name == null || "".equals(name))
-			name = DetailedDataSource.defaultName(getHost(), getPort(), getInstanceName(), getUser());
+			name = DetailedDataSource.defaultName(getHost(), getPort(), getInstanceName(), getSchema(), getUser());
 		return name;
 	}
 }

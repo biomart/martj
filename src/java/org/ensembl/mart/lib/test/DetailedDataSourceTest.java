@@ -43,7 +43,7 @@ public class DetailedDataSourceTest extends Base {
 
 	public void testConnectionStringMethod() throws Exception {
 		DetailedDataSource ds =
-			new DetailedDataSource(databaseType, host, port, databaseName, user, password, 10, jdbcDriver);
+			new DetailedDataSource(databaseType, host, port, databaseName, schema,user, password, 10, jdbcDriver);
 
 		assertTrue("Failed to get any metadata from database", super.connected(ds));
 	}

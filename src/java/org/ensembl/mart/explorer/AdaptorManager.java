@@ -243,6 +243,7 @@ public class AdaptorManager extends Box {
             databaseDialog.getHost(),
             databaseDialog.getPort(),
             databaseDialog.getDatabase(),
+			databaseDialog.getSchema(),
             databaseDialog.getUser());
 
       ds =
@@ -251,6 +252,7 @@ public class AdaptorManager extends Box {
           databaseDialog.getHost(),
           databaseDialog.getPort(),
           databaseDialog.getDatabase(),
+		  databaseDialog.getSchema(),
           databaseDialog.getUser(),
           databaseDialog.getPassword(),
           10,

@@ -68,7 +68,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
     private MartEditor editor;
 
 	
-    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String internalName, String database) {
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String internalName, String schema) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -83,7 +83,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             
             if (file == null) {
             	if (user == null){
-            	  if (database == null){	
+            	  if (schema == null){	
                     config = new DatasetConfig("new", "new", "new");
                     config.setDSConfigAdaptor(new SimpleDSConfigAdaptor(config)); //prevents lazyLoading
                     config.addFilterPage(new FilterPage("new"));
@@ -91,9 +91,9 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	  }
             	  
             	  else{
-            	  	// hack to bypass the 'null logic' above.
-            	  	if(database.equals("pgsql")) database =null;
-            	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(database,dataset);
+            	  	
+            	  	
+            	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(schema,dataset);
             	  }
             	}
             	else{//Importing config

@@ -48,6 +48,7 @@ public class DatabaseSettingsDialog extends Box {
 	private LabelledComboBox host;
 	private LabelledComboBox port;
 	private LabelledComboBox database;
+	private LabelledComboBox schema;
 	private LabelledComboBox user;
   private LabelledComboBox connectionName;
   
@@ -85,6 +86,11 @@ public class DatabaseSettingsDialog extends Box {
 		database = new LabelledComboBox("Database");
 		database.setPreferenceKey("database");
 		add( database );
+		
+		schema = new LabelledComboBox("Schema");
+		schema.setPreferenceKey("schema");
+		add( schema );
+		
 		
 		user = new LabelledComboBox("User");
 		user.setPreferenceKey("user");
@@ -178,6 +184,7 @@ public class DatabaseSettingsDialog extends Box {
 		host.store(preferences, 10);
 		port.store(preferences, 10);
 		database.store(preferences, 10);
+		schema.store(preferences, 10);
 		user.store(preferences, 10);
     connectionName.store(preferences, 10);
     
@@ -232,6 +239,7 @@ public class DatabaseSettingsDialog extends Box {
 		port.load(preferences);
 		database.load(preferences);
 		user.load(preferences);
+		schema.load(preferences);
     
     rememberPassword.setSelected( preferences.getBoolean( rememberPasswordKey, false) );
 		password.setText(preferences.get(passwordPreferenceKey, ""));
@@ -280,6 +288,12 @@ public class DatabaseSettingsDialog extends Box {
 		return database.getText();
 	}
 
+	public String getSchema() {
+		return schema.getText();
+	}
+	
+	
+	
 	public String getPassword() {
 		return new String( password.getPassword() );
 	}

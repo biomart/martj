@@ -42,6 +42,7 @@ public abstract class Base extends TestCase {
   protected String host;
   protected String port;
   protected String databaseName;
+  protected String schema;
   protected String user;
   protected String password;
   protected String connectionName;
@@ -79,7 +80,7 @@ public abstract class Base extends TestCase {
 
     String tmp = p.getProperty("connection");
     connectionName =
-      (tmp != null && tmp.length() > 1) ? tmp : DetailedDataSource.defaultName(host, port, databaseName, user);
+      (tmp != null && tmp.length() > 1) ? tmp : DetailedDataSource.defaultName(host, port, databaseName, schema,user);
   }
 
   public void setUp() throws Exception {
@@ -93,6 +94,7 @@ public abstract class Base extends TestCase {
         host,
         port,
         databaseName,
+		schema,
         user,
         password,
         DetailedDataSource.DEFAULTPOOLSIZE,

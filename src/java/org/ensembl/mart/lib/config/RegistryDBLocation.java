@@ -38,6 +38,7 @@ public class RegistryDBLocation extends MartLocationBase {
 	private final String PORT_KEY = "port";
 	private final String DATABASE_TYPE_KEY = "databaseType";
 	private final String INSTANCE_NAME_KEY = "instanceName";
+	private final String SCHEMA_KEY = "Schema";
 	private final String USER_KEY = "user";
 	private final String PASSWORD_KEY = "password";
 
@@ -93,6 +94,19 @@ public class RegistryDBLocation extends MartLocationBase {
 		setAttribute(HOST_KEY, host);
 	}
 
+	
+	public String getSchema() {
+		return getAttribute(SCHEMA_KEY);
+	}
+
+	public void setSchema(String schema) {
+		setAttribute(SCHEMA_KEY, schema);
+	}
+
+	
+	
+	
+	
 	/**
 	 * Returns the name of the Mart instance.
 	 * @return String instanceName
@@ -217,7 +231,7 @@ public class RegistryDBLocation extends MartLocationBase {
 	public String getName() {
 		String name = super.getName();
 		if (name == null || "".equals(name))
-			name = DetailedDataSource.defaultName(getHost(), getPort(), getInstanceName(), getUser());
+			name = DetailedDataSource.defaultName(getHost(), getPort(), getInstanceName(), getSchema(),getUser());
 		return name;
 	}
 }

@@ -91,6 +91,7 @@ public class DetailedDataSource implements DataSource {
   private String host;
   private String port;
   private String databaseName;
+  private String schema;
   private int maxPoolSize;
   private String password;
   private String user;
@@ -119,6 +120,7 @@ public class DetailedDataSource implements DataSource {
     String host,
     String port,
     String databaseName,
+	String schema,
     String connectionString,
     String user,
     String password,
@@ -133,6 +135,9 @@ public class DetailedDataSource implements DataSource {
     assert databaseName == null
       || connectionString.indexOf(databaseName)
         != -1 : "database is null or is not in connection string";
+    
+    //assert schema != null : "schema is null";
+    
     assert user != null : "user is null";
     assert maxPoolSize >= 0;
     assert jdbcDriverClassName != null : "jdbcDriver is null";
@@ -141,6 +146,7 @@ public class DetailedDataSource implements DataSource {
     this.host = host;
     this.port = port;
     this.databaseName = databaseName;
+    this.schema = schema;
     this.connectionString = connectionString;
     this.user = user;
     this.password = password;
@@ -171,12 +177,13 @@ public class DetailedDataSource implements DataSource {
     String host,
     String port,
     String databaseName,
+	String schema,
     String connectionString,
     String user,
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
-  	this(dbType, host,port, databaseName, connectionString, user, password, maxPoolSize, jdbcDriverClassName, null);
+  	this(dbType, host,port, databaseName, schema,connectionString, user, password, maxPoolSize, jdbcDriverClassName, null);
   }
   
 
@@ -193,6 +200,7 @@ public class DetailedDataSource implements DataSource {
   public DetailedDataSource(
     String host,
     String database,
+	String schema,
     String user,
     String password) {
     this(
@@ -200,6 +208,7 @@ public class DetailedDataSource implements DataSource {
       host,
       DEFAULTPORT,
       database,
+	  schema,
       user,
       password,
       DEFAULTPOOLSIZE,
@@ -225,11 +234,12 @@ public class DetailedDataSource implements DataSource {
     String host,
     String port,
     String database,
+	String schema,
     String user,
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
-      this(databaseType, host, port, database, user, password, maxPoolSize, jdbcDriverClassName, defaultName(host, port, database, user));
+      this(databaseType, host, port, database, schema,user, password, maxPoolSize, jdbcDriverClassName, defaultName(host, port, database, schema,user));
     }
     
   /**
@@ -251,6 +261,7 @@ public class DetailedDataSource implements DataSource {
     String host,
     String port,
     String database,
+	String schema,
     String user,
     String password,
     int maxPoolSize,
@@ -262,6 +273,7 @@ public class DetailedDataSource implements DataSource {
       host,
       port,
       database,
+	  schema,
       connectionURL(databaseType, host, port, database),
       user,
       password,
@@ -363,14 +375,14 @@ public class DetailedDataSource implements DataSource {
    * @return databaseName@host:port
    */
   public String defaultName() {
-    return defaultName(host, port, databaseName, user);
+    return defaultName(host, port, databaseName,schema, user);
   }
 
   
   /**
    * @return databaseName@host:port
    */
-  public static String defaultName(String host, String port, String databaseName, String user) {
+  public static String defaultName(String host, String port, String databaseName, String schema,String user) {
     return user +"/" +databaseName + "@" + host + ":" + port;
   }
 
@@ -505,6 +517,13 @@ public class DetailedDataSource implements DataSource {
     return name;
   }
 
+  
+  public String getSchema() {
+    return schema;
+  }
+  
+  
+  
   /**
    * @return String user
    */
@@ -565,6 +584,7 @@ public class DetailedDataSource implements DataSource {
     buf.append(", host=").append(host);
     buf.append(", port=").append(port);
     buf.append(", databaseName=").append(databaseName);
+    buf.append(", schema=").append(schema);
     buf.append(", maxPoolSize=").append(maxPoolSize);
     buf.append(", password=").append(password);
     buf.append(", user=").append(user);

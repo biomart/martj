@@ -103,6 +103,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
   static private String user;
   private String database;
+  private String schema;
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
@@ -147,6 +148,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					databaseDialog.getHost(),
 					databaseDialog.getPort(),
 					databaseDialog.getDatabase(),
+					databaseDialog.getSchema(),
 					databaseDialog.getUser());
 
 			ds =
@@ -154,15 +156,17 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				databaseDialog.getDatabaseType(),
 				databaseDialog.getHost(),
 				databaseDialog.getPort(),
-				databaseDialog.getDatabase(),
+		        databaseDialog.getDatabase(),
+	            databaseDialog.getSchema(),
 				databaseDialog.getUser(),
 				databaseDialog.getPassword(),
 				10,
 				databaseDialog.getDriver(),
 				defaultSourceName);
-			user = databaseDialog.getUser();
+			
+		    user = databaseDialog.getUser();
 			database = databaseDialog.getDatabase();
-
+			
 			Connection conn = null;
 			try {
 			  conn = ds.getConnection();
@@ -599,6 +603,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
                 databaseDialog.getHost(),
                 databaseDialog.getPort(),
                 databaseDialog.getDatabase(),
+				databaseDialog.getSchema(),
                 databaseDialog.getUser());
 
         ds =
@@ -607,6 +612,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
             databaseDialog.getHost(),
             databaseDialog.getPort(),
             databaseDialog.getDatabase(),
+			databaseDialog.getSchema(),
             databaseDialog.getUser(),
             databaseDialog.getPassword(),
             10,
@@ -614,7 +620,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
             defaultSourceName);
         user = databaseDialog.getUser();
         database = databaseDialog.getDatabase();
-
+        
         Connection conn = null;
         try {
           conn = ds.getConnection();
@@ -844,9 +850,17 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       return;
     }
 
+    
+    String dbtype = databaseDialog.getDatabaseType();
+    String schema = null;
+    
+    if(dbtype.equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+    else schema = databaseDialog.getSchema();
+     
+    
     try {
       disableCursor();
-      String[] datasets = dbutils.getNaiveDatasetNamesFor(database);
+      String[] datasets = dbutils.getNaiveDatasetNamesFor(schema);
       String dataset =
         (String) JOptionPane.showInputDialog(
           null,
@@ -860,22 +874,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
 
       disableCursor();
-      // for oracle. arrayexpress: needs user, not instance
-      String dbtype = databaseDialog.getDatabaseType();
-      String qdb= null;
-
-      if (dbtype.startsWith("oracle"))
-        qdb = user.toUpperCase(); // not sure why needs uppercase
-      if (dbtype.equals("mysql")) qdb = database;
-      
-      // There is some confusion wrt to schema/db names across platforms.
-      // For postgres we set it to an unrestricted search ei null.
-      //  DatasetConfigTreeWidget relies on some db null, user null etc logic
-      // the type is temporarily set to pgsql until sorted.
-      
-      if (dbtype.equals("postgresql")) qdb = "pgsql";
-      
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
+     
+    
+      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, schema);
 
       frame.setVisible(true);
       desktop.add(frame);

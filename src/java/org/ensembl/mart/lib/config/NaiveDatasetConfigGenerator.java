@@ -44,6 +44,7 @@ import org.ensembl.mart.lib.LoggingUtils;
 public class NaiveDatasetConfigGenerator {
 
   private static String dbName = null;
+  private static String dbSchema = null;
   private static String dsName = null;
   private static String dbHost = null;
   private static String dbPort = null;
@@ -280,6 +281,7 @@ public class NaiveDatasetConfigGenerator {
           dbHost,
           dbPort,
           dbName,
+		  dbSchema,
           dbUser,
           dbPass,
           DetailedDataSource.DEFAULTPOOLSIZE,

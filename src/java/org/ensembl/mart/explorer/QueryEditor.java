@@ -384,6 +384,8 @@ public class QueryEditor extends JPanel {
   /**
    * @return list of datasources
    */
+  
+  /**
   static List testDatasources() throws ConfigurationException {
     Vector dss = new Vector();
     dss.add(
@@ -391,6 +393,7 @@ public class QueryEditor extends JPanel {
         "mysql",
         "ensembldb.ensembl.org",
         "3306",
+        "ensembl_mart_17_1",
         "ensembl_mart_17_1",
         "anonymous",
         null,
@@ -402,13 +405,14 @@ public class QueryEditor extends JPanel {
         "ensembldb.ensembl.org",
         "3306",
         "ensembl_mart_18_1",
+		
         "anonymous",
         null,
         10,
         "com.mysql.jdbc.Driver"));
     return dss;
   }
-
+*/
   public static void main(String[] args) throws Exception {
 
     // enable logging messages

@@ -1115,6 +1115,7 @@ public class MartShell {
     String martUser = null;
     String martPass = null;
     String martDatabase = null;
+    String martSchema = null;
     String martDriver = null;
     String sourceKey = null;
 
@@ -1251,6 +1252,12 @@ public class MartShell {
         if (thisLine != null)
           martDatabase = thisLine;
 
+        
+        thisLine = Readline.readline("\nSchema: ", false);
+        if (thisLine != null)
+          martSchema = thisLine;
+        
+        
         Readline.clearHistory();
         if (lastDBSettings[SOURCEKEYITER] != null)
           Readline.addToHistory(lastDBSettings[SOURCEKEYITER]);
@@ -1288,7 +1295,7 @@ public class MartShell {
       martPort = DetailedDataSource.DEFAULTPORT;
 
     if (sourceKey == null)
-      sourceKey = DetailedDataSource.defaultName(martHost, martPort, martDatabase, martUser);
+      sourceKey = DetailedDataSource.defaultName(martHost, martPort, martDatabase, martSchema,martUser);
 
     setLastDatabaseSettings(
       martDatabaseType,
@@ -1300,7 +1307,7 @@ public class MartShell {
       martDriver,
       sourceKey);
 
-    msl.addMart(martDatabaseType, martHost, martPort, martDatabase, martUser, martPass, martDriver, sourceKey);
+    msl.addMart(martDatabaseType, martHost, martPort, martDatabase, martSchema,martUser, martPass, martDriver, sourceKey);
   }
 
   private void setLastDatabaseSettings(
