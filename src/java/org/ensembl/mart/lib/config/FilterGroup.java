@@ -350,21 +350,6 @@ public class FilterGroup {
   	  return null;
   }
   
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
-
-		buf.append("[");
-		buf.append(" internalName=").append(internalName);
-		buf.append(", displayName=").append(displayName);
-		buf.append(", description=").append(description);
-		buf.append(", filterCollections=").append(filterCollections);
-		if (hasFilterSets)
-		  buf.append(", filterSets=").append(filterSets);
-		buf.append("]");
-
-		return buf.toString();
-	}
-
   public FilterSetDescription[] getAllFilterSetDescriptions() {
   	List fsds = new ArrayList();
   	
@@ -377,6 +362,55 @@ public class FilterGroup {
   	return f;
   }
   
+	/**
+	 * Returns the FilterCollection for a particular Filter (UIFilterDescription or UIDSFilterDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalName of the Filter Description for which the collection is being requested.
+	 * @return FilterCollection for the FilterDescription provided, or null
+	 */
+	public FilterCollection getCollectionForFilter(String internalName) {
+		if (! containsUIFilterDescription(internalName))
+			return null;
+		else if (lastColl == null) {
+			for (Iterator iter = filterCollections.keySet().iterator(); iter.hasNext();) {
+				FilterCollection fc = (FilterCollection) filterCollections.get((Integer) iter.next());
+				
+				if (fc.containsUIFilterDescription(internalName)) {
+					lastColl = fc;
+					break;
+				}
+			}
+			return lastColl;
+		}
+		else {
+			if (lastColl.getInternalName().equals(internalName))
+				return lastColl;
+			else {
+				lastColl = null;
+				return getCollectionForFilter(internalName);
+			}
+		}
+	}
+
+  /**
+   * debug output
+   */
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[");
+		buf.append(" internalName=").append(internalName);
+		buf.append(", displayName=").append(displayName);
+		buf.append(", description=").append(description);
+		buf.append(", filterCollections=").append(filterCollections);
+		if (hasFilterSets)
+			buf.append(", filterSets=").append(filterSets);
+		buf.append("]");
+
+		return buf.toString();
+	}
+		
   /**
 	 * Allows Equality Comparisons manipulation of FilterGroup objects
 	 */
@@ -417,4 +451,7 @@ public class FilterGroup {
 	
 	//cache one FilterSetDescription for a call to containsFilterSetDescription or getFilterSetDescriptionByName
 	private FilterSetDescription lastFSetDescription = null;
+	
+	//cache one FilterCollection for call to getCollectionForFilter
+	private FilterCollection lastColl = null;
 }

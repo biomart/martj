@@ -50,8 +50,7 @@ public class Dataset {
 	 * @param internalName String name to represent this Dataset
 	 * @param displayName String name to display.
 	 */
-	public Dataset(String martName, String displayName)
-		throws ConfigurationException {
+	public Dataset(String martName, String displayName) throws ConfigurationException {
 		this(martName, displayName, "");
 	}
 
@@ -64,8 +63,7 @@ public class Dataset {
 	 * @param description String description of the Dataset.
 	 * @throws ConfigurationException if required values are null.
 	 */
-	public Dataset(String martName, String displayName, String description)
-		throws ConfigurationException {
+	public Dataset(String martName, String displayName, String description) throws ConfigurationException {
 		if (martName == null)
 			throw new ConfigurationException("Datasets must contain a displayName");
 
@@ -241,9 +239,9 @@ public class Dataset {
 	 */
 	public AttributePage getAttributePageByName(String internalName) {
 		if (attributePageNameMap.containsKey(internalName))
-		  return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
+			return (AttributePage) attributePages.get((Integer) attributePageNameMap.get(internalName));
 		else
-		  return null;
+			return null;
 	}
 
 	/**
@@ -274,9 +272,9 @@ public class Dataset {
 	 */
 	public FilterPage getFilterPageByName(String internalName) {
 		if (filterPageNameMap.containsKey(internalName))
-		  return (FilterPage) filterPages.get((Integer) filterPageNameMap.get(internalName));
+			return (FilterPage) filterPages.get((Integer) filterPageNameMap.get(internalName));
 		else
-		  return null;
+			return null;
 	}
 
 	/**
@@ -298,7 +296,7 @@ public class Dataset {
 		* @return UIAttributeDescription
 		*/
 	public Object getUIAttributeDescriptionByName(String internalName) {
-		if ( containsUIAttributeDescription(internalName) )
+		if (containsUIAttributeDescription(internalName))
 			return lastAtt;
 		else
 			return null;
@@ -316,21 +314,17 @@ public class Dataset {
 		boolean found = false;
 
 		if (lastAtt == null) {
-			for (Iterator iter = (Iterator) attributePages.keySet().iterator();
-				iter.hasNext();
-				) {
-				AttributePage page =
-					(AttributePage) attributePages.get((Integer) iter.next());
+			for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
+				AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
 				if (page.containsUIAttributeDescription(internalName)) {
 					lastAtt = page.getUIAttributeDescriptionByName(internalName);
 					found = true;
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			if (lastAtt.getInternalName().equals(internalName))
-			  found = true;
+				found = true;
 			else {
 				lastAtt = null;
 				found = containsUIAttributeDescription(internalName);
@@ -349,7 +343,7 @@ public class Dataset {
 		* @return Object (either instanceof UIFilterDescription or UIDSFilterDescription)
 		*/
 	public Object getUIFilterDescriptionByName(String internalName) {
-		if ( containsUIFilterDescription(internalName) )
+		if (containsUIFilterDescription(internalName))
 			return lastFilt;
 		else
 			return null;
@@ -367,9 +361,7 @@ public class Dataset {
 		boolean found = false;
 
 		if (lastFilt == null) {
-			for (Iterator iter = (Iterator) filterPages.keySet().iterator();
-				iter.hasNext();
-				) {
+			for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 				FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
 				if (page.containsUIFilterDescription(internalName)) {
 					lastFilt = page.getUIFilterDescriptionByName(internalName);
@@ -377,22 +369,21 @@ public class Dataset {
 					break;
 				}
 			}
-		}
-		else {
+		} else {
 			String lastIntName;
 			if (lastFilt instanceof UIFilterDescription)
-				lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
+				lastIntName = ((UIFilterDescription) lastFilt).getInternalName();
 			else if (lastFilt instanceof UIDSFilterDescription)
-				lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+				lastIntName = ((UIDSFilterDescription) lastFilt).getInternalName();
 			else
 				lastIntName = ""; // should not get here
-			  
-			if ( lastIntName.equals(internalName) )
+
+			if (lastIntName.equals(internalName))
 				found = true;
-		  else {
-		  	lastFilt = null;
-		  	found = containsUIFilterDescription(internalName);			
-		  }
+			else {
+				lastFilt = null;
+				found = containsUIFilterDescription(internalName);
+			}
 		}
 		return found;
 	}
@@ -407,34 +398,34 @@ public class Dataset {
 	 * 
 	 * @return FilterPage object containing the requested UIFilterDescription
 	 */
-	public FilterPage getPageForUIFilterDescription(String internalName) {
-		for (Iterator iter = (Iterator) filterPages.keySet().iterator();iter.hasNext();) {
+	public FilterPage getPageForFilter(String internalName) {
+		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
 			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
-			
+
 			if (page.containsUIFilterDescription(internalName))
-        return page;
+				return page;
 		}
 		return null;
 	}
 
-/**
- * Returns the AttributePage containing a specific UIAttributeDescription named by internalName.
- * Note, if a UIAttributeDescription is contained in multiple AttributePages, this will
- * return the first AttributePage that contains the requested UIAttributeDescription.
- * 
- * @param internalName -- String internalName of the requested UIAttributeDescription
- * @return AttributePage containing requested UIAttributeDescription
- */
-  public AttributePage getPageForUIAttributeDescription(String internalName) {
-     for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
-      AttributePage page = (AttributePage) attributePages.get( (Integer) iter.next());
-      
-      if (page.containsUIAttributeDescription(internalName))
-      	return page;
-    }
-    return null;
-  }
-  
+	/**
+	 * Returns the AttributePage containing a specific UIAttributeDescription named by internalName.
+	 * Note, if a UIAttributeDescription is contained in multiple AttributePages, this will
+	 * return the first AttributePage that contains the requested UIAttributeDescription.
+	 * 
+	 * @param internalName -- String internalName of the requested UIAttributeDescription
+	 * @return AttributePage containing requested UIAttributeDescription
+	 */
+	public AttributePage getPageForAttribute(String internalName) {
+		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
+			AttributePage page = (AttributePage) attributePages.get((Integer) iter.next());
+
+			if (page.containsUIAttributeDescription(internalName))
+				return page;
+		}
+		return null;
+	}
+
 	/**
 	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a Dataset.
 	 * 
@@ -442,14 +433,14 @@ public class Dataset {
 	 */
 	public List getAllUIFilterDescriptions() {
 		List filts = new ArrayList();
-  	
+
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
 			FilterPage fp = (FilterPage) filterPages.get((Integer) iter.next());
-  		
-			filts.addAll( fp.getAllUIFilterDescriptions() );
+
+			filts.addAll(fp.getAllUIFilterDescriptions());
 		}
-		
-		return filts;  	
+
+		return filts;
 	}
 
 	/**
@@ -459,36 +450,127 @@ public class Dataset {
 	 */
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
-  	
+
 		for (Iterator iter = filterPages.keySet().iterator(); iter.hasNext();) {
 			AttributePage ap = (AttributePage) filterPages.get((Integer) iter.next());
-  		
+
 			atts.addAll(ap.getAllUIAttributeDescriptions());
 		}
-		
-		return atts;  	
+
+		return atts;
 	}
 
-   /**
-    * Convenience method to facilitate equals comparisons of datasets.
-    * 
-    * @param starBase -- String name of the starBase requested
-    * @return true if Dataset contains the starBase, false if not
-    */
-   public boolean containsStarBase(String starBase) {
-   	  return starBases.contains(starBase);		  
-   }
-   
+	/**
+	 * Convenience method to facilitate equals comparisons of datasets.
+	 * 
+	 * @param starBase -- String name of the starBase requested
+	 * @return true if Dataset contains the starBase, false if not
+	 */
+	public boolean containsStarBase(String starBase) {
+		return starBases.contains(starBase);
+	}
+
 	/**
 	 * Convenience method to facilitate equals comparisons of datasets.
 	 * 
 	 * @param pkey -- String name of the primary key requested
 	 * @return true if Dataset contains the primary key, false if not
-	 */   
-   public boolean containsPrimaryKey(String pkey) {
-   	return primaryKeys.contains(pkey);
-   }
-   
+	 */
+	public boolean containsPrimaryKey(String pkey) {
+		return primaryKeys.contains(pkey);
+	}
+  /**
+   * Returns a FilterGroup object for a specific Filter Description (UIFilterDescription, UIDSFilterDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of Filter Description for which a group is requested.
+   * @return FilterGroup for Attrribute Description provided, or null
+   */
+	public FilterGroup getGroupForFilter(String internalName) {
+		if (!containsUIFilterDescription(internalName))
+			return null;
+		else if (lastFiltGroup == null) {
+			lastFiltGroup = getPageForFilter(internalName).getGroupForFilter(internalName);
+			return lastFiltGroup;
+		} else {
+			if (lastFiltGroup.getInternalName().equals(internalName))
+				return lastFiltGroup;
+			else {
+				lastFiltGroup = null;
+				return getGroupForFilter(internalName);
+			}
+		}
+	}
+
+  /**
+   * Returns a FilterCollection object for a specific Filter Description (UIFilterDescription, UIDSFilterDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of Filter Description for which a collection is requested.
+   * @return FilterCollection for Attrribute Description provided, or null
+   */
+	public FilterCollection getCollectionForFilter(String internalName) {
+		if (!containsUIFilterDescription(internalName)) {
+			return null;
+		} else if (lastFiltColl == null) {
+      lastFiltColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
+      return lastFiltColl;
+		} else {
+      if (lastFiltColl.getInternalName().equals(internalName))
+        return lastFiltColl;
+      else {
+        lastFiltColl = null;
+        return getCollectionForFilter(internalName);
+      }
+		}
+	}
+
+  /**
+   * Returns an AttributeGroup object for a specific Attribute Description (UIAttributeDescription, UIDSAttributeDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of Attribute Description for which a group is requested.
+   * @return FilterGroup for Attrribute Description provided, or null
+   */
+	public AttributeGroup getGroupForAttribute(String internalName) {
+    if (!containsUIFilterDescription(internalName))
+      return null;
+    else if (lastAttGroup == null) {
+      lastAttGroup = getPageForAttribute(internalName).getGroupForAttribute(internalName);
+      return lastAttGroup;
+    } else {
+      if (lastAttGroup.getInternalName().equals(internalName))
+        return lastAttGroup;
+      else {
+        lastAttGroup = null;
+        return getGroupForAttribute(internalName);
+      }
+    }    
+	}
+  
+  /**
+   * Returns an AttributeCollection object for a specific Attribute Description (UIAttributeDescription, UIDSAttributeDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of Attribute Description for which a collection is requested.
+   * @return AttributeCollection for Attribute Description provided, or null
+   */
+	public AttributeCollection getCollectionForAttribute(String internalName) {
+    if (!containsUIAttributeDescription(internalName)) {
+      return null;
+    } else if (lastFiltColl == null) {
+      lastAttColl = getGroupForAttribute(internalName).getCollectionForAttribute(internalName);
+      return lastAttColl;
+    } else {
+      if (lastFiltColl.getInternalName().equals(internalName))
+        return lastAttColl;
+      else {
+        lastFiltColl = null;
+        return getCollectionForAttribute(internalName);
+      }
+    }
+	}
+
 	/**
 	 * Provides output useful for debugging purposes.
 	 */
@@ -507,42 +589,42 @@ public class Dataset {
 		return buf.toString();
 	}
 
-  /**
+	/**
 	 * Allows Equality Comparisons manipulation of Dataset objects
 	 */
 	public boolean equals(Object o) {
 		return o instanceof Dataset && hashCode() == ((Dataset) o).hashCode();
 	}
-	
-  public int hashCode() {
-  	int tmp = internalName.hashCode();
-  	
+
+	public int hashCode() {
+		int tmp = internalName.hashCode();
+
 		tmp = (31 * tmp) + displayName.hashCode();
 		tmp = (31 * tmp) + description.hashCode();
-		
+
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);
 			tmp = (31 * tmp) + element.hashCode();
 		}
-		
+
 		for (int i = 0, n = primaryKeys.size(); i < n; i++) {
 			String element = (String) primaryKeys.get(i);
 			tmp = (31 * tmp) + element.hashCode();
 		}
 
-    for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
 			FilterPage element = (FilterPage) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
-		
+
 		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
 			AttributePage element = (AttributePage) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
-		
-  	return tmp;
-  }
-  
+
+		return tmp;
+	}
+
 	//keep track of ordering of filter and attribute pages
 	private int apageRank = 0;
 	private int fpageRank = 0;
@@ -559,4 +641,16 @@ public class Dataset {
 	private UIAttributeDescription lastAtt = null;
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
+
+	//cache one FilterGroup for call to getGroupForFilter
+	private FilterGroup lastFiltGroup = null;
+
+	//cache one FilterCollection for call to getCollectionForFilter
+	private FilterCollection lastFiltColl = null;
+
+	//cache one AttributeGroup for call to getGroupForAttribute
+	private AttributeGroup lastAttGroup = null;
+
+	//cache one AttributeCollection for call to getCollectionForAttribute
+	private AttributeCollection lastAttColl = null;
 }

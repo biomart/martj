@@ -315,6 +315,63 @@ public class FilterPage {
   	return f;
   }
   
+  /**
+   * Returns a FilterGroup for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalname for which a group is requested
+   * @return FilterGroup object containing Filter Description with given internalName, or null.
+   */
+  public FilterGroup getGroupForFilter(String internalName) {
+  	if (! containsUIFilterDescription(internalName))
+  	  return null;
+  	else if (lastGroup == null) {
+  		for (Iterator iter = filterGroups.keySet().iterator(); iter.hasNext();) {
+				FilterGroup group = (FilterGroup) iter.next();
+				
+				if (group.containsUIFilterDescription(internalName)) {
+				  lastGroup = group;
+				  break;
+				}
+			}
+			return lastGroup;
+  	}
+  	else {
+  		if (lastGroup.getInternalName().equals(internalName))
+  		  return lastGroup;
+  		else {
+  			lastGroup = null;
+  			return getGroupForFilter(internalName);
+  		}
+  	}  	
+  }
+  
+  /**
+   * Returns a FilterCollection for a particular Filter Description (UIFilterDescription or UIDSFilterDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalname for which a collection is requested
+   * @return FilterCollection object containing Filter Description with given internalName, or null.
+   */
+  public FilterCollection getCollectionForFilter(String internalName) {
+		if (! containsUIFilterDescription(internalName))
+					return null;
+		else if (lastColl == null) {
+			lastColl = getGroupForFilter(internalName).getCollectionForFilter(internalName);
+			return lastColl;
+		} else {
+			if (lastColl.getInternalName().equals(internalName))
+			  return lastColl;
+			else {
+				lastColl = null;
+				return getCollectionForFilter(internalName);
+			}
+		}
+  }
+  
+  /**
+   * debug output
+   */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -361,4 +418,10 @@ public class FilterPage {
 	
 	//cache one FilterSetDescription for call to containsFilterSetDescription or getFilterSetDescrioptionByNae
 	private FilterSetDescription lastFSetDescription = null;
+	
+	//cache one FilterGroup for call to getGroupForFilter
+	private FilterGroup lastGroup = null;
+	
+	//cache one FilterCollection for call to getCollectionForFilter
+	private FilterCollection lastColl = null;
 }

@@ -219,6 +219,39 @@ public final class AttributeGroup {
 		return atts;
   }
   
+  /**
+   * Returns the AttributeCollection for a particular Attribute (UIAttributeDescription or UIDSAttributeDescription)
+   * based on its internalName.
+   * 
+   * @param internalName - String internalName of the Attribute Description for which the collection is being requested.
+   * @return AttributeCollection for the AttributeDescription provided, or null
+   */
+  public AttributeCollection getCollectionForAttribute(String internalName) {
+  	if (! containsUIAttributeDescription(internalName))
+  	  return null;
+  	else if (lastColl == null) {
+			for (Iterator iter = attributeCollections.keySet().iterator(); iter.hasNext();) {
+				AttributeCollection ac = (AttributeCollection) attributeCollections.get((Integer) iter.next());
+				if (ac.containsUIAttributeDescription(internalName)) {
+					lastColl = ac;
+					break;
+				}
+			}
+			return lastColl;
+  	}
+  	else {
+  		if (lastColl.getInternalName().equals(internalName))
+  		  return lastColl;
+  		else {
+  			lastColl = null;
+  			return getCollectionForAttribute(internalName);
+  		}
+  	}
+  }
+  
+  /**
+   * debug output
+   */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -259,4 +292,6 @@ public final class AttributeGroup {
 
 	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
 	private UIAttributeDescription lastAtt = null;
+	//cache one AttributeCollecton for call to getCollectionForAttribute
+	private AttributeCollection lastColl = null;
 }

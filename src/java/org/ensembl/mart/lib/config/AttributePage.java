@@ -245,6 +245,63 @@ public class AttributePage {
 		return atts;
 	}
 
+	/**
+	 * Returns a AttributeGroup for a particular Attribute Description (UIAttributeDescription or UIDSAttributeDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a group is requested
+	 * @return AttributeGroup object containing Attribute Description with given internalName, or null.
+	 */
+	public AttributeGroup getGroupForAttribute(String internalName) {
+		if (! containsUIAttributeDescription(internalName))
+			return null;
+		else if (lastGroup == null) {
+			for (Iterator iter = attributeGroups.keySet().iterator(); iter.hasNext();) {
+				AttributeGroup group = (AttributeGroup) iter.next();
+				
+				if (group.containsUIAttributeDescription(internalName)) {
+					lastGroup = group;
+					break;
+				}
+			}
+			return lastGroup;
+		}
+		else {
+			if (lastGroup.getInternalName().equals(internalName))
+				return lastGroup;
+			else {
+				lastGroup = null;
+				return getGroupForAttribute(internalName);
+			}
+		}  	
+	}
+  
+	/**
+	 * Returns a AttributeCollection for a particular Attribute Description (UIAttributeDescription or UIDSAttributeDescription)
+	 * based on its internalName.
+	 * 
+	 * @param internalName - String internalname for which a collection is requested
+	 * @return AttributeCollection object containing Attribute Description with given internalName, or null.
+	 */
+	public AttributeCollection getCollectionForAttribute(String internalName) {
+		if (! containsUIAttributeDescription(internalName))
+					return null;
+		else if (lastColl == null) { 
+		  lastColl = getGroupForAttribute(internalName).getCollectionForAttribute(internalName);
+		  return lastColl;
+		} else {
+			if (lastColl.getInternalName().equals(internalName))
+				return lastColl;
+			else {
+				lastColl = null;
+				return getCollectionForAttribute(internalName);
+			}
+		}
+	}
+	
+	/**
+	 * debug output
+	 */
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -288,4 +345,10 @@ public class AttributePage {
 
 	//cache one UIAttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
 	private UIAttributeDescription lastAtt = null;
+	
+	//cache one AttributeGroup for call to getGroupForAttribute
+	private AttributeGroup lastGroup = null;
+	
+	//cache one AttributeCollection for call to getCollectionForAttribute
+	private AttributeCollection lastColl = null;
 }
