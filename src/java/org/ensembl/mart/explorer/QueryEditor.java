@@ -558,7 +558,7 @@ public class QueryEditor extends JPanel {
       int oldLimit = query.getLimit();
       if ( limit>0 ) query.setLimit( limit );
 
-      engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, os);
+      engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
       os.close();
       
       if ( limit>0 ) query.setLimit( oldLimit );

@@ -51,6 +51,8 @@ public class InputPageContainer
 
 	private DatasetViewWidget datasetViewWidget;
 
+	private OutputSettingsPage outputSettingsPage;
+
   public InputPageContainer(
     Query query,
     QueryTreeView tree,
@@ -79,7 +81,9 @@ public class InputPageContainer
     add(
       new FiltersWidget(query, adaptorManager.getRootAdaptor(), tree),
       TreeNodeData.FILTERS.getLabel());
-    add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
+    
+    outputSettingsPage = new OutputSettingsPage(query); 
+    add(outputSettingsPage, TreeNodeData.FORMAT.getLabel());
   }
 
   public void setDatasetView(DatasetView datasetView) {
@@ -139,6 +143,13 @@ public class InputPageContainer
 	 */
 	public void openDatasetViewMenu() {
 		datasetViewWidget.openDatasetViewMenu();
+	}
+
+	/**
+	 * @return
+	 */
+	public OutputSettingsPage getOutputSettingsPage() {
+		return outputSettingsPage;
 	}
 
 }

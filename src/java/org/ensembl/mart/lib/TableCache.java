@@ -102,6 +102,8 @@ public class TableCache {
 		Table[] tables = new Table[tablesTmp.size()];
     
 		tablesTmp.toArray(tables);
+        // TODO check if this.queryHashCode() == FieldMapperCache.instance.queryHashcode(query)
+        // if so, remove one of them to avoid duplication.
 		mapperCache.put(FieldMapperCache.instance.queryHashcode(query), tables);
 
 		return tables;

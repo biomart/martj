@@ -28,6 +28,7 @@ import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 
+import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.Query;
 
 /**
@@ -50,10 +51,12 @@ public class OutputSettingsPage extends InputPage implements ActionListener {
 
 		ButtonGroup group = new ButtonGroup();
 		tabulated = new JRadioButton("Tabulated Format");
+    tabulated.setSelected( true );
 		tabulated.addActionListener(this);
     group.add(tabulated);
 
 		fasta = new JRadioButton("FASTA Format");
+    fasta.setEnabled( false );    
 		fasta.addActionListener(this);
 		group.add(fasta);
     
@@ -161,4 +164,12 @@ public class OutputSettingsPage extends InputPage implements ActionListener {
 		changeSupport.removePropertyChangeListener(propertyName, listener);
 	}
 
-											}
+	/**
+	 * @return
+	 */
+	public FormatSpec getFormat() {
+    if ( fasta.isSelected() ) return FormatSpec.FASTAFORMAT;
+    else if ( tab.isSelected() ) return FormatSpec.TABSEPARATEDFORMAT;
+    else return new FormatSpec(FormatSpec.TABULATED, ",");
+	}
+}
