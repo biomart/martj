@@ -3,18 +3,11 @@
 
 # copyright EBI, GRL 2003
 
-# TODO impl all updateQuery(), updatePage(), clear() methods. add
-# stubs to InputPage. incl attr from query -> page!
+
+# TODO 4 - Add Sequence attribute support: "sequence" label -> SequencePage
 
 # editor.queryChanged / only execute if queryChanged or db settings changed.
 
-# TODO 4 - Add Sequence attribute support
-
-# TODO "copy to window" <NAME>
-
-# Handle invalid port- currently freezes app.
-
-# handle gene_chrom_start / end, strand
 
 # TODO 3 - FilterManagerPage + XXXFilterPages. add implementation for
 # Filter . Clicking should cause a list of available (not already
@@ -22,6 +15,12 @@
 # respective config panel to be displayed. If the OK button is pressed
 # on these then they are added to the query. Support removing filter
 # and attribute items from quesry. "Delete" and or right click/delete.
+
+# TODO "copy to window" <NAME>
+
+# Handle invalid port- currently freezes app.
+
+# handle gene_chrom_start / end, strand
 
 # TODO Consider loading results piecemealfrom a file to avoid large
 # files being loaded in memory.
@@ -345,17 +344,6 @@ class DatabasePage(Page):
 	self.password.setText( DEFAULT_PASSWORD )
 	
 
-    def updateQuery(self, query):
-        # todo
-        pass
-
-    def updatePage(self, query):
-        # todo
-        pass
-
-    def clear(self):
-        # todo
-        pass
 
     def stateChanged(self, event=None):
         for l in self.changeListeners:
@@ -886,17 +874,24 @@ class QueryEditor(JPanel):
         self.add(  scrollPane, BorderLayout.WEST )
 	self.add( self.cardContainer , BorderLayout.CENTER )
 
+
+
     def addPage( self, page ):
 	self.cardContainer.add( page, page.name )
+
 
 
     def showPage( self, pageName ):
 	self.cardContainer.show( pageName )
 
+
+
     def clear(self):
         for node in self.rootNode.depthFirstEnumeration():
             if isinstance( node, QueryTreeNode ):
                 node.targetComponent.clear()
+
+
                 
     def updateQuery(self, query):
         for node in self.rootNode.depthFirstEnumeration():
@@ -904,11 +899,6 @@ class QueryEditor(JPanel):
                 node.targetComponent.updateQuery( query )
 
                 
-    def updatePage(self, query):
-        for node in self.rootNode.depthFirstEnumeration():
-            if isinstance( node, QueryTreeNode ):
-                node.targetComponent.updateQuery( query )
-
                 
     def updatePage(self, query):
         for node in self.rootNode.depthFirstEnumeration():
@@ -916,8 +906,10 @@ class QueryEditor(JPanel):
                 node.targetComponent.updatePage( query )
 
 
+
     def getFormatSpec(self):
         return self.formatPage.getFormatSpec()
+
 
 
 
