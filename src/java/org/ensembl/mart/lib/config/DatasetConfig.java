@@ -403,7 +403,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public void insertAttributePage(int position, AttributePage a) {
     lazyLoad();
-    System.out.println("PAGES\t" + attributePages.size());
+    //System.out.println("PAGES\t" + attributePages.size());
     attributePages.add(position, a);
     attributePageNameMap.put(a.getInternalName(), a);
   }
