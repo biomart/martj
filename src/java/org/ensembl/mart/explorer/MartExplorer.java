@@ -88,6 +88,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
+  private final JFrame THIS_FRAME = this;
+
   /**
    * Name of the initial registry file to be loaded at startup.
    * This file should be placed in the user's home directory.
@@ -124,18 +126,89 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private Feedback feedback = new Feedback(this);
 
   final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
-  
+
   final JCheckBox logging = new JCheckBox("Logging");
 
   private Help help = new Help();
+
+  // ----------- ACTIONS ----------------------
+
+  private Action newQueryAction =
+    new AbstractAction("New Query", createImageIcon("new.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      doNewQuery();
+    }
+  };
+
+  private Action executeAction =
+    new AbstractAction("Execute Query", createImageIcon("run.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doPreview();
+    }
+  };
+  private Action countRowsAction =
+    new AbstractAction("Count Rows", createImageIcon("count_rows.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doCountRows();
+    }
+  };
+
+  private Action countFocusAction =
+    new AbstractAction("Count Focus", createImageIcon("count_focus.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doCountFocus();
+    }
+  };
+
+  private Action saveResultsAction =
+    new AbstractAction("Save Results", createImageIcon("save.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doSaveResults();
+    }
+  };
+  
+  private Action stopAction =
+    new AbstractAction("Stop query", createImageIcon("stop.gif")) {
+    public void actionPerformed(ActionEvent event) {
+      doStop();
+    }
+  };
+  
+  
+  private Action saveAction = new AbstractAction("Save", null) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doSaveQuery();
+    }
+  };
+
+  private Action closeQueryAction = new AbstractAction("Close Query", null) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        remove((QueryEditor) tabs.getSelectedComponent());
+    }
+  };
+
+  private Action documentationAction =
+    new AbstractAction("Documentation", null) {
+    public void actionPerformed(ActionEvent event) {
+      help.showDialog(THIS_FRAME);
+    }
+  };
+
+  // -------------- METHODS ----------------
 
   public static void main(String[] args) throws ConfigurationException {
 
     //    LoggingUtil.setAllRootHandlerLevelsToFinest();
     //    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
 
-//    if (!LoggingUtil.isLoggingConfigFileSet())
-//      Logger.getLogger("org.ensembl.mart").setLevel(Level.FINE);
+    //    if (!LoggingUtil.isLoggingConfigFileSet())
+    //      Logger.getLogger("org.ensembl.mart").setLevel(Level.FINE);
     MartExplorer me = new MartExplorer();
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);
@@ -238,47 +311,14 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     return "Query_" + next;
   }
 
-  private Action newQueryAction =
-    new AbstractAction("New Query", createImageIcon("new.gif")) {
-    public void actionPerformed(ActionEvent event) {
-      doNewQuery();
-    }
-  };
-
-  private Action saveAction = new AbstractAction("Save", null) {
-    public void actionPerformed(ActionEvent event) {
-      doSave();
-    }
-  };
-
-  private Action executeAction =
-    new AbstractAction("Execute Query", createImageIcon("run.gif")) {
-    public void actionPerformed(ActionEvent event) {
-      doPreview();
-    }
-  };
-
-  private Action stopAction =
-    new AbstractAction("Stop query", createImageIcon("stop.gif")) {
-    public void actionPerformed(ActionEvent event) {
-      doStop();
-    }
-  };
-
-  private Action saveResultsAction =
-    new AbstractAction("Save Results", createImageIcon("save.gif")) {
-    public void actionPerformed(ActionEvent event) {
-      if (isQueryEditorSelected())
-        getSelectedQueryEditor().doSaveResults();
-    }
-  };
-
   private JToolBar createToolBar() {
     JToolBar tb = new JToolBar();
     tb.add(new ExtendedButton(newQueryAction, "Create a New Query"));
     tb.add(new ExtendedButton(saveResultsAction, "Save Results to file"));
     tb.addSeparator();
     tb.add(new ExtendedButton(executeAction, "Execute Query"));
+    tb.add(new ExtendedButton(countFocusAction, "Count Number Of Focus objects"));
+    tb.add(new ExtendedButton(countRowsAction, "Count Number of Focus objects"));
     tb.add(new ExtendedButton(stopAction, "Stop running Query"));
     return tb;
   }
@@ -286,10 +326,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   /**
    * 
    */
-  protected void doStop() {    
+  protected void doStop() {
     if (isQueryEditorSelected())
       getSelectedQueryEditor().doStop();
-    
+
   }
 
   /**
@@ -297,7 +337,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    */
   private JMenuBar createMenuBar() {
 
-    JMenu query = new JMenu("File");
+    JMenu query = new JMenu("Query");
 
     JMenuItem newQuery = new JMenuItem(newQueryAction);
     query.add(newQuery).setAccelerator(
@@ -322,12 +362,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     saveQueryAsSQL.setEnabled(false);
     query.add(saveQueryAsSQL);
 
-    JMenuItem close = new JMenuItem("Close Query");
-    close.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doRemoveQuery();
-      }
-    });
+    JMenuItem close = new JMenuItem(closeQueryAction);
     query.add(close).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_K, Event.CTRL_MASK));
 
@@ -335,15 +370,19 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     closeAll.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         while (tabs.getTabCount() > 0)
-          doRemoveQuery();
+          closeQueryAction.actionPerformed(null);
       }
     });
 
     query.add(closeAll);
 
+    query.addSeparator();
+
     JMenuItem execute = new JMenuItem(executeAction);
     query.add(execute).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
+    query.add(new JMenuItem(countRowsAction));
+    query.add(new JMenuItem(countFocusAction));
 
     query.addSeparator();
 
@@ -380,9 +419,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     JMenuItem adaptors = new JMenuItem("Adaptors");
     settings.add(adaptors).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK));
+    final JFrame parent = this;
     adaptors.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        doDatasetConfigSettings();
+        adaptorManager.showDialog(parent);
       }
     });
 
@@ -402,16 +442,18 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     logging.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doLogging(logging.isSelected());
-        }});
+      }
+    });
     advancedMenu.add(logging);
-    
+
     settings.addSeparator();
-    
+
     JMenuItem reset = new JMenuItem("Reset");
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doReset();
-        }});
+      }
+    });
     settings.add(reset);
 
     JMenu help = new JMenu("Help");
@@ -425,29 +467,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     });
     help.add(about);
 
-    JMenuItem docs = new JMenuItem("Documentation");
-    docs.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doDocumentation();
-      }
-
-    });
+    JMenuItem docs = new JMenuItem(documentationAction);
     help.add(docs);
-
-    /**
-    
-    JMenu exit = new JMenu("Exit");
-    JMenuItem exit_explorer = new JMenuItem("Exit Mart Explorer");
-    exit_explorer.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doExit();
-      }
-    
-    });
-    
-      exit.add(exit_explorer).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
-    **/
 
     JMenuBar all = new JMenuBar();
     all.add(query);
@@ -455,7 +476,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     all.add(help);
     return all;
   }
-
 
   /**
    * Sets the logging level for all handlers. true = Level.CONFIG, false = Level.WARNING.
@@ -465,12 +485,12 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    * @param log whether logging should be enabled for all handlers.
    */
   public void doLogging(boolean log) {
-      LoggingUtil.setAllHandlerLevels(log ? Level.CONFIG : Level.WARNING);
+    LoggingUtil.setAllHandlerLevels(log ? Level.CONFIG : Level.WARNING);
   }
 
   public void doReset() {
 
-    if (logging.isSelected()) 
+    if (logging.isSelected())
       logging.doClick();
 
     try {
@@ -488,41 +508,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     if (getNumDatasetConfigsAvailable() > 0)
       doNewQuery();
 
-  }
-    
-
-  protected void doDocumentation() {
-    help.showDialog(this);
-  }
-
-  protected void doSave() {
-    if (isQueryEditorSelected())
-      getSelectedQueryEditor().doSaveQuery();
-
-  }
-
-  /**
-   * 
-   */
-  protected void doPreview() {
-    if (isQueryEditorSelected())
-      getSelectedQueryEditor().doPreview();
-  }
-
-  /**
-   * 
-   */
-  protected void doDatasetConfigSettings() {
-    adaptorManager.showDialog(this);
-
-  }
-
-  /**
-   * Delete currently selected QueryBuilder from tabbed pane if one is 
-   * selected.
-   */
-  protected void doRemoveQuery() {
-    remove((QueryEditor) tabs.getSelectedComponent());
   }
 
   /**
