@@ -42,10 +42,10 @@ public class MartBuilder {
 			StringBuffer final_table = new StringBuffer(dataset + "__"+table_name+"__");
 			if (output.equals("M")){
 				linked_tables.final_table_type ="MAIN";
-				linked_tables.final_table_name= final_table.append("MAIN").toString();
+				linked_tables.final_table_name= final_table.append("main").toString();
 			} else { 
 				linked_tables.final_table_type = "DM";
-				linked_tables.final_table_name= final_table.append("DM").toString();
+				linked_tables.final_table_name= final_table.append("dm").toString();
 			}
 			linked_tables.dataset=dataset;
 			
@@ -61,7 +61,7 @@ public class MartBuilder {
 		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
 		
-	/**	
+/**		
 		// final key
 		String key = getUserInput("Final KEY: ");
 		
@@ -72,7 +72,7 @@ public class MartBuilder {
 			for (int j=0;j<columns.length;j++){
 				
 				if(columns[j].name.equals(key)){
-					columns[j].name = columns[j].name+"_key";
+					columns[j].setAlias(columns[j].name +"_key");
 			
 				System.out.println("resetting "+ columns[j].name);
 				
@@ -80,7 +80,7 @@ public class MartBuilder {
 			}
 		}
 		
-		*/
+	*/	
 		
 		// Include extensions
 		LinkedTables [] extlinked = source_schema.getLinkedTables();
