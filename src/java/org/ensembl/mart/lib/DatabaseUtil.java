@@ -191,6 +191,11 @@ public class DatabaseUtil {
 		String jdbcDriverClassName)
 		throws ConfigurationException {
 
+    if (connectionString == null)
+      throw new ConfigurationException("Recieved Null connectionString\n");
+    if ( jdbcDriverClassName == null)
+      throw new ConfigurationException("Recieved Null jdbcDriverClassName\n");
+      
 		try {
 
 			// load driver
