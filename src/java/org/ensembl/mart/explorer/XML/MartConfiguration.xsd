@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema elementFormDefault="qualified"
-    targetNamespace="file://org/ensembl/mart/explorer/XML"
-    xmlns="file://org/ensembl/mart/explorer/XML" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    targetNamespace="http://www.ensembl.org/EnsMart"
+    xmlns="http://www.ensembl.org/EnsMart" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <!-- attributeGroup for internalName, displayName, and description in the form that all objects require -->
     <xsd:attributeGroup name="desc_data">
         <xsd:attribute name="internalName" type="xsd:string" use="required"/>
