@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.event.ActionEvent;
@@ -150,6 +151,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       //        .setDatasetView(dsv);
     }
 
+    me.loadDefaultAdaptors();
+    
     if (me.adaptorManager.getRootAdaptor().getDatasetViews().length > 0)
       me.doNewQuery();
 
@@ -161,7 +164,6 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     createUI();
 
-    loadDefaultAdaptors();
   }
 
   /**
@@ -179,7 +181,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 				feedback.warning(e);
 			} 
     logger.fine("Loading default registry file: " + url);
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     adaptorManager.importRegistry( url );
+    setCursor(Cursor.getDefaultCursor());
   }
 
   /**

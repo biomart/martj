@@ -68,8 +68,6 @@ public class AdaptorManager extends Box {
 	/** Persistent preferences object used to hold user history. */
 	private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 	private LabelledComboBox combo = new LabelledComboBox("Adaptor");
-	private Cursor waitCursor = new Cursor(Cursor.WAIT_CURSOR);
-	private Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
 	private JFileChooser dsViewFileChooser = new JFileChooser();
 	private JFileChooser registryFileChooser = new JFileChooser();
 	private FileFilter xmlFilter = new FileFilter() {
@@ -167,8 +165,8 @@ public class AdaptorManager extends Box {
 	 */
 	public void importRegistry(URL url) {
 		try {
-			setCursor(waitCursor);
-			RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(url);
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+ 			RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(url);
 			DSViewAdaptor[] as = ra.getAdaptors();
 			for (int i = 0; i < as.length; i++) {
 				// TODO only add "leaf" node adaptors
@@ -178,7 +176,7 @@ public class AdaptorManager extends Box {
 			JOptionPane.showMessageDialog(this, "Problem loading the url: " + url
 					+ ": " + e.getMessage());
 		} finally {
-			setCursor(defaultCursor);
+      setCursor(Cursor.getDefaultCursor());
 		}
 	}
 	/**
@@ -309,7 +307,7 @@ public class AdaptorManager extends Box {
 			File f = dsViewFileChooser.getSelectedFile().getAbsoluteFile();
 			prefs.put(DS_VIEW_FILE_KEY, f.toString());
 			try {
-				setCursor(waitCursor);
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(f.toURL(), false);
 				// TODO resolve any name clashes, i.e. existing dsv with same name
 				//				this.adaptor.add(adaptor);
@@ -323,7 +321,7 @@ public class AdaptorManager extends Box {
 						"Problem loading the Failed to load file: " + f.toString() + ": "
 								+ e.getMessage());
 			} finally {
-				setCursor(defaultCursor);
+				setCursor(Cursor.getDefaultCursor());
 			}
 		}
 	}
