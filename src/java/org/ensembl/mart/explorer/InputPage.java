@@ -14,7 +14,7 @@ import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Field;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.DatasetView;
 
@@ -25,7 +25,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  * overridden by implemting classes wishing to respond to query change events.
  * </p>
  */
-public class InputPage extends JPanel implements QueryChangeListener {
+public class InputPage extends JPanel implements QueryListener {
 
   protected QueryTreeView tree;
 

@@ -37,7 +37,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -50,7 +50,7 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class DatasetViewWidget
 	extends InputPage
-	implements QueryChangeListener, ChangeListener {
+	implements QueryListener, ChangeListener {
 
 	private DatasetView[] oldViews;
 

@@ -12,7 +12,7 @@ import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.DatasetView;
 
@@ -22,7 +22,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  * @author craig
  *
  */
-public class QueryTest extends TestCase implements QueryChangeListener {
+public class QueryTest extends TestCase implements QueryListener {
 
   private Query q = null;
   private int numChanges = 0;

@@ -63,7 +63,7 @@ import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
@@ -98,7 +98,7 @@ public class QueryEditor extends JPanel {
    * is up tdate with regard to the query. stale = true if the query changes
    * after the listener is addded.
    */
-  private class ResultsStatus implements QueryChangeListener {
+  private class ResultsStatus implements QueryListener {
 
     private boolean stale = true;
 

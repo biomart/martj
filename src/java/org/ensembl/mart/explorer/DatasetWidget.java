@@ -32,7 +32,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryChangeListener;
+import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
@@ -42,7 +42,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  */
 public class DatasetWidget
   extends InputPage
-  implements QueryChangeListener, ChangeListener {
+  implements QueryListener, ChangeListener {
 
   private Logger logger = Logger.getLogger(DatasetWidget.class.getName());
   

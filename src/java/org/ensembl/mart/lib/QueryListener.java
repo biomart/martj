@@ -37,7 +37,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  *
  * @see Query
  */
-public interface QueryChangeListener {
+public interface QueryListener {
 
   void queryNameChanged(Query sourceQuery, String oldName, String newName);
 

@@ -182,7 +182,7 @@ public class Query {
       filters.remove(index);
       log();
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).filterRemoved(
+        ((QueryListener) listeners.get(i)).filterRemoved(
           this,
           index,
           filter);
@@ -256,7 +256,7 @@ public class Query {
     filters.add(index, filter);
     log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).filterAdded(this, index, filter);
+      ((QueryListener) listeners.get(i)).filterAdded(this, index, filter);
   }
 
   /**
@@ -270,7 +270,7 @@ public class Query {
       attributes.remove(index);
       log();
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).attributeRemoved(
+        ((QueryListener) listeners.get(i)).attributeRemoved(
           this,
           index,
           attribute);
@@ -289,7 +289,7 @@ public class Query {
     log();
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).sequenceDescriptionChanged(
+      ((QueryListener) listeners.get(i)).sequenceDescriptionChanged(
         this,
         oldSequenceDescription,
         this.sequenceDescription);
@@ -321,7 +321,7 @@ public class Query {
     this.primaryKeys = primaryKeys;
     log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).primaryKeysChanged(
+      ((QueryListener) listeners.get(i)).primaryKeysChanged(
         this,
         old,
         this.primaryKeys);
@@ -346,7 +346,7 @@ public class Query {
     log();
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).starBasesChanged(
+      ((QueryListener) listeners.get(i)).starBasesChanged(
         this,
         old,
         this.starBases);
@@ -362,7 +362,7 @@ public class Query {
       this.limit = inlimit;
       log();
       for (int i = 0; i < listeners.size(); ++i)
-        ((QueryChangeListener) listeners.get(i)).limitChanged(
+        ((QueryListener) listeners.get(i)).limitChanged(
           this,
           old,
           this.limit);
@@ -479,12 +479,12 @@ public class Query {
    */
   private String dataset;
 
-  public QueryChangeListener[] getQueryChangeListeners() {
-    return (QueryChangeListener[]) listeners.toArray(
-      new QueryChangeListener[listeners.size()]);
+  public QueryListener[] getQueryChangeListeners() {
+    return (QueryListener[]) listeners.toArray(
+      new QueryListener[listeners.size()]);
   }
 
-  public synchronized void removeQueryChangeListener(QueryChangeListener listener) {
+  public synchronized void removeQueryChangeListener(QueryListener listener) {
     listeners.remove(listener);
   }
 
@@ -541,7 +541,7 @@ public class Query {
     filters.add(index, newFilter);
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).filterChanged(
+      ((QueryListener) listeners.get(i)).filterChanged(
         this,
         oldFilter,
         newFilter);
@@ -561,7 +561,7 @@ public class Query {
     this.dataSource = dataSource;
     log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).datasourceChanged(
+      ((QueryListener) listeners.get(i)).datasourceChanged(
         this,
         oldDatasource,
         this.dataSource);
@@ -590,7 +590,7 @@ public class Query {
     log();
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).datasetChanged(
+      ((QueryListener) listeners.get(i)).datasetChanged(
         this,
         oldDatasetName,
         this.dataset);
@@ -618,7 +618,7 @@ public class Query {
     log();
 
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).queryNameChanged(
+      ((QueryListener) listeners.get(i)).queryNameChanged(
         this,
         old,
         this.queryName);
@@ -627,7 +627,7 @@ public class Query {
   /**
    * @param listener
    */
-  public synchronized void addQueryChangeListener(QueryChangeListener listener) {
+  public synchronized void addQueryChangeListener(QueryListener listener) {
     listeners.add(listener);
   }
 
@@ -649,7 +649,7 @@ public class Query {
     attributes.add(index, attribute);
     log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).attributeAdded(
+      ((QueryListener) listeners.get(i)).attributeAdded(
         this,
         index,
         attribute);
@@ -694,7 +694,7 @@ public class Query {
     this.datasetView = datasetView;
     log();
     for (int i = 0; i < listeners.size(); ++i)
-      ((QueryChangeListener) listeners.get(i)).datasetViewChanged(
+      ((QueryListener) listeners.get(i)).datasetViewChanged(
         this,
         old,
         datasetView);
