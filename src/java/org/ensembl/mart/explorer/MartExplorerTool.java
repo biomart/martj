@@ -247,7 +247,7 @@ public class MartExplorerTool {
     else {
 	    // all required attributes set, may need to set some defaults
 		if (formatspec.getFormat() == FormatSpec.TABULATED && formatspec.getSeparator() == null) {
-            logger.info("No separator specified for tabulated output, defaulting to tab separated");
+            logger.warn("No separator specified for tabulated output, defaulting to tab separated");
             formatspec.setSeparator("\t");
 		}
 	}
