@@ -47,14 +47,15 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.DatasetView;
 
 /**
- * TODO setDatasetViews() + setMenu()
- * TODO test
+ * TODO change update mechanism to be based on setting the datasetName / 
+ * internalName.
  * 
  * Widget representing dataset views available to user as a tree. 
  * 
- * The tree is constructed from all of the datasetView displayNamess. 
- * "__" is used as the "node element" separater in the displayName.
- * For example, imagine these datasetNames are provided, one per datasetView:
+ * The tree is constructed from all of the datasetNames 
+ * (datasetView.internalName). 
+ * "__" is used as the separator for menu names and leaf items in the tree.
+ * For example an array of datasetViews with these datasetNames:
  * <pre>
  * AAA
  * BBB
@@ -63,7 +64,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  * CCCCC__DDDDD__FFFF
  * 
  * </pre>
- * The Tree would be:
+ * Would be rendered as this tree:
  * <pre>
  * -AAA
  * -BBB
@@ -73,14 +74,15 @@ import org.ensembl.mart.lib.config.DatasetView;
  * </pre>
  *             
  * 
- * When a user selects a dataset view the dataset on the underlying query 
+ * When a user selects a datasetView the dataset on the underlying query 
  * is updated. 
  * 
  * When a program sets the datasetView query.dataset is updated and so is 
- * the widget.
+ * the selected item in the tree.
  * 
  * When query.dataset is updated this widget throws a runtime exception 
- * because it's new possible state might be ambiguous. 
+ * if it's new possible state is ambiguous.
+ *  
  * A single dataset could be represented by multiple datasetViews, in this 
  * case the widget cannot choose which view to select.  
  */
@@ -138,7 +140,7 @@ public class DatasetWidget
     // make the menu appear beneath the row of components 
     // containing the label, textField and button when displayed.
     treeMenu.setMaximumSize(new Dimension(0, 100));
-    treeMenu.add( treeTopMenu );
+    treeMenu.add(treeTopMenu);
 
     Box box = Box.createHorizontalBox();
     box.add(treeMenu);
@@ -163,10 +165,9 @@ public class DatasetWidget
    * Current selection is cleared if null. If no datasetView with that
    * name is available nothing happens.
    */
-  public void setSelectionDatasetViewDisplayName(String displayName) {
+  public void setDatasetViewByDisplayName(String displayName) {
 
-    if (displayName == lastSelectedDisplayName
-      || (displayName != null && displayName.equals(lastSelectedDisplayName)))
+    if (same(displayName, lastSelectedDisplayName))
       return;
 
     if (displayName != null) {
@@ -181,16 +182,26 @@ public class DatasetWidget
 
       String text = (String) displayNameToShortName.get(displayName);
       currentSelectedText.setText(text);
+
+      setNodeLabel("Dataset", text);
+
     } else {
+
       currentSelectedText.setText("");
       selectedDatasetView = null;
+      setNodeLabel("Dataset", "");
+      this.selectedDatasetView = null;
+
     }
+
     String datasetViewInternalName =
       (selectedDatasetView != null)
         ? selectedDatasetView.getInternalName()
         : null;
 
     updateQueryDatasetName(datasetViewInternalName);
+
+    lastSelectedDisplayName = displayName;
   }
 
   /**
@@ -199,6 +210,9 @@ public class DatasetWidget
    * @param displayName display name of the datasetView.
    */
   private void doUserSelectDatasetView(String displayName) {
+
+    if (same(displayName, lastSelectedDisplayName))
+      return;
 
     //  Confirm user really wants to change dataset
     if (query.getAttributes().length > 0 || query.getFilters().length > 0) {
@@ -220,7 +234,17 @@ public class DatasetWidget
       }
     }
 
-    setSelectionDatasetViewDisplayName(displayName);
+    setDatasetViewByDisplayName(displayName);
+  }
+
+  /**
+   * @param value1 String to compare with value2, can be null.
+   * @param value2 String to comare with value1, can be null.
+   * @return true if value1 and value2 are equal, otherwise false.
+   */
+  private boolean same(String value1, String value2) {
+    return value1 == value2 || (value1 != null && value1.equals(value2));
+
   }
 
   /**
@@ -245,7 +269,7 @@ public class DatasetWidget
       String datasetName = (String) evt.getNewValue();
 
       if (datasetName == null) {
-        setSelectionDatasetViewDisplayName(null);
+        setDatasetViewByDisplayName(null);
       } else if (
         selectedDatasetView != null
           && datasetName.equals(selectedDatasetView.getInternalName())) {
@@ -338,7 +362,8 @@ public class DatasetWidget
     availableDatasetNames.clear();
     displayNameToShortName.clear();
 
-    if ( datasetViews==null ) return;
+    if (datasetViews == null)
+      return;
 
     Set clashingDisplayNames = new HashSet();
     Set clashingDatasetNames = new HashSet();
@@ -418,19 +443,54 @@ public class DatasetWidget
       public int compare(Object o1, Object o2) {
         DatasetView d1 = (DatasetView) o1;
         DatasetView d2 = (DatasetView) o2;
-        return d1.getDisplayName().compareTo(d2.getDisplayName());
+        return d1.getInternalName().compareTo(d2.getInternalName());
       }
     });
 
     treeTopMenu.add(clearDatasetMenuItem);
-    
+
+    String[][] tree = new String[][] {
+    };
+    Map menus = new HashMap();
+
     for (int i = 0; i < datasetViews.length; i++) {
-      DatasetView view = datasetViews[i];
-      
-      String displayName = view.getDisplayName();
-      JMenuItem item = new JMenuItem(displayName);
-      treeTopMenu.add( item );   
-   
+      final DatasetView view = datasetViews[i];
+
+      final String datasetName = view.getInternalName();
+
+      String[] elements = datasetName.split("__");
+
+      for (int j = 0; j < elements.length; j++) {
+
+        String substring = elements[j];
+
+        JMenu parent = treeTopMenu;
+        if ( j>0 ) parent = (JMenu) menus.get(elements[j - 1]);
+
+        if (j + 1 == elements.length) {
+
+          // user selectable leaf node
+          JMenuItem item = new JMenuItem(substring);
+          item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+              doUserSelectDatasetView(view.getDisplayName());
+            }
+          });
+          parent.add( item );
+
+        } else {
+
+          // intermediate menu node
+          JMenu menu = (JMenu) menus.get(elements[j]);
+          if (menu == null) {
+            menu = new JMenu(substring);
+            menus.put(substring, menu);
+            parent.add(menu);
+          }
+
+        }
+
+      }
     }
 
   }

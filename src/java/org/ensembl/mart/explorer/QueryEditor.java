@@ -46,6 +46,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -134,7 +135,7 @@ public class QueryEditor
     initOutputPanel();
 
     datasetPage = new DatasetWidget(query);
-    addPage( datasetPage );
+    addPage(datasetPage);
 
     layoutPanes();
 
@@ -260,11 +261,18 @@ public class QueryEditor
 
   public static void main(String[] args) throws ConfigurationException {
 
-    String dvFilePath = "data/XML/homo_sapiens__ensembl_genes.xml";
-    URL dvURL = QueryEditor.class.getClassLoader().getResource(dvFilePath);
-    System.out.println(dvURL);
-    URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dvURL, true);
-    System.out.println("Loaded num views=" + adaptor.getDatasetViews().length);
+    CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
+
+    String[] urls = new String[] { 
+      "data/XML/homo_sapiens__ensembl_genes.xml"
+      ,"data/XML/homo_sapiens__snps.xml"   
+      ,"data/XML/homo_sapiens__vega_genes.xml"   
+      };
+    for (int i = 0; i < urls.length; i++) {
+      URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
+      adaptor.add(new URLDSViewAdaptor(dvURL, true));
+      System.out.println("Using DatasetView: " + dvURL);
+    }
 
     QueryEditor editor = new QueryEditor();
     editor.setDatasetViews(adaptor.getDatasetViews());
@@ -296,9 +304,12 @@ public class QueryEditor
 
     if (evt.getSource() == query) {
 
-      if ("dataset".equals(propertyName)) {
+      if ("datasetName".equals(propertyName)) {
 
-        // TODO update dataset node in tree
+        //        if ( newValue!=null )
+        datasetChanged(datasetPage.getDatasetView());
+        //        else
+        //          reset();
 
       } else if ("attribute".equals(propertyName)) {
 
@@ -329,7 +340,6 @@ public class QueryEditor
       while (enum.hasMoreElements())
         treeModel.nodeChanged((TreeNode) enum.nextElement());
 
-      System.out.println("Query Changed: " + query);
     }
 
     if (evt.getSource() == outputSettingsPage) {
@@ -371,6 +381,9 @@ public class QueryEditor
     // enables soon to be obsolete listeners to be garbage collected once they are removed from the views.
     query.removeAllPropertyChangeListeners();
 
+    //  but we still need to listen to changes keep tree up to date
+    query.addPropertyChangeListener(this);
+
     // We need to remove all pages from the inputPanel so that we can add pages with the same
     // name again later. e.g. attributesPage.
     inputPanel.removeAll();
@@ -382,17 +395,17 @@ public class QueryEditor
     addPage(datasetPage);
     treeModel.reload();
 
-    addAttributePages(dataset);
-    addFilterPages(dataset);
-    addOutputPage();
+    if (dataset != null) {
 
-    // select the attributes page
-    treeView.setSelectionPath(
-      new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
+      addAttributePages(dataset);
+      addFilterPages(dataset);
+      addOutputPage();
 
-    //  but we still need to listen to changes keep tree up to date
-    query.addPropertyChangeListener(this);
+      // select the attributes page
+      treeView.setSelectionPath(
+        new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
 
+    }
   }
 
   /**
@@ -465,7 +478,7 @@ public class QueryEditor
    */
   public void setDatasetViews(DatasetView[] views) {
     datasetViews = views;
-    datasetPage.setDatasetViews( datasetViews );
+    datasetPage.setDatasetViews(datasetViews);
   }
 
 }
