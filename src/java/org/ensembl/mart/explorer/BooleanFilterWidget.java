@@ -378,7 +378,7 @@ public class BooleanFilterWidget
         && !"".equals(tc)
         && f.equals(o.getFieldFromContext())
         && tc.equals(o.getTableConstraintFromContext())
-        && f.equals(o.getKeyFromContext()))
+        && k.equals(o.getKeyFromContext()))
         return i;
     }
 
