@@ -97,6 +97,7 @@ public class DatabaseDatasetConfigUtils {
   private final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
+  private final String ORACLE_CREATETABLESQL = "create table meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
@@ -1176,11 +1177,16 @@ public class DatabaseDatasetConfigUtils {
 		Connection conn = null;
 			try {
 			  conn = dsource.getConnection();
-			  PreparedStatement ps = conn.prepareStatement(CREATEMETATABLESQL);
+			  String CREATE_SQL = new String();
+			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_CREATETABLESQL;}
+			  else {CREATE_SQL = CREATEMETATABLESQL;}
+			  
+			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
+			  System.out.println ("create statement: "+CREATE_SQL);
 			  ps.executeUpdate();	
 			  conn.close();
 			} catch (SQLException e) {
-			  throw new ConfigurationException("Caught SQLException during create meta_configuration table\n");
+			  throw new ConfigurationException("Caught SQLException during create meta_configuration table\n" +e);
 			}
       	
       }
