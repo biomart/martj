@@ -25,7 +25,7 @@ public class CompiledSQLQueryTest extends Base {
   private Logger logger =
 		Logger.getLogger(CompiledSQLQueryTest.class.getName());
 
-	public final String STABLE_ID_REL = "data/gene_stable_id.test";
+	public final String STABLE_ID_REL = "data/unitTests/gene_stable_id.test";
 	private StatOutputStream stats = new StatOutputStream();
 	private FormatSpec formatspec = new FormatSpec(FormatSpec.TABULATED, "\t");
 
