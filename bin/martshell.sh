@@ -38,19 +38,22 @@ PLATFORM=`uname -ms`
 case "$PLATFORM" in
 [Ll]inux*)
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
   ;;
 *alpha*)
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/alpha"
+  LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
   ;;
 # arp
 *Darwin*Power*Mac*)
-  TMP_LD_LIBPATH="${TMP_:D_LIBPATH}:${TMP_ROOT}/lib/macosx/"
+  TMP_LD_LIBPATH="${DYLD_LIBRARY_PATH}:${TMP_ROOT}/lib/macosx/"
+  DYLD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
   ;;
 # arp
 *)
   echo "warning, this platform is not known to be supported, using linux libraries\n"
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
   ;;
 esac
 
-LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@
