@@ -97,6 +97,7 @@ public class LabelledComboBox extends Box implements ActionListener {
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	public void actionPerformed(ActionEvent e) {
+          
 		// this enables us to select the radio button if the combobox value changes
 		if ( radioButton!=null ) {
 			radioButton.setSelected( true );

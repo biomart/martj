@@ -18,32 +18,24 @@
 
 package org.ensembl.mart.explorer;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import org.ensembl.mart.lib.Query;
 
 /**
- * Manages a list of ChangeListeners and provides a method for
- * sending events to them all.
- **/
-public class ChangeListenerManager {
-	
-	private List changeListeners = new ArrayList();
+ * @author craig
+ *
+ * To change the template for this generated type comment go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+public class TreeFilterWidget extends InputPage {
 
-	public void addChangeListener(ChangeListener listener) {
-		changeListeners.add( listener );
-	}
+  /**
+   * @param query
+   * @param name
+   */
+  public TreeFilterWidget(Query query, String name) {
+    super(query, name);
+    // TODO Auto-generated constructor stub
+    //JPopupMenu
+  }
 
-	public boolean removeChangeListener(ChangeListener listener) {
-			return changeListeners.remove( listener );
-	}
-
-	public void stateChanged( ChangeEvent event ) {
-		for (int i = 0, n = changeListeners.size(); i < n; i++) {
-			ChangeListener listener = (ChangeListener) changeListeners.get(i);
-			listener.stateChanged( event );
-		}
-	}
 }

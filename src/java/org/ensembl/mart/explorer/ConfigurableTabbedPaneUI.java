@@ -6,9 +6,12 @@
 
 package org.ensembl.mart.explorer;
 
-import javax.swing.plaf.basic.BasicTabbedPaneUI;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Insets;
+
 import javax.swing.UIManager;
-import java.awt.*;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
 
 /**
  * UI component for rendering tabs where the background color of the

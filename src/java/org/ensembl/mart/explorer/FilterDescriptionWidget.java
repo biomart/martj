@@ -18,8 +18,7 @@
 
 package org.ensembl.mart.explorer;
 
-import javax.swing.JLabel;
-
+import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
@@ -29,16 +28,37 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
  * To change the template for this generated type comment go to
  * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class FilterDescriptionWidget extends InputPage {
+public class FilterDescriptionWidget extends InputPage{
+
+  protected UIFilterDescription filterDescription;
+  protected Filter filter;
 
 	/**
 	 * @param query
 	 * @param name
 	 */
 	public FilterDescriptionWidget(Query query, UIFilterDescription filterDescription) {
-		super(query, filterDescription.getDisplayName() );
+		
+    super(query, filterDescription.getDisplayName() );
+    this.filterDescription = filterDescription;
+    
 		// TODO Auto-generated constructor stub
-    add( new JLabel( filterDescription.getDisplayName() ) );
+    
 	}
+  
+
+  /**
+   * @return
+   */
+  public UIFilterDescription getFilterDescription() {
+    return filterDescription;
+  }
+
+  /**
+   * @return
+   */
+  public Filter getFilter() {
+    return filter;
+  }
 
 }

@@ -51,6 +51,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 			FilterPageWidget p = new FilterPageWidget(query, name, page);
 			tabbedPane.add(name, p);
 			filterDescriptionWidgets.addAll(p.getLeafWidgets());
+      leafWidgets.addAll( p.getLeafWidgets() );
 		}
 		resetTabColors();
 

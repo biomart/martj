@@ -169,7 +169,7 @@ public class Query {
 	public void setAttributes(Attribute[] attributes) {
     Object old = this.attributes;
 		this.attributes = new ArrayList(Arrays.asList(attributes));
-    changeSupport.firePropertyChange("attribute", old, this.attributes);
+    changeSupport.firePropertyChange("attributes", old, this.attributes);
 	}
 
 	/**
@@ -227,8 +227,7 @@ public class Query {
 	 * @param Filter filter
 	 */
 	public void addFilter(Filter filter) {
-    Object old = getFilters();
-		if (filter instanceof IDListFilter && ( (IDListFilter) filter).getType() != IDListFilter.STRING ) {
+    if (filter instanceof IDListFilter && ( (IDListFilter) filter).getType() != IDListFilter.STRING ) {
 		  unprocessedfilters.add((IDListFilter) filter);
 		  hasUnprocessedListFilters = true;
 		}
@@ -236,7 +235,7 @@ public class Query {
 		  filters.add(filter);
       
 
-    changeSupport.firePropertyChange("filters", old, getFilters() );
+    changeSupport.firePropertyChange("filter", null, filter );
 	}
 
   /**
@@ -283,10 +282,10 @@ public class Query {
    * @param DomainSpecificFilter dsfilter
    */
   public void addDomainSpecificFilter(DomainSpecificFilter dsfilter) {
-    Object old = getDomainSpecificFilters();
+    
     hasDomainSpecificFilters = true;
    	dsfilters.add(dsfilter);
-    changeSupport.firePropertyChange("domain_specific_filters", old, getDomainSpecificFilters() );  
+    changeSupport.firePropertyChange("domain_specific_filter", null, dsfilter );  
   }
   
   /**
@@ -598,6 +597,26 @@ public class Query {
       removePropertyChangeListener( propertyChangeListeners[i] );
     }
     
+  }
+
+  /**
+   * Replace the oldFilter with the new one. Fires a property change event
+   * where event.name="filters", event.oldValue=filter array before change, 
+   * event.newValue=filter array after change.
+   * @param oldFilter
+   * @param newFilter
+   * @throws RuntimeException if oldFilter is not currently in the query.
+   */
+  public void replaceFilter(BasicFilter oldFilter, BasicFilter newFilter) {
+
+    int index = filters.indexOf( oldFilter );
+    if ( index==-1 ) 
+      throw new RuntimeException("Old filter not in query: " + oldFilter);
+
+    filters.remove( index );
+    filters.add(index, newFilter );
+    
+    changeSupport.firePropertyChange("filter", oldFilter, newFilter );
   }
 
 }

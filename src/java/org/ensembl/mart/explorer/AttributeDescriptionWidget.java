@@ -62,7 +62,8 @@ public class AttributeDescriptionWidget
 			new FieldAttribute(
 				attributeDescription.getFieldName(),
 				attributeDescription.getTableConstraint());
-
+    setField( attribute );
+    
 		button = new JCheckBox(attributeDescription.getDisplayName());
 		button.addActionListener(new ActionListener() {
 			

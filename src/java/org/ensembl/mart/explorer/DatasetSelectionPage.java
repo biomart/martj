@@ -111,12 +111,15 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
 			}
 		}
 
-		if (update) {
+    Dataset dataset = getSelectedDataset();
+		if (update 
+        && combo.getText()!=null 
+        && dataset!=null  ) {
+        
 			// update the nodes label      
 			setNodeLabel(getName(), combo.getText());
 
 			// set new value on query
-			Dataset dataset = getSelectedDataset();
 			query.setStarBases(dataset.getStarBases());
 			query.setPrimaryKeys(dataset.getPrimaryKeys());
 		}

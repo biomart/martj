@@ -43,8 +43,6 @@ public class AttributeGroupWidget extends GroupWidget {
     Logger.getLogger(AttributeGroupWidget.class.getName());
 
   private int lastWidth;
-  private final static int NUM_COLUMNS = 2;
-  private final static int ROW_HEIGHT = 25;
 
   private AttributeGroup group;
 

@@ -76,7 +76,7 @@ public class FilterGroupWidget extends PageWidget {
       InputPage[] attributes = getFilterWidgets(collection);
       widgets.addAll(Arrays.asList(attributes));
       GridPanel p =
-        new GridPanel(attributes, 2, 25, collection.getDisplayName());
+        new GridPanel(attributes, 1, 35, collection.getDisplayName());
       panel.add(p);
 
     }
@@ -98,8 +98,11 @@ public class FilterGroupWidget extends PageWidget {
 
         UIFilterDescription a = (UIFilterDescription) element;
         FilterPageSetWidget.TYPES.add( a.getType() );
-        FilterDescriptionWidget w = new FilterDescriptionWidget(query, a);
-        pages.add(w);
+        
+        //FilterDescriptionWidget w = new FilterDescriptionWidget(query, a);
+        FilterDescriptionWidget w = createFilterDescriptionWidget(query, a);
+        if ( w!=null ) 
+          pages.add(w);
       } 
       else if (element instanceof UIDSFilterDescription) {
 
@@ -113,5 +116,29 @@ public class FilterGroupWidget extends PageWidget {
 
     return (InputPage[]) pages.toArray(new InputPage[pages.size()]);
 	}
+
+
+  private FilterDescriptionWidget createFilterDescriptionWidget(
+    Query query,
+    UIFilterDescription filterDescription) {
+      
+    String type = filterDescription.getType();
+    FilterDescriptionWidget w = null;
+
+    if ("text_entry".equals(type)) {
+      w = new TextFilterWidget( query, filterDescription );
+    } else if ("list".equals(type)) {
+    } else if ("boolean_num".equals(type)) {
+    } else if ("range".equals(type)) {
+    } else if ("boolean".equals(type)) {
+    }
+    
+    if ( w==null ) 
+      logger.warning("Unsupported filter: " 
+      + filterDescription.getClass().getName()
+      + ", " + filterDescription );
+
+    return w;   
+  }
 
 }

@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 
+import org.ensembl.mart.lib.Field;
 import org.ensembl.mart.lib.Query;
 
 /**
@@ -19,6 +20,7 @@ public class InputPage extends JPanel {
   private Object userObject;
 
   protected Query query;
+  private Field field;
   
   private String nodeLabel;  
   private MutableTreeNode node;
@@ -94,4 +96,20 @@ public class InputPage extends JPanel {
   public List getLeafWidgets() {
     return leafWidgets;
   }
+
+  /**
+   * @return field created by this InputPage, null if
+   * none set.
+   */
+  public Field getField() {
+    return field;
+  }
+  
+  /**
+   * @param field
+   */
+  protected void setField(Field field) {
+    this.field = field;
+  }
+
 }

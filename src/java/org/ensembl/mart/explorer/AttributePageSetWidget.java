@@ -18,7 +18,6 @@
 
 package org.ensembl.mart.explorer;
 
-import java.util.ArrayList;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.Dataset;
@@ -32,11 +31,8 @@ public class AttributePageSetWidget extends PageSetWidget {
 	 * @param query
 	 */
 	public AttributePageSetWidget(Query query, Dataset dataset) {
-		super(query, "Attributes");
-
-
-    
-    leafWidgets = new ArrayList();
+		
+    super(query, "Attributes");
     
 		AttributePage[] attributePages = dataset.getAttributePages();
 		for (int i = 0, n = attributePages.length; i < n; i++) {
