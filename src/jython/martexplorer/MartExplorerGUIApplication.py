@@ -40,7 +40,7 @@ from java.lang import Thread
 from java.io import File, FileOutputStream, ByteArrayOutputStream
 from java.net import URL
 from java.util import Arrays, Vector, Collections
-from java.awt import CardLayout, Dimension, BorderLayout, Rectangle, Cursor
+from java.awt import CardLayout, Dimension, BorderLayout, Rectangle, Cursor, Color
 from java.awt.event import ActionListener, MouseAdapter
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
@@ -728,11 +728,13 @@ class SimpleAttributePage(Page):
 
 class SequencePage(Page):
 
-    def __init__(self, attributeManager):
+    def __init__(self, attributePage):
         Page.__init__(self)
-        self.attributeManager = attributeManager
+        self.attributePage = attributePage
         self.field = "sequence"
         self.name = self.field + "_attribute_page"
+	self.node = DefaultMutableTreeNode( self )
+	self.nodeInTree = None
         self.remove = JButton("Remove", actionPerformed=self.removeAction)
 
         self.transcript = JRadioButton( "Transcripts/proteins"
@@ -794,31 +796,45 @@ class SequencePage(Page):
             ,self.includeExonSequence
             )
 
-        self.flank5 = JTextField(10)
-        flank5Panel = JPanel()
-        self.flank5Label = JLabel("5' Flanking region")
-        map( flank5Panel.add, (self.flank5, self.flank5Label) )
+	self.transcriptOnlyButtons = (
+	    self.includeUpStreamUTROnly
+	    ,self.includeUpStreamAndUTR
+	    ,self.includeDownStreamUTROnly
+	    ,self.includeDownStreamAndUTR
+	    ,self.includecDNASequence
+	    ,self.includeCodingSequence
+	    ,self.includePeptide
+	    )
 
+	max = (100,25)
+
+        self.flank5Label = JLabel("5' Flanking region")
+        self.flank5 = JTextField(10)
+	self.flank5.maximumSize=max
+
+	self.flank3Label = JLabel("3' Flanking region")
         self.flank3 = JTextField(10)
-        flank3Panel = JPanel()
-        self.flank3Label = JLabel("3' Flanking region")
-        map( flank3Panel.add, (self.flank3, self.flank3Label) )
+        self.flank3.maximumSize=max
+	
 
         self.typeGroup = ButtonGroup()
         self.includeGroup = ButtonGroup()
-        self.__group__()
+	self.noInclude = JRadioButton()
+	self.noType = JRadioButton()
+        map( self.includeGroup.add, self.includeButtons + ( self.noInclude, ) )
+        map( self.typeGroup.add, ( self.transcript, self.gene, self.noType) )
         self.dependencies()
 
         # add components to panel
         includePanel = Box.createVerticalBox()
-        from javax.swing import BorderFactory
-        includePanel.border = BorderFactory.createEmptyBorder(0, 30, 0, 0)
-        map( includePanel.add, self.includeButtons + ( flank5Panel, flank3Panel) )
-        map( self.add, (self.remove, self.gene, self.transcript, includePanel ) )
+	includePanel.border = BorderFactory.createEmptyBorder( 0,30,0,0 )
+        map( includePanel.add, self.includeButtons + ( self.flank5Label, self.flank5, 
+						       self.flank3Label, self.flank3 ) )
+        map( self.add, (self.remove, self.gene, self.transcript, includePanel) )
 
-        self.changeEvent = ChangeEvent( self )
-
-
+	self.add( Box.createVerticalGlue() )
+	self.changeEvent = ChangeEvent( self )
+	
 
     def dependencies( self ):
 
@@ -849,39 +865,53 @@ class SequencePage(Page):
 
 
     def actionPerformed(self, event=None):
-        self.dependencies()
-        self.stateChanged( self.changeEvent )
-        # todo update tree - emit stateChange!
 
+	# ensure only valid gene options selcted. Could convert this
+	# into a fix or cancel option rather than auto fix.
+	if self.gene.selected:
+	    for b in self.transcriptOnlyButtons:
+		if b.selected:
+		    # deselect invalid option
+		    self.noInclude.selected = 1
+		    JOptionPane.showMessageDialog(self.rootPane
+						  ,"Deselected \"" + b.text+ "\" because that option is unavailble when target is Genes."
+						  ,"Invalid sequence combination."
+						  ,JOptionPane.WARNING_MESSAGE )
+		
+	self.dependencies()
+	if not self.nodeInTree:
+	    self.attributePage.addNode( self.node )
+	    self.nodeInTree = 1
+	else:
+	    self.attributePage.refreshView()
+        #self.stateChanged( self.changeEvent ) # ?
 
 
     def removeAction( self, event=None ):
-        self.attributeManager.deselect( self )    
+	self.noInclude.selected = 1
+	self.noType.selected = 1
+        if self.nodeInTree:
+	    self.attributePage.removeNode( self.node )    
+	    self.nodeInTree = None
+	self.dependencies()
 
-
-
-    def htmlSummary(self):
-        if self.gene.selected: focus = " - gene "
-        elif self.transcript.selected: focus = " - transcript "
+    def toString(self):
+	""" Provides label to tree node. """
+        if self.gene.selected: focus = "Gene sequence"
+        elif self.transcript.selected: focus = "Transcript sequence"
         else: focus = ""
 
         include=""
         for b in self.includeButtons:
             if b.selected: include = " - " +b.text
         
-        return "sequence"  + focus + include
+        # " "*20 is a hack to ensure swing leaves enough room for long lables later
+	return focus + include + " "*60
 
 
 
-    def __group__( self ):
-        map( self.includeGroup.add, self.includeButtons )
-        map( self.typeGroup.add, ( self.transcript, self.gene ) )
 
 
-
-    def __ungroup__( self ):
-        map( self.includeGroup.remove, self.transcriptButtons )
-        map( self.typeGroup.remove, ( self.transcript, self.gene ) )
 
 
 
@@ -922,17 +952,26 @@ class AttributePage(Page):
     def __init__(self, cardContainer):
 	Page.__init__(self)
 	self.cardContainer = cardContainer
-	# these must be set before add/removeNode() is called.
-        self.tree = None
-        self.attributesNode = None
-        self.attributesNodePath = None
 	tp = JTabbedPane()
 	self.add( tp )
 	self.addTabs(tp, defaultAttributeConfiguration)
 	tp.add( SequencePage(self), "Sequence" )
 
+	# these must be set before add/removeNode() is called.
+        self.tree = None
+        self.attributesNode = None
+        self.attributesNodePath = None
+
+
+
     def addTabs(self, tabbedPane, configuration):
-	# tab -> group -> subGroup -> attribute widget
+
+	""" Adds the attribute tabs from the configuration
+	string. On screen structure is:
+
+	    tab -> group -> subGroup -> attribute widget
+
+	"""
 	
 	# add All AttributeSubPages (add user attributes to features, snps)
         for tabData in configuration:
@@ -967,7 +1006,7 @@ class AttributePage(Page):
 		    else:
 			radioGroup = None
 			clearButton = None
-                        
+                       
                     i = 0
                     for attribute in subGroup[1]:
 			am = AttributeManager( attribute, self, radioGroup )
@@ -996,9 +1035,9 @@ class AttributePage(Page):
 	self.tree.model.removeNodeFromParent( node)
 
     def refreshView(self):
-	print "todo refresh"
 	self.cardContainer.show( self.name )
 	self.tree.expandPath( self.attributesNodePath )
+	self.tree.repaint()
 	
     def htmlSummary(self):
 	return "<html><b>Attributes</b></html>"
