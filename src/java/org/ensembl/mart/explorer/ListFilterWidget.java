@@ -191,8 +191,12 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
           this);
       query.addFilter(filter);
 
+      setNodeLabel(
+        null,
+        filterDescription.getFieldName() + " = " + option.getValue());
+
       // TODO propagate OptionPushes if set, remember so we can remove them
-    
+
     }
 
   }
