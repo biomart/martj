@@ -18,6 +18,8 @@
 
 package org.ensembl.mart.lib.config;
 
+import org.ensembl.mart.lib.DetailedDataSource;
+
 /**
  * Interface for Objects providing access to one or more DatasetView Objects via
  * implimentation specific methods for accessing and parsing DatasetView.dtd compliant
@@ -234,6 +236,13 @@ public interface DSViewAdaptor {
    * @return display name for this adaptor.
    */
   public String getDisplayName();
+
+  /**
+   * All implementations should either return a datasource if available,
+   * otherwise null.
+   * @return datasource if available, otherwise null.
+   */
+  public DetailedDataSource getDataSource();
 
 
 }

@@ -69,6 +69,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   // TODO clone query
   // TODO load registry file
 
+  // TODO Query | Rename
+
   private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
   private static final String IMAGE_DIR = "data/image";

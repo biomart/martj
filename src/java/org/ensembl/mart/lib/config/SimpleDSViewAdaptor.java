@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.lib.config;
 
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.util.StringUtil;
 
 /**
@@ -28,6 +29,7 @@ import org.ensembl.util.StringUtil;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
+
 
   private final DatasetView dsv;
   private final String[] inames;
@@ -304,6 +306,16 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
    */
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
     return false;
+  }
+
+
+  /**
+   * This adapytor is not associated with a data source so it returns null.
+   * @return null.
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDataSource()
+   */
+  public DetailedDataSource getDataSource() {
+    return null;
   }
 
 }

@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.util.StringUtil;
 
 /**
@@ -450,5 +451,14 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     }
     
     return supports;
+  }
+
+  /**
+   * This adapytor is not associated with a data source so it returns null.
+   * @return null.
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDataSource()
+   */
+  public DetailedDataSource getDataSource() {
+    return null;
   }
 }

@@ -19,62 +19,83 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 import javax.swing.Box;
-import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
  * Widget shows the currently selected datasource and enables the 
  * user to change it.
  */
-public class DatasourceWidget extends InputPage {
+public class DatasourceWidget extends InputPage implements ChangeListener {
 
-  private static int MAX_CONNECTION_POOL_SIZE = 10;
+  private Feedback feedback = new Feedback(this);
 
-
-  private DataSourceManager martManager;
-  private JTextField martName = new JTextField(30);
-  private String none = "None";
   private static Logger logger =
     Logger.getLogger(DatasourceWidget.class.getName());
+
+  private AdaptorManager adaptorManager;
+  private LabelledComboBox chooser = new LabelledComboBox("DataSource");
+  private String none = "None";
 
   /**
    * @param query listens to changes in query.datasource, updates widget in response
    * @param datasources list of available datasources. A reference to this list
    * is kept so that the widget is always up to date.
    */
-  public DatasourceWidget(Query query, DataSourceManager martManager) {
+  public DatasourceWidget(Query query, AdaptorManager adaptorManager) {
 
     super(query);
 
-    this.martManager = martManager;
-    martName.setEditable(false);
-    setDatasource(null);
+    this.adaptorManager = adaptorManager;
+    createUI();
+    updateChooser();
+    chooser.addChangeListener(this);
+  }
 
-    JButton cb = new JButton("Change");
-    cb.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doChange();
+  private void createUI() {
 
+    chooser.setEditable(false);
+    add(chooser, BorderLayout.NORTH);
+  }
+
+
+  private void updateChooser() {
+    
+    List items = new ArrayList();
+    
+    try {
+      DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
+      for (int i = 0; i < as.length; i++) {
+        DSViewAdaptor a = as[i];
+        if ( a.getDataSource()!=null ) {
+          items.add(a.getName());
+          logger.warning( "Adding adaptor to chooser : "+a.getName() );
+        }
       }
-    });
+    } catch (ConfigurationException e) {
+      feedback.warning(e);
+    }
 
-    Box b = Box.createHorizontalBox();
-    b.add(new JLabel("Datasource "));
-    b.add(cb);
-    b.add(martName);
-    add(b, BorderLayout.NORTH);
+    Collections.sort( items );
+    items.add(0, none);
+    chooser.removeAllItems();
+    chooser.addAll( items );
+
   }
 
   /**
@@ -82,15 +103,28 @@ public class DatasourceWidget extends InputPage {
    * that is set on the query.
    */
   public void doChange() {
-    
-    martManager.setSelected(query.getDataSource());
-      
-    if (martManager.showDialog(this)) {
 
-      setDatasource(martManager.getSelected());
-      query.setDataSource( martManager.getSelected() );
+  }
+
+  /**
+   * Update UI in respose to change in query.datasource.
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+   */
+  public void datasourceChanged(
+    Query sourceQuery,
+    DataSource oldDatasource,
+    DataSource newDatasource) {
+
+    DetailedDataSource ds = (DetailedDataSource) newDatasource;
+
+    if (ds == null) {
+      chooser.setSelectedItem(none);
+    } else {
+      String item = ds.getDisplayName();
+      if (!chooser.hasItem(item))
+        chooser.addItem(item);
+      chooser.setSelectedItem(item);
     }
-
   }
 
   /**
@@ -105,9 +139,9 @@ public class DatasourceWidget extends InputPage {
     logger.setLevel(Level.FINEST);
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
-    DataSourceManager mm = QueryEditor.testDatasetViewSettings().getMartSettings();
+    AdaptorManager am = QueryEditor.testDatasetViewSettings();
     Query q = new Query();
-    DatasourceWidget dw = new DatasourceWidget(q, mm);
+    DatasourceWidget dw = new DatasourceWidget(q, am);
 
     JFrame f = new JFrame("Datasource Widget Editor (Test Frame)");
     Box p = Box.createVerticalBox();
@@ -120,30 +154,27 @@ public class DatasourceWidget extends InputPage {
   }
 
   /**
-   * Listen to query.datasource changes
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
+   * Updates query in response to user selecting a different datasource.
+   * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
    */
-  public void datasourceChanged(
-    Query sourceQuery,
-    DataSource oldDatasource,
-    DataSource newDatasource) {
+  public void stateChanged(ChangeEvent e) {
+    String selected = (String) chooser.getSelectedItem();
 
-    if ( newDatasource!=null && !martManager.contains( newDatasource ))
-      martManager.add( newDatasource );
-    setDatasource(newDatasource);
-  }
+    logger.warning("selected  = " + selected);
 
-  /**
-   * Update the label to correspond to the datasource.
-   * @param newDatasource
-   */
-  private void setDatasource(DataSource datasource) {
-    if (datasource == null)
-      martName.setText(none);
-    else
-      martName.setText(datasource.toString());
+    DataSource ds = null;
+    if (selected !=null && selected!=none)
+      try {
+        ds =
+          adaptorManager
+            .getRootAdaptor()
+            .getAdaptorByName(selected)
+            .getDataSource();
+      } catch (ConfigurationException e1) {
+        feedback.warning(e1);
+      }
+    query.setDataSource(ds);
 
   }
-
 
 }

@@ -74,6 +74,11 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     String host = ds.getHost();
     String port = ds.getPort();
     String databaseName = ds.getDatabaseName();
+
+    adaptorName = ds.getDisplayName();
+    logger.warning( "adaptorName = " + adaptorName );
+    
+
     try {
       //set up the preferences node with the datasource information as the root node
       xmlCache =
@@ -92,8 +97,6 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     tmp = (databaseName != null) ? (31 * tmp) + databaseName.hashCode() : tmp;
     tmp = (31 * tmp) + ds.getJdbcDriverClassName().hashCode();
     hashcode = tmp;
-    
-    adaptorName = user + "@" + host + ":" + port + "/" + databaseName;
     
     update();
   }
@@ -543,6 +546,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#setName(java.lang.String)
    */
   public void setName(String adaptorName) {
+    logger.warning("setName = " + adaptorName);
     this.adaptorName = adaptorName;
   }
 
@@ -553,6 +557,13 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
     return false;
+  }
+
+  /**
+   * @return
+   */
+  public DetailedDataSource getDataSource() {
+    return dataSource;
   }
 
 }

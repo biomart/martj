@@ -22,6 +22,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.logging.Logger;
 
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.InputSourceUtil;
 import org.ensembl.util.StringUtil;
 
@@ -345,5 +346,14 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
     // TODO Auto-generated method stub
     return false;
+  }
+  
+  /**
+   * This adapytor is not associated with a data source so it returns null.
+   * @return null.
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDataSource()
+   */
+  public DetailedDataSource getDataSource() {
+    return null;
   }
 }

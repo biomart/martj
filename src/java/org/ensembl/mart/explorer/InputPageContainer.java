@@ -50,7 +50,7 @@ public class InputPageContainer
   public InputPageContainer(
     Query query,
     QueryTreeView tree,
-    AdaptorManager datasetViewSettings) {
+    AdaptorManager adaptorManager) {
 
     super();
     this.query = query;
@@ -59,19 +59,19 @@ public class InputPageContainer
       tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
     add(
-      new DatasetViewWidget(query, datasetViewSettings, this),
+      new DatasetViewWidget(query, adaptorManager, this),
       "DATASET_VIEW");
     add(
-      new DatasourceWidget(query, datasetViewSettings.getMartSettings()),
+      new DatasourceWidget(query, adaptorManager),
       TreeNodeData.DATASOURCE.getLabel());
     add(
       new DatasetWidget(query),
       TreeNodeData.DATASET.getLabel());
     add(
-      new AttributesWidget(query, datasetViewSettings.getRootAdaptor(), tree),
+      new AttributesWidget(query, adaptorManager.getRootAdaptor(), tree),
       TreeNodeData.ATTRIBUTES.getLabel());
     add(
-      new FiltersWidget(query, datasetViewSettings.getRootAdaptor(), tree),
+      new FiltersWidget(query, adaptorManager.getRootAdaptor(), tree),
       TreeNodeData.FILTERS.getLabel());
     add(new OutputSettingsPage(query), TreeNodeData.FORMAT.getLabel());
   }
