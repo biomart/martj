@@ -1528,6 +1528,8 @@ public class MartShell {
 	private void parseCommand(String command) throws IOException, InvalidQueryException {
 		int cLen = command.length();
 
+    command = command.replaceAll("\\s;$", ";");
+    
 		if (cLen == 0)
 			return;
 		else if (command.startsWith(HELPC))
