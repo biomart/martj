@@ -92,7 +92,7 @@ import org.ensembl.mart.lib.config.FilterPage;
  * <p class="indent_small">then the sequences will return the requested flanking sequence (although some sequences are not flankable).</p>
  * <p>- dataset_name must match the internal_name of a dataset made available by the MartConfiguration made available for the mart being querried.</p>
  * <p>- filter_list is a comma-separated list of filter_requests.  filter_requests must match one of the following formats:</p>
- * <p class="indent_big">- filter_name excluded|included  -- specifies that objects should be returned only if they match (included),</p>
+ * <p class="indent_big">- filter_name excluded|only  -- specifies that objects should be returned only if they match (only),</p>
  * <p class="indent_big">or only if they do not match (excluded) this filter.</p>
  * <p class="indent_big">- filter_name =|!=|&gt;|&gt;=|&lt;|&lt;= value</p>
  * <p class="indent_big">- filter_name in url -- specifies that the system should harvest the items in the specified url,</p>
@@ -400,7 +400,7 @@ public class MartShellLib {
 		if (filterCondition.equals(BooleanFilter.isNULL) || filterCondition.equals(BooleanFilter.isNotNULL_NUM))
 			mqlbuf.append(" excluded");
 		else
-			mqlbuf.append(" included");
+			mqlbuf.append(" only");
 
 		return true;
 	}
@@ -1011,8 +1011,6 @@ public class MartShellLib {
 
 		nestedLevel++;
 
-		logger.info("Recieved nested query " + nestedQuery + "\n\nat nestedLevel " + nestedLevel + "\n");
-
 		if (nestedLevel > MAXNESTING) {
 			nestedLevel--;
 			throw new InvalidQueryException("Only " + MAXNESTING + " levels of nested Query are allowed\n");
@@ -1155,21 +1153,14 @@ public class MartShellLib {
 		if (!thisType.startsWith("boolean"))
 			throw new InvalidQueryException(filterName + " is not a boolean filter, cannot process with " + filterCondition + "\n");
 
-		if (!filterCondition.endsWith("cluded"))
+		if (!BOOLEANQUALIFIERS.contains(filterCondition))
 			throw new InvalidQueryException(filterCondition + " is not valid for a boolean filter\n");
 
 		String thisCondition = null;
-		if (thisType.equals("boolean_num")) {
-			if (filterCondition.equals("included"))
-				thisCondition = BooleanFilter.isNotNULL_NUM;
-			else
-				thisCondition = BooleanFilter.isNULL_NUM;
-		} else {
-			if (filterCondition.equals("included"))
-				thisCondition = BooleanFilter.isNotNULL;
-			else
-				thisCondition = BooleanFilter.isNULL;
-		}
+		if (thisType.equals("boolean_num"))
+		  thisCondition = BOOLEAN_NUMCONDITIONS[ BOOLEANQUALIFIERS.indexOf(filterCondition) ];
+		else 
+		  thisCondition = BOOLEAN_CONDITIONS[ BOOLEANQUALIFIERS.indexOf(filterCondition) ];
 
 		String handler = fdesc.getHandler(filterName);
 
@@ -1331,25 +1322,26 @@ public class MartShellLib {
 	private final String LEND = String.valueOf(LISTENDCHR);
 	private final String ID = "id";
 	private final String SEQDELIMITER = "+";
-	private final String EXCLUSIVE = "included";
 	private final String TABULATED = "tabulated";
 	private final String FASTA = "fasta";
 	public static final String FILTERDELIMITER = "and";
 
 	protected final List availableCommands = Collections.unmodifiableList(Arrays.asList(new String[] { USINGQSTART, GETQSTART }));
 
-	//Pattern for stored Command
-	public static final Pattern STOREPAT = Pattern.compile("(.*)\\s+(a|A)(s|S)\\s+(\\w+)$", Pattern.DOTALL);
-
 	// variables for subquery
 	private int nestedLevel = 0;
 	private final int MAXNESTING = 1;
 	// change this to allow deeper nesting of queries inside queries
 
-	public static List ALLQUALIFIERS = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "included", "excluded", "in" });
+  //Pattern for stored Command
+  public static final Pattern STOREPAT = Pattern.compile("(.*)\\s+(a|A)(s|S)\\s+(\\w+)$", Pattern.DOTALL);
+  
+	public static List ALLQUALIFIERS = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "only", "excluded", "in" });
 
-	public static List BOOLEANQUALIFIERS = Arrays.asList(new String[] { "included", "excluded" });
-
+	public static List BOOLEANQUALIFIERS = Arrays.asList(new String[] { "only", "excluded" });
+	public final String[] BOOLEAN_NUMCONDITIONS = { BooleanFilter.isNotNULL_NUM , BooleanFilter.isNULL_NUM	};
+	public final String[] BOOLEAN_CONDITIONS = { BooleanFilter.isNotNULL, BooleanFilter.isNULL	};
+ 
 	private Logger logger = Logger.getLogger(MartShellLib.class.getName());
 	private Properties storedCommands = new Properties();
 	private Hashtable dataSourceMap;
