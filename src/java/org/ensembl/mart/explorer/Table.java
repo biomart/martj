@@ -18,6 +18,8 @@
 
 package org.ensembl.mart.explorer;
 
+import java.util.Arrays;
+
 /**
  * Represents a table in the database; name of the table and it's columns.
  * 
@@ -29,7 +31,25 @@ package org.ensembl.mart.explorer;
 
 public class Table implements Comparable {
   
-  /** full table name. */
+
+	/**
+	 * Convenience method for getting a Table with a specified name from 
+	 * an array.
+	 * @param tableName
+	 * @param tables must be sorted
+	 * @return table if found, otherwise null.
+	 */
+	public static final Table findTable(String tableName, Table[] tables) {
+		Table result = null;
+		int pos = Arrays.binarySearch(tables, new Table(tableName, new String[]{}, tableName));
+		if ( pos>-1 && pos<tables.length ) {
+			Table tmp = tables[pos];
+			if ( tableName.equals(tmp.name) ) result = tmp;
+		}
+		return result;
+	}
+	
+	  /** full table name. */
   public String name;
 
   /** shortcut for table name that can be used instead of the full name. */

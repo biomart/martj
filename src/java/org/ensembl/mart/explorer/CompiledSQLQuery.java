@@ -32,6 +32,9 @@ import java.sql.*;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class CompiledSQLQuery {
+
+	private Table[] tablesCache = null;
+
 	/**
 	 * Constructs a CompiledSQLQuery object with a specified mySQL
 	 * database Connection, and a Query object
@@ -231,25 +234,11 @@ public class CompiledSQLQuery {
 		return true;
 	}
 
-	private String[] tables() throws SQLException {
-		ArrayList tables = new ArrayList();
+	
+		
 
-		ResultSet rs = conn.createStatement().executeQuery("show tables");
-		while (rs.next()) {
-			tables.add(rs.getString(1));
-		}
-		return toStringArray(tables);
-	}
+	
 
-	private String[] columns(String table) throws SQLException {
-		ArrayList columns = new ArrayList();
-
-		ResultSet rs = conn.createStatement().executeQuery("describe " + table);
-		while (rs.next()) {
-			columns.add(rs.getString(1));
-		}
-		return toStringArray(columns);
-	}
 
 	/**
 	 * Determines if value is in array.
@@ -261,9 +250,6 @@ public class CompiledSQLQuery {
 		return value.equals(array[Arrays.binarySearch(array, value)]);
 	}
 
-	private Table table(String tableName, String starName) throws SQLException {
-		return new Table(tableName, columns(tableName), starName);
-	}
 
 	/**
 	  * Creates mappers from database. First mappers correspond to single
@@ -271,6 +257,8 @@ public class CompiledSQLQuery {
 	  */
 	private void createMappers() throws SQLException {
 
+		mappers = FieldMapperCache.instance.cachedMappers( query );
+		if ( mappers!=null ) return;
 		
 		List dimensionMappers = new ArrayList();
 		List mainMappers = new ArrayList();
@@ -279,16 +267,16 @@ public class CompiledSQLQuery {
 		List dimensionTables = new ArrayList();
 		List mainTables = new ArrayList();
 		
-		String[] tableNames = tables();
+		Table[] tables = TableCache.instance.get(query, conn);
 		String[] starNames = query.getStarBases();
 
 		// Get all relevant dimension tables and create a mapper for each
-		for (int i = 0; i < tableNames.length; i++) {
-			String tableName = tableNames[i];
+		for (int i = 0; i < tables.length; i++) {
+			Table table = tables[i];
+			String tableName = table.name;
 			for (int j = 0; j < starNames.length; j++) {
 				String starName = starNames[j];
 				if (tableName.startsWith(starName) && tableName.endsWith("_dm")) {
-					Table table = table(tableName, starName);
 					dimensionMappers.add(new FieldMapper(new Table[] { table }, null));
 					dimensionTables.add(table);
 					break;
@@ -296,9 +284,10 @@ public class CompiledSQLQuery {
 			}
 		}
 
-		// Create a mapper for each star's "main" table
 		//	sort so that we can use Arrays.binarySearch() later	
-		Arrays.sort(tableNames);
+		Arrays.sort(tables);
+		
+		
 		String[] primaryKeys = query.getPrimaryKeys();
 		for (int i = 0; i < starNames.length; i++) {
 			String primaryKey = primaryKeys[i];
@@ -306,12 +295,8 @@ public class CompiledSQLQuery {
 				String starName = starNames[j];
 				String tableName = starName + "_main";
 
-				if (!contains(tableNames, tableName))
-					// TODO throw InvalidQueryException
-					throw new RuntimeException(
-						"Star has no _main table in database" + starName);
-
-				Table table = table(tableName, starName);
+				// Find a mapper for each star's "main" table
+				Table table = Table.findTable( tableName, tables);
 				mainMappers.add(new FieldMapper(new Table[] { table }, primaryKey));
 				mainTables.add(table);
 
@@ -336,6 +321,8 @@ public class CompiledSQLQuery {
 		mappers =
 			(FieldMapper[]) mappersList.toArray(
 				new FieldMapper[mappersList.size()]);
+
+		FieldMapperCache.instance.cacheMappers( query, mappers );
 		
 		StringBuffer buf = new StringBuffer();
 		if ( logger.isDebugEnabled()) {
@@ -346,6 +333,8 @@ public class CompiledSQLQuery {
 	private String[] toStringArray(List list) {
 		return (String[]) list.toArray(new String[list.size()]);
 	}
+
+
 
 	private String sql = null;
 	private Query query = null;
