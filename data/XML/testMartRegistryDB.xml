@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MartRegistry SYSTEM "file:data/XML/MartRegistry.dtd">
+<MartRegistry>
+  <DatasetViewLocation dataset="test" description="For Testing Purposes Only" displayName="Test of a DatasetView" internalName="test_dataset" locationType="database">
+    <DatabaseLocation databaseType="mysql" host="127.0.0.1" instanceName="ensembl_mart_17_1" user="ensro"/>
+  </DatasetViewLocation>
+</MartRegistry>

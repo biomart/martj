@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MartRegistry SYSTEM "file:data/XML/MartRegistry.dtd">
+<MartRegistry>
+  <DatasetViewLocation dataset="test" description="For Testing Purposes Only" displayName="Test of a DatasetView" internalName="test_dataset" locationType="url">
+    <URLLocation url="file:data/XML/testDatasetView.xml"/>
+  </DatasetViewLocation>
+</MartRegistry>
