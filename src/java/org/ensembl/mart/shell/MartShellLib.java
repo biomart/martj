@@ -1720,7 +1720,7 @@ public class MartShellLib {
             } else
               thisDatasetConfig = envDataset;
           }
-
+        
           query.setDataset(thisDatasetConfig.getDataset());
           query.setStarBases(thisDatasetConfig.getStarBases());
           query.setPrimaryKeys(thisDatasetConfig.getPrimaryKeys());
@@ -2114,7 +2114,9 @@ public class MartShellLib {
       if (query.getAttributes().length == 0 && query.getSequenceDescription() == null)
         throw new InvalidQueryException(
           "Invalid Query Recieved, no attributes or sequence description found " + newquery + "\n");
-
+      
+      //GenericHandler requires the query to have a DatasetConfig 
+	  query.setDatasetConfig(thisDatasetConfig);
       return query;
     } catch (NumberFormatException e) {
       throw new InvalidQueryException("Recieved NumberFormatException parsing MQL " + e.getMessage(), e);
