@@ -70,14 +70,7 @@ public class Transformation {
 				units.add(unit);
 			}
 			
-			/**
-			if (ref_tables[i].type.equals("left")){
-				TransformationUnit unit = new TransformationUnitLeft(ref_tables[i]);
-				if (ref_tables[i].type.equals("outer"))
-					unit.useFK=true;
-				units.add(unit);
-			}
-			*/
+			
 			if (ref_tables[i].type.equals("main")){
 				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
 				if (ref_tables[i].type.equals("outer"))
