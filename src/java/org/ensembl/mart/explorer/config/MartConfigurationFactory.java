@@ -140,13 +140,12 @@ public class MartConfigurationFactory {
      * supplying a URL.  Note, this requires that the DTD for the supplied document be available on the file system as well.
      * Users should make sure that the DOCTYPE declaration correctly locates the DTD for their document.
      *  
-     * @param conn - A java.sql.Connection object, used to fetch the dtd from the database, if not supplied as a URL.
      * @param martConfFile - URL for the MartConfiguration xml document.
      * 
      * @return MartConfiguration object for the mart defined by this document
      * @throws ConfigurationException.  Chains all Exceptions from URL, IO, etc. into ConfigurationExceptions
      */
-	public MartConfiguration getInstance(Connection conn, URL martConfFile) throws ConfigurationException {
+	public MartConfiguration getInstance(URL martConfFile) throws ConfigurationException {
 
 		try {
 			SAXBuilder builder = new SAXBuilder();
@@ -287,9 +286,7 @@ public class MartConfigurationFactory {
 		String dispname = element.getAttributeValue(displayName, "");
 		String desc = element.getAttributeValue(description, "");
 		String typeval = element.getAttributeValue(type, "");
-    int objCode = 0;
-    if (! element.getAttributeValue(objectCode, "").equals(""))
-      objCode = Integer.parseInt( element.getAttributeValue(objectCode) );
+    String objCode = element.getAttributeValue(objectCode, "");
 
 		UIDSFilterDescription f = new UIDSFilterDescription(intName, typeval, objCode, dispname, desc);
 
