@@ -994,7 +994,7 @@ public class MartShell {
   private void pageOutput(String[] lines) {
     int linesout = 0;
     for (int i = 0, n = lines.length; i < n; i++) {
-      if (linesout > MAXLINECOUNT) {
+      if (interactiveMode && (linesout > MAXLINECOUNT)) {
         linesout = 0;
         try {
           String quit = Readline.readline("\n\nHit Enter to continue, q to return to prompt: ", false);
