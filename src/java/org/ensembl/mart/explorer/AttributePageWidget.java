@@ -32,45 +32,65 @@ import org.ensembl.mart.lib.config.DSAttributeGroup;
  */
 public class AttributePageWidget extends PageWidget {
 
-  private final Logger logger = Logger.getLogger( AttributePageWidget.class.getName() );
+  private final Logger logger =
+    Logger.getLogger(AttributePageWidget.class.getName());
 
-	private AttributePage page;
-	/**
-	 * @param name
-	 * @param query
-	 */
-	public AttributePageWidget(Query query, String name, AttributePage page, QueryTreeView tree) {
+  private AttributePage page;
+  /**
+   * @param name
+   * @param query
+   */
+  public AttributePageWidget(
+    Query query,
+    String name,
+    AttributePage page,
+    QueryTreeView tree) {
 
-		super(query, name, tree);
+    super(query, name, tree);
 
-		this.page = page;
-    
+    this.page = page;
 
-    
-    
-		List attributeGroups = page.getAttributeGroups();
+    List attributeGroups = page.getAttributeGroups();
     for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
-			Object element = iter.next();
-			if ( element instanceof AttributeGroup ) {
-        AttributeGroup group = (AttributeGroup)element;
+      Object element = iter.next();
+   
+      if (element instanceof AttributeGroup) {
+   
+        AttributeGroup group = (AttributeGroup) element;
         String groupName = group.getDisplayName();
-    
-        AttributeGroupWidget w = new AttributeGroupWidget( query, groupName, group, tree );
-        tabbedPane.add( groupName, w);  
-        leafWidgets.addAll( w.getLeafWidgets() );
-			}
-      else if ( element instanceof DSAttributeGroup ) {
-        // TODO handle DSAttributeGroup
-        logger.warning( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
-        // create page
-        // add pag as tab
+
+        AttributeGroupWidget w =
+          new AttributeGroupWidget(query, groupName, group, tree);
+        tabbedPane.add(groupName, w);
+        leafWidgets.addAll(w.getLeafWidgets());
+   
+      } else if (element instanceof DSAttributeGroup) {
+   
+        // currently hard coded support for sequence attributes
+        DSAttributeGroup g = (DSAttributeGroup) element;
+   
+        if (g.getHandler().toLowerCase().equals("sequence")) {
+  
+          SequenceGroupWidget w = new SequenceGroupWidget(g.getDisplayName(),query,tree,g);
+          tabbedPane.add(g.getDisplayName(), w);
+          leafWidgets.addAll(w.getLeafWidgets());
+  
+        } else {
+
+          // TODO handle other DSAttributeGroups
+          logger.warning(
+            "TODO: handle DSAttributeGroup: "
+              + element.getClass().getName()
+              + element);
+          // create page
+          // add pag as tab
+        }
+      } else {
+        throw new RuntimeException(
+          "Unrecognised type in attribute group list: " + element);
       }
-      else {
-        throw new RuntimeException( "Unrecognised type in attribute group list: " 
-                                    + element);
-      }
-      
-		}
+
+    }
   }
 
 }
