@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,12 +60,12 @@ import org.ensembl.mart.util.LoggingUtil;
  */
 public class MartExplorer extends JFrame {
 
-/*
-  jdbc driver [mysql default, add, remove]
-  database
-  dataset (view)
-  a+f+os
- */
+  /*
+    jdbc driver [mysql default, add, remove]
+    database
+    dataset (view)
+    a+f+os
+   */
 
   // TODO add buttons: execute, cancel, save results, save query
   // TODO adout dialog
@@ -75,7 +76,7 @@ public class MartExplorer extends JFrame {
 
   // TODO manage datatabases: list, remove
   // TODO user change q.dataSource, select from list [fire query at different databases]
-        
+
   // TODO support id list filters
   // TODO chained queries
   // TODO user resolve datasetView name space clashes
@@ -91,7 +92,8 @@ public class MartExplorer extends JFrame {
 
   private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
-  private final static String TITLE = " MartExplorer(Developement version- incomplete and unstable)";
+  private final static String TITLE =
+    " MartExplorer(Developement version- incomplete and unstable)";
 
   private static final String CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 
@@ -121,17 +123,16 @@ public class MartExplorer extends JFrame {
   }
 
   public static void main(String[] args) throws ConfigurationException {
-    
-    if ( !LoggingUtil.isLoggingConfigFileSet() ) 
-       Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
+
+    if (!LoggingUtil.isLoggingConfigFileSet())
+      Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
     MartExplorer me = new MartExplorer();
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);
 
     // test mode preloads datasets and sets up a query ready to use.
     if (//true 
-    false
-    ) {
+    false) {
 
       me.addDataSource(
         DatabaseUtil.createDataSource(
@@ -153,7 +154,7 @@ public class MartExplorer extends JFrame {
 
   public MartExplorer() {
 
-    super( TITLE );
+    super(TITLE);
 
     prefs = Preferences.userNodeForPackage(this.getClass());
 
@@ -304,16 +305,17 @@ public class MartExplorer extends JFrame {
 
     });
     query.add(save);
-    
+
     query.addSeparator();
     JMenuItem importQuery = new JMenuItem("Import MQL");
     importQuery.setEnabled(false);
     query.add(importQuery);
     JMenuItem exportQuery = new JMenuItem("Export MQL");
     exportQuery.addActionListener(new ActionListener() {
-    public void actionPerformed(ActionEvent event) {
-      doExportMQL();
-    }});
+      public void actionPerformed(ActionEvent event) {
+        doExportMQL();
+      }
+    });
     //exportQuery.setEnabled(false);
     query.add(exportQuery);
 
@@ -337,28 +339,23 @@ public class MartExplorer extends JFrame {
     return all;
   }
 
-
-
   /**
    * 
    */
   protected void doExportMQL() {
     int index = queryEditorTabbedPane.getSelectedIndex();
     if (index > -1) {
-      QueryEditor qe = (QueryEditor) queryEditorTabbedPane.getComponentAt(index);
+      QueryEditor qe =
+        (QueryEditor) queryEditorTabbedPane.getComponentAt(index);
       try {
-      
-      String mql = qe.getMQL();
-      JOptionPane.showMessageDialog(this, mql);
-      
-      // TODO Save as dialog box
-      
-      } catch( InvalidQueryException e ) {
-        e.printStackTrace();
+        qe.doExportMQL();
+      } catch (InvalidQueryException e) {
+        warn(e.getMessage());
+      } catch (IOException e) {
         warn(e.getMessage());
       }
     } else {
-      warn( "No Query to export to MQL.");
+      warn("No Query to export to MQL.");
     }
   }
 
@@ -571,8 +568,6 @@ public class MartExplorer extends JFrame {
   	 */
   public void doNewQuery() {
 
-
-
     DatasetView[] views = getDatasetViews();
     if (views.length == 0) {
       warn(
@@ -581,7 +576,7 @@ public class MartExplorer extends JFrame {
     } else {
       QueryEditor qe = new QueryEditor();
       qe.setDatasetViews(views);
-      qe.setName( nextQueryBuilderTabLabel() );
+      qe.setName(nextQueryBuilderTabLabel());
       addQueryEditor(qe);
     }
 

@@ -45,14 +45,17 @@ import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
@@ -118,6 +121,8 @@ public class QueryEditor
 
   private Engine engine = new Engine();
 
+  private JFileChooser mqlFileChooser = new JFileChooser();
+
   private DefaultTreeModel treeModel;
   private DefaultMutableTreeNode rootNode;
 
@@ -163,6 +168,18 @@ public class QueryEditor
     addPage(datasetPage);
 
     layoutPanes();
+
+    FileFilter xmlFilter = new FileFilter() {
+      public boolean accept(File f) {
+        return f != null
+          && (f.isDirectory() || f.getName().toLowerCase().endsWith(".mql"));
+      }
+      public String getDescription() {
+        return "MQL Files";
+      }
+    };
+
+    mqlFileChooser.addChoosableFileFilter(xmlFilter);
 
   }
 
@@ -691,6 +708,30 @@ public class QueryEditor
     mql = msl.QueryToMQL(query, datasetView);
 
     return mql;
+  }
+
+  /**
+   * Exports mql to a file chosen by user.
+   */
+  public void doExportMQL() throws InvalidQueryException, IOException {
+
+    if ( mqlFileChooser.getSelectedFile()==null ) {
+      mqlFileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+      mqlFileChooser.setSelectedFile( new File(query.getQueryName()+ ".mql"));
+    }
+
+    String mql = getMQL();
+
+    if (mqlFileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+      return;
+
+    File f = mqlFileChooser.getSelectedFile().getAbsoluteFile();
+    FileOutputStream os;
+    os = new FileOutputStream(f);
+    os.write(mql.getBytes());
+    os.write('\n');
+    os.close();
+
   }
 
 }
