@@ -74,7 +74,7 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 		logger.fine("optional=" + optional);
 
 		try {
-			DSConfigAdaptor[] adaptors = manager.getRootAdaptor().getAdaptors();
+			DSConfigAdaptor[] adaptors = manager.getRootAdaptor().getLeafAdaptors();
 			// TODO sort adaptors by name
 
 			for (int i = 0; i < adaptors.length; i++) {
@@ -82,7 +82,7 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 				DSConfigAdaptor adaptor = adaptors[i];
 
 				// Skip composite adaptors
-				if (adaptor.getAdaptors().length > 0)
+				if (adaptor.getLeafAdaptors().length > 0)
 					continue;
 
 				// skip adaptors which lack a "default" config

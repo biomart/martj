@@ -455,7 +455,7 @@ public class DatabaseDSConfigAdaptor implements MultiDSConfigAdaptor, Comparable
    * return empty DSConfigAdaptor[]
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
    */
-  public DSConfigAdaptor[] getAdaptors() throws ConfigurationException {
+  public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
     // DatabaseDSConfigAdaptor objects do not contain child adaptors
     return new DSConfigAdaptor[0];
   }

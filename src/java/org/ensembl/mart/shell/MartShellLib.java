@@ -958,7 +958,7 @@ public class MartShellLib {
   //recursively harvest DB and URL adaptors from composite/registry adaptors
   public void harvestAdaptorsFrom(DSConfigAdaptor adaptor) throws ConfigurationException {
     if (adaptor instanceof CompositeDSConfigAdaptor) {
-      DSConfigAdaptor[] adaptors = adaptor.getAdaptors();
+      DSConfigAdaptor[] adaptors = adaptor.getLeafAdaptors();
 
       //recursively harvest until adaptor is not a CompositeDSConfigAdaptor
       for (int i = 0, n = adaptors.length; i < n; i++)

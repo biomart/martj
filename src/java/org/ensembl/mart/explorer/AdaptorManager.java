@@ -172,7 +172,7 @@ public class AdaptorManager extends Box {
 		try {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
  			RegistryDSConfigAdaptor ra = new RegistryDSConfigAdaptor(url);
-			DSConfigAdaptor[] as = ra.getAdaptors();
+			DSConfigAdaptor[] as = ra.getLeafAdaptors();
 			for (int i = 0; i < as.length; i++) {
 				// TODO only add "leaf" node adaptors
 				add(as[i]);
@@ -189,11 +189,11 @@ public class AdaptorManager extends Box {
 	 *  
 	 */
 	private void doDeleteAll() {
-		DSConfigAdaptor as[] = rootAdaptor.getAdaptors();
+		DSConfigAdaptor as[] = rootAdaptor.getLeafAdaptors();
 		for (int i = 0; i < as.length; i++)
 			rootAdaptor.remove(as[i]);
 		try {
-			updateWidget(rootAdaptor.getAdaptors());
+			updateWidget(rootAdaptor.getLeafAdaptors());
 			storePrefs();
 		} catch (ConfigurationException e) {
 			feedback.warning(e);
@@ -261,7 +261,7 @@ public class AdaptorManager extends Box {
 			}
 			if (reg != null) {
 				RegistryDSConfigAdaptor tmp = new RegistryDSConfigAdaptor(reg);
-				DSConfigAdaptor[] adaptors = tmp.getAdaptors();
+				DSConfigAdaptor[] adaptors = tmp.getLeafAdaptors();
 				for (int i = 0; i < adaptors.length; i++) {
 					add(adaptors[i]);
 					logger.fine("Loaded Adaptor:" + adaptors[i].getName()
@@ -290,7 +290,7 @@ public class AdaptorManager extends Box {
 				newIndex = index - 1;
 			// remove the selected item
 			rootAdaptor.remove((DSConfigAdaptor) optionToConfig.get(selected));
-			updateWidget(rootAdaptor.getAdaptors());
+			updateWidget(rootAdaptor.getLeafAdaptors());
 			// select the "next" item
 			if (newIndex > -1)
 				combo.setSelectedItem(combo.getItemAt(newIndex));
@@ -378,7 +378,7 @@ public class AdaptorManager extends Box {
 	}
 	public void add(DSConfigAdaptor a) throws ConfigurationException {
 		rootAdaptor.add(a);
-		updateWidget(rootAdaptor.getAdaptors());
+		updateWidget(rootAdaptor.getLeafAdaptors());
 		storePrefs();
 	}
 	private void storePrefs() throws ConfigurationException {
@@ -417,7 +417,7 @@ public class AdaptorManager extends Box {
 	public void reset() {
 		rootAdaptor = new RegistryDSConfigAdaptor();
 		try {
-			updateWidget(rootAdaptor.getAdaptors());
+			updateWidget(rootAdaptor.getLeafAdaptors());
 			storePrefs();
 		} catch (ConfigurationException e) {
 			feedback.warning(e);

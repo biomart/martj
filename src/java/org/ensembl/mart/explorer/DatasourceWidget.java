@@ -78,7 +78,7 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
 
     Set items = new HashSet();
 
-    DSConfigAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
+    DSConfigAdaptor as[] = adaptorManager.getRootAdaptor().getLeafAdaptors();
     for (int i = 0; i < as.length; i++) {
       DSConfigAdaptor a = as[i];
       if (a.getDataSource() != null) {

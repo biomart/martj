@@ -1274,7 +1274,7 @@ public class MartShell {
     if (completionOn) {
       try {
         List martNames = new ArrayList();
-        DSConfigAdaptor[] adaptorNames = msl.adaptorManager.getAdaptors();
+        DSConfigAdaptor[] adaptorNames = msl.adaptorManager.getLeafAdaptors();
         for (int i = 0, n = adaptorNames.length; i < n; i++) {
           DSConfigAdaptor adaptor = adaptorNames[i];
           if (!(adaptor instanceof URLDSConfigAdaptor))

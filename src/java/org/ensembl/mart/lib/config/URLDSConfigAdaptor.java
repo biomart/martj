@@ -255,7 +255,7 @@ public class URLDSConfigAdaptor implements DSConfigAdaptor, Comparable {
    * @return empty DSConfigAdaptor[] 
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getAdaptors()
    */
-  public DSConfigAdaptor[] getAdaptors() throws ConfigurationException {
+  public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException {
     return new DSConfigAdaptor[0];
   }
 

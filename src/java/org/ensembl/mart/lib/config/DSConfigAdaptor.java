@@ -154,13 +154,13 @@ public interface DSConfigAdaptor {
   public String[] getDatasetNames(String adaptorName) throws ConfigurationException;
   
   /**
-   * Returns all DSConfigAdaptor objects contained with this Object (which may be a zero length list
-   * for some implimentations). Note, this only returns the adaptors contained by this adaptor, and does
-   * not return child adaptors of children to this Adaptor.
+   * Returns all primitive DSConfigAdaptor objects contained with this Object (which may be a zero length list
+   * for some implimentations). This recurses through composite adaptors and only returns those adaptors 
+   * that do not themselves contain adaptors, i.e. the "leaf" adaptors in the bbject graph.
    * @return Array of DSConfigAdaptor objects
    * @throws ConfigurationException
    */
-  public DSConfigAdaptor[] getAdaptors() throws ConfigurationException;
+  public DSConfigAdaptor[] getLeafAdaptors() throws ConfigurationException;
   
   /**
    * Determine if a DSConfigAdaptor supports (contains somewhere in its adaptors, or its adaptors child adaptors)
