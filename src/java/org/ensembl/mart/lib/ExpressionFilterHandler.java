@@ -86,9 +86,9 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 
 			StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
 			species = tokens.nextToken();
-			focus = tokens.nextToken();
-			dset = species + "_" + focus;
-
+			//focus = tokens.nextToken();
+			//dset = species + "_" + focus;
+            dset = dataset.split("__")[0];
 			String trans_lib_table = null;
 			StringBuffer idSQL = new StringBuffer();
 			// set on first_table, append lidBuf later
@@ -140,11 +140,11 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 						"Term " + term + " does not exist in the Mart Database\n");
 
 				String table =
-					species + "__expression_" + edataset + "_" + term + "__supp";
+					species + "__expression_" + edataset + "_" + term + "__sup";
 				if (terms < 1) {
 					firstTable = table;
 					selectBuf.append(firstTable + ".lib_id");
-					trans_lib_table = dset + "__expression_" + edataset + "__map";
+					trans_lib_table = dset + "__expression_" + edataset + "__look";
 					idSQL.append("select transcript_stable_id from " + trans_lib_table);
 					// will only get the lib_id for the first term, but mapped across all support tables in the from and where clause
 				}
