@@ -189,7 +189,12 @@ public class AdaptorManager extends Box {
 	 *  
 	 */
 	private void doDeleteAll() {
-		DSConfigAdaptor as[] = rootAdaptor.getLeafAdaptors();
+		DSConfigAdaptor as[];
+    try {
+      as = rootAdaptor.getLeafAdaptors();
+    } catch (ConfigurationException e1) {
+      throw new RuntimeException("Recieved ConfigurationException getting adaptors from root Adaptor: " + e1.getMessage() + "\n", e1);
+    }
 		for (int i = 0; i < as.length; i++)
 			rootAdaptor.remove(as[i]);
 		try {
