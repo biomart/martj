@@ -464,6 +464,7 @@ public class MartShellLib {
 			boolean whereFilterName = false;
 			boolean whereFilterCond = false;
 			boolean whereFilterVal = false;
+			boolean validQuery = false;
 
 			if (logger.isLoggable(Level.INFO))
 				logger.info("Recieved Query " + newquery + "\n");
@@ -512,7 +513,8 @@ public class MartShellLib {
 						getClause = true;
 					} else {
 						if (dset != null) {
-							logger.info("Recieved " + thisToken + " as appearent DatasetView, after it had already been set\n");
+							if (logger.isLoggable(Level.INFO))
+								logger.info("Recieved " + thisToken + " as appearent DatasetView, after it had already been set\n");
 							throw new InvalidQueryException("Invalid Query Recieved, DatasetView already set, attempted to set again: " + newquery + "\n");
 						} else {
 							String martreq = null;
@@ -548,9 +550,6 @@ public class MartShellLib {
 
 					}
 				} else if (getClause) {
-					if (thisToken.endsWith(","))
-						thisToken = thisToken.substring(0, thisToken.length() - 1);
-
 					// set dataset and update query with starbases, or throw an exception if dataset not set
 					if (dset == null) {
 						if (envDataset == null) {
@@ -580,17 +579,41 @@ public class MartShellLib {
 					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
 						throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause in the middle of a " + GETQSTART + " clause: " + newquery + "\n");
 					else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						if (!validQuery)
+							throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling comma\n");
+
+						validQuery = false;
 						getClause = false;
 						limitClause = true;
 					} else if (domainSpecificHandlerAvailable(thisToken)) {
+						validQuery = false;
 						domainSpecificKeyword = thisToken;
 						getClause = false;
 						domainSpecificClause = true;
 					} else if (thisToken.equalsIgnoreCase(QWHERE)) {
+						if (logger.isLoggable(Level.INFO))
+							logger.info("Recieved where clause after attributes, query is valid: " + validQuery + " \n");
+
+						if (!validQuery)
+							throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling comma\n");
+
+						validQuery = false;
 						getClause = false;
 						whereClause = true;
 						whereFilterName = true;
 					} else {
+						if (thisToken.endsWith(",")) {
+							if (logger.isLoggable(Level.INFO))
+								logger.info(thisToken + " Comma, setting validQuery to false\n");
+
+							thisToken = thisToken.substring(0, thisToken.length() - 1);
+							validQuery = false;
+						} else {
+							if (logger.isLoggable(Level.INFO))
+								logger.info(thisToken + " Not comma, setting validQuery to true\n");
+							validQuery = true;
+						}
+
 						StringTokenizer attToks = new StringTokenizer(thisToken, ",");
 						while (attToks.hasMoreTokens())
 							query = addAttribute(query, dset, attToks.nextToken().trim());
@@ -599,16 +622,30 @@ public class MartShellLib {
 					if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
 						throw new InvalidQueryException("Invalid Query Recieved, " + GETQSTART + " clause in the middle of a sequence clause: " + newquery + "\n");
 					else if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						if (!validQuery)
+							throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for an incomplete Domain Specific Request\n");
+
+						validQuery = false;
 						domainSpecificClause = false;
 						limitClause = true;
 					} else if (thisToken.equalsIgnoreCase(QWHERE)) {
+						if (!validQuery)
+							throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for an incomplete Domain Specific Request\n");
+
+						validQuery = false;
 						domainSpecificClause = false;
 						whereClause = true;
 						whereFilterName = true;
-					} else
+					} else {
 						query = modifyQueryForDomainSpecificKeyword(domainSpecificKeyword, query, dset, thisToken);
+						validQuery = true;
+					}
 				} else if (whereClause) {
 					if (thisToken.equalsIgnoreCase(QLIMIT)) {
+						if (!validQuery)
+							throw new InvalidQueryException("Recieved invalid Query " + newquery + "\ncheck for a dangling filter delimiter " + FILTERDELIMITER + "\n");
+
+						validQuery = false;
 						whereClause = false;
 						limitClause = true;
 					} else if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
@@ -620,6 +657,7 @@ public class MartShellLib {
 						whereFilterCond = false;
 						whereFilterVal = false;
 						whereFilterName = true;
+						validQuery = false;
 					} else if (whereFilterName) {
 						if (thisToken.matches("[^>=<]+([>=<]+)[^>=<]*")) {
 							Pattern pat = Pattern.compile("[^>=<]+([>=<]+)[^>=<]*");
@@ -633,6 +671,7 @@ public class MartShellLib {
 
 							if (filtToks.countTokens() == 2) {
 								query = addBasicFilter(query, dset, filtToks.nextToken(), filterCondition, filtToks.nextToken());
+								validQuery = true;
 
 								filterValue = new StringBuffer();
 								filterName = null;
@@ -653,8 +692,12 @@ public class MartShellLib {
 							whereFilterVal = false;
 						}
 					} else if (whereFilterCond) {
+						if (!ALLQUALIFIERS.contains(thisToken))
+							throw new InvalidQueryException("Recieved invalid FilterCondition " + thisToken + " in " + newquery + "\n");
+
 						if (BOOLEANQUALIFIERS.contains(thisToken)) {
 							query = addBooleanFilter(query, dset, filterName, thisToken);
+							validQuery = true;
 
 							filterValue = new StringBuffer();
 							filterName = null;
@@ -669,10 +712,8 @@ public class MartShellLib {
 							filterCondition = m.group(1);
 							String thisFilterValue = m.group(2);
 
-							if (logger.isLoggable(Level.INFO))
-								logger.info(" storing qual value " + filterCondition + " , " + thisFilterValue + "\n");
-
 							query = addBasicFilter(query, dset, filterName, filterCondition, thisFilterValue);
+							validQuery = true;
 
 							filterValue = new StringBuffer();
 							filterName = null;
@@ -709,6 +750,7 @@ public class MartShellLib {
 								filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
 
 								query = addBasicFilter(query, dset, filterName, filterCondition, filterValue.toString());
+								validQuery = true;
 
 								inQuotedValue = false;
 								filterValue = new StringBuffer();
@@ -735,6 +777,7 @@ public class MartShellLib {
 									listFilterValues.add(toks.nextToken().trim());
 
 								query = addListFilter(query, dset, filterName, listFilterValues);
+								validQuery = true;
 
 								filterValue = new StringBuffer();
 								filterName = null;
@@ -764,6 +807,7 @@ public class MartShellLib {
 										listFilterValues.add(toks.nextToken().trim());
 								}
 								query = addListFilter(query, dset, filterName, listFilterValues);
+								validQuery = true;
 
 								filterValue = new StringBuffer();
 								filterName = null;
@@ -782,6 +826,7 @@ public class MartShellLib {
 							if (thisToken.endsWith(LEND)) {
 								// storedCommand with bindValues, no whitespaces
 								query = addListFilter(query, dset, filterName, thisToken);
+								validQuery = true;
 
 								filterValue = new StringBuffer();
 								filterName = null;
@@ -802,6 +847,7 @@ public class MartShellLib {
 							if (thisToken.endsWith(LEND)) {
 								// add storedCommand
 								query = addListFilter(query, dset, filterName, storedCommand.append(" ").append(thisToken).toString());
+								validQuery = true;
 
 								filterValue = new StringBuffer();
 								filterName = null;
@@ -829,12 +875,15 @@ public class MartShellLib {
 								} else if (storedCommands.containsKey(thisToken)) {
 									//storedCommand without bindvalues
 									query = addListFilter(query, dset, filterName, thisToken);
+									validQuery = true;
 								} else {
 									//file
 									query = addListFilter(query, dset, filterName, new File(thisToken));
+									validQuery = true;
 								}
 							} else {
 								query = addBasicFilter(query, dset, filterName, filterCondition, thisToken);
+								validQuery = true;
 							}
 
 							filterValue = new StringBuffer();
@@ -858,11 +907,20 @@ public class MartShellLib {
 							throw new InvalidQueryException("Invalid Query Recieved, attempt to set limit twice: " + newquery + "\n");
 						else {
 							query.setLimit(Integer.parseInt(thisToken));
+							validQuery = true;
 						}
 					}
 				}
 				// else not needed, as these are the only states present
 			}
+
+			if (!validQuery)
+				throw new InvalidQueryException(
+					"Recieved invalid query "
+						+ newquery
+						+ "\ncheck for dangling commas between attributes, an incomplete domain specific request, a dangling filter delimeter "
+						+ FILTERDELIMITER
+						+ " between filter requests,\nor an incomplete limit request\n");
 
 			if (query.getAttributes().length == 0 && query.getSequenceDescription() == null)
 				throw new InvalidQueryException("Invalid Query Recieved, no attributes or sequence description found " + newquery + "\n");
@@ -1084,9 +1142,9 @@ public class MartShellLib {
 
 		String thisCondition = null;
 		if (thisType.equals("boolean_num"))
-		  thisCondition = BOOLEAN_NUMCONDITIONS[ BOOLEANQUALIFIERS.indexOf(filterCondition) ];
-		else 
-		  thisCondition = BOOLEAN_CONDITIONS[ BOOLEANQUALIFIERS.indexOf(filterCondition) ];
+			thisCondition = BOOLEAN_NUMCONDITIONS[BOOLEANQUALIFIERS.indexOf(filterCondition)];
+		else
+			thisCondition = BOOLEAN_CONDITIONS[BOOLEANQUALIFIERS.indexOf(filterCondition)];
 
 		String handler = fdesc.getHandler(filterName);
 
@@ -1259,15 +1317,15 @@ public class MartShellLib {
 	private final int MAXNESTING = 1;
 	// change this to allow deeper nesting of queries inside queries
 
-  //Pattern for stored Command
-  public static final Pattern STOREPAT = Pattern.compile("(.*)\\s+(a|A)(s|S)\\s+(\\w+)$", Pattern.DOTALL);
-  
+	//Pattern for stored Command
+	public static final Pattern STOREPAT = Pattern.compile("(.*)\\s+(a|A)(s|S)\\s+(\\w+)$", Pattern.DOTALL);
+
 	public static List ALLQUALIFIERS = Arrays.asList(new String[] { "=", "!=", "<", ">", "<=", ">=", "only", "excluded", "in" });
 
 	public static List BOOLEANQUALIFIERS = Arrays.asList(new String[] { "only", "excluded" });
-	public final String[] BOOLEAN_NUMCONDITIONS = { BooleanFilter.isNotNULL_NUM , BooleanFilter.isNULL_NUM	};
-	public final String[] BOOLEAN_CONDITIONS = { BooleanFilter.isNotNULL, BooleanFilter.isNULL	};
- 
+	public final String[] BOOLEAN_NUMCONDITIONS = { BooleanFilter.isNotNULL_NUM, BooleanFilter.isNULL_NUM };
+	public final String[] BOOLEAN_CONDITIONS = { BooleanFilter.isNotNULL, BooleanFilter.isNULL };
+
 	private Logger logger = Logger.getLogger(MartShellLib.class.getName());
 	private Properties storedCommands = new Properties();
 	private Hashtable dataSourceMap;
