@@ -83,7 +83,7 @@ from org.apache.log4j import Logger, Level, PropertyConfigurator, BasicConfigura
 #DEFAULT_HOST = "kaka.sanger.ac.uk"
 #DEFAULT_DATABASE = "ensembl_mart_11_1"
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_DATABASE = "dl_testmart_newnames"
+DEFAULT_DATABASE = "ensembl_mart_14_1"
 DEFAULT_PORT = "3307"
 DEFAULT_USER  = "ensro"
 DEFAULT_PASSWORD = ""
