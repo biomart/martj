@@ -2942,9 +2942,7 @@ System.out.println("Going to null ");
               }
               else { // update options if has any
 
-              	// awaiting proper fix
               	                if (currFilt.hasOptions())
-                //	if(false)
                   updateDropDown(dsv, currFilt); 
               }
 
