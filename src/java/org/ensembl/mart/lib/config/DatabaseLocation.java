@@ -36,10 +36,11 @@ public class DatabaseLocation extends MartLocationBase {
   private final String user;
   private final String password;
   private final String type = MartLocationBase.DATABASE;
+  private final String jdbcDriverClassName;
 
   private final int hashcode;
 
-  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password) throws ConfigurationException {
+  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String jdbcDriverClassName) throws ConfigurationException {
     if (host == null || instanceName == null || user == null)
       throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
       
@@ -49,6 +50,7 @@ public class DatabaseLocation extends MartLocationBase {
       this.databaseType = databaseType;
       this.port = port;
       this.password = password;
+      this.jdbcDriverClassName = jdbcDriverClassName;
       
       int tmp = host.hashCode();
 		  tmp = (31 * tmp) + user.hashCode();
@@ -56,6 +58,7 @@ public class DatabaseLocation extends MartLocationBase {
       tmp = (port != null) ? (31 * tmp) + port.hashCode() : tmp;
       tmp = (databaseType != null) ? (31 * tmp) + databaseType.hashCode() : tmp;
       tmp = (password != null) ? (31 * tmp) + password.hashCode() : tmp;
+      tmp = (jdbcDriverClassName != null) ? (31 * tmp) + jdbcDriverClassName.hashCode() : tmp;
       hashcode = tmp;      
   }
 
@@ -114,6 +117,14 @@ public class DatabaseLocation extends MartLocationBase {
 		return user;
 	}
 	
+  /**
+   * Returns the jdbcDriverClassName, if present.
+   * @return String jdbcDriverClassName
+   */
+  public String getJDBCDriverClassName() {
+    return jdbcDriverClassName;
+  }
+  
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
@@ -125,6 +136,7 @@ public class DatabaseLocation extends MartLocationBase {
 		buf.append(", databaseType").append(databaseType);
 		buf.append(", port=").append(port);
 		buf.append(", password=").append(password);
+    buf.append(", jdbcDriverClassName=").append(jdbcDriverClassName);
 		
 		buf.append("]");
 
