@@ -30,10 +30,10 @@
 
 <!ELEMENT FilterSetDescription EMPTY>
 <!ATTLIST FilterSetDescription %desc_data;
-                       tableConstraintModifier CDATA #REQUIRED
-                       fieldNameModifier CDATA #REQUIRED> 
+                       tableConstraintModifier CDATA #IMPLIED
+                       fieldNameModifier CDATA #IMPLIED> 
 
-<!ELEMENT FilterCollection (UIFilterDescription+)>
+<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
                    filterSetName       CDATA #IMPLIED
@@ -47,6 +47,13 @@
                    qualifier          CDATA #IMPLIED
                    filterSetReq       CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED>
+
+<!ELEMENT UIDSFilterDescription EMPTY>
+<!ATTLIST UIDSFilterDescription
+                   %desc_data;
+                   type               CDATA #REQUIRED
+                   filterSetReq       CDATA #IMPLIED
+                   objectCode         CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
 <!ATTLIST AttributePage %desc_data;>
@@ -54,7 +61,7 @@
 <!ELEMENT AttributeGroup (AttributeCollection+)>
 <!ATTLIST AttributeGroup %desc_data;>
 
-<!ELEMENT AttributeCollection (UIAttributeDescription+)>
+<!ELEMENT AttributeCollection (UIAttributeDescription|UIDSAttributeDescription|UIDSAttributeDescription|UIAttributeDescription)+>
 <!ATTLIST AttributeCollection
                   %desc_data;
                    maxSelect    CDATA #IMPLIED>
@@ -66,5 +73,13 @@
                     tableConstraint  CDATA #IMPLIED
                     maxLength         NMTOKEN #IMPLIED
                     source                CDATA #IMPLIED
+                    homepageURL  CDATA #IMPLIED
+                    linkoutURL          CDATA #IMPLIED>
+
+<!ELEMENT UIDSAttributeDescription EMPTY>
+<!ATTLIST UIDSAttributeDescription
+                    %desc_data;
+                    objectCode   CDATA #REQUIRED
+                    source       CDATA #IMPLIED
                     homepageURL  CDATA #IMPLIED
                     linkoutURL          CDATA #IMPLIED>
