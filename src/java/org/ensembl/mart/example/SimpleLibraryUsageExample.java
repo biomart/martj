@@ -22,7 +22,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.ensembl.mart.lib.BasicFilter;
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.FormatException;
@@ -33,27 +33,30 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
 
-
 /**
  * Demonstrates how to construct a Query and execute it against a database.
  */
 public class SimpleLibraryUsageExample {
 
-  /**
-   * Builds a query and executes it against a database.
-   * @param args ignored
-   * @throws SequenceException
-   * @throws FormatException
-   * @throws InvalidQueryException
-   * @throws SQLException
-   * @throws ConfigurationException
-   */
+	/**
+	 * Builds a query and executes it against a database.
+	 * @param args ignored
+	 * @throws SequenceException
+	 * @throws FormatException
+	 * @throws InvalidQueryException
+	 * @throws SQLException
+	 * @throws ConfigurationException
+	 */
 	public static void main(String[] args)
-		throws SequenceException, FormatException, InvalidQueryException, SQLException, ConfigurationException {
+		throws
+			SequenceException,
+			FormatException,
+			InvalidQueryException,
+			SQLException,
+			ConfigurationException {
 
 		// Configure the logging system, don't show verbose messages
-    LoggingUtils.setVerbose(false);
-		
+		LoggingUtils.setVerbose(false);
 
 		// Initialise an engine encapsualting a specific Mart database.
 		Engine engine = new Engine();
@@ -61,16 +64,20 @@ public class SimpleLibraryUsageExample {
 		// Create a Query object.
 		Query query = new Query();
 		DataSource ds =
-			DatabaseUtil.createDataSource(
-				"jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_mart_17_1",
+			new DetailedDataSource(
+				"mysql",
+				"ensembldb.ensembl.org",
+				"3306",
+				"ensembl_mart_19_2",
+				"jdbc:mysql://ensembldb.ensembl.org:3306/ensembl_mart_19_1",
 				"anonymous",
 				null,
 				10,
 				"com.mysql.jdbc.Driver");
 		query.setDataSource(ds);
-    
-    // dataset query applies to
-    query.setDataset("hsapiens_ensemblgene");
+
+		// dataset query applies to
+		query.setDataset("hsapiens_ensemblgene");
 
 		// prefixes for databases we want to use
 		query.setStarBases(

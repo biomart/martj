@@ -242,7 +242,7 @@ public class GOFilterHandler implements UnprocessedFilterHandler {
 					+ e.getMessage(),
 				e);
 		} finally {
-			DatabaseUtil.close(conn);
+			DetailedDataSource.close(conn);
 		}
 	}
 

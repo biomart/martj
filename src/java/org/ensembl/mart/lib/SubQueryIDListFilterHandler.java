@@ -65,7 +65,7 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			} catch (SQLException e) {
 				throw new InvalidQueryException( "Problem with db connection: ",e );
 			} finally {
-        DatabaseUtil.close( conn );
+        DetailedDataSource.close( conn );
 			}
 		
 			if (unversionedIds.length > 0)

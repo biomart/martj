@@ -36,7 +36,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
@@ -119,38 +119,31 @@ public class DataSourceManager extends Box {
   public void doAdd() {
     if (databaseDialog.showDialog(this)) {
 
-      try {
-
-        DataSource ds =
-          DatabaseUtil.createDataSource(
-            databaseDialog.getDatabaseType(),
-            databaseDialog.getHost(),
-            databaseDialog.getPort(),
-            databaseDialog.getDatabase(),
-            databaseDialog.getUser(),
-            databaseDialog.getPassword(),
-            10,
-            databaseDialog.getDriver());
-
-        
-        try {
-					DSViewAdaptor a = new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
-					// TODO bind a and ds so that can recreate the link after persistence
-					datasetViewSettings.add( a );
-				} catch (ConfigurationException e1) {
-          feedback.warning("Couldn not load DatasetViews from \"" 
-            + ds
-            + "\". It might be possible to execute queries against this database.",e1, false);
-				}
-
-        add(ds);
-        selected = ds.toString();
-        initialiseCombo();
-
-      } catch (ConfigurationException e) {
-        e.printStackTrace();
-        feedback.warning("Failed to connect to database: " + e.getMessage());
-      }
+      DataSource ds =
+			  new DetailedDataSource(
+			    databaseDialog.getDatabaseType(),
+			    databaseDialog.getHost(),
+			    databaseDialog.getPort(),
+			    databaseDialog.getDatabase(),
+			    databaseDialog.getUser(),
+			    databaseDialog.getPassword(),
+			    10,
+			    databaseDialog.getDriver());
+			
+			
+			try {
+				DSViewAdaptor a = new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
+				// TODO bind a and ds so that can recreate the link after persistence
+				datasetViewSettings.add( a );
+			} catch (ConfigurationException e1) {
+			  feedback.warning("Couldn not load DatasetViews from \"" 
+			    + ds
+			    + "\". It might be possible to execute queries against this database.",e1, false);
+			}
+			
+			add(ds);
+			selected = ds.toString();
+			initialiseCombo();
     }
 
   }

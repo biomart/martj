@@ -25,9 +25,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.sql.DataSource;
-
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.InputSourceUtil;
 
 /**
@@ -223,13 +221,13 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 				// apply defaults only if both dbtype and jdbcdriver are null
 				if (databaseType == null && jdbcDriverClassName == null) {
-					databaseType = DatabaseUtil.DEFAULTDATABASETYPE;
-					jdbcDriverClassName = DatabaseUtil.DEFAULTDRIVER;
+					databaseType = DetailedDataSource.DEFAULTDATABASETYPE;
+					jdbcDriverClassName = DetailedDataSource.DEFAULTDRIVER;
 				}
 
 				//use the default poolsize of 10
-				DataSource dsource =
-					DatabaseUtil.createDataSource(databaseType, host, port, instanceName, user, password, DatabaseUtil.DEFAULTPOOLSIZE, jdbcDriverClassName);
+				DetailedDataSource dsource =
+					new DetailedDataSource(databaseType, host, port, instanceName, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName);
 
 				DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(dsource, user);
 

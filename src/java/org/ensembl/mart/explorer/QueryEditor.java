@@ -52,11 +52,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Attribute;
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.FormatException;
@@ -524,7 +522,7 @@ public class QueryEditor extends JPanel {
 
     DatasetView[] views = adaptor.getDatasetViews();
 
-    DataSource ds = DatabaseUtil.createDataSource("mysql",
+    DataSource ds = new DetailedDataSource("mysql",
       //"127.0.0.1",
     //"3313",
   "ensembldb.ensembl.org", "3306", "ensembl_mart_17_1",
@@ -544,7 +542,7 @@ public class QueryEditor extends JPanel {
   static List testDatasources() throws ConfigurationException {
     Vector dss = new Vector();
     dss.add(
-      DatabaseUtil.createDataSource(
+    new DetailedDataSource(
         "mysql",
         "ensembldb.ensembl.org",
         "3306",
@@ -554,7 +552,7 @@ public class QueryEditor extends JPanel {
         10,
         "com.mysql.jdbc.Driver"));
     dss.add(
-      DatabaseUtil.createDataSource(
+    new DetailedDataSource(
         "mysql",
         "ensembldb.ensembl.org",
         "3306",

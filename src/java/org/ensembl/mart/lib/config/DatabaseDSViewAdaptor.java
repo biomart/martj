@@ -19,23 +19,20 @@
 package org.ensembl.mart.lib.config;
 
 import java.security.MessageDigest;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.DatabaseUtil;
-import org.ensembl.mart.lib.DatabaseUtil.DatabaseURLElements;
-
-import java.util.logging.Level;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
-import java.util.Iterator;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.BigPreferences;
 import org.ensembl.util.StringUtil;
 
@@ -58,10 +55,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   private HashMap inameMap = new HashMap();
   private HashMap dnameMap = new HashMap();
 
-  private final DataSource dsvsource;
-
-  //Holds elements used in hashcode, and reconstruction of MartLocation element
-  private final DatabaseURLElements els;
+  private final DetailedDataSource dataSource;
 
   private final String user;
   private final int hashcode;
@@ -73,39 +67,32 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
    * @throws ConfigurationException if DataSource or user is null
    */
-  public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
+  public DatabaseDSViewAdaptor(DetailedDataSource ds, String user) throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
 
     this.user = user;
-    dsvsource = ds;
-
+    dataSource = ds;
+    String host = ds.getHost();
+    String port = ds.getPort();
+    String databaseName = ds.getDatabaseName();
     try {
-      //get info for hashcode, and MartLocation reconstruction
-      String dbURL = dsvsource.getConnection().getMetaData().getURL();
-      // actual Database Server URL String
-      els = DatabaseUtil.decompose(dbURL);
-
       //set up the preferences node with the datasource information as the root node
       xmlCache =
         BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(
-          els.host + "/" + els.port + "/" + els.databaseName);
+          host + "/" + port + "/" + databaseName);
     } catch (IllegalArgumentException e) {
       throw new ConfigurationException(
         "Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),
         e);
-    } catch (SQLException e) {
-      throw new ConfigurationException(
-        "Caught SQLException during parse of Connection for Connection Parameters " + e.getMessage(),
-        e);
     }
 
     int tmp = user.hashCode();
-    tmp = (31 * tmp) + els.host.hashCode();
-    tmp = (els.port != null) ? (31 * tmp) + els.port.hashCode() : tmp;
-    tmp = (els.databaseType != null) ? (31 * tmp) + els.databaseType.hashCode() : tmp;
-    tmp = (els.databaseName != null) ? (31 * tmp) + els.databaseName.hashCode() : tmp;
-    tmp = (31 * tmp) + els.jdbcDriverClassName.hashCode();
+    tmp = (31 * tmp) + host.hashCode();
+    tmp = (port != null) ? (31 * tmp) + port.hashCode() : tmp;
+    tmp = (ds.getDatabaseType() != null) ? (31 * tmp) + ds.getDatabaseType().hashCode() : tmp;
+    tmp = (databaseName != null) ? (31 * tmp) + databaseName.hashCode() : tmp;
+    tmp = (31 * tmp) + ds.getJdbcDriverClassName().hashCode();
     hashcode = tmp;
     update();
   }
@@ -179,7 +166,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public void addDatasetView(DatasetView dsv) throws ConfigurationException {
     if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
       datasetNameMap.add( dsv.getDataset() );
-      dsv.setDatasource(dsvsource);
+      dsv.setDatasource(dataSource);
       dsv.setDSViewAdaptor(this);
 
       inameMap.put(dsv.getInternalName(), dsv);
@@ -273,7 +260,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
    */
   public void update() throws ConfigurationException {
-    String[] inms = DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
+    String[] inms = DatabaseDatasetViewUtils.getAllInternalNames(dataSource, user);
     for (int i = 0, n = inms.length; i < n; i++) {
       String iname = inms[i];
       boolean cacheExists = false;
@@ -292,15 +279,15 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       }
 
       if (inameMap.containsKey(iname)) {
-        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
+        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dataSource, user, iname);
         byte[] oDigest = ((DatasetView) inameMap.get(iname)).getMessageDigest();
 
         if (!MessageDigest.isEqual(oDigest, nDigest)) {
           removeDatasetView((DatasetView) inameMap.get(iname));
-          addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname));
+          addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dataSource, user, iname));
         }
       } else if (cacheExists) {
-        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
+        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dataSource, user, iname);
         byte[] oDigest = xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
         //if the cache cannot return the digest for some reason, it should return null
 
@@ -314,15 +301,15 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
             addDatasetView(newDSV);
           } else {
             //get it from the database
-            DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+            DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dataSource, user, iname);
             addDatasetView(newDSV);
           }
         } else {
-          DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+          DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dataSource, user, iname);
           addDatasetView(newDSV);
         }
       } else {
-        DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
+        DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dataSource, user, iname);
         addDatasetView(newDSV);
       }
     }
@@ -356,7 +343,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
     DatasetViewXMLUtils.LoadDatasetViewWithDocument(
       dsv,
-      DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(dsvsource, user, dsv.getInternalName()));
+      DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(dataSource, user, dsv.getInternalName()));
   }
 
   /**
@@ -372,13 +359,13 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public MartLocation[] getMartLocations() throws ConfigurationException {
     MartLocation dbloc =
       new DatabaseLocation(
-        els.host,
-        els.port,
-        els.databaseType,
-        els.databaseName,
+        dataSource.getHost(),
+        dataSource.getPort(),
+        dataSource.getDatabaseType(),
+        dataSource.getDatabaseName(),
         user,
         dbpassword,
-        els.jdbcDriverClassName, adaptorName);
+        dataSource.getJdbcDriverClassName(), adaptorName);
     return new MartLocation[] { dbloc };
   }
 
@@ -442,7 +429,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String getDisplayName() {
 
-    return (dsvsource == null) ? "No Database" : dsvsource.toString();
+    return (dataSource == null) ? "No Database" : dataSource.toString();
   }
 
   /**

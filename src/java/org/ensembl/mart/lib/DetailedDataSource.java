@@ -72,11 +72,12 @@ public class DetailedDataSource implements DataSource {
 		System.setOut(o);
 	}
 
-	private static final String DEFAULTDATABASETYPE = "mysql";
-	private static final String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
-	private static final int DEFAULTPOOLSIZE = 10;
-	private static final String DEFAULTPORT = "3306";
-	private static final String ORACLEAT = "@";
+	public static final String DEFAULTDATABASETYPE = "mysql";
+	public static final String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
+	public static final int DEFAULTPOOLSIZE = 10;
+	public static final String DEFAULTPORT = "3306";
+	
+  private static final String ORACLEAT = "@";
 	private static final String ORACLETHIN = "oracle:thin";
 	private static final String SYBASE = "sybase:Tds";
 

@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.LoggingUtils;
 
 /**
@@ -70,13 +70,13 @@ public class NieveDatasetViewGenerator {
       + "\n-U                             RDBMS User (required)"
       + "\n-P                             RDBMS Password"
       + "\n-p                             RDBMS Port (defaults to "
-      + DatabaseUtil.DEFAULTPORT
+      + DetailedDataSource.DEFAULTPORT
       + ")"
       + "\n-T                             RDBMS Type (eg, mysql, oracle:thin, etc. defaults to "
-      + DatabaseUtil.DEFAULTDATABASETYPE
+      + DetailedDataSource.DEFAULTDATABASETYPE
       + ")"
       + "\n-D                             RDBMS Driver Name (eg. for class loader, defaults to "
-      + DatabaseUtil.DEFAULTDRIVER
+      + DetailedDataSource.DEFAULTDRIVER
       + ")"
       + "\n-M                             Mart Database Name (required)"
       + "\n-d                             DatasetName for requested nieve DatasetView (if not provided, a list of potential 'best guess' dataset names will be printed, each with a list of main tables for this dataset for verification purposes)"
@@ -264,23 +264,23 @@ public class NieveDatasetViewGenerator {
       long start = System.currentTimeMillis();
 
       if (dbType == null)
-        dbType = DatabaseUtil.DEFAULTDATABASETYPE;
+        dbType = DetailedDataSource.DEFAULTDATABASETYPE;
 
       if (dbPort == null)
-        dbPort = DatabaseUtil.DEFAULTPORT;
+        dbPort = DetailedDataSource.DEFAULTPORT;
 
       if (dbDriver == null)
-        dbDriver = DatabaseUtil.DEFAULTDRIVER;
+        dbDriver = DetailedDataSource.DEFAULTDRIVER;
 
       DataSource dsource =
-        DatabaseUtil.createDataSource(
+        new DetailedDataSource(
           dbType,
           dbHost,
           dbPort,
           dbName,
           dbUser,
           dbPass,
-          DatabaseUtil.DEFAULTPOOLSIZE,
+          DetailedDataSource.DEFAULTPOOLSIZE,
           dbDriver);
 
       if (dsName != null) {

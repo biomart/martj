@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.LoggingUtils;
 
 /**
@@ -74,7 +74,7 @@ public class DatasetViewUploader {
 
 		try {
 			dataSource =
-				DatabaseUtil.createDataSource(
+				new DetailedDataSource(
 					dbType,
 					host,
 					port,

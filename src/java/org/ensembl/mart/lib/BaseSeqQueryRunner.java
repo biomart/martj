@@ -200,7 +200,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     } catch (SQLException e) {
       throw new InvalidQueryException(e + " :" + sql);
     } finally {
-      DatabaseUtil.close(conn);
+      DetailedDataSource.close(conn);
     }
   }
 

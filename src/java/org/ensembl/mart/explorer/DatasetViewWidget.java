@@ -142,8 +142,9 @@ public class DatasetViewWidget
 
 		//adaptorManager.setSelected(oldDsv);
 
+    // TODO choose it properly.f rom tree.
 		DatasetView dsv = null;
-		if (adaptorManager.showDialog(this)) {
+		adaptorManager.showDialog(this)) {
 
 			//dsv = adaptorManager.getSelected();
 
@@ -161,7 +162,7 @@ public class DatasetViewWidget
 				if (o != JOptionPane.OK_OPTION)
 					return;
 
-			}
+		
 
 			query.clear();
 			query.setDatasetView(dsv);

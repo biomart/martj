@@ -22,8 +22,7 @@ import java.security.MessageDigest;
 import java.sql.Connection;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
 import org.ensembl.mart.lib.config.DatabaseLocation;
@@ -51,7 +50,7 @@ public class DatabaseDSViewAdaptorTest extends Base {
 	 * @return DatabaseDSViewAdaptor
 	 * @throws Exception when _meta_DatasetView_[user] doesnt exist, and for all underlying exceptions
 	 */
-	public static DatabaseDSViewAdaptor getSampleDatasetViewAdaptor(DataSource dsource) throws Exception {
+	public static DatabaseDSViewAdaptor getSampleDatasetViewAdaptor(DetailedDataSource dsource) throws Exception {
 		if (!DatabaseDatasetViewUtils.DSViewUserTableExists(dsource, USER))
 			throw new Exception("_meta_DatasetView_" + USER + " must exist in the Mart Database\n");
 

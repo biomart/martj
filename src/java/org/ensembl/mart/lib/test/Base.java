@@ -9,8 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
-
 import junit.framework.TestCase;
 
 import org.ensembl.mart.lib.DetailedDataSource;
@@ -68,7 +66,7 @@ public abstract class Base extends TestCase {
 	protected Engine engine;
 	protected Query genequery = new Query();
 	protected Query snpquery = new Query();
-  protected DataSource martJDataSource;
+  protected DetailedDataSource martJDataSource;
 
 
 	public void init() {
