@@ -18,12 +18,18 @@
 
 package org.ensembl.mart.lib.config.test;
 
+import java.io.File;
 import java.net.URL;
+import java.security.MessageDigest;
 
 import junit.framework.TestCase;
 
 import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
+import org.ensembl.mart.lib.config.MartLocation;
+import org.ensembl.mart.lib.config.MartLocationBase;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.URLLocation;
 
 /**
  * Loads sample dataset view configuration file via an adaptor (searches the classpath) 
@@ -33,6 +39,8 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  */
 public class URLDSViewAdaptorTest extends TestCase {
 
+  private final String TESTFILEPATH = "URLDSViewAdaptorTestFile.xml";
+  
 	/**
 	 * Constructor for DSViewAdaptors.
 	 * @param arg0
@@ -54,6 +62,27 @@ public class URLDSViewAdaptorTest extends TestCase {
 		assertNotNull(view.getInternalName());
 		assertTrue(view.getAllFilterDescriptions().size() > 0);
 		assertTrue(view.getAllFilterDescriptions().size() > 0);
+    
+    File testFile = new File(TESTFILEPATH);
+    URLDSViewAdaptor.StoreDatasetView(view, testFile);
+    
+    assertTrue("Test File Doesnt Exist after URLDSViewAdaptor.store\n", testFile.exists());
+    
+    URLDSViewAdaptor nadapt = new URLDSViewAdaptor(testFile.toURL());
+    DatasetView nview = nadapt.getDatasetViews()[0];
+    
+    byte[] odigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(view);
+    byte[] ndigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nview);
+    
+    assertTrue("Digests from DatasetView loaded from test file differs from original DatasetView\n", MessageDigest.isEqual(odigest, ndigest));
+    
+    testFile.delete(); // cleanup after run
+    
+    MartLocation thisLoc = adaptor.getMartLocations()[0];
+    assertNotNull("MartLocation returned from getMartLocations is null\n", thisLoc);
+    assertEquals("MartLocation type should be " + MartLocationBase.URL + "\n", MartLocationBase.URL, thisLoc.getType());
+    assertTrue("MartLocation returned from getMartLocations should be a URLLocation\n", thisLoc instanceof URLLocation);
+    assertEquals("URL returned by MartLocation differs from original test dataset url\n", getTestDatasetURL(), ( (URLLocation) thisLoc).getUrl());
 	}
 
 	public static URL getTestDatasetURL() throws Exception {
