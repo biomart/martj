@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--Note, the martdatabase: protocal can be used to signal the mart-explorer library to fetch the configuration file named in the path from the mart RDBMS -->
 <!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd">
 <MartConfiguration description="First Ensembl Mart Built upon Ensembl version 15 datasets" displayName="Ensembl Mart version 15.1" internalName="ensembl_mart_15_1">
   <Dataset description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Homo sapiens (NCBI 31) -- Ensembl Genes" internalName="homo_sapiens_ensembl_genes">
@@ -17,15 +16,15 @@
           <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
-          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" internalName="marker_start" objectCode="Marker" type="select"/>
-          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" internalName="marker_end" objectCode="Marker" type="select"/>
+          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" handler="Marker" internalName="marker_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
-          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" internalName="band_start" objectCode="Band" type="select"/>
-          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" internalName="band_end" objectCode="Band" type="select"/>
+          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" handler="Band" internalName="band_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
-          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" internalName="encode_region" objectCode="Encode" type="select"/>
+          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="GENE:" internalName="gene">
@@ -77,7 +76,7 @@
           <FilterSetDescription description="Filter on Expression Data from the GNF Expression Dataset." displayName="GNF data (AFFY-HG-U95)" fieldNameModifier="gnf" internalName="gnf" tableConstraintModifier="na"/>
         </FilterSet>
         <FilterCollection filterSetName="expression_type" internalName="expression" type="text-entry">
-          <UIDSFilterDescription description="" displayName="" filterSetReq="field" internalName="expression_profile" objectCode="Expression" type="select"/>
+          <UIDSFilterDescription description="" displayName="" filterSetReq="field" handler="Expression" internalName="expression_profile" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTI SPECIES COMPARISONS:" internalName="multispecies">
@@ -367,7 +366,7 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
-      <DSAttributeGroup displayName="Sequences Available:" internalName="sequences" objectCode="sequence"/>
+      <DSAttributeGroup displayName="Sequences Available:" handler="sequence" internalName="sequences"/>
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
@@ -467,15 +466,15 @@
           <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
-          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" internalName="marker_start" objectCode="Marker" type="select"/>
-          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" internalName="marker_end" objectCode="Marker" type="select"/>
+          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" handler="Marker" internalName="marker_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
-          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" internalName="band_start" objectCode="Band" type="select"/>
-          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" internalName="band_end" objectCode="Band" type="select"/>
+          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" handler="Band" internalName="band_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
-          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" internalName="encode_region" objectCode="Encode" type="select"/>
+          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
@@ -680,7 +679,7 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Gene Sequences" displayName="Sequences" internalName="sequences">
-      <DSAttributeGroup displayName="Type of Sequence to Export:" internalName="sequences" objectCode="sequence"/>
+      <DSAttributeGroup displayName="Type of Sequence to Export:" handler="sequence" internalName="sequences"/>
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
@@ -738,15 +737,15 @@
           <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
-          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" internalName="marker_start" objectCode="Marker" type="select"/>
-          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" internalName="marker_end" objectCode="Marker" type="select"/>
+          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" handler="Marker" internalName="marker_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
-          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" internalName="band_start" objectCode="Band" type="select"/>
-          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" internalName="band_end" objectCode="Band" type="select"/>
+          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" handler="Band" internalName="band_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode" type="limit">
-          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" internalName="encode_region" objectCode="Encode" type="select"/>
+          <UIDSFilterDescription description="Choose an Encode Region to limit genes" displayName="Region" handler="Encode" internalName="encode_region" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup displayName="GENERAL SNP FILTERS:" internalName="snpfilters">
@@ -837,7 +836,7 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Snp Sequences" displayName="Sequences" internalName="sequences">
-      <DSAttributeGroup displayName="Type of Sequence to Export:" internalName="sequences" objectCode="sequence"/>
+      <DSAttributeGroup displayName="Type of Sequence to Export:" handler="sequence" internalName="sequences"/>
       <AttributeGroup description="SNP Location Attributes" displayName="Region:" internalName="region">
         <AttributeCollection description="Chromosomal Location of SNPs" displayName="Chromosome Attributes:" internalName="chromosomeatts">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="6" tableConstraint="snp_main"/>
@@ -908,12 +907,12 @@
           <UIFilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" fieldName="gene_chrom_start" internalName="base_pair_end" qualifier="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations" type="select">
-          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" internalName="marker_start" objectCode="Marker" type="select"/>
-          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" internalName="marker_end" objectCode="Marker" type="select"/>
+          <UIDSFilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" handler="Marker" internalName="marker_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" handler="Marker" internalName="marker_end" type="select"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations" type="select">
-          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" internalName="band_start" objectCode="Band" type="select"/>
-          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" internalName="band_end" objectCode="Band" type="select"/>
+          <UIDSFilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" handler="Band" internalName="band_start" type="select"/>
+          <UIDSFilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" handler="Band" internalName="band_end" type="select"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup internalName="gene">
@@ -1194,7 +1193,7 @@
       </AttributeGroup>
     </AttributePage>
     <AttributePage description="Snp Sequences" displayName="Sequences" internalName="sequences">
-      <DSAttributeGroup displayName="Type of Sequence to Export:" internalName="sequences" objectCode="sequence"/>
+      <DSAttributeGroup displayName="Type of Sequence to Export:" handler="sequence" internalName="sequences"/>
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>

@@ -25,7 +25,7 @@
 
 <!ELEMENT DSFilterGroup EMPTY>
 <!ATTLIST DSFilterGroup %desc_data;
-                        objectCode  CDATA #IMPLIED>
+                        handler  CDATA #IMPLIED>
 
 <!ELEMENT FilterSet (FilterSetDescription+)>
 <!ATTLIST FilterSet 
@@ -59,7 +59,7 @@
                    type               CDATA #REQUIRED
                    filterSetReq       CDATA #IMPLIED
                    optionName         CDATA #IMPLIED
-                   objectCode         CDATA #REQUIRED>
+                   handler            CDATA #REQUIRED>
                    
 <!ELEMENT AttributePage (AttributeGroup|DSAttributeGroup|DSAttributeGroup|AttributeGroup)+>
 <!ATTLIST AttributePage %desc_data;>
@@ -69,7 +69,7 @@
 
 <!ELEMENT DSAttributeGroup EMPTY>
 <!ATTLIST DSAttributeGroup %desc_data;
-                           objectCode CDATA #IMPLIED>
+                           handler CDATA #IMPLIED>
 
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection
