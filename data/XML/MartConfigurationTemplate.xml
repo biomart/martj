@@ -58,35 +58,36 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
-          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
-          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_start" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <FilterDescription internalName="encode_type" type="list">
+            <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="Chr13:29450016-29950015"/>
-                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="Chr2:51616414:52116413"/>
+                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016:29950015"/>
+                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
               </PushOptions>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="Chr7:115351222:117228647"/>
-                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="Chr5:131287278:132287277"/>
+                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
+                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
               </PushOptions>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes"/>
-                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="Chr7:92652026:93622434"/>
+                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
+                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
               </PushOptions>
             </Option>
           </FilterDescription>
-          <FilterDescription displayName="Region" field="encode_region" handler="Encode" internalName="encode_region" qualifiers="=" type="text-entry"/>
+          <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" qualifiers="=" type="text-entry"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="GENE:" internalName="gene">
@@ -138,16 +139,16 @@
       </FilterGroup>
       <FilterGroup description="Filters matching GO IDS, Terms, and Evidence Codes" displayName="Gene Ontology" internalName="go">
         <FilterCollection internalName="go_collection">
-          <FilterDescription description="Go IDS, or Terms related to Molecular Function Go Annotations" displayName="Molecular Function (E.g. GO:0008083 or growth factor activity)" field="molecular_function" handler="GO" internalName="molecular_function" qualifiers="=" type="text-entry">
+          <FilterDescription description="Go IDS, or Terms related to Molecular Function Go Annotations" displayName="Molecular Function (E.g. GO:0008083 or growth factor activity)" field="molecular_function" handler="org.ensembl.mart.lib.GOFilterHandler" internalName="molecular_function" qualifiers="=" type="text-entry">
             <Enable ref="evidence_code"/>
           </FilterDescription>
-          <FilterDescription description="Filter for GO Ids or terms related to Biological Process" displayName="Biological Process (E.g. GO:0008219 or cell death)" field="biological_process" handler="GO" internalName="biological_process" qualifiers="=" type="text-entry">
+          <FilterDescription description="Filter for GO Ids or terms related to Biological Process" displayName="Biological Process (E.g. GO:0008219 or cell death)" field="biological_process" handler="org.ensembl.mart.lib.GOFilterHandler" internalName="biological_process" qualifiers="=" type="text-entry">
             <Enable ref="evidence_code"/>
           </FilterDescription>
-          <FilterDescription description="Filter for GO Ids or Terms related to cellular components" displayName="Cellular Component (E.g. GO:0005623 or cell)" field="cellular_component" handler="GO" internalName="cellular_component" qualifiers="=" type="text-entry">
+          <FilterDescription description="Filter for GO Ids or Terms related to cellular components" displayName="Cellular Component (E.g. GO:0005623 or cell)" field="cellular_component" handler="org.ensembl.mart.lib.GOFilterHandler" internalName="cellular_component" qualifiers="=" type="text-entry">
             <Enable ref="evidence_code"/>
           </FilterDescription>
-          <FilterDescription description="Apply an evidence code filter in addition to the other three Go Filters" displayName="Evidence Code for Mapping" field="evidence_code" handler="GO" internalName="evidence_code" qualifiers="=" type="text-entry"/>
+          <FilterDescription description="Apply an evidence code filter in addition to the other three Go Filters" displayName="Evidence Code for Mapping" field="evidence_code" handler="org.ensembl.mart.lib.GOFilterHandler" internalName="evidence_code" qualifiers="=" type="text-entry"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter for Genes based on Expression Patters, using Controlled Vocabularies." displayName="Expression" internalName="expression">
@@ -159,7 +160,7 @@
             <Enable ref="cell_type_filter"/>
             <Option description="Filter for GNF Related Expression Patterns" displayName="GNF data (AFFY-HG-U95)" internalName="gnf" isSelectable="false" type="tree">
               <PushOptions internalName="anatomical_site_push" ref="anatomical_site_filter">
-                <Option displayName="Anatomical Site" field="gnf.anatomical_site" handler="expression" internalName="anatomical_site" isSelectable="false">
+                <Option displayName="Anatomical Site" field="gnf.anatomical_site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site" isSelectable="false">
                   <Option displayName="Alimentary" internalName="alimentary" isSelectable="true" value="Alimentary">
                     <Option displayName="Large intestine" internalName="large_intestine" isSelectable="true" value="large intestine">
                       <Option displayName="Anus" internalName="anus" isSelectable="true" value="anus"/>
@@ -557,7 +558,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="development_stage_push" ref="development_stage_filter">
-                <Option displayName="Development Stage" field="gnf.development_stage" handler="expression" internalName="development_stage" isSelectable="false">
+                <Option displayName="Development Stage" field="gnf.development_stage" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="development_stage" isSelectable="false">
                   <Option displayName="Adult" internalName="adult" isSelectable="true" value="Adult"/>
                   <Option displayName="Child" internalName="child" isSelectable="true" value="Child"/>
                   <Option displayName="Embryo" internalName="embryo" isSelectable="true" value="Embryo">
@@ -593,7 +594,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="pathology_push" ref="pathology_filter">
-                <Option displayName="Pathology" field="gnf.pathology" handler="expression" internalName="pathology" isSelectable="false">
+                <Option displayName="Pathology" field="gnf.pathology" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="pathology" isSelectable="false">
                   <Option displayName="Auto-immune disorders" internalName="auto-immune_disorders" isSelectable="true" value="Auto-immune disorders">
                     <Option displayName="Alopecia areata" internalName="alopecia_areata" isSelectable="true" value="alopecia areata"/>
                   </Option>
@@ -747,7 +748,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="cell_type_push" ref="cell_type_filter">
-                <Option displayName="Cell Type" field="gnf.cell_type" handler="expression" internalName="cell_type" isSelectable="false">
+                <Option displayName="Cell Type" field="gnf.cell_type" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="cell_type" isSelectable="false">
                   <Option displayName="A cell" internalName="a_cell" isSelectable="true" value="A cell"/>
                   <Option displayName="Acidophil cell" internalName="acidophil_cell" isSelectable="true" value="acidophil cell"/>
                   <Option displayName="Acinar cell" internalName="acinar_cell" isSelectable="true" value="acinar cell"/>
@@ -938,7 +939,7 @@
             </Option>
             <Option description="Filter for E-Genetics/Sanbi Related Expression Patterns" displayName="eGenetics/SANBI data" internalName="est" isSelectable="false" type="tree">
               <PushOptions internalName="anatomical_site_push" ref="anatomical_site_filter">
-                <Option displayName="Anatomical Site" field="est.anatomical_site" handler="expression" internalName="anatomical_site" isSelectable="false">
+                <Option displayName="Anatomical Site" field="est.anatomical_site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site" isSelectable="false">
                   <Option displayName="Alimentary" internalName="alimentary" isSelectable="true" value="Alimentary">
                     <Option displayName="Large intestine" internalName="large_intestine" isSelectable="true" value="large intestine">
                       <Option displayName="Anus" internalName="anus" isSelectable="true" value="anus"/>
@@ -1336,7 +1337,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="development_stage_push" ref="development_stage_filter">
-                <Option displayName="Development Stage" field="est.development_stage" handler="expression" internalName="development_stage" isSelectable="false">
+                <Option displayName="Development Stage" field="est.development_stage" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="development_stage" isSelectable="false">
                   <Option displayName="Adult" internalName="adult" isSelectable="true" value="Adult"/>
                   <Option displayName="Child" internalName="child" isSelectable="true" value="Child"/>
                   <Option displayName="Embryo" internalName="embryo" isSelectable="true" value="Embryo">
@@ -1372,7 +1373,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="pathology_push" ref="pathology_filter">
-                <Option displayName="Pathology" field="est.pathology" handler="expression" internalName="pathology" isSelectable="false">
+                <Option displayName="Pathology" field="est.pathology" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="pathology" isSelectable="false">
                   <Option displayName="Auto-immune disorders" internalName="auto-immune_disorders" isSelectable="true" value="Auto-immune disorders">
                     <Option displayName="Alopecia areata" internalName="alopecia_areata" isSelectable="true" value="alopecia areata"/>
                   </Option>
@@ -1526,7 +1527,7 @@
                 </Option>
               </PushOptions>
               <PushOptions internalName="cell_type_push" ref="cell_type_filter">
-                <Option displayName="Cell Type" field="est.cell_type" handler="expression" internalName="cell_type" isSelectable="false">
+                <Option displayName="Cell Type" field="est.cell_type" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="cell_type" isSelectable="false">
                   <Option displayName="A cell" internalName="a_cell" isSelectable="true" value="A cell"/>
                   <Option displayName="Acidophil cell" internalName="acidophil_cell" isSelectable="true" value="acidophil cell"/>
                   <Option displayName="Acinar cell" internalName="acinar_cell" isSelectable="true" value="acinar cell"/>
@@ -1716,10 +1717,10 @@
               </PushOptions>
             </Option>
           </FilterDescription>
-          <FilterDescription description="Filter for Genes expressed in Specified Anatomical Sites" displayName="Anatomical Site" handler="expression" internalName="anatomical_site_filter" qualifiers="=" type="tree"/>
-          <FilterDescription description="Filter for Genes Expressed in a specified Development Stage." displayName="Development Stage" handler="expression" internalName="development_stage_filter" qualifiers="=" type="tree"/>
-          <FilterDescription description="Filter for genes expressed in specified Pathological Conditions." displayName="Pathology" handler="expression" internalName="pathology_filter" qualifiers="=" type="tree"/>
-          <FilterDescription description="Filter for genes expressed in specified cell types." displayName="Cell Type" handler="expression" internalName="cell_type_filter" qualifiers="=" type="tree"/>
+          <FilterDescription description="Filter for Genes expressed in Specified Anatomical Sites" displayName="Anatomical Site" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="anatomical_site_filter" qualifiers="=" type="tree"/>
+          <FilterDescription description="Filter for Genes Expressed in a specified Development Stage." displayName="Development Stage" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="development_stage_filter" qualifiers="=" type="tree"/>
+          <FilterDescription description="Filter for genes expressed in specified Pathological Conditions." displayName="Pathology" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="pathology_filter" qualifiers="=" type="tree"/>
+          <FilterDescription description="Filter for genes expressed in specified cell types." displayName="Cell Type" handler="org.ensembl.mart.lib.ExpressionFilterHandler" internalName="cell_type_filter" qualifiers="=" type="tree"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on multi species comparison relationships" displayName="MULTISPECIES" internalName="multispecies">
@@ -2142,35 +2143,36 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
-          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
-          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_start" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <FilterDescription internalName="encode_type" type="list">
+            <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="Chr13:29450016-29950015"/>
-                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="Chr2:51616414:52116413"/>
+                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016-29950015"/>
+                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
               </PushOptions>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="Chr7:115351222:117228647"/>
-                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="Chr5:131287278:132287277"/>
+                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
+                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
               </PushOptions>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes"/>
-                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="Chr7:92652026:93622434"/>
+                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
+                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
               </PushOptions>
             </Option>
           </FilterDescription>
-          <FilterDescription displayName="Region" field="encode_region" handler="Encode" internalName="encode_region" qualifiers="=" type="text-entry"/>
+          <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" qualifiers="=" type="text-entry"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup description="Filter on Gene Related Accessions and Filters" displayName="Gene:" internalName="gene">
@@ -2486,35 +2488,36 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
-          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
-          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_start" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
         <FilterCollection displayName="Limit to Encode Region" internalName="encode">
           <FilterDescription internalName="encode_type" type="list">
+            <Enable ref="encode_region"/>
             <Option displayName="Random Picks" internalName="random_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="Chr13:29450016-29950015"/>
-                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="Chr2:51616414:52116413"/>
+                <Option displayName="Chr13: 29450016-29950015bp" internalName="Chr13_29450016_29950015" isSelectable="true" value="13:29450016-29950015"/>
+                <Option displayName="Chr2: 51616414-52116413bp" internalName="Chr2_51616414_52116413" isSelectable="true" value="2:51616414:52116413"/>
               </PushOptions>
             </Option>
             <Option displayName="Manual Picks" internalName="manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="Chr7:115351222:117228647"/>
-                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="Chr5:131287278:132287277"/>
+                <Option displayName="Chr7: 115351222-117228647bp" internalName="Chr7_115351222_117228647" isSelectable="true" value="7:115351222:117228647"/>
+                <Option displayName="Chr5: 131287278-132287277bp" internalName="Chr5_131287278_132287277" isSelectable="true" value="5:131287278:132287277"/>
               </PushOptions>
             </Option>
             <Option displayName="Semi-ManualPicks" internalName="semi_manual_picks" isSelectable="true">
               <PushOptions internalName="push_to_encode_region" ref="encode_region">
-                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes"/>
-                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="Chr7:92652026:93622434"/>
+                <Option displayName="Chr7: 89381916-90496339bp" internalName="Chr7:89381916-90496339bp" isSelectable="yes" value="7:89381916:90496339"/>
+                <Option displayName="Chr7: 92652026-93622434bp" internalName="Chr7_92652026_93622434" isSelectable="yes" value="7:92652026:93622434"/>
               </PushOptions>
             </Option>
           </FilterDescription>
-          <FilterDescription displayName="Region" field="encode_region" handler="Encode" internalName="encode_region" qualifiers="=" type="text-entry"/>
+          <FilterDescription displayName="Region" field="encode_region" handler="org.ensembl.mart.lib.EncodeQtlFilterHandler" internalName="encode_region" qualifiers="=" type="text-entry"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup displayName="GENERAL SNP FILTERS:" internalName="snpfilters">
@@ -2755,12 +2758,12 @@
           <FilterDescription description="Determine which base pair on the specified chromosome to end range" displayName="End" field="gene_chrom_start" internalName="base_pair_end" qualifiers="&lt;=" type="range"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between known markers." displayName="Markers" internalName="marker_locations">
-          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="Marker" internalName="marker_start" type="text_entry_basic_filter"/>
-          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="Marker" internalName="marker_end" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the first marker to bound a group of genes between two markers" displayName="Start" field="marker_start" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_start" type="text_entry_basic_filter"/>
+          <FilterDescription description="Choose the end Marker to bound a group of genes between two markers" displayName="End" field="marker_end" handler="org.ensembl.mart.lib.MarkerFilterHandler" internalName="marker_end" type="text_entry_basic_filter"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes located between bands of a chromosome." displayName="Bands" internalName="band_locations">
-          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="Band" internalName="band_start" type="drop_down_basic_filter"/>
-          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="Band" internalName="band_end" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the first band to bound a group of genes between two bands" displayName="Start" field="band_start" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_start" type="drop_down_basic_filter"/>
+          <FilterDescription description="Choose the end Band to bound a group of genes between two bands" displayName="End" field="band_end" handler="org.ensembl.mart.lib.BandFilterHandler" internalName="band_end" type="drop_down_basic_filter"/>
         </FilterCollection>
       </FilterGroup>
       <FilterGroup internalName="gene">

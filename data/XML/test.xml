@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE MartConfiguration SYSTEM "file://localhost/home/dlondon/src/head/martj/data/XML/MartConfiguration.dtd">
+<!DOCTYPE MartConfiguration SYSTEM "martdatabase:MartConfiguration.dtd">
 <MartConfiguration description="For Testing Purposes Only" displayName="Ensembl Mart version 14.1" internalName="ensembl_mart_14_1">
   <FilterDescription description="For Testing Purposes Only" displayName="A Test MartConfiguration FilterDescription" internalName="testConfFilterDescription" type="list">
     <Option description="For Testing Purposes Only" displayName="A Test Option" internalName="testOption" isSelectable="true"/>
