@@ -817,7 +817,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         }
         if (intName == null)
           return;
-        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
+        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName, user);
 
       } catch (ConfigurationException e) {
       }
