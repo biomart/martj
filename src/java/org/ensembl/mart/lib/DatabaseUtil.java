@@ -8,6 +8,7 @@ package org.ensembl.mart.lib;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -106,7 +107,104 @@ public class DatabaseUtil {
     public String port;
     public String databaseName;
     public String jdbcDriverClassName;
+
+
+		/**
+		 * @return databaseName@host:port
+		 */
+		public String simpleRepresentation() {
+			return databaseName + "@" + host + ":" + port;
+		}
   };
+
+
+  /**
+   * Simple wrapper for a datasource that implements a version
+   * of toString() which prints something user friendly. Ideally
+   * we would extend PoollingAlgorithmDatasource but that is final.
+   */
+  private static class PrettyPrintDataSource implements DataSource {
+    
+    private DataSource datasource;
+    private String displayName;
+
+		private PrettyPrintDataSource(DataSource ds, String displayName) {
+      this.datasource = ds;
+      this.displayName = displayName;
+    }
+
+    public String toString() {
+      return displayName;
+    }
+    
+    
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		public boolean equals(Object obj) {
+			return datasource.equals(obj);
+		}
+
+		/**
+		 * @return
+		 * @throws java.sql.SQLException
+		 */
+		public Connection getConnection() throws SQLException {
+			return datasource.getConnection();
+		}
+
+		/**
+		 * @param username
+		 * @param password
+		 * @return
+		 * @throws java.sql.SQLException
+		 */
+		public Connection getConnection(String username, String password)
+			throws SQLException {
+			return datasource.getConnection(username, password);
+		}
+
+		/**
+		 * @return
+		 * @throws java.sql.SQLException
+		 */
+		public int getLoginTimeout() throws SQLException {
+			return datasource.getLoginTimeout();
+		}
+
+		/**
+		 * @return
+		 * @throws java.sql.SQLException
+		 */
+		public PrintWriter getLogWriter() throws SQLException {
+			return datasource.getLogWriter();
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		public int hashCode() {
+			return datasource.hashCode();
+		}
+
+		/**
+		 * @param seconds
+		 * @throws java.sql.SQLException
+		 */
+		public void setLoginTimeout(int seconds) throws SQLException {
+			datasource.setLoginTimeout(seconds);
+		}
+
+		/**
+		 * @param out
+		 * @throws java.sql.SQLException
+		 */
+		public void setLogWriter(PrintWriter out) throws SQLException {
+			datasource.setLogWriter(out);
+		}
+
+  }
+
 
   /**
    * Decomposes a databaseURL into it's constituent parts.
@@ -293,7 +391,8 @@ public class DatabaseUtil {
       poolAlgorithm.setPoolMax(maxPoolSize);
       tmp.setPoolingAlgorithm(poolAlgorithm);
 
-      dataSource = tmp;
+      String displayName = decompose(connectionString).simpleRepresentation();
+      dataSource = new PrettyPrintDataSource(tmp, displayName);
 
       return dataSource;
     } catch (InstantiationException e) {
