@@ -261,12 +261,12 @@ public final class AttributeQueryRunner implements QueryRunner {
 
         if (ds.getDatabaseType().equals("mysql")) {sql += " LIMIT " + totalRowsThisExecute + "," + maxRows;} //;(maxRows - lastIDRowsProcessed); 
         if (ds.getDatabaseType().equals("postgresql")) {
-        	int pslimit=maxRows-totalRowsThisExecute;
-        	sql += " LIMIT " + pslimit + " OFFSET " + totalRowsThisExecute;}
+        	//int pslimit=maxRows-totalRowsThisExecute;
+        	sql += " LIMIT " + maxRows + " OFFSET " + totalRowsThisExecute;}
         
 
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("SQL : " + sql);
+        if (logger.isLoggable(Level.INFO))
+          logger.info("SQL : " + sql);
 
         PreparedStatement ps = conn.prepareStatement(sql);
 
@@ -274,10 +274,6 @@ public final class AttributeQueryRunner implements QueryRunner {
         for (int i = 0, n = filters.length; i < n; ++i) {
           Filter f = curQuery.getFilters()[i];
           String value = f.getValue();
-          if (value != null) {
-            logger.fine("SQL (prepared statement value) : " + p + " = " + value);
-            ps.setString(p++, value);
-          }
         }
 
         ResultSet rs = ps.executeQuery();

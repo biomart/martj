@@ -173,8 +173,8 @@ public class QueryCompiler {
     pkbuf.insert(sql.indexOf(FROM), ", " + qualifiedLowestLevelKey);
     pksql = pkbuf.toString();
 
-    if (logger.isLoggable(Level.INFO)) {
-      logger.info("SQL: " + sql + "\n");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine("SQL: " + sql + "\n");
       logger.fine("PKSQL: " + pksql + "\n");
       logger.fine("MainTable: " + mainTable + "\n");
       logger.fine("LowestLevelKey: " + lowestLevelKey + "\n");
