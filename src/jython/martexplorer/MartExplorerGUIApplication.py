@@ -4,21 +4,26 @@
 
 # copyright EBI, GRL 2003
 
-# TODO implement each of the 'basic' nodes (database, species, focus,
-# format, destination) using NodeInfo instances. Create separate
-# config panels for each.
+# TODO 1 - add gene_stable_id attribute, make attributes managed by AttributesInputPage
 
-# TODO implement useful toString() or better summary():String methods
-# on targetComponents such as DatabaseConfPanel()
+# TODO 2 - construct query, and execute it.
+
+# TODO Region filter, add / remove, manage via RegionInputPage
+
+# TODO Filter page, list of unadded filters
+
+# TODO Attributes page, list of unadded attributes
 
 # TODO add implementation for Filter and Attributes. Clicking should
 # cause a list of available (not already added) items to be
 # shown. Selecting one of these will cause the respective config panel
 # to be displayed. If the OK button is pressed on these then they are
-# added to the query.
-
-# TODO support removing filter and attribute items from
+# added to the query. Support removing filter and attribute items from
 # quesry. "Delete" and or right click/delete.
+
+# TODO validation: chr start>0, end>start,
+# TODO strand = -1, Unstranded +1
+# TODO fetch chromosomes from db and load into drop down list.
 
 from jarray import array
 from java.lang import System, String
@@ -31,21 +36,13 @@ from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
-from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute
+from org.ensembl.mart.explorer import Query, IDListFilter, FieldAttribute, BasicFilter
 
 GAP = 5
+SPACE=" &nbsp;"
+        
 
-class QueryInputPage:
-    def updateQuery(self, query):
-        pass
-
-    def updatePage(self, query):
-        pass
-
-    def clear(self):
-        pass
-
-class BaseInputPage(QueryInputPage, Box, ChangeListener):
+class InputPage(Box, ChangeListener):
 
     """ Implements a Box container that can listen for change events
     and rebroadcast to attached listeners."""
@@ -62,19 +59,38 @@ class BaseInputPage(QueryInputPage, Box, ChangeListener):
     def addChangeListener(self, listener):
         self.changeListeners.append( listener )
 
+    def label(self):
+        return "<html>" + self.htmlSummary() + SPACE*50+"</html>"
 
-class DummyInputPage(QueryInputPage, JPanel):
+    def htmlSummary(self):
+
+	""" Returns summary description of the state of this input
+	page in HTML format. Call back method to be implemented by
+	derived classes. """
+
+	return "TODO"
+
+    def updateQuery(self, query):
+        pass
+
+    def updatePage(self, query):
+        pass
+
+    def clear(self):
+        pass
+
+
+
+class DummyInputPage(InputPage):
     def __init__(self, message):
+	InputPage.__init__(self)
         self.add( JLabel( "TEMPORARY PANEL:  " +message ) )
 
     def addChangeListener( self, listener ):
         pass
 
-    def toString(self):
-        return ""
 
-
-class LabelledComboBox(QueryInputPage, Box, ActionListener):
+class LabelledComboBox(Box, ActionListener):
 
     """ Abstract "label + combo box" component with optional radio
     button. Issues ChangeEvents to ChangeListeners if contents of
@@ -89,7 +105,8 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
         Box.__init__(self, BoxLayout.X_AXIS)
 
         if radioButtonGroup:
-            self.radioButton = JRadioButton( label, 0 )
+            self.radioButton = JRadioButton( label, 0 ,
+					     actionPerformed=self.actionPerformed)
             radioButtonGroup.add( self.radioButton )
             self.add( self.radioButton )
         else:
@@ -117,12 +134,14 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
     def clear(self):
         Tool.clear( self.box )
 
-    def toString(self):
+    def htmlSummary(self):
         item = self.box.selectedItem
         if item: return item
-        else: return "UNSET"
+        else: return ""
 
     def actionPerformed( self, event=None ):
+	if self.radioButton:
+	    self.radioButton.selected = 1
         for l in self.changeListeners:
             l.stateChanged( self.changeEvent )
 
@@ -133,7 +152,11 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
         self.box.setSelectedItem( text )
 
     def getText(self):
-        return self.box.selectedItem
+	""" Returns a jython string, "" if nothing selected. """
+	if self.box.selectedItem:
+	    return self.box.selectedItem
+	else:
+	    return ""
 
 
     def isSelected(self):
@@ -143,13 +166,13 @@ class LabelledComboBox(QueryInputPage, Box, ActionListener):
 
 
 
-class SpeciesInputPage(BaseInputPage):
+class SpeciesInputPage(InputPage):
 
     """ Input component manages display and communication between
     "species" drop down list <-> query.species."""
 
     def __init__(self):
-        BaseInputPage.__init__(self)
+        InputPage.__init__(self)
         self.box = LabelledComboBox("Species", self)
         self.add( self.box )
 
@@ -161,19 +184,21 @@ class SpeciesInputPage(BaseInputPage):
     def updatePage(self, query):
         self.box.setText( query.species )
         
-    def toString(self):
+    def htmlSummary(self):
+	desc = "<b>Species</b> "
         tmp = self.box.getText()
-        if tmp: return tmp
-        else: return "UNSET"
+        if tmp:
+	    desc = desc + tmp
+	return desc
 
 
-class FocusInputPage(BaseInputPage):
+class FocusInputPage(InputPage):
 
     """ Input component manages display and communication between
     "focus" drop down list <-> query.focus."""
 
     def __init__(self):
-        BaseInputPage.__init__(self)
+        InputPage.__init__(self)
         self.box = LabelledComboBox("Focus", self)
         self.add( self.box )
 
@@ -185,17 +210,19 @@ class FocusInputPage(BaseInputPage):
     def updatePage(self, query):
         self.box.setText( query.focus )
         
-    def toString(self):
-        tmp = self.box.getText()
-        if tmp: return tmp
-        else: return "UNSET"
+    def htmlSummary(self):
+        desc = "<b>Focus</b> "
+	tmp = self.box.getText()
+        if tmp:
+	    desc = desc + tmp
+        return desc
 
 
 
-class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
+class DatabaseInputPage(InputPage):
 
     def __init__(self):
-        Box.__init__(self, BoxLayout.Y_AXIS)
+        InputPage.__init__(self)
 
         self.host = LabelledComboBox("Host", self)
         self.port = LabelledComboBox("Port", self)
@@ -233,11 +260,11 @@ class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
     def addChangeListener(self, listener):
         self.changeListeners.append( listener )
 
-    def toString(self):
-        desc = "UNSET22"
+    def htmlSummary(self):
+        desc = "<b>Database</b> "
         tmp = self.host.getText()
         if tmp:
-            desc = tmp
+            desc = desc + tmp
             tmp = self.port.getText()
             if tmp:
                 desc = desc + ":" + tmp
@@ -245,12 +272,13 @@ class DatabaseInputPage(QueryInputPage, Box, ChangeListener):
             if tmp:
                 desc = desc + "/" + tmp
         return desc
+
         
 
-class DestinationInputPage(BaseInputPage):
+class DestinationInputPage(InputPage):
 
     def __init__(self):
-        BaseInputPage.__init__(self)
+        InputPage.__init__(self)
         group = ButtonGroup()
         
         self.file = LabelledComboBox("File", self, group)
@@ -259,20 +287,174 @@ class DestinationInputPage(BaseInputPage):
         self.add( self.file )
         self.add( self.window )
 
-    def toString(self):
-        # TODO next: display label properlyin tree node
+    def htmlSummary(self):
+	desc = "<b>Destnation</b> "
         if self.file.isSelected():
-            label =  "FILE: "+self.file.getText()
+            desc = desc + " File (" + self.file.getText() + ")"
         elif self.window.isSelected():
-            label = "WINDOW: " + self.window.getText()
-        else:
-            label = "UNSET"
-
-        print label
-        return label
+            desc =  desc + " Window (" + self.window.getText() + ")"
+	return desc
 
 
 
+
+class FormatInputPage(InputPage):
+
+    def __init__(self):
+        InputPage.__init__(self)
+        
+        self.tabulated = JRadioButton( "Tabulated Format", 0, actionPerformed=self.actionPerformed )
+	self.tab = JRadioButton( "tabs", 1, actionPerformed=self.actionPerformed )
+	self.comma = JRadioButton( "comma", 0, actionPerformed=self.actionPerformed )
+
+	self.fasta = JRadioButton( "FASTA Format", 0, actionPerformed=self.actionPerformed )
+
+        group = ButtonGroup()
+	group.add( self.tabulated )
+	group.add( self.fasta )
+
+	group2 = ButtonGroup()
+	group2.add( self.tab )
+	group2.add( self.comma )
+
+	d = (500,35)
+	tabulatedOptions = Box.createHorizontalBox()
+	tabulatedOptions.preferredSize = d
+	tabulatedOptions.maximumSize = d
+	tabulatedOptions.add( Box.createHorizontalStrut(50) )
+	tabulatedOptions.add( self.tabulated )
+	tabulatedOptions.add( self.tab )
+	tabulatedOptions.add( self.comma )
+	tabulatedOptions.add( Box.createHorizontalGlue() )
+
+	fastaOptions = Box.createHorizontalBox()
+	fastaOptions.preferredSize = d
+	fastaOptions.maximumSize = d
+	fastaOptions.add( Box.createHorizontalStrut(50) ) 
+	fastaOptions.add(self.fasta)
+	fastaOptions.add( Box.createHorizontalGlue() ) 
+
+	v = Box.createVerticalBox()
+	v.add( tabulatedOptions )
+        v.add( fastaOptions )
+	v.add( Box.createVerticalGlue() )
+	self.add( v )
+
+	self.dependencies()
+
+
+    def dependencies( self ):
+	self.tab.enabled = self.tabulated.selected
+	self.comma.enabled = self.tabulated.selected
+
+
+    def actionPerformed(self, event=None):
+	self.dependencies()
+	self.stateChanged(self.changeEvent)
+
+
+    def htmlSummary(self):
+
+	desc = "<b>Format</b> "
+	if self.tabulated.selected:
+	    desc = desc + "Tabulated"
+	    if self.tab.selected:
+		desc = desc + " ( tabs ) "
+	    elif self.comma.selected:
+		desc = desc + " ( commas ) "
+	elif self.fasta.selected:
+	    desc = desc + "Fasta"
+	return desc
+
+
+class OutputPage(InputPage):
+    def htmlSummary(self):
+	return "<html><b>Output</b></html>"
+
+
+class AttributePage(InputPage):
+    def htmlSummary(self):
+	return "<html><b>Attributes</b></html>"
+
+class FilterPage(InputPage):
+    def htmlSummary(self):
+	return "<html><b>Filters</b></html>"
+
+class RegionPage(InputPage):
+
+    def __init__(self):
+	InputPage.__init__(self)
+	self.chr = LabelledComboBox("Chromosome", self)
+	self.start = LabelledComboBox("Start", self)
+	self.end = LabelledComboBox("End", self)
+	self.strand = LabelledComboBox("Strand", self)
+
+	self.add(self.chr)
+	self.add(self.start)
+	self.add(self.end)
+	self.add(self.strand)
+    
+    def htmlSummary(self):
+	chr = self.chr.getText()
+	if chr: chr = "chr"+chr
+	else: chr = ""
+
+	start = self.start.getText()
+	if start: start = ":" + start
+	else: start = ""
+
+	end= self.end.getText()
+	if end: end = "-" + end
+	else: end = ""
+
+	strand = self.strand.getText()
+	if strand: strand = ":" + strand
+	else: strand = ""
+
+	return "<b>Region</b> " + chr + start + end + strand
+
+
+    def updateQuery(self, query):
+        # todo
+        pass
+
+    def updatePage(self, query):
+	for f in query.filters:
+	    if isinstance(f, BasicFilter):
+		if f.type=="chr_name":
+		    self.chr.setText( f.value )
+		elif f.type=="start":
+		    self.start.setText( f.value )
+		elif f.type=="end":
+		    self.end.setText( f.value )
+		elif f.type=="strand":
+		    self.strand.setText( f.value )		    
+
+
+    def clear(self):
+        # todo
+        pass
+
+
+
+class GeneTypeFilterPage(InputPage):
+
+    def __init__(self):
+	InputPage.__init__(self)
+	self.id = LabelledComboBox("Gene Type", self)
+	self.add( self.id )
+	
+    def htmlSummary(self):
+	id = self.id.getText()
+	if not id: id ==""
+	return "<b>Gene Stable ID</b> " + id
+
+    def updatePage(self, query):
+	# todo
+	pass
+
+
+    
 class CardContainer(JPanel):
     """A JPanel with a CardLayout plus show() method for showing a particular card."""
     
@@ -315,15 +497,8 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
         
 
     def toString(self):
-
-        # The first time the node is rendered the length of the text
-        # area to be rendered is set to the length of the string
-        # returned.  Any future node string longer than this will be
-        # cropped. Adding blank space "makes room" for long
-        # descriptions later.
-        SPACE="&nbsp;"
-        
-        return "<html><b>"+self.targetCardName+"</b>"+SPACE+self.targetComponent.toString()+SPACE*100+"</html>"
+	desc = self.targetComponent.label()
+        return desc
 
 
     def valueChanged(self, event):
@@ -339,7 +514,7 @@ class QueryTreeNode(DefaultMutableTreeNode, TreeSelectionListener, ChangeListene
         self.tree.repaint()
 
 
-class TreeNavigationPanel(JPanel, QueryInputPage):
+class TreeNavigationPanel(JPanel):
 
 
     def __init__(self):
@@ -349,16 +524,29 @@ class TreeNavigationPanel(JPanel, QueryInputPage):
         configPanel = CardContainer()
 
         self.databasePage = DatabaseInputPage()
-        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel, self.databasePage, "DATABASE" )
-        speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel, SpeciesInputPage(),"SPECIES" )
-        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel, FocusInputPage(),"focus" )
-        filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel, None,"filter" )
-        regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel, None,"region" )
-        outputNode = QueryTreeNode( tree, self.rootNode, 4, configPanel, None,"output" )
-        attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel, None,"attribute" )
-        formatNode = QueryTreeNode( tree, outputNode, 1, configPanel, None,"format" )
+	self.formatPage = FormatInputPage()
+	self.destinationPage = DestinationInputPage()
+	
+        dbNode = QueryTreeNode( tree, self.rootNode, 0, configPanel,
+				self.databasePage, "DATABASE" )
+        speciesNode = QueryTreeNode( tree, self.rootNode, 1, configPanel,
+				     SpeciesInputPage(),"SPECIES" )
+        focusNode = QueryTreeNode( tree, self.rootNode, 2, configPanel,
+				   FocusInputPage(),"focus" )
+        filtersNode = QueryTreeNode( tree, self.rootNode, 3, configPanel,
+				     FilterPage(),"filter" )
+        regionNode = QueryTreeNode( tree, filtersNode, 0, configPanel,
+				    RegionPage(),"region" )
+	geneTypeFilterNode = QueryTreeNode( tree, filtersNode, 1, configPanel,
+						GeneTypeFilterPage(), "gene_stable_id" )
+        outputNode = QueryTreeNode( tree, self.rootNode, 4, configPanel,
+				    OutputPage(),"output" )
+        attributesNode = QueryTreeNode( tree, outputNode, 0, configPanel,
+					AttributePage(),"attribute" )
+        formatNode = QueryTreeNode( tree, outputNode, 1, configPanel,
+				    self.formatPage,"format" )
         destinationNode = QueryTreeNode( tree, outputNode, 2, configPanel,
-                                         DestinationInputPage(),"destination" )
+                                         self.destinationPage,"destination" )
         
         # expand branches in tree
 	path = TreePath(self.rootNode).pathByAddingChild( filtersNode )
@@ -461,6 +649,10 @@ class MartGUIApplication(JFrame):
 
         q = Query(species = "homo_sapiens"
                   ,focus = "gene" )
+	q.addFilter( BasicFilter("chr_name", "=", "22") )
+	q.addFilter( BasicFilter("start", "=", "1") )
+	q.addFilter( BasicFilter("end", "=", "1000000") )
+	q.addFilter( BasicFilter("strand", "=", "1") )
         q.addFilter( IDListFilter("gene_stable_id",
                                   File( System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
         
