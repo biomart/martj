@@ -193,7 +193,8 @@ public final class GeneEISeqQueryRunner implements QueryRunner {
 					  if (! geneiDs.containsKey(geneID)) {
 					    if (geneiDs.size() > 0) {
 						    // write the previous genes data, and refresh the geneiDs TreeMap
-							  seqWriter.writeSequences(lastGene);
+						    if (lastGene.intValue() > 0)
+							    seqWriter.writeSequences(lastGene);
 							  geneiDs = new TreeMap();
 					    }
 							lastGene = geneID;					 
