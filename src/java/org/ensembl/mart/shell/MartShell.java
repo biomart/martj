@@ -1303,10 +1303,11 @@ public class MartShell {
 		if (!martMap.containsKey(name))
 			throw new InvalidQueryException(MARTREQ + " " + name + " has not been stored\n");
 
+    DataSource reqMart = (DataSource) martMap.get(name);
 		String ret = null;
 		try {
-			String user = envMart.getConnection().getMetaData().getUserName();
-			DatabaseURLElements els = DatabaseUtil.decompose(envMart.getConnection().getMetaData().getURL());
+			String user = reqMart.getConnection().getMetaData().getUserName();
+			DatabaseURLElements els = DatabaseUtil.decompose(reqMart.getConnection().getMetaData().getURL());
 			ret = "Mart: " + name + " HOST: " + els.host + " USER: " + user + " MART NAME: " + els.databaseName;
 		} catch (Exception e) {
 			throw new InvalidQueryException("Could not parse Mart for Information " + e.getMessage(), e);
