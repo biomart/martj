@@ -114,7 +114,9 @@
      <include name="libreadline-java.jar" />
      <include name="martj.jar" />
      <include name="mysql-connector-java-3.0.7-stable-bin.jar" />
-    <include name="p6spy.jar" />     
+     <include name="ojdbc14.jar" />
+     <include name="p6spy.jar" />     
+     <include name="junit.jar" />     
   </patternset>
 
   <!-- test distribution jars -->
