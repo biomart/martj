@@ -377,6 +377,7 @@ public class Query {
 	private List attributes = new Vector();
 	private List filters = new Vector();
 
+  private String queryName;
 	private int querytype = Query.ATTRIBUTE; // default to ATTRIBUTE, over ride for SEQUENCE
 	private SequenceDescription seqd;
 	private String[] primaryKeys;
@@ -548,6 +549,21 @@ public class Query {
     String oldDatasetName = this.datasetInternalName;
 		this.datasetInternalName = datasetName;
     changeSupport.firePropertyChange("datasetInternalName", oldDatasetName, datasetName );
+	}
+
+	/**
+   * Returns the name that has been set for this Query, null if not set
+	 * @return String Query name
+	 */
+	public String getQueryName() {
+		return queryName;
+	}
+
+	/**
+	 * @param string -- String name to apply to this Query.
+	 */
+	public void setQueryName(String string) {
+		queryName = string;
 	}
 
 }
