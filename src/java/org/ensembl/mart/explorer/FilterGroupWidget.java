@@ -42,27 +42,31 @@ import org.ensembl.mart.lib.config.FilterGroup;
  */
 public class FilterGroupWidget extends PageWidget {
 
-  private Logger logger = Logger.getLogger(FilterGroupWidget.class.getName());
+	private Logger logger = Logger.getLogger(FilterGroupWidget.class.getName());
 
-  private FilterGroup group;
-  
-  private Map internalNameToLeafWidget = new HashMap();
+	private FilterGroup group;
+
+	private Map internalNameToLeafWidget = new HashMap();
 
 	/**
 	 * @param name
 	 * @param query
 	 */
-	public FilterGroupWidget(Query query, String name, FilterGroup group, QueryTreeView tree) {
+	public FilterGroupWidget(
+		Query query,
+		String name,
+		FilterGroup group,
+		QueryTreeView tree) {
 		super(query, name, tree);
-		
-    this.group = group;
 
-    Box panel = Box.createVerticalBox();
-    leafWidgets = addCollections(panel, group.getFilterCollections());
-    panel.add(Box.createVerticalGlue());
-    
-    add(new JScrollPane(panel));
-    
+		this.group = group;
+
+		Box panel = Box.createVerticalBox();
+		leafWidgets = addCollections(panel, group.getFilterCollections());
+		panel.add(Box.createVerticalGlue());
+
+		add(new JScrollPane(panel));
+
 	}
 
 	/**
@@ -71,19 +75,19 @@ public class FilterGroupWidget extends PageWidget {
 	 * @return
 	 */
 	private List addCollections(Box panel, FilterCollection[] collections) {
-    List widgets = new ArrayList();
+		List widgets = new ArrayList();
 
-    for (int i = 0; i < collections.length; i++) {
+		for (int i = 0; i < collections.length; i++) {
 
-      FilterCollection collection = collections[i];
-      InputPage[] attributes = getFilterWidgets(collection);
-      widgets.addAll(Arrays.asList(attributes));
-      GridPanel p =
-        new GridPanel(attributes, 1, 400, 35, collection.getDisplayName());
-      panel.add(p);
+			FilterCollection collection = collections[i];
+			InputPage[] attributes = getFilterWidgets(collection);
+			widgets.addAll(Arrays.asList(attributes));
+			GridPanel p =
+				new GridPanel(attributes, 1, 400, 35, collection.getDisplayName());
+			panel.add(p);
 
-    }
-    return widgets;
+		}
+		return widgets;
 	}
 
 	/**
@@ -91,85 +95,89 @@ public class FilterGroupWidget extends PageWidget {
 	 * @return
 	 */
 	private InputPage[] getFilterWidgets(FilterCollection collection) {
-    List filterDescriptions = collection.getFilterDescriptions();
-    List pages = new ArrayList();
+		List filterDescriptions = collection.getFilterDescriptions();
+		List pages = new ArrayList();
 
-    for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
-      Object element = iter.next();
+		for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
+			Object element = iter.next();
 
-      if (element instanceof FilterDescription ) {
+			if (element instanceof FilterDescription) {
 
-        FilterDescription a = (FilterDescription) element;
-        
-        //FilterWidget w = new FilterWidget(query, a);
-        FilterWidget w = createFilterWidget(query, a);
-        if ( w!=null ) 
-          pages.add(w);
-      } 
-      else {
-        logger.severe(  "Unrecognised filter: " +  element.getClass().getName() + element); 
-      }
-      
-    }
+				FilterDescription a = (FilterDescription) element;
 
-    return (InputPage[]) pages.toArray(new InputPage[pages.size()]);
+				//FilterWidget w = new FilterWidget(query, a);
+				FilterWidget w = createFilterWidget(query, a);
+				if (w != null)
+					pages.add(w);
+			} else {
+				logger.severe(
+					"Unrecognised filter: " + element.getClass().getName() + element);
+			}
+
+		}
+
+		return (InputPage[]) pages.toArray(new InputPage[pages.size()]);
 	}
 
+	private FilterWidget createFilterWidget(
+		Query query,
+		FilterDescription filterDescription) {
 
-  private FilterWidget createFilterWidget(
-    Query query,
-    FilterDescription filterDescription) {
-      
-    String type = filterDescription.getType();
-    FilterWidget w = null;
+		String type = filterDescription.getType();
+		FilterWidget w = null;
 
-    if ("text".equals(type)) {
-    
-      w = new TextFilterWidget( this, query, filterDescription, tree );
-    
-    } else if ("list".equals(type) || "boolean_list".equals(type) ) {
-      
-      w = new ListFilterWidget( this, query, filterDescription, tree );
-      
-    } else if ("tree".equals(type)) {
-      
-      w = new TreeFilterWidget( this, query, filterDescription, tree );
-      
-    } else if ("boolean".equals(type) || "boolean_num".equals(type) ) {
-    
-      w = new BooleanFilterWidget( this, query, filterDescription, tree );
-    
-    } else if ("text_entry_basic_filter".equals(type) || "drop_down_basic_filter".equals(type) ) {
-    
-      w = new ListFilterWidget( this, query, filterDescription, tree );
-    
-    }
-    
-    
-    if ( w!=null ) {
-      
-      internalNameToLeafWidget.put( filterDescription.getInternalName(), w);
-      FilterPageSetWidget.TYPES.add( type );
-        
-       
-    }else {
-      FilterPageSetWidget.UNSUPPORTED_TYPES.add( type );
-      
-      logger.warning("Unsupported filter: " 
-      + filterDescription.getClass().getName()
-      + ", " + filterDescription );
-    
-    }
-    
-    return w;   
-  }
+		if ("text".equals(type)) {
+
+			w = new TextFilterWidget(this, query, filterDescription, tree);
+
+		} else if ("list".equals(type)) {
+
+			w = new ListFilterWidget(this, query, filterDescription, tree);
+
+		} else if ("tree".equals(type)) {
+
+			w = new TreeFilterWidget(this, query, filterDescription, tree);
+
+		} else if (
+			"boolean".equals(type)
+				|| "boolean_num".equals(type)
+				|| "boolean_list".equals(type)) {
+
+			w = new BooleanFilterWidget(this, query, filterDescription, tree);
+
+		} else if (
+			"text_entry_basic_filter".equals(type)
+				|| "drop_down_basic_filter".equals(type)) {
+
+			w = new ListFilterWidget(this, query, filterDescription, tree);
+
+		}
+
+		if (w != null) {
+
+			internalNameToLeafWidget.put(filterDescription.getInternalName(), w);
+			FilterPageSetWidget.TYPES.add(type);
+
+		} else {
+			FilterPageSetWidget.UNSUPPORTED_TYPES.add(type);
+
+			logger.warning(
+				"Unsupported filter: "
+					+ filterDescription.getClass().getName()
+					+ ", "
+					+ filterDescription);
+
+		}
+
+		return w;
+	}
 
 	/**
 	 * @param string
 	 * @return
 	 */
-	public FilterWidget getFilterWidget( String internalName ) {
-    return (FilterWidget)internalNameToLeafWidget.get( internalName );
+	public FilterWidget getFilterWidget(String internalName) {
+		return (FilterWidget) internalNameToLeafWidget.get(internalName);
 	}
 
 }

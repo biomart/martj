@@ -113,6 +113,7 @@ public class DatasetViewWidget
 
 			query.clear();
 			query.setDatasetView(dsv);
+      
 			if (dsv != null) {
 
 				query.setPrimaryKeys(dsv.getPrimaryKeys());

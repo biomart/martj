@@ -108,11 +108,11 @@ public class MartExplorer extends JFrame {
 			DSViewAdaptor a = QueryEditor.testDSViewAdaptor();
 			DatasetView dsv = a.getDatasetViews()[0];
 
-			me.datasetViewSettings.add(a);
-			me.doNewQuery();
-			((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
-				.getQuery()
-				.setDatasetView(dsv);
+			//me.datasetViewSettings.add(a);
+			//me.doNewQuery();
+//			((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
+//				.getQuery()
+//				.setDatasetView(dsv);
 		}
 
 	}
