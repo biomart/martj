@@ -36,9 +36,9 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
   //instanceCount for default adaptorName
   private static int count = 0;
-  
+
   private final String DEFAULT_ADAPTOR_NAME = "Composite";
-  
+
   protected Set adaptors = new HashSet();
   protected Set adaptorNameMap = new HashSet();
   protected String adaptorName = null;
@@ -47,7 +47,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * Creates instance of CompositeDSViewAdaptor.
    */
   public CompositeDSViewAdaptor() {
-    adaptorName = DEFAULT_ADAPTOR_NAME + count++; 
+    adaptorName = DEFAULT_ADAPTOR_NAME + count++;
   }
 
   /**
@@ -206,20 +206,19 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException {
     boolean removed = false;
 
-    for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
+    for (Iterator iter = adaptors.iterator(); !removed && iter.hasNext();) {
       DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
 
-      if (adaptor.supportsInternalName(dsv.getInternalName())) {
+      if (adaptor.supportsDataset(dsv.getDataset())) {
         if (adaptor instanceof MultiDSViewAdaptor) {
-          String[] inames = adaptor.getDatasetInternalNames();
-          if (inames.length == 1 && inames[0].equals(dsv.getInternalName()))
-            adaptors.remove(adaptor);
-          else
-             ((MultiDSViewAdaptor) adaptor).removeDatasetView(dsv);
-          removed = true;
-        } else
-          removed = adaptors.remove(adaptor);
-        break;
+          removed =
+            ((MultiDSViewAdaptor) adaptor).removeDatasetView(
+              adaptor.getDatasetViewByDatasetInternalName(dsv.getDataset(), dsv.getInternalName()));
+        } else {
+          DatasetView thisDSV = adaptor.getDatasetViewByInternalName(dsv.getInternalName());
+          if (thisDSV.equals(dsv))
+            removed = adaptors.remove(adaptor);
+        }
       }
     }
 
@@ -281,13 +280,13 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
    */
   public boolean supportsDataset(String dataset) throws ConfigurationException {
-    return getDatasetViewByDataset(dataset).length > 0;
+    return getDatasetViewsByDataset(dataset).length > 0;
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset) throws ConfigurationException {
+  public DatasetView[] getDatasetViewsByDataset(String dataset) throws ConfigurationException {
 
     ArrayList l = new ArrayList();
     DatasetView[] views = getDatasetViews();
@@ -350,19 +349,19 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
     DSViewAdaptor dsva = null;
-    
-    if (adaptorNameMap.contains(adaptorName)) {      
+
+    if (adaptorNameMap.contains(adaptorName)) {
       for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
         DSViewAdaptor element = (DSViewAdaptor) iter.next();
         if (element.getName().equals(adaptorName)) {
           dsva = element;
           break;
         } else if (element.supportsAdaptor(adaptorName))
-          dsva = element.getAdaptorByName( adaptorName );
+          dsva = element.getAdaptorByName(adaptorName);
       }
-      
+
     }
-    
+
     return dsva;
   }
 
@@ -378,16 +377,16 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
     List l = new ArrayList();
-    
+
     if (adaptorNameMap.contains(adaptorName)) {
       for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
         DSViewAdaptor element = (DSViewAdaptor) iter.next();
-        
+
         if (element.getName().equals(adaptorName)) {
-          l.addAll( Arrays.asList(element.getDatasetNames()));
+          l.addAll(Arrays.asList(element.getDatasetNames()));
           break;
-        } else if (element.supportsAdaptor( adaptorName )) {
-          l.addAll( Arrays.asList(element.getDatasetNames( adaptorName )));
+        } else if (element.supportsAdaptor(adaptorName)) {
+          l.addAll(Arrays.asList(element.getDatasetNames(adaptorName)));
           break;
         }
       }
@@ -415,7 +414,7 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException {
     List l = new ArrayList();
-    DatasetView[] views = getDatasetViewByDataset(dataset);
+    DatasetView[] views = getDatasetViewsByDataset(dataset);
     for (int i = 0, n = views.length; i < n; i++) {
       l.add(views[i].getDisplayName());
     }
@@ -428,28 +427,28 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    */
   public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException {
     List l = new ArrayList();
-    DatasetView[] views = getDatasetViewByDataset(dataset);
+    DatasetView[] views = getDatasetViewsByDataset(dataset);
     for (int i = 0, n = views.length; i < n; i++) {
       l.add(views[i].getInternalName());
     }
 
     return (String[]) l.toArray(new String[l.size()]);
   }
-  
+
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsAdaptor(java.lang.String)
    */
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
     boolean supports = adaptorNameMap.contains(adaptorName);
-    
+
     if (!supports) {
       for (Iterator iter = adaptors.iterator(); !supports && iter.hasNext();) {
         DSViewAdaptor element = (DSViewAdaptor) iter.next();
-        
-        supports = element.supportsAdaptor( adaptorName );
+
+        supports = element.supportsAdaptor(adaptorName);
       }
     }
-    
+
     return supports;
   }
 
