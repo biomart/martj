@@ -568,4 +568,17 @@ public class Query {
 
   }
 
+  /**
+   * Unsets all property values.
+   */
+  public void clear() {
+    removeAllAttributes();
+    removeAllFilters();
+    setDatasetInternalName(null);
+    setDataSource(null);
+    setLimit(0);
+    setPrimaryKeys(null);
+    setStarBases(null);
+  }
+
 }
