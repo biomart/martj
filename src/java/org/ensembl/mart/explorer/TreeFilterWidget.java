@@ -44,7 +44,6 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.QueryFilterSettings;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
