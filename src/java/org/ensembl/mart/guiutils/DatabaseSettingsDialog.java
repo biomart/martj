@@ -207,13 +207,20 @@ public class DatabaseSettingsDialog extends Box {
     String t = "mysql";
     if ( !databaseType.hasItem(t) ) 
       databaseType.addItem(t);
-      
+    String t1 ="oracle";
+   if ( !databaseType.hasItem(t1) )
+      databaseType.addItem(t1);
+     
+ 
     driver.load(preferences);
     // ensure drivers are available
     String d = "com.mysql.jdbc.Driver";
     if ( !driver.hasItem(d) )
       driver.addItem(d);
-    
+ String d1 = "oracle.jdbc.driver.OracleDriver";
+    if ( !driver.hasItem(d1) )
+      driver.addItem(d1);
+
 		host.load(preferences);
 		port.load(preferences);
 		database.load(preferences);
