@@ -39,6 +39,7 @@ import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.NullableFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
+import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterPage;
@@ -879,6 +880,7 @@ public class MartShellLib {
 		Query newQuery = new Query(inquery);
 
 		List atts = new ArrayList();
+    Hashtable maxSelects = new Hashtable(); // will hold max-select keyed by collection.internalName
 		StringTokenizer attTokens = new StringTokenizer(attString.toString(), ",");
 
 		while (attTokens.hasMoreTokens()) {
@@ -888,7 +890,6 @@ public class MartShellLib {
 
 			if (currentApage == null) {
 				currentApage = dset.getPageForAttribute(attname);
-				atts.add(dset.getUIAttributeDescriptionByName(attname));
 			} else {
 				if (!currentApage.containsUIAttributeDescription(attname)) {
 					if (currentApage.getInternalName().equals("sequences"))
@@ -904,8 +905,27 @@ public class MartShellLib {
 								"Cannot request attributes from different Attribute Pages " + attname + " in " + currentApage + " intName is not\n");
 					}
 				}
-				atts.add(dset.getUIAttributeDescriptionByName(attname));
-			}
+      }
+      
+      //check maxSelect
+      AttributeCollection collection = currentApage.getCollectionForAttribute(attname);
+      String colname = collection.getInternalName();
+      int maxSelect = collection.getMaxSelect();
+      
+      if ( maxSelect > 0) {
+        if (maxSelects.containsKey(colname)) {
+          int oldMax = ( (Integer) maxSelects.get(colname)).intValue();
+          oldMax++;
+          if (oldMax > maxSelect)
+            throw new InvalidQueryException("You cannot select more than "+ maxSelect + " attributes from AttributeCollection " + colname + "\n");
+          else
+            maxSelects.put(colname, new Integer(oldMax));
+        }
+        else
+          maxSelects.put(colname, new Integer(1));
+      }
+      
+			atts.add(dset.getUIAttributeDescriptionByName(attname));
 		}
 
 		for (int i = 0, n = atts.size(); i < n; i++) {
