@@ -21,6 +21,7 @@
 package org.ensembl.mart.explorer;
 
 import java.util.*;
+
 import org.apache.log4j.Logger;
 import java.sql.*;
 
@@ -40,254 +41,319 @@ public class CompiledSQLQuery {
 	 * @throws SQLException
 	 * @see Query
 	 */
-    public CompiledSQLQuery(Connection conn, Query query) throws SQLException {
-        this.query = query;
-        this.conn = conn;
-        createMappers();
-    }
-
-    /**
-     * 
-     * @return Query query
-     */
-    public Query getQuery(){
-        return query;
-    }
-
-    /**
-     * creates a String SQL statement suitable for preparing in
-     * a PreparedStatement using a mySQL Connection.
-     * 
-     * @return String SQL - SQL to be executed
-     * @throws InvalidQueryException
-     */
-    public String toSQL() throws InvalidQueryException {
-        // select gene_stable_id from homo_sapiens_core_gene where
-        // chromosome_id="3" limit 3;
-        if ( sql==null ) sql = compileSQL();
-        return sql;
-    }
-  
-    private String compileSQL() throws InvalidQueryException{
-       
-        baseTableName = query.getSpecies() + "_core_" + query.getFocus();
-        StringBuffer buf = new StringBuffer();
-        boolean success = false;
-
-        for(int m=0; m<mappers.length && !success; ++m) {
-            buf.delete(0, buf.length());
-
-            success = selectClause( buf, mappers[m] );
-            if ( logger.isDebugEnabled() ) 
-              logger.debug( "select clause:" +
-                            buf.toString() );
-
-            if ( success ) success = fromClause( buf, mappers[m] );
-            if ( success && logger.isDebugEnabled() ) 
-              logger.debug( "select + from clauses:" +
-                            buf.toString() );
-
-            if ( success ) success = whereClause( buf, mappers[m] );        
-            if ( success && logger.isDebugEnabled() ) 
-              logger.debug( "select + from + where clauses:" +
-                            buf.toString() );
-		}
-      
-        if ( !success ) throw new InvalidQueryException("Failed to compile query :" + query);
-
-        return buf.toString();
-    }
-
-    /**
-     * @return true if all attributes in the query could be mapped to tables by
-     * the mapper, otherwise false.
-     */
-    private boolean selectClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
-
-        final int nAttributes = query.getAttributes().length;
-
-        if ( nAttributes==0 ) throw new InvalidQueryException("No attributes selected.");
-    
-        buf.append( "SELECT " );
-
-        for( int i=0; i<nAttributes; ++i ) {
-
-            Attribute a = query.getAttributes()[i];
-            String colName = a.getName();
-      
-            if ( !mapper.canMap( colName ) ) return false;
-                buf.append( mapper.qualifiedName( colName ) );
-      
-            if ( i+1 < nAttributes ) buf.append( ", " );
-		}
-
-        return true;
-  }
-
-
-    /**
-     * Builds array of "from" tables by looking at all the columns mentioned in
-     * the queries attributes and filters.
-     *
-     * @return true if all attributes and filter 'columns' in the query could
-     * be mapped to tables by the mapper, otherwise false.
-     */
-    private boolean fromClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
-
-        Set relevantTables = new HashSet();
-    
-        for(int i=0; i<query.getAttributes().length; ++i) {
-            String colName = query.getAttributes()[i].getName();
-            if ( !mapper.canMap( colName ) ) return false;
-
-            relevantTables.add( mapper.tableName( colName ) );
-        }
-
-        for(int i=0; i<query.getFilters().length; ++i) {
-            String colName = query.getFilters()[i].getType();
-            if ( !mapper.canMap( colName ) ) return false;
-         
-            relevantTables.add( mapper.tableName( colName ) );
-		}
-
-        fromTables = new String[ relevantTables.size() ];
-        relevantTables.toArray( fromTables );
-
-        buf.append( " FROM " );
-        for( int i=0; i<fromTables.length; ++i) {
-            if ( i>0 ) buf.append( " , " ); 
-               buf.append( fromTables[i] );
-		}
-
-        return true;
+	public CompiledSQLQuery(Connection conn, Query query) throws SQLException {
+		this.query = query;
+		this.conn = conn;
+		createMappers();
 	}
-  
 
-    /**
-     * @return true if all filter condition 'columns' in the query could be mapped to tables by
-     * the mapper, otherwise false.
-     */
-    private boolean whereClause( StringBuffer buf, ColumnMapper mapper ) throws InvalidQueryException {
+	/**
+	 * 
+	 * @return Query query
+	 */
+	public Query getQuery() {
+		return query;
+	}
 
-        final int nFilters = query.getFilters().length;
+	/**
+	 * creates a String SQL statement suitable for preparing in
+	 * a PreparedStatement using a mySQL Connection.
+	 * 
+	 * @return String SQL - SQL to be executed
+	 * @throws InvalidQueryException
+	 */
+	public String toSQL() throws InvalidQueryException {
+		// select gene_stable_id from homo_sapiens_core_gene where
+		// chromosome_id="3" limit 3;
+		if (sql == null)
+			sql = compileSQL();
+		return sql;
+	}
 
-        if ( nFilters>0 || fromTables.length>1 )
-            buf.append( " WHERE " );
-    
-        boolean and = false;
+	private String compileSQL() throws InvalidQueryException {
 
-        // Add user defined filters to where clause
-        if ( nFilters!=0 ) {
-      
-            for( int i=0; i<nFilters; ++i ) {
+		logger.info("");
 
-                Filter f = query.getFilters()[i];
-                String colName = f.getType();
-               // don't need this next check because already checked in "fromClause"
-               // but leave incase this method is ever called without calling that
-               // method previously.
-               if ( !mapper.canMap( colName ) ) return false; 
+		boolean success = false;
+		StringBuffer buf = null;
+		buf = new StringBuffer();
 
-               if ( and ) buf.append( " AND " );
-               colName = mapper.qualifiedName( colName );
-               buf.append( colName ).append( f.getRightHandClause() ).append( " " );
-               and = true;
+		for (int m = 0; m < mappers.length && !success; ++m) {
+			buf.delete(0, buf.length());
+
+			success = selectClause(buf, mappers[m]);
+			if (logger.isDebugEnabled())
+				logger.debug("select clause:" + buf.toString());
+
+			if (success)
+				success = fromClause(buf, mappers[m]);
+			if (success && logger.isDebugEnabled())
+				logger.debug("select + from clauses:" + buf.toString());
+
+			if (success)
+				success = whereClause(buf, mappers[m]);
+			if (success && logger.isDebugEnabled())
+				logger.debug("select + from + where clauses:" + buf.toString());
+
+		}
+		if (!success)
+			throw new InvalidQueryException("Failed to compile query :" + query);
+
+		return buf.toString();
+	}
+
+	/**
+	 * @return true if all attributes in the query could be mapped to tables by
+	 * the mapper, otherwise false.
+	 */
+	private boolean selectClause(StringBuffer buf, ColumnMapper mapper)
+		throws InvalidQueryException {
+
+		final int nAttributes = query.getAttributes().length;
+
+		if (nAttributes == 0)
+			throw new InvalidQueryException("No attributes selected.");
+
+		buf.append("SELECT ");
+
+		for (int i = 0; i < nAttributes; ++i) {
+
+			Attribute a = query.getAttributes()[i];
+			String colName = a.getName();
+
+			if (!mapper.canMap(colName))
+				return false;
+			buf.append(mapper.qualifiedName(colName));
+
+			if (i + 1 < nAttributes)
+				buf.append(", ");
+		}
+
+		return true;
+	}
+
+	/**
+	 * Builds array of "from" tables by looking at all the columns mentioned in
+	 * the queries attributes and filters.
+	 *
+	 * @return true if all attributes and filter 'columns' in the query could
+	 * be mapped to tables by the mapper, otherwise false.
+	 */
+	private boolean fromClause(StringBuffer buf, ColumnMapper mapper)
+		throws InvalidQueryException {
+
+		Set relevantTables = new HashSet();
+
+		for (int i = 0; i < query.getAttributes().length; ++i) {
+			String colName = query.getAttributes()[i].getName();
+			if (!mapper.canMap(colName))
+				return false;
+
+			relevantTables.add(mapper.tableName(colName));
+		}
+
+		for (int i = 0; i < query.getFilters().length; ++i) {
+			String colName = query.getFilters()[i].getType();
+			if (!mapper.canMap(colName))
+				return false;
+
+			relevantTables.add(mapper.tableName(colName));
+		}
+
+		fromTables = new String[relevantTables.size()];
+		relevantTables.toArray(fromTables);
+
+		buf.append(" FROM ");
+		for (int i = 0; i < fromTables.length; ++i) {
+			if (i > 0)
+				buf.append(" , ");
+			buf.append(fromTables[i]);
+		}
+
+		return true;
+	}
+
+	/**
+	 * @return true if all filter condition 'columns' in the query could be mapped to tables by
+	 * the mapper, otherwise false.
+	 */
+	private boolean whereClause(StringBuffer buf, ColumnMapper mapper)
+		throws InvalidQueryException {
+
+		final int nFilters = query.getFilters().length;
+
+		if (nFilters > 0 || fromTables.length > 1)
+			buf.append(" WHERE ");
+
+		boolean and = false;
+
+		// Add user defined filters to where clause
+		if (nFilters != 0) {
+
+			for (int i = 0; i < nFilters; ++i) {
+
+				Filter f = query.getFilters()[i];
+				String colName = f.getType();
+				// don't need this next check because already checked in "fromClause"
+				// but leave incase this method is ever called without calling that
+				// method previously.
+				if (!mapper.canMap(colName))
+					return false;
+
+				if (and)
+					buf.append(" AND ");
+				colName = mapper.qualifiedName(colName);
+				buf.append(colName).append(f.getRightHandClause()).append(" ");
+				and = true;
 			}
 		}
 
-        // Add joins to where clause
-        if ( fromTables.length>1 ) {
-      
-            String joinKey = "." + query.getFocus() + "_id";
-            String centralTable = fromTables[0];
+		// Add joins to where clause
+		if (fromTables.length > 1) {
 
-            // Join from (first) central table to dimenstion tables.
-            for(int i=1; i<fromTables.length; i++) {
+			String centralTable = fromTables[0];
+			String joinKey = mapper.getPrimaryKey();
 
-                if ( and ) buf.append( " AND " );
-                and = true;
+			// Join from (first) central table to dimenstion tables.
+			for (int i = 1; i < fromTables.length; i++) {
 
-                buf.append( centralTable ).append( joinKey )
-                 .append( "=").append( fromTables[i] ).append( joinKey );
+				if (and)
+					buf.append(" AND ");
+				and = true;
+
+				buf
+					.append(centralTable)
+					.append(joinKey)
+					.append("=")
+					.append(fromTables[i])
+					.append(joinKey);
 			}
 		}
-    
-        return true;
+
+		return true;
 	}
 
+	private String[] tables() throws SQLException {
+		ArrayList tables = new ArrayList();
 
-    private String[] tables() throws SQLException {
-        ArrayList tables = new ArrayList();
-        
-        ResultSet rs = conn.createStatement().executeQuery("show tables");
-        while (rs.next()) {
-            tables.add(rs.getString(1));
-        }
-        return toStringArray( tables );
+		ResultSet rs = conn.createStatement().executeQuery("show tables");
+		while (rs.next()) {
+			tables.add(rs.getString(1));
+		}
+		return toStringArray(tables);
 	}
 
+	private String[] columns(String table) throws SQLException {
+		ArrayList columns = new ArrayList();
 
-    private String[] columns(String table) throws SQLException {
-        ArrayList columns = new ArrayList();
-
-         ResultSet rs = conn.createStatement().executeQuery("describe "+table);
-         while (rs.next()) {
-             columns.add( rs.getString(1) );
-         }
-         return toStringArray( columns );
+		ResultSet rs = conn.createStatement().executeQuery("describe " + table);
+		while (rs.next()) {
+			columns.add(rs.getString(1));
+		}
+		return toStringArray(columns);
 	}
 
-    /**
-      * Creates mappers from database. First mappers correspond to single
-      * tables, the last one to all tables (useful when joins needed).
-      */
-    private void createMappers()  throws SQLException {
+	/**
+	 * Determines if value is in array.
+	 * @param array values to search
+	 * @param value value to search for
+	 * @return true if value in array, otherwise false.
+	 */
+	private boolean contains(Object[] array, Object value) {
+		return value.equals(array[Arrays.binarySearch(array, value)]);
+	}
 
-        List tables = new ArrayList();
-        List mymappers = new ArrayList();
+	private Table table(String tableName, String starName) throws SQLException {
+		return new Table(tableName, columns(tableName), starName);
+	}
 
-        String[] tableNames = tables();
-        Arrays.sort( tableNames ); // this makes the focus table first.
-    
-        String baseName = query.getSpecies() + "_core_" + query.getFocus();
-        logger.debug("Filtering tables beginning with " + baseName 
-                     + "(total num tables = "+tableNames.length+")");
+	/**
+	  * Creates mappers from database. First mappers correspond to single
+	  * tables, the last one to all tables (useful when joins needed).
+	  */
+	private void createMappers() throws SQLException {
 
-        // We create a mapper for each table. These can be used when no joins are
-        // necessary.
-        for (int i=0; i<tableNames.length; ++i) {
-            String tableName = tableNames[i];
-      
-            if ( tableName.startsWith( baseName ) ) { // ignore irrelevant tables.
-        
-                String[] colArray = columns(tableName);
-                Table table = new Table( tableName
-                                        ,colArray
-                                        ,baseName);
-                tables.add( table );
-                // create mapper for single table;
-               mymappers.add( new ColumnMapper( new Table[]{ table }) );      
-			}     
+		
+		List dimensionMappers = new ArrayList();
+		List mainMappers = new ArrayList();
+		List joinMappers = new ArrayList();
+
+		List dimensionTables = new ArrayList();
+		List mainTables = new ArrayList();
+		
+		String[] tableNames = tables();
+		String[] starNames = query.getStarBases();
+
+		// Get all relevant dimension tables and create a mapper for each
+		for (int i = 0; i < tableNames.length; i++) {
+			String tableName = tableNames[i];
+			for (int j = 0; j < starNames.length; j++) {
+				String starName = starNames[j];
+				if (tableName.startsWith(starName) && tableName.endsWith("_dm")) {
+					Table table = table(tableName, starName);
+					dimensionMappers.add(new ColumnMapper(new Table[] { table }, null));
+					dimensionTables.add(table);
+					break;
+				}
+			}
 		}
 
-        // Create join mapper.
-        Table[] tableArr = new Table[ tables.size() ];
-        tables.toArray( tableArr );
-        ColumnMapper joinMapper = new ColumnMapper( tableArr );
-        mymappers.add( joinMapper );
+		// Create a mapper for each star's "main" table
+		//	sort so that we can use Arrays.binarySearch() later	
+		Arrays.sort(tableNames);
+		String[] primaryKeys = query.getPrimaryKeys();
+		for (int i = 0; i < starNames.length; i++) {
+			String primaryKey = primaryKeys[i];
+			for (int j = 0; j < starNames.length; j++) {
+				String starName = starNames[j];
+				String tableName = starName + "_main";
 
-        mappers = (ColumnMapper[])mymappers.toArray( new ColumnMapper[ mymappers.size() ] );
+				if (!contains(tableNames, tableName))
+					// TODO throw InvalidQueryException
+					throw new RuntimeException(
+						"Star has no _main table in database" + starName);
+
+				Table table = table(tableName, starName);
+				mainMappers.add(new ColumnMapper(new Table[] { table }, primaryKey));
+				mainTables.add(table);
+
+				// Create a mapper for each main containing main + all dm tables
+				// store them separately in _joinMappers_ so that we can add them
+				// to the end of _mappersList_ 		
+				ArrayList mainAndDimensionTables = new ArrayList();
+				mainAndDimensionTables.add(table);
+				mainAndDimensionTables.addAll(dimensionTables);
+				Table[] tableArray = new Table[mainAndDimensionTables.size()];
+				mainAndDimensionTables.toArray(tableArray);
+				joinMappers.add(new ColumnMapper(tableArray, primaryKey));
+
+			}
+		}
+		
+		List mappersList = new ArrayList();
+		mappersList.addAll( mainMappers );
+		mappersList.addAll( dimensionMappers );
+		mappersList.addAll( joinMappers );
+
+		mappers =
+			(ColumnMapper[]) mappersList.toArray(
+				new ColumnMapper[mappersList.size()]);
+		
+		StringBuffer buf = new StringBuffer();
+		if ( logger.isDebugEnabled()) {
+			logger.debug( "Num mappers = " + mappers.length );
+		}
 	}
 
-    private String[] toStringArray( List list ) {
-        return (String[])list.toArray(new String[ list.size() ]);
-    }
+	private String[] toStringArray(List list) {
+		return (String[]) list.toArray(new String[list.size()]);
+	}
 
-    private String sql = null;
-    private Query query = null;
-    private Connection conn = null;
-    private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
-    private String baseTableName = null;
-    private String[] fromTables = null;
-    private ColumnMapper[] mappers = null;
+	private String sql = null;
+	private Query query = null;
+	private Connection conn = null;
+	private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
+	private String starName = null;
+	private String[] fromTables = null;
+	private ColumnMapper[] mappers = null;
 }
