@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -91,6 +93,8 @@ public class DatasetWidget
   implements PropertyChangeListener {
 
   private Logger logger = Logger.getLogger(DatasetWidget.class.getName());
+
+  private Matcher separatorMatcher = Pattern.compile("__").matcher("");
 
   // --- state
 
@@ -180,10 +184,9 @@ public class DatasetWidget
 
       this.selectedDatasetView = dsv;
 
-      String text = (String) displayNameToShortName.get(displayName);
-      currentSelectedText.setText(text);
-
-      setNodeLabel("Dataset", text);
+      String label = removeSeparators(displayName);
+      currentSelectedText.setText(label);
+      setNodeLabel("Dataset", label);
 
     } else {
 
@@ -202,6 +205,16 @@ public class DatasetWidget
     updateQueryDatasetName(datasetViewInternalName);
 
     lastSelectedDisplayName = displayName;
+  }
+
+  /**
+   * @param displayName
+   * @return
+   */
+  private String removeSeparators(String name) {
+
+    return separatorMatcher.reset(name).replaceAll(" ");
+
   }
 
   /**
@@ -227,9 +240,7 @@ public class DatasetWidget
       // undo if user changes mind
       if (o != JOptionPane.OK_OPTION) {
 
-        String text =
-          (String) displayNameToShortName.get(lastSelectedDisplayName);
-        currentSelectedText.setText(text);
+        currentSelectedText.setText(removeSeparators(displayName));
         return;
       }
     }
@@ -254,18 +265,19 @@ public class DatasetWidget
 
     query.removePropertyChangeListener(this);
     query.setDatasetInternalName(datasetName);
-    
-    if ( datasetName==null ) {
-      query.setStarBases( null );
-      query.setPrimaryKeys( null );
-      query.setDataSource( null );
-      
+
+    if (datasetName == null) {
+      query.setStarBases(null);
+      query.setPrimaryKeys(null);
+      query.setDataSource(null);
+
     } else {
-    
-      DatasetView view = (DatasetView) datasetNameToDatasetView.get( datasetName );
-      query.setStarBases( view.getStarBases() );
-      query.setPrimaryKeys( view.getPrimaryKeys() );
-      query.setDataSource( view.getDatasource() );
+
+      DatasetView view =
+        (DatasetView) datasetNameToDatasetView.get(datasetName);
+      query.setStarBases(view.getStarBases());
+      query.setPrimaryKeys(view.getPrimaryKeys());
+      query.setDataSource(view.getDatasource());
     }
     query.addPropertyChangeListener(this);
   }
@@ -456,7 +468,7 @@ public class DatasetWidget
       public int compare(Object o1, Object o2) {
         DatasetView d1 = (DatasetView) o1;
         DatasetView d2 = (DatasetView) o2;
-        return d1.getInternalName().compareTo(d2.getInternalName());
+        return d1.getDisplayName().compareTo(d2.getDisplayName());
       }
     });
 
@@ -469,7 +481,7 @@ public class DatasetWidget
     for (int i = 0; i < datasetViews.length; i++) {
       final DatasetView view = datasetViews[i];
 
-      final String datasetName = view.getInternalName();
+      final String datasetName = view.getDisplayName();
 
       String[] elements = datasetName.split("__");
 
@@ -478,7 +490,8 @@ public class DatasetWidget
         String substring = elements[j];
 
         JMenu parent = treeTopMenu;
-        if ( j>0 ) parent = (JMenu) menus.get(elements[j - 1]);
+        if (j > 0)
+          parent = (JMenu) menus.get(elements[j - 1]);
 
         if (j + 1 == elements.length) {
 
@@ -489,7 +502,7 @@ public class DatasetWidget
               doUserSelectDatasetView(view.getDisplayName());
             }
           });
-          parent.add( item );
+          parent.add(item);
 
         } else {
 

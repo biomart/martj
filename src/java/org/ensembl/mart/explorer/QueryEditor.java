@@ -73,6 +73,7 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.shell.MartShellLib;
 import org.ensembl.mart.util.*;
 
 // TODO Support attribute order rearrangment via DnD
@@ -89,563 +90,607 @@ import org.ensembl.mart.util.*;
  * </p>
  */
 public class QueryEditor
-	extends JPanel
-	implements PropertyChangeListener, TreeSelectionListener {
+  extends JPanel
+  implements PropertyChangeListener, TreeSelectionListener {
 
-	private DSViewAdaptor dsViewAdaptor;
+  private DSViewAdaptor dsViewAdaptor;
 
-	private JSplitPane topAndBottom;
+  private JSplitPane topAndBottom;
 
-	private JSplitPane top;
+  private JSplitPane top;
 
-	private static final Logger logger =
-		Logger.getLogger(QueryEditor.class.getName());
+  private static final Logger logger =
+    Logger.getLogger(QueryEditor.class.getName());
 
-	/** default percentage of total width allocated to the tree constituent component. */
-	private double TREE_WIDTH = 0.27d;
+  /** default percentage of total width allocated to the tree constituent component. */
+  private double TREE_WIDTH = 0.27d;
 
-	/** default percentage of total height allocated to the tree constituent component. */
-	private double TREE_HEIGHT = 0.7d;
+  /** default percentage of total height allocated to the tree constituent component. */
+  private double TREE_HEIGHT = 0.7d;
 
-	private Dimension MINIMUM_SIZE = new Dimension(50, 50);
+  private Dimension MINIMUM_SIZE = new Dimension(50, 50);
 
-	/** DatasetViews defining the "query space" this editor encompasses. */
-	private DatasetView[] datasetViews;
+  /** DatasetViews defining the "query space" this editor encompasses. */
+  private DatasetView[] datasetViews;
 
-	/** The query part of the model. */
-	private Query query;
+  /** The query part of the model. */
+  private Query query;
 
-	private Engine engine = new Engine();
+  private Engine engine = new Engine();
 
-	private DefaultTreeModel treeModel;
-	private DefaultMutableTreeNode rootNode;
+  private DefaultTreeModel treeModel;
+  private DefaultMutableTreeNode rootNode;
 
-	private JTree treeView;
-	private JPanel inputPanel;
-	private JEditorPane outputPanel = new JEditorPane();
+  private JTree treeView;
+  private JPanel inputPanel;
+  private JEditorPane outputPanel = new JEditorPane();
 
-	private DatasetWidget datasetPage;
-	private String currentDatasetName;
-	private OutputSettingsPage outputSettingsPage;
+  private DatasetWidget datasetPage;
+  private String currentDatasetName;
+  private OutputSettingsPage outputSettingsPage;
 
-	private AttributePageSetWidget attributesPage;
-	private FilterPageSetWidget filtersPage;
+  private AttributePageSetWidget attributesPage;
+  private FilterPageSetWidget filtersPage;
 
-	private Option lastDatasetOption;
+  private Option lastDatasetOption;
 
-	/** Maps attributes to the tree node they are represented by. */
-	private Map attributeToWidget;
+  /** Maps attributes to the tree node they are represented by. */
+  private Map attributeToWidget;
 
-	public QueryEditor() {
+  public QueryEditor() {
 
-		// don't use default FlowLayout manager because it won't resize components if
-		// QueryEditor is resized.
-		setLayout(new BorderLayout());
+    // don't use default FlowLayout manager because it won't resize components if
+    // QueryEditor is resized.
+    setLayout(new BorderLayout());
 
-		addComponentListener(new ComponentAdapter() {
-			public void componentResized(ComponentEvent e) {
-				resizeSplits();
-			}
+    addComponentListener(new ComponentAdapter() {
+      public void componentResized(ComponentEvent e) {
+        resizeSplits();
+      }
 
-		});
+    });
 
-		this.query = new Query();
-		this.attributeToWidget = new HashMap();
+    this.query = new Query();
+    this.attributeToWidget = new HashMap();
 
-		query.addPropertyChangeListener(this);
+    query.addPropertyChangeListener(this);
 
-		initTree();
-		initInputPanel();
-		initOutputPanel();
+    initTree();
+    initInputPanel();
+    initOutputPanel();
 
-		datasetPage = new DatasetWidget(query);
-		addPage(datasetPage);
+    datasetPage = new DatasetWidget(query);
+    addPage(datasetPage);
 
-		layoutPanes();
+    layoutPanes();
 
-	}
+  }
 
-	/**
-	 * Repositions the dividers after the component has been resized to maintain
-	 * the relative size of the panes.
-	 */
-	private void resizeSplits() {
+  /**
+   * Repositions the dividers after the component has been resized to maintain
+   * the relative size of the panes.
+   */
+  private void resizeSplits() {
 
-		// must set divider by explicit values rather than
-		// proportions because the proportion approach fails
-		// on winxp jre 1.4 when the component is FIRST added.
-		// (It does work when the component is resized).
-		Dimension size = getParent().getSize();
-		int treeWidth = (int) (TREE_WIDTH * size.width);
-		int treeHeight = (int) ((1 - TREE_WIDTH) * size.height);
-		top.setDividerLocation(treeWidth);
-		topAndBottom.setDividerLocation(treeHeight);
+    // must set divider by explicit values rather than
+    // proportions because the proportion approach fails
+    // on winxp jre 1.4 when the component is FIRST added.
+    // (It does work when the component is resized).
+    Dimension size = getParent().getSize();
+    int treeWidth = (int) (TREE_WIDTH * size.width);
+    int treeHeight = (int) ((1 - TREE_WIDTH) * size.height);
+    top.setDividerLocation(treeWidth);
+    topAndBottom.setDividerLocation(treeHeight);
 
-		//    top.setDividerLocation( TREE_WIDTH );
-		//    topAndBottom.setDividerLocation( 1 - TREE_WIDTH );
+    //    top.setDividerLocation( TREE_WIDTH );
+    //    topAndBottom.setDividerLocation( 1 - TREE_WIDTH );
 
-		// this doesn't actually set the size to the minumum but
-		// cause it to resize correctly. 
-		//inputPanel.setMinimumSize(MINIMUM_SIZE);
-	}
+    // this doesn't actually set the size to the minumum but
+    // cause it to resize correctly. 
+    //inputPanel.setMinimumSize(MINIMUM_SIZE);
+  }
 
-	private void showInputPage(InputPage page) {
-		((CardLayout) (inputPanel.getLayout())).show(inputPanel, page.getName());
-	}
+  private void showInputPage(InputPage page) {
+    ((CardLayout) (inputPanel.getLayout())).show(inputPanel, page.getName());
+  }
 
-	/**
-	 * Adds page to input panel and tree view.
-	 * @param page page to be added
-	 */
-	private void addPage(InputPage page) {
+  /**
+   * Adds page to input panel and tree view.
+   * @param page page to be added
+   */
+  private void addPage(InputPage page) {
 
-		//  Add page to input panel.
-		inputPanel.add(page.getName(), page);
-		showInputPage(page);
+    //  Add page to input panel.
+    inputPanel.add(page.getName(), page);
+    showInputPage(page);
 
-		// Add page's node and show it
-		treeModel.insertNodeInto(
-			page.getNode(),
-			rootNode,
-			rootNode.getChildCount());
-		TreePath path = new TreePath(rootNode).pathByAddingChild(page.getNode());
-		treeView.makeVisible(path);
+    // Add page's node and show it
+    treeModel.insertNodeInto(
+      page.getNode(),
+      rootNode,
+      rootNode.getChildCount());
+    TreePath path = new TreePath(rootNode).pathByAddingChild(page.getNode());
+    treeView.makeVisible(path);
 
-		treeView.setRootVisible(false);
-	}
+    treeView.setRootVisible(false);
+  }
 
-	/**
-	 * Sets the relative positions of the constituent components. Layout is:
-	 * <pre>
-	 * tree   |    input
-	 * -----------------
-	 *     output
-	 * </pre>
-	 */
-	private void layoutPanes() {
+  /**
+   * Sets the relative positions of the constituent components. Layout is:
+   * <pre>
+   * tree   |    input
+   * -----------------
+   *     output
+   * </pre>
+   */
+  private void layoutPanes() {
 
-		treeView.setMinimumSize(MINIMUM_SIZE);
-		inputPanel.setMinimumSize(MINIMUM_SIZE);
-		outputPanel.setMinimumSize(MINIMUM_SIZE);
+    treeView.setMinimumSize(MINIMUM_SIZE);
+    inputPanel.setMinimumSize(MINIMUM_SIZE);
+    outputPanel.setMinimumSize(MINIMUM_SIZE);
 
-		top =
-			new JSplitPane(
-				JSplitPane.HORIZONTAL_SPLIT,
-				new JScrollPane(treeView),
-				inputPanel);
-		top.setOneTouchExpandable(true);
+    top =
+      new JSplitPane(
+        JSplitPane.HORIZONTAL_SPLIT,
+        new JScrollPane(treeView),
+        inputPanel);
+    top.setOneTouchExpandable(true);
 
-		topAndBottom =
-			new JSplitPane(
-				JSplitPane.VERTICAL_SPLIT,
-				top,
-				new JScrollPane(outputPanel));
-		topAndBottom.setOneTouchExpandable(true);
+    topAndBottom =
+      new JSplitPane(
+        JSplitPane.VERTICAL_SPLIT,
+        top,
+        new JScrollPane(outputPanel));
+    topAndBottom.setOneTouchExpandable(true);
 
-		add(topAndBottom);
+    add(topAndBottom);
 
-	}
+  }
 
-	/**
-	 * 
-	 */
-	private void initOutputPanel() {
-		//outputPanel.add( outputPanel );
-	}
+  /**
+   * 
+   */
+  private void initOutputPanel() {
+    //outputPanel.add( outputPanel );
+  }
 
-	/**
-	 * 
-	 */
-	private void initInputPanel() {
-		inputPanel = new JPanel();
-		inputPanel.setLayout(new CardLayout());
-		inputPanel.add("input", new JLabel("input panel"));
-	}
+  /**
+   * 
+   */
+  private void initInputPanel() {
+    inputPanel = new JPanel();
+    inputPanel.setLayout(new CardLayout());
+    inputPanel.add("input", new JLabel("input panel"));
+  }
 
-	/**
-	 * 
-	 */
-	private void initTree() {
-		rootNode = new DefaultMutableTreeNode("Query");
-		treeModel = new DefaultTreeModel(rootNode);
-		treeView = new JTree(treeModel);
-		treeView.addTreeSelectionListener(this);
-	}
+  /**
+   * 
+   */
+  private void initTree() {
+    rootNode = new DefaultMutableTreeNode("Query");
+    treeModel = new DefaultTreeModel(rootNode);
+    treeView = new JTree(treeModel);
+    treeView.addTreeSelectionListener(this);
+  }
 
-	/**
-	 * Opens the dataset option tree if it is available, otherwise does
-	 * nothing. Calling this methid saves the user having to open the 
-	 * option list manually.
-	 */
-	public void showDatasetOptions() {
-		if (datasetPage != null)
-			datasetPage.showTree();
-	}
+  /**
+   * Opens the dataset option tree if it is available, otherwise does
+   * nothing. Calling this methid saves the user having to open the 
+   * option list manually.
+   */
+  public void showDatasetOptions() {
+    if (datasetPage != null)
+      datasetPage.showTree();
+  }
 
-	/**
-	 * Loads dataset views from files in classpath for test
-	 * purposes.
-	 * @return preloaded dataset views
-	 * @throws ConfigurationException
-	 */
-	static DatasetView[] testDSViews() throws ConfigurationException {
-		CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
+  /**
+   * Loads dataset views from files in classpath for test
+   * purposes.
+   * @return preloaded dataset views
+   * @throws ConfigurationException
+   */
+  static DatasetView[] testDSViews() throws ConfigurationException {
+    CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
 
-		String[] urls =
-			new String[] {
-				"data/XML/homo_sapiens__ensembl_genes.xml",
-				"data/XML/homo_sapiens__snps.xml",
-				"data/XML/homo_sapiens__vega_genes.xml" };
-		for (int i = 0; i < urls.length; i++) {
-			URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
-			adaptor.add(new URLDSViewAdaptor(dvURL, true));
-			System.out.println("Using DatasetView: " + dvURL);
-		}
+    String[] urls =
+      new String[] {
+        "data/XML/homo_sapiens__ensembl_genes.xml",
+        "data/XML/homo_sapiens__snps.xml",
+        "data/XML/homo_sapiens__vega_genes.xml" };
+    for (int i = 0; i < urls.length; i++) {
+      URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
+      adaptor.add(new URLDSViewAdaptor(dvURL, true));
+      logger.info("Using DatasetView: " + dvURL);
+    }
 
-		DatasetView[] views = adaptor.getDatasetViews();
+    DatasetView[] views = adaptor.getDatasetViews();
 
-		DataSource ds =
-			DatabaseUtil.createDataSource(
-				"mysql",
-				"127.0.0.1",
-				"3313",
-				"ensembl_mart_17_1",
-				"ensro",
-				null,
-				10,
-				"com.mysql.jdbc.Driver");
+    DataSource ds =
+      DatabaseUtil.createDataSource(
+        "mysql",
+        "127.0.0.1",
+        "3313",
+        "ensembl_mart_17_1",
+        "ensro",
+        null,
+        10,
+        "com.mysql.jdbc.Driver");
 
-		for (int i = 0, n = views.length; i < n; i++) {
-			views[i].setDatasource(ds);
-		}
+    for (int i = 0, n = views.length; i < n; i++) {
+      views[i].setDatasource(ds);
+    }
 
-		return views;
-	}
+    return views;
+  }
 
-	public static void main(String[] args) throws ConfigurationException {
+  public static void main(String[] args) throws ConfigurationException {
 
     DatasetView[] views = testDSViews();
-		final QueryEditor editor = new QueryEditor();
-		editor.setDatasetViews( views );
-   
-    
-		JButton executeButton = new JButton("Execute");
-		executeButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				try {
-					editor.execute();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+    final QueryEditor editor = new QueryEditor();
+    editor.setDatasetViews(views);
 
-		JFrame f = new JFrame("Query Editor (Test Frame)");
-		Box p = Box.createVerticalBox();
-		p.add(editor);
-		p.add(executeButton);
-		f.getContentPane().add(p);
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setSize(950, 750);
-		f.setVisible(true);
+    JButton executeButton = new JButton("Execute");
+    executeButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent event) {
+        try {
+          editor.execute();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    });
+
+    JFrame f = new JFrame("Query Editor (Test Frame)");
+    Box p = Box.createVerticalBox();
+    p.add(editor);
+    p.add(executeButton);
+    f.getContentPane().add(p);
+    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    f.setSize(950, 750);
+    f.setVisible(true);
 
     // preselect a view
-    editor.datasetPage.setDatasetViewByDisplayName( views[0].getDisplayName() );
-    
+    editor.datasetPage.setDatasetViewByDisplayName(views[0].getDisplayName());
 
+    // To be called by using program to open tree ready for user to choose
+    // dataset. Saves a click.
+    //editor.showDatasetOptions();
 
-		// To be called by using program to open tree ready for user to choose
-		// dataset. Saves a click.
-		//editor.showDatasetOptions();
+    // TODO support programmatically selecting homosapiens ensembl gene option
+    //   Option o = config.getLayout().getOptionByInternalName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
+    //    editor.datasetPage.setOption( o );
 
-		// TODO support programmatically selecting homosapiens ensembl gene option
-		//   Option o = config.getLayout().getOptionByInternalName("homo_sapiens").getOptionByInternalName("homo_sapiens_ensembl_genes");
-		//    editor.datasetPage.setOption( o );
+  }
 
-	}
+  /**
+   * Redraws the tree if there are any property changes in the Query.
+   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+   */
+  public void propertyChange(PropertyChangeEvent evt) {
 
-	/**
-	 * Redraws the tree if there are any property changes in the Query.
-	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-	 */
-	public void propertyChange(PropertyChangeEvent evt) {
+    String propertyName = evt.getPropertyName();
+    Object newValue = evt.getNewValue();
+    Object oldValue = evt.getOldValue();
 
-		String propertyName = evt.getPropertyName();
-		Object newValue = evt.getNewValue();
-		Object oldValue = evt.getOldValue();
+    if (evt.getSource() == query) {
 
-		if (evt.getSource() == query) {
+      if ("datasetInternalName".equals(propertyName)) {
 
-			if ("datasetInternalName".equals(propertyName)) {
+        //        if ( newValue!=null )
+        datasetChanged(datasetPage.getDatasetView());
+        //        else
+        //          reset();
 
-				//        if ( newValue!=null )
-				datasetChanged(datasetPage.getDatasetView());
-				//        else
-				//          reset();
+      } else if ("dataSource".equals(propertyName)) {
 
-			} else if ("attribute".equals(propertyName)) {
+        // no nothing because datasource is not displayed in 
+        // tree
 
-				if (newValue != null && oldValue == null)
-					insertNode(
-						attributesPage.getNode(),
-						((InputPageAware) newValue).getInputPage().getNode());
+      } else if ("star_bases".equals(propertyName)) {
 
-				else if (newValue == null && oldValue != null)
-					treeModel.removeNodeFromParent(
-						((InputPageAware) oldValue).getInputPage().getNode());
+        // ignore this change because not represented in tree,
+        // star_bases will be removed in future
 
-			} else if ("filter".equals(propertyName)) {
+      } else if ("primary_keys".equals(propertyName)) {
 
-				if (newValue != null && oldValue == null) {
-					insertNode(
-						filtersPage.getNode(),
-						((InputPageAware) newValue).getInputPage().getNode());
-				} else if (newValue == null && oldValue != null)
-					treeModel.removeNodeFromParent(
-						((InputPageAware) oldValue).getInputPage().getNode());
+        // ignore this change because not represented in tree,
+        // primary_keys will be removed in future
 
-			} else {
-				logger.warning("Unrecognised propertyChange: " + propertyName);
-			}
+      } else if ("attribute".equals(propertyName)) {
 
-			Enumeration enum = rootNode.breadthFirstEnumeration();
-			while (enum.hasMoreElements())
-				treeModel.nodeChanged((TreeNode) enum.nextElement());
+        if (newValue != null && oldValue == null)
+          insertNode(
+            attributesPage.getNode(),
+            ((InputPageAware) newValue).getInputPage().getNode());
 
-		}
+        else if (newValue == null && oldValue != null)
+          treeModel.removeNodeFromParent(
+            ((InputPageAware) oldValue).getInputPage().getNode());
 
-		if (evt.getSource() == outputSettingsPage) {
-			treeModel.nodeChanged(outputSettingsPage.getNode());
-		}
+      } else if ("filter".equals(propertyName)) {
 
-	}
+        if (newValue != null && oldValue == null) {
+          insertNode(
+            filtersPage.getNode(),
+            ((InputPageAware) newValue).getInputPage().getNode());
+        } else if (newValue == null && oldValue != null)
+          treeModel.removeNodeFromParent(
+            ((InputPageAware) oldValue).getInputPage().getNode());
 
-	/**
-	 * Inserts child node under parent in tree and select it.
-	 * @param parent
-	 * @param child
-	 */
-	private void insertNode(MutableTreeNode parent, MutableTreeNode child) {
+      } else {
+        logger.warning("Unrecognised propertyChange: " + propertyName);
+      }
 
-		treeModel.insertNodeInto(child, parent, parent.getChildCount());
+      Enumeration enum = rootNode.breadthFirstEnumeration();
+      while (enum.hasMoreElements())
+        treeModel.nodeChanged((TreeNode) enum.nextElement());
 
-		// make node selected in tree
-		treeView.setSelectionPath(
-			new TreePath(rootNode).pathByAddingChild(parent).pathByAddingChild(
-				child));
+    }
 
-	}
+    if (evt.getSource() == outputSettingsPage) {
+      treeModel.nodeChanged(outputSettingsPage.getNode());
+    }
 
-	/**
-	 * Update the model (query) and the view (tree and inputPanels).
-	 */
-	void datasetChanged(DatasetView dataset) {
+  }
 
-		treeModel.nodeChanged(datasetPage.getNode());
+  /**
+   * Inserts child node under parent in tree and select it.
+   * @param parent
+   * @param child
+   */
+  private void insertNode(MutableTreeNode parent, MutableTreeNode child) {
 
-		// Basically we remove most things from the model and views before adding those things that should
-		// be present back in.
+    treeModel.insertNodeInto(child, parent, parent.getChildCount());
 
-		// Update the model
-		query.removeAllAttributes();
-		query.removeAllFilters();
+    // make node selected in tree
+    treeView.setSelectionPath(
+      new TreePath(rootNode).pathByAddingChild(parent).pathByAddingChild(
+        child));
 
-		// enables soon to be obsolete listeners to be garbage collected once they are removed from the views.
-		query.removeAllPropertyChangeListeners();
+  }
 
-		//  but we still need to listen to changes keep tree up to date
-		query.addPropertyChangeListener(this);
+  /**
+   * Update the model (query) and the view (tree and inputPanels).
+   */
+  void datasetChanged(DatasetView dataset) {
 
-		// We need to remove all pages from the inputPanel so that we can add pages with the same
-		// name again later. e.g. attributesPage.
-		inputPanel.removeAll();
+    treeModel.nodeChanged(datasetPage.getNode());
 
-		// Remove all nodes from the tree then add the datasetPage. Removing
-		// the other nodes one at a time using treeModel.removeNodeFromParent( XXX.getNode() ) 
-		// failed to work on jdk1.4.1@linux. 
-		rootNode.removeAllChildren();
-		addPage(datasetPage);
-		treeModel.reload();
+    // Basically we remove most things from the model and views before adding those things that should
+    // be present back in.
 
-		if (dataset != null) {
+    // Update the model
+    query.removeAllAttributes();
+    query.removeAllFilters();
 
-			addAttributePages(dataset);
-			addFilterPages(dataset);
-			addOutputPage();
+    // enables soon to be obsolete listeners to be garbage collected once they are removed from the views.
+    query.removeAllPropertyChangeListeners();
 
-			// select the attributes page
-			treeView.setSelectionPath(
-				new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
+    //  but we still need to listen to changes keep tree up to date
+    query.addPropertyChangeListener(this);
 
-		}
-	}
+    // We need to remove all pages from the inputPanel so that we can add pages with the same
+    // name again later. e.g. attributesPage.
+    inputPanel.removeAll();
 
-	/**
-	 * Adds output page to tree and InputPanel.
-	 */
-	private void addOutputPage() {
-		outputSettingsPage = new OutputSettingsPage();
-		outputSettingsPage.addPropertyChangeListener(this);
-		addPage(outputSettingsPage);
-	}
+    // Remove all nodes from the tree then add the datasetPage. Removing
+    // the other nodes one at a time using treeModel.removeNodeFromParent( XXX.getNode() ) 
+    // failed to work on jdk1.4.1@linux. 
+    rootNode.removeAllChildren();
+    addPage(datasetPage);
+    treeModel.reload();
 
-	/**
-	 * 
-	 */
-	private void addFilterPages(DatasetView dataset) {
-		filtersPage = new FilterPageSetWidget(query, dataset);
-		addPage(filtersPage);
-	}
+    if (dataset != null) {
 
-	/**
-	 * Creates the attribute pages and various maps that are useful 
-	 * for relating nodes, pages and attributes.
-	 */
-	private void addAttributePages(DatasetView dataset) {
+      addAttributePages(dataset);
+      addFilterPages(dataset);
+      addOutputPage();
 
-		attributesPage = new AttributePageSetWidget(query, dataset);
-		//    List list = attributesPage.getLeafWidgets();
-		//    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
-		//    for (int i = 0; i < attributePages.length; i++) {
-		//      AttributeDescriptionWidget w = attributePages[i];
-		//      Attribute a = w.getAttribute();
-		//      attributeFieldNameToPage.put( a.getField(), w );
-		//      attributeToWidget.put( a, w );
-		//    }
+      // select the attributes page
+      treeView.setSelectionPath(
+        new TreePath(rootNode).pathByAddingChild(attributesPage.getNode()));
 
-		addPage(attributesPage);
+    }
+  }
 
-	}
+  /**
+   * Adds output page to tree and InputPanel.
+   */
+  private void addOutputPage() {
+    outputSettingsPage = new OutputSettingsPage();
+    outputSettingsPage.addPropertyChangeListener(this);
+    addPage(outputSettingsPage);
+  }
 
-	/**
-	 * Show input page corresponding to selected tree node. 
-	 */
-	public void valueChanged(TreeSelectionEvent e) {
-		if (e.getNewLeadSelectionPath() != null
-			&& e.getNewLeadSelectionPath().getLastPathComponent() != null) {
+  /**
+   * 
+   */
+  private void addFilterPages(DatasetView dataset) {
+    filtersPage = new FilterPageSetWidget(query, dataset);
+    addPage(filtersPage);
+  }
 
-			DefaultMutableTreeNode node =
-				(DefaultMutableTreeNode) e
-					.getNewLeadSelectionPath()
-					.getLastPathComponent();
+  /**
+   * Creates the attribute pages and various maps that are useful 
+   * for relating nodes, pages and attributes.
+   */
+  private void addAttributePages(DatasetView dataset) {
 
-			if (node.getUserObject() instanceof InputPage) {
+    attributesPage = new AttributePageSetWidget(query, dataset);
+    //    List list = attributesPage.getLeafWidgets();
+    //    AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
+    //    for (int i = 0; i < attributePages.length; i++) {
+    //      AttributeDescriptionWidget w = attributePages[i];
+    //      Attribute a = w.getAttribute();
+    //      attributeFieldNameToPage.put( a.getField(), w );
+    //      attributeToWidget.put( a, w );
+    //    }
 
-				InputPage page = (InputPage) node.getUserObject();
-				showInputPage(page);
+    addPage(attributesPage);
 
-			}
-		}
-	}
+  }
 
-	/**
-	 * @return
-	 */
-	public DatasetView[] getDatasetViews() {
-		return datasetViews;
-	}
+  /**
+   * Show input page corresponding to selected tree node. 
+   */
+  public void valueChanged(TreeSelectionEvent e) {
+    if (e.getNewLeadSelectionPath() != null
+      && e.getNewLeadSelectionPath().getLastPathComponent() != null) {
 
-	/**
-	 * @param views
-	 */
-	public void setDatasetViews(DatasetView[] views) {
-		datasetViews = views;
-		datasetPage.setDatasetViews(datasetViews);
-	}
+      DefaultMutableTreeNode node =
+        (DefaultMutableTreeNode) e
+          .getNewLeadSelectionPath()
+          .getLastPathComponent();
 
-	/**
-	 * @return
-	 */
-	public Query getQuery() {
-		return query;
-	}
+      if (node.getUserObject() instanceof InputPage) {
 
-	public void execute()
-		throws SequenceException, FormatException, InvalidQueryException, SQLException {
+        InputPage page = (InputPage) node.getUserObject();
+        showInputPage(page);
+
+      }
+    }
+  }
+
+  /**
+   * @return
+   */
+  public DatasetView[] getDatasetViews() {
+    return datasetViews;
+  }
+
+  /**
+   * @param views
+   */
+  public void setDatasetViews(DatasetView[] views) {
+    datasetViews = views;
+    datasetPage.setDatasetViews(datasetViews);
+  }
+
+  /**
+   * @return
+   */
+  public Query getQuery() {
+    return query;
+  }
+
+  public void execute()
+    throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
     int nPreviewBytes = 10000;
 
-		File file = new File("/tmp/results.txt");
+    File file = new File("/tmp/results.txt");
 
-    outputPanel.setEditable( false );
+    outputPanel.setEditable(false);
     outputPanel.setText(""); // clear last results set
 
-		try {
+    try {
 
       // OPTIMISATION could write out to a dual outputStream, one outputStream goes
       // to a file, the other is a pipe into the application. This would prevent the
       // need to read from the file system and remove the need for PollingFileInputStream.
-      
 
       // Write results to file, we need to force flush() calls because until we do that the
       // data might be buffered in memory and we can't read it into the preview pane
       // until is is written to disk.
-			final OutputStream os = new AutoFlushOutputStream( new FileOutputStream(file), nPreviewBytes );
-      
+      final OutputStream os =
+        new AutoFlushOutputStream(new FileOutputStream(file), nPreviewBytes);
+
       // Read results from file. We use the PollingInputStream wrapper so that we keep reading
       // every 500ms, otherwise
-      final PollingInputStream pis = new PollingInputStream( new FileInputStream(file) );
-      pis.setLive( true );
-      
+      final PollingInputStream pis =
+        new PollingInputStream(new FileInputStream(file));
+      pis.setLive(true);
+
       // JEditorPane.read(inputStream,...) only displays the contents of the inputStream 
       // once the end of the stream is reached. Because of this, and to prevent the client
       // memory usage becoming extreme for large queries we limit the amount of data
       // to display by closing the inputStream (potentially) prematurely by the using the
       // MaximumBytesInputFilter() wrapper around the inputStream. 
-      final InputStream is = new MaximumBytesInputFilter(pis, nPreviewBytes );
+      final InputStream is = new MaximumBytesInputFilter(pis, nPreviewBytes);
 
       // Write results to file on one thread.
-			new Thread() {
+      new Thread() {
 
-				public void run() {
+        public void run() {
 
-					FormatSpec formatSpec = FormatSpec.TABSEPARATEDFORMAT;
-					try {
+          FormatSpec formatSpec = FormatSpec.TABSEPARATEDFORMAT;
+          try {
 
-						engine.execute(query, formatSpec, os);
-						os.close();
+            engine.execute(query, formatSpec, os);
+            os.close();
             // tell the inputStream to stop reading once a -1 has been read
             // from the file because we aren't writing any more.
-            pis.setLive( false );
+            pis.setLive(false);
 
-					} catch (SequenceException e) {
-						e.printStackTrace();
-					} catch (FormatException e) {
-						e.printStackTrace();
-					} catch (InvalidQueryException e) {
-						e.printStackTrace();
-					} catch (SQLException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+          } catch (SequenceException e) {
+            e.printStackTrace();
+          } catch (FormatException e) {
+            e.printStackTrace();
+          } catch (InvalidQueryException e) {
+            e.printStackTrace();
+          } catch (SQLException e) {
+            e.printStackTrace();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
 
-				}
-			}
-			.start();
+        }
+      }
+      .start();
 
       // read results from file on another thread.
-			new Thread() {
+      new Thread() {
 
-				public void run() {
+        public void run() {
 
-					System.out.println("Start reading ...");
-					try {
-						outputPanel.read(is, null);
-						is.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+          System.out.println("Start reading ...");
+          try {
+            outputPanel.read(is, null);
+            is.close();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
           System.out.println("Finish reading ...");
-				}
-			}
-			.start();
+        }
+      }
+      .start();
 
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} 
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
 
+  }
 
-	}
+  /**
+   * Set the name for this widget and the query it contains.
+   */
+  public void setName(String name) {
+    super.setName(name);
+    query.setQueryName(name);
+  }
+
+  /*
+   * @return the name of this widget, this is derived from it's query.name.
+   */
+  public String getName() {
+    return query.getQueryName();
+  }
+
+  /**
+   * @return mql representation of the current query,
+   * or null if datasetView unset.
+   */
+  public String getMQL() throws InvalidQueryException {
+
+    String mql = null;
+    DatasetView datasetView = datasetPage.getDatasetView();
+    if (datasetView == null)
+      throw new InvalidQueryException("DatasetView must be selected before query can be converted to MQL.");
+
+    MartShellLib msl = new MartShellLib(null);
+    mql = msl.QueryToMQL(query, datasetView);
+
+    return mql;
+  }
 
 }
