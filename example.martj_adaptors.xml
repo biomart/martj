@@ -28,6 +28,7 @@
     <!-- Connect to the Ensembl database using the standard mysql driver -->
 
     <DatabaseLocation name="Ensembl" databaseType="mysql"
+    jdbcDriverClassName="com.mysql.jdbc.Driver"
     host="martdb.ebi.ac.uk" port="3306" instanceName="ensembl_mart_19_1" user="anonymous"/>
 
 
