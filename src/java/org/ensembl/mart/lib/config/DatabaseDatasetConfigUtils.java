@@ -1851,6 +1851,9 @@ public class DatabaseDatasetConfigUtils {
    
     String tableConstraint = description.getTableConstraint();
 
+    System.out.println(" ****** table constraint "+ tableConstraint);
+    
+    
 	// have placeholders for attributes in XML now with no info other than internal_name
 	if (tableConstraint == null){
 		return validatedAttribute;
@@ -1865,7 +1868,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = dsource.getConnection();
     catalog=null;
     //schema=null;
-    System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
+    //System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
     ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     
     
@@ -1875,13 +1878,11 @@ public class DatabaseDatasetConfigUtils {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
       
-      System.out.println ("loop column name: "+ columnName+" table name "+tableName);
-      
       
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
-      System.out.println(fieldValid + "\t" + tableValid);
+      System.out.println(field +" " +fieldValid + "\t"+tableName +" " + tableValid);
       if (valid[0] && valid[1]) {
 
         break;
@@ -1913,13 +1914,16 @@ public class DatabaseDatasetConfigUtils {
     String descriptionTableConstraint) {
     boolean[] validFlags = new boolean[] { false, false };
 
-    if (columnName.equals(descriptionField)) {
+    // oracle case mismatch
+    if (columnName.toLowerCase().equals(descriptionField.toLowerCase())) {
       validFlags[0] = true;
 
       if (descriptionTableConstraint != null) {
         if (tableName.toLowerCase().indexOf(descriptionTableConstraint.toLowerCase()) > -1) {
           validFlags[1] = true;
         } else {
+        	        	
+        	
           if (logger.isLoggable(Level.FINE))
             logger.fine(
               "Recieved correct field, but tableName "
@@ -2011,9 +2015,9 @@ public class DatabaseDatasetConfigUtils {
 
       //System.out.println("database type: " + dsource.getDatabaseType());
 
-      ResultSet rsSch = dmd.getSchemas();
-      while (rsSch.next()) {
-        String databaseName2 = rsSch.getString(1);
+      //ResultSet rsSch = 
+      //while (rsSch.next()) {
+        String databaseName2 = getSchema();
 
         //first search for tablePattern    
         ResultSet rsTab = dmd.getTables(null, databaseName2, tablePattern, null);
@@ -2035,8 +2039,8 @@ public class DatabaseDatasetConfigUtils {
             potentials.add(tableName);
         }
         rsTab.close();
-      }
-      rsSch.close();
+      //}
+      //rsSch.close();
     } else {
 
 
@@ -2096,10 +2100,18 @@ public class DatabaseDatasetConfigUtils {
       for (int i = 0, n = mainTables.length; i < n; i++) {
         numberKeys = 0;
         String tableName = mainTables[i];
+        
+        
+        
         TableDescription table = getTableDescriptionFor(databaseName, tableName);
+        //System.out.println("DATABASE NAME "+databaseName);
+        
         for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
           ColumnDescription column = table.columnDescriptions[j];
           String cname = column.name;
+          
+          //System.out.println("COLUMN "+cname);
+          
           //NN
           if (cname.endsWith("_KEY") || cname.endsWith("_key"))
             //if (cname.endsWith("_key"))
@@ -2110,10 +2122,22 @@ public class DatabaseDatasetConfigUtils {
           resolution++;
           break;
         }
+      
+      
+        //System.out.println("before tttable descripiton table "+tableName+ " sorted length "+ 
+        //		sortedMainTables.size() +"< "+mainTables.length+ " resolution "+resolution +
+        //		"number  of keys"+ numberKeys);
+      
+      
+      
       }
       // incase first main table has 2 keys
       if (sortedMainTables.size() < 1)
         resolution++;
+    
+    
+    
+    
     }
     String[] retList = new String[sortedMainTables.size()];
     sortedMainTables.toArray(retList);
@@ -2160,11 +2184,15 @@ public class DatabaseDatasetConfigUtils {
     }
     rsTab.close();
 
+    System.out.println("trying second");
+    
     //now try capitals, should NOT get mixed results
     rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
     while (rsTab.next()) {
       String tableName = rsTab.getString(3);
 
+      System.out.println("tables "+ tableName);
+      
       if (!potentials.contains(tableName))
         potentials.add(tableName);
     }
@@ -2268,7 +2296,7 @@ public class DatabaseDatasetConfigUtils {
         int javaType = rset.getInt(5);
         String dbType = rset.getString(6);
         int maxLength = rset.getInt(7);
-
+         
         ColumnDescription column = new ColumnDescription(cname, dbType, javaType, maxLength);
         columns.add(column);
       }
@@ -2511,6 +2539,10 @@ public class DatabaseDatasetConfigUtils {
   public DatasetConfig getNewFiltsAtts(String databaseName, DatasetConfig dsv)
     throws ConfigurationException, SQLException {
 
+  	if (dsource.getDatabaseType().equals("oracle:thin")) databaseName=getSchema();
+  	
+  	
+  	
     String datasetName = dsv.getDataset();
 
     AttributePage ap = new AttributePage();
@@ -2533,9 +2565,15 @@ public class DatabaseDatasetConfigUtils {
     //primaryKeys should be in this same order
 
     List starbases = new ArrayList();
+    
+    System.out.println("before sort");
 
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
 
+    
+    System.out.println("****after sort");
+    
+    
     List primaryKeys = new ArrayList();
 
     for (int i = 0, n = starbases.size(); i < n; i++) {
