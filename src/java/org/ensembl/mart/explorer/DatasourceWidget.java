@@ -79,17 +79,13 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
 
     Set items = new HashSet();
 
-    try {
-      DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
-      for (int i = 0; i < as.length; i++) {
-        DSViewAdaptor a = as[i];
-        if (a.getDataSource() != null) {
-          items.add(a.getName());
-          logger.warning( "Adding datasource: " + a.getName() );
-        }
+    DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
+    for (int i = 0; i < as.length; i++) {
+      DSViewAdaptor a = as[i];
+      if (a.getDataSource() != null) {
+        items.add(a.getName());
+        logger.warning( "Adding datasource: " + a.getName() );
       }
-    } catch (ConfigurationException e) {
-      feedback.warning(e);
     }
 
     List l = new ArrayList(items);
