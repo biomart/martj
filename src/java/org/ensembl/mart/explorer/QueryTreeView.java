@@ -38,8 +38,9 @@ import org.ensembl.mart.lib.config.DSViewAdaptor;
 /**
  * Tree view showing the current state of the query.
  * 
- * <p>TODO main() test case
- * <p>TODO add,remove support
+ * <p>TODO extract QueryChangeListener interface
+ * <p>TODO extract propertyChange to a base class shared by this and QuerySettingsContainer
+  * <p>TODO add,remove support
  * <p>TODO support deleting nodes
  * <p>TODO support dnd reordering of attribute nodes
  */
@@ -73,6 +74,9 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
     query.addPropertyChangeListener(this);
   }
 
+  /*
+   *  <p>TODO main() test case 
+   */
   public static void main(String[] args) {
   }
 
@@ -109,7 +113,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
 
         else if (newValue == null && oldValue != null)
           removeAttribute((Attribute) oldValue);
-          
+
       } else if ("filter".equals(propertyName)) {
 
         if (newValue != null && oldValue == null)
@@ -129,7 +133,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param filter
    */
-  private void removeFilter(Filter filter) {
+  public void removeFilter(Filter filter) {
     // TODO Auto-generated method stub
     //  treeModel.removeNodeFromParent(
     //    ((InputPageAware) oldValue).getInputPage().getNode());
@@ -139,7 +143,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param filter
    */
-  private void addFilter(Filter filter) {
+  public void addFilter(Filter filter) {
     // TODO Auto-generated method stub
     //  {
     //    insertNode(
@@ -152,7 +156,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param attribute
    */
-  private void removeAttribute(Attribute attribute) {
+  public void removeAttribute(Attribute attribute) {
     // TODO Auto-generated method stub
     //  {
     //    treeModel.removeNodeFromParent(
@@ -163,7 +167,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param attribute
    */
-  private void addAttribute(Attribute attribute) {
+  public void addAttribute(Attribute attribute) {
     // TODO Auto-generated method stub
     //  insertNode(
     //    attributesPage.getNode(),
@@ -173,7 +177,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param newValue
    */
-  private void changedDatasetInternalName(Object newValue) {
+  public void changedDatasetInternalName(Object newValue) {
     // TODO Auto-generated method stub
 
   }
@@ -181,7 +185,7 @@ public class QueryTreeView extends JPanel implements PropertyChangeListener {
   /**
    * @param string
    */
-  private void changedDatasetInternalName(String string) {
+  public void changedDatasetInternalName(String string) {
     // TODO Auto-generated method stub
 
   }
