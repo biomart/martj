@@ -98,7 +98,7 @@ public class MartShell {
 
 	// main variables
 	private static final String defaultConf = System.getProperty("user.home") + "/.martshell";
-	private static String COMMAND_LINE_SWITCHES = "hAC:M:H:T:P:U:p:d:vl:e:O:F:R:E:";
+	private static String COMMAND_LINE_SWITCHES = "h:AC:M:H:T:P:U:p:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainConfiguration = null;
 	private static String mainHost = null;
@@ -114,6 +114,7 @@ public class MartShell {
 	private static String mainBatchFile = null;
 	private static String mainBatchFormat = null;
 	private static String mainBatchSeparator = null;
+  private static String helpCommand = null;
 	private static Logger mainLogger = Logger.getLogger(MartShell.class.getName());
 
 	/**
@@ -123,24 +124,24 @@ public class MartShell {
 	public static String usage() {
 		return "MartShell <OPTIONS>"
 			+ "\n"
-			+ "\n-h                             - this screen"
-			+ "\n-A                                          Turn off Commandline Completion (faster startup, less helpful)"
-			+ "\n-C  MART_CONFIGURATION_FILE_URL                           -  URL to Alternate Mart XML Configuration File"
-			+ "\n-M  CONNECTION_CONFIGURATION_FILE_URL            - URL to mysql connection configuration file"
-			+ "\n-H HOST                        - database host"
-			+ "\n-T DATABASE_TYPE               - type of Relational Database Management System holing the mart (default mysql)"
-			+ "\n-P PORT                        - database port"
-			+ "\n-U USER                        - database user name"
-			+ "\n-p PASSWORD                    - database password"
-			+ "\n-d DATABASE                    - database name"
-			+ "\n-v                             - verbose logging output"
-			+ "\n-l LOGGING_FILE_URL            - logging file, defaults to console if none specified"
-			+ "\n-e MARTQUERY                   - a well formatted Mart Query to run in Batch Mode"
-			+ "\nThe following are used in combination with the -e flag:"
-			+ "\n-O OUTPUT_FILE                 - output file, default is standard out"
-			+ "\n-F OUTPUT_FORMAT               - output format, either tabulated or fasta"
-			+ "\n-R OUTPUT_SEPARATOR            - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
-			+ "\n\n-E QUERY_FILE_URL            - URL to file with valid Mart Query Commands"
+			+ "\n-h <command>                            - this screen, or, if a command is provided, help for that command"
+			+ "\n-A                                      - Turn off Commandline Completion (faster startup, less helpful)"
+			+ "\n-C  MART_CONFIGURATION_FILE_URL         - URL to Alternate Mart XML Configuration File"
+			+ "\n-M  CONNECTION_CONFIGURATION_FILE_URL   - URL to mysql connection configuration file"
+			+ "\n-H HOST                                 - database host"
+			+ "\n-T DATABASE_TYPE                        - type of Relational Database Management System holing the mart (default mysql)"
+			+ "\n-P PORT                                 - database port"
+			+ "\n-U USER                                 - database user name"
+			+ "\n-p PASSWORD                             - database password"
+			+ "\n-d DATABASE                             - database name"
+			+ "\n-v                                      - verbose logging output"
+			+ "\n-l LOGGING_FILE_URL                     - logging file, defaults to console if none specified"
+			+ "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
+			+ "\n\nThe following are used in combination with the -e flag:"
+			+ "\n-O OUTPUT_FILE                          - output file, default is standard out"
+			+ "\n-F OUTPUT_FORMAT                        - output format, either tabulated or fasta"
+			+ "\n-R OUTPUT_SEPARATOR                     - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
+			+ "\n\n-E QUERY_FILE_URL                     - URL to file with valid Mart Query Commands"
 			+ "\n\nThe application searches for a .martshell file in the user home directory for mysql connection configuration"
 			+ "\nif present, this file will be loaded. If the -g option is given, or any of the commandline connection"
 			+ "\nparameters are passed, these over-ride those values provided in the .martshell file"
@@ -264,6 +265,7 @@ public class MartShell {
 
 					case 'h' :
 						help = true;
+            helpCommand = g.getOptarg();            
 						break;
 
 					case 'C' :
@@ -357,7 +359,18 @@ public class MartShell {
 
 		// check for help
 		if (help) {
-			System.out.println(usage());
+      if (helpCommand.equals(""))
+        System.out.println(usage());
+      else {
+        MartShell ms = new MartShell();
+        ms.UnsetCommandCompletion();
+        try {
+					System.out.println(ms.Help(helpCommand));
+				} catch (InvalidQueryException e) {
+					System.out.println("Couldnt provide Help for " + helpCommand + e.getMessage());
+					e.printStackTrace();
+				}
+      }
 			return;
 		}
 
@@ -379,7 +392,8 @@ public class MartShell {
 
 		if (mainBatchMode) {
 			boolean validQuery = true;
-
+      ms.UnsetCommandCompletion();
+      
 			if (mainBatchSQL == null && mainBatchScriptFile == null) {
 				System.out.println("Must supply either a Query command or a query script\n" + usage());
 				System.exit(0);
@@ -802,7 +816,10 @@ public class MartShell {
 		return normalizedcommand;
 	}
 
-	private String Help(String command) throws InvalidQueryException {
+	public String Help(String command) throws InvalidQueryException {
+    if (!helpLoaded)
+      LoadHelpFile();
+      
 		StringBuffer buf = new StringBuffer();
 
 		if (command.equals(HELPC)) {
@@ -813,33 +830,32 @@ public class MartShell {
 				buf.append("\t\t" + element).append("\n");
 			}
 			buf.append("\n");
+      return buf.toString();
+      
 		} else if (command.startsWith(HELPC)) {
 			buf.append("\n");
 			StringTokenizer hToks = new StringTokenizer(command, " ");
 			hToks.nextToken(); // skip help
 			String comm = hToks.nextToken();
 
-			if (commandHelp.containsKey(comm)) {
-				// if this is a help call, make sure and check for domain specific bits in the help input to substitute
-				String output = commandHelp.getProperty(comm);
-				for (int i = 0, n = dsCommands.length; i < n; i++) {
-					Pattern pat = dsCommands[i];
-					Matcher m = pat.matcher(output);
-					if (m.matches())
-						buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
-					else
-						buf.append(output).append("\n");
-				}
-			} else
-				buf.append("Sorry, no help is available for item: ").append(comm).append("\n");
+      return Help(comm);
 		} else {
-			if (commandHelp.containsKey(command))
-				buf.append(commandHelp.getProperty(command));
-			else
+			if (commandHelp.containsKey(command)) {
+        // if this is a help call, make sure and check for domain specific bits in the help input to substitute
+        String output = commandHelp.getProperty(command);
+        for (int i = 0, n = dsCommands.length; i < n; i++) {
+          Pattern pat = dsCommands[i];
+          Matcher m = pat.matcher(output);
+          
+          if (m.matches())
+            buf.append(m.group(1)).append(Help(m.group(2))).append(m.group(3)).append("\n");
+          else
+            buf.append(output).append("\n");
+        }
+      } else
 				buf.append("Sorry, no information available for item: ").append(command).append("\n");
+      return buf.toString(); 
 		}
-    
-    return buf.toString();
 	}
 
 	private void LoadHelpFile() throws InvalidQueryException {
