@@ -19,11 +19,17 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
+import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 
 import org.ensembl.mart.lib.Query;
@@ -36,7 +42,13 @@ import org.ensembl.mart.lib.config.UIAttributeDescription;
  */
 public class AttributeGroupWidget extends InputPage {
 
+  private int lastWidth;
+	private final static int NUM_COLUMNS = 2;
+  private final static int ROW_HEIGHT = 25;
+
 	private AttributeGroup group;
+  private JComponent[] attributeWidgets;
+  
 
 	/**
 	 * @param query
@@ -48,46 +60,125 @@ public class AttributeGroupWidget extends InputPage {
 
 		this.group = group;
 
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		addCollections(this, group.getAttributeCollections());
-
+    setLayout( new BoxLayout(this, BoxLayout.Y_AXIS) ); 
+    Box panel = Box.createVerticalBox();
+    attributeWidgets = addCollections(panel, group.getAttributeCollections());
+    add( new JScrollPane( panel ) );
+    add( Box.createVerticalGlue() );
 	}
 
 	/**
 	 * @param collections
 	 */
-	private void addCollections(
+	private JComponent[] addCollections(
 		Container container,
 		AttributeCollection[] collections) {
+
+    List widgets = new ArrayList();
 
 		for (int i = 0; i < collections.length; i++) {
 
 			AttributeCollection collection = collections[i];
-			JPanel collectionPanel = new JPanel();
-			collectionPanel.setBorder(new TitledBorder(collection.getDisplayName()));
-			container.add(collectionPanel);
+			Box rows = Box.createVerticalBox();
+			rows.setBorder(new TitledBorder(collection.getDisplayName()));
+			container.add( rows );
 
-			addAttributes(collectionPanel, collection.getUIAttributeDescriptions());
+			widgets.addAll( addAttributes( rows, collection.getUIAttributeDescriptions()) );
+       
+      rows.addComponentListener( new ComponentListener() {
 
+				public void componentResized(ComponentEvent e) {
+					resizeAttributes();
+				}
+
+				public void componentMoved(ComponentEvent e) {}
+				public void componentShown(ComponentEvent e) {}
+				public void componentHidden(ComponentEvent e) {}
+        
+      });
+      }
+      
+      return (JComponent[]) widgets.toArray(new JComponent[widgets.size()]);
+		}
+    
+    
+	/**
+	 * Resizes widgets if the width of this component has changed.
+	 */
+	private void resizeAttributes() {
+
+		final int width = getSize().width;
+
+		if (width != lastWidth) {
+			
+      int noScrollWidth = width/NUM_COLUMNS - 10;
+			int height = ROW_HEIGHT;
+			Dimension size = new Dimension(noScrollWidth, height);
+
+			for (int i = 0, n = attributeWidgets.length; i < n; i++) {
+				attributeWidgets[i].setPreferredSize(size);
+				attributeWidgets[i].setMinimumSize(size);
+				attributeWidgets[i].setMaximumSize(size);
+				attributeWidgets[i].invalidate();
+			}
+
+			lastWidth = width;
 		}
 	}
 
+	
+
 	/**
-	 * @param collectionPanel
-	 * @param attributes
-	 */
-	private void addAttributes(Container collectionPanel, List attributes) {
+   * Adds attributes in rows where each each row is one "pair".
+   * <pre>
+   * att1 att2
+   * att3 att4
+   * att5 glue
+   * </pre>
+	* @ param collectionPanel
+	* @ param attributes
+	*/ 
+	private List addAttributes(Box rows, List attributes) {
+
+    List widgets = new ArrayList();
+
 		for (Iterator iter = attributes.iterator(); iter.hasNext();) {
-			Object element = iter.next();
-			if (element instanceof UIAttributeDescription) {
-				UIAttributeDescription attributeDescription = (UIAttributeDescription) element;
-        collectionPanel.add( new AttributeDescriptionWidget( query, attributeDescription ) );
-			} else {
-				throw new RuntimeException(
-					"Unsupported attribute description: " + element);
+
+			Box row = Box.createHorizontalBox();
+  
+			for (int column = 0; column < NUM_COLUMNS; ++column ) {
+
+				if (iter.hasNext()) {
+
+					Object element = iter.next();
+					
+          if (element instanceof UIAttributeDescription) {
+					
+          	UIAttributeDescription a = (UIAttributeDescription) element;
+            AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a); 
+            widgets.add( w );
+						row.add( w );
+					
+          } else {
+					
+          	throw new RuntimeException(
+							"Unsupported attribute description: " + element);
+					
+          }
+          
+        } else {
+				
+        	// pad column 
+					row.add(Box.createHorizontalGlue());
+				
+        }
 			}
 
+			rows.add(row);
+
 		}
+  
+    return widgets;
 
 	}
 

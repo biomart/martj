@@ -68,6 +68,7 @@ public class AttributeDescriptionWidget
 			
       public void actionPerformed(ActionEvent event) {
         
+        // TODO add / remove from tree (and inputPanel / use same name as attribute panel?)
         if ( button.isSelected() ) query.addAttribute(attribute);
         else query.removeAttribute(attribute);
 
