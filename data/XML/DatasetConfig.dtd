@@ -35,7 +35,8 @@
                    qualifier      CDATA #IMPLIED
                    legal_qualifiers          CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED
-                   key                CDATA #IMPLIED>
+                   key                CDATA #IMPLIED
+                   value              CDATA #IMPLIED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>
 <!ATTLIST AttributePage %desc_data;>
