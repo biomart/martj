@@ -1126,37 +1126,37 @@
 
 	 <FilterGroup internalName="genefilters" displayName="GENE ASSOCIATED SNP FILTERS:" description="Filter for SNPS based on Gene Relationships">
 
-<FilterSet internalName="genetype" displayName="Type of Gene" description="Filter for SNPs associated with the following Gene Datasets" type="radio">
+     <FilterSet internalName="genetype" displayName="Type of Gene" description="Filter for SNPs associated with the following Gene Datasets" type="radio">
 
-		 <FilterSetDescription internalName="ensemblgene" displayName="Ensembl genes" description="Filter for SNPs with Relationships to Ensembl Genes" tableConstraintModifier="_ensembl" fieldNameModifier="ensembl"/>
+		 <FilterSetDescription internalName="ensemblgene" displayName="Ensembl genes" description="Filter for SNPs with Relationships to Ensembl Genes" tableConstraintModifier="ensemblgene" fieldNameModifier="ensembl"/>
 
-<FilterSetDescription internalName="vegagene" displayName="Vega genes" description="Filter for SNPs with Relationships to Vega Genes" tableConstraintModifier="_vega" fieldNameModifier="vega"/>
+<FilterSetDescription internalName="vegagene" displayName="Vega genes" description="Filter for SNPs with Relationships to Vega Genes" tableConstraintModifier="vegagene" fieldNameModifier="vega"/>
 
 </FilterSet>
 
 		 <FilterCollection internalName="genetypefilters" displayName="Entries with gene associations" filterSetName="genetype" type="radio">
 
-		 <UIFilterDescription internalName="coding" displayName="coding Only" description="Snps associated with Coding Sequence" type="boolean" fieldName="coding" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="coding" displayName="coding Only" description="Snps associated with Coding Sequence" type="boolean" fieldName="coding" filterSetReq="1" tableConstraint="snp_main"/>
 
-		 <UIFilterDescription internalName="intronic" displayName="Intronic only" description="Snps associated with  Intronic Sequence" type="boolean" fieldName="intronic" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="intronic" displayName="Intronic only" description="Snps associated with  Intronic Sequence" type="boolean" fieldName="intronic" filterSetReq="1" tableConstraint="snp_main"/>
 
-		 <UIFilterDescription internalName="5utr" displayName="5&quot; UTR only" description="Snps associated with  5&quot; Sequence" type="boolean" fieldName="5utr" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="5utr" displayName="5&quot; UTR only" description="Snps associated with  5&quot; Sequence" type="boolean" fieldName="5utr" filterSetReq="1" tableConstraint="snp_main"/>
 
-		 <UIFilterDescription internalName="3utr" displayName="3&quot; UTR Only" description="Snps associated with 3&quot; UTR Sequence" type="boolean" fieldName="3utr" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="3utr" displayName="3&quot; UTR Only" description="Snps associated with 3&quot; UTR Sequence" type="boolean" fieldName="3utr" filterSetReq="1" tableConstraint="snp_main"/>
 
-		 <UIFilterDescription internalName="5upstream" displayName="5&quot; Upstream Only" description="Snps associated with 5&quot; Upstream Sequence" type="boolean" fieldName="5upstream" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="5upstream" displayName="5&quot; Upstream Only" description="Snps associated with 5&quot; Upstream Sequence" type="boolean" fieldName="5upstream" filterSetReq="1" tableConstraint="snp_main"/>
 
-		 <UIFilterDescription internalName="3downstream" displayName="3&quot; Downstream Only" description="Snps associated with 3&quot; Downstream Sequence" type="boolean" fieldName="3downstream" filterSetReq="fieldName" tableConstraint="snp_main"/>
+		 <UIFilterDescription internalName="3downstream" displayName="3&quot; Downstream Only" description="Snps associated with 3&quot; Downstream Sequence" type="boolean" fieldName="3downstream" filterSetReq="1" tableConstraint="snp_main"/>
 
 		 </FilterCollection>
 
 		 <FilterCollection internalName="snpeffect" type="boolean">
 
-		 <UIFilterDescription internalName="synsnp" displayName="Synonymous SNPs" description="Filter only Synonymous SNPs" type="boolean_num" fieldName="is_synonymous" filterSetName="genetype" filterSetReq="tableConstraint" tableConstraint="gene_dm"/>
+		 <UIFilterDescription internalName="synsnp" displayName="Synonymous SNPs" description="Filter only Synonymous SNPs" type="boolean_num" fieldName="is_synonymous" filterSetReq="2" tableConstraint="_dm"/>
 
-		 <UIFilterDescription internalName="nonsynsnp" displayName="Non-synonymous SNPs" description="Filter only Non-synonymous SNPs" type="boolean_num" fieldName="is_nonsynonymous" filterSetName="genetype" filterSetReq="tableConstraint" tableConstraint="gene_dm"/>
+		 <UIFilterDescription internalName="nonsynsnp" displayName="Non-synonymous SNPs" description="Filter only Non-synonymous SNPs" type="boolean_num" fieldName="is_nonsynonymous" filterSetReq="2" tableConstraint="_dm"/>
 
-		 <UIFilterDescription internalName="stopsnp" displayName="Stop SNPs" description="Filter only for Stop SNPs" type="boolean_num" fieldName="is_stop" filterSetName="genetype" filterSetReq="tableConstraint" tableConstraint="gene_dm"/>
+		 <UIFilterDescription internalName="stopsnp" displayName="Stop SNPs" description="Filter only for Stop SNPs" type="boolean_num" fieldName="is_stop" filterSetReq="2" tableConstraint="_dm"/>
 
 		 </FilterCollection>
 
