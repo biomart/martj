@@ -100,6 +100,12 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     assertEquals(a, q.getAttributes()[0]);
     assertEquals(a3, q.getAttributes()[1]);
     assertEquals(a2, q.getAttributes()[2]);
+
+    q.removeAttribute( a3 );
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(a, q.getAttributes()[0]);
+    assertEquals(a2, q.getAttributes()[1]);
   }
 
   public void testSettingFilters() throws Exception {
@@ -139,6 +145,15 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     assertEquals(2, q.getFilters().length);
     assertEquals(f3, q.getFilters()[0]);
     assertEquals(f, q.getFilters()[1]);
+    
+    q.addFilter( f2 );
+    expectedNumChanges++;
+    
+    q.removeFilter( f3 );
+    expectedNumChanges++;
+    assertEquals(expectedNumChanges, numChanges);
+    assertEquals(f, q.getFilters()[0]);
+    assertEquals(f2, q.getFilters()[1]);
 
   }
 
