@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
+import javax.sql.DataSource;
+
 /**
  * Container for a mart dataset.   A dataset contains information about the
  *  main (or star) table(s) that it provides, the primary key(s) for these table(s),
@@ -34,36 +36,36 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Dataset extends BaseConfigurationObject {
+public class DatasetView extends BaseConfigurationObject {
 
 	/*
 	 * Datasets must have an internalName, so dont allow parameterless construction
 	 */
-	public Dataset() throws ConfigurationException {
+	public DatasetView() throws ConfigurationException {
 		this("", "", "");
 	}
 	/**
-	 * Constructs a Dataset named by internalName and displayName.
+	 * Constructs a DatasetView named by internalName and displayName.
 	 *  internalName is a single word that references this dataset, used to get the dataset from the MartConfiguration by name.
 	 *  displayName is the String to display in any UI.
 	 * 
-	 * @param internalName String name to represent this Dataset
+	 * @param internalName String name to represent this DatasetView
 	 * @param displayName String name to display.
 	 */
-	public Dataset(String internalName, String displayName) throws ConfigurationException {
+	public DatasetView(String internalName, String displayName) throws ConfigurationException {
 		this(internalName, displayName, "");
 	}
 
 	/**
-	 * Constructs a Dataset named by internalName and displayName, with a description of
+	 * Constructs a DatasetView named by internalName and displayName, with a description of
 	 *  the dataset.
 	 * 
-	 * @param internalName String name to represent this Dataset. Must not be null
+	 * @param internalName String name to represent this DatasetView. Must not be null
 	 * @param displayName String name to display in an UI.
-	 * @param description String description of the Dataset.
+	 * @param description String description of the DatasetView.
 	 * @throws ConfigurationException if required values are null.
 	 */
-	public Dataset(String internalName, String displayName, String description) throws ConfigurationException {
+	public DatasetView(String internalName, String displayName, String description) throws ConfigurationException {
 		super(internalName, displayName, description);
 	}
 
@@ -95,7 +97,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Add a DefaultFilter object to this Dataset.
+	 * Add a DefaultFilter object to this DatasetView.
 	 * @param df - A DefaultFilter object
 	 */
 	public void addDefaultFilter(DefaultFilter df) {
@@ -117,7 +119,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	* Adds a star name to the list for this Dataset.  A star name is the
+	* Adds a star name to the list for this DatasetView.  A star name is the
 	* name of a central, or main, table to which all mart facts are tied.
 	* Datasets can contain more than one star name.
 	* 
@@ -128,7 +130,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Set all star names for a Dataset with one call.
+	 * Set all star names for a DatasetView with one call.
 	 * Note, subsequent calls to setStars or addStar will add
 	 * starBases to what has been added before.
 	 * 
@@ -160,7 +162,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Add an AttributePage to the Dataset.
+	 * Add an AttributePage to the DatasetView.
 	 * 
 	 * @param a
 	 */
@@ -188,7 +190,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Add a FilterPage to the Dataset.
+	 * Add a FilterPage to the DatasetView.
 	 * 
 	 * @param f FiterPage object.
 	 */
@@ -216,7 +218,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Determine if this Dataset has Options Available.
+	 * Determine if this DatasetView has Options Available.
 	 * 
 	 * @return boolean, true if Options are available, false if not.
 	 */
@@ -235,7 +237,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Determine if this Dataset has DefaultFilters available.
+	 * Determine if this DatasetView has DefaultFilters available.
 	 * @return boolean, true if DefaultFilter(s) are available, false if not
 	 */
 	public boolean hasDefaultFilters() {
@@ -243,7 +245,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns all DefaultFilter Objects added to the Dataset.
+	 * Returns all DefaultFilter Objects added to the DatasetView.
 	 * @return DefaultFilter[] array of DefaultFilter objects.
 	 */
 	public DefaultFilter[] getDefaultFilters() {
@@ -253,7 +255,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the list of star names for this Dataset.
+	 * Returns the list of star names for this DatasetView.
 	 * 
 	 * @return starBases String[]
 	 */
@@ -264,7 +266,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns a list of primary keys for this Dataset.
+	 * Returns a list of primary keys for this DatasetView.
 	 * 
 	 * @return pkeys String[]
 	 */
@@ -275,7 +277,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns a list of all AttributePage objects contained in this Dataset, in the order they were added.
+	 * Returns a list of all AttributePage objects contained in this DatasetView, in the order they were added.
 	 * 
 	 * @return attributePages AttributePage[]
 	 */
@@ -299,17 +301,17 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Check whether a Dataset contains a particular AttributePage named by displayName.
+	 * Check whether a DatasetView contains a particular AttributePage named by displayName.
 	 * 
 	 * @param displayName String name of the AttributePage
-	 * @return boolean true if AttributePage is contained in the Dataset, false if not.
+	 * @return boolean true if AttributePage is contained in the DatasetView, false if not.
 	 */
 	public boolean containsAttributePage(String internalName) {
 		return attributePageNameMap.containsKey(internalName);
 	}
 
 	/**
-	 * Returns a list of all FilterPage objects contained within the Dataset, in the order they were added.
+	 * Returns a list of all FilterPage objects contained within the DatasetView, in the order they were added.
 	 * @return FilterPage[]
 	 */
 	public FilterPage[] getFilterPages() {
@@ -332,17 +334,17 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Check whether a Dataset contains a particular FilterPage named by displayName.
+	 * Check whether a DatasetView contains a particular FilterPage named by displayName.
 	 * 
 	 * @param displayName String name of the FilterPage
-	 * @return boolean true if FilterPage is contained in the Dataset, false if not.
+	 * @return boolean true if FilterPage is contained in the DatasetView, false if not.
 	 */
 	public boolean containsFilterPage(String internalName) {
 		return filterPageNameMap.containsKey(internalName);
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular AttributeDescription.
+		* Convenience method for non graphical UI.  Allows a call against the DatasetView for a particular AttributeDescription.
 		* Note, it is best to first call containsAttributeDescription,
 		* as there is a caching system to cache a AttributeDescription during a call to containsAttributeDescription.
 		* 
@@ -357,7 +359,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific AttributeDescription.
+		* Convenience method for non graphical UI.  Can determine if the DatasetView contains a specific AttributeDescription.
 		*  As an optimization for initial calls to containsAttributeDescription with an immediate call to getAttributeDescriptionByName if
 		*  found, this method caches the AttributeDescription it has found.
 		* 
@@ -388,7 +390,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular 
+		* Convenience method for non graphical UI.  Allows a call against the DatasetView for a particular 
 		* FilterDescription Object. Note, it is best to first call containsFilterDescription, as there is a 
 		* caching system to cache a FilterDescription Object during a call to containsFilterDescription.
 		* 
@@ -416,7 +418,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Determine if this Dataset supports a given field and tableConstraint for an Attribute.  
+	 * Determine if this DatasetView supports a given field and tableConstraint for an Attribute.  
 	 * Caches the first supporting AttributeDescription that it finds, for subsequent call to 
 	 * getAttributeDescriptionByFieldNameTableConstraint.
 	 * @param field
@@ -439,7 +441,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific FilterDescription/MapFilterDescription object.
+		* Convenience method for non graphical UI.  Can determine if the DatasetView contains a specific FilterDescription/MapFilterDescription object.
 		*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
 		*  found, this method caches the FilterDescription Object it has found.
 		* 
@@ -497,12 +499,12 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Determine if this Dataset contains a FilterDescription that supports a given field and tableConstraint.
+	 * Determine if this DatasetView contains a FilterDescription that supports a given field and tableConstraint.
 	 * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
 	 * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
 	 * @param field -- String field of a mart database table
 	 * @param tableConstraint -- String tableConstraint of a mart database
-	 * @return boolean, true if the Dataset contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+	 * @return boolean, true if the DatasetView contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
 	 */
 	public boolean supportsFilterDescription(String field, String tableConstraint) {
 		boolean supports = false;
@@ -602,7 +604,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a Dataset.
+	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a DatasetView.
 	 * 
 	 * @return List of FilterDescription/MapFilterDescription objects
 	 */
@@ -622,7 +624,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Convenience Method to get all AttributeDescription objects in all Pages/Groups/Collections within a Dataset.
+	 * Convenience Method to get all AttributeDescription objects in all Pages/Groups/Collections within a DatasetView.
 	 * 
 	 * @return List of AttributeDescription objects
 	 */
@@ -645,7 +647,7 @@ public class Dataset extends BaseConfigurationObject {
 	 * Convenience method to facilitate equals comparisons of datasets.
 	 * 
 	 * @param starBase -- String name of the starBase requested
-	 * @return true if Dataset contains the starBase, false if not
+	 * @return true if DatasetView contains the starBase, false if not
 	 */
 	public boolean containsStarBase(String starBase) {
 		return starBases.contains(starBase);
@@ -655,7 +657,7 @@ public class Dataset extends BaseConfigurationObject {
 	 * Convenience method to facilitate equals comparisons of datasets.
 	 * 
 	 * @param pkey -- String name of the primary key requested
-	 * @return true if Dataset contains the primary key, false if not
+	 * @return true if DatasetView contains the primary key, false if not
 	 */
 	public boolean containsPrimaryKey(String pkey) {
 		return primaryKeys.contains(pkey);
@@ -819,6 +821,22 @@ public class Dataset extends BaseConfigurationObject {
 			return getFilterDescriptionByInternalName(internalName).getCompleterQualifiers(internalName);
 	}
 	
+  /**
+   * Returns the DataSource for this DatasetView, or null.
+   * @return DataSource datasource
+   */
+  public DataSource getDatasource() {
+    return datasource;
+  }
+
+  /**
+   * Set the DataSource for this DatasetView.
+   * @param source -- DataSource
+   */
+  public void setDatasource(DataSource source) {
+    datasource = source;
+  }
+  
 	/**
 	 * Provides output useful for debugging purposes.
 	 */
@@ -830,21 +848,25 @@ public class Dataset extends BaseConfigurationObject {
 		buf.append(", primarykeys=").append(primaryKeys);
 		buf.append(", filterPages=").append(filterPages);
 		buf.append(", attributePages=").append(attributePages);
+        buf.append(", datasource=").append(datasource);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
 	/**
-	 * Allows Equality Comparisons manipulation of Dataset objects
+	 * Allows Equality Comparisons manipulation of DatasetView objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof Dataset && hashCode() == ((Dataset) o).hashCode();
+		return o instanceof DatasetView && hashCode() == ((DatasetView) o).hashCode();
 	}
 
 	public int hashCode() {
 		int tmp = super.hashCode();
 
+        if (datasource != null)
+          tmp = (31 * tmp) + datasource.hashCode();
+          
 		for (int i = 0, n = starBases.size(); i < n; i++) {
 			String element = (String) starBases.get(i);
 			tmp = (31 * tmp) + element.hashCode();
@@ -868,6 +890,8 @@ public class Dataset extends BaseConfigurationObject {
 		return tmp;
 	}
 
+    DataSource datasource = null;
+    
 	//keep track of ordering of filter and attribute pages
 	private int apageRank = 0;
 	private int fpageRank = 0;

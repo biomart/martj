@@ -33,7 +33,7 @@ import java.util.TreeMap;
  *                                Datasets.</p>
  * 
  *         <ul>
- *           <li><p>Dataset: contains the information for a particular star within a mart.
+ *           <li><p>DatasetView: contains the information for a particular star within a mart.
  *                          Holds lists of AttributePages and FilterPages</p>
  *               <ul>
  *               <li><p>AttributePage: contains a List of AttributeCollections.</p>
@@ -103,12 +103,12 @@ public class MartConfiguration extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Add a single Dataset to the MartConfiguration.
+	 * Add a single DatasetView to the MartConfiguration.
 	 * 
-	 * @param d A Dataset object
-	 * @see Dataset
+	 * @param d A DatasetView object
+	 * @see DatasetView
 	 */
-	public void addDataset(Dataset d) {
+	public void addDataset(DatasetView d) {
 		Integer rankInt = new Integer(thisRank);
 		datasets.put(rankInt, d);
 		datasetNameMap.put(d.getInternalName(), rankInt);
@@ -120,9 +120,9 @@ public class MartConfiguration extends BaseConfigurationObject {
 	 * Note, subsequent calls to setDatasets or addDataset will add
 	 * datasets to what have been added before.
 	 *  
-	 * @param d Dataset[] Array of Datasets.
+	 * @param d DatasetView[] Array of Datasets.
 	 */
-	public void setDatasets(Dataset[] d) {
+	public void setDatasets(DatasetView[] d) {
 		for (int i = 0, n = d.length; i < n; i++) {
 			Integer rankInt = new Integer(thisRank);
 			datasets.put(rankInt, d[i]);
@@ -132,34 +132,34 @@ public class MartConfiguration extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns an Array of Dataset objects, in the order they were added.
+	 * Returns an Array of DatasetView objects, in the order they were added.
 	 * 
-	 * @return Dataset[]
+	 * @return DatasetView[]
 	 */
-	public Dataset[] getDatasets() {
-		Dataset[] d = new Dataset[datasets.size()];
+	public DatasetView[] getDatasets() {
+		DatasetView[] d = new DatasetView[datasets.size()];
 		datasets.values().toArray(d);
 		return d;
 	}
 
 	/**
-	 * Returns a particular Dataset based on a supplied Dataset internalName.
+	 * Returns a particular DatasetView based on a supplied DatasetView internalName.
 	 * 
-	 * @param internalName String internalName of the Dataset
-	 * @return Dataset with the provided internalName, or null if not found
+	 * @param internalName String internalName of the DatasetView
+	 * @return DatasetView with the provided internalName, or null if not found
 	 */
-	public Dataset getDatasetByName(String internalName) {
+	public DatasetView getDatasetByName(String internalName) {
 		if (datasetNameMap.containsKey(internalName))
-			return (Dataset) datasets.get((Integer) datasetNameMap.get(internalName));
+			return (DatasetView) datasets.get((Integer) datasetNameMap.get(internalName));
 		else
 			return null;
 	}
 
 	/**
-	 * Check for whether the MartConfiguration contains a particular Dataset named by internalName.
+	 * Check for whether the MartConfiguration contains a particular DatasetView named by internalName.
 	 * 
-	 * @param internalName String internalName of a Dataset
-	 * @return boolean, true if the MartConfiguration contains the Dataset named by the given internalName
+	 * @param internalName String internalName of a DatasetView
+	 * @return boolean, true if the MartConfiguration contains the DatasetView named by the given internalName
 	 */
 	public boolean containsDataset(String internalName) {
 		return datasetNameMap.containsKey(internalName);
@@ -190,7 +190,7 @@ public class MartConfiguration extends BaseConfigurationObject {
   	List names = new ArrayList();
   	
   	for (Iterator iter = datasets.values().iterator(); iter.hasNext();) {
-			Dataset dset = (Dataset) iter.next();
+			DatasetView dset = (DatasetView) iter.next();
 			names.add(dset.getInternalName());
 		}
   	return names;
@@ -224,7 +224,7 @@ public class MartConfiguration extends BaseConfigurationObject {
 		tmp = (31 * tmp) + description.hashCode();
 
 		for (Iterator iter = datasets.keySet().iterator(); iter.hasNext();) {
-			Dataset d = (Dataset) iter.next();
+			DatasetView d = (DatasetView) iter.next();
 			tmp = (31 * tmp) + d.hashCode();
 		}
     

@@ -44,7 +44,7 @@ import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -153,10 +153,10 @@ public class MartShellLib {
 
 	private void LoadMaps() {
 		if (!mapsLoaded) {
-			Dataset[] dsets = martconf.getDatasets();
+			DatasetView[] dsets = martconf.getDatasets();
 
 			for (int i = 0, n = dsets.length; i < n; i++) {
-				Dataset dataset = dsets[i];
+				DatasetView dataset = dsets[i];
 				String datasetName = dataset.getInternalName();
 				starBase_Dataset.put(dataset.getStarBases()[0], datasetName); // first starbase only
 
@@ -245,9 +245,9 @@ public class MartShellLib {
 
 		if (!martconf.containsDataset(datasetName))
 			throw new InvalidQueryException(
-				"Dataset " + datasetName + " is not supported by the martConfiguration provided\n");
+				"DatasetView " + datasetName + " is not supported by the martConfiguration provided\n");
 
-		Dataset dataset = martconf.getDatasetByName(datasetName);
+		DatasetView dataset = martconf.getDatasetByName(datasetName);
 
 		success = getGetClause(query, dataset, mqlbuf);
 
@@ -281,7 +281,7 @@ public class MartShellLib {
 		return datasetName;
 	}
 
-	private boolean getGetClause(Query query, Dataset dataset, StringBuffer mqlbuf) {
+	private boolean getGetClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
 		Attribute[] attributes = query.getAttributes();
 		mqlbuf.append("select");
 
@@ -344,7 +344,7 @@ public class MartShellLib {
 			mqlbuf.append("+").append(rflank);
 	}
 
-	private boolean getWhereClause(Query query, Dataset dataset, StringBuffer mqlbuf) {
+	private boolean getWhereClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
 		boolean success = true;
 
 		mqlbuf.append("where ");
@@ -513,7 +513,7 @@ public class MartShellLib {
 	 * 
 	 * @param mql - String MQL command to parse into a Query object
 	 * @return Query object
-	 * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, Dataset/Attributes/Sequences/Filters not found, etc.)
+	 * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, DatasetView/Attributes/Sequences/Filters not found, etc.)
 	 */
 	public Query MQLtoQuery(String newquery) throws InvalidQueryException {
 		boolean start = true;
@@ -532,7 +532,7 @@ public class MartShellLib {
 
 		logger.info("Recieved Query " + newquery + "\n");
 
-		Dataset dset = null;
+		DatasetView dset = null;
 		Query query = new Query();
 		currentFpage = null;
 		currentApage = null;
@@ -585,7 +585,7 @@ public class MartShellLib {
 							"Invalid Query Recieved, dataset already set, attempted to set again: " + newquery + "\n");
 					} else {
 						if (!martconf.containsDataset(thisToken))
-							throw new InvalidQueryException("Dataset " + thisToken + " is not found in this mart\n");
+							throw new InvalidQueryException("DatasetView " + thisToken + " is not found in this mart\n");
 							
 						dset = martconf.getDatasetByName(thisToken);
 						logger.info("setting local dataset to " + dset.getInternalName() + "\n");
@@ -602,7 +602,7 @@ public class MartShellLib {
 						throw new InvalidQueryException("Invalid Query Recieved, did not set dataset: " + newquery + "\n");
 					} else {
 						if (!martconf.containsDataset(envDataset))
-							throw new InvalidQueryException("Dataset " + envDataset + " is not found in this mart\n");
+							throw new InvalidQueryException("DatasetView " + envDataset + " is not found in this mart\n");
 						dset = martconf.getDatasetByName(envDataset);
 					}
 				}
@@ -919,7 +919,7 @@ public class MartShellLib {
 	private Query modifyQueryForDomainSpecificKeyword(
 		String domainSpecificKeyword,
 		Query query,
-		Dataset dset,
+		DatasetView dset,
 		String thisToken)
 		throws InvalidQueryException {
 		// can either add keywords here, or replace it with a Plugin Module
@@ -1006,7 +1006,7 @@ public class MartShellLib {
 		return f;
 	}
 
-	private Query addSequenceDescription(Query inquery, Dataset dset, String seqrequest) throws InvalidQueryException {
+	private Query addSequenceDescription(Query inquery, DatasetView dset, String seqrequest) throws InvalidQueryException {
 		currentApage = dset.getAttributePageByInternalName("sequences");
 		for (int i = 0, n = atts.size(); i < n; i++) {
 			String element = (String) atts.get(i);
@@ -1060,7 +1060,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private Query addAttribute(Query inquery, Dataset dset, String attname) throws InvalidQueryException {
+	private Query addAttribute(Query inquery, DatasetView dset, String attname) throws InvalidQueryException {
 		checkAttributeValidity(dset, attname);
 
 		Query newQuery = new Query(inquery);
@@ -1071,7 +1071,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private void checkAttributeValidity(Dataset dset, String attname) throws InvalidQueryException {
+	private void checkAttributeValidity(DatasetView dset, String attname) throws InvalidQueryException {
 		if (!dset.containsAttributeDescription(attname))
 			throw new InvalidQueryException(
 				"Attribute " + attname + " is not found in this mart for dataset " + dset.getInternalName() + "\n");
@@ -1117,7 +1117,7 @@ public class MartShellLib {
 		atts.add(attname);
 	}
 
-	private Query addBooleanFilter(Query inquery, Dataset dset, String filterName, String filterCondition)
+	private Query addBooleanFilter(Query inquery, DatasetView dset, String filterName, String filterCondition)
 		throws InvalidQueryException {
 		checkFilterValidity(dset, filterName);
 
@@ -1154,7 +1154,7 @@ public class MartShellLib {
 
 	private Query addBasicFilter(
 		Query inquery,
-		Dataset dset,
+		DatasetView dset,
 		String filterName,
 		String filterCondition,
 		String filterValue)
@@ -1183,7 +1183,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private Query addListFilter(Query inquery, Dataset dset, String filterName, List filterValues)
+	private Query addListFilter(Query inquery, DatasetView dset, String filterName, List filterValues)
 		throws InvalidQueryException {
 		checkFilterValidity(dset, filterName);
 
@@ -1208,7 +1208,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private Query addListFilter(Query inquery, Dataset dset, String filterName, File fileloc)
+	private Query addListFilter(Query inquery, DatasetView dset, String filterName, File fileloc)
 		throws InvalidQueryException {
 		checkFilterValidity(dset, filterName);
 
@@ -1229,7 +1229,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private Query addListFilter(Query inquery, Dataset dset, String filterName, URL urlLoc)
+	private Query addListFilter(Query inquery, DatasetView dset, String filterName, URL urlLoc)
 		throws InvalidQueryException {
 		checkFilterValidity(dset, filterName);
 
@@ -1250,7 +1250,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private Query addListFilter(Query inquery, Dataset dset, String filterName, String storedQueryName)
+	private Query addListFilter(Query inquery, DatasetView dset, String filterName, String storedQueryName)
 		throws InvalidQueryException {
 		checkFilterValidity(dset, filterName);
 
@@ -1276,7 +1276,7 @@ public class MartShellLib {
 		return newQuery;
 	}
 
-	private void checkFilterValidity(Dataset dset, String filterName) throws InvalidQueryException {
+	private void checkFilterValidity(DatasetView dset, String filterName) throws InvalidQueryException {
 		if (!dset.containsFilterDescription(filterName))
 			throw new InvalidQueryException(
 				"Filter " + filterName + " not supported by mart dataset " + dset.getInternalName() + "\n");
@@ -1306,7 +1306,7 @@ public class MartShellLib {
 	boolean mapsLoaded = false; // true when LoadMaps called for first time
 	// mapping hashes for QueryToMQL
 	private Hashtable starBase_Dataset = new Hashtable();
-	// starbase to Dataset internalName
+	// starbase to DatasetView internalName
 	private Hashtable field_Attribute = new Hashtable();
 	// dataset internal_name to List of UIMappers for Attributes
 	private Hashtable field_Filter = new Hashtable();

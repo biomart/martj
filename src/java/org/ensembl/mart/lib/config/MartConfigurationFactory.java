@@ -49,7 +49,7 @@ public class MartConfigurationFactory {
 	// default, but can be over-ridden
 
 	// element names
-	private final String DATASET = "Dataset";
+	private final String DATASET = "DatasetView";
 	private final String STARBASE = "StarBase";
 	private final String PRIMARYKEY = "PrimaryKey";
 	private final String ENABLE = "Enable";
@@ -190,13 +190,13 @@ public class MartConfigurationFactory {
 
 
 
-	private Dataset getDataset(Element thisElement)
+	private DatasetView getDataset(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
 		String desc = thisElement.getAttributeValue(DESCRIPTION, "");
 
-		Dataset d = new Dataset(intName, dispname, desc);
+		DatasetView d = new DatasetView(intName, dispname, desc);
 
 		for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
 			iter.hasNext();

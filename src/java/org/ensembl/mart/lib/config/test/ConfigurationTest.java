@@ -34,7 +34,7 @@ import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DSFilterGroup;
-import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.DefaultFilter;
 import org.ensembl.mart.lib.config.Disable;
 import org.ensembl.mart.lib.config.Enable;
@@ -141,8 +141,8 @@ public class ConfigurationTest extends Base {
     //layout test
     layoutTest( martconf.getLayout() );
     
-		// Dataset Data Correct
-		Dataset[] ds = martconf.getDatasets();
+		// DatasetView Data Correct
+		DatasetView[] ds = martconf.getDatasets();
 		assertEquals("should only be one dataset, got " + ds.length + "\n", 1, ds.length);
 		datasetTest(martconf, ds[0]);
 	}
@@ -179,18 +179,18 @@ public class ConfigurationTest extends Base {
 		assertTrue("isSelectable should be true for Layout Option\n", o.isSelectable());
   }
   
-	private void datasetTest(MartConfiguration martconf, Dataset d) throws Exception {
+	private void datasetTest(MartConfiguration martconf, DatasetView d) throws Exception {
 		String testIName = "test_dataset";
 		String IName = d.getInternalName();
-		String testDName = "Test of a Dataset";
+		String testDName = "Test of a DatasetView";
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
 
-		assertEquals("Internal Name not correctly set for Dataset\n", testIName, IName);
-		assertEquals("Display Name not correctly set for Dataset\n", testDName, DName);
-		assertEquals("Description not correctly set for Dataset\n", TESTDESC, Desc);
+		assertEquals("Internal Name not correctly set for DatasetView\n", testIName, IName);
+		assertEquals("Display Name not correctly set for DatasetView\n", testDName, DName);
+		assertEquals("Description not correctly set for DatasetView\n", TESTDESC, Desc);
 
-		//contains/get for MartConfiguration-Dataset
+		//contains/get for MartConfiguration-DatasetView
 		boolean containsTest = martconf.containsDataset(testIName);
 		String testGetByName = null;
 
@@ -209,17 +209,17 @@ public class ConfigurationTest extends Base {
 		assertEquals("didnt get the expected primary key\n", "test_primaryKey", pks[0]);
 
     //Option data correct
-    assertTrue("Dataset should have Options.\n", d.hasOptions());
+    assertTrue("DatasetView should have Options.\n", d.hasOptions());
     Option[] ops = d.getOptions();
-    assertEquals("Dataset should have 1 Option.\n", 1, ops.length);
+    assertEquals("DatasetView should have 1 Option.\n", 1, ops.length);
     
     datasetOptionTest(ops[0]);
   
   
     //defaultFilter data correct
-    assertTrue("Dataset should have DefaultFilters\n", d.hasDefaultFilters());
+    assertTrue("DatasetView should have DefaultFilters\n", d.hasDefaultFilters());
     DefaultFilter[] dfs = d.getDefaultFilters();
-    assertEquals("Dataset should have one Default Filter\n", 1, dfs.length);
+    assertEquals("DatasetView should have one Default Filter\n", 1, dfs.length);
     
     datasetDefaultFilterTest(dfs[0]);
       
@@ -240,14 +240,14 @@ public class ConfigurationTest extends Base {
     // dataset option does not have suboption, isSelectable is true
     String testIName = "dataset option";
     String IName = option.getInternalName();
-    String testDName = "A Test Dataset Option";
+    String testDName = "A Test DatasetView Option";
     String DName = option.getDisplayName();
     String Desc = option.getDescription();
     
-    assertEquals("InternalName not correctly set for Dataset Option\n", testIName, IName);
-    assertEquals("DisplayName not correctly set for Dataset Option\n", testDName, DName);
-    assertEquals("Description not correctly set for Dataset Option\n", TESTDESC, Desc);
-    assertTrue("isSelectable should be true for Dataset Option\n", option.isSelectable());
+    assertEquals("InternalName not correctly set for DatasetView Option\n", testIName, IName);
+    assertEquals("DisplayName not correctly set for DatasetView Option\n", testDName, DName);
+    assertEquals("Description not correctly set for DatasetView Option\n", TESTDESC, Desc);
+    assertTrue("isSelectable should be true for DatasetView Option\n", option.isSelectable());
   }
   
   private void datasetDefaultFilterTest(DefaultFilter df) throws Exception {
@@ -255,11 +255,11 @@ public class ConfigurationTest extends Base {
     String Value = df.getValue();
     FilterDescription testFDesc = new FilterDescription("testDefaultFilterDescription", "test_id", TESTTYPE, "", TESTQUALIFIERS,  "A TEST ID, DOESNT EXIST", "gene_main", null, TESTDESC);
                                                             
-    assertEquals("value not correctly set for Dataset DefaultFilter\n", testValue, Value);
-    assertEquals("FilterDescription not correct for Dataset DefaultFilter\n", testFDesc, df.getUIFilterDescription());
+    assertEquals("value not correctly set for DatasetView DefaultFilter\n", testValue, Value);
+    assertEquals("FilterDescription not correct for DatasetView DefaultFilter\n", testFDesc, df.getUIFilterDescription());
   }
   
-	private void filterPageTest(Dataset d, FilterPage fp) throws Exception {
+	private void filterPageTest(DatasetView d, FilterPage fp) throws Exception {
 		String testIName = "testFilterPage";
 		String IName = fp.getInternalName();
 		String testDName = "Test A Filter Page";
@@ -270,9 +270,9 @@ public class ConfigurationTest extends Base {
 		assertEquals("Display Name not correctly set for FilterPage\n", testDName, DName);
 		assertEquals("Description not correctly set for FilterPage\n", TESTDESC, Desc);
 
-		// contains/get for Dataset-FilterPage
+		// contains/get for DatasetView-FilterPage
 		boolean containsTest = d.containsFilterPage(testIName);
-		assertTrue("Dataset should contain testFilterPage, but doesnt\n", containsTest);
+		assertTrue("DatasetView should contain testFilterPage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
@@ -288,7 +288,7 @@ public class ConfigurationTest extends Base {
 		secondFilterGroupTest(d, fp, fgs.get(1));
 	}
 
-	private void attributePageTest(Dataset d, AttributePage ap) throws Exception {
+	private void attributePageTest(DatasetView d, AttributePage ap) throws Exception {
 		String testIName = "testAttributePage";
 		String IName = ap.getInternalName();
 		String testDName = "Test of an Attribute Page";
@@ -299,9 +299,9 @@ public class ConfigurationTest extends Base {
 		assertEquals("Display Name not correctly set for AttributePage\n", testDName, DName);
 		assertEquals("Description not correctly set for AttributePage\n", TESTDESC, Desc);
 
-		// contains/get for Dataset-AttributePage
+		// contains/get for DatasetView-AttributePage
 		boolean containsTest = d.containsAttributePage(testIName);
-		assertTrue("Dataset should contain testAttributePage, but doesnt\n", containsTest);
+		assertTrue("DatasetView should contain testAttributePage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
@@ -363,7 +363,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 	}
 
-	private void secondFilterGroupTest(Dataset d, FilterPage fp, Object group) throws Exception {
+	private void secondFilterGroupTest(DatasetView d, FilterPage fp, Object group) throws Exception {
 		// second FilterGroup is a FilterGroup object, with everything contained within it
 		assertTrue("Second FilterGroup in the FilterPage should be a FilterGroup object", group instanceof FilterGroup);
 
@@ -396,7 +396,7 @@ public class ConfigurationTest extends Base {
 		secondFilterCollectionTest(d, fp, fg, fcs[1]);
 	}
 
-	private void secondAttributeGroupTest(Dataset d, AttributePage ap, Object group) throws Exception {
+	private void secondAttributeGroupTest(DatasetView d, AttributePage ap, Object group) throws Exception {
 		//second AttributeGroup in the AttributePage is an AttributeGroup, with everything in it
 		assertTrue("Second AttributeGroup in the AttributePage should be an AttributeGroup", group instanceof AttributeGroup);
 
@@ -428,7 +428,7 @@ public class ConfigurationTest extends Base {
 		attributeCollectionTest(d, ap, ag, acs[0]);
 	}
 
-	private void firstFilterCollectionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
+	private void firstFilterCollectionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
 		// first FilterCollection Does Not Contain Any Options
 		String testIName = "testFilterCollection";
 		String IName = fc.getInternalName();
@@ -460,7 +460,7 @@ public class ConfigurationTest extends Base {
 		firstFColFourthFdescTest(d,fp,fg,fc,(FilterDescription) fs.get(3));
 	}
 
-	private void secondFilterCollectionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
+	private void secondFilterCollectionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
 		//second FilterCollection is a member of the FilterSet
 		String testIName = "testOptionsCollection";
 		String IName = fc.getInternalName();
@@ -493,7 +493,7 @@ public class ConfigurationTest extends Base {
 		secondFColFifthFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(4));
 	}
 
-	private void attributeCollectionTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac) throws Exception {
+	private void attributeCollectionTest(DatasetView d, AttributePage ap, AttributeGroup ag, AttributeCollection ac) throws Exception {
 		String testIName = "testAttributeCollection";
 		String IName = ac.getInternalName();
 		String testDName = "Test of an AttributeCollection:";
@@ -524,7 +524,7 @@ public class ConfigurationTest extends Base {
 		attributeCollectionAdescTest(d, ap, ag, ac, (AttributeDescription) as.get(0));
 	}
 	
-	private void firstFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
+	private void firstFColFirstFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
 		String IName = f.getInternalName();
 		String testDName = "A TEST ID, DOESNT EXIST";
 		String DName = f.getDisplayName();
@@ -566,7 +566,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+REFINAME+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+REFINAME+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+REFINAME+"\n", fp.supports(Field, TableConstraint));
@@ -580,13 +580,13 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+REFINAME+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private void firstFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void firstFColSecFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
     //second FilterDescription from First FilterCollection contains an Enables Object
     String testIName = "enableFilter";
 		String IName = f.getInternalName();
@@ -630,7 +630,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -644,7 +644,7 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -654,7 +654,7 @@ public class ConfigurationTest extends Base {
 		EnableTest(e[0]);
 	}
 
-	private void firstFColThirdFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void firstFColThirdFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		//second FilterDescription from First FilterCollection contains an Enables Object
 		String testIName = "disableFilter";
 		String IName = f.getInternalName();
@@ -698,7 +698,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -712,7 +712,7 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -722,7 +722,7 @@ public class ConfigurationTest extends Base {
 		DisableTest(disables[0]);
 	}
 	
-	private void firstFColFourthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void firstFColFourthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "testHandlerFilterDescription";
 		String IName = f.getInternalName();
 		String testDName = "A TEST ID, DOESNT EXIST";
@@ -765,7 +765,7 @@ public class ConfigurationTest extends Base {
 		
 		String TableConstraint = f.getTableConstraint();
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -779,13 +779,13 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);		
 	}
 	
-	private void secondFColFirstFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void secondFColFirstFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "filterDescriptionValueOption";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Value Option";
@@ -828,7 +828,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -842,7 +842,7 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -853,7 +853,7 @@ public class ConfigurationTest extends Base {
 		ValueOptionTest(o[0]);    
 	}
 
-	private void secondFColSecFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void secondFColSecFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "filterDescriptionTreeValueOption";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Tree Value Option";
@@ -896,7 +896,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -910,7 +910,7 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -921,7 +921,7 @@ public class ConfigurationTest extends Base {
 		TreeValueOptionTest(o[0]);
 	}
 
-	private void secondFColThirdFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void secondFColThirdFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "FilterDescriptionOptionFilters";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Option Filters";
@@ -962,7 +962,7 @@ public class ConfigurationTest extends Base {
 		OptionFilterTwoTest(d, fp, fg, fc, f, o[1]);
 	}
 
-	private void secondFColFourthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
+	private void secondFColFourthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
 		String testIName = "FilterDescriptionOptionPushOptions";
 		String IName = f.getInternalName();
 		String testDName = "A TEST OF OPTION WITH PUSHOPTIONS";
@@ -1001,7 +1001,7 @@ public class ConfigurationTest extends Base {
   	pushOptionOptionTest(d, fp, fg, fc, f, o[0]);
   }
 
-	private void secondFColFifthFdescTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private void secondFColFifthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "testPushOptionOptionFilter";
 		String IName = f.getInternalName();
 		String testDName = "A TEST OF A PUSHOPTION FILTER OPTION";
@@ -1083,7 +1083,7 @@ public class ConfigurationTest extends Base {
 		ValueOptionTest(options[0]);		
 	}
 	
-	 private void OptionFilterOneTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	 private void OptionFilterOneTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "filterOptionOne";
 		String IName = option.getInternalName();
 		String testDName = "A Test Option Filter";
@@ -1125,7 +1125,7 @@ public class ConfigurationTest extends Base {
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
 		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", datasetSupports);
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", datasetSupports);
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -1139,13 +1139,13 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	 }
 
-	private void OptionFilterTwoTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	private void OptionFilterTwoTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "filterOptionTwo";
 		String IName = option.getInternalName();
 		String testDName = "A Test Option Filter";
@@ -1186,7 +1186,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -1200,13 +1200,13 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);	 		
 	 }
 	 
-	private void pushOptionOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	private void pushOptionOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "pushOptionOption";
 		String IName = option.getInternalName();
 		String testDName = "A TEST OPTION WITH PUSHOPTIONS";
@@ -1247,7 +1247,7 @@ public class ConfigurationTest extends Base {
 		}
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -1261,7 +1261,7 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -1271,7 +1271,7 @@ public class ConfigurationTest extends Base {
 		PushOptionValueTest(d, option, pos[0]);	 		
 	}
 	
-	private void PushOptionValueTest(Dataset d, Option superoption, PushAction p) {
+	private void PushOptionValueTest(DatasetView d, Option superoption, PushAction p) {
 		String testIName = "TestValuePushOptions";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHOPTIONS";
@@ -1286,11 +1286,11 @@ public class ConfigurationTest extends Base {
 		assertEquals("PushOption Ref incorrect\n", testRef, Ref);
 		
 		String testINameGetByName = superoption.getInternalName()+"."+Ref;
-		assertTrue("Dataset should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		assertTrue("DatasetView should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
 		FilterDescription testFilter = d.getFilterDescriptionByInternalName(Ref);
 		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
 		
-		assertEquals("Dataset returned the wrong FilterDescription for " + testINameGetByName + "\n", testFilter, Filter);
+		assertEquals("DatasetView returned the wrong FilterDescription for " + testINameGetByName + "\n", testFilter, Filter);
 		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", testFilter.getField(), Filter.getField(testINameGetByName));
 		
 		Option[] options = p.getOptions();
@@ -1314,7 +1314,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("testPushOptionOption Value incorrect\n", testValue, Value);
 	}
 
-	private void PushOptionFilterOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) throws Exception {
+	private void PushOptionFilterOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) throws Exception {
 		String testIName = "PushOptionFilterOption";
 		String IName = option.getInternalName();
 		String testDName = "A TEST OPTION WITH PUSHOPTION FILTER OPTION";
@@ -1331,7 +1331,7 @@ public class ConfigurationTest extends Base {
 		PushOptionFilterOptionPushOptionTest(d, fp, fg, fc, f, option, pos[0]);
 	}
 	
-	private void PushOptionFilterOptionPushOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option o, PushAction p) throws Exception {
+	private void PushOptionFilterOptionPushOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option o, PushAction p) throws Exception {
 		String testIName = "OptionFilterPushOption";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHOPTIONS WITH OPTION FILTER";
@@ -1350,7 +1350,7 @@ public class ConfigurationTest extends Base {
 		OptionFilterPushOptionOptionTest(d,fp,fg,fc,f,o,options[0]);
 	}
 	
-	private void OptionFilterPushOptionOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option superoption, Option o) throws Exception {
+	private void OptionFilterPushOptionOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option superoption, Option o) throws Exception {
 		String testIName = "PushOptionFilterOption";
 		String IName = o.getInternalName();
 		String testDName = "A TEST FILTER OPTION IN A PUSHOPTION";
@@ -1392,7 +1392,7 @@ public class ConfigurationTest extends Base {
 		
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
 		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
-		assertTrue("Dataset should support field and tableConstraint for "+IName+"\n", datasetSupports);
+		assertTrue("DatasetView should support field and tableConstraint for "+IName+"\n", datasetSupports);
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 		
 		assertTrue("FilterPage should support field and tableConstraint for "+IName+"\n", fp.supports(Field, TableConstraint));
@@ -1406,17 +1406,17 @@ public class ConfigurationTest extends Base {
 		
 		assertTrue("FilterDescripton should support field and tableConstraint for "+IName+"\n", f.supports(Field, TableConstraint));
 		
-		assertEquals("Dataset returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 		
 		String testINameGetByName = superoption.getInternalName()+"."+IName;
 		
-		assertTrue("Dataset should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		assertTrue("DatasetView should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
 		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
 		
-		assertEquals("Dataset returned the wrong FilterDescription for " + testINameGetByName + "\n", f, Filter);
+		assertEquals("DatasetView returned the wrong FilterDescription for " + testINameGetByName + "\n", f, Filter);
 		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", f.getField(testINameGetByName), Filter.getField(testINameGetByName));
 		
 		String FieldByIName = f.getField(testINameGetByName);
@@ -1430,7 +1430,7 @@ public class ConfigurationTest extends Base {
 		assertEquals("PushOptionFilterOption getType By InternalName incorrect\n", TESTTYPE, TypeByIName);
 	}
 	
-	private void attributeCollectionAdescTest(Dataset d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, AttributeDescription a) throws Exception {
+	private void attributeCollectionAdescTest(DatasetView d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, AttributeDescription a) throws Exception {
 		String testIName = "testAttributeDescription";
 		String IName = a.getInternalName();
 		String testDName = "Test of a AttributeDescription";

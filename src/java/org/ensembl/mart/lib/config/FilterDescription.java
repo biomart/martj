@@ -783,7 +783,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * 
 	 * @param d
 	 */
-	public void setParentsForAllPushOptionOptions(Dataset d)
+	public void setParentsForAllPushOptionOptions(DatasetView d)
 		throws ConfigurationException {
 
 		setParentsForAllPushOptionOptions(d, getOptions());
@@ -797,7 +797,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param options
 	 */
 	private void setParentsForAllPushOptionOptions(
-		Dataset dataset,
+		DatasetView dataset,
 		Option[] options)
 		throws ConfigurationException {
 

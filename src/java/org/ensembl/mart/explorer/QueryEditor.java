@@ -48,7 +48,7 @@ import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.Option;
@@ -190,7 +190,7 @@ public class QueryEditor
 	}
 
 	/**
-	 * Adds the Dataset selection page to the panel.
+	 * Adds the DatasetView selection page to the panel.
 	 */
 	private void addDatasetSelectionPage() {
 
@@ -410,7 +410,7 @@ public class QueryEditor
 	/**
 	 * Update the model (query) and the view (tree and inputPanels).
 	 */
-	private void datasetChanged(Dataset dataset) {
+	private void datasetChanged(DatasetView dataset) {
 
     treeModel.nodeChanged( datasetSelectionPage.getNode() );
     
@@ -462,7 +462,7 @@ public class QueryEditor
 	/**
 	 * 
 	 */
-	private void addFilterPages(Dataset dataset) {
+	private void addFilterPages(DatasetView dataset) {
 		filtersPage =
 			new FilterPageSetWidget(
 				query,
@@ -474,7 +474,7 @@ public class QueryEditor
 	 * Creates the attribute pages and various maps that are useful 
 	 * for relating nodes, pages and attributes.
 	 */
-	private void addAttributePages(Dataset dataset) {
+	private void addAttributePages(DatasetView dataset) {
 
 		attributesPage =
 			new AttributePageSetWidget(

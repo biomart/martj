@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -55,7 +55,7 @@ import org.gnu.readline.ReadlineCompleter;
  * <li><p>Help Mode: keyword: "help". Only names added by the client for this mode are made available.</p>
  * <li><p>Get Mode: keyword: "get".  Only attribute_names, and other names added by the client for this mode are made available.</p>
  * <li><p>Sequence Mode: keyword: "sequence".  Only names added by the client for this mode are made available.</p>
- * <li><p>Dataset Mode: keyword: "datasets".  Only dataset names, and other names added by the client for this mode, are made available.</p>
+ * <li><p>DatasetView Mode: keyword: "datasets".  Only dataset names, and other names added by the client for this mode, are made available.</p>
  * <li><p>Where Mode: keyword: "where".  Only filter_names, filter_set_names, and other names added by the client for this mode, are made available.</p>
  * </ul>
  * <br>
@@ -111,8 +111,8 @@ public class MartCompleter implements ReadlineCompleter {
 	private final String USE = "use";
 	private final String DATASETS = "datasets";
 
-	private Dataset envDataset = null;
-	private Dataset currentDataset = null;
+	private DatasetView envDataset = null;
+	private DatasetView currentDataset = null;
 	private boolean usingLocalDataset = false;
 
 	private List currentApages = new ArrayList();
@@ -148,9 +148,9 @@ public class MartCompleter implements ReadlineCompleter {
 
 		this.martconf = martconf;
 
-		Dataset[] dsets = martconf.getDatasets();
+		DatasetView[] dsets = martconf.getDatasets();
 		for (int i = 0, n = dsets.length; i < n; i++) {
-			Dataset dataset = dsets[i];
+			DatasetView dataset = dsets[i];
 			datasetSet.add(dataset.getInternalName());
 		}
 
@@ -439,7 +439,7 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Sets the Environment Dataset for the session.  This dataset remains in effect
+	 * Sets the Environment DatasetView for the session.  This dataset remains in effect
 	 * for the duration of the MartCompleter objects existence, and can only be over ridden
 	 * by a subsequent call to setEnvDataset, or a local dataset in the command
 	 * 
@@ -597,7 +597,7 @@ public class MartCompleter implements ReadlineCompleter {
 	}
 
 	/**
-	 * Sets the MartCompleter into the Dataset Mode 
+	 * Sets the MartCompleter into the DatasetView Mode 
 		*
 		*/
 	public void SetDatasetMode() {

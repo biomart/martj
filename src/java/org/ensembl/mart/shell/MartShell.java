@@ -59,7 +59,7 @@ import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.Dataset;
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.MartConfiguration;
@@ -1101,7 +1101,7 @@ public class MartShell {
 	}
 
 	private String[] ListDatasets() {
-		Dataset[] ds = martconf.getDatasets();
+		DatasetView[] ds = martconf.getDatasets();
 		String[] ret = new String[ds.length];
 
 		for (int i = 0, n = ds.length; i < n; i++)
@@ -1116,7 +1116,7 @@ public class MartShell {
 				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
 
 			int blen = 3; //3 filters/line
-			Dataset dset = martconf.getDatasetByName(envDataset);
+			DatasetView dset = martconf.getDatasetByName(envDataset);
 			List columns = new ArrayList();
 			String[] buffer = new String[blen];
 
@@ -1152,7 +1152,7 @@ public class MartShell {
 				throw new InvalidQueryException("This mart does not support dataset " + envDataset + "\n");
 
 			int blen = 3; //3 atts/line
-			Dataset dset = martconf.getDatasetByName(envDataset);
+			DatasetView dset = martconf.getDatasetByName(envDataset);
 			List columns = new ArrayList();
 			String[] buffer = new String[blen];
 
@@ -1248,7 +1248,7 @@ public class MartShell {
 				if (envDataset == null)
 					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
 
-				Dataset dset = martconf.getDatasetByName(envDataset);
+				DatasetView dset = martconf.getDatasetByName(envDataset);
 				if (!(dset.containsFilterDescription(name)))
 					throw new InvalidQueryException("Filter " + name + " is not supported by dataset " + envDataset + "\n");
 
@@ -1267,7 +1267,7 @@ public class MartShell {
 				if (envDataset == null)
 					throw new InvalidQueryException("Must set a dataset with a use command for describe filter to work\n");
 
-				Dataset dset = martconf.getDatasetByName(envDataset);
+				DatasetView dset = martconf.getDatasetByName(envDataset);
 				if (!dset.containsAttributeDescription(name))
 					throw new InvalidQueryException("Attribute " + name + " is not supported by dataset " + envDataset + "\n");
 
@@ -1285,7 +1285,7 @@ public class MartShell {
 
 		List lines = new ArrayList();
 
-		Dataset dset = martconf.getDatasetByName(dsetname);
+		DatasetView dset = martconf.getDatasetByName(dsetname);
 		//filters first
 		FilterPage[] fpages = dset.getFilterPages();
 		for (int i = 0, n = fpages.length; i < n; i++) {
@@ -1642,7 +1642,7 @@ public class MartShell {
 
 	private void showDataset() {
 		String dsetName = (envDataset != null) ? envDataset : "not set";
-		System.out.println("Current Dataset " + dsetName);
+		System.out.println("Current DatasetView " + dsetName);
 	}
 
 	private void WriteHistory(String command) throws InvalidQueryException {
@@ -2130,7 +2130,7 @@ public class MartShell {
 					MartShellLib.USINGQSTART }));
 
 	// describe instructions
-	private final String DATASETKEY = "Dataset";
+	private final String DATASETKEY = "DatasetView";
 	private final String FILTERKEY = "Filter";
 	private final String ATTRIBUTEKEY = "Attribute";
 
