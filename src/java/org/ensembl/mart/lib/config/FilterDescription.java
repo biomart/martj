@@ -32,7 +32,7 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class FilterDescription extends BaseConfigurationObject {
+public class FilterDescription extends QueryFilterSettings {
 
 	/**
 	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and qualifiers.
@@ -43,7 +43,11 @@ public class FilterDescription extends BaseConfigurationObject {
 	 * @param qualifiers String, comma-separated list of qualifiers to use in a MartShell MQL
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
-	public FilterDescription(String internalName, String field, String type, String qualifiers)
+	public FilterDescription(
+		String internalName,
+		String field,
+		String type,
+		String qualifiers)
 		throws ConfigurationException {
 		this(internalName, field, type, qualifiers, "", "", null, "");
 	}
@@ -97,8 +101,11 @@ public class FilterDescription extends BaseConfigurationObject {
 			return description;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDescription();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getDescription();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -107,26 +114,32 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return description;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getDescription(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getDescription(
+						refIname);
 				else
 					return null; // nothing found
 			} else
 				return null; // nothing found
 		}
 	}
-	
+
 	/**
 	 * Returns the displayName, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
 	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
 	 * @return String displayName
 	 */
-  public String getDisplayname(String internalName) {
+	public String getDisplayname(String internalName) {
 		if (this.internalName.equals(internalName))
 			return displayName;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getDisplayName();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getDisplayName();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -135,14 +148,17 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return displayName;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getDisplayName(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getDisplayName(
+						refIname);
 				else
 					return null; // nothing found
 			} else
 				return null; // nothing found
 		}
-  }
-	
+	}
+
 	/**
 	 * returns the field.
 	 * @return String field
@@ -161,8 +177,11 @@ public class FilterDescription extends BaseConfigurationObject {
 			return field;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getField();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getField();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -171,7 +190,10 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return field;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getField(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getField(
+						refIname);
 				else
 					return null; // nothing found
 			} else
@@ -198,8 +220,11 @@ public class FilterDescription extends BaseConfigurationObject {
 			return type;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getType();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getType();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -208,7 +233,10 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return type;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getType(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getType(
+						refIname);
 				else
 					return null; // nothing found
 			} else
@@ -235,8 +263,11 @@ public class FilterDescription extends BaseConfigurationObject {
 			return tableConstraint;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getTableConstraint();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getTableConstraint();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -245,7 +276,10 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return tableConstraint;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getTableConstraint(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getTableConstraint(
+						refIname);
 				else
 					return null; // nothing found
 			} else
@@ -271,8 +305,11 @@ public class FilterDescription extends BaseConfigurationObject {
 			return handler;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getHandler();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getHandler();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
@@ -281,7 +318,10 @@ public class FilterDescription extends BaseConfigurationObject {
 				if (this.internalName.equals(refIname))
 					return handler;
 				else if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getHandler(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getHandler(
+						refIname);
 				else
 					return null; // nothing found
 			} else
@@ -303,15 +343,21 @@ public class FilterDescription extends BaseConfigurationObject {
 			return qualifiers;
 		else {
 			if (uiOptionNameMap.containsKey(internalName))
-				return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName))).getQualifiers();
-			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				return (
+					(Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName)))
+					.getQualifiers();
+			else if (
+				(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 				// pushOption option
 				String[] names = internalName.split("\\.");
 				String optionIname = names[0];
 				String refIname = names[1];
 
 				if (uiOptionNameMap.containsKey(optionIname))
-					return ((Option) uiOptions.get((Integer) uiOptionNameMap.get(optionIname))).getQualifiers(refIname);
+					return (
+						(Option) uiOptions.get(
+							(Integer) uiOptionNameMap.get(optionIname))).getQualifiers(
+						refIname);
 				else
 					return null; // nothing found
 			} else
@@ -319,7 +365,9 @@ public class FilterDescription extends BaseConfigurationObject {
 		}
 	}
 
-	public String getInternalNameByFieldNameTableConstraint(String field, String tableConstraint) {
+	public String getInternalNameByFieldNameTableConstraint(
+		String field,
+		String tableConstraint) {
 		String ret = null;
 
 		if (supports(field, tableConstraint)) {
@@ -451,7 +499,8 @@ public class FilterDescription extends BaseConfigurationObject {
 	 */
 	public Option getOptionByName(String internalName) {
 		if (uiOptionNameMap.containsKey(internalName))
-			return (Option) uiOptions.get((Integer) uiOptionNameMap.get(internalName));
+			return (Option) uiOptions.get(
+				(Integer) uiOptionNameMap.get(internalName));
 		else
 			return null;
 	}
@@ -550,8 +599,11 @@ public class FilterDescription extends BaseConfigurationObject {
 	public List getCompleterNames() {
 		List names = new ArrayList();
 
-		if (field != null && field.length() > 0 && type != null && type.length() > 0) {
-			//add internalName, and any PushOptions names that are found
+		if (field != null
+			&& field.length() > 0
+			&& type != null
+			&& type.length() > 0) {
+			//add internalName, and any PushOption names that are found
 			if (!names.contains(internalName))
 				names.add(internalName);
 
@@ -565,7 +617,10 @@ public class FilterDescription extends BaseConfigurationObject {
 				String opfield = element.getField();
 				String optype = element.getType();
 
-				if (opfield != null && opfield.length() > 0 && optype != null && optype.length() > 0) {
+				if (opfield != null
+					&& opfield.length() > 0
+					&& optype != null
+					&& optype.length() > 0) {
 					if (!names.contains(element.getInternalName()))
 						names.add(element.getInternalName());
 				} else {
@@ -584,17 +639,18 @@ public class FilterDescription extends BaseConfigurationObject {
 			//filterDescription has qualifiers
 			if (this.qualifiers != null && this.qualifiers.length() > 0)
 				quals.addAll(Arrays.asList(qualifiers.split(",")));
-		} else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+		} else if (
+			(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 			//PushOption Filter Option has qualifiers 
 			String[] iname_info = internalName.split("\\.");
 			String supername = iname_info[0];
 			String refname = iname_info[1];
-      
+
 			Option superOption = getOptionByName(supername);
-			PushOptions[] pos = superOption.getPushOptions();
-      
+			PushAction[] pos = superOption.getPushOptions();
+
 			for (int i = 0, n = pos.length; i < n; i++) {
-				PushOptions po = pos[i];
+				PushAction po = pos[i];
 
 				if (po.containsOption(refname)) {
 					Option[] os = po.getOptionByInternalName(refname).getOptions();
@@ -621,7 +677,7 @@ public class FilterDescription extends BaseConfigurationObject {
 				String opquals = option.getQualifiers();
 
 				if (opquals != null && opquals.length() > 0) {
-					quals.addAll( Arrays.asList( opquals.split(",") ) );
+					quals.addAll(Arrays.asList(opquals.split(",")));
 				}
 			}
 		}
@@ -644,17 +700,18 @@ public class FilterDescription extends BaseConfigurationObject {
 						vals.add(opvalue);
 				}
 			}
-		} else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+		} else if (
+			(internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
 			//PushOption Option either Filter Option with Value Options, or Value Options
 			String[] iname_info = internalName.split("\\.");
 			String supername = iname_info[0];
 			String refname = iname_info[1];
 
 			Option superOption = getOptionByName(supername);
-			PushOptions[] pos = superOption.getPushOptions();
+			PushAction[] pos = superOption.getPushOptions();
 
 			for (int i = 0, n = pos.length; i < n; i++) {
-				PushOptions po = pos[i];
+				PushAction po = pos[i];
 				if (po.getRef().equals(refname)) {
 					//value options
 					Option[] suboptions = po.getOptions();
@@ -703,6 +760,75 @@ public class FilterDescription extends BaseConfigurationObject {
 		return vals;
 	}
 
+	public String getValue() {
+		// TODO implement this method?
+		return null;
+	}
+
+	/**
+	 * Recurses through options beneath all PushOption to set option.parent.
+	 * 
+	 * <br>
+	 * For optionPush->option1 option1.parent = optionPush.ref
+	 * </br>
+	 * 
+	 * <br>
+	 * For optionPush->option1->option1_1 : option1_1.parent = option1
+	 * </bre>
+	 * 
+	 * @param d
+	 */
+	public void setParentsForAllPushOptionOptions(Dataset d)
+		throws ConfigurationException {
+
+		setParentsForAllPushOptionOptions(d, getOptions());
+
+	}
+
+	/**
+	 * Recurses through options looking for Options inside PushOptions. Set the parent
+	 * for these Options to the FieldDesscription specified by PushOption.ref.
+	 * @param d
+	 * @param options
+	 */
+	private void setParentsForAllPushOptionOptions(
+		Dataset dataset,
+		Option[] options)
+		throws ConfigurationException {
+
+		for (int i = 0, n = options.length; i < n; i++) {
+
+			Option option = options[i];
+			PushAction[] pushOptions = option.getPushOptions();
+
+			for (int j = 0; j < pushOptions.length; j++) {
+				
+        PushAction pushOption = pushOptions[j];
+				
+        String targetName = pushOption.getRef();
+				QueryFilterSettings parent =
+					dataset.getFilterDescriptionByInternalName(targetName);
+				
+        if (parent == null)
+					throw new ConfigurationException(
+						"OptionPush.ref = "
+							+ targetName
+							+ " Refers to a FilterDescription that is not in dataset "
+							+ dataset.getInternalName());
+
+        // Assign the target FilterDescription to each option.
+				Option[] options2 = pushOption.getOptions();
+				for (int k = 0; k < options2.length; k++) {
+					Option option2 = options2[k];
+					option2.setParent(parent);
+
+          // Recurse incase this option has any PushOptions
+					setParentsForAllPushOptionOptions(dataset, option2.getOptions());
+				}
+			}
+		}
+	}
+
 	private Hashtable uiOptionNameMap = new Hashtable();
 	private TreeMap uiOptions = new TreeMap();
 	private boolean hasOptions = false;
@@ -719,4 +845,5 @@ public class FilterDescription extends BaseConfigurationObject {
 
 	//cache one supporting Option for call to supports
 	Option lastSupportingOption = null;
+
 }

@@ -23,12 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * PushOptions specifies a set of options that should be pushed onto
+ * PushOption specifies a set of options that should be pushed onto
  * a filter. These options replace any options currently available on
  * that filter. It contains the name of the filter, available via getRef(),
  * and the options that are to be pushed, available via getOptions().
  */
-public class PushOptions extends BaseConfigurationObject {
+public class PushAction extends BaseConfigurationObject {
 
   private String ref;
   private List options = new ArrayList();
@@ -42,7 +42,7 @@ public class PushOptions extends BaseConfigurationObject {
    * @param description
    * @throws ConfigurationException
    */
-  public PushOptions(
+  public PushAction(
     String internalName,
     String displayName,
     String description,
@@ -80,7 +80,7 @@ public class PushOptions extends BaseConfigurationObject {
    * @see java.lang.Object#equals(java.lang.Object)
    */
   public boolean equals(Object o) {
-    return o instanceof PushOptions && hashCode() == o.hashCode();
+    return o instanceof PushAction && hashCode() == o.hashCode();
   }
 
   /**
@@ -106,10 +106,10 @@ public class PushOptions extends BaseConfigurationObject {
   }
 
   /**
-   * Determine if this PushOptions contains a specific Option named by internalName.
+   * Determine if this PushOption contains a specific Option named by internalName.
    * Caches the Option with this internalName if found, for subsequent call to getOptionByInternalName.
-   * @param internalName - String name mapping to an Option contained within this PushOptions.
-   * @return true if this PushOptions contains an Option named by internalName, false otherwise.
+   * @param internalName - String name mapping to an Option contained within this PushOption.
+   * @return true if this PushOption contains an Option named by internalName, false otherwise.
    */
   public boolean containsOption(String internalName) {
   	boolean ret = false;
@@ -135,8 +135,8 @@ public class PushOptions extends BaseConfigurationObject {
   }
 
   /**
-   * Get an Option with a specific internalName, contained within this PushOptions.
-   * @param internalName - name mapping to an Option contained within this PushOptions.
+   * Get an Option with a specific internalName, contained within this PushOption.
+   * @param internalName - name mapping to an Option contained within this PushOption.
    * @return Option named by internalName, or null
    */
   public Option getOptionByInternalName(String internalName) {
@@ -147,7 +147,7 @@ public class PushOptions extends BaseConfigurationObject {
   }
   
   /**
-   * Determine if this PushOptions contains an Option supporting a specific field and TableConstraint.
+   * Determine if this PushOption contains an Option supporting a specific field and TableConstraint.
    * Also caches the first supporting Option it finds, for subsequent call to getOptionByFieldNameTableConstraint.
    * @param field - String field name in a mart database table
    * @param tableConstraint - String tableConstraint mapping to a mart database
@@ -167,7 +167,7 @@ public class PushOptions extends BaseConfigurationObject {
   }
   
   /**
-   * Get an Option supporting a specific field, tableConstraint, contained within this PushOptions.
+   * Get an Option supporting a specific field, tableConstraint, contained within this PushOption.
    * Calling supports first caches the last supporting Option, if found, making subsequent calls to
    * getOptionByFieldNameTableConstraint faster.
    * @param field - String field name in a mart database table

@@ -46,7 +46,7 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
 import org.ensembl.mart.lib.config.MartDTDEntityResolver;
 import org.ensembl.mart.lib.config.MartXMLutils;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.PushOptions;
+import org.ensembl.mart.lib.config.PushAction;
 import org.ensembl.mart.lib.test.Base;
 import org.jdom.Document;
 import org.jdom.input.SAXBuilder;
@@ -1265,12 +1265,12 @@ public class ConfigurationTest extends Base {
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 		
-		PushOptions[] pos = option.getPushOptions();
-		assertEquals("pushOptionOption should have one PushOptions\n", 1, pos.length);
+		PushAction[] pos = option.getPushOptions();
+		assertEquals("pushOptionOption should have one PushOption\n", 1, pos.length);
 		PushOptionValueTest(d, option, pos[0]);	 		
 	}
 	
-	private void PushOptionValueTest(Dataset d, Option superoption, PushOptions p) {
+	private void PushOptionValueTest(Dataset d, Option superoption, PushAction p) {
 		String testIName = "TestValuePushOptions";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHOPTIONS";
@@ -1325,12 +1325,12 @@ public class ConfigurationTest extends Base {
 		assertEquals("PushOptionFilterOption displayName incorrect\n", testDName, DName);
 		assertEquals("PushOptionFilterOption Description incorrect\n", TESTDESC, Desc);
 		
-		PushOptions[] pos = option.getPushOptions();
-		assertEquals("PushOptionFilterOption should have one PushOptions\n", 1, pos.length);
+		PushAction[] pos = option.getPushOptions();
+		assertEquals("PushOptionFilterOption should have one PushOption\n", 1, pos.length);
 		PushOptionFilterOptionPushOptionTest(d, fp, fg, fc, f, option, pos[0]);
 	}
 	
-	private void PushOptionFilterOptionPushOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option o, PushOptions p) throws Exception {
+	private void PushOptionFilterOptionPushOptionTest(Dataset d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option o, PushAction p) throws Exception {
 		String testIName = "OptionFilterPushOption";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHOPTIONS WITH OPTION FILTER";

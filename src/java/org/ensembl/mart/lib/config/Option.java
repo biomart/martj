@@ -28,8 +28,9 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class Option extends BaseConfigurationObject {
+public class Option extends QueryFilterSettings {
 
+  private QueryFilterSettings parent;
 	private String field;
 	private String tableConstraint;
 	private String value;
@@ -169,7 +170,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getDisplayName();
 				}
@@ -186,7 +187,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getDescription();
 				}
@@ -209,7 +210,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getField();
 				}
@@ -233,7 +234,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getTableConstraint();
 				}
@@ -257,7 +258,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getHandler();
 				}
@@ -267,7 +268,7 @@ public class Option extends BaseConfigurationObject {
 	}
 
   /**
-   * Searches each PushOptions for potential completer names.  If it contains Options acting as Filters 
+   * Searches each PushOption for potential completer names.  If it contains Options acting as Filters 
    * (eg, to be pushed to some other FilterDescription), adds 'internalName.option.getInternalName()' to the list of potential completer names.
    * If it references another FilterDescription, and contains value Options, adds 'internalName.pushOptions.getRef()' to the list.
    * @return List of potential completer names
@@ -275,7 +276,7 @@ public class Option extends BaseConfigurationObject {
   public List getCompleterNames() {
   	List names = new ArrayList();
   	for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-			PushOptions element = (PushOptions) uiOptionPushes.get(i);
+			PushAction element = (PushAction) uiOptionPushes.get(i);
 			Option[] ops = element.getOptions();
 
 			for (int j = 0, o = ops.length; j < o; j++) {
@@ -312,17 +313,17 @@ public class Option extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Get all PushOptions objects available as an array.  OptionPushes are returned in the order they were added.
-	 * @return PushOptions[]
+	 * Get all PushOption objects available as an array.  OptionPushes are returned in the order they were added.
+	 * @return PushOption[]
 	 */
-	public PushOptions[] getPushOptions() {
-		return (PushOptions[]) uiOptionPushes.toArray(new PushOptions[uiOptionPushes.size()]);
+	public PushAction[] getPushOptions() {
+		return (PushAction[]) uiOptionPushes.toArray(new PushAction[uiOptionPushes.size()]);
 	}
 
 	/**
 	 * @param object
 	 */
-	public void addPushOption(PushOptions optionPush) {
+	public void addPushOption(PushAction optionPush) {
 		uiOptionPushes.add(optionPush);
 		hashcode = -1;
 	}
@@ -342,7 +343,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getQualifiers();
 				}
@@ -366,7 +367,7 @@ public class Option extends BaseConfigurationObject {
 				return null;
 			else {
 				for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-					PushOptions element = (PushOptions) uiOptionPushes.get(i);
+					PushAction element = (PushAction) uiOptionPushes.get(i);
 					if (element.containsOption(refIname))
 						return element.getOptionByInternalName(refIname).getType();
 				}
@@ -402,7 +403,7 @@ public class Option extends BaseConfigurationObject {
 
 				if (!supports) {
 					for (int i = 0, n = uiOptionPushes.size(); i < n; i++) {
-						PushOptions element = (PushOptions) uiOptionPushes.get(i);
+						PushAction element = (PushAction) uiOptionPushes.get(i);
 						if (element.supports(field, tableConstraint)) {
 							lastSupportingOption = element.getOptionByFieldNameTableConstraint(field, tableConstraint);
 							supports = true;
@@ -490,5 +491,13 @@ public class Option extends BaseConfigurationObject {
 			}
 		}
 		return hashcode;
+	}
+
+	public void setParent(QueryFilterSettings parent) {
+		this.parent = parent;
+	}
+
+	public QueryFilterSettings getParent() {
+		return parent;
 	}
 }

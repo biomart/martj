@@ -21,6 +21,7 @@ package org.ensembl.mart.lib.config;
 import java.net.URL;
 import java.sql.Connection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 
@@ -242,8 +243,20 @@ public class MartConfigurationFactory {
 			Element element = (Element) iter.next();
 			d.addAttributePage(getAttributePage(element));
 		}
+    
+    // we need to manually set the "parent" references on these options
+    // so they are availbe for future use.
+    List fds = d.getAllFilterDescriptions();
+    for (Iterator iter = fds.iterator(); iter.hasNext();) {
+			FilterDescription fd = (FilterDescription) iter.next();
+      fd.setParentsForAllPushOptionOptions( d );
+		}
+        
+    
 		return d;
 	}
+
+	
 
 	private DefaultFilter getDefaultFilter(Element thisElement)
 		throws ConfigurationException {
@@ -344,7 +357,9 @@ public class MartConfigurationFactory {
 			iter.hasNext();
 			) {
 			Element suboption = (Element) iter.next();
-			o.addOption(getOption(suboption));
+      Option o2 = getOption(suboption);
+      o2.setParent( o );
+			o.addOption( o2 );
 		}
 
     for (Iterator iter = thisElement.getChildElements(PUSHOPTIONS).iterator();
@@ -356,13 +371,13 @@ public class MartConfigurationFactory {
 		return o;
 	}
  
-  private PushOptions getPushOptions(Element thisElement)  throws ConfigurationException {
+  private PushAction getPushOptions(Element thisElement)  throws ConfigurationException {
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
     String desc = thisElement.getAttributeValue(DESCRIPTION, "");
     String ref = thisElement.getAttributeValue(REF, "");
         
-    PushOptions op = new PushOptions( intName, dispname, desc, ref);
+    PushAction op = new PushAction( intName, dispname, desc, ref);
     
     for (Iterator iter = thisElement.getChildElements(OPTION).iterator();
       iter.hasNext();
@@ -400,7 +415,9 @@ public class MartConfigurationFactory {
 			iter.hasNext();
 			) {
 			Element option = (Element) iter.next();
-			f.addOption(getOption(option));
+      Option o = getOption(option);
+      o.setParent( f );
+			f.addOption( o );
 		}
 
     for(Iterator iter = thisElement.getChildElements(ENABLE).iterator(); iter.hasNext();) {

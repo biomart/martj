@@ -127,20 +127,20 @@ public class FilterCollection extends BaseConfigurationObject {
 				String testIname = testNames[1]; // y in x.y
 
         if (uiFilterNameMap.containsKey(testIname)) {
-        	// y is an actual filter, with its values stored in a PushOptions in another Filter					
+        	// y is an actual filter, with its values stored in a PushOption in another Filter					
 					lastFilt = (FilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(testIname));
 					contains = true;
 				} else {
-					// y may be a Filter stored in a PushOptions within another Filter
+					// y may be a Filter stored in a PushOption within another Filter
 					for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
 						FilterDescription element = (FilterDescription) iter.next();
 
 						if (element.containsOption(testRefName)) {
 							Option superOption = element.getOptionByName(testRefName);
 							
-							PushOptions[] pos = superOption.getPushOptions();
+							PushAction[] pos = superOption.getPushOptions();
 							for (int i = 0, n = pos.length; i < n; i++) {
-								PushOptions po = pos[i];
+								PushAction po = pos[i];
 								if (po.containsOption(testIname)) {
 									lastFilt = element;
 									contains = true;
