@@ -61,6 +61,10 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   private final int hashcode;
   private String adaptorName = null;
 
+
+  private boolean clearCache = false; //developer hack to clear the cache
+                                      //will be replaced soon with user supported clearing
+
   /**
    * Constructor for a DatabaseDSViewAdaptor
    * @param ds -- DataSource for Mart RDBMS
@@ -81,11 +85,18 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
     try {
       //set up the preferences node with the datasource information as the root node
-      xmlCache = BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(adaptorName);
+      if (clearCache) {
+        BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(adaptorName).node(user).removeNode();
+        BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).flush();
+      }
+        
+      xmlCache = BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).node(adaptorName).node(user);
     } catch (IllegalArgumentException e) {
       throw new ConfigurationException(
         "Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),
         e);
+    } catch (BackingStoreException e) {
+      throw new ConfigurationException("Caught BackingStoreException clearing cache: " + e.getMessage(), e);
     }
 
     int tmp = user.hashCode();
