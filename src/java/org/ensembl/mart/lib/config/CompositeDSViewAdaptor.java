@@ -37,8 +37,9 @@ public class CompositeDSViewAdaptor implements DSViewAdaptor {
 	}
 
 	/**
-	 * Adds adaptor.
-	 * @param adaptor adaptor to be added.
+	 * Adds adaptor.  
+	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSViewAdaptor
+   * to this instance or you will cause circular references when the getXXX() methods are called.
 	 */
 	public void add(DSViewAdaptor adaptor) {
 		adaptors.add(adaptor);
