@@ -36,9 +36,11 @@ PLATFORM=`uname -ms`
 case "$PLATFORM" in
 [Ll]inux*)
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  JAVA="${TMP_ROOT}/jre/linux/bin/java"
   ;;
 *alpha*)
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/alpha"
+  JAVA="${TMP_ROOT}/jre/alpha/bin/java"
   ;;
 # arp
 *Darwin*Power*Mac*)
@@ -48,7 +50,8 @@ case "$PLATFORM" in
 *)
   echo "warning, this platform is not known to be supported, using linux libraries\n"
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
+  JAVA="${TMP_ROOT}/jre/linux/bin/java"
   ;;
 esac
 
-LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell -Mdata/exampleDotMartShellURL $@
+LD_LIBRARY_PATH=$TMP_LD_LIBPATH $JAVA -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell $@

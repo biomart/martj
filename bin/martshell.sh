@@ -40,6 +40,11 @@ case "$PLATFORM" in
 *alpha*)
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/alpha"
   ;;
+# arp
+*Darwin*Power*Mac*)
+  TMP_LD_LIBPATH="${TMP_:D_LIBPATH}:${TMP_ROOT}/lib/macosx/"
+  ;;
+# arp
 *)
   echo "warning, this platform is not known to be supported, using linux libraries\n"
   TMP_LD_LIBPATH="${TMP_LD_LIBPATH}:${TMP_ROOT}/lib/linux"
