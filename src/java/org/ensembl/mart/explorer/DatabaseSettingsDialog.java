@@ -61,12 +61,12 @@ public class DatabaseSettingsDialog extends Box {
 		
     databaseType = new LabelledComboBox("Database type");
     databaseType.setPreferenceKey("database_type");
-    databaseType.setEditable( false );
+    //databaseType.setEditable( false );
     add( databaseType );
 
-    driver = new LabelledComboBox("Database type");
+    driver = new LabelledComboBox("Database Driver");
     driver.setPreferenceKey("driver_type");
-    driver.setEditable( false );
+    //driver.setEditable( false );
     add( driver );
     	
 		host = new LabelledComboBox("Host");
@@ -163,6 +163,7 @@ public class DatabaseSettingsDialog extends Box {
 
 		//  persist state for next time program runs
 		databaseType.store(preferences, 10);
+    driver.store(preferences, 10);
 		host.store(preferences, 10);
 		port.store(preferences, 10);
 		database.store(preferences, 10);
@@ -189,7 +190,18 @@ public class DatabaseSettingsDialog extends Box {
 
 	private void loadPreferences(Preferences preferences) {
 
-		databaseType.load(preferences);
+    databaseType.load(preferences);
+    // ensure mysql is available
+    String t = "mysql";
+    if ( !databaseType.hasItem(t) ) 
+      databaseType.addItem(t);
+      
+    driver.load(preferences);
+    // ensure drivers are available
+    String d = "com.mysql.jdbc.Driver";
+    if ( !driver.hasItem(d) )
+      driver.addItem(d);
+    
 		host.load(preferences);
 		port.load(preferences);
 		database.load(preferences);

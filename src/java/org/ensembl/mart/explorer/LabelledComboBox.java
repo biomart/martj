@@ -170,10 +170,11 @@ public class LabelledComboBox extends Box implements ActionListener {
 	}
 	
 	/**
-	 * Adds item to list.
+	 * Adds item to list. Does nothing if item is present.
 	 * @param anObject object to be added to list.
 	 */
 	public void addItem(Object anObject) {
+    if ( !hasItem(anObject) )
 		combo.addItem(anObject);
 	}
 
