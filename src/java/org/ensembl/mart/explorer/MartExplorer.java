@@ -57,6 +57,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
+import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
 import org.ensembl.util.SystemUtil;
@@ -125,17 +126,18 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private Feedback feedback = new Feedback(this);
 
   final JCheckBox advanced = new JCheckBox("Enable Advanced Options");
+  
+  final JCheckBox logging = new JCheckBox("Logging");
 
   private Help help = new Help();
 
   public static void main(String[] args) throws ConfigurationException {
 
-    // enable logging messages
     //    LoggingUtil.setAllRootHandlerLevelsToFinest();
     //    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
 
-    if (!LoggingUtil.isLoggingConfigFileSet())
-      Logger.getLogger("org.ensembl.mart").setLevel(Level.FINE);
+//    if (!LoggingUtil.isLoggingConfigFileSet())
+//      Logger.getLogger("org.ensembl.mart").setLevel(Level.FINE);
     MartExplorer me = new MartExplorer();
     me.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     me.setVisible(true);
@@ -151,7 +153,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     super(TITLE);
 
     createUI();
-
+    doLogging(false);
   }
 
   /**
@@ -386,16 +388,27 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
     });
 
+    JMenu advancedMenu = new JMenu("Advanced");
+    settings.add(advancedMenu);
+
     advanced.setToolTipText(
       "Enables optional DatasetConfigs, ability to change dataset name and datasource.");
     advanced.setSelected(adaptorManager.isAdvancedOptionsEnabled());
-    settings.add(advanced);
+    advancedMenu.add(advanced);
     advanced.addItemListener(new ItemListener() {
       public void itemStateChanged(ItemEvent e) {
         adaptorManager.setAdvancedOptionsEnabled(advanced.isSelected());
       }
     });
 
+    logging.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        doLogging(logging.isSelected());
+        }});
+    advancedMenu.add(logging);
+    
+    settings.addSeparator();
+    
     JMenuItem reset = new JMenuItem("Reset");
     reset.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
@@ -446,7 +459,21 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   }
 
 
+  /**
+   * Sets the logging level for all handlers. true = Level.CONFIG, false = Level.WARNING.
+   * For more sophisticated control of the logging system start mart explorer with a logging
+   * config file parameter, e.g. 
+   * -Djava.util.logging.config.file=some-config-file.properties
+   * @param log whether logging should be enabled for all handlers.
+   */
+  public void doLogging(boolean log) {
+      LoggingUtil.setAllHandlerLevels(log ? Level.CONFIG : Level.WARNING);
+  }
+
   public void doReset() {
+
+    if (logging.isSelected()) 
+      logging.doClick();
 
     try {
       prefs.clear();
