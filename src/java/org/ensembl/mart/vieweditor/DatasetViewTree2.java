@@ -9,11 +9,14 @@ package org.ensembl.mart.vieweditor;
  */
 
 import org.ensembl.mart.lib.config.*;
-
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
@@ -23,13 +26,24 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
-public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener, TreeModelListener, ActionListener, TreeSelectionListener {
+public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener, TreeModelListener, ActionListener, TreeSelectionListener,DropTargetListener,DragSourceListener, DragGestureListener {
 
     public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
     protected Insets scrollInsets = defaultScrollInsets;
     protected DatasetViewTreeNode lastSelectedNode;
     protected TreePath clickedPath;
-    protected DatasetViewTreeModel model;
+    //protected DatasetViewTreeModel model;
+    /** The Drop position. */
+	private DropTarget dropTarget = null;
+	/** The Drag node.*/
+	private DragSource dragSource = null;
+	/** The dragged node.*/
+	private DatasetViewTreeNode selnode=null;
+	/** The droppped node.*/
+	private DatasetViewTreeNode dropnode=null;
+	/** The TreeModel for the tree.*/
+	private DatasetViewTreeModel treemodel=null;
+
     public DatasetViewTree2(DatasetView dsView) {
         super((TreeModel) null);			// Create the JTree itself
         addMouseListener(this);
@@ -42,6 +56,10 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
         rootNode.setUserObject(dsView);
         AttributePage[] attributePages = dsView.getAttributePages();
         FilterPage[] filterPages = dsView.getFilterPages();
+
+        dropTarget = new DropTarget (this, this);
+		dragSource = new DragSource();
+		dragSource.createDefaultDragGestureRecognizer( this, DnDConstants.ACTION_MOVE, this);
 
         for (int i = 0; i < filterPages.length; i++) {
             FilterPage fiPage = filterPages[i];
@@ -115,19 +133,10 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
 
         // Populate the root node with its subdirectories
         //boolean addedNodes = rootNode.populateDirectories(true);
-        model = new DatasetViewTreeModel(rootNode);
-        model.addTreeModelListener(this);
-        setModel(model);
+        treemodel = new DatasetViewTreeModel(rootNode);
+        treemodel.addTreeModelListener(this);
+        setModel(treemodel);
 
-    }
-
-    // Returns the full pathname for a path, or null if not a known path
-    public String getPathName(TreePath path) {
-        Object o = path.getLastPathComponent();
-        if (o instanceof DatasetViewTree.DatasetTreeNode) {
-            return ((DatasetViewTree.DatasetTreeNode) o).fullName;
-        }
-        return null;
     }
 
 
@@ -259,14 +268,14 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
     private void insert() {
         System.out.println("I'm inserting...");
         DatasetViewTreeNode node =  new DatasetViewTreeNode("newNode");
-        model.insertNodeInto(node,(DatasetViewTreeNode)clickedPath.getLastPathComponent(),clickedPath.getPathCount()+1);
+        treemodel.insertNodeInto(node,(DatasetViewTreeNode)clickedPath.getLastPathComponent(),clickedPath.getPathCount()+1);
 
     }
 
     private void delete() {
         System.out.println("I'm deleting...");
         DatasetViewTreeNode node =  (DatasetViewTreeNode)clickedPath.getLastPathComponent();
-        model.removeNodeFromParent(node);
+        treemodel.removeNodeFromParent(node);
         //node.removeFromParent();
 
     }
@@ -300,6 +309,100 @@ public class DatasetViewTree2 extends JTree implements Autoscroll, MouseListener
     public void treeNodesRemoved(TreeModelEvent e) {
         System.out.println("tree nodes removed");
     }
+
+    /** Internally implemented, Do not override!*/
+	public void dragEnter(DropTargetDragEvent event){
+		event.acceptDrag (DnDConstants.ACTION_MOVE);
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragExit(DropTargetEvent event){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragOver(DropTargetDragEvent event){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void drop(DropTargetDropEvent event){
+		try {
+			Transferable transferable = event.getTransferable();
+
+			if (transferable.isDataFlavorSupported (DataFlavor.stringFlavor)){
+				event.acceptDrop(DnDConstants.ACTION_MOVE);
+				String s = (String)transferable.getTransferData ( DataFlavor.stringFlavor);
+				Object occur=event.getSource();
+				Point droppoint=event.getLocation();
+				TreePath droppath=getClosestPathForLocation(droppoint.x,droppoint.y);
+				dropnode=(DatasetViewTreeNode)droppath.getLastPathComponent();
+				event.getDropTargetContext().dropComplete(true);
+			}
+			else{
+				event.rejectDrop();
+			}
+		}
+		catch (IOException exception) {
+			event.rejectDrop();
+		}
+		catch (UnsupportedFlavorException ufException ) {
+			event.rejectDrop();
+		}
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dropActionChanged ( DropTargetDragEvent event ){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragGestureRecognized( DragGestureEvent event){
+		selnode=null;
+		dropnode=null;
+		Object selected =getSelectionPath();
+		TreePath treepath=(TreePath)selected;
+		selnode=(DatasetViewTreeNode)treepath.getLastPathComponent();
+		if ( selected != null ){
+			StringSelection text = new StringSelection( selected.toString());
+			dragSource.startDrag (event, DragSource.DefaultMoveDrop, text, this);
+		}
+		else{
+		}
+	}
+
+	/** Internally implemented, Do not override!.
+	* throws IllegalArgumentException.
+	*/
+	public void dragDropEnd (DragSourceDropEvent event){
+		if ( event.getDropSuccess()){
+			try{
+				if(dropnode.equals(selnode)){
+					System.out.println("drag==drop");
+					throw new IllegalArgumentException("the source is the same as the destination");
+				}
+				else{
+						dropnode.add(selnode);
+				}
+			} catch(IllegalArgumentException iae){
+				throw new IllegalArgumentException(iae.toString());
+			}
+			treemodel.reload();
+        }
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragEnter (DragSourceDragEvent event){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragExit (DragSourceEvent event){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dragOver (DragSourceDragEvent event){
+	}
+
+	/** Internally implemented, Do not override!*/
+	public void dropActionChanged ( DragSourceDragEvent event){
+	}
 
 }
 

@@ -1,91 +1,138 @@
 package org.ensembl.mart.vieweditor;
 
 /**
- * Created by Katerina Tzouvara
- * Date: 12-Nov-2003
- * Time: 12:02:50
+ * Created by IntelliJ IDEA.
+ * User: katerina
+ * Date: 19-Nov-2003
+ * Time: 15:52:01
+ * To change this template use Options | File Templates.
  */
 
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.*;
 
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.awt.dnd.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 public class DatasetViewTree extends JTree implements Autoscroll {
 
     public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
     protected Insets scrollInsets = defaultScrollInsets;
-    protected DatasetView dsView;
+    protected DatasetView dsView = null;
+    protected DatasetViewTreeNode lastSelectedNode = null;
+    protected DatasetViewTreeNode rootNode = null;
+    protected TreePath clickedPath = null;
+    protected DatasetViewTreeModel treemodel = null;
 
-    public DatasetViewTree(DatasetView dsView) throws FileNotFoundException, SecurityException {
-        super((TreeModel) null);			// Create the JTree itself
-
+    public DatasetViewTree(DatasetView dsView) {
+        super((TreeModel) null);
         this.dsView = dsView;
-
-// Use horizontal and vertical lines
+        addMouseListener(new DatasetViewTreeMouseListener());
+        addTreeSelectionListener(new DatasetViewTreeSelectionListener());
+        // Use horizontal and vertical lines
         putClientProperty("JTree.lineStyle", "Angled");
-
+        setEditable(true);
         // Create the first node
-        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("root");
+        rootNode = new DatasetViewTreeNode(dsView.getDisplayName());
+        rootNode.setUserObject(dsView);
+        populateTree();
+        treemodel = new DatasetViewTreeModel(rootNode);
+        setModel(treemodel);
+        DatasetViewTreeDnDListener dndListener = new DatasetViewTreeDnDListener(this);
 
+    }
+
+    private void populateTree() {
         AttributePage[] attributePages = dsView.getAttributePages();
         FilterPage[] filterPages = dsView.getFilterPages();
 
-        for (int i = 0; i < attributePages.length; i++) {
-            AttributePage at = attributePages[i];
-            DatasetViewElement e = new DatasetViewElement(at.getInternalName(), dsView);
-            DefaultMutableTreeNode atNode = new DefaultMutableTreeNode(at.getInternalName());
-            rootNode.add(atNode);
-            DefaultMutableTreeNode dummyNode = new DefaultMutableTreeNode("dummy");
-            rootNode.add(atNode);
-            atNode.add(dummyNode);
-//at.getAttributeGroups();
-        }
+        populateFilterNodes(filterPages);
+        populateAttributeNodes(attributePages);
+    }
+
+    private void populateFilterNodes(FilterPage[] filterPages) {
         for (int i = 0; i < filterPages.length; i++) {
-            FilterPage fi = filterPages[i];
-            DefaultMutableTreeNode fiNode = new DefaultMutableTreeNode(fi.getInternalName());
+            FilterPage fiPage = filterPages[i];
+            String fiName = fiPage.getInternalName();
+            DatasetViewTreeNode fiNode = new DatasetViewTreeNode("FilterPage:" + fiName);
+            fiNode.setUserObject(fiPage);
             rootNode.add(fiNode);
-            DefaultMutableTreeNode dummyNode = new DefaultMutableTreeNode("dummy");
-            rootNode.add(fiNode);
-//at.getAttributeGroups();
+            List groups = fiPage.getFilterGroups();
+            for (int j = 0; j < groups.size(); j++) {
+                if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
+                    FilterGroup fiGroup = (FilterGroup) groups.get(j);
+                    String grName = fiGroup.getInternalName();
+                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("FilterGroup:" + grName);
+                    grNode.setUserObject(fiGroup);
+                    fiNode.add(grNode);
+                    FilterCollection[] collections = fiGroup.getFilterCollections();
+                    for (int z = 0; z < collections.length; z++) {
+                        FilterCollection fiCollection = collections[z];
+                        String colName = fiCollection.getInternalName();
+                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
+                        colNode.setUserObject(fiCollection);
+                        grNode.add(colNode);
+                        List descriptions = fiCollection.getFilterDescriptions();
+                        for (int y = 0; y < descriptions.size(); y++) {
+                            FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
+                            String desName = fiDescription.getInternalName();
+                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                            desNode.setUserObject(fiDescription);
+                            colNode.add(desNode);
+                        }
+                    }
+                }
+            }
         }
-        // Populate the root node with its subdirectories
-        //boolean addedNodes = rootNode.populateFolders(true,"root");
-        setModel(new DefaultTreeModel(rootNode));
-
-        // Listen for Tree Selection Events
-        addTreeExpansionListener(new TreeExpansionHandler());
     }
 
-    // Returns the full pathname for a path, or null if not a known path
-    public String getPathName(TreePath path) {
-        Object o = path.getLastPathComponent();
-        if (o instanceof DatasetTreeNode) {
-            return ((DatasetTreeNode) o).fullName;
+    private void populateAttributeNodes(AttributePage[] attributePages) {
+        for (int i = 0; i < attributePages.length; i++) {
+            AttributePage atPage = attributePages[i];
+            String atName = atPage.getInternalName();
+            DatasetViewTreeNode atNode = new DatasetViewTreeNode("AttributePage:" + atName);
+            atNode.setUserObject(atPage);
+            rootNode.add(atNode);
+            List groups = atPage.getAttributeGroups();
+            for (int j = 0; j < groups.size(); j++) {
+                if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.AttributeGroup")) {
+                    AttributeGroup atGroup = (AttributeGroup) groups.get(j);
+                    String grName = atGroup.getInternalName();
+                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("AttributeGroup:" + grName);
+                    grNode.setUserObject(atGroup);
+                    atNode.add(grNode);
+                    AttributeCollection[] collections = atGroup.getAttributeCollections();
+                    for (int z = 0; z < collections.length; z++) {
+                        AttributeCollection atCollection = (AttributeCollection) collections[z];
+                        String colName = atCollection.getInternalName();
+                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
+                        grNode.add(colNode);
+                        colNode.setUserObject(atCollection);
+                        List descriptions = atCollection.getAttributeDescriptions();
+                        for (int y = 0; y < descriptions.size(); y++) {
+                            AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
+                            String desName = atDescription.getInternalName();
+                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
+                            desNode.setUserObject(atDescription);
+                            colNode.add(desNode);
+                        }
+                    }
+                }
+            }
         }
-        return null;
-    }
-
-    // Adds a new node to the tree after construction.
-    // Returns the inserted node, or null if the parent
-    // directory has not been expanded.
-    public DatasetTreeNode addNode(DatasetTreeNode parent, String name) {
-        int index = parent.addNode(name);
-        if (index != -1) {
-            ((DefaultTreeModel) getModel()).nodesWereInserted(
-                    parent, new int[]{index});
-            return (DatasetTreeNode) parent.getChildAt(index);
-        }
-
-        // No node was created
-        return null;
     }
 
     // Autoscrolling support
@@ -131,217 +178,257 @@ public class DatasetViewTree extends JTree implements Autoscroll {
                 vBar.setValue(vBar.getValue() + vBar.getUnitIncrement(1));
             }
         }
-    }
-
-    // Inner class that represents a node in this file system tree
-    public class DatasetTreeNode extends DefaultMutableTreeNode {
-
-        protected String name;		// Name of this component
-        protected String fullName;	// Full pathname
-        protected String type;
-        protected int order;
-        protected boolean populated;// true if we have been populated
-        protected boolean interim;	// true if we are in interim state
-        protected boolean isFolder;	// true if this is a directory
-
-        public DatasetTreeNode(String fullName) {
-            this.fullName = fullName;
-            isFolder = true;
-            StringTokenizer st = new StringTokenizer(fullName, ":");
-            int tokens = st.countTokens();
-            order = tokens - 1;
-            if (tokens == 5)
-                isFolder = false;
-            if (tokens == 1)
-                type = "root";
-            else {
-                int count = 0;
-                for (int i = 0; i < tokens; i++) {
-                    String temp = st.nextToken();
-                    if (i == 1)
-                        type = temp;
-                    if (i == tokens - 1)
-                        name = temp;
-                }
-            }
-        }
-
-        // Override isLeaf to check whether this is a directory
-        public boolean isLeaf() {
-            return !isFolder;
-        }
-
-        // Override getAllowsChildren to check whether this is a directory
-        public boolean getAllowsChildren() {
-            return isFolder;
-        }
-
-        // Return whether this is a directory
-        public boolean isFolder() {
-            return isFolder;
-        }
-
-        // Get full path
-        public String getFullName() {
-            return fullName;
-        }
-
-        // For display purposes, we return our own name
-        public String toString() {
-            return name;
-        }
-
-        // If we are a folder, scan our contents and populate
-        // with children. In addition, populate those children
-        // if the "descend" flag is true. We only descend once,
-        // to avoid recursing the whole subtree.
-        // Returns true if some nodes were added
-        boolean populateFolders(boolean descend) {
-            boolean addedNodes = false;
-
-            // Do this only once
-            if (populated == false) {
-                File f;
-                try {
-                    f = new File(fullName);
-                } catch (SecurityException e) {
-                    populated = true;
-                    return false;
-                }
-
-                if (interim == true) {
-                    // We have had a quick look here before:
-                    // remove the dummy node that we added last time
-                    removeAllChildren();
-                    interim = false;
-                }
-                ArrayList list = new ArrayList();
-                if (type.equals("root")) {
-
-                    AttributePage[] attributePages = dsView.getAttributePages();
-                    FilterPage[] filterPages = dsView.getFilterPages();
-
-                    // Process the contents
-                    for (int i = 0; i < attributePages.length; i++) {
-                        String name = ((AttributePage) attributePages[i]).getInternalName();
-                        try {
-                            DatasetTreeNode node = new DatasetTreeNode(fullName + ":attribute:" + name);
-                            list.add(node);
-                            if (descend && node.isFolder()) {
-                                node.populateFolders(false);
-                            }
-                            addedNodes = true;
-                            if (descend == false) {
-                                // Only add one node if not descending
-                                break;
-                            }
-                        } catch (Throwable t) {
-                            // Ignore phantoms or access problems
-                        }
-                    }
-                } else if (type.equals("attribute")) {
-                    if (order == 1) {
-
-                    }
-
-                }
-                if (addedNodes == true) {
-                    // Now sort the list of contained files and directories
-                    Object[] nodes = list.toArray();
-                    Arrays.sort(nodes, new Comparator() {
-                        public boolean equals(Object o) {
-                            return false;
-                        }
-
-                        public int compare(Object o1, Object o2) {
-                            DatasetTreeNode node1 = (DatasetTreeNode) o1;
-                            DatasetTreeNode node2 = (DatasetTreeNode) o2;
-
-                            // Directories come first
-                            if (node1.isFolder != node2.isFolder) {
-                                return node1.isFolder ? -1 : +1;
-                            }
-
-                            // Both directories or both files -
-                            // compare based on pathname
-                            return node1.fullName.compareTo(node2.fullName);
-                        }
-                    });
-
-                    // Add sorted items as children of this node
-                    for (int j = 0; j < nodes.length; j++) {
-                        this.add((DatasetTreeNode) nodes[j]);
-                    }
-                }
-
-                // If we were scanning to get all subdirectories,
-                // or if we found no content, there is no
-                // reason to look at this directory again, so
-                // set populated to true. Otherwise, we set interim
-                // so that we look again in the future if we need to
-                if (descend == true || addedNodes == false) {
-                    populated = true;
-                } else {
-                    // Just set interim state
-                    interim = true;
-                }
-            }
-
-            return addedNodes;
-        }
-
-        // Adding a new file or directory after
-        // constructing the FileTree. Returns
-        // the index of the inserted node.
-        public int addNode(String name) {
-            // If not populated yet, do nothing
-            if (populated == true) {
-                // Do not add a new node if
-                // the required node is already there
-                int childCount = getChildCount();
-                for (int i = 0; i < childCount; i++) {
-                    DatasetTreeNode node = (DatasetTreeNode) getChildAt(i);
-                    if (node.name.equals(name)) {
-                        // Already exists - ensure
-                        // we repopulate
-                        if (node.isFolder()) {
-                            node.interim = true;
-                            node.populated = false;
-                        }
-                        return -1;
-                    }
-                }
-
-                // Add a new node
-                try {
-                    DatasetTreeNode node = new DatasetTreeNode(fullName);
-                    add(node);
-                    return childCount;
-                } catch (Exception e) {
-                }
-            }
-            return -1;
-        }
-
 
     }
 
     // Inner class that handles Tree Expansion Events
-    protected class TreeExpansionHandler implements TreeExpansionListener {
+    protected class DatasetViewTreeExpansionHandler implements TreeExpansionListener {
         public void treeExpanded(TreeExpansionEvent evt) {
             TreePath path = evt.getPath();			// The expanded path
             JTree tree = (JTree) evt.getSource();	// The tree
 
             // Get the last component of the path and
             // arrange to have it fully populated.
-            DatasetTreeNode node = (DatasetTreeNode) path.getLastPathComponent();
-            if (node.populateFolders(true)) {
-                ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
-            }
+            DatasetViewTreeNode node = (DatasetViewTreeNode) path.getLastPathComponent();
+            /*if (node.populateFolders(true)) {
+                 ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
+             }   */
         }
 
         public void treeCollapsed(TreeExpansionEvent evt) {
             // Nothing to do
         }
     }
+
+    // Inner class that handles Menu Action Events
+    protected class MenuActionListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            if (e.getActionCommand().equals("cut"))
+                cut();
+            else if (e.getActionCommand().equals("copy"))
+                copy();
+            else if (e.getActionCommand().equals("paste"))
+                paste();
+            else if (e.getActionCommand().equals("insert"))
+                insert();
+            else if (e.getActionCommand().equals("delete"))
+                delete();
+        }
+    }
+
+    // Inner class that handles Tree Selection Events
+    protected class DatasetViewTreeSelectionListener implements TreeSelectionListener {
+        public void valueChanged(TreeSelectionEvent e) {
+            doOnSelection();
+        }
+    }
+
+    private void doOnSelection(){
+         lastSelectedNode = (DatasetViewTreeNode)
+                    this.getLastSelectedPathComponent();
+            if (lastSelectedNode == null) return;
+
+            Object nodeInfo = lastSelectedNode.getUserObject();
+
+            System.out.println(nodeInfo.getClass());
+    }
+
+    // Inner class that handles Tree Model Events
+    protected class DatasetViewTreeModelListener implements TreeModelListener {
+         public void treeNodesChanged(TreeModelEvent e) {
+        System.out.println("treeNodesChanged");
+
+          /* if (nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+            ((AttributePage)nodeInfo).setInternalName();
+           else if nodeInfo.getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage"))
+            ((AttributePage)nodeInfo).setInternalName();
+            */
+      /*  Object[] children = e.getChildren();
+        int[] childIndices = e.getChildIndices();
+        for (int i = 0; i < children.length; i++) {
+            System.out.println("Index " + childIndices[i] + ",changed value: " + children[0]);
+        }  */
+    }
+
+
+    public void treeStructureChanged(TreeModelEvent e) {
+           System.out.println("tree structure changed");
+    }
+
+    public void treeNodesInserted(TreeModelEvent e) {
+        TreePath tPath = e.getTreePath();
+        System.out.println("tree nodes inserted");
+        //tPath.getPathComponent();
+    }
+
+    public void treeNodesRemoved(TreeModelEvent e) {
+        System.out.println("tree nodes removed");
+    }
+
+    }
+
+    // Inner class that handles Tree Expansion Events
+    protected class DatasetViewTreeDnDListener implements DropTargetListener, DragSourceListener, DragGestureListener {
+        protected DropTarget dropTarget = null;
+        protected DragSource dragSource = null;
+        protected DatasetViewTreeNode selnode = null;
+        protected DatasetViewTreeNode dropnode = null;
+
+        public DatasetViewTreeDnDListener(DatasetViewTree tree){
+            dropTarget = new DropTarget(tree, this);
+            dragSource = new DragSource();
+            dragSource.createDefaultDragGestureRecognizer(tree, DnDConstants.ACTION_MOVE, this);
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragEnter(DropTargetDragEvent event) {
+            event.acceptDrag(DnDConstants.ACTION_MOVE);
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragExit(DropTargetEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragOver(DropTargetDragEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void drop(DropTargetDropEvent event) {
+            try {
+                Transferable transferable = event.getTransferable();
+
+                if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                    event.acceptDrop(DnDConstants.ACTION_MOVE);
+                    String s = (String) transferable.getTransferData(DataFlavor.stringFlavor);
+                    Object ob = event.getSource();
+                    Point droppoint = event.getLocation();
+                    TreePath droppath = getClosestPathForLocation(droppoint.x, droppoint.y);
+                    dropnode = (DatasetViewTreeNode) droppath.getLastPathComponent();
+                    event.getDropTargetContext().dropComplete(true);
+                } else {
+                    event.rejectDrop();
+                }
+            } catch (IOException exception) {
+                event.rejectDrop();
+            } catch (UnsupportedFlavorException ufException) {
+                event.rejectDrop();
+            }
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dropActionChanged(DropTargetDragEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragGestureRecognized(DragGestureEvent event) {
+            selnode = null;
+            dropnode = null;
+            Object selected = getSelectionPath();
+            TreePath treepath = (TreePath) selected;
+            selnode = (DatasetViewTreeNode) treepath.getLastPathComponent();
+            if (selected != null) {
+                StringSelection text = new StringSelection(selected.toString());
+                dragSource.startDrag(event, DragSource.DefaultMoveDrop, text, this);
+            } else {
+            }
+        }
+
+        /** Internally implemented, Do not override!.
+         * throws IllegalArgumentException.
+         */
+        public void dragDropEnd(DragSourceDropEvent event) {
+            if (event.getDropSuccess()) {
+                try {
+                    if (dropnode.equals(selnode)) {
+                        System.out.println("drag==drop");
+                        throw new IllegalArgumentException("the source is the same as the destination");
+                    } else {
+                        dropnode.add(selnode);
+                    }
+                } catch (IllegalArgumentException iae) {
+                    throw new IllegalArgumentException(iae.toString());
+                }
+                treemodel.reload();
+            }
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragEnter(DragSourceDragEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragExit(DragSourceEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dragOver(DragSourceDragEvent event) {
+        }
+
+        /** Internally implemented, Do not override!*/
+        public void dropActionChanged(DragSourceDragEvent event) {
+        }
+    }
+
+    // Inner class that handles Mouse events
+    protected class DatasetViewTreeMouseListener implements MouseListener {
+        public void mousePressed(MouseEvent e) {
+        }
+
+        public void mouseReleased(MouseEvent e) {
+        }
+
+        public void mouseEntered(MouseEvent e) {
+        }
+
+        public void mouseExited(MouseEvent e) {
+        }
+
+        public void mouseClicked(MouseEvent e) {
+            if (e.getButton() == 3) {
+                //Create the popup menu.
+                loungePopupMenu(e);
+            }
+        }
+    }
+
+    private void loungePopupMenu(MouseEvent e) {
+        JPopupMenu popup = new JPopupMenu();
+        String[] menuItems = { "copy", "cut", "paste", "insert", "delete" };
+        for( int i =0; i<menuItems.length; i++ ) {
+           JMenuItem menuItem = new JMenuItem( menuItems[i] );
+            MenuActionListener menuActionListener = new MenuActionListener();
+            menuItem.addActionListener(menuActionListener);
+            popup.add(menuItem);
+        }
+        popup.show(e.getComponent(),
+                e.getX(), e.getY());
+
+        clickedPath = this.getClosestPathForLocation(e.getX(), e.getY());
+        System.out.println("here" + ((DatasetViewTreeNode) clickedPath.getLastPathComponent()).getUserObject().getClass());
+    }
+
+    private void cut() {
+    }
+
+    private void copy() {
+    }
+
+    private void paste() {
+    }
+
+    private void insert() {
+        System.out.println("I'm inserting...");
+        DatasetViewTreeNode node = new DatasetViewTreeNode("newNode");
+        treemodel.insertNodeInto(node, (DatasetViewTreeNode) clickedPath.getLastPathComponent(), clickedPath.getPathCount() + 1);
+    }
+
+    private void delete() {
+        System.out.println("I'm deleting...");
+        DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+        treemodel.removeNodeFromParent(node);
+        //node.removeFromParent();
+    }
+
+
 }

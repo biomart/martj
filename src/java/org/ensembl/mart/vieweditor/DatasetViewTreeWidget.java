@@ -91,7 +91,7 @@ public class DatasetViewTreeWidget extends JPanel {
 		//w.setDatasetView(view);
 
 		JFrame f = new JFrame("DatasetView Tree Widget");
-        f.getContentPane().add(new JScrollPane(new DatasetViewTree2(view)));
+        f.getContentPane().add(new JScrollPane(new DatasetViewTree(view)));
        // f.getContentPane().add(new DatasetViewTree2());
 		//f.getContentPane().add( w );
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
