@@ -36,6 +36,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
@@ -95,11 +96,13 @@ public class SequenceGroupWidget
   private LabelledTextField flank5 = new LabelledTextField("1000");
   private LabelledTextField flank3 = new LabelledTextField("1000");
 
-  private JRadioButton clearButton = new JRadioButton("None");
+  private JButton clearButton = new JButton("Clear");
 
   private JRadioButton transcript = new JRadioButton("Transcripts/proteins");
 
   private JRadioButton gene = new JRadioButton("Genes");
+  
+  private JRadioButton none = new JRadioButton();
 
   private JRadioButton includeGeneSequence =
     new JRadioButton("Gene sequence only");
@@ -150,7 +153,7 @@ public class SequenceGroupWidget
 
   private JRadioButton includeNone = new JRadioButton();
 
-  private JRadioButton[] typeButtons = { transcript, gene, clearButton };
+  private JRadioButton[] typeButtons = { transcript, gene,  none };
 
   private JRadioButton[] includeButtons =
     {
@@ -245,8 +248,7 @@ public class SequenceGroupWidget
     if (sd == null) {
 
       includeNone.setSelected(true);
-      for (int i = 0; i < includeButtons.length; i++)
-        includeButtons[i].setEnabled(false);
+      setButtonsEnabled(includeButtons, false);
       schematicSequenceImageHolder.setIcon(blankIcon);
 
       flank5.setEnabled(false);
@@ -455,6 +457,9 @@ public class SequenceGroupWidget
       }
     }
 
+    // re-enable buttons if necessary
+    if (transcript.isSelected()) setButtonsEnabled(includeButtons, true);
+    else if  (gene.isSelected()) setButtonsEnabled(geneButtons, true);
   }
 
   private void buildGUI() {
@@ -464,7 +469,7 @@ public class SequenceGroupWidget
 
     Box b = Box.createVerticalBox();
 
-    b.add(addAll(Box.createHorizontalBox(), typeButtons, true));
+    b.add(addAll(Box.createHorizontalBox(), new JComponent[]{transcript,gene,clearButton}, true));
 
     b.add(
       addAll(
@@ -498,12 +503,19 @@ public class SequenceGroupWidget
     g.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
     blankIcon = new ImageIcon(blank);
 
-    clearButton.setSelected(true);
+    none.setSelected(true);
     ButtonGroup bg = new ButtonGroup();
     for (int i = 0; i < typeButtons.length; i++) {
       bg.add(typeButtons[i]);
       typeButtons[i].addActionListener(this);
     }
+
+    clearButton.addActionListener(this);
+    clearButton.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        none.doClick();
+      }
+    });
 
     bg = new ButtonGroup();
     for (int i = 0; i < includeButtons.length; i++) {
@@ -815,6 +827,11 @@ public class SequenceGroupWidget
   private void enableTranscriptButtons() {
     for (int i = 0; i < includeButtons.length; i++)
       includeButtons[i].setEnabled(true);
+  }
+
+  private void setButtonsEnabled(JRadioButton[] buttons, boolean enabled) {
+    for (int i = 0; i < buttons.length; i++)
+      buttons[i].setEnabled(enabled);
   }
 
   /**
