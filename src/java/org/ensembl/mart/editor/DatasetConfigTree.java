@@ -749,6 +749,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		String pushField = fd2.getField();
 		String pushInternalName = fd2.getInternalName();
 		String pushTableName = fd2.getTableConstraint();
+		
+		if (pushTableName.equals("main")){
+			String[] mains = dsConfig.getStarBases();
+			pushTableName = mains[0];
+		}	
 		// can add push actions to existing push actions so need to know the class of the node
 		String className = node.getUserObject().getClass().getName();
 		String field;
@@ -757,16 +762,16 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		if (className.equals("org.ensembl.mart.lib.config.FilterDescription")) {
 			FilterDescription fd1 = (FilterDescription) node.getUserObject();
 			field = fd1.getField();
-			if (!fd1.getTableConstraint().equals(pushTableName))
-				field = "olook_" + field;
+			//if (!fd1.getTableConstraint().equals(pushTableName))
+			//	field = "olook_" + field;
 			options = fd1.getOptions();
 		} else {
 			PushAction pa1 = (PushAction) node.getUserObject();
 			String intName = pa1.getInternalName();
 			field = intName.split("_push")[0];
-			if (field.startsWith("glook_")) {
-				field = field.replaceFirst("glook_", "");
-			}
+			//if (field.startsWith("glook_")) {
+			//	field = field.replaceFirst("glook_", "");
+			//}
 			options = pa1.getOptions();
 		}
 

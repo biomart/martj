@@ -1355,6 +1355,9 @@ public class DatabaseDatasetConfigUtils {
     String validatedPrimaryKey = new String(primaryKey);
 
     String tablePattern = "%" + MAINTABLESUFFIX;
+    
+	if(dsource.getDatabaseType().equals("oracle:thin")) tablePattern=tablePattern.toUpperCase();
+    
     boolean isBroken = true;
 
     Connection conn = null;
@@ -1364,8 +1367,7 @@ public class DatabaseDatasetConfigUtils {
       ResultSet columns = conn.getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
       while (columns.next()) {
         String thisColumn = columns.getString(4);
-
-        if (thisColumn.toLowerCase().equals(primaryKey.toLowerCase())) {
+        if (thisColumn.equalsIgnoreCase(primaryKey)) {
           isBroken = false;
           break;
         } else {
@@ -1524,6 +1526,9 @@ public class DatabaseDatasetConfigUtils {
 
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+      
+	  if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
+      
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
       Connection conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
@@ -1602,6 +1607,9 @@ public class DatabaseDatasetConfigUtils {
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
       //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
+      
+	  if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
+      
       Connection conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
@@ -1857,7 +1865,6 @@ public class DatabaseDatasetConfigUtils {
    
     String tableConstraint = description.getTableConstraint();
 
-    System.out.println(" ****** table constraint "+ tableConstraint);
     
     
 	// have placeholders for attributes in XML now with no info other than internal_name
@@ -1870,6 +1877,8 @@ public class DatabaseDatasetConfigUtils {
     // if the tableConstraint is null, this field must be available in one of the main tables
     //String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
     String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
+    
+	if(dsource.getDatabaseType().equals("oracle:thin")) table=table.toUpperCase();
     
     Connection conn = dsource.getConnection();
     catalog=null;
@@ -1888,7 +1897,6 @@ public class DatabaseDatasetConfigUtils {
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
-      System.out.println(field +" " +fieldValid + "\t"+tableName +" " + tableValid);
       if (valid[0] && valid[1]) {
 
         break;
@@ -2189,15 +2197,11 @@ public class DatabaseDatasetConfigUtils {
       potentials.add(tableName);
     }
     rsTab.close();
-
-    System.out.println("trying second");
     
     //now try capitals, should NOT get mixed results
     rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
     while (rsTab.next()) {
       String tableName = rsTab.getString(3);
-
-      System.out.println("tables "+ tableName);
       
       if (!potentials.contains(tableName))
         potentials.add(tableName);
@@ -2574,14 +2578,7 @@ public class DatabaseDatasetConfigUtils {
     //primaryKeys should be in this same order
 
     List starbases = new ArrayList();
-    
-    System.out.println("before sort");
-
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
-
-    
-    System.out.println("****after sort");
-    
     
     List primaryKeys = new ArrayList();
 
@@ -2660,12 +2657,12 @@ public class DatabaseDatasetConfigUtils {
           }
         }
       }
-
+    
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
 
-        String cname = column.name;
-
+        //String cname = column.name;
+		String cname = column.name.toLowerCase();
         // ignore the key columns as atts and filters
         if (cname.endsWith("_key"))
           continue;
@@ -2679,20 +2676,17 @@ public class DatabaseDatasetConfigUtils {
         int ctype = column.javaType; // java generalized type across all JDBC instances
         //String ctype = column.dbType; //as in RDBMS table definition
         int csize = column.maxLength;
-
         if (logger.isLoggable(Level.FINE))
           logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
-
           if (isAllNull(cname, fullTableName))
             continue;
 
-          if (isMainTable(tableName)) {
+          if (isMainTable(tableName)){
             tableName = "main";
             allCols.add(cname);
             if (!cname.endsWith("_bool")) {
-
               FilterDescription currFilt = null;
               if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName, null) != null)
 
@@ -2914,6 +2908,11 @@ public class DatabaseDatasetConfigUtils {
     String pushInternalName = fd2.getInternalName();
     String pushTableName = fd2.getTableConstraint();
 
+	if (pushTableName.equals("main")){
+    	String[] mains = dsConfig.getStarBases();
+		pushTableName = mains[0];
+	}
+
 	String orderSQL = JOptionPane.showInputDialog("Optional column name to order " + pushInternalName + " :");		
 	
 
@@ -2925,17 +2924,17 @@ public class DatabaseDatasetConfigUtils {
     if (className.equals("org.ensembl.mart.lib.config.FilterDescription")) {
       FilterDescription fd1 = (FilterDescription) bo;
       field = fd1.getField();
-      if (!fd1.getTableConstraint().equals(pushTableName))
-        field = "olook_" + field;
+      //if (!fd1.getTableConstraint().equals(pushTableName))
+      //  field = "olook_" + field;
       options = fd1.getOptions();
 
     } else {
       PushAction pa1 = (PushAction) bo;
       String intName = pa1.getInternalName();
       field = intName.split("_push")[0];
-      if (field.startsWith("glook_")) {
-        field = field.replaceFirst("glook_", "");
-      }
+      //if (field.startsWith("glook_")) {
+      //  field = field.replaceFirst("glook_", "");
+      //}
       options = pa1.getOptions();
     }
 
@@ -2983,9 +2982,7 @@ public class DatabaseDatasetConfigUtils {
     att.setTableConstraint(tableName);
     
     if (maxSize > 255){
-    	System.out.println(columnName + "\t" + maxSize);
     	maxSize = 255;
-    	
     }
     
     att.setMaxLength(String.valueOf(maxSize));
@@ -3060,7 +3057,7 @@ public class DatabaseDatasetConfigUtils {
       String[] starNames = dsConfig.getStarBases();
       String[] primaryKeys = dsConfig.getPrimaryKeys();
       for (int k = 0; k < primaryKeys.length; k++) {
-        if (primaryKeys[k].equals(joinKey))
+        if (primaryKeys[k].equalsIgnoreCase(joinKey))
           tableName = starNames[k];
       }
     }
@@ -3075,6 +3072,8 @@ public class DatabaseDatasetConfigUtils {
         + columnName
         + " IS NOT NULL ORDER BY "
         + columnName;
+        
+        
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
     String value;
@@ -3117,7 +3116,7 @@ public class DatabaseDatasetConfigUtils {
       orderSQL = "\" ORDER BY " + orderSQL;
         
     String sql =
-      "SELECT "
+      "SELECT DISTINCT "
         + columnName
         + " FROM "
         + tableName
@@ -3126,6 +3125,8 @@ public class DatabaseDatasetConfigUtils {
         + "=\""
         + whereValue
         + orderSQL;
+        
+        
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
     String value;
@@ -3160,7 +3161,7 @@ public class DatabaseDatasetConfigUtils {
       if (dsource.getDatabaseType().equals("mysql")) {
       sql.append (" limit 1");
       }
-      
+
       PreparedStatement ps = conn.prepareStatement(sql.toString());
       ResultSet rs = ps.executeQuery();
       rs.next();
