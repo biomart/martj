@@ -26,11 +26,11 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public interface DatasetViewAdaptor {
+public interface DSViewAdaptor {
   
   /**
    * Returns a String[] consisting of the displayNames of all DatasetView objects provided by
-   * a particular DatasetViewAdaptor object. 
+   * a particular DSViewAdaptor object. 
    * @return String[] displayNames
    * @throws ConfigurationException for all underlying exceptions
    */
@@ -38,7 +38,7 @@ public interface DatasetViewAdaptor {
   
   /**
    * Returns a String[] consisting of the internalNames of all DatasetView objects provided by
-   * a particular DatasetViewAdaptor object.
+   * a particular DSViewAdaptor object.
    * @return String[] internalNames
    * @throws ConfigurationException
    */
@@ -46,14 +46,14 @@ public interface DatasetViewAdaptor {
   
   /**
    * Returns a DatasetView[] consisting of all DatasetView objects provided by a particular
-   * DatasetViewAdaptor object.
+   * DSViewAdaptor object.
    * @return DatasetView[] dsetviews
    * @throws ConfigurationException  for all underlying exceptions
    */
   public DatasetView[] getDatasetViews() throws ConfigurationException;
   
   /**
-   * Determine if a DatasetViewAdaptor object contains a DatasetView with the given
+   * Determine if a DSViewAdaptor object contains a DatasetView with the given
    * displayName.
    * @param name -- String displayName of requested DatasetView
    * @return true if supported, false otherwise
@@ -69,7 +69,7 @@ public interface DatasetViewAdaptor {
   public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException;
   
   /**
-   * Determine if a DatasetViewAdaptor object contains a DatasetView with the given
+   * Determine if a DSViewAdaptor object contains a DatasetView with the given
    * internalName.
    * @param name -- String internalName of requested DatasetView.
    * @return true if supported, false otherwise
@@ -85,7 +85,7 @@ public interface DatasetViewAdaptor {
   public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException;
   
   /**
-   * If a DatasetViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
+   * If a DSViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
    * based on a comparison with the information stored in the object's target source.  May not actually do anything for some implimentations.
    * 
    * @throws ConfigurationException for all underlying Exceptions
