@@ -29,8 +29,10 @@ import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -66,7 +68,8 @@ public class QueryEditor extends JPanel {
   /** The query part of the model. */
   private Query query;
 
-  private TreeModel treeModel;
+  private DefaultTreeModel treeModel;
+  private MutableTreeNode rootNode;
   
   private JTree treeView;
   private JPanel inputPanel;
@@ -90,9 +93,19 @@ public class QueryEditor extends JPanel {
    * 
    */
   private void addDatasetSelectionPage() {
+    
     DatasetSelectionPage page = new DatasetSelectionPage(query, config );
+    
+    // Add dataset selection page to input panel.
     inputPanel.add( page.getName(), page );
     ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
+    
+    // Add datasetSelectionPage node and show it
+    treeModel.insertNodeInto( page.getNode(), rootNode, 0 );
+    TreePath path = new TreePath( rootNode ).pathByAddingChild( page.getNode() );
+    treeView.makeVisible(  path );	
+    
+    treeView.setRootVisible( false );
   }
 
   /**
@@ -146,7 +159,7 @@ public class QueryEditor extends JPanel {
    * 
    */
   private void initTree() {
-    TreeNode rootNode = new DefaultMutableTreeNode( "Query" );
+    rootNode = new DefaultMutableTreeNode( "Query" );
     treeModel = new DefaultTreeModel( rootNode );
     treeView = new JTree( treeModel );
 

@@ -27,7 +27,7 @@ public class DatasetSelectionPage extends InputPage {
     super("DatasetSelectionPage", query);
 
     add(new JLabel("TODO - " + getClass().getName()));
-  }
+  } 
 
   private MartConfiguration config;
 

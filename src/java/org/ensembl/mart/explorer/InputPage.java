@@ -8,7 +8,7 @@ package org.ensembl.mart.explorer;
 
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
+import javax.swing.tree.MutableTreeNode;
 
 import org.ensembl.mart.lib.Query;
 
@@ -18,16 +18,22 @@ import org.ensembl.mart.lib.Query;
 public class InputPage extends JPanel {
 
   private Query query;
-  private TreeNode node;
+  private MutableTreeNode node;
+  private String defaultNodeLabel;
 
   public InputPage(String name, Query query) {
     setName(name);
     this.query = query;
     node = new DefaultMutableTreeNode(this);
+    defaultNodeLabel = "<html><b>"+name+"</b></html>";
   }
 
-  public TreeNode getNode() {
+  public MutableTreeNode getNode() {
     return node;
+  }
+
+  public String toString() {
+    return defaultNodeLabel;
   }
 
 }
