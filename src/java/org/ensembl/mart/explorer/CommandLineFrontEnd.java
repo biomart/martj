@@ -188,7 +188,8 @@ public class CommandLineFrontEnd {
     q.setSpecies( species );
     q.setFocus( focus );
     q.setAttributes( attributes );
-    q.setFilters( filters );
+
+    q.setFilters( (Filter[])filters.toArray( new Filter[]{}) );
     q.setResultTarget( resultFile );
 
     Engine e = new Engine();

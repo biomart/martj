@@ -175,10 +175,10 @@ public class FilterPanel extends JPanel
     // default behaviour, overriden by settings below
     entireGenomeButton.setSelected(true);
 
-    Iterator iter = query.getFilters().iterator();
-    while (iter.hasNext()) {
+    Filter[] filters = query.getFilters();
+    for( int i=0; i<filters.length; ++i) {
 
-      Object o = iter.next();
+      Filter o = filters[i];
       
       logger.debug("loading data from filter : " + o);
 
@@ -200,8 +200,8 @@ public class FilterPanel extends JPanel
         case IDListFilter.STRING_MODE:
           String[] ids = f.getIdentifiers();
           StringBuffer buf = new StringBuffer();
-          for( int i=0; i< ids.length; ++i )
-            buf.append( ids[i] ).append("\n");
+          for( int j=0; j< ids.length; ++j )
+            buf.append( ids[j] ).append("\n");
           stableIDs.setText( buf.toString() );
           stableIDStringButton.setSelected( true );
           break;

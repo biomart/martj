@@ -3,7 +3,7 @@
 package org.ensembl.mart.explorer;
 
 public class CompositeAttribute implements Attribute {
-    public String sqlRepr(){
+    public String getName(){
         // Write your code here
         return null;
     }

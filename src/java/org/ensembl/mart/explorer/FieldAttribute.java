@@ -33,7 +33,7 @@ public class FieldAttribute implements Attribute {
       return buf.toString();
     }
 
-    public String sqlRepr(){
+    public String getName(){
 			return field;
     }
 

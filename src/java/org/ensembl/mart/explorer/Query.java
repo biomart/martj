@@ -19,28 +19,31 @@ public class Query {
 			attributes.remove( attribute );
   }
 
-    public List getAttributes() {
-        return attributes;
-    }
+  public Attribute[] getAttributes() {
+    Attribute[] a = new Attribute[ attributes.size() ];
+    attributes.toArray( a );
+    return a;
+  }
 
-    public void setAttributes(List attributes) {
-        this.attributes = attributes;
-    }
+  public void setAttributes(List attributes) {
+    this.attributes = attributes;
+  }
+  
+  public Filter[] getFilters() {
+    Filter[] f = new Filter[ filters.size() ];
+    filters.toArray( f );
+    return f;
+  }
 
-    public List getFilters() {
-        return filters;
-    }
-
-    public void setFilters(List filters) {
-        this.filters = filters;
-    }
-
+   public void setFilters(Filter[] filters) {
+		this.filters = Arrays.asList( filters );
+   }
 
     public void addFilter(Filter filter) {
       // new filters with the same hashCode() override old ones
-			if ( filters.contains( filter ) )
+      if ( filters.contains( filter ) )
       	filters.remove( filter );
-			filters.add( filter );
+      filters.add( filter );
     }
 
     public String getHost(){

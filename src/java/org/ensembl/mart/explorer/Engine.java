@@ -75,7 +75,7 @@ public class Engine {
     throws SQLException, FormatterException, InvalidQueryException {
     
     init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
-    CompiledSQLQuery csql = new CompiledSQLQuery( query );
+    CompiledSQLQuery csql = new CompiledSQLQuery( query, this );
     String sql = csql.toSQL();
     Connection conn = getDatabaseConnection( query );
 
@@ -83,10 +83,9 @@ public class Engine {
     logger.info( "SQL : " +sql );
 
     PreparedStatement ps = conn.prepareStatement( sql );
-    List filters = query.getFilters();
     int p=1;
-    for( int i=0; i<filters.size(); ++i) {
-      Filter f = (Filter)filters.get(i);
+    for( int i=0; i<query.getFilters().length; ++i) {
+      Filter f = query.getFilters()[i];
       String value = f.getValue();
       if ( value!=null ) {
         logger.info("SQL (prepared statement value) : "+p+" = " + value);
@@ -123,14 +122,14 @@ public class Engine {
         this.database = database;
     }
 
-    public List tables(Query q) throws SQLException {
+    public String[] tables(Query q) throws SQLException {
         ArrayList tables = new ArrayList();
         Connection conn = getDatabaseConnection( q );
         ResultSet rs = conn.createStatement().executeQuery("show tables");
         while (rs.next()) {
             tables.add(rs.getString(1));
         }
-        return tables;
+        return toStringArray( tables );
     }
 
     public String[] databases(Query q) throws SQLException {
@@ -140,6 +139,52 @@ public class Engine {
         while (rs.next()) {
             tables.add(rs.getString(1));
         }
-        return (String[])tables.toArray(new String[ tables.size() ]);
+        return toStringArray( tables );
     }
+
+
+  public Properties columnToTable( Query query ) throws SQLException {
+
+    Properties col2Table = new Properties();
+
+    Connection conn = getDatabaseConnection( query );
+    
+    String[] tables = tables( query );
+
+    // sort by length so that we have central tables before satelite
+    // tables. This means that for columns that appear in multiple tables
+    // (e.g. gene_stable_id) we use always use the one from the central
+    // table.
+    Arrays.sort( tables );
+
+    String base = query.getSpecies() + "_core_" + query.getFocus();
+
+    logger.debug("Filtering tables beginning with " + base + "(total num tables = "+tables.length+")");
+
+    for (int i=0; i<tables.length; ++i) {
+
+      String table = tables[i];
+
+      if ( table.startsWith( base ) ) {
+
+        logger.debug("loading table : " + table);
+        ResultSet rs = conn.createStatement().executeQuery("describe " + table);
+        while ( rs.next() ) {
+          String col = rs.getString(1);
+          if ( !col2Table.containsKey( col ) ) 
+            col2Table.put( col, table);
+        }
+      }
+      else {
+        logger.debug("ignoring table : " + table);
+      }
+    }
+
+    return col2Table;
+  }
+
+
+  private String[] toStringArray( List list ) {
+    return (String[])list.toArray(new String[ list.size() ]);
+  }
 }

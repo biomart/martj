@@ -64,8 +64,8 @@ public class CompiledSQLQueryTest extends Base {
      * Test filtering on stable ids from a file.
      */
     public void testStableIDsFromFileQuery() throws Exception {
-
-			query.addAttribute( new FieldAttribute("gene_stable_id") );
+      
+      query.addAttribute( new FieldAttribute("gene_stable_id") );
       query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE) ) );
       ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
       query.setResultTarget( stats );
@@ -79,13 +79,31 @@ public class CompiledSQLQueryTest extends Base {
       // the implementation converts the file to a url. We include this test incase future
       // implementations work differently.
 
-			query.addAttribute( new FieldAttribute("gene_stable_id") );
+      query.addAttribute( new FieldAttribute("gene_stable_id") );
       query.addFilter( new IDListFilter("gene_stable_id", new File( STABLE_ID_FILE).toURL() ) );
-      ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
-      query.setResultTarget( stats );
-			executeQuery( query, stats );
+      executeWithStats( query, 3 );
     }
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run( suite() );
-    }
+
+
+
+  public void testJoinToPFAM() throws Exception {
+    query.addAttribute( new FieldAttribute("gene_stable_id") );
+    query.addAttribute( new FieldAttribute("pfam") );
+    executeWithStats( query, 3 );
+  }
+
+
+  /**
+   * Convenience method; executes query and print nLines of results to
+  screen. Each line has tab separated values.
+   */
+  private void executeWithStats( Query query, int nLines) throws Exception  {
+    ResultStats stats = new ResultStats( "stats", new SeparatedValueFormatter("\t"), 3 );
+    query.setResultTarget( stats );
+    executeQuery( query, stats );
+  }
+
+  public static void main(String[] args) {
+    junit.textui.TestRunner.run( suite() );
+  }
 }

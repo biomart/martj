@@ -4,10 +4,12 @@ package org.ensembl.mart.explorer;
 
 import java.util.*;
 import org.apache.log4j.Logger;
+import java.sql.*;
 
 public class CompiledSQLQuery {
-  public CompiledSQLQuery(Query query) {
+  public CompiledSQLQuery(Query query, Engine engine) {
     this.query = query;
+    this.engine = engine;
   }
 
   public Query getQuery(){
@@ -22,6 +24,14 @@ public class CompiledSQLQuery {
   }
   
   private String compileSQL() throws InvalidQueryException{
+
+    try {
+      columnToTable = engine.columnToTable( query ) ;
+    } catch (SQLException e) {
+      throw new InvalidQueryException("Failed to load column to table mapping.", e);
+    }
+
+    baseTableName = query.getSpecies() + "_core_" + query.getFocus();
     StringBuffer buf = new StringBuffer();
     selectClause( buf);
     fromClause( buf );
@@ -32,41 +42,117 @@ public class CompiledSQLQuery {
 
   private void selectClause( StringBuffer buf ) throws InvalidQueryException {
 
-    final List attributes = query.getAttributes();
-    final int nAttributes = attributes.size();
+    final int nAttributes = query.getAttributes().length;
 
-		if ( nAttributes==0 ) throw new InvalidQueryException("No attributes selected.");
-
+    if ( nAttributes==0 ) throw new InvalidQueryException("No attributes selected.");
+    
     buf.append( "SELECT " );
+
     for( int i=0; i<nAttributes; ++i ) {
-      Attribute a = (Attribute)attributes.get(i);
-      buf.append( a.sqlRepr() );
+
+      Attribute a = query.getAttributes()[i];
+      String colName = a.getName();
+      String table = mapToTable( colName ); 
+      
+      buf.append( table ).append(".").append( colName );
+      
       if ( i+1 < nAttributes ) buf.append( ", " );
     }
   }
 
-  private void fromClause( StringBuffer buf ) {
+  private void fromClause( StringBuffer buf ) throws InvalidQueryException {
+
+    // build array of "from" tables by looking at all the columns mentioned
+    // in the attributes and filters.
+
+    Set relevantTables = new HashSet();
+    
+    for(int i=0; i<query.getAttributes().length; ++i) {
+      String colName = query.getAttributes()[i].getName();
+      relevantTables.add( mapToTable( colName ) );
+    }
+
+    for(int i=0; i<query.getFilters().length; ++i) {
+      String colName = query.getFilters()[i].getType();
+      relevantTables.add( mapToTable( colName ) );
+    }
+
+    fromTables = new String[ relevantTables.size() ];
+    relevantTables.toArray( fromTables );
+
     buf.append( " FROM " );
-    // tmp
-		buf.append( query.getSpecies() ).append( "_core_" ).append( query.getFocus() );
+    for( int i=0; i<fromTables.length; ++i) {
+      if ( i>0 ) buf.append( " , " ); 
+      buf.append( fromTables[i] );
+    }
   }
+  
+  private void whereClause( StringBuffer buf ) throws InvalidQueryException {
 
-  private void whereClause( StringBuffer buf ) {
+    final int nFilters = query.getFilters().length;
 
-		final List filters = query.getFilters();
-    final int nFilters = filters.size();
+    if ( nFilters>0 || fromTables.length>1 )
+      buf.append( " WHERE " );
+    
+    boolean and = false;
 
-		if ( nFilters==0 ) return;
+    // Add user defined filters to where clause
+    if ( nFilters!=0 ) {
+      
+      for( int i=0; i<nFilters; ++i ) {
 
-    buf.append( " WHERE " );
-    for( int i=0; i<nFilters; ++i ) {
-      Filter f = (Filter)filters.get(i);
-      buf.append( f.getWhereClause() );
-      if ( i+1 < nFilters ) buf.append( " AND " );
+        Filter f = query.getFilters()[i];
+
+        String colName = f.getType();
+        String table = mapToTable( colName );
+        buf.append( table ).append(".").append( f.getWhereClause() ).append( " " );
+        if ( and ) buf.append( " AND " );
+        and = true;
+      }
+
+    }
+
+    // Add joins to where clause
+    if ( fromTables.length>1 ) {
+      
+      String joinKey = "." + query.getFocus() + "_id";
+      String centralTable = fromTables[0];
+
+      // Join from (first) central table to dimenstion tables.
+      for(int i=1; i<fromTables.length; i++) {
+
+        if ( and ) buf.append( " AND " );
+        and = true;
+
+        buf.append( centralTable ).append( joinKey )
+          .append( "=").append( fromTables[i] ).append( joinKey );
+      }
     }
   }
 
+  
+  
+  /**
+   * @return table name corresponding to the column
+   * @throw InvalidQueryException if no mapping from colName to table found
+   */
+  private String mapToTable( String colName ) throws InvalidQueryException{
+     if ( colName==null ) 
+          throw new InvalidQueryException("Column is null.");
+   
+     String table = columnToTable.getProperty( colName );
+     if ( table==null ) 
+       throw new InvalidQueryException("Can't find table for column :" + colName);
+
+     return table;
+  }
+
+
   private String sql;
   private Query query;
+  private Engine engine;
+  private Properties columnToTable;
   private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
+  private String baseTableName = null;
+  private String[] fromTables;
 }
