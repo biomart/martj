@@ -304,9 +304,9 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
 		setModel(treeModel);
 		setRootVisible(false);
 
+    rootNode.add(datasetViewNode);
 		rootNode.add(dataSourceNode);
 		rootNode.add(datasetNode);
-		rootNode.add(datasetViewNode);
 		rootNode.add(attributesNode);
 		rootNode.add(filtersNode);
 		rootNode.add(formatNode);

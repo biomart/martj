@@ -294,4 +294,5 @@ public class CompositeDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     return (DatasetView[]) l.toArray(new DatasetView[l.size()]);
 
   }
+
 }

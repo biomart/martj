@@ -75,7 +75,7 @@ public class DatasourceWidget extends InputPage {
   }
 
   /**
-   * Opens MartManager dialog and if the user selects a new datasource
+   * Opens MartSettings dialog and if the user selects a new datasource
    * that is set on the query.
    */
   public void doChange() {
@@ -117,7 +117,7 @@ public class DatasourceWidget extends InputPage {
   }
 
   /**
-   * TODO listen to query.datasource changes
+   * Listen to query.datasource changes
    * @see org.ensembl.mart.lib.QueryChangeListener#datasourceChanged(org.ensembl.mart.lib.Query, javax.sql.DataSource, javax.sql.DataSource)
    */
   public void datasourceChanged(

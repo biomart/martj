@@ -57,6 +57,7 @@ import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.SimpleDSViewAdaptor;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
@@ -540,5 +541,36 @@ public class DatasetViewSettings extends Box {
 
     }
 
+
+  public boolean contains(DatasetView dsv) {
+
+    try {
+      return dsv!=null && datasetViewAdaptor.supportsInternalName( dsv.getInternalName() );
+    } catch (ConfigurationException e) {
+      // Shouldn't happen
+      feedback.warn(e);
+    }
+    
+    return false;
+  }
+
+  /**
+   * Adds dataset.
+   * @param datasetView
+   */
+  public void add(DatasetView datasetView) {
+    try {
+      datasetViewAdaptor.add( new SimpleDSViewAdaptor(datasetView) );
+    } catch (ConfigurationException e) {
+      // Shouldn't happen
+      feedback.warn(e);
+    }
+  }
+
+
+  public void setSelected(DatasetView selected) {
+    this.selected = selected;
+    
+  }
 
 }
