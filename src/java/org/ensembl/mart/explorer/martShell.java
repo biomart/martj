@@ -30,8 +30,9 @@ import org.ensembl.mart.explorer.config.MartConfiguration;
 
 public class martShell {
 
-  // main variables
-	private static final String defaultConf = System.getProperty("user.home") + "/.martexplorer";
+	// main variables
+	private static final String defaultConf =
+		System.getProperty("user.home") + "/.martexplorer";
 	private static String COMMAND_LINE_SWITCHES = "hM:H:P:U:p:d:vl:e:O:F:R:E:";
 	private static String confinUse = null;
 	private static String mainHost = null;
@@ -39,14 +40,16 @@ public class martShell {
 	private static String mainDatabase = null;
 	private static String mainUser = null;
 	private static String mainPassword = null;
-	private static boolean mainBatchMode = false;  // if -e is passed, go true
+	private static boolean mainBatchMode = false; // if -e is passed, go true
 	private static String mainBatchSQL = null;
-	private static String mainBatchScriptURL = null;  // can hold the URL to a mart script
+	private static String mainBatchScriptURL = null;
+	// can hold the URL to a mart script
 	private static String mainBatchFile = null;
 	private static String mainBatchFormat = null;
 	private static String mainBatchSeparator = null;
-	private static Logger mainLogger = Logger.getLogger(martShell.class.getName());
-	
+	private static Logger mainLogger =
+		Logger.getLogger(martShell.class.getName());
+
 	/**
 	 *  @return application usage instructions
 	 * 
@@ -120,7 +123,10 @@ public class martShell {
 					+ e);
 		} catch (java.io.IOException e) {
 			mainLogger.warn(
-				"Could not load connection file " + connfile + " IOException: " + e);
+				"Could not load connection file "
+					+ connfile
+					+ " IOException: "
+					+ e);
 		}
 		confinUse = connfile;
 	}
@@ -134,8 +140,7 @@ public class martShell {
 		if (new File(defaultConf).exists())
 			getConnProperties(defaultConf);
 
-		Getopt g =
-			new Getopt("MartExplorerTool", args, COMMAND_LINE_SWITCHES);
+		Getopt g = new Getopt("MartExplorerTool", args, COMMAND_LINE_SWITCHES);
 		int c;
 
 		while ((c = g.getopt()) != -1) {
@@ -174,16 +179,16 @@ public class martShell {
 				case 'v' :
 					verbose = true;
 					break;
-					
+
 				case 'l' :
 					loggingURL = g.getOptarg();
 					break;
 
 				case 'e' :
-				   mainBatchSQL = g.getOptarg();
-				   mainBatchMode = true;
-					 break;
-           
+					mainBatchSQL = g.getOptarg();
+					mainBatchMode = true;
+					break;
+
 				case 'O' :
 					mainBatchFile = g.getOptarg();
 					break;
@@ -195,11 +200,11 @@ public class martShell {
 				case 'R' :
 					mainBatchSeparator = g.getOptarg();
 					break;
-					
-			  case 'E' :
-			    mainBatchScriptURL = g.getOptarg();
-			    mainBatchMode = true;
-			    break;
+
+				case 'E' :
+					mainBatchScriptURL = g.getOptarg();
+					mainBatchMode = true;
+					break;
 			}
 		}
 
@@ -222,51 +227,54 @@ public class martShell {
 			System.out.println(usage());
 			return;
 		}
-		
+
 		martShell ms = new martShell();
 		if (mainHost != null)
-		  ms.setDBHost(mainHost);
+			ms.setDBHost(mainHost);
 		if (mainPort != null)
-		  ms.setDBPort(mainPort);
+			ms.setDBPort(mainPort);
 		if (mainUser != null)
-		  ms.setDBUser(mainUser);
+			ms.setDBUser(mainUser);
 		if (mainPassword != null)
-		  ms.setDBPass(mainPassword);
+			ms.setDBPass(mainPassword);
 		if (mainDatabase != null)
-		  ms.setDBDatabase(mainDatabase);
-		
+			ms.setDBDatabase(mainDatabase);
+
 		if (mainBatchMode) {
 			boolean validQuery = true;
-			
+
 			if (mainBatchSQL == null && mainBatchScriptURL == null) {
-			  System.out.println("Must supply either a Query command or a query script\n"+usage());
-			  System.exit(0);
+				System.out.println(
+					"Must supply either a Query command or a query script\n"
+						+ usage());
+				System.exit(0);
+			} else if (mainBatchScriptURL != null) {
+				validQuery = ms.runBatchScript(mainBatchScriptURL);
+			} else {
+				if (mainBatchFile != null)
+					ms.setBatchOutputFile(mainBatchFile);
+				if (mainBatchFormat != null)
+					ms.setBatchOutputFormat(mainBatchFormat);
+				if (mainBatchSeparator == null)
+					ms.setBatchOutputSeparator("\t"); //default
+				else
+					ms.setBatchOutputSeparator(mainBatchSeparator);
+
+				validQuery = ms.runBatch(mainBatchSQL);
 			}
-			else if (mainBatchScriptURL != null) {
-			  validQuery = ms.runBatchScript(mainBatchScriptURL);
+			if (!validQuery) {
+				System.out.println(
+					"Invalid Batch Query:"
+						+ ms.getBatchError()
+						+ "\n"
+						+ usage());
+				System.exit(0);
 			}
-			else {  
-			  if (mainBatchFile != null)
-			    ms.setBatchOutputFile(mainBatchFile);
-			  if (mainBatchFormat != null)
-			    ms.setBatchOutputFormat(mainBatchFormat);
-			  if (mainBatchSeparator == null)
-			    ms.setBatchOutputSeparator("\t"); //default
-			  else
-			    ms.setBatchOutputSeparator(mainBatchSeparator);
-			
-			  validQuery = ms.runBatch(mainBatchSQL);
-			}
-			if (! validQuery) {
-			  System.out.println("Invalid Batch Query:"+ms.getBatchError()+"\n"+usage());
-			  System.exit(0);
-			}
-		}
-		else
-		  ms.runInteractive();
-		
+		} else
+			ms.runInteractive();
+
 	}
-	
+
 	public martShell() {
 	}
 
@@ -276,21 +284,25 @@ public class martShell {
 
 		while (true) {
 			try {
+				if (martHost.length() < 5)
+					setMartConnection(setMart);
+                    
 				Prompt();
 				thisline = reader.readLine();
 				if (thisline.equals(exit) || thisline.equals(quit))
 					break;
-				
+
 				if (thisline.length() != 0) {
-		   	  parse(thisline);
-				  thisline = null;
-			  }
+					parse(thisline);
+					thisline = null;
+				}
 			} catch (Exception e) {
-				System.out.println("Couldnt get that one" + e.getMessage());
+				System.out.println(e.getMessage());
+				issub = false;
 				thisline = null;
 			}
 		}
-		
+
 		try {
 			ExitShell();
 		} catch (IOException e) {
@@ -298,104 +310,104 @@ public class martShell {
 			System.exit(1);
 		}
 	}
-	
+
 	public boolean runBatchScript(String batchScriptURL) {
 		boolean valid = true;
-	  try {
-		  reader = new BufferedReader( new InputStreamReader( new URL(batchScriptURL).openStream() ) );
+		try {
+			reader =
+				new BufferedReader(
+					new InputStreamReader(
+						new URL(batchScriptURL).openStream()));
 
-		  for (String line = reader.readLine(); line != null; line = reader.readLine())
+			for (String line = reader.readLine();
+				line != null;
+				line = reader.readLine())
 				parse(line);
-	  } catch (Exception e) {
-		  setBatchError("Couldnt get that one" + e.getMessage());
-		  valid = false;
-	  }
-	  return valid;
+		} catch (Exception e) {
+			setBatchError(e.getMessage());
+			valid = false;
+		}
+		return valid;
 	}
-	
-	public boolean runBatch(String querystring){
+
+	public boolean runBatch(String querystring) {
 		boolean validQuery = true;
-		
-		if (martHost == null) {
+
+		if (martHost.length() < 5) {
 			validQuery = false;
-		  setBatchError("Must set Host");
-		}
-		else if (martPort == null) {
+			setBatchError("Must set Host");
+		} else if (martPort.length() < 1) {
 			validQuery = false;
-			setBatchError("Must set a Port");		
-		}
-		else if (martUser == null) {
+			setBatchError("Must set a Port");
+		} else if (martUser.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a User");
-		}
-		else if (martPass == null) {
+		} else if (martPass.length() < 1) {
 			validQuery = false;
 			setBatchError("Must set a Password");
-		}
-		else if (martDatabase == null) {
+		} else if (martDatabase.length() < 5) {
 			validQuery = false;
 			setBatchError("Must set a Mart Database");
-		}
-		else {
+		} else {
 			try {
-				if (! querystring.endsWith(lineEnd))
-				  querystring = querystring+lineEnd;
-				  
+				if (!querystring.endsWith(lineEnd))
+					querystring = querystring + lineEnd;
+
 				parseCommand(querystring);
 			} catch (Exception e) {
-				setBatchError("Recieved Error processing Query: "+e.getMessage());
+				setBatchError(e.getMessage());
 				validQuery = false;
 			}
 		}
 		return validQuery;
 	}
 
-  public void setDBHost(String dbhost) {
-    this.martHost = dbhost;
-  }
-  
-  public void setDBPort(String dbport) {
-  	this.martPort = dbport;
-  }
-  
-  public void setDBUser(String dbuser) {
-  	this.martUser = dbuser;
-  }
-  
-  public void setDBPass(String dbpass) {
-  	martPass = dbpass;
-  }
-  
-  public void setDBDatabase(String db) {
-  	martDatabase = db;
-  }
-  
-	public void setBatchOutputFile(String batchFile) {
-		batchOutPutFile = batchFile;	
+	public void setDBHost(String dbhost) {
+		this.martHost = dbhost;
 	}
 
-  public void setBatchOutputFormat(String outputFormat) {
-  	batchOutPutFormat = outputFormat;
-  }
-  
-  public void setBatchOutputSeparator(String outputSeparator) {
-  	batchOutPutSeparator = outputSeparator;
-  }
-  
-  public String getBatchError() {
-  	return batchErrorMessage;
-  }
-  
-  private void setBatchError(String message) {
-  	batchErrorMessage = message;
-  }
-  
+	public void setDBPort(String dbport) {
+		this.martPort = dbport;
+	}
+
+	public void setDBUser(String dbuser) {
+		this.martUser = dbuser;
+	}
+
+	public void setDBPass(String dbpass) {
+		martPass = dbpass;
+	}
+
+	public void setDBDatabase(String db) {
+		martDatabase = db;
+	}
+
+	public void setBatchOutputFile(String batchFile) {
+		batchOutPutFile = batchFile;
+	}
+
+	public void setBatchOutputFormat(String outputFormat) {
+		batchOutPutFormat = outputFormat;
+	}
+
+	public void setBatchOutputSeparator(String outputSeparator) {
+		batchOutPutSeparator = outputSeparator;
+	}
+
+	public String getBatchError() {
+		return batchErrorMessage;
+	}
+
+	private void setBatchError(String message) {
+		batchErrorMessage = message;
+	}
+
 	private void parse(String line) throws InvalidQueryException {
-      if (line.equals(help)) {
-			  if (issub)
-				  System.out.println("help not applicable in the middle of a query");
-			  else
-				  System.out.println(help());
+		if (line.equals(help)) {
+			if (issub)
+				System.out.println("help not applicable in the middle of a query");
+			else
+				System.out.println(help());
 		} else if (line.equals(lineEnd)) {
 			String command = conline.append(line).toString().trim();
 			parseCommand(command);
@@ -417,21 +429,21 @@ public class martShell {
 		System.exit(0);
 	}
 
-  private void Prompt() {
+	private void Prompt() {
 		if (issub)
 			subPrompt();
 		else
 			mainPrompt();
-  }
-  
+	}
+
 	private void mainPrompt() {
 		String prompt = null;
-		
+
 		if (martUser != null && martDatabase != null)
-		  prompt = martUser+"@"+martDatabase+">";
+			prompt = martUser + "@" + martDatabase + ">";
 		else
-		  prompt = ">";
-		  
+			prompt = ">";
+
 		System.out.print(prompt);
 	}
 
@@ -443,109 +455,140 @@ public class martShell {
 		return "JUST TYPE SOMETHING IN, SILLY\n";
 	}
 
-  private void setMartConnection(String command) throws InvalidQueryException {
-  	if (command.endsWith(lineEnd))
-  	  command = command.substring(0, command.length() -1);
-  	  
-  	StringTokenizer ctokens = new StringTokenizer(command, " ");
-  	if (ctokens.countTokens() > 1) {
-  		// parse command
-  		ctokens.nextToken(); // throw away
-  	  String connSettings = ctokens.nextToken();
-  	  
-  	  StringTokenizer sTokens = new StringTokenizer(connSettings, ",");
-  	  while (sTokens.hasMoreTokens()) {
-  	  	StringTokenizer tokens = new StringTokenizer(sTokens.nextToken(), "=");
-  	  	if (tokens.countTokens() < 2)
-  	  	  throw new InvalidQueryException("Recieved invalid setMart request: "
-  	  	  + command
-  	  	  + "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
-  	  	  + mysqlhost
-  	  	  + ", " + mysqlport
-  	  	  + ", " + mysqluser
-  	  	  + ", " + mysqlpass 
-  	  	  + ", " + mysqldbase
-  	  	  + "\n");
-  	  	  
-  	  	String key = tokens.nextToken();
-  	  	String value = tokens.nextToken();
-  	  	
-  	  	if (key.equals(mysqlhost))
-  	  	  martHost = value;
-  	  	else if (key.equals(mysqlport))
-  	  	  martPort = value;
-  	  	else if (key.equals(mysqluser))
-  	  	  martUser = value;
-  	  	else if (key.equals(mysqlpass))
-  	  	  martPass = value;
-  	  	else if (key.equals(mysqldbase))
-  	  	  martDatabase = value;
-  	  	else
-				  throw new InvalidQueryException("Recieved invalid setMart request: "
-				  + command
-				  + "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
-				  + mysqlhost
-				  + ", " + mysqlport
-				  + ", " + mysqluser
-				  + ", " + mysqlpass 
-				  + ", " + mysqldbase
-				  + "\n");
-  	  }
-  	}
-  	else {
-  		if (mainBatchMode)
-			  throw new InvalidQueryException("Recieved invalid setMart request: "
-			  + command
-			  + "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
-			  + mysqlhost
-			  + ", " + mysqlport
-			  + ", " + mysqluser
-			  + ", " + mysqlpass 
-			  + ", " + mysqldbase
-			  + "\n");
-			  
-      //interactive
-      if (reader == null)
-        throw new InvalidQueryException("Interactive request to set mart connection parameters recieved without valid input reader\n");
-      
-      String thisLine = null;
-        
- 		try {
-				System.out.println("\nPlease enter the host address of the mart database: ");
+	private void setMartConnection(String command)
+		throws InvalidQueryException {
+		if (command.endsWith(lineEnd))
+			command = command.substring(0, command.length() - 1);
+
+		StringTokenizer ctokens = new StringTokenizer(command, " ");
+		if (ctokens.countTokens() > 1) {
+			// parse command
+			ctokens.nextToken(); // throw away
+			String connSettings = ctokens.nextToken();
+
+			StringTokenizer sTokens = new StringTokenizer(connSettings, ",");
+			while (sTokens.hasMoreTokens()) {
+				StringTokenizer tokens =
+					new StringTokenizer(sTokens.nextToken(), "=");
+				if (tokens.countTokens() < 2)
+					throw new InvalidQueryException(
+						"Recieved invalid setMart request: "
+							+ command
+							+ "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
+							+ mysqlhost
+							+ ", "
+							+ mysqlport
+							+ ", "
+							+ mysqluser
+							+ ", "
+							+ mysqlpass
+							+ ", "
+							+ mysqldbase
+							+ "\n");
+
+				String key = tokens.nextToken();
+				String value = tokens.nextToken();
+
+				if (key.equals(mysqlhost))
+					martHost = value;
+				else if (key.equals(mysqlport))
+					martPort = value;
+				else if (key.equals(mysqluser))
+					martUser = value;
+				else if (key.equals(mysqlpass))
+					martPass = value;
+				else if (key.equals(mysqldbase))
+					martDatabase = value;
+				else
+					throw new InvalidQueryException(
+						"Recieved invalid setMart request: "
+							+ command
+							+ "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
+							+ mysqlhost
+							+ ", "
+							+ mysqlport
+							+ ", "
+							+ mysqluser
+							+ ", "
+							+ mysqlpass
+							+ ", "
+							+ mysqldbase
+							+ "\n");
+			}
+		} else {
+			if (mainBatchMode)
+				throw new InvalidQueryException(
+					"Recieved invalid setMart request: "
+						+ command
+						+ "\nmust be of format: setMart x=y(,x=y)* where x can be one of: "
+						+ mysqlhost
+						+ ", "
+						+ mysqlport
+						+ ", "
+						+ mysqluser
+						+ ", "
+						+ mysqlpass
+						+ ", "
+						+ mysqldbase
+						+ "\n");
+
+			//interactive
+			if (reader == null)
+				throw new InvalidQueryException("Interactive request to set mart connection parameters recieved without valid input reader\n");
+
+			String thisLine = null;
+
+			try {
+				System.out.println(
+					"\nPlease enter the host address of the mart database: ");
 				thisLine = reader.readLine();
-				if (thisLine != null)
-				    martHost = thisLine;
-				    
-				System.out.println("\nPlease enter the port on which the mart database is running, if different from 3306: ");
-			  thisLine = reader.readLine();
-			  if (thisLine != null)
-					martPort = thisLine;				
-				
-				System.out.println("\nPlease enter the user name used to connect to the mart database: ");
-			  thisLine = reader.readLine();
-			  if (thisLine != null)
+				if ( thisLine.length() >= 5 )
+					martHost = thisLine;
+					
+				System.out.println(
+					"\nPlease enter the port on which the mart database is running, if different from 3306: ");
+				thisLine = reader.readLine();
+				if ( thisLine.length() > 1 )
+					martPort = thisLine;
+
+				System.out.println(
+					"\nPlease enter the user name used to connect to the mart database: ");
+				thisLine = reader.readLine();
+				if ( thisLine.length() > 1 )
 					martUser = thisLine;
-					
-				System.out.println("\nPlease enter the password used to connect to the mart database: ");
-			  thisLine = reader.readLine();
-			  if (thisLine != null)
+
+				System.out.println(
+					"\nPlease enter the password used to connect to the mart database: ");
+				thisLine = reader.readLine();
+				if ( thisLine.length() > 1 )
 					martPass = thisLine;
-					
-				System.out.println("\nPlease enter the name of the mart database you wish to query: ");
-			  thisLine = reader.readLine();
-			  if (thisLine != null)
+
+				System.out.println(
+					"\nPlease enter the name of the mart database you wish to query: ");
+				thisLine = reader.readLine();
+				if ( thisLine.length() > 1 )
 					martDatabase = thisLine;
 			} catch (IOException e) {
-				throw new InvalidQueryException("Problem reading input for mart connection settings: "+e.getMessage());
+				throw new InvalidQueryException(
+					"Problem reading input for mart connection settings: "
+						+ e.getMessage());
 			}
-  	}
-		System.out.println("\nMart connections now:"
-		+ "\nHost " + martHost
-		+ "\nPort "+ martPort
-		+ "\nUser "+ martUser
-		+ "\nDatabase " + martDatabase+"\n");
-  }
-  
+		}
+	}
+
+	private void showConnectionSettings() {
+		System.out.println(
+			"\nMart connections now:"
+				+ "\nHost "
+				+ martHost
+				+ "\nPort "
+				+ martPort
+				+ "\nUser "
+				+ martUser
+				+ "\nDatabase "
+				+ martDatabase
+				+ "\n");
+	}
 	private void parseCommand(String command) throws InvalidQueryException {
 		int cLen = command.length();
 
@@ -555,19 +598,31 @@ public class martShell {
 			} else if (command.startsWith(qStart)) {
 				List atts = new ArrayList();
 				Hashtable filts = new Hashtable();
-			
+
+                String seqd  = null;
 				String dataset = null;
 				String where = null;
 				String limit = null;
 				String into = null;
-			
+
 				int fIndex = command.indexOf(qFrom);
-				if (fIndex < 0) {
-					System.out.println("You must supply a from with a query: " + command);
-					return;
-				}
-				String attList = command.substring(qStart.length(), fIndex - 1).trim();
-			
+				int wIndex = command.indexOf(qWith);
+				
+				if (fIndex < 0)
+				  throw new InvalidQueryException("\nYou must supply a from statement with a query: " + command+"\n");
+
+				String attList =
+					command.substring(qStart.length(), fIndex - 1).trim();
+
+                if (wIndex >= 0) {
+                  if ( wIndex > fIndex )
+                    throw new InvalidQueryException("\nInvalid Query: with sequence statements must precede from statements\n");
+                    
+                    int atWindex = attList.indexOf(qWith);
+                    seqd = attList.substring(atWindex);
+                    attList = attList.substring(0, atWindex - 1).trim();
+                }
+                
 				StringTokenizer att = new StringTokenizer(attList, ",", false);
 				if (att.countTokens() > 1) {
 					while (att.hasMoreTokens()) {
@@ -575,46 +630,83 @@ public class martShell {
 					}
 				} else
 					atts.add(attList);
-			
+
 				int lineEndIndex = command.indexOf(lineEnd);
 				int whereIndex = command.indexOf(qWhere);
 				int limitIndex = command.lastIndexOf(qLimit);
 				int intoIndex = command.lastIndexOf(qInto);
-			
-				if (limitIndex > -1 && intoIndex > -1 && limitIndex > intoIndex) {
-					System.out.println("Invalid Query, limit must precede into: " + command);
-					return;
-				}
-			
+
+				if (limitIndex > -1
+					&& intoIndex > -1
+					&& limitIndex > intoIndex)
+				    throw new InvalidQueryException("\nInvalid Query, limit must precede into: " + command+"\n");
+
 				if (whereIndex > -1) {
-					dataset = command.substring(fIndex + qFrom.length(), whereIndex - 1).trim();
-			
+					dataset =
+						command
+							.substring(fIndex + qFrom.length(), whereIndex - 1)
+							.trim();
+
 					if (limitIndex > -1) {
-						if (whereIndex > limitIndex) {
-							System.out.println("Invalid Query: where must precede the limit clause: " + command);
-							return;
-						} else
-							where = command.substring(whereIndex + qWhere.length(), limitIndex).trim();
-			
+						if (whereIndex > limitIndex)
+							throw new InvalidQueryException("\nInvalid Query: where must precede the limit clause: "+ command+"\n");
+						else
+							where =
+								command
+									.substring(
+										whereIndex + qWhere.length(),
+										limitIndex)
+									.trim();
+
 						if (intoIndex > -1) {
-							limit = command.substring(limitIndex + qLimit.length(), intoIndex).trim();
-							into = command.substring(intoIndex + qInto.length(), lineEndIndex).trim();
+							limit =
+								command
+									.substring(
+										limitIndex + qLimit.length(),
+										intoIndex)
+									.trim();
+							into =
+								command
+									.substring(
+										intoIndex + qInto.length(),
+										lineEndIndex)
+									.trim();
 						} else
-							limit = command.substring(limitIndex + qLimit.length(), lineEndIndex).trim();
-			
+							limit =
+								command
+									.substring(
+										limitIndex + qLimit.length(),
+										lineEndIndex)
+									.trim();
+
 					} else if (intoIndex > -1) {
-						if (whereIndex > intoIndex) {
-							System.out.println("Invalid Query: Where must precede the into clause: " + command);
-							return;
-						} else {
-							where = command.substring(whereIndex + qWhere.length(), intoIndex).trim();
-							into = command.substring(intoIndex + qInto.length(), lineEndIndex).trim();
+						if (whereIndex > intoIndex)
+							 throw new InvalidQueryException("\nInvalid Query: Where must precede the into clause: "+ command+"\n");
+						else {
+							where =
+								command
+									.substring(
+										whereIndex + qWhere.length(),
+										intoIndex)
+									.trim();
+							into =
+								command
+									.substring(
+										intoIndex + qInto.length(),
+										lineEndIndex)
+									.trim();
 						}
 					} else
-						where = command.substring(whereIndex + qWhere.length(), lineEndIndex).trim();
-			
-					StringTokenizer whereTokens = new StringTokenizer(where, " ", false);
-			
+						where =
+							command
+								.substring(
+									whereIndex + qWhere.length(),
+									lineEndIndex)
+								.trim();
+
+					StringTokenizer whereTokens =
+						new StringTokenizer(where, " ", false);
+
 					String filterType = null;
 					String filtCond = null;
 					boolean islist = false;
@@ -624,13 +716,14 @@ public class martShell {
 					int liststart = 0;
 					int listend = 0;
 					int open = 0;
-			
+
 					while (whereTokens.hasMoreTokens()) {
 						String nextWhere = whereTokens.nextToken();
-			
+
 						if (nextWhere.endsWith(","))
-							nextWhere = nextWhere.substring(0, nextWhere.length() - 1);
-			
+							nextWhere =
+								nextWhere.substring(0, nextWhere.length() - 1);
+
 						if (filterType == null)
 							filterType = nextWhere;
 						else {
@@ -641,9 +734,9 @@ public class martShell {
 							else if (islist) {
 								if (nextWhere.startsWith(lStart)) {
 									open++;
-			
+
 									nextWhere = nextWhere.substring(1);
-			
+
 									if (nextWhere.startsWith(qStart)) {
 										//if (sublevel > 0) {
 										//System.out.println("Can only have one nested subroutine");
@@ -656,7 +749,18 @@ public class martShell {
 										// single token surrounded by perenthesis
 										if (nextWhere.endsWith(lEnd)) {
 											islist = false;
-											filts.put(filterType, filtCond + " LIST " + thisList.append(nextWhere.substring(0, nextWhere.indexOf(lEnd)).toString()));
+											filts.put(
+												filterType,
+												filtCond
+													+ " LIST "
+													+ thisList.append(
+														nextWhere
+															.substring(
+																0,
+																nextWhere
+																	.indexOf(
+																	lEnd))
+															.toString()));
 											thisList = new StringBuffer();
 											filterType = null;
 											open = 0;
@@ -665,15 +769,27 @@ public class martShell {
 									}
 								} else if (nextWhere.endsWith(lEnd)) {
 									// last token in a series within perenthesis
-			
+
 									islist = false;
-									filts.put(filterType, filtCond + " LIST " + thisList.append(nextWhere.substring(0, nextWhere.indexOf(lEnd)).toString()));
+									filts.put(
+										filterType,
+										filtCond
+											+ " LIST "
+											+ thisList.append(
+												nextWhere
+													.substring(
+														0,
+														nextWhere.indexOf(
+															lEnd))
+													.toString()));
 									thisList = new StringBuffer();
 									filterType = null;
 									open = 0;
 								} else if (nextWhere.indexOf("file:") > -1) {
 									//URL
-									filts.put(filterType, filtCond + " URL " + nextWhere);
+									filts.put(
+										filterType,
+										filtCond + " URL " + nextWhere);
 									filterType = null;
 								} else
 									thisList.append(nextWhere + ",");
@@ -681,7 +797,9 @@ public class martShell {
 								char operen = '(';
 								char cperen = ')';
 								int lastindex = 0;
-								for (int i = 0, n = nextWhere.length(); i < n; i++) {
+								for (int i = 0, n = nextWhere.length();
+									i < n;
+									i++) {
 									char c = nextWhere.charAt(i);
 									if (c == cperen) {
 										open--;
@@ -693,12 +811,16 @@ public class martShell {
 										lastindex++;
 									}
 								}
-			
+
 								nextWhere = nextWhere.substring(0, lastindex);
 								if (open == 0) {
 									issubr = false;
 									sub.append(" " + nextWhere);
-									filts.put(filterType, filtCond + " SubQuery " + sub.toString());
+									filts.put(
+										filterType,
+										filtCond
+											+ " SubQuery "
+											+ sub.toString());
 									filterType = null;
 									sub = new StringBuffer();
 								} else
@@ -708,92 +830,135 @@ public class martShell {
 								filtCond = nextWhere;
 							} else {
 								String filtValue = whereTokens.nextToken();
-			
+
 								if (filtValue.endsWith(","))
-									filtValue = filtValue.substring(0, filtValue.indexOf(","));
-			
-								filts.put(filterType, nextWhere + " " + filtValue);
+									filtValue =
+										filtValue.substring(
+											0,
+											filtValue.indexOf(","));
+
+								filts.put(
+									filterType,
+									nextWhere + " " + filtValue);
 								filterType = null;
 							}
 						}
 					}
 				} else if (limitIndex > -1) {
 					System.out.println("parsing limit");
-			
-					dataset = command.substring(fIndex + qFrom.length(), limitIndex - 1).trim();
+
+					dataset =
+						command
+							.substring(fIndex + qFrom.length(), limitIndex - 1)
+							.trim();
 					if (intoIndex > -1) {
 						System.out.println("Parsing into");
-			
-						limit = command.substring(limitIndex + qLimit.length(), intoIndex).trim();
-						into = command.substring(intoIndex + qInto.length(), lineEndIndex).trim();
+
+						limit =
+							command
+								.substring(
+									limitIndex + qLimit.length(),
+									intoIndex)
+								.trim();
+						into =
+							command
+								.substring(
+									intoIndex + qInto.length(),
+									lineEndIndex)
+								.trim();
 					} else
-						limit = command.substring(limitIndex + qLimit.length(), lineEndIndex).trim();
+						limit =
+							command
+								.substring(
+									limitIndex + qLimit.length(),
+									lineEndIndex)
+								.trim();
 				} else if (intoIndex > -1) {
 					System.out.println("Parsing into");
-					dataset = command.substring(fIndex + qFrom.length(), intoIndex - 1).trim();
-					into = command.substring(intoIndex + qInto.length(), lineEndIndex).trim();
+					dataset =
+						command
+							.substring(fIndex + qFrom.length(), intoIndex - 1)
+							.trim();
+					into =
+						command
+							.substring(intoIndex + qInto.length(), lineEndIndex)
+							.trim();
 				} else {
 					System.out.println("Just select and dataset");
-			
-					dataset = command.substring(fIndex + qFrom.length(), lineEndIndex).trim();
+
+					dataset =
+						command
+							.substring(fIndex + qFrom.length(), lineEndIndex)
+							.trim();
 				}
 				// process it all
-			
+
 				System.out.println("Requested query from " + dataset);
-			
+
 				int n = atts.size();
 				System.out.println("\nwith " + n + " Attributes\n");
 				for (int i = 0; i < n; i++) {
 					System.out.println((String) atts.get(i) + "\n");
 				}
-			
+
+                if (seqd != null) {
+                  StringTokenizer stokens = new StringTokenizer(seqd, " ");
+                  stokens.nextToken(); //skip with
+                  String sequenceDescription = stokens.nextToken();
+                  System.out.println("With sequence description = "+sequenceDescription+"\n");
+                }
+                  
 				if (where != null) {
 					System.out.println("\nand " + filts.size() + " Filters:\n");
-			
-					for (Iterator iter = filts.keySet().iterator(); iter.hasNext();) {
+
+					for (Iterator iter = filts.keySet().iterator();
+						iter.hasNext();
+						) {
 						String filterType = (String) iter.next();
 						String filtValue = (String) filts.get(filterType);
 						System.out.println(filterType + " " + filtValue + "\n");
 					}
 				}
-			
+
 				if (limit != null)
 					System.out.println("Limit " + limit + "\n");
-			
+
 				if (into != null)
 					System.out.println("into " + into);
-			}
-			else if (command.startsWith(setMart))
-			  setMartConnection(command);
+			} else if (command.startsWith(setMart))
+				setMartConnection(command);
+			else if (command.startsWith(showConnectionSettings))
+				showConnectionSettings();
 			else if (command.equals(exit) || command.equals(quit))
-			  ExitShell(); 
+				ExitShell();
 			else {
-				throw new InvalidQueryException("Invalid Command, please try again " + command);
+				throw new InvalidQueryException("\nInvalid Query: please try again " + command+"\n");
 			}
-		} 
-		catch (Exception e) {
-			throw new InvalidQueryException("Recieved Exception processing Command: "+e.getMessage());
+		} catch (Exception e) {
+			throw new InvalidQueryException(
+				"Recieved Exception processing Command: " + e.getMessage());
 		}
 	}
-	
+
 	// martShell object variables
 	private BufferedReader reader;
-  private String martHost = null;
-  private String martPort = null;
-  private String martUser = null;
-  private String martPass = null;
-  private String martDatabase = null;
-  private String batchOutPutFile = null;
-  private String batchOutPutFormat = null;
-  private String batchOutPutSeparator = null;
-  private String batchErrorMessage = null;
-  
+	private String martHost = null;
+	private String martPort = null;
+	private String martUser = null;
+	private String martPass = null;
+	private String martDatabase = null;
+	private String batchOutPutFile = null;
+	private String batchOutPutFormat = null;
+	private String batchOutPutSeparator = null;
+	private String batchErrorMessage = null;
+
 	private final String exit = "exit;";
 	private final String quit = "quit;";
 	private final String help = "help;";
 	private final String lineEnd = ";";
 	private final String listStart = "list";
 	private final String qStart = "select";
+	private final String qWith = "with";
 	private final String qFrom = "from";
 	private final String qWhere = "where";
 	private final String qLimit = "limit";
@@ -801,18 +966,29 @@ public class martShell {
 	private final String lStart = "(";
 	private final String lEnd = ")";
 	private final String id = "id";
-	
+
 	// strings used to get connection settings from setMart command
 	private final String setMart = "setMart";
+	private final String showConnectionSettings = "showConnectionSettings";
 	private final String mysqlhost = "mysqlhost";
 	private final String mysqluser = "mysqluser";
-	private final String mysqlpass = "mysqlpass";	
+	private final String mysqlpass = "mysqlpass";
 	private final String mysqlport = "mysqlport";
 	private final String mysqldbase = "mysqldbase";
-	
+
 	private final int sublevel = 0;
-	private List qualifiers = Arrays.asList(new String[] { "=", "<", ">", "<=", ">=", "exclusive", "excluded", "in" });
+	private List qualifiers =
+		Arrays.asList(
+			new String[] {
+				"=",
+				"<",
+				">",
+				"<=",
+				">=",
+				"exclusive",
+				"excluded",
+				"in" });
 
 	private boolean issub = false;
-	private StringBuffer conline = new StringBuffer();	
+	private StringBuffer conline = new StringBuffer();
 }
