@@ -26,6 +26,7 @@ package org.ensembl.mart.lib.config;
  */
 public class Importable extends BaseNamedConfigurationObject {
   private final String linkNameKey = "linkName";
+  private final String linkVersionKey = "linkVersion";
   private final String nameKey = "name";
   private final String filtersKey = "filters";
   private final String orderByKey = "orderBy";
@@ -43,13 +44,14 @@ public class Importable extends BaseNamedConfigurationObject {
   	super();
     
     setAttribute(linkNameKey, null);
+	setAttribute(linkVersionKey, null);
     setAttribute(nameKey, null);
 	setAttribute(filtersKey, null);
     setAttribute(orderByKey, null);
   }
 
   public Importable(String linkName)  throws ConfigurationException {
-    this(linkName, null, null, linkName, null, null, null);
+    this(linkName, null, null, linkName, null, null, null, null);
   }
   
   /**
@@ -58,7 +60,7 @@ public class Importable extends BaseNamedConfigurationObject {
    * @throws ConfigurationException when ref is null or empty.
    */
   public Importable(String internalName, String displayName, String description, String linkName) throws ConfigurationException {
-  	this(internalName, displayName, description, linkName, null, null, null);
+  	this(internalName, displayName, description, linkName, null, null, null, null);
   }
   
   /**
@@ -67,13 +69,14 @@ public class Importable extends BaseNamedConfigurationObject {
    * @param valueCondition - String Condition for Value of the Enabling FilterDescription required for it to Importable the referent FilterDescription.
    * @throws ConfigurationException when ref is null or empty.
    */
-  public Importable(String internalName, String displayName, String description, String linkName, String moduleName, String filters, String orderBy) throws ConfigurationException {
+  public Importable(String internalName, String displayName, String description, String linkName, String linkVersion, String moduleName, String filters, String orderBy) throws ConfigurationException {
   	super(internalName, displayName, description);
   	
   	if (linkName == null || "".equals(linkName))
   	  throw new ConfigurationException("Importable objects must have a linkName.\n");
   	  
   	setAttribute(linkNameKey, linkName);
+	setAttribute(linkVersionKey, linkVersion);
   	setAttribute(nameKey, moduleName);
 	setAttribute(filtersKey, filters);
     setAttribute(orderByKey, orderBy);
