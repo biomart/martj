@@ -1,5 +1,4 @@
 #!/usr/bin/env martjython.sh
-
 # MartExplorer Graphical User Interface.
 
 # copyright EBI, GRL 2003
@@ -22,7 +21,7 @@
 # TODO fetch chromosomes from db and load into drop down list.
 
 from jarray import array
-from java.lang import System, String
+from java.lang import System, String, ClassLoader
 from java.io import File
 from java.net import URL
 from java.util import Arrays, Vector
@@ -30,7 +29,7 @@ from java.awt import CardLayout, Dimension, BorderLayout
 from java.awt.event import ActionListener
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
 from javax.swing import JScrollPane, JMenu, JMenuItem, JMenuBar, JToolBar, JTree, JList
-from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton
+from javax.swing import ListSelectionModel, ButtonGroup, JRadioButton, JOptionPane
 from javax.swing.event import ChangeEvent, ChangeListener, TreeSelectionListener
 from javax.swing.tree import TreePath, DefaultTreeModel, DefaultMutableTreeNode
 from javax.swing.border import EmptyBorder
@@ -41,6 +40,9 @@ SPACE=" &nbsp;"
         
 def toVector(list):
     return Vector( Arrays.asList( list ) )
+
+def platformSpecificPath( path ):
+    return path.replace("/", File.separator )
 
 class InputPage(Box, ChangeListener):
 
@@ -759,11 +761,12 @@ class MartGUIApplication(JFrame):
 	q.addFilter( BasicFilter("start", "=", "1") )
 	q.addFilter( BasicFilter("end", "=", "1000000") )
 	q.addFilter( BasicFilter("strand", "=", "1") )
-        q.addFilter( IDListFilter("gene_stable_id",
-                                  File( System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
-        
-        q.addFilter( IDListFilter("gene_stable_id",
-                                  URL( "file://" +System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) )
+
+        # load test data file via classpath; this works from a
+        # deployed jar and from normal directory in developement
+        # situations.
+        url = ClassLoader.getSystemResource("data/gene_stable_id.test")
+        q.addFilter( IDListFilter("gene_stable_id", url ) )
         q.addFilter( IDListFilter("gene_stable_id",
                                   array( ("ENSG00000177741"), String) ) )
         q.addAttribute( FieldAttribute("gene_stable_id") )
@@ -803,11 +806,10 @@ class MartGUIApplication(JFrame):
         self.queryPages.clear()
 
 
-if __name__=="__main__":
-    import sys
-    usage = "Usage: MartExplorerGUIApplication [ [-v] [-l LOGGING_FILE_URL] ]"
-    if len(sys.argv)>1:
-        parameter = sys.argv[1]
+def main(args, quitOnExit):
+    usage = "Usage: MartExplorerGUIApplication [ [-h] [-v] [-l LOGGING_FILE_URL] ]"
+    if len(args)>1:
+        parameter = args[1]
 
         if parameter=="-v":
             BasicConfigurator.configure()
@@ -815,18 +817,28 @@ if __name__=="__main__":
 
         elif parameter=="-h":
             print usage
+            System.exit(0)
 
         elif parameter=="-l":
-            if len(sys.argv)>2:
-                print "using logging file : ", sys.argv[2]
-                PropertyConfigurator.configure( sys.argv[2] )
+            if len(args)>2:
+                print "using logging file : ", args[2]
+                PropertyConfigurator.configure( args[2] )
             else:
                 print "ERROR: No logging file URL specified."
                 print usage
                 System.exit(0)
         else:
             Logger.getRoot().setLevel(Level.WARN)
-        
-    # 1=don't exit JVM, fast for development purposes
-    if 1: MartGUIApplication(JFrame.DISPOSE_ON_CLOSE).visible=1
-    else: MartGUIApplication(JFrame.EXIT_ON_CLOSE).visible=1
+
+    if quitOnExit:
+        closeAction = JFrame.EXIT_ON_CLOSE
+    else:
+        closeAction = JFrame.DISPOSE_ON_CLOSE
+    MartGUIApplication( closeAction ).visible=1
+
+if __name__=="__main__":
+    import sys
+    main( sys.argv, 0 )
+
+
+
