@@ -18,11 +18,20 @@
 
 package org.ensembl.mart.vieweditor;
 
-import org.ensembl.mart.lib.config.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
 import java.util.List;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.FilterPage;
 
 /**
  * Class DatasetViewTreeNode extends DefaultMutableTreeNode.

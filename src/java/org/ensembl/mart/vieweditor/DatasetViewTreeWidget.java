@@ -18,14 +18,27 @@
 
 package org.ensembl.mart.vieweditor;
 
-import java.net.URL;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
 import java.io.File;
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.table.TableColumn;
+import java.net.URL;
 
-import org.ensembl.mart.explorer.QueryEditor;
-import org.ensembl.mart.lib.config.*;
+import javax.swing.ImageIcon;
+import javax.swing.JDesktopPane;
+import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.URLDSViewAdaptor;
 
 /**
  * DatasetViewTreeWidget extends internal frame.

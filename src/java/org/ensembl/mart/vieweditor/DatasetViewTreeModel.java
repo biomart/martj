@@ -18,12 +18,19 @@
 
 package org.ensembl.mart.vieweditor;
 
-import org.ensembl.mart.lib.config.*;
-
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.*;
+
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseConfigurationObject;
+import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.FilterPage;
 
 /**
  * Class DatasetViewTreeModel extends DefaultTreeModel.

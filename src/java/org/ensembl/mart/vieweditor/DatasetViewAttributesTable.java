@@ -18,11 +18,19 @@
 
 package org.ensembl.mart.vieweditor;
 
-import org.ensembl.mart.lib.config.DatasetView;
-
-import javax.swing.*;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.dnd.Autoscroll;
-import java.awt.*;
+
+import javax.swing.JInternalFrame;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+
+import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * Class DatasetViewAttributesTable extending JTable.

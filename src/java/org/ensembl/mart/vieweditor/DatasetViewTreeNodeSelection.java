@@ -17,9 +17,8 @@
 */
 
 package org.ensembl.mart.vieweditor;
-import org.ensembl.mart.lib.config.FilterPage;
-import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 
 
 public class DatasetViewTreeNodeSelection implements Transferable {

@@ -19,8 +19,8 @@
 package org.ensembl.mart.vieweditor;
 
 import java.io.File;
-import javax.swing.*;
-import javax.swing.filechooser.*;
+
+import javax.swing.filechooser.FileFilter;
 
 /**
  * Class XMLFileFilter extends FileFilter.
