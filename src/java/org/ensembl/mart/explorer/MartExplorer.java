@@ -411,7 +411,7 @@ public class MartExplorer
 
     query.addSeparator();
 
-    JMenuItem exit_explorer = new JMenuItem("Quit");
+    JMenuItem exit_explorer = new JMenuItem("Exit");
     exit_explorer.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent event) {
         doExit();
@@ -420,7 +420,7 @@ public class MartExplorer
     });
 
     query.add(exit_explorer).setAccelerator(
-      KeyStroke.getKeyStroke(KeyEvent.VK_Q, Event.CTRL_MASK));
+      KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
 
     JMenu settings = new JMenu("Settings");
 
