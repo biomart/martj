@@ -11,6 +11,7 @@ import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
 import org.ensembl.mart.lib.*;
+import org.ensembl.mart.lib.config.DatasetView;
 
 /**
  * Tests Query's setters, getters and listener notification mechanisms.
@@ -80,12 +81,12 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     q.addAttribute(a);
     expectedNumChanges++;
     assertEquals(expectedNumChanges, numChanges);
-    q.addAttribute(a);
-    assertEquals(expectedNumChanges, numChanges);
-    assertEquals(
-      "Shouldn't add attribute if already included",
-      1,
-      q.getAttributes().length);
+    try {
+
+      q.addAttribute(a);
+      fail("Shouldn't add attribute if already included");
+    } catch (IllegalArgumentException e) {
+    }
 
     q.addAttribute(a2);
     expectedNumChanges++;
@@ -101,7 +102,7 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     assertEquals(a3, q.getAttributes()[1]);
     assertEquals(a2, q.getAttributes()[2]);
 
-    q.removeAttribute( a3 );
+    q.removeAttribute(a3);
     expectedNumChanges++;
     assertEquals(expectedNumChanges, numChanges);
     assertEquals(a, q.getAttributes()[0]);
@@ -145,11 +146,11 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     assertEquals(2, q.getFilters().length);
     assertEquals(f3, q.getFilters()[0]);
     assertEquals(f, q.getFilters()[1]);
-    
-    q.addFilter( f2 );
+
+    q.addFilter(f2);
     expectedNumChanges++;
-    
-    q.removeFilter( f3 );
+
+    q.removeFilter(f3);
     expectedNumChanges++;
     assertEquals(expectedNumChanges, numChanges);
     assertEquals(f, q.getFilters()[0]);
@@ -166,10 +167,9 @@ public class QueryTest extends TestCase implements QueryChangeListener {
 
   }
 
-
   public void testSettingDatasetInternalName() throws Exception {
     String datasetInternalName = "DS1";
-    q.setDataset( datasetInternalName );
+    q.setDataset(datasetInternalName);
     assertEquals(datasetInternalName, q.getDataset());
     expectedNumChanges++;
     assertEquals(expectedNumChanges, numChanges);
@@ -283,6 +283,16 @@ public class QueryTest extends TestCase implements QueryChangeListener {
     Query sourceQuery,
     Filter oldFilter,
     Filter newFilter) {
+    numChanges++;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   */
+  public void datasetViewChanged(
+    Query query,
+    DatasetView oldDatasetView,
+    DatasetView newDatasetView) {
     numChanges++;
   }
 

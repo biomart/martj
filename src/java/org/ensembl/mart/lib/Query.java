@@ -145,9 +145,10 @@ public class Query {
   }
 
   /**
-   * Adds attribute to the end of the attributes array. Does nothing if attribute is 
-   * null or already added.
+   * Adds attribute to the end of the attributes array. 
    * @param attribute item to be added.
+   * @throws IllegalArgumentException if attribute is 
+   * null or already added.
    */
   public void addAttribute(Attribute attribute) {
     addAttribute(attributes.size(), attribute);
@@ -210,27 +211,31 @@ public class Query {
   }
 
   /**
-   * Add filter to end of filter list. Does nothing if filter is null
-   * or already added.
+   * Add filter to end of filter list. 
    * 
    * @param Filter filter to be added.
+   * @throws IllegalArgumentException if filter is 
+   * null or already added.
    */
   public void addFilter(Filter filter) {
     addFilter(filters.size(), filter);
   }
 
   /**
-   * Add filter to end of filter list. Does nothing if filter is null
-   * or already added.
+   * Add filter to end of filter list. 
    * 
    * @param index position where to insert the filter in the filters array.
    * @param filter filter to be added
+   * @throws IllegalArgumentException if attribute is 
+   * null or already added.
    */
   public void addFilter(int index, Filter filter) {
-    
-    if (filter == null || filters.contains( filter ))
-      return;
-      
+
+    if (filter == null)
+      throw new IllegalArgumentException("Can not add a null filter");
+    if (filters.contains(filter))
+      throw new IllegalArgumentException("Filter already present: " + filter);
+
     filters.add(index, filter);
     log();
     for (int i = 0; i < listeners.size(); ++i)
@@ -608,17 +613,20 @@ public class Query {
     listeners.add(listener);
   }
 
-
   /**
-   * Adds attribute at the specified index. Does nothing if attribute is 
-   * null or already added.
+   * Adds attribute at the specified index. 
    * @param index position in array to add attribute.
    * @param attribute item to be added to attributes array.
+   * @throws IllegalArgumentException if attribute is 
+   * null or already added.
    */
   public void addAttribute(int index, Attribute attribute) {
 
-    if (attribute == null || attributes.contains(attribute))
-      return;
+    if (attribute == null)
+      throw new IllegalArgumentException("Can not add a null attribute");
+    if (attributes.contains(attribute))
+      throw new IllegalArgumentException(
+        "attribute already present: " + attribute);
 
     attributes.add(index, attribute);
     log();
