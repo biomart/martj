@@ -69,20 +69,22 @@ import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
 /**
- * Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (referred to below as the Mart Query Language).
+ * <p>Interface to a Mart Database implimentation that provides commandline access using a SQL-like query language (see MartShellLib for a description of the Mart Query Language).
  * The system can be used to run script files containing valid Mart Query Language commands, or individual queries from the commandline.
- * It has an interactive shell as well.  
+ * It has an interactive shell as well.  Script files can include comment lines beginning with #, which are ignored by the system.</p>  
  * 
- * The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
+ * <p>The interactive shell makes use of the <a href="http://java-readline.sourceforge.net/">Java Readline Library</a>
  * to allow commandline editing, history, and tab completion for those users working on Linux/Unix operating systems.  Unfortunately, there is no way
  * to provide this functionality in a portable way across OS platforms.  For windows users, there is a Getline c library which is provided with the Java Readline source.
- * By following the instructions to build a windows version of this library, and you will get some (but not all) of this functionality.  One other side effect
- * of the use of this library is that, because it uses GNU Readline, which is GPL, it makes MartShell GPL as well (despite the LPGL license that it and the rest
+ * By following the instructions to build a windows version of this library, and you will get some (but not all) of this functionality.</p>
+ * <p> One other side effect of the use of this library is that, because it uses GNU Readline, which is GPL, it makes MartShell GPL as well (despite the LPGL license that it and the rest
  * of Mart-Explorer are released under).  If you are serious about extending/using the MartShell class in your own code for distribution, and are worried about
- * the effects of the GPL, then you might consider rebuilding the Java Readline Library using the LGPL EditLine library, which is available on some Linux platforms.
+ * the effects of the GPL, then you might consider rebuilding the Java Readline Library using the LGPL EditLine library, which is available on some Linux platforms.</p>
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @see MartShellLib
+ * @see MartCompleter
  */
 public class MartShell {
 
@@ -411,7 +413,7 @@ public class MartShell {
 				// add describe
 				mcl.AddAvailableCommandsTo(DESCC, describeCommands);
 
-				mcl.SetDefaultMode();
+				mcl.SetCommandMode();
 
 				Readline.setCompleter(mcl);
 			}
@@ -1603,7 +1605,7 @@ public class MartShell {
 			continueQuery = false;
 			conline = new StringBuffer();
 			if (completionOn)
-				mcl.SetDefaultMode();
+				mcl.SetCommandMode();
 				
 			parseCommand(command);
 		} else if (line.endsWith(LINEEND)) {
@@ -1612,7 +1614,7 @@ public class MartShell {
 			conline = new StringBuffer();
 
 			if (completionOn)
-				mcl.SetDefaultMode();
+				mcl.SetCommandMode();
 
 			parseCommand(command);
 		} else {

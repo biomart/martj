@@ -52,18 +52,88 @@ import org.ensembl.mart.lib.config.UIDSFilterDescription;
 import org.ensembl.mart.lib.config.UIFilterDescription;
 
 /**
- * Library allowing client code to execute Mart Query Language (MQL)
- * querries against a mart.  Must be provided an Engine Object, and a
- * MartConfiguration Object.  
- * The default output settings are tab - separated, tabulated output
- * to STDOUT.  Clients can over ride these settings in one of two ways:
- *   - using an into clause within the MQL query (takes highest priority)
- *   - using the appropriate setter methods (these values are over ridden by an into clause,
- *      but, once set, they remain in effect for the entire session, until another call to the
- *      settter(s) is(are) made).
+ * <p>Library allowing client code to execute Mart Query Language (MQL)
+ * querries against a mart.  It is intnded primarily for the MartShell, but can be used by any client wishing to interact with
+ * a mart using MQL.</p>
  * 
+ * <!-- This is a css style for indenting lines below.  It is placed here to allow the first line to be used in the package description. -->  
+ * <STYLE>
+ * <!--
+ * 
+ * P.indent_small {
+ *   text-indent: 0.2in;
+ * }
+ * 
+ * P.indent_big {
+ *   text-indent: 0.5in;
+ * }
+ * -->
+ * </STYLE>
+ * 
+ * <p>Mart Query Language (MQL) is a derivative of the Structured Query Language (SQL)
+ * used to query relational databases.  It follows the following format (items in angle brackets are optional):</p>
+ * <p class="indent_big">select</p>
+ * <p class="indent_big">&lt; attribute_list &gt;</p>
+ * <p class="indent_big">&lt; sequence sequence_request &gt;</p>
+ * <p class="indent_big">from dataset_name</p>
+ * <p class="indent_big">&lt; where filter_list &gt;</p>
+ * <p class="indent_big">&lt; into output_request &gt;</p>
+ * <p class="indent_big">&lt; limit integer &gt;</p>
+ * <br>
+ * <p>- attribute_list is a comma-separated list of mart attributes.  These must match the internal_name of attributes in the MartConfiguration for the mart being querried.
+ *    attribute_list can be omitted for sequence_requests, otherwise, at least one attribute must be specified. Specifying attributes with
+ *    a sequence_request requests that those attributes (if available) are included, either as fields in tabulated output, or in the description portion of the 
+ *    header in fasta output.</p>
+ * <p>- sequence_request follows the pattern:</p>
+ * <p class="indent_big">&lt;left_flank_length_integer+&gt;sequence_name&lt;+right_flank_length_integer&gt;</p>
+ * <p class="indent_small">sequence_name must match the name of a sequence available from the system (see the SequenceDescription documentation below).
+ * <p class="indent_small">If specified with a left and/or right flank_length_integer (eg., 10+gene_exon, gene_exon+10, or 10+gene_exon+10)<p>
+ * <p class="indent_small">then the sequences will return the requested flanking sequence (although some sequences are not flankable).</p>
+ * <p>- dataset_name must match the internal_name of a dataset made available by the MartConfiguration made available for the mart being querried.</p>
+ * <p>- filter_list is a comma-separated list of filter_requests.  filter_requests must match one of the following formats:</p>
+ * <p class="indent_big">- filter_name excluded|exclusive  -- specifies that objects should be returned only if they match (exclusive),</p>
+ * <p class="indent_big">or only if they do not match (excluded) this filter.</p>
+ * <p class="indent_big">- filter_name =|!=|&gt;|&gt;=|&lt;|&lt;= value</p>
+ * <p class="indent_big">- filter_name in url -- specifies that the system should harvest the items in the specified url,</p>
+ * <p class="indent_big">and return objects only if they satisfy the condition of filter_name in (items in the url).</p>
+ * <p class="indent_big">The url must return a list of items, one per line.</p>
+ * <p class="indent_big">- filter_name in (comma-separated list of items) -- note the list must be enclosed in perentheses.</p>
+ * <p class="indent_big">- filter_name in (nested query) -- Nested query can be a MQL query, but it cannot include sequence_requests, or into requests.</p>
+ * <p class="indent_big">It also must only return one attribute, matching filter_name.</p>
+ * <p>filter_name must match the internal_name for a filter specified in the MartConfiguration for the mart being querried.  Also, in some cases, the filter_name
+ *    must be further qualified with a filter_set_name prepended with a period (eg, filter_set_name.filter_name = value).  This is only the case when the filter
+ *    is part of a filter_set, as specified in the MartConfiguration.</p>   
+ * <br>
+ * <p>- output_request must be one or more key=value requests (comma-separated).  These can be one of:</p>
+ * <p class="indent_big">file=path_to_output_file</p>
+ * <p class="indent_big">format=format  -- format must be either 'tabulated' or 'fasta'</p>
+ * <p class="indent_big">separator=separator_character -- almost any character can be specified to separate the fields of tabulated output.</p>
+ * <p class="indent_big">Note, to specify tab separated output use the word 'tab', use the word 'space' for space separated output,</p>
+ * <p class="indent_big">and use the word 'comma' for comma separated output.</p>
+ * <p>- if a limit request is specified, this adds a limit integer clause to the actual SQL executed against the mart database.  Note that this does not necessarily
+ *    limit the number of records returned to the specified integer.  It limits the number of mart focus objects querried, for which attributes are returned.
+ *    If there is a one-many, many-many, or many-one relationship between the mart focus object, and the attribute being requested, then the number of records returned
+ *    will reflect this.</p>
+ * <br>
+ * <p>Note, the minimal MQL request would be 'select attribute_name from dataset_name'.  The minimal sequence request would be 'select sequence sequence_name from dataset'.</p>
+ * <p>MQL differs from SQL in not requiring (or even allowing) multiple datasets, table qualifiers, or joins.  You just have to specify the attributes/sequence that you want, the dataset to query, and filters to apply.</p>
+ * <p>This makes simple queries which are not that hard at the SQL level, even more simple.</p>
+ * <p>Because the Mart-Explorer engine resolves some filters to complex sub querries, it makes more complex underlying querries just as simple.</p>
+ * <p>Finally, it makes querries for things like sequences (which are impossible using SQL) just as simple.</p>  
+ * <p>MQL statements can be written on one line, or separated with newlines and whitespace to make them easier to read</p>
+ * <br>
+ * <p>The default output settings are tab - separated, tabulated output
+ * to System.out.  Client programs can over ride these settings in one of two ways:</p>
+ * <ul>
+ *    <li><p>using an into clause within the MQL query (takes highest priority, but only controls the output for a particular query)</p>
+ *    <li><p>using the appropriate setter methods (these values are temporarily over ridden by an into clause,
+ *      but, once set, they remain in effect for the entire session, until another call to the
+ *      settter(s) is(are) made).</p>
+ * </ul>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
+ * @see org.ensembl.mart.lib.SequenceDescription
+ * @see org.ensembl.mart.lib.config.MartConfiguration
  */
 public class MartShellLib {
 

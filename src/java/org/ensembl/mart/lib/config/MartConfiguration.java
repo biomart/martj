@@ -42,7 +42,7 @@ import java.util.TreeMap;
  *                                        for displaying an attribute and its information, and the 
  *                                        Attribute it needs to add to a mart Query.</p>
  *                       </ul>
- *                </ul>
+ *                
  *                   <li><p>FilterPage:  contains a List of FilterCollections</p>
  *                     <ul>
  *                         <li><p>FilterCollection: contains a List of UIFilterDescription/UIDSFilterDescription objects</p>
