@@ -18,44 +18,151 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.net.URL;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
 
+import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
 
 /**
- * @author craig
- *
- * To change the template for this generated type comment go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ * Provides a panel in which a user can create and edit
+ * a Query.
+ * 
+ * <p>
+ * The Panel represents the queries made available in the 
+ * MartConfiguration object it is initialised with.
+ * </p>
  */
 public class QueryEditor extends JPanel {
 
-  private Dimension preferedSize;
-  private MartConfiguration config;
+  /** total height of the componment */
+  private int HEIGHT = 768;
   
+  /** total width of the component */
+  private int WIDTH = 1024;
+  
+  /** default percentage of total width allocated to the tree constituent component. */
+  private double TREE_WIDTH = 0.3d; 
+  
+  /** default percentage of total height allocated to the tree constituent component. */
+  private double TREE_HEIGHT = 0.7d; 
+
+  /** Configuration defining the "query space" this editor encompasses. */
+  private MartConfiguration config;
+
+  /** The query part of the model. */
+  private Query query;
+
+  private TreeModel treeModel;
+  
+  private JTree treeView;
+  private JPanel inputPanel;
+  private JPanel outputPanel;
+
 
   public QueryEditor(MartConfiguration config) {
     this.config = config;
-    preferedSize = new Dimension( 100, 100 );
-    setPreferredSize( preferedSize );
+    this.query = new Query();
+
+    initTree();
+    initInputPanel();
+    initOutputPanel();
+
+    initialLayout();
+    
+    addDatasetSelectionPage();
   }
 
-	public static void main(String[] args) throws ConfigurationException {
+  /**
+   * 
+   */
+  private void addDatasetSelectionPage() {
+    DatasetSelectionPage page = new DatasetSelectionPage(query, config );
+    inputPanel.add( page.getName(), page );
+    ((CardLayout)(inputPanel.getLayout())).show( inputPanel, page.getName() );
+  }
+
+  /**
+   * Sets the prefered sizes for constituent components and adds them
+   * to this component.
+   * All sizes are relative to the treeview dimensions. Layout is:
+   * <pre>
+   * tree   |    input
+   * -----------------
+   *     output
+   * </pre>
+   */
+  private void initialLayout() {
+
+    int topHeight = (int) (HEIGHT * TREE_HEIGHT);
+    int treeWidth = (int) (WIDTH * TREE_WIDTH);
+    int inputWidth = WIDTH - treeWidth;
+    int outputHeight = HEIGHT - topHeight;
+    
+    treeView.setPreferredSize(new Dimension(treeWidth, treeWidth));
+    inputPanel.setPreferredSize(new Dimension(inputWidth, topHeight));
+    outputPanel.setPreferredSize(new Dimension(WIDTH, outputHeight));
+
+    JSplitPane top =
+      new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeView, inputPanel);
+    top.setOneTouchExpandable(true);
+    JSplitPane topAndBottom =
+      new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, outputPanel);
+    topAndBottom.setOneTouchExpandable(true);
+    add(topAndBottom);
+  }
+
+  /**
+   * 
+   */
+  private void initOutputPanel() {
+    outputPanel = new JPanel();
+    outputPanel.add(new JLabel("output panel"));
+  }
+
+  /**
+   * 
+   */
+  private void initInputPanel() {
+    inputPanel = new JPanel();
+    inputPanel.setLayout(new CardLayout());
+    inputPanel.add("input", new JLabel("input panel"));
+  }
+
+  /**
+   * 
+   */
+  private void initTree() {
+    TreeNode rootNode = new DefaultMutableTreeNode( "Query" );
+    treeModel = new DefaultTreeModel( rootNode );
+    treeView = new JTree( treeModel );
+
+  }
+
+  public static void main(String[] args) throws ConfigurationException {
     String confFile = "data/xmltest/test_file.xml";
     URL confURL = ClassLoader.getSystemResource(confFile);
-    MartConfiguration config = new MartConfigurationFactory().getInstance(confURL);
-    
-   QueryEditor editor = new QueryEditor( config );
-   JFrame f = new JFrame( "Query Editor" );
-   f.getContentPane().add( editor );
-   f.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-   f.pack();
-   f.setVisible( true );
-	}
+    MartConfiguration config =
+      new MartConfigurationFactory().getInstance(confURL);
+
+    QueryEditor editor = new QueryEditor(config);
+    JFrame f = new JFrame("Query Editor");
+    f.getContentPane().add(editor);
+    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    f.pack();
+    f.setVisible(true);
+  }
 }
