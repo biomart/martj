@@ -99,7 +99,7 @@ public class Option extends QueryFilterSettings {
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", null);
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", null);
 	}
 
 	public Option(
@@ -109,6 +109,7 @@ public class Option extends QueryFilterSettings {
 		String description,
 		String field,
 		String tableConstraint,
+		String key,
 		String value,
 		String ref,
 		String type,
@@ -117,7 +118,7 @@ public class Option extends QueryFilterSettings {
 		String handler)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, value, tableConstraint, handler, type, qualifier, legalQualifiers);
+		super(internalName, displayName, description, field, value, tableConstraint, key, handler, type, qualifier, legalQualifiers);
 
     setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);
@@ -333,6 +334,29 @@ public class Option extends QueryFilterSettings {
 			}
 		}
 	}
+
+	/**
+	* Returns the Key for this Option, or a child Option (possibly within a PushAction),
+	* named by refIname.
+	* @param refIname -- name of Option for which Key is desired.
+	* @return String tableConstraint
+	*/
+	public String getKey(String refIname) {
+			if (uiOptionNameMap.containsKey(refIname))
+				return ((Option) uiOptionNameMap.get( attributes.getProperty(internalNameKey) )).getKey(refIname);
+			else {
+				if (pushActions.size() < 1)
+					return null;
+				else {
+					for (int i = 0, n = pushActions.size(); i < n; i++) {
+						PushAction element = (PushAction) pushActions.get(i);
+						if (element.containsOption(refIname))
+							return element.getOptionByInternalName(refIname).getKey();
+					}
+					return null; // nothing found
+				}
+			}
+		}
 
 	/**
 	 * Get the Handler for this Option, or a child Option (possibly within a PushAction),
@@ -671,6 +695,17 @@ public class Option extends QueryFilterSettings {
 			return getParent().getTableConstraintFromContext();
 	}
 
+	/**
+	 * Returns key based on context. 
+	 * @return key if set otherwise getParent().getKeyFromContext().
+	 */
+	public String getKeyFromContext() {
+		if (valid( getAttribute(keyKey) ))
+			return  getAttribute(keyKey) ;
+		else
+			return getParent().getKeyFromContext();
+	}
+	
 	/**
 	 * Returns the qualifier based on context.
 	 * @return qualifier if set otherwise getParent().getQualifierFromContext().

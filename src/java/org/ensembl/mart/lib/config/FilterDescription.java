@@ -103,7 +103,7 @@ public class FilterDescription extends QueryFilterSettings {
 
 	/**
 	 * Constructor for a FilterDescription named by internalName internally, with a field, type, and legalQualifiers.
-	 * 
+	 * * not used anywhere yet and should probably add tableConstraint and Key
 	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param field String name of the field to reference in the mart.
 	 * @param type String type of filter.  Must not be null or empty.
@@ -111,7 +111,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
 	public FilterDescription(String internalName, String field, String type, String legalQualifiers) throws ConfigurationException {
-		this(internalName, field, type, "", legalQualifiers, "", "", null, "");
+		this(internalName, field, type, "", legalQualifiers, "", "", "", null, "");
 	}
 
 	/**
@@ -124,6 +124,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param legal_qualifiers String, comma-separated list of legalQualifiers to use in a MartShell MQL
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL field
+	 * @param key String join field key
 	 * @param handler String, specifying the handler to use for a FilterDescription
 	 * @param description String description of the Filter
 	 * 
@@ -138,11 +139,12 @@ public class FilterDescription extends QueryFilterSettings {
 		String legalQualifiers,
 		String displayName,
 		String tableConstraint,
+		String key,
 		String handler,
 		String description)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, null, tableConstraint, handler, type, qualifier, legalQualifiers);
+		super(internalName, displayName, description, field, null, tableConstraint, key, handler, type, qualifier, legalQualifiers);
 
 		if (type == null || type.equals(""))
 			throw new ConfigurationException("FilterDescription requires a type.");
@@ -281,6 +283,34 @@ public class FilterDescription extends QueryFilterSettings {
 					return  getAttribute(tableConstraintKey);
 				else if (uiOptionNameMap.containsKey(optionIname))
 					return ((Option) uiOptionNameMap.get(optionIname)).getTableConstraint(refIname);
+				else
+					return null; // nothing found
+			} else
+				return null; // nothing found
+		}
+	}
+
+	/**
+	 * Returns the key, given an internalName which may, in some cases, map to an Option instead of this FilterDescription.
+	 * @param internalName -- internalName of either this FilterDescription, or an Option contained within this FilterDescription
+	 * @return String key
+	 */
+	public String getKey(String internalName) {
+		if ( getAttribute(internalNameKey).equals(internalName))
+			return  getAttribute(keyKey);
+		else {
+			if (uiOptionNameMap.containsKey(internalName))
+				return ((Option) uiOptionNameMap.get(internalName)).getKey();
+			else if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
+				// pushOption option
+				String[] names = internalName.split("\\.");
+				String optionIname = names[0];
+				String refIname = names[1];
+
+				if ( getAttribute(internalNameKey).equals(refIname))
+					return  getAttribute(keyKey);
+				else if (uiOptionNameMap.containsKey(optionIname))
+					return ((Option) uiOptionNameMap.get(optionIname)).getKey(refIname);
 				else
 					return null; // nothing found
 			} else
@@ -906,7 +936,16 @@ public class FilterDescription extends QueryFilterSettings {
 	public String getTableConstraintFromContext() {
 		return getTableConstraint();
 	}
-	
+
+	/**
+	 * Same as getKey(). Included to make FilterDescription implement QueryFilterSettings
+	 * interface.
+	 * @return key
+	 */
+	public String getKeyFromContext() {
+		return getKey();
+	}
+		
 	/**
 	 * set the hasBrokenField flag to true, eg. the field
 	 * does not refer to an existing field in a particular Mart Dataset instance.
