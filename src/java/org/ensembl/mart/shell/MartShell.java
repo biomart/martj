@@ -46,14 +46,12 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import java.util.logging.Logger;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
+import org.ensembl.mart.lib.LoggingUtils;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
@@ -134,7 +132,7 @@ public class MartShell {
 			+ "\n-D DATABASE                             - database name"
 			+ "\n-d DATASET                              - dataset name"
 			+ "\n-v                                      - verbose logging output"
-			+ "\n-l LOGGING_FILE_URL                     - logging file, defaults to console if none specified"
+			+ "\n-l LOGGING_CONFIGURATION_URL                     - Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
 			+ "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
 			+ "\n\nThe following are used in combination with the -e flag:"
 			+ "\n-O OUTPUT_FILE                          - output file, default is standard out"
@@ -148,21 +146,6 @@ public class MartShell {
 			+ "\nor using a .martshell file, can use -H, -P, -p, -u, or -d to specify"
 			+ "\nparameters not specified in the configuration file, or over-ride those that are specified."
 			+ "\n";
-	}
-
-	/**
-	 * Initialise logging system to print to logging messages of level >= WARN
-	 * to console. Does nothing if system property log4j.configuration is set.
-	 */
-	public static void defaultLoggingConfiguration(boolean verbose) {
-		if (System.getProperty("log4j.configuration") == null) {
-
-			BasicConfigurator.configure();
-			if (verbose)
-				Logger.getRoot().setLevel(Level.INFO);
-			else
-				Logger.getRoot().setLevel(Level.WARN);
-		}
 	}
 
 	/**
@@ -209,9 +192,9 @@ public class MartShell {
 			}
 
 		} catch (java.net.MalformedURLException e) {
-			mainLogger.warn("Could not load connection file " + connfile + " MalformedURLException: " + e);
+			mainLogger.warning("Could not load connection file " + connfile + " MalformedURLException: " + e);
 		} catch (java.io.IOException e) {
-			mainLogger.warn("Could not load connection file " + connfile + " IOException: " + e);
+			mainLogger.warning("Could not load connection file " + connfile + " IOException: " + e);
 		}
 		confinUse = connfile;
 	}
@@ -276,6 +259,7 @@ public class MartShell {
 	}
 
 	public static void main(String[] oargs) {
+
 		String loggingURL = null;
 		boolean help = false;
 		boolean verbose = false;
@@ -309,7 +293,6 @@ public class MartShell {
 
 					case 'C' :
 						mainConfiguration = g.getOptarg();
-						System.out.println("mainConfiguration = " + mainConfiguration + "\n");
 						break;
 
 					case 'A' :
@@ -386,9 +369,20 @@ public class MartShell {
 
 		// Initialise logging system
 		if (loggingURL != null) {
-			PropertyConfigurator.configure(loggingURL);
+			try {
+				LoggingUtils.setLoggingConfiguration(new URL(loggingURL).openStream());
+			} catch (SecurityException e) {
+				System.out.println("Caught Security Exception when adding logger configuration URL");
+				e.printStackTrace();
+			} catch (MalformedURLException e) {
+				System.out.println("User supplied URL " + loggingURL + " is not well formed");
+				e.printStackTrace();
+			} catch (IOException e) {
+				System.out.println("Could not read input from URL " + loggingURL + "\n");
+				e.printStackTrace();
+			}
 		} else {
-			defaultLoggingConfiguration(verbose);
+			LoggingUtils.setVerbose(verbose);
 		}
 
 		if (confinUse != null) {
@@ -514,7 +508,7 @@ public class MartShell {
 					historyOn = true;
 					readlineLoaded = true;
 				} catch (UnsatisfiedLinkError ignore_me3) {
-					mainLogger.warn(
+					mainLogger.warning(
 						"Could not load Readline Library, commandline editing, completion will not be available"
 							+ "\nConsult MartShell documentation for methods to resolve this error.");
 					historyOn = false;
@@ -802,6 +796,10 @@ public class MartShell {
 	 */
 	public void UnsetCommandCompletion() {
 		completionOn = false;
+	}
+
+	public void setLoggingConfigurationURL(URL conf) {
+		loggingConfURL = conf;
 	}
 
 	/**
@@ -2291,14 +2289,17 @@ public class MartShell {
 	}
 
 	private void setVerbose(String command) throws InvalidQueryException {
-		if (!command.matches("\\w+\\s(on|off)"))
-			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
+		if (loggingConfURL == null) {
+			if (!command.matches("\\w+\\s(on|off)"))
+				throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
 
-		String val = command.split("\\s")[1];
-		verbose = (val.equals("on")) ? true : false;
+			String val = command.split("\\s")[1];
+			verbose = (val.equals("on")) ? true : false;
 
-		System.out.println("Logging now " + val + "\n");
-		defaultLoggingConfiguration(verbose);
+			System.out.println("Logging now " + val + "\n");
+			LoggingUtils.setVerbose(verbose);
+		} else
+			throw new InvalidQueryException("Cannot change logging properties when a logging configuration URL is supplied\n");
 	}
 
 	private void setOutputSettings(String command) throws InvalidQueryException {
@@ -2775,6 +2776,7 @@ public class MartShell {
 	private MartShellLib msl = null;
 	private BufferedReader reader;
 	private boolean verbose = false;
+	private URL loggingConfURL = null;
 
 	private final String history_file = System.getProperty("user.home") + "/.martshell_history";
 
