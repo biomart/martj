@@ -525,6 +525,7 @@ public class MartShellLib {
 		boolean limitClause = false;
 		boolean inList = false;
 		boolean inBind = false;
+		boolean inQuotedValue = false;
 		boolean whereFilterName = false;
 		boolean whereFilterCond = false;
 		boolean whereFilterVal = false;
@@ -720,15 +721,45 @@ public class MartShellLib {
 						whereFilterCond = false;
 						whereFilterVal = false;
 					} else {
-						
-						logger.info("Storing " + thisToken + " as filterCondition, moving to whereFilterVal\n");
-						
 						filterCondition = thisToken;
 						whereFilterCond = false;
 						whereFilterVal = true;
 					}
 				} else if (whereFilterVal) {
-					if (thisToken.equals(LSTART)) {
+					if (thisToken.startsWith(QUOTE)) {
+						String tok = thisToken.substring(1);
+						
+						inQuotedValue = true;
+
+            if (thisToken.endsWith(QUOTE)) {
+            	tok = tok.substring(0, tok.length() - 1);
+							query = addBasicFilter(query, dset, filterName, filterCondition, tok);
+
+							inQuotedValue = false;
+							filterValue = new StringBuffer();
+							filterName = null;
+							filterCondition = null;
+							whereFilterName = false;
+							whereFilterCond = false;
+							whereFilterVal = false;
+            } else
+              filterValue.append(tok);
+					} else if (inQuotedValue) {
+						if (thisToken.endsWith(QUOTE)) {
+							filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
+							
+							query = addBasicFilter(query, dset, filterName, filterCondition, filterValue.toString());
+
+							inQuotedValue = false;
+							filterValue = new StringBuffer();
+							filterName = null;
+							filterCondition = null;
+							whereFilterName = false;
+							whereFilterCond = false;
+							whereFilterVal = false;						
+						} else
+							filterValue.append(" ").append(thisToken);
+					} else if (thisToken.equals(LSTART)) {
 						inList = true;
 					} else if (thisToken.startsWith(LSTART)) {
 						inList = true;
@@ -1116,9 +1147,11 @@ public class MartShellLib {
 				thisCondition = BooleanFilter.isNULL;
 		}
 
+    String handler = fdesc.getHandler(filterName);
+    
 		Query newQuery = new Query(inquery);
 		newQuery.addFilter(
-			new BooleanFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), thisCondition));
+			new BooleanFilter(fdesc.getField(filterName), fdesc.getTableConstraint(filterName), thisCondition, handler));
 		return newQuery;
 	}
 
@@ -1306,6 +1339,7 @@ public class MartShellLib {
 	public static final String QLIMIT = "limit";
 	public static final char LISTSTARTCHR = '(';
 	private final String LSTART = String.valueOf(LISTSTARTCHR);
+	private final String QUOTE = "'";
 	public static final char LISTENDCHR = ')';
 	private final String LEND = String.valueOf(LISTENDCHR);
 	private final String ID = "id";
