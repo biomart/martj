@@ -31,6 +31,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String valueKey = "value";
 	protected final String handlerKey = "handler";
 	protected final String tableConstraintKey = "tableConstraint";
+	protected final String keyKey = "key";
 	protected final String typeKey = "type";
 	protected final String qualifierKey = "qualifier";
 	protected final String legalQualifiersKey = "legal_qualifiers";
@@ -39,6 +40,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  valueKey,
                                                  handlerKey,
                                                  tableConstraintKey,
+                                                 keyKey,
                                                  typeKey,
                                                  qualifierKey,
                                                  legalQualifiersKey
@@ -79,16 +81,17 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", "", null, "", "", "");
+			this(internalName, displayName, description, "", "", "", null, "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String handler, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key,String handler, String type, String qualifier, String legalQualifiers) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     setAttribute(fieldKey, field);
     setAttribute(valueKey, value);
 		setAttribute(handlerKey, handler);
 		setAttribute(tableConstraintKey, tableConstraint);
+	    setAttribute(keyKey, key);
 		setAttribute(typeKey, type);
 		setAttribute(qualifierKey, qualifier);
 		setAttribute(legalQualifiersKey, legalQualifiers);
@@ -122,8 +125,18 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		return getAttribute(tableConstraintKey);
 	}
 
-	public abstract String getTableConstraintFromContext();
+	public void setKey(String key) {
+		setAttribute(keyKey, key);
+	}
 
+	public String getKey() {
+		return getAttribute(keyKey);
+	}
+
+	public abstract String getTableConstraintFromContext();
+	
+	public abstract String getKeyFromContext();
+	
 	public void setType(String type) {
 		setAttribute(typeKey, type);
 	}
