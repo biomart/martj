@@ -86,6 +86,28 @@ public abstract class MetaDataResolver {
 		return (Column []) cols.toArray(b);
 	}
 	
+	
+	public String [] getColumnNames (String name){
+		
+		Column [] col;
+		ArrayList cols = new ArrayList();
+		
+		try {
+			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().username,name,"%");
+			int z=0;
+			while (columns.next()){	
+				cols.add(columns.getString(4));
+				z++;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		String [] b = new String[cols.size()];
+		return (String []) cols.toArray(b);
+	}
+	
+	
+	
 	public Table getMainTable (String main_name){
 		
 		Table table = new Table();
