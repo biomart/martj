@@ -500,4 +500,53 @@ public class Option extends QueryFilterSettings {
 	public QueryFilterSettings getParent() {
 		return parent;
 	}
+  
+  
+  /**
+   * Returns field based on context. 
+   * @return field if set otherwise getParent().getFieldFromContext().
+   */
+  public String getFieldFromContext() {
+    if ( field!=null ) return field;
+    else return getParent().getFieldFromContext();
+  }
+  
+  
+  /**
+   * Returns value based on context. 
+   * @return value if set otherwise getParent().getValueFromContext().
+   */
+  public String getValueFromContext() {
+      if ( value!=null ) return value;
+      else return getParent().getValueFromContext();
+    }
+    
+
+  /**
+   * Returns type based on context. 
+   * @return type if set otherwise getParent().getTypeFromContext().
+   */
+	public String getTypeFromContext() {
+    if ( type!=null ) return type;
+    else return getParent().getTypeFromContext();
+	}
+
+  /**
+   * Returns handler based on context. 
+   * @return handler if set otherwise getParent().getHandlerFromContext().
+   */
+	public String getHandlerFromContext() {
+    if ( handler!=null ) return handler;
+    else return getParent().getHandlerFromContext();
+	}
+
+  /**
+   * Returns tableContraint based on context. 
+   * @return tableConstraint if set otherwise getParent().getTableConstraintFromContext().
+   */
+	public String getTableConstraintFromContext() {
+    if ( tableConstraint!=null ) return tableConstraint;
+    else return getParent().getTableConstraintFromContext();
+  }
+  
 }

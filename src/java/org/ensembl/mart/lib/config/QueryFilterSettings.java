@@ -35,11 +35,31 @@ public abstract class QueryFilterSettings extends BaseConfigurationObject {
 	public QueryFilterSettings(String internalName, String displayName, String description) throws ConfigurationException {
 		super(internalName, displayName, description);
 	}
-	public abstract String getField();
-  public abstract String getHandler();
-  public abstract String getTableConstraint();
-  public abstract String getType();
-  public abstract String getValue(); 
+	
 
+  
+  public abstract String getField();
+  public abstract String getFieldFromContext();
+  
+  public abstract String getValue();
+  public abstract String getValueFromContext();
+  
+  public abstract String getHandler();
+  public abstract String getHandlerFromContext();
+  
+  public abstract String getTableConstraint();
+  public abstract String getTableConstraintFromContext();
+  
+  public abstract String getType();
+  public abstract String getTypeFromContext();
+  
+  // These will break the build - Darin to implement methods in derived class
+  public abstract String getQualifier();
+  public abstract String getQualiferFromContext();
+    
+  // Rename Qualifiers to LegalQualifiers in DB
+  public abstract String getLegalQualifiers();
+  public abstract String getLegalQualifersFromContext();
+   
 
 }

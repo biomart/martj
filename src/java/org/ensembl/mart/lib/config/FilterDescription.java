@@ -761,8 +761,7 @@ public class FilterDescription extends QueryFilterSettings {
 	}
 
 	public String getValue() {
-		// TODO implement this method?
-		return null;
+		return value;
 	}
 
 	/**
@@ -802,31 +801,77 @@ public class FilterDescription extends QueryFilterSettings {
 			PushAction[] pushOptions = option.getPushOptions();
 
 			for (int j = 0; j < pushOptions.length; j++) {
-				
-        PushAction pushOption = pushOptions[j];
-				
-        String targetName = pushOption.getRef();
+
+				PushAction pushOption = pushOptions[j];
+
+				String targetName = pushOption.getRef();
 				QueryFilterSettings parent =
 					dataset.getFilterDescriptionByInternalName(targetName);
-				
-        if (parent == null)
+
+				if (parent == null)
 					throw new ConfigurationException(
 						"OptionPush.ref = "
 							+ targetName
 							+ " Refers to a FilterDescription that is not in dataset "
 							+ dataset.getInternalName());
 
-        // Assign the target FilterDescription to each option.
+				// Assign the target FilterDescription to each option.
 				Option[] options2 = pushOption.getOptions();
 				for (int k = 0; k < options2.length; k++) {
 					Option option2 = options2[k];
 					option2.setParent(parent);
 
-          // Recurse incase this option has any PushOptions
+					// Recurse incase this option has any PushOptions
 					setParentsForAllPushOptionOptions(dataset, option2.getOptions());
 				}
 			}
 		}
+	}
+
+	/**
+	 * Same as getField(). Included to make FilterDescription implement QueryFilterSettings
+	 * interface.
+	 * @return field
+	 */
+	public String getFieldFromContext() {
+		return field;
+	}
+
+	/**
+	 * Same as getValue(). Included to make FilterDescription implement QueryFilterSettings
+	 * interface.
+	 * @return value
+	 */
+	public String getValueFromContext() {
+		return value;
+
+	}
+
+	/**
+	 * Same as getType(). Included to make FilterDescription implement QueryFilterSettings
+	 * interface.
+	 * @return type
+	 */
+	public String getTypeFromContext() {
+		return type;
+	}
+
+	/**
+	 * Same as getHandler(). Included to make FilterDescription implement QueryFilterSettings
+	 * interface.
+	 * @return handler
+	 */
+	public String getHandlerFromContext() {
+		return handler;
+	}
+
+  /**
+   * Same as getTableConstraint(). Included to make FilterDescription implement QueryFilterSettings
+   * interface.
+   * @return tableConstraint
+   */
+	public String getTableConstraintFromContext() {
+		return tableConstraint;
 	}
 
 	private Hashtable uiOptionNameMap = new Hashtable();
@@ -841,6 +886,7 @@ public class FilterDescription extends QueryFilterSettings {
 	private String type;
 	private String qualifiers;
 	private String tableConstraint;
+	private String value;
 	private int hshcode = -1;
 
 	//cache one supporting Option for call to supports
