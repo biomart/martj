@@ -591,7 +591,6 @@ public class DatabaseDatasetConfigUtils {
         String dname = rs.getString(2);
         String dset = rs.getString(3);
         String description = rs.getString(4);
-        System.out.println(iname + "\t" + dset);
         byte[] digest = rs.getBytes(5);
         DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description);
         dsv.setMessageDigest(digest);
