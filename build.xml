@@ -245,6 +245,18 @@
       <fileset refid="lib.classpath"/>
     </copy>
 
+    <copy todir="${dist.dir}/lib/linux" >
+       <fileset dir="${lib.dir}/linux"/> 
+    </copy>
+   
+    <copy todir="${dist.dir}/lib/alpha" >
+       <fileset dir="${lib.dir}/alpha"/> 
+    </copy>
+    
+    <copy todir="${dist.dir}/data/XML">
+      <fileset dir="${data.dir}/XML"/>
+    </copy>
+
     <copy file="${readme}" todir="${dist.dir}" />
     <copy file="${license}" todir="${dist.dir}" />
     <copy file="${install}" todir="${dist.dir}" />
