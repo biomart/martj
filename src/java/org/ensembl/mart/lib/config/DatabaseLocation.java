@@ -21,7 +21,7 @@ package org.ensembl.mart.lib.config;
 import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
- * Object representing a DatabaseLocation element in a DatasetViewLocation element
+ * Object representing a DatabaseLocation element in a DatasetConfigLocation element
  * within a MartRegistry.dtd compliant XML document.  
  * Note, this object has the capability of storing database passwords, but does not do anything
  * to make them secure.  Users are encouraged to use readonly, passwordless access, or user-password

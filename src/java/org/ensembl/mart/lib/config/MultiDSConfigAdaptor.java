@@ -19,20 +19,20 @@
 package org.ensembl.mart.lib.config;
 
 /**
- * Further defines common functionality for DSViewAdaptor implimentations
- * which contain Multiple DatasetView objects within them.
+ * Further defines common functionality for DSConfigAdaptor implimentations
+ * which contain Multiple DatasetConfig objects within them.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public interface MultiDSViewAdaptor extends DSViewAdaptor {
+public interface MultiDSConfigAdaptor extends DSConfigAdaptor {
 
   /**
-   * Remove a DatasetView from the adaptor.  This might mean removing one dataset view
-   * from a MultiDSViewAdaptor, or removing an entire adaptor.
-   * @param dsv -- DatasetView to remove
+   * Remove a DatasetConfig from the adaptor.  This might mean removing one dataset config
+   * from a MultiDSConfigAdaptor, or removing an entire adaptor.
+   * @param dsv -- DatasetConfig to remove
    * Returns boolean, true if removed, false if not removed
    * @throws ConfigurationException for an underlying Exceptions
    */
-  public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException;
+  public boolean removeDatasetConfig(DatasetConfig dsv) throws ConfigurationException;
 
 }

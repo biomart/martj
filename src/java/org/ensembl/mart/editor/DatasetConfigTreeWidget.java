@@ -38,32 +38,32 @@ import javax.swing.JTree;
 
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 /**
- * DatasetViewTreeWidget extends internal frame.
+ * DatasetConfigTreeWidget extends internal frame.
  *
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
-public class DatasetViewTreeWidget extends JInternalFrame {
+public class DatasetConfigTreeWidget extends JInternalFrame {
 
-    private DatasetView datasetView = null;
+    private DatasetConfig datasetConfig = null;
     private static int openFrameCount = 0;
     private static final int xOffset = 30, yOffset = 30;
     private JDesktopPane desktop;
     private GridBagConstraints constraints;
-    private DatasetViewTree tree;
+    private DatasetConfigTree tree;
     private File file = null;
     private MartEditor editor;
 
-    public DatasetViewTreeWidget(File file, MartEditor editor, DatasetView dsv, String user, String dataset, String database) {
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String database) {
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -72,27 +72,27 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                 true);//iconifiable
         this.editor = editor;
         try {
-		  DatasetView view = null;	
+		  DatasetConfig config = null;	
           if (dsv == null){	
-	   //  this.setFrameIcon(createImageIcon(MartEditor.IMAGE_DIR+"MartView_cube.gif"));
+	   //  this.setFrameIcon(createImageIcon(MartEditor.IMAGE_DIR+"MartConfig_cube.gif"));
             
             if (file == null) {
             	if (user == null){
             	  if (database == null){	
-                    view = new DatasetView("new", "new", "new");
-                    view.addFilterPage(new FilterPage("new"));
-                    view.addAttributePage(new AttributePage("new"));
+                    config = new DatasetConfig("new", "new", "new");
+                    config.addFilterPage(new FilterPage("new"));
+                    config.addAttributePage(new AttributePage("new"));
             	  }
             	  else{
-            	  	view = DatabaseDatasetViewUtils.getNaiveDatasetViewFor(MartEditor.getDetailedDataSource(),database,dataset);
+            	  	config = DatabaseDatasetConfigUtils.getNaiveDatasetConfigFor(MartEditor.getDetailedDataSource(),database,dataset);
             	  }
             	}
             	else{
-					DSViewAdaptor adaptor = new DatabaseDSViewAdaptor(MartEditor.getDetailedDataSource(),user);
-					DatasetView views[] = adaptor.getDatasetViews();
-					for (int k =0; k < views.length;k++){
-					  if (views[k].getDataset().equals(dataset)){
-					    view = views[k];
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user);
+					DatasetConfig configs[] = adaptor.getDatasetConfigs();
+					for (int k =0; k < configs.length;k++){
+					  if (configs[k].getDataset().equals(dataset)){
+					    config = configs[k];
 					    break;
 					  }
 					}
@@ -100,22 +100,22 @@ public class DatasetViewTreeWidget extends JInternalFrame {
             	}
             } else {
                 URL url = file.toURL();
-                DSViewAdaptor adaptor = new URLDSViewAdaptor(url, true);
+                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url, true);
 
-                // only view one in the file so get that one
-                view = adaptor.getDatasetViews()[0];
+                // only config one in the file so get that one
+                config = adaptor.getDatasetConfigs()[0];
             }
           }
           else{
-          	view = new DatasetView(dsv);
+          	config = new DatasetConfig(dsv);
           }
-            this.setTitle(view.getInternalName());
+            this.setTitle(config.getInternalName());
 
             JFrame.setDefaultLookAndFeelDecorated(true);
 
-            DatasetViewAttributesTable attrTable = new DatasetViewAttributesTable(
-                    view, this);
-            tree = new DatasetViewTree(view,
+            DatasetConfigAttributesTable attrTable = new DatasetConfigAttributesTable(
+                    config, this);
+            tree = new DatasetConfigTree(config,
                     this, attrTable);
                     
 			//DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
@@ -123,7 +123,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 			//tree.setCellRenderer(renderer);        
 			tree.setCellRenderer(new MyRenderer());        
             // for update         
-            setDatasetView(view);
+            setDatasetConfig(config);
             
             JScrollPane treeScrollPane = new JScrollPane(tree);
             JScrollPane tableScrollPane = new JScrollPane(attrTable);
@@ -152,7 +152,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 
     /**
      * Test purposes only. Creates a frame with a JTree containing
-     * a presepecified DatasetView.dtd compatible configuration file.
+     * a presepecified DatasetConfig.dtd compatible configuration file.
      * @param args
      * @throws ConfigurationException
      */
@@ -164,8 +164,8 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     /**
      * @return
      */
-    public DatasetView getDatasetView() {
-        return datasetView;
+    public DatasetConfig getDatasetConfig() {
+        return datasetConfig;
     }
 
     public void addAttributesTable(JTable table) {
@@ -181,27 +181,27 @@ public class DatasetViewTreeWidget extends JInternalFrame {
     }
 
     /**
-     * @param view
+     * @param config
      */
-    public void setDatasetView(DatasetView view) {
-        clearDatasetView();
-        datasetView = view;
-        loadDatasetView();
+    public void setDatasetConfig(DatasetConfig config) {
+        clearDatasetConfig();
+        datasetConfig = config;
+        loadDatasetConfig();
     }
 
     /**
-     * Loads the datasetView by creating a tree to represent it
+     * Loads the datasetConfig by creating a tree to represent it
      * and displaying it.
      */
-    private void loadDatasetView() {
+    private void loadDatasetConfig() {
 
 
     }
 
     /**
-     * Removes current dataset view if one is loaded, otherwise does nothing.
+     * Removes current dataset config if one is loaded, otherwise does nothing.
      */
-    private void clearDatasetView() {
+    private void clearDatasetConfig() {
 
     }
 
@@ -253,7 +253,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = DatasetViewTreeWidget.class.getClassLoader().getResource(path);
+        java.net.URL imgURL = DatasetConfigTreeWidget.class.getClassLoader().getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
@@ -294,8 +294,8 @@ class MyRenderer extends DefaultTreeCellRenderer {
 	}
 
 	protected boolean isHidden(Object value) {
-		DatasetViewTreeNode node =
-				(DatasetViewTreeNode)value;
+		DatasetConfigTreeNode node =
+				(DatasetConfigTreeNode)value;
 		BaseConfigurationObject nodeObject = (BaseConfigurationObject) node.getUserObject();		
 		if (nodeObject.getAttribute("hidden") != null && nodeObject.getAttribute("hidden").equals("true")){
 			return true;

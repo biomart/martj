@@ -33,7 +33,7 @@ import java.util.TreeMap;
  *                                Datasets.</p>
  * 
  *         <ul>
- *           <li><p>DatasetView: contains the information for a particular star within a mart.
+ *           <li><p>DatasetConfig: contains the information for a particular star within a mart.
  *                          Holds lists of AttributePages and FilterPages</p>
  *               <ul>
  *               <li><p>AttributePage: contains a List of AttributeCollections.</p>
@@ -103,12 +103,12 @@ public class MartConfiguration extends BaseNamedConfigurationObject {
 	}
 
 	/**
-	 * Add a single DatasetView to the MartConfiguration.
+	 * Add a single DatasetConfig to the MartConfiguration.
 	 * 
-	 * @param d A DatasetView object
-	 * @see DatasetView
+	 * @param d A DatasetConfig object
+	 * @see DatasetConfig
 	 */
-	public void addDataset(DatasetView d) {
+	public void addDataset(DatasetConfig d) {
 		Integer rankInt = new Integer(thisRank);
 		datasets.put(rankInt, d);
 		datasetNameMap.put(d.getInternalName(), rankInt);
@@ -120,9 +120,9 @@ public class MartConfiguration extends BaseNamedConfigurationObject {
 	 * Note, subsequent calls to setDatasets or addDataset will add
 	 * datasets to what have been added before.
 	 *  
-	 * @param d DatasetView[] Array of Datasets.
+	 * @param d DatasetConfig[] Array of Datasets.
 	 */
-	public void setDatasets(DatasetView[] d) {
+	public void setDatasets(DatasetConfig[] d) {
 		for (int i = 0, n = d.length; i < n; i++) {
 			Integer rankInt = new Integer(thisRank);
 			datasets.put(rankInt, d[i]);
@@ -132,34 +132,34 @@ public class MartConfiguration extends BaseNamedConfigurationObject {
 	}
 
 	/**
-	 * Returns an Array of DatasetView objects, in the order they were added.
+	 * Returns an Array of DatasetConfig objects, in the order they were added.
 	 * 
-	 * @return DatasetView[]
+	 * @return DatasetConfig[]
 	 */
-	public DatasetView[] getDatasets() {
-		DatasetView[] d = new DatasetView[datasets.size()];
+	public DatasetConfig[] getDatasets() {
+		DatasetConfig[] d = new DatasetConfig[datasets.size()];
 		datasets.values().toArray(d);
 		return d;
 	}
 
 	/**
-	 * Returns a particular DatasetView based on a supplied DatasetView internalName.
+	 * Returns a particular DatasetConfig based on a supplied DatasetConfig internalName.
 	 * 
-	 * @param internalName String internalName of the DatasetView
-	 * @return DatasetView with the provided internalName, or null if not found
+	 * @param internalName String internalName of the DatasetConfig
+	 * @return DatasetConfig with the provided internalName, or null if not found
 	 */
-	public DatasetView getDatasetByName(String internalName) {
+	public DatasetConfig getDatasetByName(String internalName) {
 		if (datasetNameMap.containsKey(internalName))
-			return (DatasetView) datasets.get((Integer) datasetNameMap.get(internalName));
+			return (DatasetConfig) datasets.get((Integer) datasetNameMap.get(internalName));
 		else
 			return null;
 	}
 
 	/**
-	 * Check for whether the MartConfiguration contains a particular DatasetView named by internalName.
+	 * Check for whether the MartConfiguration contains a particular DatasetConfig named by internalName.
 	 * 
-	 * @param internalName String internalName of a DatasetView
-	 * @return boolean, true if the MartConfiguration contains the DatasetView named by the given internalName
+	 * @param internalName String internalName of a DatasetConfig
+	 * @return boolean, true if the MartConfiguration contains the DatasetConfig named by the given internalName
 	 */
 	public boolean containsDataset(String internalName) {
 		return datasetNameMap.containsKey(internalName);
@@ -190,7 +190,7 @@ public class MartConfiguration extends BaseNamedConfigurationObject {
   	List names = new ArrayList();
   	
   	for (Iterator iter = datasets.values().iterator(); iter.hasNext();) {
-			DatasetView dset = (DatasetView) iter.next();
+			DatasetConfig dset = (DatasetConfig) iter.next();
 			names.add(dset.getInternalName());
 		}
   	return names;

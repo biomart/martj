@@ -40,13 +40,13 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.MartRegistry;
 import org.ensembl.mart.lib.config.MartRegistryXMLUtils;
-import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.util.LoggingUtil;
 /**
  * Widget representing availabled adaptors and enabling user to add, and delete
@@ -58,17 +58,17 @@ public class AdaptorManager extends Box {
 	private static final Logger logger = Logger.getLogger(AdaptorManager.class
 			.getName());
 	private Feedback feedback = new Feedback(this);
-	private static final String DS_VIEW_FILE_KEY = "CONFIG_FILE_KEY";
+	private static final String DS_CONFIG_FILE_KEY = "CONFIG_FILE_KEY";
 	private static final String REGISTRY_FILE_KEY = "REGISTRY_FILE_KEY";
 	private static final String REGISTRY_KEY = "REGISTRY_KEY";
 	private static final String OPTIONAL_ENABLED_KEY = "OPTIONAL_ENABLED";
 	private String none = "None";
-	private RegistryDSViewAdaptor rootAdaptor = new RegistryDSViewAdaptor();
-	private Map optionToView = new HashMap();
+	private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor();
+	private Map optionToConfig = new HashMap();
 	/** Persistent preferences object used to hold user history. */
 	private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
 	private LabelledComboBox combo = new LabelledComboBox("Adaptor");
-	private JFileChooser dsViewFileChooser = new JFileChooser();
+	private JFileChooser dsConfigFileChooser = new JFileChooser();
 	private JFileChooser registryFileChooser = new JFileChooser();
 	private FileFilter xmlFilter = new FileFilter() {
 		public boolean accept(File f) {
@@ -82,7 +82,7 @@ public class AdaptorManager extends Box {
 	private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
 	/**
 	 * This widget is part of a system based on the MVC design pattern. From this
-	 * perspective the widget is a View and a Controller and the query is the
+	 * perspective the widget is a Config and a Controller and the query is the
 	 * Model.
 	 * 
 	 * @param query
@@ -166,8 +166,8 @@ public class AdaptorManager extends Box {
 	public void importRegistry(URL url) {
 		try {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
- 			RegistryDSViewAdaptor ra = new RegistryDSViewAdaptor(url);
-			DSViewAdaptor[] as = ra.getAdaptors();
+ 			RegistryDSConfigAdaptor ra = new RegistryDSConfigAdaptor(url);
+			DSConfigAdaptor[] as = ra.getAdaptors();
 			for (int i = 0; i < as.length; i++) {
 				// TODO only add "leaf" node adaptors
 				add(as[i]);
@@ -184,7 +184,7 @@ public class AdaptorManager extends Box {
 	 *  
 	 */
 	private void doDeleteAll() {
-		DSViewAdaptor as[] = rootAdaptor.getAdaptors();
+		DSConfigAdaptor as[] = rootAdaptor.getAdaptors();
 		for (int i = 0; i < as.length; i++)
 			rootAdaptor.remove(as[i]);
 		try {
@@ -197,19 +197,19 @@ public class AdaptorManager extends Box {
 	/**
 	 * Updates state of widget after a user action.
 	 * 
-	 * @param views
+	 * @param configs
 	 */
-	private void updateWidget(DSViewAdaptor[] adaptors)
+	private void updateWidget(DSConfigAdaptor[] adaptors)
 			throws ConfigurationException {
-		optionToView.clear();
+		optionToConfig.clear();
 		// map string -> adaptor
 		for (int i = 0; i < adaptors.length; i++) {
-			DSViewAdaptor a = adaptors[i];
-			optionToView.put(a.getName(), a);
+			DSConfigAdaptor a = adaptors[i];
+			optionToConfig.put(a.getName(), a);
 			logger.fine("Added" + a.getName() + ":" + a);
 		}
 		// sort
-		List l = new ArrayList(optionToView.keySet());
+		List l = new ArrayList(optionToConfig.keySet());
 		Collections.sort(l);
 		combo.removeAllItems();
 		combo.addAll(l);
@@ -233,14 +233,14 @@ public class AdaptorManager extends Box {
 					databaseDialog.getDriver(), defaultSourceName);
 
 			try {
-				DSViewAdaptor a = new DatabaseDSViewAdaptor(ds, databaseDialog
+				DSConfigAdaptor a = new DatabaseDSConfigAdaptor(ds, databaseDialog
 						.getUser());
 				// TODO bind a and ds so that can recreate the link after persistence
 				add(a);
 			} catch (ConfigurationException e1) {
 				feedback
 						.warning(
-								"Couldn not load DatasetViews from \""
+								"Couldn not load DatasetConfigs from \""
 										+ ds
 										+ "\". It might be possible to execute queries against this database.",
 								e1, false);
@@ -255,12 +255,12 @@ public class AdaptorManager extends Box {
 				reg = MartRegistryXMLUtils.ByteArrayToMartRegistry(b);
 			}
 			if (reg != null) {
-				RegistryDSViewAdaptor tmp = new RegistryDSViewAdaptor(reg);
-				DSViewAdaptor[] adaptors = tmp.getAdaptors();
+				RegistryDSConfigAdaptor tmp = new RegistryDSConfigAdaptor(reg);
+				DSConfigAdaptor[] adaptors = tmp.getAdaptors();
 				for (int i = 0; i < adaptors.length; i++) {
 					add(adaptors[i]);
 					logger.fine("Loaded Adaptor:" + adaptors[i].getName()
-							+ ", num datasetViews=" + adaptors[i].getDatasetViews().length);
+							+ ", num datasetConfigs=" + adaptors[i].getDatasetConfigs().length);
 				}
 			}
 		} catch (ConfigurationException e1) {
@@ -269,7 +269,7 @@ public class AdaptorManager extends Box {
 		advancedOptionsEnabled = prefs.getBoolean(OPTIONAL_ENABLED_KEY, false);
 	}
 	/**
-	 * Delete selected datasetview.
+	 * Delete selected datasetconfig.
 	 */
 	public void doDelete() {
 		if (combo.getSelectedItem() == null)
@@ -284,7 +284,7 @@ public class AdaptorManager extends Box {
 			else if (index - 1 <= max)
 				newIndex = index - 1;
 			// remove the selected item
-			rootAdaptor.remove((DSViewAdaptor) optionToView.get(selected));
+			rootAdaptor.remove((DSConfigAdaptor) optionToConfig.get(selected));
 			updateWidget(rootAdaptor.getAdaptors());
 			// select the "next" item
 			if (newIndex > -1)
@@ -301,14 +301,14 @@ public class AdaptorManager extends Box {
 	 */
 	protected void doAddFile() {
 		// user chooses file
-		int action = dsViewFileChooser.showOpenDialog(this);
+		int action = dsConfigFileChooser.showOpenDialog(this);
 		// convert file contents into string
 		if (action == JFileChooser.APPROVE_OPTION) {
-			File f = dsViewFileChooser.getSelectedFile().getAbsoluteFile();
-			prefs.put(DS_VIEW_FILE_KEY, f.toString());
+			File f = dsConfigFileChooser.getSelectedFile().getAbsoluteFile();
+			prefs.put(DS_CONFIG_FILE_KEY, f.toString());
 			try {
 				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(f.toURL(), false);
+				URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(f.toURL(), false);
 				// TODO resolve any name clashes, i.e. existing dsv with same name
 				//				this.adaptor.add(adaptor);
 				add(adaptor);
@@ -350,18 +350,18 @@ public class AdaptorManager extends Box {
 				null);
 	}
 	private void initFileChoosers() {
-		String lastChosenFile = prefs.get(DS_VIEW_FILE_KEY, null);
+		String lastChosenFile = prefs.get(DS_CONFIG_FILE_KEY, null);
 		if (lastChosenFile != null) {
-			dsViewFileChooser.setSelectedFile(new File(lastChosenFile));
+			dsConfigFileChooser.setSelectedFile(new File(lastChosenFile));
 		}
-		dsViewFileChooser.addChoosableFileFilter(xmlFilter);
+		dsConfigFileChooser.addChoosableFileFilter(xmlFilter);
 		lastChosenFile = prefs.get(REGISTRY_FILE_KEY, null);
 		if (lastChosenFile != null) {
 			registryFileChooser.setSelectedFile(new File(lastChosenFile));
 		}
 		registryFileChooser.addChoosableFileFilter(xmlFilter);
 	}
-	public boolean contains(DatasetView dsv) {
+	public boolean contains(DatasetConfig dsv) {
 		try {
 			return dsv != null
 					&& rootAdaptor.supportsInternalName(dsv.getInternalName());
@@ -371,7 +371,7 @@ public class AdaptorManager extends Box {
 		}
 		return false;
 	}
-	public void add(DSViewAdaptor a) throws ConfigurationException {
+	public void add(DSConfigAdaptor a) throws ConfigurationException {
 		rootAdaptor.add(a);
 		updateWidget(rootAdaptor.getAdaptors());
 		storePrefs();
@@ -387,7 +387,7 @@ public class AdaptorManager extends Box {
 			feedback.warning(e);
 		}
 	}
-	public RegistryDSViewAdaptor getRootAdaptor() {
+	public RegistryDSConfigAdaptor getRootAdaptor() {
 		return rootAdaptor;
 	}
 	public void setAdvancedOptionsEnabled(boolean b) {
@@ -410,7 +410,7 @@ public class AdaptorManager extends Box {
 	 * advancedOptionsEnabled=false;
 	 */
 	public void reset() {
-		rootAdaptor = new RegistryDSViewAdaptor();
+		rootAdaptor = new RegistryDSConfigAdaptor();
 		try {
 			updateWidget(rootAdaptor.getAdaptors());
 			storePrefs();

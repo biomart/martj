@@ -57,7 +57,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	}
 
 	/**
-	 * Empty Constructor should only be used by DatasetViewEditor
+	 * Empty Constructor should only be used by DatasetConfigEditor
 	 *
 	 */
 	public QueryFilterSettings() {

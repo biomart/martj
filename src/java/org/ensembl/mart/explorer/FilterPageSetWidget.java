@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterPage;
 
 /**
@@ -40,7 +40,7 @@ public class FilterPageSetWidget extends PageSetWidget {
 	/**
 	 * @param query
 	 */
-	public FilterPageSetWidget(Query query, DatasetView dataset, QueryTreeView tree) {
+	public FilterPageSetWidget(Query query, DatasetConfig dataset, QueryTreeView tree) {
 		super(query, "Filters", tree);
 
 		filterDescriptionWidgets = new ArrayList();

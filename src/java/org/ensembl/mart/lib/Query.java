@@ -24,7 +24,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.util.StringUtil;
 
 /**
@@ -391,7 +391,7 @@ public class Query {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-    buf.append(" datasetView=").append( datasetView==null ? "unset" : datasetView.getInternalName() );
+    buf.append(" datasetConfig=").append( datasetConfig==null ? "unset" : datasetConfig.getInternalName() );
     buf.append(" dataset=").append(dataset);
 		buf.append(", dataSource=").append(dataSource);
 		buf.append(", starBases=[").append(StringUtil.toString(starBases));
@@ -439,8 +439,8 @@ public class Query {
 			tmp = (31 * tmp) + filters.get(i).hashCode();
 
 		tmp *= 31;
-		if (datasetView != null)
-			tmp += datasetView.hashCode();
+		if (datasetConfig != null)
+			tmp += datasetConfig.hashCode();
 
 		tmp *= 31;
 		if (queryName != null)
@@ -458,7 +458,7 @@ public class Query {
 	private SequenceDescription sequenceDescription;
 	private String[] primaryKeys;
 	private String[] starBases;
-	private DatasetView datasetView;
+	private DatasetConfig datasetConfig;
 	private int limit = 0; // add a limit clause to the SQL with an int > 0
 
 	/**
@@ -663,7 +663,7 @@ public class Query {
 
 		setDataSource(null);
 		setDataset(null);
-		setDatasetView(null);
+		setDatasetConfig(null);
 
 		removeAllAttributes();
 		removeAllFilters();
@@ -674,19 +674,19 @@ public class Query {
 		setStarBases(null);
 	}
 
-	public DatasetView getDatasetView() {
-		return datasetView;
+	public DatasetConfig getDatasetConfig() {
+		return datasetConfig;
 	}
 
-	public synchronized void setDatasetView(DatasetView datasetView) {
-		DatasetView old = this.datasetView;
-		this.datasetView = datasetView;
+	public synchronized void setDatasetConfig(DatasetConfig datasetConfig) {
+		DatasetConfig old = this.datasetConfig;
+		this.datasetConfig = datasetConfig;
 		log();
 		for (int i = 0; i < listeners.size(); ++i)
-			((QueryListener) listeners.get(i)).datasetViewChanged(
+			((QueryListener) listeners.get(i)).datasetConfigChanged(
 				this,
 				old,
-				datasetView);
+				datasetConfig);
 	}
 
 }

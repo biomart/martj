@@ -344,7 +344,7 @@ public class TreeFilterWidget extends FilterWidget {
         fieldName = option.getFieldFromContext();
         if ( fieldName == null) {
           String s =
-            "Can't add filter because of configuration problem in DatsetView.";
+            "Can't add filter because of configuration problem in DatsetConfig.";
           String s2 =
             s
               + "option= " + option

@@ -58,7 +58,7 @@ public abstract class BaseConfigurationObject implements Comparable {
   }
 
   /**
-   * Set the XML Attribute for a particular key. This method is primarily for DatasetViewXMLUtils and DatasetViewEditor.  Client code should
+   * Set the XML Attribute for a particular key. This method is primarily for DatasetConfigXMLUtils and DatasetConfigEditor.  Client code should
    * use the setXXX methods. Note, keys with null values are not added to the object. 
    * @param key - String key for this attribute
    * @param value - String value for this attribute
@@ -71,7 +71,7 @@ public abstract class BaseConfigurationObject implements Comparable {
   }
 
   /**
-   * Get the value of an attribute for a given key. This method is primarily for DatasetViewEditor.  Client code should
+   * Get the value of an attribute for a given key. This method is primarily for DatasetConfigEditor.  Client code should
    * use the getXXX methods.
    * @param key- 
    * @return
@@ -82,7 +82,7 @@ public abstract class BaseConfigurationObject implements Comparable {
 
   /**
    * Get the XML Attribute Titles for this object. This is meant for use
-   * by DatasetViewEditor. Once called, the order of the strings in the return
+   * by DatasetConfigEditor. Once called, the order of the strings in the return
    * list are preserved over successive calls, with any new attribute titles added on subsequent
    * calls to addAttribute appended to the end of the list.
    * @return String[] List of XMLAttribute Titles.
@@ -98,7 +98,7 @@ public abstract class BaseConfigurationObject implements Comparable {
   /**
    * All Configuration Objects must impliment a flag to determine
    * if a validated version of an object (one that has been returned
-   * by the DatasetView.validate() method) is broken in some way.
+   * by the DatasetConfig.validate() method) is broken in some way.
    * @return boolean, true if the Object contains broken members, false otherwise
    */
   public abstract boolean isBroken();

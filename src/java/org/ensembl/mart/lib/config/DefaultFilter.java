@@ -19,8 +19,8 @@
 package org.ensembl.mart.lib.config;
 
 /**
- * Default Filter for a DatasetView.  Holds a FilterDescription, and
- * the value to apply for that filter.  This allows the DatasetView to
+ * Default Filter for a DatasetConfig.  Holds a FilterDescription, and
+ * the value to apply for that filter.  This allows the DatasetConfig to
  * provide the UI with any default filters that need to be added to a 
  * query when it is selected.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -42,7 +42,7 @@ public class DefaultFilter extends BaseConfigurationObject {
   }
   
    /**
-    * Empty Constructor.  Should really only be used by the DatasetViewEditor
+    * Empty Constructor.  Should really only be used by the DatasetConfigEditor
     */
    public DefaultFilter() {
    	super();

@@ -22,8 +22,8 @@ import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterPage;
 
 /**
@@ -33,15 +33,15 @@ public class FiltersWidget extends InputPage {
 
   private JTabbedPane tabbedPane = new JTabbedPane();
   private JLabel unavailableLabel =
-    new JLabel("Unavailable. Choose DatasetView first.");
+    new JLabel("Unavailable. Choose DatasetConfig first.");
   
   
   /**
-   * Displays the filters grouped according to query.datasetView.
+   * Displays the filters grouped according to query.datasetConfig.
    * If none are available if displays a message to that effect. 
    * @param query
    */
-  public FiltersWidget(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree) {
+  public FiltersWidget(Query query, DSConfigAdaptor datasetConfigAdaptor, QueryTreeView tree) {
     super(query, null, tree);
     unavailable();
   }
@@ -53,21 +53,21 @@ public class FiltersWidget extends InputPage {
   }
 
   /**
-   * Loads filters from datasetView when a new datasetView is set on
+   * Loads filters from datasetConfig when a new datasetConfig is set on
    * the query.
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(
+  public void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig) {
 
-    if (newDatasetView == null) {
+    if (newDatasetConfig == null) {
       unavailable();
     } else {
       remove( unavailableLabel );
       tabbedPane.removeAll();
-      FilterPage[] fps = newDatasetView.getFilterPages();
+      FilterPage[] fps = newDatasetConfig.getFilterPages();
       for (int i = 0; i < fps.length; i++)
         tabbedPane.add(
           new FilterPageWidget(query, fps[i].getDisplayName(), fps[i], tree));

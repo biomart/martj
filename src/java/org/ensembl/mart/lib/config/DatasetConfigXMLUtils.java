@@ -49,15 +49,15 @@ import org.xml.sax.InputSource;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatasetViewXMLUtils {
+public class DatasetConfigXMLUtils {
 
-	private static Logger logger = Logger.getLogger(DatasetViewXMLUtils.class.getName());
+	private static Logger logger = Logger.getLogger(DatasetConfigXMLUtils.class.getName());
 
 	public static String DEFAULTDIGESTALGORITHM = "MD5";
 
 	// element names
-	private static final String DATASETVIEWDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
-	private static final String DATASETVIEW = "DatasetView";
+	private static final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetView.dtd";
+	private static final String DATASETCONFIG = "DatasetConfig";
 	private static final String STARBASE = "MainTable";
 	private static final String PRIMARYKEY = "Key";
 	private static final String ENABLE = "Enable";
@@ -80,14 +80,14 @@ public class DatasetViewXMLUtils {
 	private static final String INTERNALNAME = "internalName";
 
   /**
-   * Returns a DatasetView from an XML stored as a byte[]
+   * Returns a DatasetConfig from an XML stored as a byte[]
    * @param b - byte[] holding XML
-   * @return DatasetView for xml in byte[]
+   * @return DatasetConfig for xml in byte[]
    * @throws ConfigurationException
    */
-  public static DatasetView ByteArrayToDatasetView(byte[] b) throws ConfigurationException {
+  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b) throws ConfigurationException {
     ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return XMLStreamToDatasetView(bin);
+    return XMLStreamToDatasetConfig(bin);
   }
   
   /**
@@ -102,45 +102,45 @@ public class DatasetViewXMLUtils {
   }
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetView object.
+	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object.
 	 * 
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
-	 * @return DatasetView
+	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput) throws ConfigurationException {
-		return XMLStreamToDatasetView(xmlinput, null, false);
+	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput) throws ConfigurationException {
+		return XMLStreamToDatasetConfig(xmlinput, null, false);
 	}
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetView object,
+	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object,
 	 * with optional validation of the XML against the DatasetView.dtd contained in the Java CLASSPATH.
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
 	 * @param validate -- if true, XML is validated against the DatasetView.dtd contained in the Java CLASSPATH.
-	 * @return DatasetView
+	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions.
 	 */
-	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, boolean validate)
+	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate)
 		throws ConfigurationException {
-		return XMLStreamToDatasetView(xmlinput, null, validate);
+		return XMLStreamToDatasetConfig(xmlinput, null, validate);
 	}
 
 	/**
-	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetView object, with
+	 * Takes an InputStream containing DatasetView.dtd compliant XML, and creates a DatasetConfig object, with
 	 * a precomputed Message Digest using a given Algorithm.
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
-	 * @return DatasetView
+	 * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 * @see java.security.MessageDigest
 	 */
-	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, byte[] digest) throws ConfigurationException {
-		return XMLStreamToDatasetView(xmlinput, digest, false);
+	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest) throws ConfigurationException {
+		return XMLStreamToDatasetConfig(xmlinput, digest, false);
 	}
 
 	/**
-	 * Takes an InputStream containing XML, and creates a DatasetView object.
-	 * Optional parameters exist for creating a DatasetView with a message digest
+	 * Takes an InputStream containing XML, and creates a DatasetConfig object.
+	 * Optional parameters exist for creating a DatasetConfig with a message digest
 	 * created by a sun.security.MessageDigest object, and for validating the xml against
 	 * the DatasetView.dtd stored in the java CLASSPATH. 
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML
@@ -150,9 +150,9 @@ public class DatasetViewXMLUtils {
 	 * @throws ConfigurationException for all underlying Exceptions
 	 * @see java.security.MessageDigest
 	 */
-	public static DatasetView XMLStreamToDatasetView(InputStream xmlinput, byte[] digest, boolean validate)
+	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate)
 		throws ConfigurationException {
-		return DocumentToDatasetView(XMLStreamToDocument(xmlinput, validate), digest);
+		return DocumentToDatasetConfig(XMLStreamToDocument(xmlinput, validate), digest);
 	}
 
 	/**
@@ -181,31 +181,31 @@ public class DatasetViewXMLUtils {
 
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetView.dtd compliant
-	 * XML document, and returns a DatasetView object.
+	 * XML document, and returns a DatasetConfig object.
 	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
-	 * @return DatasetView object
+	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
-	public static DatasetView DocumentToDatasetView(Document doc) throws ConfigurationException {
-		return DocumentToDatasetView(doc, null);
+	public static DatasetConfig DocumentToDatasetConfig(Document doc) throws ConfigurationException {
+		return DocumentToDatasetConfig(doc, null);
 	}
 
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetView.dtd compliant
-	 * XML document, and returns a DatasetView object.  If a digestAlgorithm and
-	 * Message Digest are supplied, these are added to the DatasetView.
+	 * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
+	 * Message Digest are supplied, these are added to the DatasetConfig.
 	 * @param doc -- Document representing a DatasetView.dtd compliant XML document
 	 * @param digest -- a digest computed with the given digestAlgorithm
-	 * @return DatasetView object
+	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
-	public static DatasetView DocumentToDatasetView(Document doc, byte[] digest) throws ConfigurationException {
+	public static DatasetConfig DocumentToDatasetConfig(Document doc, byte[] digest) throws ConfigurationException {
 		Element thisElement = doc.getRootElement();
 
-		DatasetView d = new DatasetView();
+		DatasetConfig d = new DatasetConfig();
     loadAttributesFromElement(thisElement, d);
 
-//		LoadDatasetViewWithDocument(d, doc);
+//		LoadDatasetConfigWithDocument(d, doc);
 
 		if (digest != null)
 			d.setMessageDigest(digest);
@@ -225,18 +225,18 @@ public class DatasetViewXMLUtils {
   }
   
 	/**
-	 * Takes a reference to a DatasetView, and a JDOM Document, and parses the JDOM document to add all of the information
-	 * from the XML for a particular DatasetView object into the existing DatasetView reference passed into the method.
-	 * @param dsv -- DatasetView reference to be updated
+	 * Takes a reference to a DatasetConfig, and a JDOM Document, and parses the JDOM document to add all of the information
+	 * from the XML for a particular DatasetConfig object into the existing DatasetConfig reference passed into the method.
+	 * @param dsv -- DatasetConfig reference to be updated
 	 * @param doc -- Document containing DatasetView.dtd compliant XML for dsv
 	 * @throws ConfigurationException when the internalName returned by the JDOM Document does not match
 	 *         that of the dsv reference, and for any other underlying Exception
 	 */
-	public static void LoadDatasetViewWithDocument(DatasetView dsv, Document doc) throws ConfigurationException {
+	public static void LoadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
 		Element thisElement = doc.getRootElement();
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 
-		// a DatasetView object must have been constructed with an internalName
+		// a DatasetConfig object must have been constructed with an internalName
 		// test that the internalNames match , throw an exception if they are not
 		if (!intName.equals(dsv.getInternalName()))
 			throw new ConfigurationException("Document internalName does not match input dsv reference internalName, they may not represent the same data\n");
@@ -457,24 +457,24 @@ public class DatasetViewXMLUtils {
 	}
 
 	/**
-	 * Writes a DatasetView object as XML to the given File.  Handles opening and closing of the OutputStream.
-	 * @param dsv -- DatasetView object
+	 * Writes a DatasetConfig object as XML to the given File.  Handles opening and closing of the OutputStream.
+	 * @param dsv -- DatasetConfig object
 	 * @param file -- File to write XML
 	 * @throws ConfigurationException for underlying Exceptions
 	 */
-	public static void DatasetViewToFile(DatasetView dsv, File file) throws ConfigurationException {
-		DocumentToFile(DatasetViewToDocument(dsv), file);
+	public static void DatasetConfigToFile(DatasetConfig dsv, File file) throws ConfigurationException {
+		DocumentToFile(DatasetConfigToDocument(dsv), file);
 	}
 
 	/**
-	 * Writes a DatasetView object as XML to the given OutputStream.  Does not close the OutputStream after writing.
-	 * If you wish to write a Document to a File, use DatasetViewToFile instead, as it handles opening and closing the OutputStream.
-	 * @param dsv -- DatasetView object to write as XML
+	 * Writes a DatasetConfig object as XML to the given OutputStream.  Does not close the OutputStream after writing.
+	 * If you wish to write a Document to a File, use DatasetConfigToFile instead, as it handles opening and closing the OutputStream.
+	 * @param dsv -- DatasetConfig object to write as XML
 	 * @param out -- OutputStream to write, not closed after writing
 	 * @throws ConfigurationException for underlying Exceptions
 	 */
-	public static void DatasetViewToOutputStream(DatasetView dsv, OutputStream out) throws ConfigurationException {
-		DocumentToOutputStream(DatasetViewToDocument(dsv), out);
+	public static void DatasetConfigToOutputStream(DatasetConfig dsv, OutputStream out) throws ConfigurationException {
+		DocumentToOutputStream(DatasetConfigToDocument(dsv), out);
 	}
 
 	/**
@@ -532,41 +532,41 @@ public class DatasetViewXMLUtils {
   }
   
 	/**
-	 * Takes a DatasetView object, and returns a JDOM Document representing the
+	 * Takes a DatasetConfig object, and returns a JDOM Document representing the
 	 * XML for this Object. Does not store DataSource or Digest information
-	 * @param dsview -- DatasetView object to be converted into a JDOM Document
+	 * @param dsconfig -- DatasetConfig object to be converted into a JDOM Document
 	 * @return Document object
 	 */
-	public static Document DatasetViewToDocument(DatasetView dsview) {
-		Element root = new Element(DATASETVIEW);
-		loadElementAttributesFromObject(dsview, root);
+	public static Document DatasetConfigToDocument(DatasetConfig dsconfig) {
+		Element root = new Element(DATASETCONFIG);
+		loadElementAttributesFromObject(dsconfig, root);
 		
-		Option[] os = dsview.getOptions();
+		Option[] os = dsconfig.getOptions();
 		for (int i = 0, n = os.length; i < n; i++)
 			root.addContent(getOptionElement(os[i]));
 
-		DefaultFilter[] dfilts = dsview.getDefaultFilters();
+		DefaultFilter[] dfilts = dsconfig.getDefaultFilters();
 		for (int i = 0, n = dfilts.length; i < n; i++)
 			root.addContent(getDefaultFilterElement(dfilts[i]));
 
-		String[] starbases = dsview.getStarBases();
+		String[] starbases = dsconfig.getStarBases();
 		for (int i = 0, n = starbases.length; i < n; i++)
 			root.addContent(getStarBaseElement(starbases[i]));
 
-		String[] pkeys = dsview.getPrimaryKeys();
+		String[] pkeys = dsconfig.getPrimaryKeys();
 		for (int i = 0, n = pkeys.length; i < n; i++)
 			root.addContent(getPrimaryKeyElement(pkeys[i]));
 
-		FilterPage[] fpages = dsview.getFilterPages();
+		FilterPage[] fpages = dsconfig.getFilterPages();
 		for (int i = 0, n = fpages.length; i < n; i++)
 			root.addContent(getFilterPageElement(fpages[i]));
 
-		AttributePage[] apages = dsview.getAttributePages();
+		AttributePage[] apages = dsconfig.getAttributePages();
 		for (int i = 0, n = apages.length; i < n; i++)
 			root.addContent(getAttributePageElement(apages[i]));
 
     Document thisDoc = new Document(root);
-    thisDoc.setDocType( new DocType(DATASETVIEW, DATASETVIEWDOCTYPEURL) );
+    thisDoc.setDocType( new DocType(DATASETCONFIG, DATASETCONFIGDOCTYPEURL) );
     
 		return thisDoc;
 	}
@@ -753,9 +753,9 @@ public class DatasetViewXMLUtils {
 	}
 
 	/**
-	 * Given a Document object, converts the given document to an DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM digest using the 
+	 * Given a Document object, converts the given document to an DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM digest using the 
 	 * JDOM XMLOutputter writing to a java.security.DigestOutputStream.  This is the default method for calculating the MessageDigest 
-	 * of a DatasetView Object used in various places in the MartJ system.
+	 * of a DatasetConfig Object used in various places in the MartJ system.
 	 * @param doc -- Document object representing a DatasetView.dtd compliant XML document. 
 	 * @return byte[] digest algorithm
 	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
@@ -768,10 +768,10 @@ public class DatasetViewXMLUtils {
 	/**
 	 * Given a Document object and a digestAlgorithm, converts the given document to
 	 * a digest using the JDOM XMLOutputter writing to a DigestOutputStream.  This is the default
-	 * method for calculating the MessageDigest of a DatasetView object used in various places in the MartJ system.
-	 * If the digestAlgorithm is null, defaults to DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM.
+	 * method for calculating the MessageDigest of a DatasetConfig object used in various places in the MartJ system.
+	 * If the digestAlgorithm is null, defaults to DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM.
 	 * @param doc -- Document object representing a DatasetView.dtd compliant XML document.
-	 * @param digestAlgorithm -- Algorithm to use to compute the MessageDigest. If null, DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM is used.
+	 * @param digestAlgorithm -- Algorithm to use to compute the MessageDigest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
 	 * @return byte[] digest algorithm
 	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
 	 * @see java.security.DigestOutputStream
@@ -801,36 +801,36 @@ public class DatasetViewXMLUtils {
 	}
 
 	/**
-	 * Returns a MessageDigest digest for a DatasetView by first creating a JDOM Document object, and then
-	 * calculuating its digest using DatasetViewXMLUtils.DocumentToMEssageDigest(dsv, DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM). 
-	 * @param dsv -- A DatasetView object
+	 * Returns a MessageDigest digest for a DatasetConfig by first creating a JDOM Document object, and then
+	 * calculuating its digest using DatasetConfigXMLUtils.DocumentToMEssageDigest(dsv, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM). 
+	 * @param dsv -- A DatasetConfig object
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static byte[] DatasetViewToMessageDigest(DatasetView dsv) throws ConfigurationException {
-		return DatasetViewToMessageDigest(dsv, DEFAULTDIGESTALGORITHM);
+	public static byte[] DatasetConfigToMessageDigest(DatasetConfig dsv) throws ConfigurationException {
+		return DatasetConfigToMessageDigest(dsv, DEFAULTDIGESTALGORITHM);
 	}
 
 	/**
-	 * Returns a MessageDigest digest for a DatasetView by first creating a JDOM Document object, and then
-	 * calculuating its digest using DatasetViewXMLUtils.DocumentToMEssageDigest(dsv, digestAlgorithm). 
-	 * @param dsv -- A DatasetView object
-	 * @param digestAlgorithm -- String digest algorithm to use. If null, DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM is used.
+	 * Returns a MessageDigest digest for a DatasetConfig by first creating a JDOM Document object, and then
+	 * calculuating its digest using DatasetConfigXMLUtils.DocumentToMEssageDigest(dsv, digestAlgorithm). 
+	 * @param dsv -- A DatasetConfig object
+	 * @param digestAlgorithm -- String digest algorithm to use. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static byte[] DatasetViewToMessageDigest(DatasetView dsv, String digestAlgorithm)
+	public static byte[] DatasetConfigToMessageDigest(DatasetConfig dsv, String digestAlgorithm)
 		throws ConfigurationException {
-		return DocumentToMessageDigest(DatasetViewToDocument(dsv), digestAlgorithm);
+		return DocumentToMessageDigest(DatasetConfigToDocument(dsv), digestAlgorithm);
 	}
 
 	/**
 	 * This method does not convert the raw bytes of a given InputStream into a Message Digest.  It is intended to calculate a Message Digest
-	 * that is comparable between multiple XML representations of the same DatasetView Object (despite one representation having an Element with
+	 * that is comparable between multiple XML representations of the same DatasetConfig Object (despite one representation having an Element with
 	 * an Attribute specified with an empty string, and the other having the same Element with that Attribute specification missing entirely, or each
 	 * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
-	 * It does this by first converting the InputStream into a DatasetView Object (using XMLStreamToDatasetView(is)), and then calculating the 
-	 * digest on the resulting DatasetView Object (using DatasetViewToMessageDigest(dsv, DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM)).
+	 * It does this by first converting the InputStream into a DatasetConfig Object (using XMLStreamToDatasetConfig(is)), and then calculating the 
+	 * digest on the resulting DatasetConfig Object (using DatasetConfigToMessageDigest(dsv, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM)).
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
@@ -841,23 +841,23 @@ public class DatasetViewXMLUtils {
 
 	/**
 	 * This method does not convert the raw bytes of a given InputStream into a Message Digest.  It is intended to calculate a Message Digest
-	 * that is comparable between multiple XML representations of the same DatasetView Object (despite one representation having an Element with
+	 * that is comparable between multiple XML representations of the same DatasetConfig Object (despite one representation having an Element with
 	 * an Attribute specified with an empty string, and the other having the same Element with that Attribute specification missing entirely, or each
 	 * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
-	 * It does this by first converting the InputStream into a DatasetView Object (using XMLStreamToDatasetView(is)), and then calculating the 
-	 * digest on the resulting DatasetView Object (using DatasetViewToMessageDigest(dsv, digestAlgorithm)).
+	 * It does this by first converting the InputStream into a DatasetConfig Object (using XMLStreamToDatasetConfig(is)), and then calculating the 
+	 * digest on the resulting DatasetConfig Object (using DatasetConfigToMessageDigest(dsv, digestAlgorithm)).
 	 * @param xmlinput -- InputStream containing DatasetView.dtd compliant XML.
-	 * @param digestAlgorithm -- MessageDigest Algorithm to compute the digest. If null, DatasetViewXMLUtils.DEFAULTDIGESTALGORITHM is used.
+	 * @param digestAlgorithm -- MessageDigest Algorithm to compute the digest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
 	public static byte[] XMLStreamToMessageDigest(InputStream is, String digestAlgorithm) throws ConfigurationException {
-		return DatasetViewToMessageDigest(XMLStreamToDatasetView(is), digestAlgorithm);
+		return DatasetConfigToMessageDigest(XMLStreamToDatasetConfig(is), digestAlgorithm);
 	}
 
-  public static byte[] DatasetViewToByteArray(DatasetView dsv) throws ConfigurationException {
+  public static byte[] DatasetConfigToByteArray(DatasetConfig dsv) throws ConfigurationException {
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    DatasetViewToOutputStream(dsv, bout);
+    DatasetConfigToOutputStream(dsv, bout);
     return bout.toByteArray();
   }
   

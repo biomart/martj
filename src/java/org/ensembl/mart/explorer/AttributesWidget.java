@@ -23,8 +23,8 @@ import javax.swing.JTabbedPane;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -33,15 +33,15 @@ public class AttributesWidget extends InputPage {
 
   private JTabbedPane tabbedPane = new JTabbedPane();
   private JLabel unavailableLabel =
-    new JLabel("Unavailable. Choose DatasetView first.");
+    new JLabel("Unavailable. Choose DatasetConfig first.");
   
   
   /**
-   * Displays the attributes grouped according to query.datasetView.
+   * Displays the attributes grouped according to query.datasetConfig.
    * If none are available if displays a message to that effect. 
    * @param query
    */
-  public AttributesWidget(Query query, DSViewAdaptor datasetViewAdaptor, QueryTreeView tree) {
+  public AttributesWidget(Query query, DSConfigAdaptor datasetConfigAdaptor, QueryTreeView tree) {
     super(query, null, tree);
     clearAttributes();
     
@@ -54,21 +54,21 @@ public class AttributesWidget extends InputPage {
   }
 
   /**
-   * Loads attributes from datasetView when a new datasetView is set on
+   * Loads attributes from datasetConfig when a new datasetConfig is set on
    * the query.
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(
+  public void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig) {
 
-    if (newDatasetView == null) {
+    if (newDatasetConfig == null) {
       clearAttributes();
     } else {
       remove( unavailableLabel );
       tabbedPane.removeAll();
-      AttributePage[] aps = newDatasetView.getAttributePages();
+      AttributePage[] aps = newDatasetConfig.getAttributePages();
       for (int i = 0; i < aps.length; i++)
         tabbedPane.add(
           new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree));

@@ -20,7 +20,7 @@ package org.ensembl.mart.lib;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * The listener interface for receiving query events.
@@ -81,9 +81,9 @@ public interface QueryListener {
     String[] oldPrimaryKeys,
     String[] newPrimaryKeys);
 
-  void datasetViewChanged(
+  void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView);
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig);
 
 }

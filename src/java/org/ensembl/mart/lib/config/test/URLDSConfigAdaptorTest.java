@@ -24,58 +24,58 @@ import java.security.MessageDigest;
 
 import junit.framework.TestCase;
 
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.lib.config.URLLocation;
 
 /**
- * Loads sample dataset view configuration file via an adaptor (searches the classpath) 
+ * Loads sample dataset config configuration file via an adaptor (searches the classpath) 
  * and reads some data from it to ensure the adaptor worked.
  * 
  * Sample file is: "data/XML/homo_sapiens__ensembl_genes.xml"
  */
-public class URLDSViewAdaptorTest extends TestCase {
+public class URLDSConfigAdaptorTest extends TestCase {
 
-  private final String TESTFILEPATH = "URLDSViewAdaptorTestFile.xml";
+  private final String TESTFILEPATH = "URLDSConfigAdaptorTestFile.xml";
   private final String TESTFILENAME = "URLTESTFILE";
   
 	/**
-	 * Constructor for DSViewAdaptors.
+	 * Constructor for DSConfigAdaptors.
 	 * @param arg0
 	 */
-	public URLDSViewAdaptorTest(String arg0) {
+	public URLDSConfigAdaptorTest(String arg0) {
 		super(arg0);
 	}
 
-	public void testURLDSViewAdaptor() throws Exception {
+	public void testURLDSConfigAdaptor() throws Exception {
 
 
-    URLDSViewAdaptor adaptor = getSampleDSViewAdaptor();
+    URLDSConfigAdaptor adaptor = getSampleDSConfigAdaptor();
 
-		DatasetView[] views = adaptor.getDatasetViews();
-		assertTrue("No datasets loaded.", views.length > 0);
-		DatasetView view = views[0];
-		assertNotNull(view.getDescription());
-		assertNotNull(view.getDisplayName());
-		assertNotNull(view.getInternalName());
-		assertTrue(view.getAllFilterDescriptions().size() > 0);
-		assertTrue(view.getAllFilterDescriptions().size() > 0);
+		DatasetConfig[] configs = adaptor.getDatasetConfigs();
+		assertTrue("No datasets loaded.", configs.length > 0);
+		DatasetConfig config = configs[0];
+		assertNotNull(config.getDescription());
+		assertNotNull(config.getDisplayName());
+		assertNotNull(config.getInternalName());
+		assertTrue(config.getAllFilterDescriptions().size() > 0);
+		assertTrue(config.getAllFilterDescriptions().size() > 0);
     
     File testFile = new File(TESTFILEPATH);
-    URLDSViewAdaptor.StoreDatasetView(view, testFile);
+    URLDSConfigAdaptor.StoreDatasetConfig(config, testFile);
     
-    assertTrue("Test File Doesnt Exist after URLDSViewAdaptor.store\n", testFile.exists());
+    assertTrue("Test File Doesnt Exist after URLDSConfigAdaptor.store\n", testFile.exists());
     
-    URLDSViewAdaptor nadapt = new URLDSViewAdaptor(testFile.toURL());
-    DatasetView nview = nadapt.getDatasetViews()[0];
+    URLDSConfigAdaptor nadapt = new URLDSConfigAdaptor(testFile.toURL());
+    DatasetConfig nconfig = nadapt.getDatasetConfigs()[0];
     
-    byte[] odigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(view);
-    byte[] ndigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nview);
+    byte[] odigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(config);
+    byte[] ndigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nconfig);
     
-    assertTrue("Digests from DatasetView loaded from test file differs from original DatasetView\n", MessageDigest.isEqual(odigest, ndigest));
+    assertTrue("Digests from DatasetConfig loaded from test file differs from original DatasetConfig\n", MessageDigest.isEqual(odigest, ndigest));
     
     testFile.delete(); // cleanup after run
     
@@ -91,20 +91,20 @@ public class URLDSViewAdaptorTest extends TestCase {
 
 	public static URL getTestDatasetURL() throws Exception {
 
-		URL url = URLDSViewAdaptorTest.class.getClassLoader().getResource(DatasetViewXMLUtilsTest.TESTDATASETVIEWFILE);
-    assertNotNull("Missing dataset file: " + DatasetViewXMLUtilsTest.TESTDATASETVIEWFILE + "\n", url);
+		URL url = URLDSConfigAdaptorTest.class.getClassLoader().getResource(DatasetConfigXMLUtilsTest.TESTDATASETCONFIGFILE);
+    assertNotNull("Missing dataset file: " + DatasetConfigXMLUtilsTest.TESTDATASETCONFIGFILE + "\n", url);
     
     return url;
 	}
   
-  public static URLDSViewAdaptor getSampleDSViewAdaptor() throws Exception {
-    URLDSViewAdaptor adaptor = new URLDSViewAdaptor( getTestDatasetURL(), false);
+  public static URLDSConfigAdaptor getSampleDSConfigAdaptor() throws Exception {
+    URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor( getTestDatasetURL(), false);
     assertNotNull( adaptor );
     return adaptor;
   }
 
 	public static void main(String[] args) {
-		junit.textui.TestRunner.run(URLDSViewAdaptorTest.class);
+		junit.textui.TestRunner.run(URLDSConfigAdaptorTest.class);
 	}
 
 	/*

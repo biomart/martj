@@ -20,7 +20,7 @@ package org.ensembl.mart.lib;
 
 import javax.sql.DataSource;
 
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * An abstract adapter class for receiving query events.
@@ -159,12 +159,12 @@ public abstract class QueryAdaptor implements QueryListener {
   }
 
   /**
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(
+  public void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig) {
     
 
   }

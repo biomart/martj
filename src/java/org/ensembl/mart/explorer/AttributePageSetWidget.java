@@ -20,7 +20,7 @@ package org.ensembl.mart.explorer;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Holds all the attribute pages.
@@ -30,7 +30,7 @@ public class AttributePageSetWidget extends PageSetWidget {
   /**
 	 * @param query
 	 */
-	public AttributePageSetWidget(Query query, DatasetView dataset, QueryTreeView tree) {
+	public AttributePageSetWidget(Query query, DatasetConfig dataset, QueryTreeView tree) {
 		
     super(query, "Attributes", tree);
     

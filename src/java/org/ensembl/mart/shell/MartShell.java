@@ -58,8 +58,8 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
@@ -123,7 +123,7 @@ public class MartShell {
       + "\n-R MARTREGISTRY_FILE_URL                - URL or path to MartRegistry (Bookmark) document"
       + "\n-M SHELL_CONFIGURATION_FILE_URL         - URL or path to shell configuration file"
       + "\n-I INITIALIZATION_SCRIPT                - URL or path to Shell initialization MQL script"
-      + "\n-d DATASETVIEW                          - DatasetViewname"
+      + "\n-d DATASETCONFIG                          - DatasetConfigname"
       + "\n-v                                      - verbose logging output"
       + "\n-l LOGGING_CONFIGURATION_URL            - URL to Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
       + "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
@@ -138,7 +138,7 @@ public class MartShell {
       + "\nor using a .martshell file, can use -R, or -I to specify"
       + "\nparameters not specified in the configuration file, or over-ride those that are specified."
       + "\n\nAn Inititialization script can contain any MQL statements, but is best suited to statements concerning"
-      + "\nMart management, such as initializing the Mart to query for the session, or the various DatasetViews"
+      + "\nMart management, such as initializing the Mart to query for the session, or the various DatasetConfigs"
       + "\nbeing querried."
       + "\n";
   }
@@ -762,7 +762,7 @@ public class MartShell {
 
   /**
    * Method allowing client scripts to specify a default MartRegistry.dtd compliant
-   * document specifying the location of Mart DatasetViews.
+   * document specifying the location of Mart DatasetConfigs.
    * 
    * @param confFile - String path or URL to MartRegistry file
    * 
@@ -772,7 +772,7 @@ public class MartShell {
   }
 
   /**
-   * Takes a script with MQL commands (typically, add Mart, set Mart, add DatasetView(s), use DatasetView ,etc).
+   * Takes a script with MQL commands (typically, add Mart, set Mart, add DatasetConfig(s), use DatasetConfig ,etc).
    * This will ignore lines commented with #.
    * @param initScript -- either path or URL to MQL initialization script.
    */
@@ -1022,8 +1022,8 @@ public class MartShell {
       String request = toks[1];
       String[] lines = null;
 
-      if (request.equalsIgnoreCase(DATASETVIEWSREQ))
-        lines = msl.listDatasetViews(toks);
+      if (request.equalsIgnoreCase(DATASETCONFIGSREQ))
+        lines = msl.listDatasetConfigs(toks);
       else if (request.equalsIgnoreCase(DATASETSREQ))
         lines = msl.listDatasets(toks);
       else if (request.equalsIgnoreCase(FILTERSREQ))
@@ -1098,8 +1098,8 @@ public class MartShell {
         addMart(toks);
       else if (addreq.equalsIgnoreCase(DATASETSREQ))
         msl.addDatasets(toks);
-      else if (addreq.equalsIgnoreCase(DATASETVIEWREQ))
-        msl.addDatasetView(toks);
+      else if (addreq.equalsIgnoreCase(DATASETCONFIGREQ))
+        msl.addDatasetConfig(toks);
       else
         throw new InvalidQueryException("Invalid Add request recieved " + command + "\n" + Help(ADDC) + "\n");
     } else
@@ -1269,8 +1269,8 @@ public class MartShell {
         msl.removeDatasets(toks);
       else if (removereq.equalsIgnoreCase(DATASETREQ))
         msl.removeDataset(toks);
-      else if (removereq.equalsIgnoreCase(DATASETVIEWREQ))
-        msl.removeDatasetView(toks);
+      else if (removereq.equalsIgnoreCase(DATASETCONFIGREQ))
+        msl.removeDatasetConfig(toks);
       else if (removereq.equalsIgnoreCase(PROCREQ))
         msl.removeProcedure(toks);
       else
@@ -1285,10 +1285,10 @@ public class MartShell {
     if (completionOn) {
       try {
         List martNames = new ArrayList();
-        DSViewAdaptor[] adaptorNames = msl.getAdaptorManager().getAdaptors();
+        DSConfigAdaptor[] adaptorNames = msl.getAdaptorManager().getAdaptors();
         for (int i = 0, n = adaptorNames.length; i < n; i++) {
-          DSViewAdaptor adaptor = adaptorNames[i];
-          if (!(adaptor instanceof URLDSViewAdaptor))
+          DSConfigAdaptor adaptor = adaptorNames[i];
+          if (!(adaptor instanceof URLDSConfigAdaptor))
             martNames.add(adaptor.getName());
         }
         mcl.setMartNames(martNames);
@@ -1302,14 +1302,14 @@ public class MartShell {
         List datasetInames = new ArrayList();
         if (msl.getEnvMart() != null) {
           //get all datasets relative to envMart
-          DSViewAdaptor adaptor = msl.getAdaptorManager().getAdaptorByName(msl.getEnvMart().getName());
+          DSConfigAdaptor adaptor = msl.getAdaptorManager().getAdaptorByName(msl.getEnvMart().getName());
 
           String[] datasets = adaptor.getDatasetNames();
           for (int i = 0, n = datasets.length; i < n; i++) {
             datasetInames.add(datasets[i]);
           }
         } else {
-          //dump absolute path names for all Datasets (not views)
+          //dump absolute path names for all Datasets (not configs)
           String[] adaptors = msl.getAdaptorManager().getAdaptorNames();
           for (int i = 0, n = adaptors.length; i < n; i++) {
             String adaptor = adaptors[i];
@@ -1321,7 +1321,7 @@ public class MartShell {
             }
           }
         }
-        mcl.setDatasetViewInternalNames(datasetInames);
+        mcl.setDatasetConfigInternalNames(datasetInames);
       } catch (ConfigurationException e) {
         if (mainLogger.isLoggable(Level.INFO))
           mainLogger.info("Caught ConfigurationException updating the completion system\n");
@@ -1634,8 +1634,8 @@ public class MartShell {
         System.out.println(msl.showEnvMart());
       } else if (req.equalsIgnoreCase(DATASETREQ)) {
         System.out.println(msl.showEnvDataset());
-      } else if (req.equalsIgnoreCase(DATASETVIEWREQ)) {
-        System.out.println(msl.showEnvDataSetView());
+      } else if (req.equalsIgnoreCase(DATASETCONFIGREQ)) {
+        System.out.println(msl.showEnvDataSetConfig());
       } else if (req.equalsIgnoreCase(OUTPUTREQ)) {
         try {
           showEnvOutput(toks);
@@ -1652,7 +1652,7 @@ public class MartShell {
   private void showAllEnvironment() {
     System.out.println(msl.showEnvMart());
     System.out.println(msl.showEnvDataset());
-    System.out.println(msl.showEnvDataSetView());
+    System.out.println(msl.showEnvDataSetConfig());
     showAllOutputSettings();
   }
 
@@ -2255,8 +2255,8 @@ public class MartShell {
   private final String MARTSREQ = "Marts";
   private final String DATASETREQ = "dataset";
   private final String DATASETSREQ = "datasets";
-  private final String DATASETVIEWSREQ = "datasetviews";
-  private final String DATASETVIEWREQ = "datasetview";
+  private final String DATASETCONFIGSREQ = "datasetconfigs";
+  private final String DATASETCONFIGREQ = "datasetconfig";
   private final String FILTERSREQ = "filters";
   private final String FILTERREQ = "filter";
   private final String ATTRIBUTESREQ = "attributes";
@@ -2269,16 +2269,16 @@ public class MartShell {
 
   //lists to set for completion of add, remove, list, set, update, describe, environment, execute
   private final List addRequests =
-    Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETSREQ, DATASETVIEWREQ })));
+    Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETSREQ, DATASETCONFIGREQ })));
 
   private final List removeRequests =
     Collections.unmodifiableList(
-      new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETSREQ, DATASETREQ, DATASETVIEWREQ, PROCREQ })));
+      new ArrayList(Arrays.asList(new String[] { MARTREQ, DATASETSREQ, DATASETREQ, DATASETCONFIGREQ, PROCREQ })));
 
   private final List listRequests =
     Collections.unmodifiableList(
       new ArrayList(
-        Arrays.asList(new String[] { MARTSREQ, DATASETSREQ, DATASETVIEWSREQ, FILTERSREQ, ATTRIBUTESREQ, PROCSREQ })));
+        Arrays.asList(new String[] { MARTSREQ, DATASETSREQ, DATASETCONFIGSREQ, FILTERSREQ, ATTRIBUTESREQ, PROCSREQ })));
 
   private final List setRequests =
     Collections.unmodifiableList(
@@ -2293,7 +2293,7 @@ public class MartShell {
 
   private final List envRequests =
     Collections.unmodifiableList(
-      new ArrayList(Arrays.asList(new String[] { MARTREQ, OUTPUTREQ, DATASETREQ, DATASETVIEWREQ })));
+      new ArrayList(Arrays.asList(new String[] { MARTREQ, OUTPUTREQ, DATASETREQ, DATASETCONFIGREQ })));
 
   private final List executeRequests =
     Collections.unmodifiableList(new ArrayList(Arrays.asList(new String[] { PROCREQ, HISTORYC, SCRIPTREQ })));

@@ -57,8 +57,8 @@ import javax.swing.KeyStroke;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.util.LoggingUtil;
 
 import sun.awt.font.AdvanceCache;
@@ -81,7 +81,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   // TODO test save/load query
 
   // TODO chained queries
-  // TODO user resolve datasetView name space clashes
+  // TODO user resolve datasetConfig name space clashes
 
   // TODO support user renaming queries 
 
@@ -115,10 +115,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private static final Dimension PREFERRED_SIZE = new Dimension(1024, 768);
 
   /** Currently available datasets. */
-  private List datasetViews = new ArrayList();
+  private List datasetConfigs = new ArrayList();
 
   /** Currently available databases. */
-  private List databaseDSViewAdaptors = new ArrayList();
+  private List databaseDSConfigAdaptors = new ArrayList();
 
   private JTabbedPane tabs = new JTabbedPane();
 
@@ -145,19 +145,19 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     // test mode preloads datasets and sets up a query ready to use.
     if (true) {
-      DSViewAdaptor a = QueryEditor.testDSViewAdaptor();
-      DatasetView dsv = a.getDatasetViews()[0];
+      DSConfigAdaptor a = QueryEditor.testDSConfigAdaptor();
+      DatasetConfig dsv = a.getDatasetConfigs()[0];
 
-      //me.datasetViewSettings.add(a);
+      //me.datasetConfigSettings.add(a);
       //me.doNewQuery();
       //      ((QueryEditor) me.queryEditorTabbedPane.getComponent(0))
       //        .getQuery()
-      //        .setDatasetView(dsv);
+      //        .setDatasetConfig(dsv);
     }
 
     me.loadDefaultAdaptors();
     
-    if (me.adaptorManager.getRootAdaptor().getDatasetViews().length > 0)
+    if (me.adaptorManager.getRootAdaptor().getDatasetConfigs().length > 0)
       me.doNewQuery();
 
   }
@@ -256,7 +256,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   private Action executeAction =
     new AbstractAction("Execute Query", createImageIcon("run.gif")) {
     public void actionPerformed(ActionEvent event) {
-      doPreview();
+      doPreconfig();
     }
   };
 
@@ -372,12 +372,12 @@ JMenuItem execute = new JMenuItem(executeAction);
       KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.CTRL_MASK));
     adaptors.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        doDatasetViewSettings();
+        doDatasetConfigSettings();
       }
     });
 
     final JCheckBox advanced = new JCheckBox("Enable Advanced Options");    
-    advanced.setToolTipText("Enables optional DatasetViews, ability to change dataset name and datasource.");
+    advanced.setToolTipText("Enables optional DatasetConfigs, ability to change dataset name and datasource.");
     advanced.setSelected( adaptorManager.isAdvancedOptionsEnabled() );
     settings.add( advanced );
     advanced.addItemListener(new ItemListener() {
@@ -478,15 +478,15 @@ protected void doSave() {
   /**
    * 
    */
-  protected void doPreview() {
+  protected void doPreconfig() {
     if (isQueryEditorSelected())
-      getSelectedQueryEditor().doPreview();
+      getSelectedQueryEditor().doPreconfig();
   }
 
   /**
    * 
    */
-  protected void doDatasetViewSettings() {
+  protected void doDatasetConfigSettings() {
     adaptorManager.showDialog(this);
 
   }
@@ -529,10 +529,10 @@ protected void doSave() {
 
     try {
 
-      if (adaptorManager.getRootAdaptor().getDatasetViews().length == 0) {
+      if (adaptorManager.getRootAdaptor().getDatasetConfigs().length == 0) {
         feedback.warning(
           "You need to add an "
-            + "adaptor containing dataset views before you can create a query.");
+            + "adaptor containing dataset configs before you can create a query.");
 
       } else {
 
@@ -540,7 +540,7 @@ protected void doSave() {
         qe.setName(nextQueryBuilderTabLabel());
         addQueryEditor(qe);
         tabs.setSelectedComponent(qe);
-        qe.openDatasetViewMenu();  
+        qe.openDatasetConfigMenu();  
         
       }
     } catch (ConfigurationException e) {

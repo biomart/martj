@@ -30,8 +30,8 @@ import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.DSAttributeGroup;
 import org.ensembl.mart.lib.config.DSFilterGroup;
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.DefaultFilter;
 import org.ensembl.mart.lib.config.Disable;
 import org.ensembl.mart.lib.config.Enable;
@@ -44,14 +44,14 @@ import org.ensembl.mart.lib.config.PushAction;
 import org.jdom.Document;
 
 /**
- * Tests for a DatasetView.dtd compliant testDatasetView.xml.
+ * Tests for a DatasetConfig.dtd compliant testDatasetConfig.xml.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatasetViewXMLUtilsTest extends TestCase {
+public class DatasetConfigXMLUtilsTest extends TestCase {
 
-	public static final String TESTDATASETVIEWFILE = "data/XML/testDatasetView.xml";
+	public static final String TESTDATASETCONFIGFILE = "data/XML/testDatasetConfig.xml";
 
 	private static final String TESTDESC = "For Testing Purposes Only";
 	private static final String TESTHANDLER = "testHandler";
@@ -66,53 +66,53 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	private static final String TESTISSELECTABLE = "true";
 
 	/**
-	 * Returns an instance of the testDatasetView.xml based XML object
-	 * @param validate -- if true, XML is validated against DatasetView.dtd in the Classpath
-	 * @return DatasetView
+	 * Returns an instance of the testDatasetConfig.xml based XML object
+	 * @param validate -- if true, XML is validated against DatasetConfig.dtd in the Classpath
+	 * @return DatasetConfig
 	 * @throws Exception 
 	 */
-	public static DatasetView TestDatasetViewInstance(boolean validate) throws Exception {
-		return DatasetViewXMLUtils.XMLStreamToDatasetView(DatasetViewXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETVIEWFILE), validate);
+	public static DatasetConfig TestDatasetConfigInstance(boolean validate) throws Exception {
+		return DatasetConfigXMLUtils.XMLStreamToDatasetConfig(DatasetConfigXMLUtilsTest.class.getClassLoader().getResourceAsStream(TESTDATASETCONFIGFILE), validate);
 	}
 
-	public DatasetViewXMLUtilsTest(String arg0) {
+	public DatasetConfigXMLUtilsTest(String arg0) {
 		super(arg0);
 	}
 
-	public void testDatasetView() throws Exception {
-		DatasetView dsv = TestDatasetViewInstance(true);
-		validateDatasetView(dsv);
-		validateDatasetViewSynchronization(dsv);
-		validateDatasetViewMutability(dsv);
+	public void testDatasetConfig() throws Exception {
+		DatasetConfig dsv = TestDatasetConfigInstance(true);
+		validateDatasetConfig(dsv);
+		validateDatasetConfigSynchronization(dsv);
+		validateDatasetConfigMutability(dsv);
 	}
 
-	public static void validateDatasetViewSynchronization(DatasetView rDSV) throws Exception {
-		Document rDoc = DatasetViewXMLUtils.DatasetViewToDocument(rDSV);
-		byte[] rDigest = DatasetViewXMLUtils.DocumentToMessageDigest(rDoc);
+	public static void validateDatasetConfigSynchronization(DatasetConfig rDSV) throws Exception {
+		Document rDoc = DatasetConfigXMLUtils.DatasetConfigToDocument(rDSV);
+		byte[] rDigest = DatasetConfigXMLUtils.DocumentToMessageDigest(rDoc);
 
-		DatasetView nDSV = DatasetViewXMLUtils.DocumentToDatasetView(rDoc);
+		DatasetConfig nDSV = DatasetConfigXMLUtils.DocumentToDatasetConfig(rDoc);
 
-		//assertTrue("reference DatasetView does not equal DatasetView after synchronization\n", rDSV.equals(nDSV));
-		assertEquals("reference DatasetView does not equal DatasetView after synchronization\n", rDSV, nDSV);
+		//assertTrue("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV.equals(nDSV));
+		assertEquals("reference DatasetConfig does not equal DatasetConfig after synchronization\n", rDSV, nDSV);
 
-		byte[] nDigest = DatasetViewXMLUtils.DatasetViewToMessageDigest(nDSV);
+		byte[] nDigest = DatasetConfigXMLUtils.DatasetConfigToMessageDigest(nDSV);
 
-		assertTrue("Message Digests do not equal for same DatasetView object after synchronization\n", java.security.MessageDigest.isEqual(rDigest, nDigest));
+		assertTrue("Message Digests do not equal for same DatasetConfig object after synchronization\n", java.security.MessageDigest.isEqual(rDigest, nDigest));
 	}
 
-	public static void validateDatasetView(DatasetView d) throws Exception {
+	public static void validateDatasetConfig(DatasetConfig d) throws Exception {
 		String testIName = "test_dataset";
 		String IName = d.getInternalName();
-		String testDName = "Test of a DatasetView";
+		String testDName = "Test of a DatasetConfig";
 		String DName = d.getDisplayName();
 		String Desc = d.getDescription();
 		String testDatasetPrefix = "test";
 		String DatasetPrefix = d.getDataset();
 
-		assertEquals("Internal Name not correctly set for DatasetView\n", testIName, IName);
-		assertEquals("Display Name not correctly set for DatasetView\n", testDName, DName);
-		assertEquals("Description not correctly set for DatasetView\n", TESTDESC, Desc);
-		assertEquals("DatasetPrefix not correctly set for DatasetView\n", testDatasetPrefix, DatasetPrefix);
+		assertEquals("Internal Name not correctly set for DatasetConfig\n", testIName, IName);
+		assertEquals("Display Name not correctly set for DatasetConfig\n", testDName, DName);
+		assertEquals("Description not correctly set for DatasetConfig\n", TESTDESC, Desc);
+		assertEquals("DatasetPrefix not correctly set for DatasetConfig\n", testDatasetPrefix, DatasetPrefix);
 
 		String[] sbs = d.getStarBases();
 		assertEquals("should only get one starbase\n", 1, sbs.length);
@@ -123,16 +123,16 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("didnt get the expected primary key\n", "test_primaryKey", pks[0]);
 
 		//Option data correct
-		assertTrue("DatasetView should have Options.\n", d.hasOptions());
+		assertTrue("DatasetConfig should have Options.\n", d.hasOptions());
 		Option[] ops = d.getOptions();
-		assertEquals("DatasetView should have 1 Option.\n", 1, ops.length);
+		assertEquals("DatasetConfig should have 1 Option.\n", 1, ops.length);
 
 		datasetOptionTest(ops[0]);
 
 		//defaultFilter data correct
-		assertTrue("DatasetView should have DefaultFilters\n", d.hasDefaultFilters());
+		assertTrue("DatasetConfig should have DefaultFilters\n", d.hasDefaultFilters());
 		DefaultFilter[] dfs = d.getDefaultFilters();
-		assertEquals("DatasetView should have one Default Filter\n", 1, dfs.length);
+		assertEquals("DatasetConfig should have one Default Filter\n", 1, dfs.length);
 
 		datasetDefaultFilterTest(dfs[0]);
 
@@ -153,14 +153,14 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		// dataset option does not have suboption, isSelectable is true
 		String testIName = "dataset option";
 		String IName = option.getInternalName();
-		String testDName = "A Test DatasetView Option";
+		String testDName = "A Test DatasetConfig Option";
 		String DName = option.getDisplayName();
 		String Desc = option.getDescription();
 
-		assertEquals("InternalName not correctly set for DatasetView Option\n", testIName, IName);
-		assertEquals("DisplayName not correctly set for DatasetView Option\n", testDName, DName);
-		assertEquals("Description not correctly set for DatasetView Option\n", TESTDESC, Desc);
-		assertTrue("isSelectable should be true for DatasetView Option\n", option.isSelectable());
+		assertEquals("InternalName not correctly set for DatasetConfig Option\n", testIName, IName);
+		assertEquals("DisplayName not correctly set for DatasetConfig Option\n", testDName, DName);
+		assertEquals("Description not correctly set for DatasetConfig Option\n", TESTDESC, Desc);
+		assertTrue("isSelectable should be true for DatasetConfig Option\n", option.isSelectable());
 	}
 
 	private static void datasetDefaultFilterTest(DefaultFilter df) throws Exception {
@@ -179,11 +179,11 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 				null,
 				TESTDESC);
 
-		assertEquals("value not correctly set for DatasetView DefaultFilter\n", testValue, Value);
-		assertEquals("FilterDescription not correct for DatasetView DefaultFilter\n", testFDesc, df.getFilterDescription());
+		assertEquals("value not correctly set for DatasetConfig DefaultFilter\n", testValue, Value);
+		assertEquals("FilterDescription not correct for DatasetConfig DefaultFilter\n", testFDesc, df.getFilterDescription());
 	}
 
-	private static void filterPageTest(DatasetView d, FilterPage fp) throws Exception {
+	private static void filterPageTest(DatasetConfig d, FilterPage fp) throws Exception {
 		String testIName = "testFilterPage";
 		String IName = fp.getInternalName();
 		String testDName = "Test A Filter Page";
@@ -194,9 +194,9 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Display Name not correctly set for FilterPage\n", testDName, DName);
 		assertEquals("Description not correctly set for FilterPage\n", TESTDESC, Desc);
 
-		// contains/get for DatasetView-FilterPage
+		// contains/get for DatasetConfig-FilterPage
 		boolean containsTest = d.containsFilterPage(testIName);
-		assertTrue("DatasetView should contain testFilterPage, but doesnt\n", containsTest);
+		assertTrue("DatasetConfig should contain testFilterPage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
@@ -212,7 +212,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		secondFilterGroupTest(d, fp, fgs.get(1));
 	}
 
-	private static void attributePageTest(DatasetView d, AttributePage ap) throws Exception {
+	private static void attributePageTest(DatasetConfig d, AttributePage ap) throws Exception {
 		String testIName = "testAttributePage";
 		String IName = ap.getInternalName();
 		String testDName = "Test of an Attribute Page";
@@ -223,9 +223,9 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Display Name not correctly set for AttributePage\n", testDName, DName);
 		assertEquals("Description not correctly set for AttributePage\n", TESTDESC, Desc);
 
-		// contains/get for DatasetView-AttributePage
+		// contains/get for DatasetConfig-AttributePage
 		boolean containsTest = d.containsAttributePage(testIName);
-		assertTrue("DatasetView should contain testAttributePage, but doesnt\n", containsTest);
+		assertTrue("DatasetConfig should contain testAttributePage, but doesnt\n", containsTest);
 
 		String testGetByName = null;
 		if (containsTest) {
@@ -287,7 +287,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("Handler not set correctly for DSFilterGroup\n", TESTHANDLER, Handler);
 	}
 
-	private static void secondFilterGroupTest(DatasetView d, FilterPage fp, Object group) throws Exception {
+	private static void secondFilterGroupTest(DatasetConfig d, FilterPage fp, Object group) throws Exception {
 		// second FilterGroup is a FilterGroup object, with everything contained within it
 		assertTrue("Second FilterGroup in the FilterPage should be a FilterGroup object", group instanceof FilterGroup);
 
@@ -320,7 +320,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		secondFilterCollectionTest(d, fp, fg, fcs[1]);
 	}
 
-	private static void secondAttributeGroupTest(DatasetView d, AttributePage ap, Object group) throws Exception {
+	private static void secondAttributeGroupTest(DatasetConfig d, AttributePage ap, Object group) throws Exception {
 		//second AttributeGroup in the AttributePage is an AttributeGroup, with everything in it
 		assertTrue("Second AttributeGroup in the AttributePage should be an AttributeGroup", group instanceof AttributeGroup);
 
@@ -352,7 +352,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		attributeCollectionTest(d, ap, ag, acs[0]);
 	}
 
-	private static void firstFilterCollectionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
+	private static void firstFilterCollectionTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
 		// first FilterCollection Does Not Contain Any Options
 		String testIName = "testFilterCollection";
 		String IName = fc.getInternalName();
@@ -384,7 +384,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		firstFColFourthFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(3));
 	}
 
-	private static void secondFilterCollectionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
+	private static void secondFilterCollectionTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc) throws Exception {
 		//second FilterCollection is a member of the FilterSet
 		String testIName = "testOptionsCollection";
 		String IName = fc.getInternalName();
@@ -417,7 +417,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		secondFColFifthFdescTest(d, fp, fg, fc, (FilterDescription) fs.get(4));
 	}
 
-	private static void attributeCollectionTest(DatasetView d, AttributePage ap, AttributeGroup ag, AttributeCollection ac) throws Exception {
+	private static void attributeCollectionTest(DatasetConfig d, AttributePage ap, AttributeGroup ag, AttributeCollection ac) throws Exception {
 		String testIName = "testAttributeCollection";
 		String IName = ac.getInternalName();
 		String testDName = "Test of an AttributeCollection:";
@@ -448,7 +448,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		attributeCollectionAdescTest(d, ap, ag, ac, (AttributeDescription) as.get(0));
 	}
 
-	private static void firstFColFirstFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
+	private static void firstFColFirstFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
 		String IName = f.getInternalName();
 		String testDName = "A TEST ID, DOESNT EXIST";
 		String DName = f.getDisplayName();
@@ -492,7 +492,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + REFINAME + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + REFINAME + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + REFINAME + "\n", fp.supports(Field, TableConstraint));
@@ -506,13 +506,13 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + REFINAME + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private static void firstFColSecFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void firstFColSecFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		//second FilterDescription from First FilterCollection contains an Enables Object
 		String testIName = "enableFilter";
 		String IName = f.getInternalName();
@@ -558,7 +558,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -572,7 +572,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -582,7 +582,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		EnableTest(e[0]);
 	}
 
-	private static void firstFColThirdFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void firstFColThirdFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		//second FilterDescription from First FilterCollection contains an Enables Object
 		String testIName = "disableFilter";
 		String IName = f.getInternalName();
@@ -628,7 +628,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -642,7 +642,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -652,7 +652,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		DisableTest(disables[0]);
 	}
 
-	private static void firstFColFourthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void firstFColFourthFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "testHandlerFilterDescription";
 		String IName = f.getInternalName();
 		String testDName = "A TEST ID, DOESNT EXIST";
@@ -697,7 +697,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		String TableConstraint = f.getTableConstraint();
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -711,13 +711,13 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private static void secondFColFirstFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void secondFColFirstFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "filterDescriptionValueOption";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Value Option";
@@ -762,7 +762,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -776,7 +776,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -787,7 +787,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		ValueOptionTest(o[0]);
 	}
 
-	private static void secondFColSecFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void secondFColSecFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "filterDescriptionTreeValueOption";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Tree Value Option";
@@ -832,7 +832,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -846,7 +846,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -857,7 +857,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		TreeValueOptionTest(o[0]);
 	}
 
-	private static void secondFColThirdFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void secondFColThirdFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "FilterDescriptionOptionFilters";
 		String IName = f.getInternalName();
 		String testDName = "A TEST Option Filters";
@@ -898,7 +898,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		OptionFilterTwoTest(d, fp, fg, fc, f, o[1]);
 	}
 
-	private static void secondFColFourthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
+	private static void secondFColFourthFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) {
 		String testIName = "FilterDescriptionOptionPushAction";
 		String IName = f.getInternalName();
 		String testDName = "A TEST OF OPTION WITH PUSHACTION";
@@ -937,7 +937,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		pushActionOptionTest(d, fp, fg, fc, f, o[0]);
 	}
 
-	private static void secondFColFifthFdescTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
+	private static void secondFColFifthFdescTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f) throws Exception {
 		String testIName = "testPushActionOptionFilter";
 		String IName = f.getInternalName();
 		String testDName = "A TEST OF A PUSHACTION FILTER OPTION";
@@ -1019,7 +1019,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		ValueOptionTest(options[0]);
 	}
 
-	private static void OptionFilterOneTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	private static void OptionFilterOneTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "filterOptionOne";
 		String IName = option.getInternalName();
 		String testDName = "A Test Option Filter";
@@ -1063,7 +1063,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
 		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", datasetSupports);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", datasetSupports);
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -1077,13 +1077,13 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private static void OptionFilterTwoTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	private static void OptionFilterTwoTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "filterOptionTwo";
 		String IName = option.getInternalName();
 		String testDName = "A Test Option Filter";
@@ -1126,7 +1126,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -1140,13 +1140,13 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 	}
 
-	private static void pushActionOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
+	private static void pushActionOptionTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option) {
 		String testIName = "pushActionOption";
 		String IName = option.getInternalName();
 		String testDName = "A TEST OPTION WITH PUSHACTION";
@@ -1189,7 +1189,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", d.supportsFilterDescription(Field, TableConstraint));
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -1203,7 +1203,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("FilterGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
@@ -1213,7 +1213,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		PushActionValueTest(d, option, pos[0]);
 	}
 
-	private static void PushActionValueTest(DatasetView d, Option superoption, PushAction p) {
+	private static void PushActionValueTest(DatasetConfig d, Option superoption, PushAction p) {
 		String testIName = "TestValuePushAction";
 		String IName = p.getInternalName();
 		String testDName = "A TEST PUSHACTION";
@@ -1228,11 +1228,11 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("PushAction Ref incorrect\n", testRef, Ref);
 
 		String testINameGetByName = superoption.getInternalName() + "." + Ref;
-		assertTrue("DatasetView should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		assertTrue("DatasetConfig should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
 		FilterDescription testFilter = d.getFilterDescriptionByInternalName(Ref);
 		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
 
-		assertEquals("DatasetView returned the wrong FilterDescription for " + testINameGetByName + "\n", testFilter, Filter);
+		assertEquals("DatasetConfig returned the wrong FilterDescription for " + testINameGetByName + "\n", testFilter, Filter);
 		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", testFilter.getField(), Filter.getField(testINameGetByName));
 
 		Option[] options = p.getOptions();
@@ -1256,7 +1256,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("testPushActionOption Value incorrect\n", testValue, Value);
 	}
 
-	private static void PushActionFilterOptionTest(DatasetView d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option)
+	private static void PushActionFilterOptionTest(DatasetConfig d, FilterPage fp, FilterGroup fg, FilterCollection fc, FilterDescription f, Option option)
 		throws Exception {
 		String testIName = "PushActionFilterOption";
 		String IName = option.getInternalName();
@@ -1275,7 +1275,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	}
 
 	private static void PushActionFilterOptionPushActionTest(
-		DatasetView d,
+		DatasetConfig d,
 		FilterPage fp,
 		FilterGroup fg,
 		FilterCollection fc,
@@ -1302,7 +1302,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	}
 
 	private static void OptionFilterPushActionOptionTest(
-		DatasetView d,
+		DatasetConfig d,
 		FilterPage fp,
 		FilterGroup fg,
 		FilterCollection fc,
@@ -1353,7 +1353,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		//test supports, getFilterDescriptionByFieldNameTableConstraint functionality
 		boolean datasetSupports = d.supportsFilterDescription(Field, TableConstraint);
-		assertTrue("DatasetView should support field and tableConstraint for " + IName + "\n", datasetSupports);
+		assertTrue("DatasetConfig should support field and tableConstraint for " + IName + "\n", datasetSupports);
 		FilterDescription g = d.getFilterDescriptionByFieldNameTableConstraint(Field, TableConstraint);
 
 		assertTrue("FilterPage should support field and tableConstraint for " + IName + "\n", fp.supports(Field, TableConstraint));
@@ -1367,17 +1367,17 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 
 		assertTrue("FilterDescripton should support field and tableConstraint for " + IName + "\n", f.supports(Field, TableConstraint));
 
-		assertEquals("DatasetView returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
+		assertEquals("DatasetConfig returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, g);
 		assertEquals("FilterPage returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, h);
 		assertEquals("AttributeGroup returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, i);
 		assertEquals("FilterCollection returned wrong supporting FilterDescription for FieldName TableConstraint\n", f, j);
 
 		String testINameGetByName = superoption.getInternalName() + "." + IName;
 
-		assertTrue("DatasetView should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
+		assertTrue("DatasetConfig should contain FilterDescription for " + testINameGetByName + "\n", d.containsFilterDescription(testINameGetByName));
 		FilterDescription Filter = d.getFilterDescriptionByInternalName(testINameGetByName);
 
-		assertEquals("DatasetView returned the wrong FilterDescription for " + testINameGetByName + "\n", f, Filter);
+		assertEquals("DatasetConfig returned the wrong FilterDescription for " + testINameGetByName + "\n", f, Filter);
 		assertEquals("Did not get the correct Field for " + testINameGetByName + "\n", f.getField(testINameGetByName), Filter.getField(testINameGetByName));
 
 		String FieldByIName = f.getField(testINameGetByName);
@@ -1391,7 +1391,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		assertEquals("PushActionFilterOption getType By InternalName incorrect\n", TESTTYPE, TypeByIName);
 	}
 
-	private static void attributeCollectionAdescTest(DatasetView d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, AttributeDescription a)
+	private static void attributeCollectionAdescTest(DatasetConfig d, AttributePage ap, AttributeGroup ag, AttributeCollection ac, AttributeDescription a)
 		throws Exception {
 		String testIName = "testAttributeDescription";
 		String IName = a.getInternalName();
@@ -1457,9 +1457,9 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 		}
   }
   
-	private void validateDatasetViewMutability(DatasetView reference) throws Exception {
-		//Rebuild a DatasetView from scratch, with empty constructors and set/add methods
-		DatasetView newDSV = new DatasetView();
+	private void validateDatasetConfigMutability(DatasetConfig reference) throws Exception {
+		//Rebuild a DatasetConfig from scratch, with empty constructors and set/add methods
+		DatasetConfig newDSV = new DatasetConfig();
     transferAttributes(reference, newDSV);
         
 		Option[] os = reference.getOptions();
@@ -2141,7 +2141,7 @@ public class DatasetViewXMLUtilsTest extends TestCase {
 	}
 
 	public static void main(String[] args) {
-		junit.textui.TestRunner.run(DatasetViewXMLUtilsTest.class);
+		junit.textui.TestRunner.run(DatasetConfigXMLUtilsTest.class);
 	}
 
 	/*

@@ -24,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Object representing a URLLocation element in a DatasetViewLocation element
+ * Object representing a URLLocation element in a DatasetConfigLocation element
  * of a MartRegistry.dtd compliant XML document.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>

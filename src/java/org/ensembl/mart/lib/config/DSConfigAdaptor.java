@@ -21,65 +21,65 @@ package org.ensembl.mart.lib.config;
 import org.ensembl.mart.lib.DetailedDataSource;
 
 /**
- * Interface for Objects providing access to one or more DatasetView Objects via
+ * Interface for Objects providing access to one or more DatasetConfig Objects via
  * implimentation specific methods for accessing and parsing DatasetView.dtd compliant
  * documents from a target source.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public interface DSViewAdaptor {
+public interface DSConfigAdaptor {
 
   /**
-   * sets the name of this DSViewAdptor
+   * sets the name of this DSConfigAdptor
    * @param adaptorName - name of the adaptor
    */
   public void setName(String adaptorName);
   
   /**
-   * Returns the name of this DSViewAdaptor
-   * @return String name of DSViewAdaptor
+   * Returns the name of this DSConfigAdaptor
+   * @return String name of DSConfigAdaptor
    */
   public String getName();
   
   /**
-   * Returns a DatasetView[] consisting of all DatasetView objects provided by a particular
-   * DSViewAdaptor object.
-   * @return DatasetView[] dsetviews
+   * Returns a DatasetConfig[] consisting of all DatasetConfig objects provided by a particular
+   * DSConfigAdaptor object.
+   * @return DatasetConfig[] dsetconfigs
    * @throws ConfigurationException  for all underlying exceptions
    */
-  public DatasetView[] getDatasetViews() throws ConfigurationException;
+  public DatasetConfig[] getDatasetConfigs() throws ConfigurationException;
 
   /**
-   * Returns a specific DatasetView object, named by the given dataset
+   * Returns a specific DatasetConfig object, named by the given dataset
    * and internalName.
    * @param dataset
    * @param internalName
-   * @return DatasetView named by the given dataset
+   * @return DatasetConfig named by the given dataset
    * and internalName.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView getDatasetViewByDatasetInternalName(
+  public DatasetConfig getDatasetConfigByDatasetInternalName(
     String dataset,
     String internalName)
     throws ConfigurationException;
 
   /**
-   * Returns a specific DatasetView object, named by the given dataset
+   * Returns a specific DatasetConfig object, named by the given dataset
    * and displayName.
    * @param dataset
    * @param internalName
-   * @return DatasetView named by the given dataset
+   * @return DatasetConfig named by the given dataset
    * and internalName.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView getDatasetViewByDatasetDisplayName(
+  public DatasetConfig getDatasetConfigByDatasetDisplayName(
     String dataset,
     String displayName)
     throws ConfigurationException;
 
   /**
-   * Determine if the DSViewAdaptor contains a DatasetView with the given
+   * Determine if the DSConfigAdaptor contains a DatasetConfig with the given
    * dataset name.
    * @param dataset -- dataset name
    * @return true if supported, false otherwise
@@ -88,32 +88,32 @@ public interface DSViewAdaptor {
   public boolean supportsDataset(String dataset) throws ConfigurationException;
 
   /**
-   * Returns specific DatasetViews with the given dataset name 
+   * Returns specific DatasetConfigs with the given dataset name 
    * @param dataset -- dataset name
-   * @return DatasetViews with the given dataset name, empty array if non found
+   * @return DatasetConfigs with the given dataset name, empty array if non found
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public DatasetView[] getDatasetViewsByDataset(String dataset)
+  public DatasetConfig[] getDatasetConfigsByDataset(String dataset)
     throws ConfigurationException;
 
   /**
-   * Returns a list of the DatasetView internalNames for a particular dataset.
+   * Returns a list of the DatasetConfig internalNames for a particular dataset.
    * @param dataset - name of the dataset for which internalNames are required.
-   * @return String[] list of datasetview internalNames associated with the dataset.
+   * @return String[] list of datasetconfig internalNames associated with the dataset.
    * @throws ConfigurationException
    */
-  public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException;
+  public String[] getDatasetConfigInternalNamesByDataset(String dataset) throws ConfigurationException;
   
   /**
-   * Returns a list of the DatasetView displayNames for a particular dataset.
+   * Returns a list of the DatasetConfig displayNames for a particular dataset.
    * @param dataset - name of the dataset for which displayNames are required.
-   * @return String[] list of datasetview displayNames associated with the dataset.
+   * @return String[] list of datasetconfig displayNames associated with the dataset.
    * @throws ConfigurationException
    */
-  public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException;
+  public String[] getDatasetConfigDisplayNamesByDataset(String dataset) throws ConfigurationException;
   
   /**
-   * Returns a list of the names of the Datasets for which DatasetViews are held
+   * Returns a list of the names of the Datasets for which DatasetConfigs are held
    * for an Adaptor.
    * @return String[] list of dataset names
    * @throws ConfigurationException
@@ -121,42 +121,42 @@ public interface DSViewAdaptor {
   public String[] getDatasetNames() throws ConfigurationException;
   
   /**
-   * Returns a list of the names of Datasets for which DatasetViews are held, given a particular
+   * Returns a list of the names of Datasets for which DatasetConfigs are held, given a particular
    * adaptor name.  May return an empty list for adaptors with zero child adaptors.
-   * @param adaptorName - name of DSViewAdaptor object for which DatasetNames are required
+   * @param adaptorName - name of DSConfigAdaptor object for which DatasetNames are required
    * @return String[] list of datatset names
    * @throws ConfigurationException
    */
   public String[] getDatasetNames(String adaptorName) throws ConfigurationException;
   
   /**
-   * Returns all DSViewAdaptor objects contained with this Object (which may be a zero length list
+   * Returns all DSConfigAdaptor objects contained with this Object (which may be a zero length list
    * for some implimentations). Note, this only returns the adaptors contained by this adaptor, and does
    * not return child adaptors of children to this Adaptor.
-   * @return Array of DSViewAdaptor objects
+   * @return Array of DSConfigAdaptor objects
    * @throws ConfigurationException
    */
-  public DSViewAdaptor[] getAdaptors() throws ConfigurationException;
+  public DSConfigAdaptor[] getAdaptors() throws ConfigurationException;
   
   /**
-   * Determine if a DSViewAdaptor supports (contains somewhere in its adaptors, or its adaptors child adaptors)
-   * a given DSViewAdaptor named by adaptorName
-   * @param adaptorName - name of requested DSViewAdaptor
-   * @return boolean true if the requested DSViewAdaptor is supported by this DSViewAdaptor, false otherwise
+   * Determine if a DSConfigAdaptor supports (contains somewhere in its adaptors, or its adaptors child adaptors)
+   * a given DSConfigAdaptor named by adaptorName
+   * @param adaptorName - name of requested DSConfigAdaptor
+   * @return boolean true if the requested DSConfigAdaptor is supported by this DSConfigAdaptor, false otherwise
    * @throws ConfigurationException
    */
   public boolean supportsAdaptor(String adaptorName) throws ConfigurationException;
   
   /**
-   * Returns a DSViewAdaptor object named by the given adaptor name
-   * @param adaptorName - name of DSViewAdaptor required 
-   * @return DSViewAdaptor named by adaptorName
+   * Returns a DSConfigAdaptor object named by the given adaptor name
+   * @param adaptorName - name of DSConfigAdaptor required 
+   * @return DSConfigAdaptor named by adaptorName
    * @throws ConfigurationException
    */
-  public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException;
+  public DSConfigAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException;
   
   /**
-   * Returns the names of all DSViewAdaptor objects contained within this Object (which may be a zero
+   * Returns the names of all DSConfigAdaptor objects contained within this Object (which may be a zero
    * length list for some implimentations). Note, this only returns the names of Adaptors held by this Adaptor,
    * and does not return names of child adaptors of children to this Adaptor.
    * @return String[] names of all adaptors in this Object.
@@ -165,7 +165,7 @@ public interface DSViewAdaptor {
   public String[] getAdaptorNames() throws ConfigurationException;
   
   /**
-    * If a DSViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
+    * If a DSConfigAdaptor implimenting object caches names and DatasetConfig objects, this method updates the cache contents
     * based on a comparison with the information stored in the object's target source.  May not actually do anything for some implimentations.
     * 
     * @throws ConfigurationException for all underlying Exceptions
@@ -173,17 +173,17 @@ public interface DSViewAdaptor {
   public void update() throws ConfigurationException;
 
   /**
-   * Method to allow DatasetView objects to be instantiated with a minimum of information, but then be lazy loaded with the rest of their
-   * XML data when needed.  This method is intended primarily to be used by the DatasetView object itself, which automatically lazy loads itself
+   * Method to allow DatasetConfig objects to be instantiated with a minimum of information, but then be lazy loaded with the rest of their
+   * XML data when needed.  This method is intended primarily to be used by the DatasetConfig object itself, which automatically lazy loads itself
    * using the adaptor that it was instantiated with.
-   * @param dsv -- DatasetView Object to be lazy loaded.  Input reference is modified by the method.
+   * @param dsv -- DatasetConfig Object to be lazy loaded.  Input reference is modified by the method.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public void lazyLoad(DatasetView dsv) throws ConfigurationException;
+  public void lazyLoad(DatasetConfig dsv) throws ConfigurationException;
 
   /**
    * All implimentations should be able to create MartLocation objects which can be added to 
-   * a MartRegistry object when RegistryDSViewAdaptor.getMartRegistry method is called.
+   * a MartRegistry object when RegistryDSConfigAdaptor.getMartRegistry method is called.
    * @return MartLocation[] array
    * @throws ConfigurationException for any underlying Exceptions.
    */

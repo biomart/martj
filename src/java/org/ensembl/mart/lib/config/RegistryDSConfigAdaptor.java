@@ -29,30 +29,30 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.InputSourceUtil;
 
 /**
- * DSViewAdaptor implimentation for working with MartRegistry Objects.
+ * DSConfigAdaptor implimentation for working with MartRegistry Objects.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
+public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 
 	private MartRegistry martreg; // single, underlying MartRegistry for this Adaptor
 	private URL url;
 	private Set martRegs = new TreeSet(); // keep a list of MartRegistry Objects pulled from RegistryLocation elements
 
 	/**
-	 * Constructs an empty RegistryDSViewAdaptor.  A URL for
+	 * Constructs an empty RegistryDSConfigAdaptor.  A URL for
 	 * an existing MartRegistry document can be set later, using setExistingRegistryURL. This will cause the 
 	 */
-	public RegistryDSViewAdaptor() {
+	public RegistryDSConfigAdaptor() {
 		super();
 	}
 
 	/**
-	 * Constructs a RegistryDSViewAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
+	 * Constructs a RegistryDSConfigAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
 	 * @param url -- URL pointing to MartRegistry.dtd compliant XML Document
 	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
 	 */
-	public RegistryDSViewAdaptor(URL url) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(URL url) throws ConfigurationException {
 		super();
 		setRegistryURL(url);
     
@@ -60,22 +60,22 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	}
 
 	/**
-	 * Constructs a RegistryDSViewAdaptor with an existing MartRegistry object.
+	 * Constructs a RegistryDSConfigAdaptor with an existing MartRegistry object.
 	 * Users can set a URL to refer to this MartRegistry using setRegistryURL.
 	 * @param martreg -- existing MartRegistry object
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public RegistryDSViewAdaptor(MartRegistry martreg) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(MartRegistry martreg) throws ConfigurationException {
 		this(martreg, null);
 	}
 
 	/**
-	 * Construct a RegistryDSViewAdaptor with an existing MartRegistry object, and its URL
+	 * Construct a RegistryDSConfigAdaptor with an existing MartRegistry object, and its URL
 	 * @param martreg -- existing MartRegistry object
 	 * @param url -- url refering, or to refer to this MartRegistry object
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public RegistryDSViewAdaptor(MartRegistry martreg, URL url) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(MartRegistry martreg, URL url) throws ConfigurationException {
 		this.martreg = martreg;
 
 		if (url != null) {
@@ -87,20 +87,20 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	}
 
 	/**
-	 * Construct a RegistryDSViewAdaptor with an existing DSViewAdaptor object. Users can set
+	 * Construct a RegistryDSConfigAdaptor with an existing DSConfigAdaptor object. Users can set
 	 * its URL later with a call to setRegistryURL.
 	 * @param adaptor -- adaptor to initialize this RegistryAdaptor with.
 	 */
-	public RegistryDSViewAdaptor(DSViewAdaptor adaptor) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
 		this(adaptor, null);
 	}
 
 	/**
-	 * Construct a RegistryDSViewAdaptor with an existing DSViewAdaptor object, and its URL. 
+	 * Construct a RegistryDSConfigAdaptor with an existing DSConfigAdaptor object, and its URL. 
 	 * @param adaptor -- adaptor to initialize this RegistryAdaptor with.
 	 * @param url -- url to refer to this MartRegistry object
 	 */
-	public RegistryDSViewAdaptor(DSViewAdaptor adaptor, URL url) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(DSConfigAdaptor adaptor, URL url) throws ConfigurationException {
 		adaptors.add(adaptor);
 		if (url != null) {
 			this.url = url;
@@ -160,12 +160,12 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 	/*
 	 * TODO: This method iterates through all of the MartLocation objects within the MartRegistry object underlying this
-	 * MartRegistryAdaptor, determining the unique set of DSViewAdaptors to represent the object.  If two DSViewAdaptor
-	 * objects are found to support the same DatasetView object (based on internalName), then the first encountered DSViewAdaptor
-	 * is given precedence.  The last encountered DSViewAdaptor is either modified using the removeDatasetView command (if it is a
-	 * MultiDSViewAdaptor), or thrown away. In the case where all of the DatasetView objects within a MultiDSViewAdaptor are found
-	 * to be supported by previously loaded adaptors, the entire MultiDSViewAdaptor is thrown away.  This does set up the possibility that
-	 * DatasetView specifications for the same Dataset from multiple adaptors which differ in their filters/attributes could be mis - handled.
+	 * MartRegistryAdaptor, determining the unique set of DSConfigAdaptors to represent the object.  If two DSConfigAdaptor
+	 * objects are found to support the same DatasetConfig object (based on internalName), then the first encountered DSConfigAdaptor
+	 * is given precedence.  The last encountered DSConfigAdaptor is either modified using the removeDatasetConfig command (if it is a
+	 * MultiDSConfigAdaptor), or thrown away. In the case where all of the DatasetConfig objects within a MultiDSConfigAdaptor are found
+	 * to be supported by previously loaded adaptors, the entire MultiDSConfigAdaptor is thrown away.  This does set up the possibility that
+	 * DatasetConfig specifications for the same Dataset from multiple adaptors which differ in their filters/attributes could be mis - handled.
 	 */
 	private void loadAdaptorsFromRegistry() throws ConfigurationException {
 		MartLocation[] locs = martreg.getMartLocations();
@@ -186,14 +186,14 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 				}
 
 
-				RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(subreg, url);
+				RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url);
 				adaptor.setName(location.getName());
 				add(adaptor);
 				martRegs.add(subreg);
 
 			} else if (location.getType().equals(MartLocationBase.URL)) {
 			
-        URLDSViewAdaptor adaptor = new URLDSViewAdaptor(((URLLocation) location).getUrl(), false);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(((URLLocation) location).getUrl(), false);
         adaptor.setName(location.getName());
 				add(adaptor);
 			
@@ -226,7 +226,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
         DetailedDataSource dsource =
 					new DetailedDataSource(databaseType, host, port, instanceName, connectionString, user, password, DetailedDataSource.DEFAULTPOOLSIZE, jdbcDriverClassName, name);
 
-				DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(dsource, user);
+				DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(dsource, user);
         adaptor.setName(location.getName());
 				add(adaptor);
  
@@ -238,10 +238,10 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 //	/**
 //	 * Adds adaptor.  
-//	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSViewAdaptor
+//	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSConfigAdaptor
 //	 * to this instance or you will cause circular references when the getXXX() methods are called.
 //	 */
-//	public void add(DSViewAdaptor adaptor) {
+//	public void add(DSConfigAdaptor adaptor) {
 //		if (!adaptors.contains(adaptor))
 //			adaptors.add(adaptor);
 //	}
@@ -255,7 +255,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 		MartRegistry nmartreg = new MartRegistry();
 
 		for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
-			DSViewAdaptor adaptor = (DSViewAdaptor) iter.next();
+			DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
 
 			MartLocation[] martlocs = adaptor.getMartLocations();
 			for (int i = 0, n = martlocs.length; i < n; i++) {
@@ -277,31 +277,31 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 	}
 
   /**
-   * Allows Equality Comparisons manipulation of DSViewAdaptor objects.  Although
-   * any DSViewAdaptor object can be compared with any other DSViewAdaptor object, to provide
+   * Allows Equality Comparisons manipulation of DSConfigAdaptor objects.  Although
+   * any DSConfigAdaptor object can be compared with any other DSConfigAdaptor object, to provide
    * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
    * implimentations to equal.
    *
-	 * Equality is based on the CompositeViewAdaptor hashCode, so that two URL
+	 * Equality is based on the CompositeConfigAdaptor hashCode, so that two URL
 	 * sources specifying the same MartRegistry will equal.
 	 */
 	public boolean equals(Object o) {
-		return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
+		return o instanceof DSConfigAdaptor && hashCode() == o.hashCode();
 	}
 
 	/**
-	 * Calculates CompositeDSViewAdaptor hashCode. Two MartRegistryAdaptors specifying
+	 * Calculates CompositeDSConfigAdaptor hashCode. Two MartRegistryAdaptors specifying
 	 * the same MartLocation elements, regardless of their URL source, should
 	 * have the same hashCode.  A call to update on either should resolve any
-	 * differences in actual DatasetView content.
-	 * @see org.ensembl.mart.lib.config.CompositeDSViewAdaptor#hashCode()
+	 * differences in actual DatasetConfig content.
+	 * @see org.ensembl.mart.lib.config.CompositeDSConfigAdaptor#hashCode()
 	 */
 	public int hashCode() {
 		return super.hashCode();
 	}
   
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
+   * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getName()
    */
   public String getName() {
       return super.getName();

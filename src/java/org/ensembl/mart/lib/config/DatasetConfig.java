@@ -27,30 +27,30 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Provides a view of a mart dataset where a dataset is one or more main tables plus zero 
+ * Provides a config of a mart dataset where a dataset is one or more main tables plus zero 
  * or more dimension tables.
  * 
- * <p>A DatasetView specifies the dataset and a description of the attributes 
+ * <p>A DatasetConfig specifies the dataset and a description of the attributes 
  * and filters it contains. These attributes and filters are grouped hierarchically:
  * <b>Page -> Group -> Collection -> Description</b>. It also currently contains 
  * information about the
  * the primary key(s) used in joining. This will be removed in future versions.</p> 
  * 
- * <p>DatasetView Objects support a lazy load optimization strategy.
+ * <p>DatasetConfig Objects support a lazy load optimization strategy.
  * They can be instantiated with a miniumum of information (internalName), and lazy loaded when
  * the rest of the information is needed.  Any call to a get method will cause the object to attempt
  * to lazy load.  Lazy loading is only attempted when there are no FilterPage or AttributePage objects
- * loaded into the DatasetView.  A failed attempt to lazy load throws a RuntimeException.
+ * loaded into the DatasetConfig.  A failed attempt to lazy load throws a RuntimeException.
  * Note that any call to toString, equals, and hashCode will cause lazy loading to occur, 
  * which can lead to some issues (see the documentation for each of these methods below).</p>
  *   
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatasetView extends BaseNamedConfigurationObject {
+public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private final String datasetKey = "dataset";
-  private DSViewAdaptor adaptor = null;
+  private DSConfigAdaptor adaptor = null;
   private byte[] digest = null;
 
   private List attributePages = new ArrayList();
@@ -100,15 +100,15 @@ public class DatasetView extends BaseNamedConfigurationObject {
   //cache one FilterDescription for call to supports/getFilterDescriptionByFieldNameTableConstraint
   private FilterDescription lastSupportingFilter = null;
 
-  private Logger logger = Logger.getLogger(DatasetView.class.getName());
+  private Logger logger = Logger.getLogger(DatasetConfig.class.getName());
   
   /**
    * Copy Constructor allowing client to specify whether to lazyLoad the copy at initiation, rather
    * than defering to a call to getXXX.
-   * @param ds -- DatasetView to copy
+   * @param ds -- DatasetConfig to copy
    * @param lazyLoad - boolean, if true, copy will lazyLoad, if false, copy will defer lazyLoading until a getXXX method is called.
    */
-  public DatasetView(DatasetView ds, boolean lazyLoad) {
+  public DatasetConfig(DatasetConfig ds, boolean lazyLoad) {
     super(ds);
 
     setDataset(ds.getDataset());
@@ -116,11 +116,11 @@ public class DatasetView extends BaseNamedConfigurationObject {
     if (digest != null)
       setMessageDigest(digest);
 
-    //if the DatasetView has an underlying DSViewAdaptor implementing Object, this can be substituted for the
+    //if the DatasetConfig has an underlying DSConfigAdaptor implementing Object, this can be substituted for the
     //actual element content, and defer the loading of this content to the lazyLoad system.  This requires that
-    //all DSViewAdaptor implementing objects either implement a lazyLoad method and insert themselves into every
-    //DatasetView that they manage, or, in the absence of a sensible lazyLoad method, ensure that all content is
-    //is loaded, and __NOT__ insert themselves into the DatasetView that they manage.
+    //all DSConfigAdaptor implementing objects either implement a lazyLoad method and insert themselves into every
+    //DatasetConfig that they manage, or, in the absence of a sensible lazyLoad method, ensure that all content is
+    //is loaded, and __NOT__ insert themselves into the DatasetConfig that they manage.
     if (ds.getAdaptor() == null) {
 
       addStarBases(ds.getStarBases());
@@ -146,68 +146,68 @@ public class DatasetView extends BaseNamedConfigurationObject {
         addFilterPage(new FilterPage(fpages[i]));
       }
     } else
-      setDSViewAdaptor(ds.getAdaptor());
+      setDSConfigAdaptor(ds.getAdaptor());
     
     if (lazyLoad)
       lazyLoad();
   }
   
   /**
-   * Copy Constructor. Creates a new copy of an existing DatasetView object.
-   * Note, if the existing DatasetView object has a DatasetViewAdaptor set to it, 
+   * Copy Constructor. Creates a new copy of an existing DatasetConfig object.
+   * Note, if the existing DatasetConfig object has a DatasetConfigAdaptor set to it, 
    * this is transferred instead of the actual filterPages and attributePages, deferring
    * the population of these objects to the lazyLoad method called when a getXXX method is
    * called.
-   * @param ds DatasetView to copy
+   * @param ds DatasetConfig to copy
    */
-  public DatasetView(DatasetView ds) {
+  public DatasetConfig(DatasetConfig ds) {
     this(ds, false);
   }
 
   /**
-   * Empty constructor.  Should really only be used by the DatasetViewEditor
+   * Empty constructor.  Should really only be used by the DatasetConfigEditor
    */
-  public DatasetView() {
+  public DatasetConfig() {
     super();
 
     setAttribute(datasetKey, null);
   }
 
   /**
-   * Constructs a DatasetView named by internalName and displayName.
+   * Constructs a DatasetConfig named by internalName and displayName.
    *  internalName is a single word that references this dataset, used to get the dataset from the MartConfiguration by name.
    *  displayName is the String to display in any UI.
    * 
-   * @param internalName String name to represent this DatasetView
+   * @param internalName String name to represent this DatasetConfig
    * @param displayName String name to display.
    * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
    */
-  public DatasetView(String internalName, String displayName, String dataset) throws ConfigurationException {
+  public DatasetConfig(String internalName, String displayName, String dataset) throws ConfigurationException {
     this(internalName, displayName, dataset, "");
   }
 
   /**
-   * Constructs a DatasetView named by internalName and displayName, with a description of
+   * Constructs a DatasetConfig named by internalName and displayName, with a description of
    *  the dataset.
    * 
-   * @param internalName String name to represent this DatasetView. Must not be null
+   * @param internalName String name to represent this DatasetConfig. Must not be null
    * @param displayName String name to display in an UI.
    * @param dataset String prefix for all tables in the Mart Database for this Dataset. Must not be null
-   * @param description String description of the DatasetView.
+   * @param description String description of the DatasetConfig.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetView(String internalName, String displayName, String dataset, String description)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description)
     throws ConfigurationException {
     super(internalName, displayName, description);
 
     if (dataset == null)
-      throw new ConfigurationException("DatasetView objects must contain a dataset\n");
+      throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
     setAttribute(datasetKey, dataset);
   }
 
   /**
-   * Sets the dataset for this DatasetView object
-   * @param dataset -- Dataset that this view represnets.
+   * Sets the dataset for this DatasetConfig object
+   * @param dataset -- Dataset that this config represnets.
    */
   public void setDataset(String dataset) {
     setAttribute(datasetKey, dataset);
@@ -221,7 +221,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * add a Option object to this DatasetView.  Options are stored in the order that they are added.
+   * add a Option object to this DatasetConfig.  Options are stored in the order that they are added.
    * @param o - an Option object
    */
   public void addOption(Option o) {
@@ -231,7 +231,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Remove a Option objectfrom this DatasetView.  Maintains order of other objects as they were added.
+   * Remove a Option objectfrom this DatasetConfig.  Maintains order of other objects as they were added.
    * @param o - An option to remove.
    */
   public void removeOption(Option o) {
@@ -245,7 +245,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   /**
    * Insert an Option at a specific position within the option list.  Options
    * at or after this position are shifted right.
-   * @param position - position within the list of options in the DatasetView.
+   * @param position - position within the list of options in the DatasetConfig.
    * @param o - Option to be inserted
    */
   public void insertOption(int position, Option o) {
@@ -259,12 +259,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert an Option before an existing Option, defined by internalName.
    * @param internalName -- name of the Option before which the new option should be inserted.
    * @param o -- Option to be inserted
-   * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
+   * @throws ConfigurationException if the DatasetConfig does not contain the Option named by the given internalName.
    */
   public void insertOptionBeforeOption(String internalName, Option o) throws ConfigurationException {
 	lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
-      throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
+      throw new ConfigurationException("DatasetConfig does not contain Option " + internalName + "\n");
 
     insertOption(uiOptions.indexOf(uiOptionNameMap.get(internalName)), o);
   }
@@ -273,12 +273,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert an Option after an existing Option, defined by internalName.
    * @param internalName -- name of the Option after which the new option should be inserted.
    * @param o -- Option to be inserted
-   * @throws ConfigurationException if the DatasetView does not contain the Option named by the given internalName.
+   * @throws ConfigurationException if the DatasetConfig does not contain the Option named by the given internalName.
    */
   public void insertOptionAfterOption(String internalName, Option o) throws ConfigurationException {
 	lazyLoad();
     if (!uiOptionNameMap.containsKey(internalName))
-      throw new ConfigurationException("DatasetView does not contain Option " + internalName + "\n");
+      throw new ConfigurationException("DatasetConfig does not contain Option " + internalName + "\n");
 
     insertOption(uiOptions.indexOf(uiOptionNameMap.get(internalName)) + 1, o);
   }
@@ -297,7 +297,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Add a DefaultFilter object to this DatasetView.
+   * Add a DefaultFilter object to this DatasetConfig.
    * @param df - A DefaultFilter object
    */
   public void addDefaultFilter(DefaultFilter df) {
@@ -326,7 +326,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-  * Adds a star name to the list for this DatasetView.  A star name is the
+  * Adds a star name to the list for this DatasetConfig.  A star name is the
   * name of a central, or main, table to which all mart facts are tied.
   * Datasets can contain more than one star name.
   * 
@@ -342,7 +342,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Add a group of star names for a DatasetView with one call.
+   * Add a group of star names for a DatasetConfig with one call.
    * Note, subsequent calls to addStarBases or addStarBase will add
    * starBases to what has been added before.
    * 
@@ -379,7 +379,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Add an AttributePage to the DatasetView.
+   * Add an AttributePage to the DatasetConfig.
    * 
    * @param a -- AttributePage to be added.
    */
@@ -389,7 +389,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Remove an AttributePage from the DatasetView.
+   * Remove an AttributePage from the DatasetConfig.
    * @param a -- AttributePage to be removed.
    */
   public void removeAttributePage(AttributePage a) {
@@ -400,7 +400,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 
   /**
    * Insert an AttributePage at a particular Position within the List
-   * of AttributePages contained in the DatasetView. AttributePages at
+   * of AttributePages contained in the DatasetConfig. AttributePages at
    * or after the given position are shifted right.
    * @param position -- position to insert the AttributePage.
    * @param a -- AttributePage to be inserted.
@@ -416,13 +416,13 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert an AttributePage before another AttributePage, named by internalName.
    * @param internalName -- internalName of the AttributePage before which the given AttributePage should be inserted.
    * @param a -- AttributePage to be inserted.
-   * @throws ConfigurationException when the DatasetView does not contain an AttributePage named by the given internalName.
+   * @throws ConfigurationException when the DatasetConfig does not contain an AttributePage named by the given internalName.
    */
   public void insertAttributePageBeforeAttributePage(String internalName, AttributePage a)
     throws ConfigurationException {
     lazyLoad();
     if (!attributePageNameMap.containsKey(internalName))
-      throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
+      throw new ConfigurationException("This DatasetConfig does not contain AttributePage " + internalName + "\n");
 
     insertAttributePage(attributePages.indexOf(attributePageNameMap.get(internalName)), a);
   }
@@ -431,12 +431,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert an AttributePage after another AttributePage, named by internalName.
    * @param internalName -- internalName of the AttributePage after which the given AttributePage should be inserted.
    * @param a -- AttributePage to be inserted.
-   * @throws ConfigurationException when the DatasetView does not contain an AttributePage named by the given internalName.
+   * @throws ConfigurationException when the DatasetConfig does not contain an AttributePage named by the given internalName.
    */
   public void insertAttributePageAfterAttributePage(String internalName, AttributePage a) throws ConfigurationException {
 	lazyLoad();
     if (!attributePageNameMap.containsKey(internalName))
-      throw new ConfigurationException("This DatasetView does not contain AttributePage " + internalName + "\n");
+      throw new ConfigurationException("This DatasetConfig does not contain AttributePage " + internalName + "\n");
 
     insertAttributePage(attributePages.indexOf(attributePageNameMap.get(internalName)) + 1, a);
   }
@@ -456,7 +456,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Add a FilterPage to the DatasetView.
+   * Add a FilterPage to the DatasetConfig.
    * 
    * @param f FiterPage object.
    */
@@ -466,7 +466,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Remove a FilterPage from the DatasetView.
+   * Remove a FilterPage from the DatasetConfig.
    * @param f -- FilterPage to be removed.
    */
   public void removeFilterPage(FilterPage f) {
@@ -491,12 +491,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert a FilterPage before a specified FilterPage, named by internalName.
    * @param internalName -- name of the FilterPage before which the given FilterPage should be inserted.
    * @param f -- FilterPage to be inserted.
-   * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
+   * @throws ConfigurationException when the DatasetConfig does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageBeforeFilterPage(String internalName, FilterPage f) throws ConfigurationException {
 	lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
-      throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
+      throw new ConfigurationException("DatasetConfig does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)), f);
   }
 
@@ -504,12 +504,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Insert a FilterPage after a specified FilterPage, named by internalName.
    * @param internalName -- name of the FilterPage after which the given FilterPage should be inserted.
    * @param f -- FilterPage to be inserted.
-   * @throws ConfigurationException when the DatasetView does not contain a FilterPage named by internalName.
+   * @throws ConfigurationException when the DatasetConfig does not contain a FilterPage named by internalName.
    */
   public void insertFilterPageAfterFilterPage(String internalName, FilterPage f) throws ConfigurationException {
 	lazyLoad();
     if (!filterPageNameMap.containsKey(internalName))
-      throw new ConfigurationException("DatasetView does not contain FilterPage " + internalName + "\n");
+      throw new ConfigurationException("DatasetConfig does not contain FilterPage " + internalName + "\n");
     insertFilterPage(filterPages.indexOf(filterPageNameMap.get(internalName)) + 1, f);
   }
 
@@ -528,7 +528,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView has Options Available.
+   * Determine if this DatasetConfig has Options Available.
    * 
    * @return boolean, true if Options are available, false if not.
    */
@@ -549,7 +549,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView has DefaultFilters available.
+   * Determine if this DatasetConfig has DefaultFilters available.
    * @return boolean, true if DefaultFilter(s) are available, false if not
    */
   public boolean hasDefaultFilters() {
@@ -558,7 +558,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Returns all DefaultFilter Objects added to the DatasetView.
+   * Returns all DefaultFilter Objects added to the DatasetConfig.
    * @return DefaultFilter[] array of DefaultFilter objects.
    */
   public DefaultFilter[] getDefaultFilters() {
@@ -569,7 +569,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Returns the list of star names for this DatasetView.
+   * Returns the list of star names for this DatasetConfig.
    * 
    * @return starBases String[]
    */
@@ -581,7 +581,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Returns a list of primary keys for this DatasetView.
+   * Returns a list of primary keys for this DatasetConfig.
    * 
    * @return pkeys String[]
    */
@@ -593,7 +593,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Returns a list of all AttributePage objects contained in this DatasetView, in the order they were added.
+   * Returns a list of all AttributePage objects contained in this DatasetConfig, in the order they were added.
    * 
    * @return attributePages AttributePage[]
    */
@@ -619,10 +619,10 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Check whether a DatasetView contains a particular AttributePage named by displayName.
+   * Check whether a DatasetConfig contains a particular AttributePage named by displayName.
    * 
    * @param displayName String name of the AttributePage
-   * @return boolean true if AttributePage is contained in the DatasetView, false if not.
+   * @return boolean true if AttributePage is contained in the DatasetConfig, false if not.
    */
   public boolean containsAttributePage(String internalName) {
     lazyLoad();
@@ -630,7 +630,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Returns a list of all FilterPage objects contained within the DatasetView, in the order they were added.
+   * Returns a list of all FilterPage objects contained within the DatasetConfig, in the order they were added.
    * @return FilterPage[]
    */
   public FilterPage[] getFilterPages() {
@@ -655,10 +655,10 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Check whether a DatasetView contains a particular FilterPage named by displayName.
+   * Check whether a DatasetConfig contains a particular FilterPage named by displayName.
    * 
    * @param displayName String name of the FilterPage
-   * @return boolean true if FilterPage is contained in the DatasetView, false if not.
+   * @return boolean true if FilterPage is contained in the DatasetConfig, false if not.
    */
   public boolean containsFilterPage(String internalName) {
     lazyLoad();
@@ -666,7 +666,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-  	* Convenience method for non graphical UI.  Allows a call against the DatasetView for a particular AttributeDescription.
+  	* Convenience method for non graphical UI.  Allows a call against the DatasetConfig for a particular AttributeDescription.
   	* Note, it is best to first call containsAttributeDescription,
   	* as there is a caching system to cache a AttributeDescription during a call to containsAttributeDescription.
   	* 
@@ -682,7 +682,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-  	* Convenience method for non graphical UI.  Can determine if the DatasetView contains a specific AttributeDescription.
+  	* Convenience method for non graphical UI.  Can determine if the DatasetConfig contains a specific AttributeDescription.
   	*  As an optimization for initial calls to containsAttributeDescription with an immediate call to getAttributeDescriptionByName if
   	*  found, this method caches the AttributeDescription it has found.
   	* 
@@ -714,7 +714,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-  	* Convenience method for non graphical UI.  Allows a call against the DatasetView for a particular 
+  	* Convenience method for non graphical UI.  Allows a call against the DatasetConfig for a particular 
   	* FilterDescription Object. Note, it is best to first call containsFilterDescription, as there is a 
   	* caching system to cache a FilterDescription Object during a call to containsFilterDescription.
   	* 
@@ -744,7 +744,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView supports a given field and tableConstraint for an Attribute.  
+   * Determine if this DatasetConfig supports a given field and tableConstraint for an Attribute.  
    * Caches the first supporting AttributeDescription that it finds, for subsequent call to 
    * getAttributeDescriptionByFieldNameTableConstraint.
    * @param field
@@ -768,7 +768,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-  	* Convenience method for non graphical UI.  Can determine if the DatasetView contains a specific FilterDescription/MapFilterDescription object.
+  	* Convenience method for non graphical UI.  Can determine if the DatasetConfig contains a specific FilterDescription/MapFilterDescription object.
   	*  As an optimization for initial calls to containsFilterDescription with an immediate call to getFilterDescriptionByInternalName if
   	*  found, this method caches the FilterDescription Object it has found.
   	* 
@@ -831,12 +831,12 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView contains a FilterDescription that supports a given field and tableConstraint.
+   * Determine if this DatasetConfig contains a FilterDescription that supports a given field and tableConstraint.
    * Calling this method will cache any FilterDescription that supports the field and tableConstraint, and this will
    * be returned by a getFilterDescriptionByFieldNameTableConstraint call.
    * @param field -- String field of a mart database table
    * @param tableConstraint -- String tableConstraint of a mart database
-   * @return boolean, true if the DatasetView contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
+   * @return boolean, true if the DatasetConfig contains a FilterDescription supporting a given field, tableConstraint, false otherwise.
    */
   public boolean supportsFilterDescription(String field, String tableConstraint) {
     lazyLoad();
@@ -941,7 +941,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a DatasetView.
+   * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a DatasetConfig.
    * 
    * @return List of FilterDescription/MapFilterDescription objects
    */
@@ -962,7 +962,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Convenience Method to get all AttributeDescription objects in all Pages/Groups/Collections within a DatasetView.
+   * Convenience Method to get all AttributeDescription objects in all Pages/Groups/Collections within a DatasetConfig.
    * 
    * @return List of AttributeDescription objects
    */
@@ -986,7 +986,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Convenience method to facilitate equals comparisons of datasets.
    * 
    * @param starBase -- String name of the starBase requested
-   * @return true if DatasetView contains the starBase, false if not
+   * @return true if DatasetConfig contains the starBase, false if not
    */
   public boolean containsStarBase(String starBase) {
     lazyLoad();
@@ -997,7 +997,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
    * Convenience method to facilitate equals comparisons of datasets.
    * 
    * @param pkey -- String name of the primary key requested
-   * @return true if DatasetView contains the primary key, false if not
+   * @return true if DatasetConfig contains the primary key, false if not
    */
   public boolean containsPrimaryKey(String pkey) {
     lazyLoad();
@@ -1174,7 +1174,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
 
   /**
    * Returns a digest suitable for comparison with a digest computed on another version
-   * of the XML underlying this DatasetView. 
+   * of the XML underlying this DatasetConfig. 
    * @return byte[] digest
    */
   public byte[] getMessageDigest() {
@@ -1182,7 +1182,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Set a Message Digest for the DatasetView.  This must be a digest
+   * Set a Message Digest for the DatasetConfig.  This must be a digest
    * generated by a java.security.MessageDigest object with the given algorithmName
    * method.  
    * @param bs - byte[] digest computed
@@ -1192,32 +1192,32 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * set the DSViewAdaptor used to instantiate a particular DatasetView object.
-   * @param dsva -- DSViewAdaptor implimenting object.
+   * set the DSConfigAdaptor used to instantiate a particular DatasetConfig object.
+   * @param dsva -- DSConfigAdaptor implimenting object.
    */
-  public void setDSViewAdaptor(DSViewAdaptor dsva) {
+  public void setDSConfigAdaptor(DSConfigAdaptor dsva) {
     adaptor = dsva;
   }
 
   /**
-   * Get the DSViewAdaptor implimenting object used to instantiate this DatasetView object.
-   * @return DSViewAdaptor used to instantiate this DatasetView
+   * Get the DSConfigAdaptor implimenting object used to instantiate this DatasetConfig object.
+   * @return DSConfigAdaptor used to instantiate this DatasetConfig
    */
-  public DSViewAdaptor getDSViewAdaptor() {
+  public DSConfigAdaptor getDSConfigAdaptor() {
     return adaptor;
   }
 
   private void lazyLoad() {
     if (filterPages.size() == 0 && attributePages.size() == 0) {
       if (adaptor == null)
-        throw new RuntimeException("DatasetView objects must be provided a DSViewAdaptor to facilitate lazyLoading\n");
+        throw new RuntimeException("DatasetConfig objects must be provided a DSConfigAdaptor to facilitate lazyLoading\n");
       try {
         if (logger.isLoggable(Level.INFO))
           logger.info("LAZYLOAD\n");
 
         adaptor.lazyLoad(this);
       } catch (ConfigurationException e) {
-        throw new RuntimeException("Could not lazyload datasetview " + e.getMessage(), e);
+        throw new RuntimeException("Could not lazyload datasetconfig " + e.getMessage(), e);
       }
     }
   }
@@ -1244,19 +1244,19 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Allows Equality Comparisons manipulation of DatasetView objects.
+   * Allows Equality Comparisons manipulation of DatasetConfig objects.
    * Note, currently does not use Message Digest information.
    * Also, If the lazy load fails, a RuntimeException is thrown.
    */
   public boolean equals(Object o) {
-    return o instanceof DatasetView && hashCode() == ((DatasetView) o).hashCode();
+    return o instanceof DatasetConfig && hashCode() == ((DatasetConfig) o).hashCode();
   }
 
   /**
-   * hashCode for DatasetView
+   * hashCode for DatasetConfig
    * Note, currently does not compare digest data, even if present.
-   * Also Note that this method calls the underlying lazyLoad() function, using the lazyLoad(DatasetView dsv) method from the DSViewAdaptor implimenting Object
-   * that it was instantiated with.  Depending upon the DSViewAdaptor implimentation being used, if DatasetView objects are stored in Hash based collections immediately
+   * Also Note that this method calls the underlying lazyLoad() function, using the lazyLoad(DatasetConfig dsv) method from the DSConfigAdaptor implimenting Object
+   * that it was instantiated with.  Depending upon the DSConfigAdaptor implimentation being used, if DatasetConfig objects are stored in Hash based collections immediately
    * upon instantiation, this could remove the speed optimization that the lazy loading system is designed to provide.  Also, if any Exceptions are encountered by
    * a particular implimenation during lazyLoad, this will lead to a RuntimeException when hashCode is called.
    */
@@ -1307,7 +1307,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView has broken StarBases.
+   * Determine if this DatasetConfig has broken StarBases.
    * @return boolean
    */
   public boolean hasBrokenStarBases() {
@@ -1323,7 +1323,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView has broken primary keys.
+   * Determine if this DatasetConfig has broken primary keys.
    * @return boolean
    */
   public boolean hasBrokenPrimaryKeys() {
@@ -1355,7 +1355,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Sets the hasBrokenDefaultFilters flag to true, meaning one or more of this DatasetView Object's
+   * Sets the hasBrokenDefaultFilters flag to true, meaning one or more of this DatasetConfig Object's
    * DefaultFilters have broken FilterDescription Objects with respect to a particular Mart instance.
    */
   public void setDefaultFiltersBroken() {
@@ -1363,7 +1363,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView Object has broken DefaultFilter Objects.
+   * Determine if this DatasetConfig Object has broken DefaultFilter Objects.
    * @return boolean
    */
   public boolean hasBrokenDefaultFilters() {
@@ -1371,7 +1371,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Sets the hasBrokenOptions flag to true, meaning this DatasetView has one or more Option Objects which are broken with respect
+   * Sets the hasBrokenOptions flag to true, meaning this DatasetConfig has one or more Option Objects which are broken with respect
    * to a particular Mart instance.
    */
   public void setOptionsBroken() {
@@ -1379,7 +1379,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   }
 
   /**
-   * Determine if this DatasetView has broken Options.
+   * Determine if this DatasetConfig has broken Options.
    * @return boolean
    */
   public boolean hasBrokenOptions() {
@@ -1403,7 +1403,7 @@ public class DatasetView extends BaseNamedConfigurationObject {
   /**
    * @return adaptor that created this instance, can be null.
    */
-  public DSViewAdaptor getAdaptor() {
+  public DSConfigAdaptor getAdaptor() {
     return adaptor;
 
   }

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.config.FilterDescription;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 
 /**
@@ -168,7 +168,7 @@ public class GenericHandler implements UnprocessedFilterHandler {
 				      logger.info("Recieved filterValue " + filterValue + " from SQL\n");
 				  
 				      if (filterValue != null && filterValue.length() > 0) {
-					    DatasetView dsv = query.getDatasetView();
+					    DatasetConfig dsv = query.getDatasetConfig();
 					    FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[k]);
 					    Filter posFilter =
 					  	  new BasicFilter(fd.getField(), fd.getTableConstraint(), fd.getKey(), fd.getQualifier(), filterValue);
@@ -189,7 +189,7 @@ public class GenericHandler implements UnprocessedFilterHandler {
 					//set the id list filter(s) - code for just 1 per lookup table at moment - may need changing in future
 				
 					if (tranIds.size() > 0) {
-						DatasetView dsv = query.getDatasetView();
+						DatasetConfig dsv = query.getDatasetConfig();
 						FilterDescription fd = dsv.getFilterDescriptionByInternalName(newfilterCols[0]);
 						
 						Filter posFilter =

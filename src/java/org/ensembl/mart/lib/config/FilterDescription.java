@@ -84,7 +84,7 @@ public class FilterDescription extends QueryFilterSettings {
    * represented in a FilterDescription, and FilterDescription objects
    * do not contain PushAction objects, whild Option objects do not
    * contain Enable or Disable objects.  For this reason, this method
-   * is strictly reserved for use for the DatasetViewEditor application,
+   * is strictly reserved for use for the DatasetConfigEditor application,
    * to facilitate conversions between these objects, with subsequent editing by the user. 
    * @param o - Option to be converted to a FilterDescription.
    */
@@ -102,7 +102,7 @@ public class FilterDescription extends QueryFilterSettings {
   }
   
 	/**
-	 * Empty Constructor should only be used by DatasetViewEditor
+	 * Empty Constructor should only be used by DatasetConfigEditor
 	 *
 	 */
 	public FilterDescription() {
@@ -888,7 +888,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * 
 	 * @param d
 	 */
-	public void setParentsForAllPushOptionOptions(DatasetView d) throws ConfigurationException {
+	public void setParentsForAllPushOptionOptions(DatasetConfig d) throws ConfigurationException {
 
 		setParentsForAllPushOptionOptions(d, getOptions());
 
@@ -900,7 +900,7 @@ public class FilterDescription extends QueryFilterSettings {
 	 * @param d
 	 * @param options
 	 */
-	private void setParentsForAllPushOptionOptions(DatasetView dataset, Option[] options) throws ConfigurationException {
+	private void setParentsForAllPushOptionOptions(DatasetConfig dataset, Option[] options) throws ConfigurationException {
 
 		for (int i = 0, n = options.length; i < n; i++) {
 

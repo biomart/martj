@@ -39,7 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.tree.DefaultTreeModel;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 /**
  * Abstract generic tree option widget. It presents the user with set of
  * options organised as a tree.
@@ -137,7 +137,7 @@ public abstract class PopUpTreeCombo extends JPanel {
 	}
 	/**
 	 * @param displayName
-	 *          display name of the selected datasetView.
+	 *          display name of the selected datasetConfig.
 	 */
 	private void doSelect(String label, Object o) {
 		if (label == lastLabel && o == lastObject)
@@ -152,65 +152,65 @@ public abstract class PopUpTreeCombo extends JPanel {
 		}
 	}
 	private JMenuItem noneMenuItem = new JMenuItem("None");
-	private Map datasetNameToDatasetView = new HashMap();
+	private Map datasetNameToDatasetConfig = new HashMap();
 	/**
-	 * Unpacks the datasetViews into several sets and maps that enable easy
+	 * Unpacks the datasetConfigs into several sets and maps that enable easy
 	 * lookup of information.
 	 * 
-	 * displayName -> shortName datasetName -> datasetView | List-of-datasetViews
-	 * displayName -> datasetView | List-of-datasetViews
+	 * displayName -> shortName datasetName -> datasetConfig | List-of-datasetConfigs
+	 * displayName -> datasetConfig | List-of-datasetConfigs
 	 * 
-	 * @param datasetViews
-	 *          dataset views, should be sorted by displayNames.
+	 * @param datasetConfigs
+	 *          dataset configs, should be sorted by displayNames.
 	 */
-	private void unpack(DatasetView[] datasetViews) {
+	private void unpack(DatasetConfig[] datasetConfigs) {
 		Set availableDisplayNames = new HashSet();
 		Set availableDatasetNames = new HashSet();
-		Map displayNameToDatasetView = new HashMap();
+		Map displayNameToDatasetConfig = new HashMap();
 		Map displayNameToShortName = new HashMap();
-		if (datasetViews == null)
+		if (datasetConfigs == null)
 			return;
 		Set clashingDisplayNames = new HashSet();
 		Set clashingDatasetNames = new HashSet();
-		for (int i = 0; i < datasetViews.length; i++) {
-			DatasetView view = datasetViews[i];
-			String displayName = view.getDisplayName();
+		for (int i = 0; i < datasetConfigs.length; i++) {
+			DatasetConfig config = datasetConfigs[i];
+			String displayName = config.getDisplayName();
 			if (availableDisplayNames.contains(displayName))
-				clashingDisplayNames.add(view);
+				clashingDisplayNames.add(config);
 			else
 				availableDisplayNames.add(displayName);
-			String datasetName = view.getInternalName();
+			String datasetName = config.getInternalName();
 			if (availableDatasetNames.contains(datasetName))
-				clashingDatasetNames.add(view);
+				clashingDatasetNames.add(config);
 			else
 				availableDatasetNames.add(datasetName);
 			String[] elements = displayName.split("__");
 			String shortName = elements[elements.length - 1];
 			displayNameToShortName.put(displayName, shortName);
 		}
-		for (int i = 0; i < datasetViews.length; i++) {
-			DatasetView view = datasetViews[i];
-			String displayName = view.getDisplayName();
-			if (clashingDisplayNames.contains(view)) {
-				List list = (List) displayNameToDatasetView.get(displayName);
+		for (int i = 0; i < datasetConfigs.length; i++) {
+			DatasetConfig config = datasetConfigs[i];
+			String displayName = config.getDisplayName();
+			if (clashingDisplayNames.contains(config)) {
+				List list = (List) displayNameToDatasetConfig.get(displayName);
 				if (list == null) {
 					list = new LinkedList();
-					displayNameToDatasetView.put(displayName, list);
+					displayNameToDatasetConfig.put(displayName, list);
 				}
-				list.add(view);
+				list.add(config);
 			} else {
-				displayNameToDatasetView.put(displayName, view);
+				displayNameToDatasetConfig.put(displayName, config);
 			}
-			String datasetName = view.getInternalName();
-			if (clashingDatasetNames.contains(view)) {
-				List list = (List) datasetNameToDatasetView.get(datasetName);
+			String datasetName = config.getInternalName();
+			if (clashingDatasetNames.contains(config)) {
+				List list = (List) datasetNameToDatasetConfig.get(datasetName);
 				if (list == null) {
 					list = new LinkedList();
-					datasetNameToDatasetView.put(datasetName, list);
+					datasetNameToDatasetConfig.put(datasetName, list);
 				}
-				list.add(view);
+				list.add(config);
 			} else {
-				datasetNameToDatasetView.put(datasetName, view);
+				datasetNameToDatasetConfig.put(datasetName, config);
 			}
 		}
 	}

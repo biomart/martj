@@ -38,7 +38,7 @@ public class DSAttributeGroup extends BaseNamedConfigurationObject {
   }
   
 	/**
-	 * Empty Constructor should really only be used by the DatasetViewEditory
+	 * Empty Constructor should really only be used by the DatasetConfigEditory
 	 */
 	public DSAttributeGroup() throws ConfigurationException {
 		super();

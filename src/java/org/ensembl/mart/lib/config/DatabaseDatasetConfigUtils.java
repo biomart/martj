@@ -59,7 +59,7 @@ import org.jdom.output.XMLOutputter;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DatabaseDatasetViewUtils {
+public class DatabaseDatasetConfigUtils {
 
   private static final String DIGESTTYPE = "MD5";
 
@@ -97,7 +97,7 @@ public class DatabaseDatasetViewUtils {
   private static final String EXISTWHERE = " where internalName = ? and displayName = ? and dataset = ?";
   private static final String DELETEOLDXML = "delete from "; //append table after user test
   private static final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ? and dataset = ?";
-    private static final String DELETEDATASETVIEW = " where dataset = ?";
+    private static final String DELETEDATASETCONFIG = " where dataset = ?";
   private static final String INSERTXMLSQLA = "insert into "; //append table after user test
   private static final String INSERTXMLSQLB =
     " (internalName, displayName, dataset, description, xml, MessageDigest) values (?, ?, ?, ?, ?, ?)";
@@ -121,7 +121,7 @@ public class DatabaseDatasetViewUtils {
   private static final String DEFAULTGROUP = "defaultGroup";
   private static final String DEFAULTPAGE = "defaultPage";
 
-  private static Logger logger = Logger.getLogger(DatabaseDatasetViewUtils.class.getName());
+  private static Logger logger = Logger.getLogger(DatabaseDatasetConfigUtils.class.getName());
 
   /**
    * Verify if a meta_DatasetView_[user] table exists.  Returns false if user is null, or
@@ -131,7 +131,7 @@ public class DatabaseDatasetViewUtils {
    * @return true if meta_DatasetView_[user] exists, false otherwise
    * @throws ConfigurationException for SQLExceptions
    */
-  public static boolean DSViewUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
+  public static boolean DSConfigUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
     boolean exists = true;
     String table = BASEMETATABLE + "_" + user;
 
@@ -193,7 +193,7 @@ public class DatabaseDatasetViewUtils {
    * @return true if meta_DatasetView exists, false if it does not exist
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static boolean BaseDSViewTableExists(DetailedDataSource dsource) throws ConfigurationException {
+  public static boolean BaseDSConfigTableExists(DetailedDataSource dsource) throws ConfigurationException {
     String table = BASEMETATABLE;
     boolean exists = true;
 
@@ -207,15 +207,15 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Store a DatesetView.dtd compliant (compressed or uncompressed) XML Document in the Mart Database with a given internalName and displayName.  
-   * If user is not null and meta_DatsetView_[user] exists, this table is the target, otherwise, meta_DatasetView is the target.
+   * Store a DatesetConfig.dtd compliant (compressed or uncompressed) XML Document in the Mart Database with a given internalName and displayName.  
+   * If user is not null and meta_DatsetConfig_[user] exists, this table is the target, otherwise, meta_DatasetView is the target.
    * Along with the internalName and displayName of the XML, an MD5 messageDigest of the xml is computed, and stored as well. 
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
-   * @param internalName -- internalName of the DatasetViewXML being stored.
-   * @param displayName -- displayName of the DatasetView XML being stored.
-   * @param dataset -- dataset of the DatasetView XML being stored
-   * @param doc - JDOM Document object representing the XML for the DatasetView   
+   * @param internalName -- internalName of the DatasetConfigXML being stored.
+   * @param displayName -- displayName of the DatasetConfig XML being stored.
+   * @param dataset -- dataset of the DatasetConfig XML being stored
+   * @param doc - JDOM Document object representing the XML for the DatasetConfig   
    * @param compress -- if true, the XML is compressed using GZIP.
    * @throws ConfigurationException when no meta_DatasetView table exists, and for all underlying Exceptions
    */
@@ -255,7 +255,7 @@ public class DatabaseDatasetViewUtils {
       return storeUncompressedXMLOracle(dsource, user, internalName, displayName, dataset, description, doc);
 
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
 
       if (logger.isLoggable(Level.FINE))
@@ -275,10 +275,10 @@ public class DatabaseDatasetViewUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(dsource, metatable, dataset, internalName, displayName);
 
       if (rowstodelete > 0)
-        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+        DeleteOldDSConfigEntriesFor(dsource, metatable, dataset, internalName, displayName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
@@ -316,7 +316,7 @@ public class DatabaseDatasetViewUtils {
     Document doc)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String insertSQL = INSERTXMLSQLA + metatable + INSERTXMLSQLB;
       String oraclehackSQL = SELECTXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
@@ -339,10 +339,10 @@ public class DatabaseDatasetViewUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(dsource, metatable, dataset, internalName, displayName);
 
       if (rowstodelete > 0)
-        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+        DeleteOldDSConfigEntriesFor(dsource, metatable, dataset, internalName, displayName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
@@ -401,7 +401,7 @@ public class DatabaseDatasetViewUtils {
       return storeCompressedXMLOracle(dsource, user, internalName, displayName, dataset, description, doc);
 
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
 
       if (logger.isLoggable(Level.FINE))
@@ -425,10 +425,10 @@ public class DatabaseDatasetViewUtils {
       gout.close();
       out.close();
 
-      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(dsource, metatable, dataset, internalName, displayName);
 
       if (rowstodelete > 0)
-        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+        DeleteOldDSConfigEntriesFor(dsource, metatable, dataset, internalName, displayName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
@@ -465,7 +465,7 @@ public class DatabaseDatasetViewUtils {
     Document doc)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
       String oraclehackSQL = SELECTCOMPRESSEDXMLFORUPDATE + metatable + GETANYNAMESWHERINAME + " FOR UPDATE";
 
@@ -492,10 +492,10 @@ public class DatabaseDatasetViewUtils {
       gout.close();
       out.close();
 
-      int rowstodelete = getDSViewEntryCountFor(dsource, metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(dsource, metatable, dataset, internalName, displayName);
 
       if (rowstodelete > 0)
-        DeleteOldDSViewEntriesFor(dsource, metatable, dataset, internalName, displayName);
+        DeleteOldDSConfigEntriesFor(dsource, metatable, dataset, internalName, displayName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
@@ -550,7 +550,7 @@ public class DatabaseDatasetViewUtils {
    */
   public static String[] getAllDatasetNames(DetailedDataSource ds, String user) throws ConfigurationException {
     SortedSet names = new TreeSet();
-    String metatable = getDSViewTableFor(ds, user);
+    String metatable = getDSConfigTableFor(ds, user);
     String sql = GETALLDATASETSQL + metatable;
 
     if (logger.isLoggable(Level.FINE))
@@ -589,7 +589,7 @@ public class DatabaseDatasetViewUtils {
   public static String[] getAllInternalNamesForDataset(DetailedDataSource ds, String user, String dataset)
     throws ConfigurationException {
     List names = new ArrayList();
-    String metatable = getDSViewTableFor(ds, user);
+    String metatable = getDSConfigTableFor(ds, user);
     String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDATASET;
 
     if (logger.isLoggable(Level.FINE))
@@ -630,7 +630,7 @@ public class DatabaseDatasetViewUtils {
   public static String[] getAllDisplayNamesForDataset(DetailedDataSource ds, String user, String dataset)
     throws ConfigurationException {
     List names = new ArrayList();
-    String metatable = getDSViewTableFor(ds, user);
+    String metatable = getDSConfigTableFor(ds, user);
     String sql = GETDNAMESQL + metatable + GETANYNAMESWHEREDATASET;
 
     if (logger.isLoggable(Level.FINE))
@@ -660,23 +660,23 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
+   * Returns a DatasetConfig object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
-   * @param dataset -- dataset for which DatasetView is requested
-   * @param internalName -- internalName of desired DatasetView object
-   * @return DatasetView defined by given internalName
+   * @param dataset -- dataset for which DatasetConfig is requested
+   * @param internalName -- internalName of desired DatasetConfig object
+   * @return DatasetConfig defined by given internalName
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByDatasetInternalName(
+  public static DatasetConfig getDatasetConfigByDatasetInternalName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String internalName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHERINAME;
 
       if (logger.isLoggable(Level.FINE))
@@ -704,7 +704,7 @@ public class DatabaseDatasetViewUtils {
       rs.close();
       conn.close();
 
-      DatasetView dsv = new DatasetView(iname, dname, dprefix, description);
+      DatasetConfig dsv = new DatasetConfig(iname, dname, dprefix, description);
       dsv.setMessageDigest(digest);
       return dsv;
     } catch (SQLException e) {
@@ -712,22 +712,22 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static byte[] getDatasetViewByteArrayByDatasetInternalName(
+  public static byte[] getDatasetConfigByteArrayByDatasetInternalName(
   DetailedDataSource dsource,
   String user,
   String dataset,
   String internalName)
   throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetViewByteArrayByDatasetInternalNameOracle(dsource, user, dataset, internalName);
+      return getDatasetConfigByteArrayByDatasetInternalNameOracle(dsource, user, dataset, internalName);
     
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -763,24 +763,24 @@ public class DatabaseDatasetViewUtils {
       return bout.toByteArray();      
     } catch (SQLException e) {
       throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
         e);
     } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
     }  
   }
   
-  public static byte[] getDatasetViewByteArrayByDatasetInternalNameOracle(DetailedDataSource dsource,
+  public static byte[] getDatasetConfigByteArrayByDatasetInternalNameOracle(DetailedDataSource dsource,
   String user,
   String dataset,
   String internalName) throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -815,39 +815,39 @@ public class DatabaseDatasetViewUtils {
       return bout.toByteArray();
     } catch (SQLException e) {
       throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
         e);
     } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
     }
   }
   
   /**
-   * Returns a DatasetView JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
+   * Returns a DatasetConfig JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
-   * @param dataset -- dataset for which DatasetView document is requested
-   * @param internalName -- internalName of desired DatasetView document
-   * @return DatasetView JDOM Document defined by given displayName and dataset
+   * @param dataset -- dataset for which DatasetConfig document is requested
+   * @param internalName -- internalName of desired DatasetConfig document
+   * @return DatasetConfig JDOM Document defined by given displayName and dataset
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static Document getDatasetViewDocumentByDatasetInternalName(
+  public static Document getDatasetConfigDocumentByDatasetInternalName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String internalName)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetViewDocumentByDatasetInternalNameOracle(dsource, user, dataset, internalName);
+      return getDatasetConfigDocumentByDatasetInternalNameOracle(dsource, user, dataset, internalName);
         
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -874,29 +874,29 @@ public class DatabaseDatasetViewUtils {
       else
         rstream = new ByteArrayInputStream(stream);
 
-      return DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+      return DatasetConfigXMLUtils.XMLStreamToDocument(rstream, false);
     } catch (SQLException e) {
       throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
         e);
     } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
     }
   }
 
-  private static Document getDatasetViewDocumentByDatasetInternalNameOracle(
+  private static Document getDatasetConfigDocumentByDatasetInternalNameOracle(
       DetailedDataSource dsource,
       String user,
       String dataset,
       String internalName)
       throws ConfigurationException {
         try {
-          String metatable = getDSViewTableFor(dsource, user);
+          String metatable = getDSConfigTableFor(dsource, user);
           String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
 
           if (logger.isLoggable(Level.FINE))
             logger.fine(
-              "Using " + sql + " to get DatasetView for internalName " + internalName + "and dataset " + dataset + "\n");
+              "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
 
           Connection conn = dsource.getConnection();
           PreparedStatement ps = conn.prepareStatement(sql);
@@ -920,43 +920,43 @@ public class DatabaseDatasetViewUtils {
           } else
             rstream = stream.getAsciiStream();
 
-          Document ret =  DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+          Document ret =  DatasetConfigXMLUtils.XMLStreamToDocument(rstream, false);
           rstream.close();
           rs.close();
           conn.close();
           return ret;
         } catch (SQLException e) {
           throw new ConfigurationException(
-            "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+            "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
             e);
         } catch (IOException e) {
-          throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+          throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
         }
       }
       
   /**
-   * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
+   * Returns a DatasetConfig object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given dataset and displayName
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param dataset -- dataset for which DatsetView is requested
+   * @param dataset -- dataset for which DatsetConfig is requested
    * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
-   * @param displayName -- String displayName for requested DatasetView
-   * @return DatasetView with given displayName and dataset
+   * @param displayName -- String displayName for requested DatasetConfig
+   * @return DatasetConfig with given displayName and dataset
    * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
-  public static DatasetView getDatasetViewByDatasetDisplayName(
+  public static DatasetConfig getDatasetConfigByDatasetDisplayName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String displayName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETALLNAMESQL + metatable + GETANYNAMESWHEREDNAME;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
-          "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
+          "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
 
       Connection conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
@@ -979,7 +979,7 @@ public class DatabaseDatasetViewUtils {
       rs.close();
       conn.close();
 
-      DatasetView dsv = new DatasetView(iname, dname, dprefix, description);
+      DatasetConfig dsv = new DatasetConfig(iname, dname, dprefix, description);
       dsv.setMessageDigest(digest);
       return dsv;
     } catch (SQLException e) {
@@ -987,24 +987,24 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static Document getDatasetViewDocumentByDatasetDisplayName(
+  public static Document getDatasetConfigDocumentByDatasetDisplayName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String displayName)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
-      return getDatasetViewDocumentByDatasetDisplayNameOracle(dsource, user, dataset, displayName);
+      return getDatasetConfigDocumentByDatasetDisplayNameOracle(dsource, user, dataset, displayName);
       
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using "
             + sql
-            + " to get DatasetView Document for displayName "
+            + " to get DatasetConfig Document for displayName "
             + displayName
             + " and dataset "
             + dataset
@@ -1035,31 +1035,31 @@ public class DatabaseDatasetViewUtils {
       else
         rstream = new ByteArrayInputStream(stream);
 
-      return DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+      return DatasetConfigXMLUtils.XMLStreamToDocument(rstream, false);
     } catch (SQLException e) {
       throw new ConfigurationException(
-        "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+        "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
         e);
     } catch (IOException e) {
-      throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+      throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
     } catch (ConfigurationException e) {
       throw e;
     }
   }
 
-  private static Document getDatasetViewDocumentByDatasetDisplayNameOracle(
+  private static Document getDatasetConfigDocumentByDatasetDisplayNameOracle(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String displayName)
     throws ConfigurationException {
       try {
-        String metatable = getDSViewTableFor(dsource, user);
+        String metatable = getDSConfigTableFor(dsource, user);
         String sql = GETDOCBYDNAMESELECT + metatable + GETDOCBYDNAMEWHERE;
 
         if (logger.isLoggable(Level.FINE))
           logger.fine(
-            "Using " + sql + " to get DatasetView for displayName " + displayName + "and dataset " + dataset + "\n");
+            "Using " + sql + " to get DatasetConfig for displayName " + displayName + "and dataset " + dataset + "\n");
 
         Connection conn = dsource.getConnection();
         PreparedStatement ps = conn.prepareStatement(sql);
@@ -1083,37 +1083,37 @@ public class DatabaseDatasetViewUtils {
         } else
           rstream = stream.getAsciiStream();
 
-        Document ret =  DatasetViewXMLUtils.XMLStreamToDocument(rstream, false);
+        Document ret =  DatasetConfigXMLUtils.XMLStreamToDocument(rstream, false);
         rstream.close();
         rs.close();
         conn.close();
         return ret;
       } catch (SQLException e) {
         throw new ConfigurationException(
-          "Caught SQL Exception during fetch of requested DatasetView: " + e.getMessage(),
+          "Caught SQL Exception during fetch of requested DatasetConfig: " + e.getMessage(),
           e);
       } catch (IOException e) {
-        throw new ConfigurationException("Caught IOException during fetch of requested DatasetView: " + e.getMessage(), e);
+        throw new ConfigurationException("Caught IOException during fetch of requested DatasetConfig: " + e.getMessage(), e);
       }
     }
     
   /**
-   * Get a message digest for a given DatasetView, given by dataset and internalName
+   * Get a message digest for a given DatasetConfig, given by dataset and internalName
    * @param dsource -- connection to mart database
    * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which digest is requested
-   * @param internalName -- internalName for DatasetView digest desired.
+   * @param internalName -- internalName for DatasetConfig digest desired.
    * @return byte[] digest for given dataset and displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByDatasetInternalName(
+  public static byte[] getDSConfigMessageDigestByDatasetInternalName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String internalName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
@@ -1148,18 +1148,18 @@ public class DatabaseDatasetViewUtils {
    * @param dsource -- connection to mart database
    * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which displayName is requested
-   * @param internalName -- internalName for DatasetView internalName desired.
+   * @param internalName -- internalName for DatasetConfig internalName desired.
    * @return String displayName for given dataset and internalName
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewDisplayNameByDatasetInternalName(
+  public static String getDSConfigDisplayNameByDatasetInternalName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String internalName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDNAMESQL + metatable + GETANYNAMESWHERINAME;
 
       if (logger.isLoggable(Level.FINE))
@@ -1189,22 +1189,22 @@ public class DatabaseDatasetViewUtils {
     }
   }
   /**
-   * Get a message digest for a given DatasetView, given by dataset and displayName
+   * Get a message digest for a given DatasetConfig, given by dataset and displayName
    * @param dsource -- connection to mart database
    * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which digest is requested
-   * @param displayName -- displayName for DatasetView digest desired.
+   * @param displayName -- displayName for DatasetConfig digest desired.
    * @return byte[] digest for given displayName and dataset
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static byte[] getDSViewMessageDigestByDatasetDisplayName(
+  public static byte[] getDSConfigMessageDigestByDatasetDisplayName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String displayName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETDIGBYNAMESELECT + metatable + GETDIGBYDNAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
@@ -1238,18 +1238,18 @@ public class DatabaseDatasetViewUtils {
    * @param dsource -- connection to mart database
    * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which internalName is requested
-   * @param displayName -- displayName for DatasetView internalName desired.
+   * @param displayName -- displayName for DatasetConfig internalName desired.
    * @return String internalName for given displayName and dataset
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static String getDSViewInternalNameByDatasetDisplayName(
+  public static String getDSConfigInternalNameByDatasetDisplayName(
     DetailedDataSource dsource,
     String user,
     String dataset,
     String displayName)
     throws ConfigurationException {
     try {
-      String metatable = getDSViewTableFor(dsource, user);
+      String metatable = getDSConfigTableFor(dsource, user);
       String sql = GETINTNAMESQL + metatable + GETANYNAMESWHEREDNAME;
 
       if (logger.isLoggable(Level.FINE))
@@ -1278,7 +1278,7 @@ public class DatabaseDatasetViewUtils {
     }
   }
 
-  public static int getDSViewEntryCountFor(
+  public static int getDSConfigEntryCountFor(
     DetailedDataSource ds,
     String metatable,
     String dataset,
@@ -1287,7 +1287,7 @@ public class DatabaseDatasetViewUtils {
     throws ConfigurationException {
     String existSQL = EXISTSELECT + metatable + EXISTWHERE;
     if (logger.isLoggable(Level.FINE))
-      logger.fine("Getting DSViewEntryCount with SQL " + existSQL + "\n");
+      logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
 
     int ret;
     try {
@@ -1318,15 +1318,15 @@ public class DatabaseDatasetViewUtils {
 
   /**
    * Removes all records in a given metatable for the given dataset, internalName and displayName.  
-   * Throws an error if the rows deleted do not equal the number of rows obtained using DatabaseDatasetViewAdaptor.getDSViewEntryCountFor(). 
+   * Throws an error if the rows deleted do not equal the number of rows obtained using DatabaseDatasetConfigAdaptor.getDSConfigEntryCountFor(). 
    * @param dsrc - DetailedDataSource for Mart Database
    * @param metatable - meta_DatasetView table to use to delete entries
-   * @param dataset - dataset for DatasetView entries to delete from metatable
-   * @param internalName - internalName of DatasetView entries to delete from metatable
-   * @param displayName - displayName of DatasetView entries to delete from metatable
-   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSViewEntryCountFor()
+   * @param dataset - dataset for DatasetConfig entries to delete from metatable
+   * @param internalName - internalName of DatasetConfig entries to delete from metatable
+   * @param displayName - displayName of DatasetConfig entries to delete from metatable
+   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
    */
-  public static void DeleteOldDSViewEntriesFor(
+  public static void DeleteOldDSConfigEntriesFor(
     DetailedDataSource dsrc,
     String metatable,
     String dataset,
@@ -1335,9 +1335,9 @@ public class DatabaseDatasetViewUtils {
     throws ConfigurationException {
     String deleteSQL = DELETEOLDXML + metatable + DELETEOLDXMLWHERE;
 
-    int rowstodelete = getDSViewEntryCountFor(dsrc, metatable, dataset, internalName, displayName);
+    int rowstodelete = getDSConfigEntryCountFor(dsrc, metatable, dataset, internalName, displayName);
     if (logger.isLoggable(Level.FINE))
-      logger.fine("Deleting old DSViewEntries with SQL " + deleteSQL + "\n");
+      logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL + "\n");
 
     int rowsdeleted;
     try {
@@ -1372,15 +1372,15 @@ public class DatabaseDatasetViewUtils {
  /**
    * Removes all records in a given metatable for the given dataset   
    * @param dsrc - DetailedDataSource for Mart Database
-   * @param dataset - dataset for DatasetView entries to delete from metatable
-   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSViewEntryCountFor()
+   * @param dataset - dataset for DatasetConfig entries to delete from metatable
+   * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
    */
 
-  public static void deleteDatasetView(
+  public static void deleteDatasetConfig(
     DetailedDataSource dsrc,
     String dataset)
     throws ConfigurationException {
-    String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETVIEW;
+    String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG;
 
     try {
       Connection conn = dsrc.getConnection();
@@ -1400,23 +1400,23 @@ public class DatabaseDatasetViewUtils {
 
 
   /**
-   * Get the correct DatasetView table for a given user in the Mart Database
+   * Get the correct DatasetConfig table for a given user in the Mart Database
    * stored in the given DetailedDataSource.
    * @param ds -- DetailedDataSource for Mart Database.
-   * @param user -- user to retrieve a DatasetView table.  If user is null, or if meta_DatasetView_[user] does not exist
-   *                returns DatabaseDatasetViewUtils.BASEMETATABLE.
+   * @param user -- user to retrieve a DatasetConfig table.  If user is null, or if meta_DatasetView_[user] does not exist
+   *                returns DatabaseDatasetConfigUtils.BASEMETATABLE.
    * @return String meta table name
-   * @throws ConfigurationException if both meta_DatasetView_[user] and DatabaseDatasetViewUtils.BASEMETATABLE are absent, and for all underlying exceptions.
+   * @throws ConfigurationException if both meta_DatasetView_[user] and DatabaseDatasetConfigUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
-  public static String getDSViewTableFor(DetailedDataSource ds, String user) throws ConfigurationException {
+  public static String getDSConfigTableFor(DetailedDataSource ds, String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
 
     //override if user not null
-    if (DSViewUserTableExists(ds, user))
+    if (DSConfigUserTableExists(ds, user))
       metatable += "_" + user;
     else {
       //if BASEMETATABLE doesnt exist, throw an exception
-      if (!BaseDSViewTableExists(ds))
+      if (!BaseDSConfigTableExists(ds))
         throw new ConfigurationException(
           "Neither " + BASEMETATABLE + " or " + BASEMETATABLE + "_" + user + " exists in the Mart Database\n");
     }
@@ -1424,7 +1424,7 @@ public class DatabaseDatasetViewUtils {
     return metatable;
   }
   
-  public static DatasetView getValidatedDatasetView(DetailedDataSource dsource, DatasetView dsv) throws SQLException {
+  public static DatasetConfig getValidatedDatasetConfig(DetailedDataSource dsource, DatasetConfig dsv) throws SQLException {
     String schema = null;
     String catalog = null;
 	Connection conn = dsource.getConnection();
@@ -1437,8 +1437,8 @@ public class DatabaseDatasetViewUtils {
         logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
     }
     conn.close();
-    DatasetView validatedDatasetView = new DatasetView(dsv);
-    String dset = validatedDatasetView.getDataset();
+    DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv);
+    String dset = validatedDatasetConfig.getDataset();
     boolean hasBrokenStars = false;
     String[] starbases = dsv.getStarBases();
     String[] validatedStars = new String[starbases.length];
@@ -1449,15 +1449,15 @@ public class DatabaseDatasetViewUtils {
 
       if (!validatedStar.equals(starbase)) {
         hasBrokenStars = true;
-        validatedDatasetView.removeStarBase(starbase);
+        validatedDatasetConfig.removeStarBase(starbase);
       }
 
       validatedStars[i] = validatedStar;
     }
 
     if (hasBrokenStars) {
-      validatedDatasetView.setStarsBroken();
-      validatedDatasetView.addStarBases(validatedStars);
+      validatedDatasetConfig.setStarsBroken();
+      validatedDatasetConfig.addStarBases(validatedStars);
     }
 
     boolean hasBrokenPKeys = false;
@@ -1470,15 +1470,15 @@ public class DatabaseDatasetViewUtils {
 
       if (!validatedKey.equals(pkey)) {
         hasBrokenPKeys = true;
-        validatedDatasetView.removePrimaryKey(pkey);
+        validatedDatasetConfig.removePrimaryKey(pkey);
       }
 
       validatedKeys[i] = validatedKey;
     }
 
     if (hasBrokenPKeys) {
-      validatedDatasetView.setPrimaryKeysBroken();
-      validatedDatasetView.addPrimaryKeys(validatedKeys);
+      validatedDatasetConfig.setPrimaryKeysBroken();
+      validatedDatasetConfig.addPrimaryKeys(validatedKeys);
     }
 
     boolean hasBrokenDefaultFilters = false;
@@ -1492,17 +1492,17 @@ public class DatabaseDatasetViewUtils {
 
       if (validatedDefaultFilter.isBroken()) {
         hasBrokenDefaultFilters = true;
-        validatedDatasetView.removeDefaultFilter(dfilter);
+        validatedDatasetConfig.removeDefaultFilter(dfilter);
         brokenFilters.add(validatedDefaultFilter);
       }
     }
 
     if (hasBrokenDefaultFilters) {
-      validatedDatasetView.setDefaultFiltersBroken();
+      validatedDatasetConfig.setDefaultFiltersBroken();
 
       for (int i = 0, n = brokenFilters.size(); i < n; i++) {
         DefaultFilter brokenFilter = (DefaultFilter) brokenFilters.get(i);
-        validatedDatasetView.addDefaultFilter(brokenFilter);
+        validatedDatasetConfig.addDefaultFilter(brokenFilter);
       }
     }
 
@@ -1520,14 +1520,14 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (hasBrokenOptions) {
-      validatedDatasetView.setOptionsBroken();
+      validatedDatasetConfig.setOptionsBroken();
 
       for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         Option brokenOption = (Option) brokenOptions.get(position);
 
-        validatedDatasetView.removeOption(options[position.intValue()]);
-        validatedDatasetView.insertOption(position.intValue(), brokenOption);
+        validatedDatasetConfig.removeOption(options[position.intValue()]);
+        validatedDatasetConfig.insertOption(position.intValue(), brokenOption);
       }
     }
 
@@ -1545,14 +1545,14 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (hasBrokenAttributePages) {
-      validatedDatasetView.setAttributePagesBroken();
+      validatedDatasetConfig.setAttributePagesBroken();
 
       for (Iterator iter = brokenAPages.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         AttributePage brokenAPage = (AttributePage) brokenAPages.get(position);
 
-        validatedDatasetView.removeAttributePage(apages[position.intValue()]);
-        validatedDatasetView.insertAttributePage(position.intValue(), brokenAPage);
+        validatedDatasetConfig.removeAttributePage(apages[position.intValue()]);
+        validatedDatasetConfig.insertAttributePage(position.intValue(), brokenAPage);
       }
     }
 
@@ -1569,18 +1569,18 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (hasBrokenFilterPages) {
-      validatedDatasetView.setFilterPagesBroken();
+      validatedDatasetConfig.setFilterPagesBroken();
 
       for (Iterator iter = brokenFPages.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         FilterPage brokenPage = (FilterPage) brokenFPages.get(position);
 
-        validatedDatasetView.removeFilterPage(allPages[position.intValue()]);
-        validatedDatasetView.insertFilterPage(position.intValue(), brokenPage);
+        validatedDatasetConfig.removeFilterPage(allPages[position.intValue()]);
+        validatedDatasetConfig.insertFilterPage(position.intValue(), brokenPage);
       }
     }
 
-    return validatedDatasetView;
+    return validatedDatasetConfig;
   }
 
   private static DefaultFilter getValidatedDefaultFilter(
@@ -2259,7 +2259,7 @@ public class DatabaseDatasetViewUtils {
 
   /**
    * Returns a list of potential (Naive) dataset names from a given Mart compliant database hosted on a given DetailedDataSource.
-   * These names can be used as an argument to getNaiveMainTablesFor, getNaiveDimensionTablesFor and getNaiveDatasetViewFor.
+   * These names can be used as an argument to getNaiveMainTablesFor, getNaiveDimensionTablesFor and getNaiveDatasetConfigFor.
    * @param dsource -- DetailedDataSource housing a connection to an RDBMS
    * @param databaseName -- name of the RDBMS instance to search for potential datasets
    * @return String[] of potential dataset names
@@ -2603,7 +2603,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 
   //TODO: change this when Mart Compliant Schema is fully optimized
   /**
-   * Returns a Naive DatasetView for a given dataset within a given Mart Compliant database, hosted on a given
+   * Returns a Naive DatasetConfig for a given dataset within a given Mart Compliant database, hosted on a given
    * RDBMS.  This will consist of an unordered set of starbases, no primary keys, and one FilterPage and AttributePage
    * containing one group with Collections for each table containing descriptions for each field.  Filters are only
    * described for main tables, and no Option grouping is attempted.  All Descriptions are fully constrained to
@@ -2616,9 +2616,9 @@ System.out.println("database type: "+ dsource.getDatabaseType());
    * @throws ConfigurationException
    * @throws SQLException
    */
-  public static DatasetView getNaiveDatasetViewFor(DetailedDataSource dsource, String databaseName, String datasetName)
+  public static DatasetConfig getNaiveDatasetConfigFor(DetailedDataSource dsource, String databaseName, String datasetName)
     throws ConfigurationException, SQLException {
-    DatasetView dsv = new DatasetView();
+    DatasetConfig dsv = new DatasetConfig();
 
     //dsv.setInternalName(datasetName);
 	dsv.setInternalName("default");
@@ -2823,7 +2823,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
   }
 
 
-  public static DatasetView getNewFiltsAtts(DetailedDataSource dsource, String databaseName, DatasetView dsv)
+  public static DatasetConfig getNewFiltsAtts(DetailedDataSource dsource, String databaseName, DatasetConfig dsv)
 	throws ConfigurationException, SQLException {
 		
 		String datasetName = dsv.getDataset();
@@ -3114,7 +3114,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
   }
 
 
-  private static void updateDropDown(DatasetView dsView, DetailedDataSource dsource, FilterDescription fd1)
+  private static void updateDropDown(DatasetConfig dsConfig, DetailedDataSource dsource, FilterDescription fd1)
 	  throws ConfigurationException, SQLException {
       
       Option[] ops = fd1.getOptions();
@@ -3136,7 +3136,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 	  fd1.setQualifier("=");
 	  fd1.setLegalQualifiers("=");
 
-	  Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, dsource, dsView);
+	  Option[] options = DatabaseDatasetConfigUtils.getOptions(field, tableName, joinKey, dsource, dsConfig);
 	  
 	  fd1.addOptions(options);
 	  
@@ -3147,8 +3147,8 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 	    
 	    
 	    String ref = pas[k].getRef();
-	    FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(ref);
-	    updatePushAction(dsView, fd1, fd2, dsource);
+	    FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(ref);
+	    updatePushAction(dsConfig, fd1, fd2, dsource);
 	    
 	  }
 	  Option[] newOps = fd1.getOptions();
@@ -3165,24 +3165,24 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 		  	
 		  for (int m = 0; m < pas2.length; m++){
 		    String ref2 = pas2[m].getRef();
-		    FilterDescription fd3 = dsView.getFilterDescriptionByInternalName(ref2);
-		    updatePushAction(dsView, newPa, fd3, dsource);
+		    FilterDescription fd3 = dsConfig.getFilterDescriptionByInternalName(ref2);
+		    updatePushAction(dsConfig, newPa, fd3, dsource);
 		  }	 	    	    
 	    }
 	  }
   }
 
 
-  private static void updatePushAction(DatasetView dsView, BaseConfigurationObject bo, FilterDescription fd2, DetailedDataSource ds)
+  private static void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2, DetailedDataSource ds)
 	  throws ConfigurationException, SQLException {
 	  
-	  //dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-	  //FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+	  //dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+	  //FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(filter2);
 		
 	  fd2.setType("drop_down_basic_filter");
         
 	  // set FilterDescription fd1 = to current node
-	  //DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+	  //DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		
 	  String pushField = fd2.getField();
 	  String pushInternalName = fd2.getInternalName();
@@ -3211,28 +3211,28 @@ System.out.println("database type: "+ dsource.getDatabaseType());
         
         
 		
-	  //DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+	  //DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 	   	
 	  for (int i = 0; i < options.length; i++ ){
 		  Option op = options[i];
 		  String opName = op.getInternalName();
 		  PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-		  pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,ds));
+		  pa.addOptions(DatabaseDatasetConfigUtils.getLookupOptions(pushField,pushTableName,field,opName,ds));
 			
 		  if (pa.getOptions().length > 0){  
 		  	System.out.println("ADDING PA\t" + op.getInternalName());
 		  	op.addPushAction(pa);
 		  	
 			//Enumeration children = parentNode.children();
-			//DatasetViewTreeNode childNode = null;
+			//DatasetConfigTreeNode childNode = null;
 			//while (children.hasMoreElements()){
-			//  childNode = (DatasetViewTreeNode) children.nextElement();
+			//  childNode = (DatasetConfigTreeNode) children.nextElement();
 			//  if (op.equals(childNode.getUserObject()))
 			//	break;
 			//}
-			//DatasetViewTreeNode newNode = new DatasetViewTreeNode("PushAction:newNode", pa);
-			//String result = DatasetViewTree.treemodel.insertNodeInto(newNode, childNode, 0);
+			//DatasetConfigTreeNode newNode = new DatasetConfigTreeNode("PushAction:newNode", pa);
+			//String result = DatasetConfigTree.treemodel.insertNodeInto(newNode, childNode, 0);
 			  
 		  }
 	  }
@@ -3272,7 +3272,7 @@ System.out.println("database type: "+ dsource.getDatabaseType());
     return att;
   }
 
-  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType, String joinKey, DetailedDataSource dsource, String fullTableName, DatasetView dsv)
+  private static FilterDescription getFilterDescription(String columnName, String tableName, int columnType, String joinKey, DetailedDataSource dsource, String fullTableName, DatasetConfig dsv)
     throws SQLException, ConfigurationException {
     FilterDescription filt = new FilterDescription();
 	filt.setField(columnName);
@@ -3328,14 +3328,14 @@ System.out.println("database type: "+ dsource.getDatabaseType());
     return filt;
   }
   
-  public static Option[] getOptions(String columnName, String tableName, String joinKey, DetailedDataSource dsource, DatasetView dsView)
+  public static Option[] getOptions(String columnName, String tableName, String joinKey, DetailedDataSource dsource, DatasetConfig dsConfig)
 	  throws SQLException, ConfigurationException{
 	  
 	  List options = new ArrayList();
 	  
 	  if (tableName.equalsIgnoreCase("main")){
-	    String[] starNames = dsView.getStarBases();
-	    String[] primaryKeys = dsView.getPrimaryKeys();
+	    String[] starNames = dsConfig.getStarBases();
+	    String[] primaryKeys = dsConfig.getPrimaryKeys();
 		   for (int k = 0; k < primaryKeys.length; k++) {
 		     if (primaryKeys[k].equals(joinKey))
 		       tableName = starNames[k];

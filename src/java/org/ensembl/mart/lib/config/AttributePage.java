@@ -65,7 +65,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
   }
    
 /**
- * Empty Constructor should really only be used by the DatasetViewEditor
+ * Empty Constructor should really only be used by the DatasetConfigEditor
  */
 	public AttributePage() {
 		super();

@@ -21,11 +21,11 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 
 
-public class DatasetViewTreeNodeSelection implements Transferable {
+public class DatasetConfigTreeNodeSelection implements Transferable {
 
-    DatasetViewTreeNode node;
+    DatasetConfigTreeNode node;
 
-    public DatasetViewTreeNodeSelection(DatasetViewTreeNode node) {
+    public DatasetConfigTreeNodeSelection(DatasetConfigTreeNode node) {
             this.node = node;
     }
 
@@ -33,7 +33,7 @@ public class DatasetViewTreeNodeSelection implements Transferable {
         //Return an array of DataFlavors that represents the object
         DataFlavor[] df = new DataFlavor[1];
         try {
-            df[1] = new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetViewTreeNode"), "treeNode");
+            df[1] = new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode");
             return df;
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,7 +44,7 @@ public class DatasetViewTreeNodeSelection implements Transferable {
 
     public boolean isDataFlavorSupported(DataFlavor df) {
         //Test if the DataFlavor supplied is supported
-        if(df.getDefaultRepresentationClassAsString().equals("org.ensembl.mart.editor.DatasetViewTreeNode"))
+        if(df.getDefaultRepresentationClassAsString().equals("org.ensembl.mart.editor.DatasetConfigTreeNode"))
             return true;
         else
             return false;

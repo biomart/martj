@@ -88,7 +88,7 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 			filterName = focus + "_chrom_start";
 
 			if (species == null || species.equals(""))
-				throw new InvalidQueryException("Species is required for a Band Filter, check the MartConfiguration for the correct starBases for this DatasetView.");
+				throw new InvalidQueryException("Species is required for a Band Filter, check the MartConfiguration for the correct starBases for this DatasetConfig.");
 			lookupTable = species + "__karyotype__look";
 
 			chrFilter = newQuery.getFilterByName(CHRNAME);

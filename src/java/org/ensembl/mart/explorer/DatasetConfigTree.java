@@ -30,38 +30,38 @@ import javax.swing.Box;
 import javax.swing.JFrame;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
- * Widget showing available dataset views represented as a menu tree. The user can select one of
+ * Widget showing available dataset configs represented as a menu tree. The user can select one of
  * these. 
  * 
  * <p>The first tier of the tree contains
  * adaptors, the second the datasets, and the optional third tier the internalNames. 
- * If adaptorManager.isOptionalDatasetViewsEnabled()==true then the optional 
- * third tier is included. Otherwise only dataset views with internalName=="default"
+ * If adaptorManager.isOptionalDatasetConfigsEnabled()==true then the optional 
+ * third tier is included. Otherwise only dataset configs with internalName=="default"
  * are displayed and they are shown as adaptor -> dataset. In this case the internalName
  * is not shown.
  * </p>
  */
-public class DatasetViewTree extends PopUpTreeCombo {
+public class DatasetConfigTree extends PopUpTreeCombo {
 
 	private final static Logger logger =
-		Logger.getLogger(DatasetViewTree.class.getName());
+		Logger.getLogger(DatasetConfigTree.class.getName());
 
 	private Feedback feedback = new Feedback(this);
 
 	private AdaptorManager manager;
 
-	public DatasetViewTree(AdaptorManager manager) {
+	public DatasetConfigTree(AdaptorManager manager) {
 		super("Dataset");
 		this.manager = manager;
 	}
 
 	/**
-	 * Update the tree's rootNode to reflect the currently available datasetViews.
+	 * Update the tree's rootNode to reflect the currently available datasetConfigs.
 	 * Structure: adaptor -> dataset [ -> internalName ]
 	 * @see org.ensembl.mart.explorer.PopUpTreeCombo#update()
 	 */
@@ -72,23 +72,23 @@ public class DatasetViewTree extends PopUpTreeCombo {
 		logger.fine("optional=" + optional);
 
 		try {
-			DSViewAdaptor[] adaptors = manager.getRootAdaptor().getAdaptors();
+			DSConfigAdaptor[] adaptors = manager.getRootAdaptor().getAdaptors();
 			// TODO sort adaptors by name
 
 			for (int i = 0; i < adaptors.length; i++) {
 
-				DSViewAdaptor adaptor = adaptors[i];
+				DSConfigAdaptor adaptor = adaptors[i];
 
 				// Skip composite adaptors
 				if (adaptor.getAdaptors().length > 0)
 					continue;
 
-				// skip adaptors which lack a "default" view
-				// if we are only showing default views.
-				if (!optional && !containsDefaultView(adaptor))
+				// skip adaptors which lack a "default" config
+				// if we are only showing default configs.
+				if (!optional && !containsDefaultConfig(adaptor))
 					continue;
         
-        if (adaptor.getDatasetViews().length==0 )
+        if (adaptor.getDatasetConfigs().length==0 )
           continue;
 
 				LabelledTreeNode adaptorNode =
@@ -104,13 +104,13 @@ public class DatasetViewTree extends PopUpTreeCombo {
 					for (int j = 0; j < datasetNames.length; j++) {
 
 						String dataset = datasetNames[j];
-						DatasetView[] views = adaptor.getDatasetViewsByDataset(dataset);
+						DatasetConfig[] configs = adaptor.getDatasetConfigsByDataset(dataset);
 
 						LabelledTreeNode datasetNode = null;
 
-						for (int k = 0; k < views.length; k++) {
+						for (int k = 0; k < configs.length; k++) {
 
-							DatasetView view = views[k];
+							DatasetConfig config = configs[k];
 
 							if (optional) {
 
@@ -123,20 +123,20 @@ public class DatasetViewTree extends PopUpTreeCombo {
 
 								// adaptor -> dataset -> internalName
 								datasetNode.add(
-									new LabelledTreeNode(view.getInternalName(), view));
+									new LabelledTreeNode(config.getInternalName(), config));
 
 							} else {
-								// adaptor -> dataset (using default datasetview only)
-								if (isDefault(view)) {
+								// adaptor -> dataset (using default datasetconfig only)
+								if (isDefault(config)) {
 									adaptorNode.add(
-										new LabelledTreeNode(view.getDataset(), view));
+										new LabelledTreeNode(config.getDataset(), config));
 									break;
 								}
 							}
 						}
 					}
 				} catch (ConfigurationException e) {
-					// do this try ... catch so that a problem with one adaptor won't prevent dataset views from
+					// do this try ... catch so that a problem with one adaptor won't prevent dataset configs from
 					// others being loaded 
 					feedback.warning(e);
 				}
@@ -148,20 +148,20 @@ public class DatasetViewTree extends PopUpTreeCombo {
 		}
 	}
 
-	public boolean isDefault(DatasetView view) {
-		return "default".equals(view.getInternalName().toLowerCase());
+	public boolean isDefault(DatasetConfig config) {
+		return "default".equals(config.getInternalName().toLowerCase());
 	}
 
 	/**
 	 * @param adaptor
 	 * @return
 	 */
-	private boolean containsDefaultView(DSViewAdaptor adaptor) {
+	private boolean containsDefaultConfig(DSConfigAdaptor adaptor) {
 		boolean r = false;
 		try {
-			DatasetView[] views = adaptor.getDatasetViews();
-			for (int i = 0; !r && i < views.length; i++)
-				if (isDefault(views[i]))
+			DatasetConfig[] configs = adaptor.getDatasetConfigs();
+			for (int i = 0; !r && i < configs.length; i++)
+				if (isDefault(configs[i]))
 					r = true;
 
 		} catch (ConfigurationException e) {
@@ -176,10 +176,10 @@ public class DatasetViewTree extends PopUpTreeCombo {
 		logger.setLevel(Level.FINE);
 
 		AdaptorManager am = new AdaptorManager();
-		//QueryEditor.testDatasetViewSettings();
+		//QueryEditor.testDatasetConfigSettings();
 		am.setAdvancedOptionsEnabled(true);
 
-		final DatasetViewTree pu = new DatasetViewTree(am);
+		final DatasetConfigTree pu = new DatasetConfigTree(am);
 		// test the listener support
 		pu.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -188,7 +188,7 @@ public class DatasetViewTree extends PopUpTreeCombo {
 		});
 		Box p = Box.createVerticalBox();
 		p.add(pu);
-		JFrame f = new JFrame(DatasetViewTree.class.getName() + " (Test Frame)");
+		JFrame f = new JFrame(DatasetConfigTree.class.getName() + " (Test Frame)");
 		f.getContentPane().add(p);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//f.setSize(250, 100);
@@ -197,15 +197,15 @@ public class DatasetViewTree extends PopUpTreeCombo {
 	}
 
 	/**
-   * Sets the selected node to the node where node.userObject==datasetView
-	 * @param newDatasetView
+   * Sets the selected node to the node where node.userObject==datasetConfig
+	 * @param newDatasetConfig
 	 */
-	public void setSelectedUserObject(DatasetView datasetView) {
+	public void setSelectedUserObject(DatasetConfig datasetConfig) {
 		Enumeration enum = rootNode.breadthFirstEnumeration();
 
 		while (enum.hasMoreElements()) {
 			LabelledTreeNode next = (LabelledTreeNode) enum.nextElement();
-      if ( next.getUserObject()==datasetView) {
+      if ( next.getUserObject()==datasetConfig) {
         setSelected(next);
         break;
         } 

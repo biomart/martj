@@ -29,7 +29,7 @@ import javax.swing.filechooser.FileFilter;
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
 public class XMLFileFilter extends FileFilter {

@@ -75,59 +75,59 @@ import org.ensembl.mart.lib.config.*;
 
 
 /**
- * Class DatasetViewTree extends JTree.
+ * Class DatasetConfigTree extends JTree.
  *
- * <p>This is the main class of the view editor that creates and populates the tree etc
+ * <p>This is the main class of the config editor that creates and populates the tree etc
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
-public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner {
+public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwner {
 
     public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
     protected Insets scrollInsets = defaultScrollInsets;
-    protected DatasetView dsView = null;
-    protected DatasetViewTreeNode lastSelectedNode = null;
-    protected DatasetViewTreeNode editingNode = null;
-    protected DatasetViewTreeNode editingNodeParent = null;
-    protected DatasetViewTreeNode rootNode = null;
+    protected DatasetConfig dsConfig = null;
+    protected DatasetConfigTreeNode lastSelectedNode = null;
+    protected DatasetConfigTreeNode editingNode = null;
+    protected DatasetConfigTreeNode editingNodeParent = null;
+    protected DatasetConfigTreeNode rootNode = null;
     protected TreePath clickedPath = null;
-    protected DatasetViewTreeModel treemodel = null;
-    protected DatasetViewTreeWidget frame;
-    protected DatasetViewAttributesTable attrTable = null;
-    protected DatasetViewAttributeTableModel attrTableModel = null;
+    protected DatasetConfigTreeModel treemodel = null;
+    protected DatasetConfigTreeWidget frame;
+    protected DatasetConfigAttributesTable attrTable = null;
+    protected DatasetConfigAttributeTableModel attrTableModel = null;
     protected Clipboard clipboard;
     protected boolean cut = false;
     protected int editingNodeIndex;
     protected File file = null;
 
-    public DatasetViewTree(DatasetView dsView, DatasetViewTreeWidget frame, DatasetViewAttributesTable attrTable) {
+    public DatasetConfigTree(DatasetConfig dsConfig, DatasetConfigTreeWidget frame, DatasetConfigAttributesTable attrTable) {
         super((TreeModel) null);
-        this.dsView = dsView;
+        this.dsConfig = dsConfig;
         this.frame = frame;
         this.attrTable = attrTable;
         file = frame.getFileChooserPath();
-        addMouseListener(new DatasetViewTreeMouseListener());
-        addTreeSelectionListener(new DatasetViewTreeSelectionListener());
+        addMouseListener(new DatasetConfigTreeMouseListener());
+        addTreeSelectionListener(new DatasetConfigTreeSelectionListener());
         // Use horizontal and vertical lines
         putClientProperty("JTree.lineStyle", "Angled");
         setEditable(true);
         // Create the first node
-        rootNode = new DatasetViewTreeNode(dsView.getDisplayName());
-        rootNode.setUserObject(dsView);
-        treemodel = new DatasetViewTreeModel(rootNode, dsView);
+        rootNode = new DatasetConfigTreeNode(dsConfig.getDisplayName());
+        rootNode.setUserObject(dsConfig);
+        treemodel = new DatasetConfigTreeModel(rootNode, dsConfig);
         setModel(treemodel);
         this.setSelectionInterval(0, 0);
-        DatasetViewTreeDnDListener dndListener = new DatasetViewTreeDnDListener(this);
+        DatasetConfigTreeDnDListener dndListener = new DatasetConfigTreeDnDListener(this);
         clipboard = new Clipboard("tree_clipboard");
 
     }
 
-    public DatasetView getDatasetView() {
-        dsView = (DatasetView) rootNode.getUserObject();
-        return dsView;
+    public DatasetConfig getDatasetConfig() {
+        dsConfig = (DatasetConfig) rootNode.getUserObject();
+        return dsConfig;
     }
 
     // Autoscrolling support
@@ -177,14 +177,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     // Inner class that handles Tree Expansion Events
-    protected class DatasetViewTreeExpansionHandler implements TreeExpansionListener {
+    protected class DatasetConfigTreeExpansionHandler implements TreeExpansionListener {
         public void treeExpanded(TreeExpansionEvent evt) {
             TreePath path = evt.getPath();			// The expanded path
             JTree tree = (JTree) evt.getSource();	// The tree
 
             // Get the last component of the path and
             // arrange to have it fully populated.
-            DatasetViewTreeNode node = (DatasetViewTreeNode) path.getLastPathComponent();
+            DatasetConfigTreeNode node = (DatasetConfigTreeNode) path.getLastPathComponent();
             /*if (node.populateFolders(true)) {
                  ((DefaultTreeModel) tree.getModel()).nodeStructureChanged(node);
              }   */
@@ -199,7 +199,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     protected class AttrTableModelListener implements TableModelListener {
         public void tableChanged(TableModelEvent evt) {
 
-            // treemodel.reload(attrTableModel.getNode(),(DatasetViewTreeNode)attrTableModel.getNode().getParent());
+            // treemodel.reload(attrTableModel.getNode(),(DatasetConfigTreeNode)attrTableModel.getNode().getParent());
             treemodel.reload(attrTableModel.getParentNode());
         }
 
@@ -271,7 +271,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     // Inner class that handles Tree Selection Events
-    protected class DatasetViewTreeSelectionListener implements TreeSelectionListener {
+    protected class DatasetConfigTreeSelectionListener implements TreeSelectionListener {
         public void valueChanged(TreeSelectionEvent e) {
             doOnSelection();
         }
@@ -283,13 +283,13 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                 TableCellEditor attrTableEditor = attrTable.getCellEditor();
                 attrTableEditor.stopCellEditing();
             }
-        lastSelectedNode = (DatasetViewTreeNode) this.getLastSelectedPathComponent();
+        lastSelectedNode = (DatasetConfigTreeNode) this.getLastSelectedPathComponent();
         if (lastSelectedNode == null) return;
         BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
         String nodeObjectClass = nodeObject.getClass().getName();
         String[] data = nodeObject.getXmlAttributeTitles();
 
-        attrTableModel = new DatasetViewAttributeTableModel((DatasetViewTreeNode) this.getLastSelectedPathComponent(), data, nodeObjectClass);
+        attrTableModel = new DatasetConfigAttributeTableModel((DatasetConfigTreeNode) this.getLastSelectedPathComponent(), data, nodeObjectClass);
         attrTableModel.addTableModelListener(new AttrTableModelListener());
 
         // model.setObject(nodeObject);
@@ -298,7 +298,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     // Inner class that handles Tree Model Events
-    protected class DatasetViewTreeModelListener implements TreeModelListener {
+    protected class DatasetConfigTreeModelListener implements TreeModelListener {
         public void treeNodesChanged(TreeModelEvent e) {
             System.out.println("treeNodesChanged");
         }
@@ -321,13 +321,13 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     // Inner class that handles Tree Expansion Events
-    protected class DatasetViewTreeDnDListener implements DropTargetListener, DragSourceListener, DragGestureListener {
+    protected class DatasetConfigTreeDnDListener implements DropTargetListener, DragSourceListener, DragGestureListener {
         protected DropTarget dropTarget = null;
         protected DragSource dragSource = null;
-        protected DatasetViewTreeNode selnode = null;
-        protected DatasetViewTreeNode dropnode = null;
+        protected DatasetConfigTreeNode selnode = null;
+        protected DatasetConfigTreeNode dropnode = null;
 
-        public DatasetViewTreeDnDListener(DatasetViewTree tree) {
+        public DatasetConfigTreeDnDListener(DatasetConfigTree tree) {
             dropTarget = new DropTarget(tree, this);
             dragSource = new DragSource();
             dragSource.createDefaultDragGestureRecognizer(tree, DnDConstants.ACTION_MOVE, this);
@@ -357,7 +357,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                     Object ob = event.getSource();
                     Point droppoint = event.getLocation();
                     TreePath droppath = getClosestPathForLocation(droppoint.x, droppoint.y);
-                    dropnode = (DatasetViewTreeNode) droppath.getLastPathComponent();
+                    dropnode = (DatasetConfigTreeNode) droppath.getLastPathComponent();
                     event.getDropTargetContext().dropComplete(true);
                 } else {
                     event.rejectDrop();
@@ -379,7 +379,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
             dropnode = null;
             Object selected = getSelectionPath();
             TreePath treepath = (TreePath) selected;
-            selnode = (DatasetViewTreeNode) treepath.getLastPathComponent();
+            selnode = (DatasetConfigTreeNode) treepath.getLastPathComponent();
             if (selected != null) {
                 StringSelection text = new StringSelection(selected.toString());
                 dragSource.startDrag(event, DragSource.DefaultMoveDrop, text, this);
@@ -397,10 +397,10 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                         return;
                     } else {
                         String result = new String();
-                        DatasetViewTreeNode selnodeParent;
+                        DatasetConfigTreeNode selnodeParent;
                         int selnodeIndex;
                         if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
-                            selnodeParent = (DatasetViewTreeNode) selnode.getParent();
+                            selnodeParent = (DatasetConfigTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             
@@ -408,9 +408,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
                               // can convert FD to Option and insert into another FD
 							  result = treemodel.insertNodeInto(selnode, dropnode, 0);
                             } else
-                              result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
+                              result = treemodel.insertNodeInto(selnode, (DatasetConfigTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
                         } else {
-                            selnodeParent = (DatasetViewTreeNode) selnode.getParent();
+                            selnodeParent = (DatasetConfigTreeNode) selnode.getParent();
                             selnodeIndex = selnodeParent.getIndex(selnode);
                             treemodel.removeNodeFromParent(selnode);
                             result = treemodel.insertNodeInto(selnode, dropnode, 0);
@@ -440,7 +440,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         }
     }
 
-    protected class DatasetViewTreeMouseListener implements MouseListener {
+    protected class DatasetConfigTreeMouseListener implements MouseListener {
         public void mousePressed(MouseEvent e) {
             if (attrTable != null)
                 if (attrTable.getEditorComponent() != null) {
@@ -469,10 +469,10 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     private void loungePopupMenu(MouseEvent e) {
         JPopupMenu popup = new JPopupMenu();
         clickedPath = this.getClosestPathForLocation(e.getX(), e.getY());
-        editingNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+        editingNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
         String[] menuItems = null;
         String clickedNodeClass = editingNode.getUserObject().getClass().getName();
-        if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetView"))
+        if (clickedNodeClass.equals("org.ensembl.mart.lib.config.DatasetConfig"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off", "insert filter page", "insert attribute page", "delete", "save","save as"};
         else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
             menuItems = new String[]{"copy", "cut", "paste", "Hidden on/off","insert filter group", "delete", "save","save as"};
@@ -509,7 +509,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     public void cut() {
         cut = true;
-        editingNodeParent = (DatasetViewTreeNode) editingNode.getParent();
+        editingNodeParent = (DatasetConfigTreeNode) editingNode.getParent();
         editingNodeIndex = editingNode.getParent().getIndex(editingNode);
         treemodel.removeNodeFromParent(editingNode);
         copy();
@@ -518,27 +518,27 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     public void copy() {
 
         String editingNodeClass = editingNode.getUserObject().getClass().getName();
-        DatasetViewTreeNode copiedNode = new DatasetViewTreeNode("");
+        DatasetConfigTreeNode copiedNode = new DatasetConfigTreeNode("");
 
         if ((editingNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new FilterPage((FilterPage) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new FilterPage((FilterPage) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new AttributePage((AttributePage) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new AttributePage((AttributePage) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new FilterGroup((FilterGroup) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new FilterGroup((FilterGroup) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new AttributeGroup((AttributeGroup) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new AttributeGroup((AttributeGroup) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new FilterCollection((FilterCollection) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new FilterCollection((FilterCollection) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new AttributeCollection((AttributeCollection) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new AttributeCollection((AttributeCollection) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new FilterDescription((FilterDescription) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new FilterDescription((FilterDescription) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new AttributeDescription((AttributeDescription) editingNode.getUserObject()));
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new AttributeDescription((AttributeDescription) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Option"))
-            copiedNode = new DatasetViewTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
-        DatasetViewTreeNodeSelection ss = new DatasetViewTreeNodeSelection(copiedNode);
+            copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Option((Option) editingNode.getUserObject()));
+        DatasetConfigTreeNodeSelection ss = new DatasetConfigTreeNodeSelection(copiedNode);
         clipboard.setContents(ss, this);
     }
 
@@ -547,9 +547,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		if (bc.getHidden() == null || !bc.getHidden().equals("true")){
 			bc.setHidden("true");
 			Enumeration children = editingNode.breadthFirstEnumeration();
-			DatasetViewTreeNode childNode = null;
+			DatasetConfigTreeNode childNode = null;
 			while (children.hasMoreElements()){
-				childNode = (DatasetViewTreeNode) children.nextElement();
+				childNode = (DatasetConfigTreeNode) children.nextElement();
 				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
 				ch.setHidden("true");
 			}
@@ -557,9 +557,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		else{
 			bc.setHidden("false");
 			Enumeration children = editingNode.breadthFirstEnumeration();
-			DatasetViewTreeNode childNode = null;
+			DatasetConfigTreeNode childNode = null;
 			while (children.hasMoreElements()){
-				childNode = (DatasetViewTreeNode) children.nextElement();
+				childNode = (DatasetConfigTreeNode) children.nextElement();
 				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject)childNode.getUserObject();
 				ch.setHidden("false");
 			}			
@@ -568,7 +568,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 	}
 
 
-    public DatasetViewTreeNode getEditingNode() {
+    public DatasetConfigTreeNode getEditingNode() {
         return editingNode;
     }
 
@@ -576,14 +576,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         Transferable t = clipboard.getContents(this);
         try {
 
-            DatasetViewTreeNode selnode = (DatasetViewTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetViewTreeNode"), "treeNode"));
-            DatasetViewTreeNode dropnode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+            DatasetConfigTreeNode selnode = (DatasetConfigTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));
+            DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
             String result = new String();
             if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
-                result = treemodel.insertNodeInto(selnode, (DatasetViewTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
+                result = treemodel.insertNodeInto(selnode, (DatasetConfigTreeNode) dropnode.getParent(), dropnode.getParent().getIndex(dropnode) + 1);
             } else {
                 if (selnode.getUserObject() instanceof org.ensembl.mart.lib.config.AttributePage) {
-                    result = treemodel.insertNodeInto(selnode, dropnode, ((DatasetView) dropnode.getUserObject()).getFilterPages().length);
+                    result = treemodel.insertNodeInto(selnode, dropnode, ((DatasetConfig) dropnode.getUserObject()).getFilterPages().length);
                 } else
                     result = treemodel.insertNodeInto(selnode, dropnode, 0);
             }
@@ -602,12 +602,12 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 
     public void insert(BaseConfigurationObject obj, String name) {
 		
-		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 
-        DatasetViewTreeNode newNode = new DatasetViewTreeNode(name + "newNode", obj);
+        DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(name + "newNode", obj);
         String result = new String();
         if (newNode.getUserObject() instanceof org.ensembl.mart.lib.config.AttributePage) {
-            result = treemodel.insertNodeInto(newNode, parentNode, ((DatasetView) parentNode.getUserObject()).getFilterPages().length);
+            result = treemodel.insertNodeInto(newNode, parentNode, ((DatasetConfig) parentNode.getUserObject()).getFilterPages().length);
         } else
             result = treemodel.insertNodeInto(newNode, parentNode, 0);
         if (result.startsWith("Error")) {
@@ -621,14 +621,14 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");		
 		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
 	    //String[] filterTokens = filter2.split(":");
-        //		FilterDescription fd2 = dsView.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
-		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
-		FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(filter2);
+        //		FilterDescription fd2 = dsConfig.getFilterDescriptionByFieldNameTableConstraint(filterTokens[1],filterTokens[0]);
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+		FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(filter2);
 		
         fd2.setType("drop_down_basic_filter");
         
         // set FilterDescription fd1 = to current node
-	    DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+	    DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		
 		String pushField = fd2.getField();
 		String pushInternalName = fd2.getInternalName();
@@ -656,24 +656,24 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         
         
 		
-		DatasetViewTreeNode parentNode = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		
 	    for (int i = 0; i < options.length; i++ ){
 			Option op = options[i];
 			String opName = op.getInternalName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-			pa.addOptions(DatabaseDatasetViewUtils.getLookupOptions(pushField,pushTableName,field,opName,MartEditor.getDetailedDataSource()));
+			pa.addOptions(DatabaseDatasetConfigUtils.getLookupOptions(pushField,pushTableName,field,opName,MartEditor.getDetailedDataSource()));
 			
 			if (pa.getOptions().length > 0){  
 			  Enumeration children = parentNode.children();
-			  DatasetViewTreeNode childNode = null;
+			  DatasetConfigTreeNode childNode = null;
 			  while (children.hasMoreElements()){
-			  	childNode = (DatasetViewTreeNode) children.nextElement();
+			  	childNode = (DatasetConfigTreeNode) children.nextElement();
 			  	if (op.equals(childNode.getUserObject()))
 			  	  break;
 			  }
-			  DatasetViewTreeNode newNode = new DatasetViewTreeNode("PushAction:newNode", pa);
+			  DatasetConfigTreeNode newNode = new DatasetConfigTreeNode("PushAction:newNode", pa);
 			  String result = treemodel.insertNodeInto(newNode, childNode, 0);
 			  if (result.startsWith("Error")) {
 				JOptionPane.showMessageDialog(frame, result, "Error", JOptionPane.ERROR_MESSAGE);
@@ -688,10 +688,10 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 	public void makeDropDown()
 		throws ConfigurationException, SQLException {
 		
-		DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		FilterDescription fd1 = (FilterDescription) node.getUserObject();
         
-		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
         
 		String field = fd1.getField();
         String tableName = fd1.getTableConstraint();
@@ -700,19 +700,19 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 
-		Option[] options = DatabaseDatasetViewUtils.getOptions(field, tableName, joinKey, MartEditor.getDetailedDataSource(), dsView);
+		Option[] options = DatabaseDatasetConfigUtils.getOptions(field, tableName, joinKey, MartEditor.getDetailedDataSource(), dsConfig);
 		for (int k = options.length - 1; k > -1; k-- ){
 			insert(options[k], "Option");
 		}
 	}
 
     public void delete() {
-        DatasetViewTreeNode node = (DatasetViewTreeNode) clickedPath.getLastPathComponent();
+        DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
         treemodel.removeNodeFromParent(node);
     }
 
     public void save_as() {
-        dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+        dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
         JFileChooser fc;
         if (frame.getFileChooserPath() != null)  {
             fc = new JFileChooser(frame.getFileChooserPath());
@@ -727,7 +727,7 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
         int returnVal = fc.showSaveDialog(frame.getContentPane());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             try {
-                DatasetViewXMLUtils.DatasetViewToFile(dsView, fc.getSelectedFile());
+                DatasetConfigXMLUtils.DatasetConfigToFile(dsConfig, fc.getSelectedFile());
                 frame.setFileChooserPath(fc.getSelectedFile());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -736,10 +736,10 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
     public void save() {
-        dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+        dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
         try {
             if(frame.getFileChooserPath() != null)
-                DatasetViewXMLUtils.DatasetViewToFile(dsView, frame.getFileChooserPath());
+                DatasetConfigXMLUtils.DatasetConfigToFile(dsConfig, frame.getFileChooserPath());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -747,9 +747,9 @@ public class DatasetViewTree extends JTree implements Autoscroll, ClipboardOwner
     }
 
 	public void export() {
-		dsView = (DatasetView) ((DatasetViewTreeNode) this.getModel().getRoot()).getUserObject();
+		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 		try {
-			DatabaseDSViewAdaptor.storeDatasetView(MartEditor.getDetailedDataSource(), MartEditor.getUser() ,dsView, true);
+			DatabaseDSConfigAdaptor.storeDatasetConfig(MartEditor.getDetailedDataSource(), MartEditor.getUser() ,dsConfig, true);
 
 		} catch (Exception e) {
 			e.printStackTrace();

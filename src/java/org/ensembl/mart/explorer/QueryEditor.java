@@ -57,12 +57,12 @@ import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceException;
-import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
+import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.shell.MartShellLib;
 import org.ensembl.mart.util.AutoFlushOutputStream;
 import org.ensembl.mart.util.FileUtil;
@@ -75,7 +75,7 @@ import org.ensembl.util.ExtensionFileFilter;
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
 // TODO support boolean_list filter type
 // TODO support id list filters
-// TODO add user defined size for preview buffer
+// TODO add user defined size for preconfig buffer
 
 /**
  * Widget for creating, loading, saving and editing Queries.
@@ -84,8 +84,8 @@ import org.ensembl.util.ExtensionFileFilter;
  */
 public class QueryEditor extends JPanel {
 
-  private int previewLimit    = 1000;
-  private int maxPreviewBytes = 100000;
+  private int preconfigLimit    = 1000;
+  private int maxPreconfigBytes = 100000;
   
   private AdaptorManager adaptorManager;
 
@@ -142,25 +142,25 @@ public class QueryEditor extends JPanel {
    */
   public QueryEditor(
     QueryEditorContext editorManager,
-    AdaptorManager datasetViewSettings)
+    AdaptorManager datasetConfigSettings)
     throws IOException {
 
-    this.adaptorManager = datasetViewSettings;
+    this.adaptorManager = datasetConfigSettings;
     this.editorManager = editorManager;
     this.query = new Query();
 
-    QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getRootAdaptor());
+    QueryTreeView treeConfig = new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
     inputPanelContainer =
       new InputPageContainer(
         query,
-        treeView,
-        datasetViewSettings);
+        treeConfig,
+        datasetConfigSettings);
 
     outputPanel = new JEditorPane();
     outputPanel.setEditable(false);
 
     addWidgets(
-      new JScrollPane(treeView),
+      new JScrollPane(treeConfig),
       new JScrollPane(inputPanelContainer),
       new JScrollPane(outputPanel));
 
@@ -186,7 +186,7 @@ public class QueryEditor extends JPanel {
   /**
 	 * 
 	 */
-	private void doDatasetViewChanged() {
+	private void doDatasetConfigChanged() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -322,14 +322,14 @@ public class QueryEditor extends JPanel {
 
 
   /**
-   * Loads dataset views from files in classpath for test
+   * Loads dataset configs from files in classpath for test
    * purposes.
-   * @return preloaded dataset views
+   * @return preloaded dataset configs
    * @throws ConfigurationException
    */
-  static DSViewAdaptor testDSViewAdaptor() throws ConfigurationException {
+  static DSConfigAdaptor testDSConfigAdaptor() throws ConfigurationException {
 
-    CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
+    CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
     String[] urls = new String[] { 
       //,"data/XML/homo_sapiens__snps.xml"
@@ -339,10 +339,10 @@ public class QueryEditor extends JPanel {
     };
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
-      adaptor.add(new URLDSViewAdaptor(dvURL, true));
+      adaptor.add(new URLDSConfigAdaptor(dvURL, true));
     }
 
-    DatasetView[] views = adaptor.getDatasetViews();
+    DatasetConfig[] configs = adaptor.getDatasetConfigs();
 
     DetailedDataSource ds = new DetailedDataSource("mysql",
       //"127.0.0.1",
@@ -388,9 +388,9 @@ public class QueryEditor extends JPanel {
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     logger.setLevel(Level.FINEST);
 
-    DatasetView[] views = null;
+    DatasetConfig[] configs = null;
 
-    AdaptorManager dvs = testDatasetViewSettings();
+    AdaptorManager dvs = testDatasetConfigSettings();
     final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
 
@@ -403,7 +403,7 @@ public class QueryEditor extends JPanel {
     f.setVisible(true);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetView(dvs.getRootAdaptor().getDatasetViews()[0]);
+    editor.getQuery().setDatasetConfig(dvs.getRootAdaptor().getDatasetConfigs()[0]);
 
   }
 
@@ -416,12 +416,12 @@ public class QueryEditor extends JPanel {
 
 
   /**
-   * Executes query and writes results to preview panel, limits number
-   * of result rows printed to previewLimit.
+   * Executes query and writes results to preconfig panel, limits number
+   * of result rows printed to preconfigLimit.
    *
    */
-  public void doPreview() {
-    runQuery(false, false, previewLimit);
+  public void doPreconfig() {
+    runQuery(false, false, preconfigLimit);
   }
 
 
@@ -438,7 +438,7 @@ public class QueryEditor extends JPanel {
    * may be stored in a user specified results file.
    * 
    * Part of the temporary file is read and
-   * displyed in the preview pane. Saving is implemented by copying the tmp
+   * displyed in the preconfig pane. Saving is implemented by copying the tmp
    * file to the file selected by the user.
    * 
    * Threads are used for concurrent writing and reading from the temporary file.
@@ -483,7 +483,7 @@ public class QueryEditor extends JPanel {
       // memory usage becoming extreme for large queries we limit the amount of data
       // to display by closing the inputStream (potentially) prematurely by the using the
       // MaximumBytesInputFilter() wrapper around the inputStream. 
-      final InputStream is = new MaximumBytesInputFilter(pis, maxPreviewBytes);
+      final InputStream is = new MaximumBytesInputFilter(pis, maxPreconfigBytes);
 
       new Thread() {
 
@@ -508,7 +508,7 @@ public class QueryEditor extends JPanel {
 
         public void run() {
 
-          loadPreviewPanel(is);
+          loadPreconfigPanel(is);
         }
       }
       .start();
@@ -520,9 +520,9 @@ public class QueryEditor extends JPanel {
   }
 
   /**
-   * Reads all data from is and displays in preview panel.
+   * Reads all data from is and displays in preconfig panel.
    */
-  private void loadPreviewPanel(InputStream is) {
+  private void loadPreconfigPanel(InputStream is) {
 
     try {
       outputPanel.read(is, null);
@@ -547,13 +547,13 @@ public class QueryEditor extends JPanel {
 
     try {
 
-      // The preview pane loading system can't read bytes from tmpFile
+      // The preconfig pane loading system can't read bytes from tmpFile
       // until they are written to disk so we force the output memory buffer to
       // flush often.
       final OutputStream os =
         new AutoFlushOutputStream(
           new FileOutputStream(tmpFile),
-          maxPreviewBytes);
+          maxPreconfigBytes);
 
       
       int oldLimit = query.getLimit();
@@ -602,17 +602,17 @@ public class QueryEditor extends JPanel {
 
   /**
    * @return mql representation of the current query,
-   * or null if datasetView unset.
+   * or null if datasetConfig unset.
    */
   public String getQueryAsMQL() throws InvalidQueryException {
 
     String mql = null;
-    DatasetView datasetView = query.getDatasetView();
-    if (datasetView == null)
-      throw new InvalidQueryException("DatasetView must be selected before query can be converted to MQL.");
+    DatasetConfig datasetConfig = query.getDatasetConfig();
+    if (datasetConfig == null)
+      throw new InvalidQueryException("DatasetConfig must be selected before query can be converted to MQL.");
 
     MartShellLib msl = new MartShellLib(null);
-    mql = msl.QueryToMQL(query, datasetView);
+    mql = msl.QueryToMQL(query, datasetConfig);
 
     return mql;
   }
@@ -689,10 +689,10 @@ public class QueryEditor extends JPanel {
   /**
    * 
    */
-  public static AdaptorManager testDatasetViewSettings() {
+  public static AdaptorManager testDatasetConfigSettings() {
     AdaptorManager dvs = new AdaptorManager();
     try {
-      dvs.add( testDSViewAdaptor() );
+      dvs.add( testDSConfigAdaptor() );
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
@@ -701,26 +701,26 @@ public class QueryEditor extends JPanel {
   }
 
 	/**
-   * When doPreview() is called a limit is set on the query with this value.
-	 * @return max number of rows in preview results.
+   * When doPreconfig() is called a limit is set on the query with this value.
+	 * @return max number of rows in preconfig results.
 	 */
-	public int getPreviewLimit() {
-		return previewLimit;
+	public int getPreconfigLimit() {
+		return preconfigLimit;
 	}
 
 	/**
-	 * Set the maximum number of rows to be displayed during a doPreview() cal.
-   * @return max number of rows to include in preview results pane.
+	 * Set the maximum number of rows to be displayed during a doPreconfig() cal.
+   * @return max number of rows to include in preconfig results pane.
 	 */
-	public void setPreviewLimit(int i) {
-		previewLimit = i;
+	public void setPreconfigLimit(int i) {
+		preconfigLimit = i;
 	}
 
 	/**
 	 * 
 	 */
-	public void openDatasetViewMenu() {
-		inputPanelContainer.openDatasetViewMenu();
+	public void openDatasetConfigMenu() {
+		inputPanelContainer.openDatasetConfigMenu();
 	}
 
 }

@@ -27,7 +27,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Contains all the input pages.
@@ -44,12 +44,12 @@ public class InputPageContainer
   private final static Logger logger =
     Logger.getLogger(InputPageContainer.class.getName());
 
-  private DatasetView datasetView;
+  private DatasetConfig datasetConfig;
   private CardLayout cardLayout = new CardLayout();
 
 	private AdaptorManager adaptorManager;
 
-	private DatasetViewWidget datasetViewWidget;
+	private DatasetConfigWidget datasetConfigWidget;
 
 	private OutputSettingsPage outputSettingsPage;
 
@@ -65,10 +65,10 @@ public class InputPageContainer
     if (tree != null)
       tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
-    datasetViewWidget = new DatasetViewWidget(query, adaptorManager, this); 
+    datasetConfigWidget = new DatasetConfigWidget(query, adaptorManager, this); 
     add(
-      datasetViewWidget,
-      "DATASET_VIEW");
+      datasetConfigWidget,
+      "DATASET_CONFIG");
     add(
       new DatasourceWidget(query, adaptorManager),
       TreeNodeData.DATASOURCE.getLabel());
@@ -86,18 +86,18 @@ public class InputPageContainer
     add(outputSettingsPage, TreeNodeData.FORMAT.getLabel());
   }
 
-  public void setDatasetView(DatasetView datasetView) {
-    this.datasetView = datasetView;
+  public void setDatasetConfig(DatasetConfig datasetConfig) {
+    this.datasetConfig = datasetConfig;
   }
 
   /**
    * Show input page corresponding to selected tree node.
-   * Does nothing if query.datasetView==null because we should
-   * only show the datasetViewWidget in that case. 
+   * Does nothing if query.datasetConfig==null because we should
+   * only show the datasetConfigWidget in that case. 
    */
   public void valueChanged(TreeSelectionEvent e) {
   
-    if ( query.getDatasetView()==null ) return;
+    if ( query.getDatasetConfig()==null ) return;
 
 
     if (e.getNewLeadSelectionPath() != null
@@ -141,8 +141,8 @@ public class InputPageContainer
 	/**
 	 * 
 	 */
-	public void openDatasetViewMenu() {
-		datasetViewWidget.openDatasetViewMenu();
+	public void openDatasetConfigMenu() {
+		datasetConfigWidget.openDatasetConfigMenu();
 	}
 
 	/**

@@ -50,15 +50,15 @@ import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
+import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
-import org.ensembl.mart.lib.config.RegistryDSViewAdaptor;
-import org.ensembl.mart.lib.config.URLDSViewAdaptor;
+import org.ensembl.mart.lib.config.RegistryDSConfigAdaptor;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 
 /**
  * <p>Library allowing client code to parse Mart Query Language (MQL)
@@ -80,7 +80,7 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  * 
  * <p>Mart Query Language (MQL) is a derivative of the Structured Query Language (SQL)
  * used to query relational databases.  It follows the following format (items in angle brackets are optional):</p>
- * <p class="indent_big">&lt; using datasetViewName &lt; dataSourceName &gt; &gt; </p>
+ * <p class="indent_big">&lt; using datasetConfigName &lt; dataSourceName &gt; &gt; </p>
  * <p class="indent_big">get</p>
  * <p class="indent_big">&lt; attribute_list &gt;</p>
  * <p class="indent_big">&lt; sequence sequence_request &gt;</p>
@@ -144,9 +144,9 @@ public class MartShellLib {
   /**
    * Create a MartShellLib object with a previously populated
    * adaptorManager.
-   * @param adaptor RegistryDSViewAdaptor object
+   * @param adaptor RegistryDSConfigAdaptor object
    */
-  public MartShellLib(RegistryDSViewAdaptor adaptor) {
+  public MartShellLib(RegistryDSConfigAdaptor adaptor) {
     adaptorManager = adaptor;
   }
 
@@ -160,9 +160,9 @@ public class MartShellLib {
 
   /**
    * Retrieve the environmental Dataset, or null if not set
-   * @return DatasetView environmental dataset
+   * @return DatasetConfig environmental dataset
    */
-  public DatasetView getEnvDataset() {
+  public DatasetConfig getEnvDataset() {
     return envDataset;
   }
 
@@ -172,24 +172,24 @@ public class MartShellLib {
     if (confURL == null)
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
-    RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(confURL);
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL);
     harvestAdaptorsFrom(adaptor);
   }
 
   /**
    * Allows clients to override the adaptorManager created and managed in the MartShellLib at
    * any time with a new one.
-   * @param adaptor RegistryDSViewAdaptor
+   * @param adaptor RegistryDSConfigAdaptor
    */
-  public void setAdaptorManager(RegistryDSViewAdaptor adaptor) {
+  public void setAdaptorManager(RegistryDSConfigAdaptor adaptor) {
     adaptorManager = adaptor;
   }
 
   /**
    * Allows client to retrieve the underlying adaptorManager for the library
-   * @return RegistryDSViewAdaptor adaptorManager
+   * @return RegistryDSConfigAdaptor adaptorManager
    */
-  public RegistryDSViewAdaptor getAdaptorManager() {
+  public RegistryDSConfigAdaptor getAdaptorManager() {
     return adaptorManager;
   }
 
@@ -197,23 +197,23 @@ public class MartShellLib {
    * Converts the Query into an MQL string.
    * 
    * @param query Query object to be transformed into MQL
-   * @param datasetViewquery Query object to be transformed into MQL
+   * @param datasetConfigquery Query object to be transformed into MQL
    * @return String MQL statement
    * throws InvalidQueryException for all underlying exceptions
    */
-  public String QueryToMQL(Query query, DatasetView datasetView) throws InvalidQueryException {
+  public String QueryToMQL(Query query, DatasetConfig datasetConfig) throws InvalidQueryException {
 
     StringBuffer mqlbuf = new StringBuffer();
-    boolean success = getUsingClause(query, datasetView, mqlbuf);
+    boolean success = getUsingClause(query, datasetConfig, mqlbuf);
 
     if (success)
-      success = getGetClause(query, datasetView, mqlbuf.append(" "));
+      success = getGetClause(query, datasetConfig, mqlbuf.append(" "));
 
     if (success && (query.getType() == Query.SEQUENCE))
       getSequenceClause(query, mqlbuf.append(" "));
 
     if (success && (query.getTotalFilterCount() > 0))
-      success = getWhereClause(query, datasetView, mqlbuf.append(" "));
+      success = getWhereClause(query, datasetConfig, mqlbuf.append(" "));
 
     if (success && query.hasLimit())
       mqlbuf.append(" ").append("limit ").append(query.getLimit());
@@ -241,14 +241,14 @@ public class MartShellLib {
 
     if (!adaptorManager.supportsInternalName(datasetName))
       throw new InvalidQueryException(
-        "DatasetView " + datasetName + " is not supported by the martConfiguration provided\n");
+        "DatasetConfig " + datasetName + " is not supported by the martConfiguration provided\n");
 
-    DatasetView dataset = adaptorManager.getDatasetViewByInternalName(datasetName);
+    DatasetConfig dataset = adaptorManager.getDatasetConfigByInternalName(datasetName);
 
     return QueryToMQL(query, dataset);
   }
 
-  private boolean getUsingClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
+  private boolean getUsingClause(Query query, DatasetConfig dataset, StringBuffer mqlbuf) {
     boolean success = true;
 
     mqlbuf.append(USINGQSTART).append(" ").append(dataset.getInternalName());
@@ -256,7 +256,7 @@ public class MartShellLib {
     return success;
   }
 
-  private boolean getGetClause(Query query, DatasetView dataset, StringBuffer mqlbuf) {
+  private boolean getGetClause(Query query, DatasetConfig dataset, StringBuffer mqlbuf) {
     Attribute[] attributes = query.getAttributes();
     mqlbuf.append(GETQSTART);
 
@@ -308,7 +308,7 @@ public class MartShellLib {
       mqlbuf.append("+").append(rflank);
   }
 
-  private boolean getWhereClause(Query query, DatasetView datasetview, StringBuffer mqlbuf) {
+  private boolean getWhereClause(Query query, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     boolean success = true;
 
     mqlbuf.append("where ");
@@ -321,11 +321,11 @@ public class MartShellLib {
       Filter filter = filters[i];
 
       if (filter instanceof BasicFilter)
-        success = mapBasicFilter((BasicFilter) filter, datasetview, mqlbuf);
+        success = mapBasicFilter((BasicFilter) filter, datasetconfig, mqlbuf);
       else if (filter instanceof BooleanFilter)
-        success = mapBooleanFilter((BooleanFilter) filter, datasetview, mqlbuf);
+        success = mapBooleanFilter((BooleanFilter) filter, datasetconfig, mqlbuf);
       else
-        success = mapIDListFilter((IDListFilter) filter, datasetview, mqlbuf);
+        success = mapIDListFilter((IDListFilter) filter, datasetconfig, mqlbuf);
 
       if (!success)
         MQLError = "Could not map filter " + filter.getField() + " " + filter.getTableConstraint();
@@ -334,13 +334,13 @@ public class MartShellLib {
     return success;
   }
 
-  private boolean mapBooleanFilter(BooleanFilter filter, DatasetView datasetview, StringBuffer mqlbuf) {
+  private boolean mapBooleanFilter(BooleanFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
       return false;
 
-    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
     String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
     String filterCondition = filter.getCondition();
 
@@ -354,14 +354,14 @@ public class MartShellLib {
     return true;
   }
 
-  private boolean mapIDListFilter(IDListFilter filter, DatasetView datasetview, StringBuffer mqlbuf) {
+  private boolean mapIDListFilter(IDListFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
       return false;
 
     boolean success = true;
-    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
     String filterName = fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint);
     //String filterCondition = filter.getCondition();
 
@@ -399,13 +399,13 @@ public class MartShellLib {
     return success;
   }
 
-  private boolean mapBasicFilter(BasicFilter filter, DatasetView datasetview, StringBuffer mqlbuf) {
+  private boolean mapBasicFilter(BasicFilter filter, DatasetConfig datasetconfig, StringBuffer mqlbuf) {
     String field = filter.getField();
     String tableConstraint = filter.getTableConstraint();
-    if (!datasetview.supportsFilterDescription(field, tableConstraint))
+    if (!datasetconfig.supportsFilterDescription(field, tableConstraint))
       return false;
 
-    FilterDescription fdesc = datasetview.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
+    FilterDescription fdesc = datasetconfig.getFilterDescriptionByFieldNameTableConstraint(field, tableConstraint);
     mqlbuf
       .append(fdesc.getInternalNameByFieldNameTableConstraint(field, tableConstraint))
       .append(" ")
@@ -490,7 +490,7 @@ public class MartShellLib {
         for (int i = 0, n = sources.length; i < n; i++) {
           String source = sources[i];
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(source);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(source);
 
           String[] datasets = adaptor.getDatasetNames();
           for (int j = 0, m = datasets.length; j < m; j++) {
@@ -526,67 +526,67 @@ public class MartShellLib {
     return ret;
   }
 
-  public String[] listDatasetViews(String[] toks) throws ConfigurationException {
-    if (adaptorManager.getDatasetViews().length == 0)
-      return new String[] { "No DatasetViews Loaded\n" };
+  public String[] listDatasetConfigs(String[] toks) throws ConfigurationException {
+    if (adaptorManager.getDatasetConfigs().length == 0)
+      return new String[] { "No DatasetConfigs Loaded\n" };
 
     List retList = new ArrayList();
 
     if (toks.length == 3) {
-      //list datasetviews all|sourcename
+      //list datasetconfigs all|sourcename
       String reqName = toks[2];
 
       if (reqName.equalsIgnoreCase(LISTALLREQ)) {
-        //list datasetviews all
+        //list datasetconfigs all
 
         String[] sources = adaptorManager.getAdaptorNames();
         for (int i = 0, n = sources.length; i < n; i++) {
           String source = sources[i];
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(source);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(source);
 
           String[] datasets = adaptor.getDatasetNames();
           for (int j = 0, m = datasets.length; j < m; j++) {
             String dataset = datasets[j];
-            String[] views = adaptor.getDatasetViewInternalNamesByDataset(dataset);
+            String[] configs = adaptor.getDatasetConfigInternalNamesByDataset(dataset);
 
-            for (int k = 0, l = views.length; k < l; k++) {
-              String view = views[k];
-              retList.add(source + "." + dataset + "." + view + "\n");
+            for (int k = 0, l = configs.length; k < l; k++) {
+              String config = configs[k];
+              retList.add(source + "." + dataset + "." + config + "\n");
             }
           }
         }
       } else {
-        //list datasetviews sourcename
+        //list datasetconfigs sourcename
         if (!adaptorManager.supportsAdaptor(reqName))
           throw new ConfigurationException("Source " + reqName + " is not a valid Mart Source\n");
 
-        DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(reqName);
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(reqName);
 
         String[] datasets = adaptor.getDatasetNames();
         for (int j = 0, m = datasets.length; j < m; j++) {
-          String[] views = adaptor.getDatasetViewInternalNamesByDataset(datasets[j]);
+          String[] configs = adaptor.getDatasetConfigInternalNamesByDataset(datasets[j]);
 
-          for (int k = 0, l = views.length; k < l; k++) {
-            retList.add(reqName + "." + datasets[j] + "." + views[k] + "\n");
+          for (int k = 0, l = configs.length; k < l; k++) {
+            retList.add(reqName + "." + datasets[j] + "." + configs[k] + "\n");
           }
         }
 
       }
     } else if (toks.length == 2) {
-      //list datasetviews (relative to envMart and envDataset
+      //list datasetconfigs (relative to envMart and envDataset
       if (envMart == null)
-        throw new ConfigurationException("Must set environmental Mart to list DatasetViews to it\n");
+        throw new ConfigurationException("Must set environmental Mart to list DatasetConfigs to it\n");
       if (envDataset == null)
-        throw new ConfigurationException("Must set environmental Dataset to list DatasetViews to it\n");
+        throw new ConfigurationException("Must set environmental Dataset to list DatasetConfigs to it\n");
 
-      String[] views =
-        adaptorManager.getAdaptorByName(envMart.getName()).getDatasetViewInternalNamesByDataset(
+      String[] configs =
+        adaptorManager.getAdaptorByName(envMart.getName()).getDatasetConfigInternalNamesByDataset(
           envDataset.getInternalName());
-      for (int i = 0, n = views.length; i < n; i++) {
-        retList.add(views[i] + "\n");
+      for (int i = 0, n = configs.length; i < n; i++) {
+        retList.add(configs[i] + "\n");
       }
     } else
-      throw new ConfigurationException("Invalid list datasetviews command recieved\n");
+      throw new ConfigurationException("Invalid list datasetconfigs command recieved\n");
 
     String[] ret = new String[retList.size()];
     retList.toArray(ret);
@@ -777,14 +777,14 @@ public class MartShellLib {
   }
 
   public String[] DescribeDataset(String dsetname) throws ConfigurationException, InvalidQueryException {
-    DatasetView dset = null;
+    DatasetConfig dset = null;
 
     if (dsetname == null) {
       if (envDataset == null)
         throw new InvalidQueryException("Invalid describe dataset command, please set the environmental Dataset and Mart with either 'use' or 'set'\n");
       dset = envDataset;
     } else {
-      dset = getDatasetViewFor(dsetname);
+      dset = getDatasetConfigFor(dsetname);
     }
 
     List lines = new ArrayList();
@@ -952,7 +952,7 @@ public class MartShellLib {
 
   public void addMart(DetailedDataSource ds) throws InvalidQueryException {
     try {
-      DatabaseDSViewAdaptor adaptor = new DatabaseDSViewAdaptor(ds, ds.getUser());
+      DatabaseDSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(ds, ds.getUser());
       adaptor.setName(ds.getName());
       adaptorManager.add(adaptor);
     } catch (ConfigurationException e) {
@@ -971,7 +971,7 @@ public class MartShellLib {
 
       try {
         URL regURL = InputSourceUtil.getURLForString(source);
-        RegistryDSViewAdaptor regadaptor = new RegistryDSViewAdaptor(regURL);
+        RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(regURL);
 
         harvestAdaptorsFrom(regadaptor);
       } catch (MalformedURLException e) {
@@ -980,26 +980,26 @@ public class MartShellLib {
           e);
       } catch (ConfigurationException e) {
         throw new InvalidQueryException(
-          "Recieved ConfigurationException loading DatasetViews from " + source + " " + e.getMessage() + "\n",
+          "Recieved ConfigurationException loading DatasetConfigs from " + source + " " + e.getMessage() + "\n",
           e);
       }
     } else
-      throw new InvalidQueryException("Recieved invalid add DatasetViews command.\n");
+      throw new InvalidQueryException("Recieved invalid add DatasetConfigs command.\n");
   }
 
   //recursively harvest DB and URL adaptors from composite/registry adaptors
-  public void harvestAdaptorsFrom(DSViewAdaptor adaptor) throws ConfigurationException {
-    if (adaptor instanceof CompositeDSViewAdaptor) {
-      DSViewAdaptor[] adaptors = adaptor.getAdaptors();
+  public void harvestAdaptorsFrom(DSConfigAdaptor adaptor) throws ConfigurationException {
+    if (adaptor instanceof CompositeDSConfigAdaptor) {
+      DSConfigAdaptor[] adaptors = adaptor.getAdaptors();
 
-      //recursively harvest until adaptor is not a CompositeDSViewAdaptor
+      //recursively harvest until adaptor is not a CompositeDSConfigAdaptor
       for (int i = 0, n = adaptors.length; i < n; i++)
         harvestAdaptorsFrom(adaptors[i]);
     } else
       adaptorManager.add(adaptor);
   }
 
-  public void addDatasetView(StringTokenizer toks) throws InvalidQueryException {
+  public void addDatasetConfig(StringTokenizer toks) throws InvalidQueryException {
     if (toks.hasMoreTokens()) {
       String source = toks.nextToken();
       String userName = null;
@@ -1011,15 +1011,15 @@ public class MartShellLib {
 
       try {
         URL dsvURL = InputSourceUtil.getURLForString(source);
-        URLDSViewAdaptor adaptor = new URLDSViewAdaptor(dsvURL);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL);
 
         if (userName == null) {
-          CompositeDSViewAdaptor fileAdaptor = null;
+          CompositeDSConfigAdaptor fileAdaptor = null;
           if (adaptorManager.supportsAdaptor(DEFAULTURLADAPTORNAME)) {
-            fileAdaptor = (CompositeDSViewAdaptor) adaptorManager.getAdaptorByName(DEFAULTURLADAPTORNAME);
+            fileAdaptor = (CompositeDSConfigAdaptor) adaptorManager.getAdaptorByName(DEFAULTURLADAPTORNAME);
             adaptorManager.remove(fileAdaptor);
           } else {
-            fileAdaptor = new CompositeDSViewAdaptor();
+            fileAdaptor = new CompositeDSConfigAdaptor();
             fileAdaptor.setName(DEFAULTURLADAPTORNAME);
           }
             
@@ -1035,12 +1035,12 @@ public class MartShellLib {
           e);
       } catch (ConfigurationException e) {
         throw new InvalidQueryException(
-          "Recieved ConfigurationException loading DatasetView from " + source + " " + e.getMessage() + "\n",
+          "Recieved ConfigurationException loading DatasetConfig from " + source + " " + e.getMessage() + "\n",
           e);
       }
 
     } else
-      throw new InvalidQueryException("Recieved invalid add DatasetView command.\n");
+      throw new InvalidQueryException("Recieved invalid add DatasetConfig command.\n");
   }
 
   public void removeProcedure(StringTokenizer toks) throws InvalidQueryException {
@@ -1056,7 +1056,7 @@ public class MartShellLib {
       String name = toks.nextToken();
 
       try {
-        //If a DSViewAdaptor has been created with this Mart, remove it
+        //If a DSConfigAdaptor has been created with this Mart, remove it
         if (adaptorManager.supportsAdaptor(name))
           adaptorManager.remove(adaptorManager.getAdaptorByName(name));
         else
@@ -1087,19 +1087,19 @@ public class MartShellLib {
                 + name
                 + " must remove it with datasetname relative to the environmental mart, or sourcename.datasetname explicitly\n");
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(nametoks[0]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(nametoks[0]);
           if (adaptor == null)
             throw new InvalidQueryException("Nothing loaded for Mart " + nametoks[0] + "\n");
 
           if (adaptor.supportsDataset(nametoks[1])) {
-            if (adaptor instanceof DatabaseDSViewAdaptor) {
-              DatabaseDSViewAdaptor dbadaptor = (DatabaseDSViewAdaptor) adaptor;
+            if (adaptor instanceof DatabaseDSConfigAdaptor) {
+              DatabaseDSConfigAdaptor dbadaptor = (DatabaseDSConfigAdaptor) adaptor;
 
-              DatasetView[] dsvs = dbadaptor.getDatasetViewsByDataset(nametoks[1]);
+              DatasetConfig[] dsvs = dbadaptor.getDatasetConfigsByDataset(nametoks[1]);
               for (int i = 0, n = dsvs.length; i < n; i++)
-                dbadaptor.removeDatasetView(dsvs[i]);
+                dbadaptor.removeDatasetConfig(dsvs[i]);
 
-              if (dbadaptor.getDatasetViews().length < 1)
+              if (dbadaptor.getDatasetConfigs().length < 1)
                 adaptorManager.remove(dbadaptor);
             } else
               adaptorManager.remove(adaptor);
@@ -1110,17 +1110,17 @@ public class MartShellLib {
           if (envMart == null)
             throw new InvalidQueryException("Must set environmental Mart to remove datasets relative to it.");
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
 
           if (adaptor.supportsDataset(nametoks[0])) {
-            if (adaptor instanceof DatabaseDSViewAdaptor) {
-              DatabaseDSViewAdaptor dbadaptor = (DatabaseDSViewAdaptor) adaptor;
+            if (adaptor instanceof DatabaseDSConfigAdaptor) {
+              DatabaseDSConfigAdaptor dbadaptor = (DatabaseDSConfigAdaptor) adaptor;
 
-              DatasetView[] dsvs = dbadaptor.getDatasetViewsByDataset(nametoks[1]);
+              DatasetConfig[] dsvs = dbadaptor.getDatasetConfigsByDataset(nametoks[1]);
               for (int i = 0, n = dsvs.length; i < n; i++)
-                dbadaptor.removeDatasetView(dsvs[i]);
+                dbadaptor.removeDatasetConfig(dsvs[i]);
 
-              if (dbadaptor.getDatasetViews().length < 1)
+              if (dbadaptor.getDatasetConfigs().length < 1)
                 adaptorManager.remove(dbadaptor);
             } else
               adaptorManager.remove(adaptor);
@@ -1155,7 +1155,7 @@ public class MartShellLib {
           throw new InvalidQueryException("Source " + source + " has not been loaded.\n");
       } catch (ConfigurationException e) {
         throw new InvalidQueryException(
-          "Caught ConfigurationException removing DatasetViews from source " + source + "\n" + e.getMessage(),
+          "Caught ConfigurationException removing DatasetConfigs from source " + source + "\n" + e.getMessage(),
           e);
       }
     } else if (toks.countTokens() == 1) {
@@ -1175,10 +1175,10 @@ public class MartShellLib {
         throw e;
       }
     } else
-      throw new InvalidQueryException("Recieved invalid remove DatasetViews comand.\n");
+      throw new InvalidQueryException("Recieved invalid remove DatasetConfigs comand.\n");
   }
 
-  public void removeDatasetView(StringTokenizer toks) throws InvalidQueryException {
+  public void removeDatasetConfig(StringTokenizer toks) throws InvalidQueryException {
     if (toks.hasMoreTokens()) {
       String name = toks.nextToken();
 
@@ -1190,20 +1190,20 @@ public class MartShellLib {
           && adaptorManager.supportsAdaptor(nametoks[0])
           && adaptorManager.supportsDataset(nametoks[1]))
           throw new InvalidQueryException(
-            "Cannot remove default datasetview for dataset with relative name: "
+            "Cannot remove default datasetconfig for dataset with relative name: "
               + name
-              + " must remove it with sourcename.datasetname.viewname explicitly\n");
+              + " must remove it with sourcename.datasetname.configname explicitly\n");
 
-        adaptorManager.removeDatasetView(getDatasetViewFor(name));
+        adaptorManager.removeDatasetConfig(getDatasetConfigFor(name));
       } catch (ConfigurationException e) {
         throw new InvalidQueryException(
-          "Caught ConfigurationException removing DatasetView " + name + " " + e.getMessage(),
+          "Caught ConfigurationException removing DatasetConfig " + name + " " + e.getMessage(),
           e);
       } catch (InvalidQueryException e) {
         throw e;
       }
     } else
-      throw new InvalidQueryException("Recieved invalid remove DatasetView command.\n");
+      throw new InvalidQueryException("Recieved invalid remove DatasetConfig command.\n");
   }
 
   public void updateDatasets(StringTokenizer toks) throws InvalidQueryException {
@@ -1222,7 +1222,7 @@ public class MartShellLib {
         adaptorManager.getAdaptorByName(envMart.getName()).update();
       }
     } catch (ConfigurationException e) {
-      throw new InvalidQueryException("Could not update DatasetViews, " + e.getMessage() + "\n", e);
+      throw new InvalidQueryException("Could not update DatasetConfigs, " + e.getMessage() + "\n", e);
     }
   }
 
@@ -1237,7 +1237,7 @@ public class MartShellLib {
           if (!adaptorManager.supportsAdaptor(nametoks[0]))
             throw new InvalidQueryException("Source " + nametoks[0] + " is not a valid mart source\n");
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(nametoks[0]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(nametoks[0]);
 
           if (!adaptor.supportsDataset(nametoks[1]))
             throw new InvalidQueryException(
@@ -1248,7 +1248,7 @@ public class MartShellLib {
           //datasetname relative to environmental Mart
           if (envMart == null)
             throw new InvalidQueryException(
-              "Must set environmental Mart to update datasetviews with relative name " + nametoks[0] + "\n");
+              "Must set environmental Mart to update datasetconfigs with relative name " + nametoks[0] + "\n");
 
           if (!adaptorManager.getAdaptorByName(envMart.getName()).supportsDataset(nametoks[0]))
             throw new InvalidQueryException(
@@ -1257,27 +1257,27 @@ public class MartShellLib {
           adaptorManager.getAdaptorByName(envMart.getName()).update();
         } else
           throw new InvalidQueryException(
-            "Recieved invalid update DatasetView command update datasetview " + name + "\n");
+            "Recieved invalid update DatasetConfig command update datasetconfig " + name + "\n");
       } catch (ConfigurationException e) {
-        throw new InvalidQueryException("Could not update DatasetView " + name + " " + e.getMessage(), e);
+        throw new InvalidQueryException("Could not update DatasetConfig " + name + " " + e.getMessage(), e);
       }
     } else
-      throw new InvalidQueryException("Recieved invalid update DatasetView command.\n");
+      throw new InvalidQueryException("Recieved invalid update DatasetConfig command.\n");
   }
 
-  public DatasetView getDatasetViewFor(String name) throws InvalidQueryException {
-    DatasetView ret = null;
+  public DatasetConfig getDatasetConfigFor(String name) throws InvalidQueryException {
+    DatasetConfig ret = null;
     String[] toks = name.split("\\.");
 
     try {
       if (toks.length == 3) {
-        //sourcename.datasetname.viewname
+        //sourcename.datasetname.configname
 
         if (!adaptorManager.supportsAdaptor(toks[0]))
           throw new InvalidQueryException(
-            "Sourcename " + toks[0] + " from datasetview request " + name + " is not a known source\n");
+            "Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
 
-        DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
 
         if (!adaptor.supportsDataset(toks[1]))
           throw new InvalidQueryException(
@@ -1285,20 +1285,20 @@ public class MartShellLib {
               + toks[1]
               + " is not supported by sourcename "
               + toks[0]
-              + " in datasetview request "
+              + " in datasetconfig request "
               + name
               + "\n");
 
-        ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], toks[2]);
+        ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], toks[2]);
       } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.viewname relative to envMart
+        //either sourcename.datasetname or datasetname.configname relative to envMart
         if (adaptorManager.supportsAdaptor(toks[0])) {
           //assume it is sourcename.datasetname
           if (!adaptorManager.supportsAdaptor(toks[0]))
             throw new InvalidQueryException(
-              "Sourcename " + toks[0] + " from datasetview request " + name + " is not a known source\n");
+              "Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
 
           if (!adaptor.supportsDataset(toks[1]))
             throw new InvalidQueryException(
@@ -1306,50 +1306,50 @@ public class MartShellLib {
                 + toks[1]
                 + " is not supported by sourcename "
                 + toks[0]
-                + " in datasetview request "
+                + " in datasetconfig request "
                 + name
                 + "\n");
 
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], DEFAULTDATASETVIEWNAME);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], DEFAULTDATASETCONFIGNAME);
         } else {
-          //assume it is datasetname.viewname relative to envMart
+          //assume it is datasetname.configname relative to envMart
           if (envMart == null)
             throw new InvalidQueryException(
-              "Must set environmental Mart to manipulate DatasetViews with relative name " + name + "\n");
+              "Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[0], toks[1]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], toks[1]);
         }
       } else if (toks.length == 1) {
         if (envMart == null)
           throw new InvalidQueryException(
-            "Must set environmental Mart to manipulate DatasetViews with relative name " + name + "\n");
+            "Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
 
-        DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
 
-        //either datasetname relative to envMart or viewname relative to envMart.envDataset
+        //either datasetname relative to envMart or configname relative to envMart.envDataset
         if (adaptorManager.supportsDataset(toks[0])) {
           //assume it is datasetname relative to envMart
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[0], DEFAULTDATASETVIEWNAME);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], DEFAULTDATASETCONFIGNAME);
         } else {
-          //assume it is viewname relative to envMart and envDataset
+          //assume it is configname relative to envMart and envDataset
           if (envDataset == null)
             throw new InvalidQueryException(
-              "Must set environmental Dataset to manipulate DatasetViews with relative name " + name + "\n");
+              "Must set environmental Dataset to manipulate DatasetConfigs with relative name " + name + "\n");
 
-          ret = adaptor.getDatasetViewByDatasetInternalName(envDataset.getDataset(), toks[0]);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(envDataset.getDataset(), toks[0]);
         }
       }
     } catch (ConfigurationException e) {
       throw new InvalidQueryException(
-        "Caught ConfigurationException manipulating DatasetView named " + name + " " + e.getMessage(),
+        "Caught ConfigurationException manipulating DatasetConfig named " + name + " " + e.getMessage(),
         e);
     } catch (InvalidQueryException e) {
       throw e;
     }
 
     if (ret == null)
-      throw new InvalidQueryException("Could not manipulate DatasetView " + name + "\n");
+      throw new InvalidQueryException("Could not manipulate DatasetConfig " + name + "\n");
 
     return ret;
   }
@@ -1383,7 +1383,7 @@ public class MartShellLib {
     } else {
       List datasetMart = getDatasetAndMartFrom(command);
 
-      envDataset = (DatasetView) datasetMart.get(0);
+      envDataset = (DatasetConfig) datasetMart.get(0);
 
       if (datasetMart.size() == 2)
         envMart = (DetailedDataSource) datasetMart.get(1);
@@ -1393,12 +1393,12 @@ public class MartShellLib {
   private List getDatasetAndMartFrom(String command) throws InvalidQueryException {
     List ret = new ArrayList();
     DetailedDataSource retMart = null;
-    DatasetView retDataset = null;
+    DatasetConfig retDataset = null;
 
-    DSViewAdaptor dsadaptor = null;
+    DSConfigAdaptor dsadaptor = null;
     String datasourcereq = null;
     String datasetreq = null;
-    String viewreq = null;
+    String configreq = null;
 
     String dsourceDelimiter = ">";
     if (command.indexOf(dsourceDelimiter) > 0) {
@@ -1429,7 +1429,7 @@ public class MartShellLib {
     String[] toks = datasetreq.split("\\.");
     try {
       if (toks.length == 3) {
-        //sourcename.datasetname.viewname
+        //sourcename.datasetname.configname
 
         //dont use datasourcereq for returned Mart if using 'name>martName' syntax
         if (datasourcereq == null) {
@@ -1462,9 +1462,9 @@ public class MartShellLib {
           dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
 
         datasetreq = toks[1];
-        viewreq = toks[2];
+        configreq = toks[2];
       } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.viewname
+        //either sourcename.datasetname or datasetname.configname
         if (adaptorManager.supportsAdaptor(toks[0])) {
           //assume it is sourcename.datasetname
 
@@ -1499,9 +1499,9 @@ public class MartShellLib {
             dsadaptor = adaptorManager.getAdaptorByName(toks[0]);
 
           datasetreq = toks[1];
-          viewreq = DEFAULTDATASETVIEWNAME;
+          configreq = DEFAULTDATASETCONFIGNAME;
         } else if (adaptorManager.supportsDataset(toks[0])) {
-          //assume it is datasetname.viewname
+          //assume it is datasetname.configname
 
           if (envMart == null)
             throw new InvalidQueryException("Must set environmental Mart with use or set for relative dataset names to work\n");
@@ -1517,16 +1517,16 @@ public class MartShellLib {
           dsadaptor = adaptorManager.getAdaptorByName(envMart.getName());
 
           datasetreq = toks[0];
-          viewreq = toks[1];
+          configreq = toks[1];
         } else
           throw new InvalidQueryException(
             "Could not resolve set Dataset "
               + toks[0]
               + "."
               + toks[1]
-              + " command to either sourcename.datasetname or datasetname.viewname\n");
+              + " command to either sourcename.datasetname or datasetname.configname\n");
       } else {
-        //either datasetname or viewname, so check for envMart and associated adaptor
+        //either datasetname or configname, so check for envMart and associated adaptor
         if (envMart == null)
           throw new InvalidQueryException("Must set environmental Mart with use or set for relative dataset names to work\n");
 
@@ -1543,25 +1543,25 @@ public class MartShellLib {
         if (adaptorManager.supportsDataset(toks[0])) {
           //assume it is datasetname
           datasetreq = toks[0];
-          viewreq = DEFAULTDATASETVIEWNAME;
+          configreq = DEFAULTDATASETCONFIGNAME;
         } else {
-          //assume it is viewname
+          //assume it is configname
           if (envDataset == null)
-            throw new InvalidQueryException("Must set environmental Dataset before using relative viewname\n");
+            throw new InvalidQueryException("Must set environmental Dataset before using relative configname\n");
 
           datasetreq = envDataset.getDataset();
-          viewreq = toks[0];
+          configreq = toks[0];
         }
       }
 
       if (!dsadaptor.supportsDataset(datasetreq))
         throw new InvalidQueryException("Mart " + toks[0] + " does not support dataset " + datasetreq + "\n");
 
-      DatasetView dsv = dsadaptor.getDatasetViewByDatasetInternalName(datasetreq, viewreq);
+      DatasetConfig dsv = dsadaptor.getDatasetConfigByDatasetInternalName(datasetreq, configreq);
 
       if (dsv == null)
         throw new InvalidQueryException(
-          "Mart " + toks[0] + " does not support dataset " + datasetreq + " view " + viewreq + "\n");
+          "Mart " + toks[0] + " does not support dataset " + datasetreq + " config " + configreq + "\n");
 
       retDataset = dsv;
     } catch (ConfigurationException e) {
@@ -1599,20 +1599,20 @@ public class MartShellLib {
     if (envDataset == null)
       return " Environmental DataSet not set\n";
     else {
-      //determine if it is a URLDSViewAdaptor DatasetView
-      DSViewAdaptor adaptor = envDataset.getAdaptor();
-      if (adaptor != null && adaptor instanceof URLDSViewAdaptor)
+      //determine if it is a URLDSConfigAdaptor DatasetConfig
+      DSConfigAdaptor adaptor = envDataset.getAdaptor();
+      if (adaptor != null && adaptor instanceof URLDSConfigAdaptor)
         return adaptor.getName() + "." + envDataset.getDataset() + "\n";
       else
         return " Dataset " + envDataset.getDataset() + "\n";
     }
   }
 
-  public String showEnvDataSetView() {
+  public String showEnvDataSetConfig() {
     if (envDataset == null)
-      return " Environmental DataSetView not set\n";
+      return " Environmental DataSetConfig not set\n";
     else
-      return " DatasetView " + envDataset.getInternalName() + "\n";
+      return " DatasetConfig " + envDataset.getInternalName() + "\n";
   }
 
   /** 
@@ -1620,7 +1620,7 @@ public class MartShellLib {
    * 
    * @param mql - String MQL command to parse into a Query object
    * @return Query object
-   * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, DatasetView/Attributes/Sequences/Filters not found, etc.)
+   * @throws InvalidQueryException for all underlying exceptions (MQL syntax errors, DatasetConfig/Attributes/Sequences/Filters not found, etc.)
    */
   public Query MQLtoQuery(String newquery) throws InvalidQueryException {
     try {
@@ -1638,7 +1638,7 @@ public class MartShellLib {
       boolean whereFilterVal = false;
       boolean validQuery = false;
 
-      DatasetView thisDatasetView = null;
+      DatasetConfig thisDatasetConfig = null;
 
       if (logger.isLoggable(Level.INFO))
         logger.info("Recieved Query " + newquery + "\n");
@@ -1689,20 +1689,20 @@ public class MartShellLib {
             usingClause = false;
             getClause = true;
           } else {
-            if (thisDatasetView != null)
+            if (thisDatasetConfig != null)
               throw new InvalidQueryException(
-                "Invalid Query Recieved, DatasetView already set, attempted to set again: " + newquery + "\n");
+                "Invalid Query Recieved, DatasetConfig already set, attempted to set again: " + newquery + "\n");
             else {
               List datasetMart = getDatasetAndMartFrom(thisToken);
 
-              thisDatasetView = (DatasetView) datasetMart.get(0);
-              query.setDataset(thisDatasetView.getDataset());
+              thisDatasetConfig = (DatasetConfig) datasetMart.get(0);
+              query.setDataset(thisDatasetConfig.getDataset());
 
               if (datasetMart.size() == 2)
                 query.setDataSource((DetailedDataSource) datasetMart.get(1));
 
               if (logger.isLoggable(Level.INFO)) {
-                logger.info("setting local dataset to " + thisDatasetView.getDataset() + "\n");
+                logger.info("setting local dataset to " + thisDatasetConfig.getDataset() + "\n");
                 if (query.getDataSource() != null)
                   logger.info("setting Mart to " + query.getDataSource().getName() + "\n");
               }
@@ -1711,19 +1711,19 @@ public class MartShellLib {
           }
         } else if (getClause) {
           // set dataset and update query with starbases, or throw an exception if dataset not set
-          if (thisDatasetView == null) {
+          if (thisDatasetConfig == null) {
             if (envDataset == null) {
               throw new InvalidQueryException(
-                "Invalid Query Recieved, did not set DatasetView: "
+                "Invalid Query Recieved, did not set DatasetConfig: "
                   + newquery
-                  + "\nEither set environmental DatasetView with 'set' or 'use', or use a 'using' clause in your MQL\n");
+                  + "\nEither set environmental DatasetConfig with 'set' or 'use', or use a 'using' clause in your MQL\n");
             } else
-              thisDatasetView = envDataset;
+              thisDatasetConfig = envDataset;
           }
 
-          query.setDataset(thisDatasetView.getDataset());
-          query.setStarBases(thisDatasetView.getStarBases());
-          query.setPrimaryKeys(thisDatasetView.getPrimaryKeys());
+          query.setDataset(thisDatasetConfig.getDataset());
+          query.setStarBases(thisDatasetConfig.getStarBases());
+          query.setPrimaryKeys(thisDatasetConfig.getPrimaryKeys());
           
           //favor using DataSource over envMart
           if (query.getDataSource() == null) {
@@ -1783,7 +1783,7 @@ public class MartShellLib {
 
             StringTokenizer attToks = new StringTokenizer(thisToken, ",");
             while (attToks.hasMoreTokens())
-              query = addAttribute(query, thisDatasetView, attToks.nextToken().trim());
+              query = addAttribute(query, thisDatasetConfig, attToks.nextToken().trim());
           }
         } else if (domainSpecificClause) {
           if (thisToken.equalsIgnoreCase(GETQSTART) || thisToken.equalsIgnoreCase(USINGQSTART))
@@ -1807,7 +1807,7 @@ public class MartShellLib {
             whereClause = true;
             whereFilterName = true;
           } else {
-            query = modifyQueryForDomainSpecificKeyword(domainSpecificKeyword, query, thisDatasetView, thisToken);
+            query = modifyQueryForDomainSpecificKeyword(domainSpecificKeyword, query, thisDatasetConfig, thisToken);
             validQuery = true;
           }
         } else if (whereClause) {
@@ -1848,7 +1848,7 @@ public class MartShellLib {
 
               if (filtToks.countTokens() == 2) {
                 query =
-                  addBasicFilter(query, thisDatasetView, filtToks.nextToken(), filterCondition, filtToks.nextToken());
+                  addBasicFilter(query, thisDatasetConfig, filtToks.nextToken(), filterCondition, filtToks.nextToken());
                 validQuery = true;
 
                 filterValue = new StringBuffer();
@@ -1874,7 +1874,7 @@ public class MartShellLib {
               throw new InvalidQueryException("Recieved invalid FilterCondition " + thisToken + " in " + newquery + "\n");
 
             if (BOOLEANQUALIFIERS.contains(thisToken)) {
-              query = addBooleanFilter(query, thisDatasetView, filterName, thisToken);
+              query = addBooleanFilter(query, thisDatasetConfig, filterName, thisToken);
               validQuery = true;
 
               filterValue = new StringBuffer();
@@ -1890,7 +1890,7 @@ public class MartShellLib {
               filterCondition = m.group(1);
               String thisFilterValue = m.group(2);
 
-              query = addBasicFilter(query, thisDatasetView, filterName, filterCondition, thisFilterValue);
+              query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, thisFilterValue);
               validQuery = true;
 
               filterValue = new StringBuffer();
@@ -1912,7 +1912,7 @@ public class MartShellLib {
 
               if (thisToken.endsWith(QUOTE)) {
                 tok = tok.substring(0, tok.length() - 1);
-                query = addBasicFilter(query, thisDatasetView, filterName, filterCondition, tok);
+                query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, tok);
 
                 inQuotedValue = false;
                 filterValue = new StringBuffer();
@@ -1927,7 +1927,7 @@ public class MartShellLib {
               if (thisToken.endsWith(QUOTE)) {
                 filterValue.append(" ").append(thisToken.substring(0, thisToken.length() - 1));
 
-                query = addBasicFilter(query, thisDatasetView, filterName, filterCondition, filterValue.toString());
+                query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, filterValue.toString());
                 validQuery = true;
 
                 inQuotedValue = false;
@@ -1954,7 +1954,7 @@ public class MartShellLib {
                 while (toks.hasMoreTokens())
                   listFilterValues.add(toks.nextToken().trim());
 
-                query = addListFilter(query, thisDatasetView, filterName, listFilterValues);
+                query = addListFilter(query, thisDatasetConfig, filterName, listFilterValues);
                 validQuery = true;
 
                 filterValue = new StringBuffer();
@@ -1984,7 +1984,7 @@ public class MartShellLib {
                   while (toks.hasMoreTokens())
                     listFilterValues.add(toks.nextToken().trim());
                 }
-                query = addListFilter(query, thisDatasetView, filterName, listFilterValues);
+                query = addListFilter(query, thisDatasetConfig, filterName, listFilterValues);
                 validQuery = true;
 
                 filterValue = new StringBuffer();
@@ -2003,7 +2003,7 @@ public class MartShellLib {
             } else if (thisToken.indexOf(LSTART) > 0) {
               if (thisToken.endsWith(LEND)) {
                 // storedCommand with bindValues, no whitespaces
-                query = addListFilter(query, thisDatasetView, filterName, thisToken);
+                query = addListFilter(query, thisDatasetConfig, filterName, thisToken);
                 validQuery = true;
 
                 filterValue = new StringBuffer();
@@ -2027,7 +2027,7 @@ public class MartShellLib {
                 query =
                   addListFilter(
                     query,
-                    thisDatasetView,
+                    thisDatasetConfig,
                     filterName,
                     storedCommand.append(" ").append(thisToken).toString());
                 validQuery = true;
@@ -2051,7 +2051,7 @@ public class MartShellLib {
                 if (thisToken.indexOf(":") >= 0) {
                   //url
                   try {
-                    query = addListFilter(query, thisDatasetView, filterName, new URL(thisToken));
+                    query = addListFilter(query, thisDatasetConfig, filterName, new URL(thisToken));
                     validQuery = true;
                   } catch (Exception e) {
                     throw new InvalidQueryException(
@@ -2060,15 +2060,15 @@ public class MartShellLib {
                   }
                 } else if (storedCommands.containsKey(thisToken)) {
                   //storedCommand without bindvalues
-                  query = addListFilter(query, thisDatasetView, filterName, thisToken);
+                  query = addListFilter(query, thisDatasetConfig, filterName, thisToken);
                   validQuery = true;
                 } else {
                   //file
-                  query = addListFilter(query, thisDatasetView, filterName, new File(thisToken));
+                  query = addListFilter(query, thisDatasetConfig, filterName, new File(thisToken));
                   validQuery = true;
                 }
               } else {
-                query = addBasicFilter(query, thisDatasetView, filterName, filterCondition, thisToken);
+                query = addBasicFilter(query, thisDatasetConfig, filterName, filterCondition, thisToken);
                 validQuery = true;
               }
 
@@ -2126,7 +2126,7 @@ public class MartShellLib {
   private Query modifyQueryForDomainSpecificKeyword(
     String domainSpecificKeyword,
     Query query,
-    DatasetView dset,
+    DatasetConfig dset,
     String thisToken)
     throws InvalidQueryException {
     // can either add keywords here, or replace it with a Plugin Module
@@ -2219,7 +2219,7 @@ public class MartShellLib {
     return f;
   }
 
-  private Query addSequenceDescription(Query inquery, DatasetView dset, String seqrequest) throws InvalidQueryException {
+  private Query addSequenceDescription(Query inquery, DatasetConfig dset, String seqrequest) throws InvalidQueryException {
     currentApage = dset.getAttributePageByInternalName("sequences");
     for (int i = 0, n = atts.size(); i < n; i++) {
       String element = (String) atts.get(i);
@@ -2271,7 +2271,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private Query addAttribute(Query inquery, DatasetView dset, String attname) throws InvalidQueryException {
+  private Query addAttribute(Query inquery, DatasetConfig dset, String attname) throws InvalidQueryException {
     checkAttributeValidity(dset, attname);
 
     Query newQuery = new Query(inquery);
@@ -2282,7 +2282,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private void checkAttributeValidity(DatasetView dset, String attname) throws InvalidQueryException {
+  private void checkAttributeValidity(DatasetConfig dset, String attname) throws InvalidQueryException {
     if (!dset.containsAttributeDescription(attname))
       throw new InvalidQueryException(
         "Attribute " + attname + " is not found in this mart for dataset " + dset.getInternalName() + "\n");
@@ -2330,7 +2330,7 @@ public class MartShellLib {
     atts.add(attname);
   }
 
-  private Query addBooleanFilter(Query inquery, DatasetView dset, String filterName, String filterCondition)
+  private Query addBooleanFilter(Query inquery, DatasetConfig dset, String filterName, String filterCondition)
     throws InvalidQueryException {
     checkFilterValidity(dset, filterName);
 
@@ -2360,7 +2360,7 @@ public class MartShellLib {
 
   private Query addBasicFilter(
     Query inquery,
-    DatasetView dset,
+    DatasetConfig dset,
     String filterName,
     String filterCondition,
     String filterValue)
@@ -2386,7 +2386,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private Query addListFilter(Query inquery, DatasetView dset, String filterName, List filterValues)
+  private Query addListFilter(Query inquery, DatasetConfig dset, String filterName, List filterValues)
     throws InvalidQueryException {
     checkFilterValidity(dset, filterName);
 
@@ -2413,7 +2413,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private Query addListFilter(Query inquery, DatasetView dset, String filterName, File fileloc)
+  private Query addListFilter(Query inquery, DatasetConfig dset, String filterName, File fileloc)
     throws InvalidQueryException {
     checkFilterValidity(dset, filterName);
 
@@ -2435,7 +2435,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private Query addListFilter(Query inquery, DatasetView dset, String filterName, URL urlLoc)
+  private Query addListFilter(Query inquery, DatasetConfig dset, String filterName, URL urlLoc)
     throws InvalidQueryException {
     checkFilterValidity(dset, filterName);
 
@@ -2457,7 +2457,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private Query addListFilter(Query inquery, DatasetView dset, String filterName, String storedQueryName)
+  private Query addListFilter(Query inquery, DatasetConfig dset, String filterName, String storedQueryName)
     throws InvalidQueryException {
     checkFilterValidity(dset, filterName);
 
@@ -2484,7 +2484,7 @@ public class MartShellLib {
     return newQuery;
   }
 
-  private void checkFilterValidity(DatasetView dset, String filterName) throws InvalidQueryException {
+  private void checkFilterValidity(DatasetConfig dset, String filterName) throws InvalidQueryException {
     if (!dset.containsFilterDescription(filterName))
       throw new InvalidQueryException(
         "Filter " + filterName + " not supported by mart dataset " + dset.getInternalName() + "\n");
@@ -2513,13 +2513,13 @@ public class MartShellLib {
     filtNames.add(filterName);
   }
 
-  private RegistryDSViewAdaptor adaptorManager = new RegistryDSViewAdaptor();
+  private RegistryDSConfigAdaptor adaptorManager = new RegistryDSConfigAdaptor();
   private int maxcharcount = 0;
 
   private String MQLError = null;
 
   //MartShellLib instance variables
-  private DatasetView envDataset = null;
+  private DatasetConfig envDataset = null;
   private DetailedDataSource envMart = null;
   private AttributePage currentApage = null;
   // keeps track of the AttributePage
@@ -2544,7 +2544,7 @@ public class MartShellLib {
   private final String SEQDELIMITER = "+";
   public static final String FILTERDELIMITER = "and";
   private final String DEFAULTURLADAPTORNAME = "userfiles";
-  public static final String DEFAULTDATASETVIEWNAME = "default";
+  public static final String DEFAULTDATASETCONFIGNAME = "default";
   private final String LISTALLREQ = "all";
   private final String MARTREQ = "Mart";
 

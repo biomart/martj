@@ -16,7 +16,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Base class for user input pages. Uses a BorderLayout by default.
@@ -72,7 +72,7 @@ public class InputPage extends JPanel implements QueryListener {
 
   /**
    * Derived classes should change _label_ to
-   * whatever html string they want to appear in the tree view.
+   * whatever html string they want to appear in the tree config.
    * @return label.
    */
   public String toString() {
@@ -211,9 +211,9 @@ public class InputPage extends JPanel implements QueryListener {
   }
 
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(Query query, DatasetView oldDatasetView, DatasetView newDatasetView) {
+  public void datasetConfigChanged(Query query, DatasetConfig oldDatasetConfig, DatasetConfig newDatasetConfig) {
   }
 
 

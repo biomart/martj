@@ -30,30 +30,30 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
- * Class DatasetViewAttributesTable extending JTable.
+ * Class DatasetConfigAttributesTable extending JTable.
  *
  * <p>This class is written for the attributes table to implement auscroll
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
-public class DatasetViewAttributesTable extends JTable implements Autoscroll{
+public class DatasetConfigAttributesTable extends JTable implements Autoscroll{
 
      public static final Insets defaultScrollInsets = new Insets(8, 8, 8, 8);
      protected Insets scrollInsets = defaultScrollInsets;
-     protected DatasetViewTreeModel treemodel = null;
+     protected DatasetConfigTreeModel treemodel = null;
      protected JInternalFrame frame;
-     protected DatasetView dsView = null;
+     protected DatasetConfig dsConfig = null;
 
-     public DatasetViewAttributesTable(DatasetView dsView, JInternalFrame frame) {
-        //super(new DatasetViewAttributeTableModel());
+     public DatasetConfigAttributesTable(DatasetConfig dsConfig, JInternalFrame frame) {
+        //super(new DatasetConfigAttributeTableModel());
         super(null);
-        this.dsView = dsView;
+        this.dsConfig = dsConfig;
         this.frame = frame;
 
      }

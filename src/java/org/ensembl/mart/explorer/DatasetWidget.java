@@ -33,7 +33,7 @@ import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Widget represents the currently selected dataset 
@@ -53,7 +53,7 @@ public class DatasetWidget
 
   private LabelledComboBox combo = new LabelledComboBox("Dataset ");
 
-  private JButton defaultButton = new JButton("Reset from dataset view");
+  private JButton defaultButton = new JButton("Reset from dataset config");
 
   /**
    * @param query underlying model for this widget.
@@ -62,7 +62,7 @@ public class DatasetWidget
 
     super(query, "Dataset ");
 
-    defaultButton.setEnabled(query.getDatasetView() != null);
+    defaultButton.setEnabled(query.getDatasetConfig() != null);
     defaultButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doLoadDefaultDatasetName();
@@ -86,7 +86,7 @@ public class DatasetWidget
 
 
   private void doLoadDefaultDatasetName() {
-    DatasetView dsv = query.getDatasetView(); 
+    DatasetConfig dsv = query.getDatasetConfig(); 
     if ( dsv!=null )
       combo.setSelectedItem( dsv.getDataset() );
   }
@@ -146,18 +146,18 @@ public class DatasetWidget
   }
 
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(
+  public void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig) {
 
     // set dataset to default value
-    if ( query.getDataset()==null && query.getDatasetView()!=null ) 
-      query.setDataset( newDatasetView.getDataset() );
+    if ( query.getDataset()==null && query.getDatasetConfig()!=null ) 
+      query.setDataset( newDatasetConfig.getDataset() );
 
-    defaultButton.setEnabled(newDatasetView != null );
+    defaultButton.setEnabled(newDatasetConfig != null );
   }
 
 }

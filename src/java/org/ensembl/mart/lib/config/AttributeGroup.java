@@ -56,7 +56,7 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   }
   
  /**
-  * Empty Constructor should only be used by DatasetViewEditory
+  * Empty Constructor should only be used by DatasetConfigEditory
   */
 	public AttributeGroup() {
 		super();

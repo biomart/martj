@@ -34,7 +34,7 @@ import org.ensembl.mart.lib.LoggingUtils;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
-public class DatasetViewUploader {
+public class DatasetConfigUploader {
 
 	private String dbType = "mysql"; // default
 	private String driver = "com.mysql.jdbc.Driver"; //default
@@ -53,12 +53,12 @@ public class DatasetViewUploader {
 	};
 
 	private final static Logger logger =
-		Logger.getLogger(DatasetViewUploader.class.getName());
+		Logger.getLogger(DatasetConfigUploader.class.getName());
 
 	public static void main(String[] args) {
 		LoggingUtils.setVerbose(false);
 
-		DatasetViewUploader u = new DatasetViewUploader();
+		DatasetConfigUploader u = new DatasetConfigUploader();
 		u.parse(args);
 		u.initDataSource();
 		u.upload();
@@ -112,13 +112,13 @@ public class DatasetViewUploader {
         if ( file.exists() ) url = file.toURL();
         if ( url==null ) url = new URL(files[i]);
         
-				URLDSViewAdaptor fileLoader = new URLDSViewAdaptor(url, true);
+				URLDSConfigAdaptor fileLoader = new URLDSConfigAdaptor(url, true);
 
 				// upload xml
-				DatabaseDSViewAdaptor.storeDatasetView(
+				DatabaseDSConfigAdaptor.storeDatasetConfig(
 					dataSource,
 					datasetUser,
-					fileLoader.getDatasetViews()[0],
+					fileLoader.getDatasetConfigs()[0],
 					compress);
 
 				System.out.println("Finished uploading file: " + files[i]);
@@ -153,7 +153,7 @@ public class DatasetViewUploader {
         };
 
 		Getopt g =
-			new Getopt("DatasetViewUploader", args, "h:P:d:u:p:U:Hnt:D:", longopts);
+			new Getopt("DatasetConfigUploader", args, "h:P:d:u:p:U:Hnt:D:", longopts);
 		int c;
 
 		while ((c = g.getopt()) != -1) {
@@ -249,14 +249,14 @@ public class DatasetViewUploader {
 
 	public String usage() {
     return
-    "DatasetViewUploader <OPTIONS> FILE_1 FILE_2 FILE_3 ... FILE_N"
+    "DatasetConfigUploader <OPTIONS> FILE_1 FILE_2 FILE_3 ... FILE_N"
     +"\nOPTIONS:" 
     +"\n--host, -h HOST"
     +"\n--port, -P PORT                       - optional port, default will be used"
     +"\n--database, -d DATABASE"
     +"\n--user, -u USERNAME"
     +"\n--password, -p PASSWORD               - optional database password"
-    +"\n--dataset-user -U DATASET_VIEW_USER   - username prefix for meta table on database."
+    +"\n--dataset-user -U DATASET_CONFIG_USER   - username prefix for meta table on database."
     +"\n--help, -H"
     +"\n--no-compress, -n                     - files are compressed by default."
     +"\n--db-type DATABASE_TYPE               - optional database type, default is mysql"

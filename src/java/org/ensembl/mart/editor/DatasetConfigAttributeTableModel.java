@@ -30,23 +30,23 @@ import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.BaseConfigurationObject;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.FilterPage;
 
 /**
- * Class DatasetViewAttributeTableModel implementing TableModel.
+ * Class DatasetConfigAttributeTableModel implementing TableModel.
  *
  * <p>This class is written for the attributes table to implement autoscroll
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
-public class DatasetViewAttributeTableModel implements TableModel {
+public class DatasetConfigAttributeTableModel implements TableModel {
 
     protected String[] columnNames = {"Attribute", "Value"};
     protected Vector tableModelListenerList;
@@ -54,16 +54,16 @@ public class DatasetViewAttributeTableModel implements TableModel {
     protected BaseConfigurationObject obj;
     protected String objClass;
     protected String[] firstColumnData;
-    protected DatasetViewTreeNode node;
-    protected DatasetViewTreeNode parent;
+    protected DatasetConfigTreeNode node;
+    protected DatasetConfigTreeNode parent;
 
-    public DatasetViewAttributeTableModel(DatasetViewTreeNode node, String[] firstColumnData, String objClass) {
+    public DatasetConfigAttributeTableModel(DatasetConfigTreeNode node, String[] firstColumnData, String objClass) {
         this.node = node;
         this.obj = (BaseConfigurationObject) node.getUserObject();
         this.firstColumnData = firstColumnData;
         this.objClass = objClass;
         tableModelListenerList = new Vector();
-        parent = (DatasetViewTreeNode) node.getParent();
+        parent = (DatasetConfigTreeNode) node.getParent();
     }
 
     public void addTableModelListener(TableModelListener l) {
@@ -121,101 +121,101 @@ public class DatasetViewAttributeTableModel implements TableModel {
         Object child = node.getUserObject();
 
         if (columnIndex == 1) {
-            //child may be a DatasetView, in which case dont try to remove/add the child to a null parent
-            if (child instanceof org.ensembl.mart.lib.config.DatasetView) {
+            //child may be a DatasetConfig, in which case dont try to remove/add the child to a null parent
+            if (child instanceof org.ensembl.mart.lib.config.DatasetConfig) {
                 obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
             } else {
-                Object parent = ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                Object parent = ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                 int index = node.getParent().getIndex(node);
 
-                if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
+                if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
-                        DatasetView view = (DatasetView) ((DatasetViewTreeNode) node.getParent()).getUserObject();
-                        view.removeFilterPage((FilterPage) node.getUserObject());
+                        DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+                        config.removeFilterPage((FilterPage) node.getUserObject());
 
                     } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
-                        DatasetView view = (DatasetView) ((DatasetViewTreeNode) node.getParent()).getUserObject();
-                        view.removeAttributePage((AttributePage) node.getUserObject());
+                        DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+                        config.removeAttributePage((AttributePage) node.getUserObject());
 
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
-                        FilterPage fp = (FilterPage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fp.removeFilterGroup((FilterGroup) node.getUserObject());
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterCollection) {
-                        FilterGroup fg = (FilterGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterGroup fg = (FilterGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fg.removeFilterCollection((FilterCollection) node.getUserObject());
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
-                        FilterCollection fc = (FilterCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fc.removeFilterDescription((FilterDescription) node.getUserObject());
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
-                        AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
-                        AttributeGroup ag = (AttributeGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ag.removeAttributeCollection((AttributeCollection) node.getUserObject());
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
-                        AttributeCollection ac = (AttributeCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
                     }
                 }
 
                 obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
 
-                if (parent instanceof org.ensembl.mart.lib.config.DatasetView) {
+                if (parent instanceof org.ensembl.mart.lib.config.DatasetConfig) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
-                        DatasetView view = (DatasetView) ((DatasetViewTreeNode) node.getParent()).getUserObject();
-                        view.insertFilterPage(index, (FilterPage) obj);
+                        DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
+                        config.insertFilterPage(index, (FilterPage) obj);
 
                     } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
-                        DatasetView view = (DatasetView) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        DatasetConfig config = (DatasetConfig) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 
-                        view.insertAttributePage(index - view.getFilterPages().length, (AttributePage) obj);
+                        config.insertAttributePage(index - config.getFilterPages().length, (AttributePage) obj);
 
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterPage) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterGroup) {
-                        FilterPage fp = (FilterPage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterPage fp = (FilterPage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fp.insertFilterGroup(index, (FilterGroup) obj);
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterGroup) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterCollection) {
-                        FilterGroup fg = (FilterGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterGroup fg = (FilterGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fg.insertFilterCollection(index, (FilterCollection) obj);
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
                     if (child instanceof org.ensembl.mart.lib.config.FilterDescription) {
-                        FilterCollection fc = (FilterCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         fc.insertFilterDescription(index, (FilterDescription) obj);
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
-                        AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributePage ap = (AttributePage) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ap.insertAttributeGroup(index, (AttributeGroup) obj);
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeCollection) {
-                        AttributeGroup ag = (AttributeGroup) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributeGroup ag = (AttributeGroup) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ag.insertAttributeCollection(index, (AttributeCollection) obj);
                     }
                 } else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
                     if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
-                        AttributeCollection ac = (AttributeCollection) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+                        AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
                         ac.insertAttributeDescription(index, (AttributeDescription) obj);
                     }
                 }
             }
-            DatasetViewTreeNode newNode = new DatasetViewTreeNode(obj.getAttribute("internalName"), obj);
+            DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(obj.getAttribute("internalName"), obj);
 
             if (parent != null) {
                 int index = parent.getIndex(node);
@@ -233,7 +233,7 @@ public class DatasetViewAttributeTableModel implements TableModel {
         this.obj = obj;
     }
 
-    public DatasetViewTreeNode getParentNode() {
+    public DatasetConfigTreeNode getParentNode() {
         return parent;
     }
 

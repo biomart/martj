@@ -64,7 +64,7 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
     }  
   }
   /**
-   * Empty Constructor should only be used by DatasetViewEditor.
+   * Empty Constructor should only be used by DatasetConfigEditor.
    *
    */
   public AttributeCollection() {

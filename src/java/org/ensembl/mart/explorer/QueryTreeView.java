@@ -67,14 +67,14 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.QueryFilterSettings;
 
 /**
- * Tree view showing the current state of the query. Allows the user
+ * Tree config showing the current state of the query. Allows the user
  * to select nodes and delete attributes and filters.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -275,19 +275,19 @@ public class QueryTreeView extends JTree implements QueryListener {
 	private final static Logger logger =
 		Logger.getLogger(QueryTreeView.class.getName());
 
-	private DSViewAdaptor dsvAdaptor;
+	private DSConfigAdaptor dsvAdaptor;
 
 	private Query query;
 
 	/**
-	 * Tree view showing the current state of the query. The current datasetView
+	 * Tree config showing the current state of the query. The current datasetConfig
 	 * is retrieved from the adaptor and this is used to determine how to render
 	 * the values stored in the query.
 	 * 
 	 * @param query Query represented by tree.
-	 * @param dsvAdaptor source of DatasetViews used to interpret query.
+	 * @param dsvAdaptor source of DatasetConfigs used to interpret query.
 	 */
-	public QueryTreeView(Query query, DSViewAdaptor dsvAdaptor) {
+	public QueryTreeView(Query query, DSConfigAdaptor dsvAdaptor) {
 
 		super();
 
@@ -327,8 +327,8 @@ public class QueryTreeView extends JTree implements QueryListener {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		// default adaptor for retrieving datasetviews
-		DSViewAdaptor adaptor = QueryEditor.testDSViewAdaptor();
+		// default adaptor for retrieving datasetconfigs
+		DSConfigAdaptor adaptor = QueryEditor.testDSConfigAdaptor();
 
 		final Query query = new Query();
 		final QueryTreeView qtv = new QueryTreeView(query, adaptor);
@@ -421,7 +421,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 
 		// preload some default settings
-		//query.setDatasetView( adaptor.getDatasetViews()[0] );
+		//query.setDatasetConfig( adaptor.getDatasetConfigs()[0] );
 		query.addAttribute(new FieldAttribute("ensembl_gene_id"));
 		query.addFilter(new BasicFilter("ensembl_gene_id", "=", "ENSG001"));
 		query.addFilter(new BasicFilter("chr_name", "=", "3"));
@@ -498,10 +498,10 @@ public class QueryTreeView extends JTree implements QueryListener {
 		// otherwise use the raw one from attribute
 
 		AttributeDescription ad = null;
-		if (query.getDatasetView() != null)
+		if (query.getDatasetConfig() != null)
 			ad =
 				query
-					.getDatasetView()
+					.getDatasetConfig()
 					.getAttributeDescriptionByFieldNameTableConstraint(
 					attribute.getField(),
 					attribute.getTableConstraint());
@@ -561,7 +561,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 	/**
 	 * Adds a child node to the filtersNode to represent the filter at the specified index.
 	 * The node label is partly derived from a corresponding FilterDescription retrieved
-	 * from the dsView, otherwise it is based solely on the filter.
+	 * from the dsConfig, otherwise it is based solely on the filter.
 	 * @see org.ensembl.mart.lib.QueryChangeListener#queryFilterAdded(org.ensembl.mart.lib.Query, int, org.ensembl.mart.lib.Filter)
 	 */
 	public void filterAdded(Query sourceQuery, int index, Filter filter) {
@@ -571,10 +571,10 @@ public class QueryTreeView extends JTree implements QueryListener {
 
 		// Try to get a user friendly fieldName, 
 		// otherwise use the raw one from filter
-		if (query.getDatasetView() != null) {
+		if (query.getDatasetConfig() != null) {
 
 			FilterDescription fd =
-				query.getDatasetView().getFilterDescriptionByFieldNameTableConstraint(
+				query.getDatasetConfig().getFilterDescriptionByFieldNameTableConstraint(
 					filter.getField(),
 					filter.getTableConstraint());
 			if (fd != null) {
@@ -629,7 +629,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 
 				} else if (p instanceof FilterDescription) {
 
-					// If parent in dataset view was a PushAction then
+					// If parent in dataset config was a PushAction then
 					// parent will have been set to PushAction.ref
 					FilterDescription fd2 = (FilterDescription) p;
 					if (fd2.getDisplayName() != null) {
@@ -703,10 +703,10 @@ public class QueryTreeView extends JTree implements QueryListener {
 	/**
 	 * Do nothing. 
 	 */
-	public void datasetViewChanged(
+	public void datasetConfigChanged(
 		Query query,
-		DatasetView oldDatasetView,
-		DatasetView newDatasetView) {
+		DatasetConfig oldDatasetConfig,
+		DatasetConfig newDatasetConfig) {
 
 	}
 

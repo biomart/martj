@@ -30,53 +30,53 @@ import javax.swing.JFrame;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
  * Widget representing currently available datasource.dataset options.
- * Once user selects a datasource.dataset the default datasource.dataset.datasetView
+ * Once user selects a datasource.dataset the default datasource.dataset.datasetConfig
  * is selected.
  * 
  * TODO upgrade to drop down tree
  */
-public class DatasetViewWidget
+public class DatasetConfigWidget
 	extends InputPage
 	implements ActionListener {
 
 	private InputPageContainer container;
 
-	private DatasetView[] oldViews;
+	private DatasetConfig[] oldConfigs;
 
-	private Map optionToView = new HashMap();
+	private Map optionToConfig = new HashMap();
 
 	private AdaptorManager adaptorManager;
 
 	private static final Logger logger =
-		Logger.getLogger(DatasetViewWidget.class.getName());
+		Logger.getLogger(DatasetConfigWidget.class.getName());
 
 	private Feedback feedback = new Feedback(this);
 
-	private DatasetViewTree chooser;
+	private DatasetConfigTree chooser;
 
 	private String noneOption = "None";
 
-	private DatasetView lastDSV;
+	private DatasetConfig lastDSV;
 
 
 	/**
 	 * @param query underlying model for this widget.
 	 */
-	public DatasetViewWidget(
+	public DatasetConfigWidget(
 		Query query,
 		AdaptorManager adaptorManager,
     InputPageContainer container) {
 
-		super(query, "Dataset View");
+		super(query, "Dataset Config");
 
 		this.adaptorManager = adaptorManager;
     this.container = container;
-    this.chooser = new DatasetViewTree(adaptorManager);
+    this.chooser = new DatasetConfigTree(adaptorManager);
     
 		chooser.addActionListener(this);
 		add(chooser, BorderLayout.NORTH);
@@ -91,11 +91,11 @@ public class DatasetViewWidget
 		logger.setLevel(Level.FINE);
 		//Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
 
-    AdaptorManager am = QueryEditor.testDatasetViewSettings();
+    AdaptorManager am = QueryEditor.testDatasetConfigSettings();
     am.setAdvancedOptionsEnabled( true );
 		Query q = new Query();
-		DatasetViewWidget dvm =
-			new DatasetViewWidget(q, am, null);
+		DatasetConfigWidget dvm =
+			new DatasetConfigWidget(q, am, null);
 		dvm.setSize(950, 750);
 
 		JFrame f = new JFrame(dvm.getClass().getName() + " - test");
@@ -107,27 +107,27 @@ public class DatasetViewWidget
 	}
 
 	/**
-	 * Responds to a change in dataset view on the query. Updates the state of
+	 * Responds to a change in dataset config on the query. Updates the state of
 	 * this widget by changing the currently selected item in the list.
 	 */
-	public void datasetViewChanged(
+	public void datasetConfigChanged(
 		Query query,
-		DatasetView oldDatasetView,
-		DatasetView newDatasetView) {
+		DatasetConfig oldDatasetConfig,
+		DatasetConfig newDatasetConfig) {
 
-		if (newDatasetView != null
-			&& !adaptorManager.contains(newDatasetView)) 
+		if (newDatasetConfig != null
+			&& !adaptorManager.contains(newDatasetConfig)) 
 			try {
-				adaptorManager.add(newDatasetView.getAdaptor());
+				adaptorManager.add(newDatasetConfig.getAdaptor());
 			} catch (ConfigurationException e) {
 				feedback.warning(e);
 			}
 
-		if (newDatasetView != null) {
-			chooser.setSelectedUserObject(newDatasetView);
+		if (newDatasetConfig != null) {
+			chooser.setSelectedUserObject(newDatasetConfig);
 			// set these to default values
-			query.setPrimaryKeys(newDatasetView.getPrimaryKeys());
-			query.setStarBases(newDatasetView.getStarBases());
+			query.setPrimaryKeys(newDatasetConfig.getPrimaryKeys());
+			query.setStarBases(newDatasetConfig.getStarBases());
 		} else {
 			chooser.setSelectedUserObject(null);
 		}
@@ -136,19 +136,19 @@ public class DatasetViewWidget
 
 
 	/**
-	 * Handles user selection of an adaptor->dataset by setting the datasetView,
+	 * Handles user selection of an adaptor->dataset by setting the datasetConfig,
    * and datasource if vailable.
 	 * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
 	 */
   public void actionPerformed(ActionEvent e) {
 
-    DatasetView dsv = (DatasetView) chooser.getSelectedUserObject();
+    DatasetConfig dsv = (DatasetConfig) chooser.getSelectedUserObject();
     
     if ( dsv==null || dsv == lastDSV) return;
 		lastDSV = dsv;
     
 		query.clear();
-		query.setDatasetView(dsv);
+		query.setDatasetConfig(dsv);
 
 		if (dsv != null) {
 
@@ -156,8 +156,8 @@ public class DatasetViewWidget
 			query.setStarBases(dsv.getStarBases());
 			query.setDataset(dsv.getDataset());
       
-      if ( dsv.getDSViewAdaptor()!=null && dsv.getDSViewAdaptor().getDataSource()!=null )
-        query.setDataSource( dsv.getDSViewAdaptor().getDataSource() );
+      if ( dsv.getDSConfigAdaptor()!=null && dsv.getDSConfigAdaptor().getDataSource()!=null )
+        query.setDataSource( dsv.getDSConfigAdaptor().getDataSource() );
 		}
 
     container.toFront( TreeNodeData.ATTRIBUTES );
@@ -167,7 +167,7 @@ public class DatasetViewWidget
 	/**
 	 * 
 	 */
-	public void openDatasetViewMenu() {
+	public void openDatasetConfigMenu() {
 		chooser.showTree();
 	}
 

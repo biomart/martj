@@ -60,7 +60,7 @@ public class FilterCollection extends BaseNamedConfigurationObject {
   }
   
   /**
-   * Empty Constructor should only be used by DatasetViewEditor.
+   * Empty Constructor should only be used by DatasetConfigEditor.
    *
    */
   public FilterCollection() {

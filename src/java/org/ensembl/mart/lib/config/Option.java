@@ -72,7 +72,7 @@ public class Option extends QueryFilterSettings {
    * child objects of the Option are supported by the FilterDescription,
    * and vice versa.  In particular, the isSelectable field is set to
    * true. For these reasons, this method is reserved for use by
-   * the DatasetViewEditor application to facilitate the conversion
+   * the DatasetConfigEditor application to facilitate the conversion
    * between these two objects, with subsequent editing by the user.
    * @param fd - FilterDescription to be converted to an Option
    */
@@ -87,7 +87,7 @@ public class Option extends QueryFilterSettings {
   }
   
 	/**
-	 * Empty Constructor should only be used by DatasetViewEditor.
+	 * Empty Constructor should only be used by DatasetConfigEditor.
 	 *
 	 */
 	public Option() {

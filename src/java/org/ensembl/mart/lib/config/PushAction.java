@@ -48,7 +48,7 @@ public class PushAction extends BaseNamedConfigurationObject {
   }
   
   /**
-   * Empty Constructor should only be used by DatasetViewEditor
+   * Empty Constructor should only be used by DatasetConfigEditor
    */
   public PushAction() {
     super();

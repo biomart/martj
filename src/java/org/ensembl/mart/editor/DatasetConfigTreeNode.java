@@ -25,25 +25,25 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.ensembl.mart.lib.config.*;
 
 /**
- * Class DatasetViewTreeNode extends DefaultMutableTreeNode.
+ * Class DatasetConfigTreeNode extends DefaultMutableTreeNode.
  *
- * <p>This class is written so that the tree node is aware of the datasetview etc objects
+ * <p>This class is written so that the tree node is aware of the datasetconfig etc objects
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
 
-public class DatasetViewTreeNode extends DefaultMutableTreeNode {
+public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 
     protected String name;
 
-    public DatasetViewTreeNode(String name) {
+    public DatasetConfigTreeNode(String name) {
         this.name = name;
     }
 
-    public DatasetViewTreeNode(String name, Object obj) {
+    public DatasetConfigTreeNode(String name, Object obj) {
         this.name = name;
         this.setUserObject(obj);
     }
@@ -60,15 +60,15 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
         super.setUserObject(obj);
 
         String nodeObjectClass = obj.getClass().getName();
-        if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetView")) {
-            setName("DatasetView: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-            DatasetView dsv = (DatasetView) obj;
+        if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DatasetConfig")) {
+            setName("DatasetConfig: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+            DatasetConfig dsv = (DatasetConfig) obj;
             FilterPage[] fpages = dsv.getFilterPages();
             for (int i = 0; i < fpages.length; i++) {
                 if (fpages[i].getClass().getName().equals("org.ensembl.mart.lib.config.FilterPage")) {
                     FilterPage fp = fpages[i];
                     String fpName = fp.getInternalName();
-                    DatasetViewTreeNode fpNode = new DatasetViewTreeNode("FilterPage:" + fpName);
+                    DatasetConfigTreeNode fpNode = new DatasetConfigTreeNode("FilterPage:" + fpName);
                     fpNode.setUserObject(fp);
                
                     this.add(fpNode);
@@ -77,50 +77,50 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
                             FilterGroup fiGroup = (FilterGroup) groups.get(j);
                             String grName = fiGroup.getInternalName();
-                            DatasetViewTreeNode grNode = new DatasetViewTreeNode("FilterGroup:" + grName);
+                            DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("FilterGroup:" + grName);
                             grNode.setUserObject(fiGroup);
                             FilterCollection[] collections = fiGroup.getFilterCollections();
                             for (int z = 0; z < collections.length; z++) {
                                 FilterCollection fiCollection = collections[z];
                                 String colName = fiCollection.getInternalName();
-                                DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
+                                DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("FilterCollection:" + colName);
                                 colNode.setUserObject(fiCollection);
                                 List descriptions = fiCollection.getFilterDescriptions();
                                 for (int y = 0; y < descriptions.size(); y++) {
                                     FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                                     String desName = fiDescription.getInternalName();
-                                    DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                                    DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
                                     desNode.setUserObject(fiDescription);
                                     Enable[] enables = fiDescription.getEnables();
                                     Disable[] disables = fiDescription.getDisables();
                                     Option[] options = fiDescription.getOptions();
                                     for (int k = 0; k < enables.length; k++) {
                                         Enable enable = enables[k];
-                                        DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                                        DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
                                         enableNode.setUserObject(enable);
                                     }                                   
                                     for (int k = 0; k < disables.length; k++) {
                                         Disable disable = disables[k];
-                                        DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                                        DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
                                         disableNode.setUserObject(disable);
                                     }
                                     for (int k = 0; k < options.length; k++) {
                                         Option option = options[k];
                                         String optionName = option.getInternalName();
-                                        DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                                        DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
                                         optionNode.setUserObject(option);
                                         // new code to cycle through push actions
 										PushAction[] pushActions = option.getPushActions();
 										for (int l = 0; l < pushActions.length; l++) {
 											PushAction pa = pushActions[l];
-							                DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+							                DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 						                    pushActionNode.setUserObject(pa);
 						                    
 											Option[] paOptions = pa.getOptions();
 											for (int m = 0; m < paOptions.length; m++) {
 												Option op = paOptions[m];
 												String paoptionName = op.getInternalName();
-												DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+												DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 												paOptionNode.setUserObject(op);
 											}
 						                    
@@ -138,7 +138,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 if (apages[i].getClass().getName().equals("org.ensembl.mart.lib.config.AttributePage")) {
                     AttributePage ap = apages[i];
                     String apName = ap.getInternalName();
-                    DatasetViewTreeNode apNode = new DatasetViewTreeNode("AttributePage:" + apName);
+                    DatasetConfigTreeNode apNode = new DatasetConfigTreeNode("AttributePage:" + apName);
                     apNode.setUserObject(ap);
                     this.add(apNode);
                     List groups = ap.getAttributeGroups();
@@ -146,19 +146,19 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.AttributeGroup")) {
                             AttributeGroup atGroup = (AttributeGroup) groups.get(j);
                             String grName = atGroup.getInternalName();
-                            DatasetViewTreeNode grNode = new DatasetViewTreeNode("AttributeGroup:" + grName);
+                            DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("AttributeGroup:" + grName);
                             grNode.setUserObject(atGroup);
                             AttributeCollection[] collections = atGroup.getAttributeCollections();
                             for (int z = 0; z < collections.length; z++) {
                                 AttributeCollection atCollection = collections[z];
                                 String colName = atCollection.getInternalName();
-                                DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
+                                DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("AttributeCollection:" + colName);
                                 colNode.setUserObject(atCollection);
                                 List descriptions = atCollection.getAttributeDescriptions();
                                 for (int y = 0; y < descriptions.size(); y++) {
                                     AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
                                     String desName = atDescription.getInternalName();
-                                    DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
+                                    DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
                                     desNode.setUserObject(atDescription);
                                 }
                             }
@@ -166,7 +166,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                         else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
 							DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
 							String grName = atGroup.getInternalName();
-							DatasetViewTreeNode grNode = new DatasetViewTreeNode("DSAttributeGroup:" + grName);
+							DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("DSAttributeGroup:" + grName);
 							grNode.setUserObject(atGroup);
 						}
                     }
@@ -181,20 +181,20 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.FilterGroup")) {
                     FilterGroup fiGroup = (FilterGroup) groups.get(j);
                     String grName = fiGroup.getInternalName();
-                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("FilterGroup:" + grName);
+                    DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("FilterGroup:" + grName);
                     grNode.setUserObject(fiGroup);
                     this.add(grNode);
                     FilterCollection[] collections = fiGroup.getFilterCollections();
                     for (int z = 0; z < collections.length; z++) {
                         FilterCollection fiCollection = collections[z];
                         String colName = fiCollection.getInternalName();
-                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
+                        DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("FilterCollection:" + colName);
                         colNode.setUserObject(fiCollection);
                         List descriptions = fiCollection.getFilterDescriptions();
                         for (int y = 0; y < descriptions.size(); y++) {
                             FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                             String desName = fiDescription.getInternalName();
-                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                            DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
                             desNode.setUserObject(fiDescription);
                             Enable[] enables = fiDescription.getEnables();
                             Disable[] disables = fiDescription.getDisables();
@@ -202,30 +202,30 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 							
                             for (int k = 0; k < enables.length; k++) {
                                 Enable enable = enables[k];
-                                DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                                DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
                                 enableNode.setUserObject(enable);
                             }
                             for (int k = 0; k < disables.length; k++) {
                                 Disable disable = disables[k];
-                                DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                                DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
                                 disableNode.setUserObject(disable);
                             }
                             for (int k = 0; k < options.length; k++) {
                                 Option option = options[k];
                                 String optionName = option.getInternalName();
-                                DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                                DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
                                 optionNode.setUserObject(option);
 								// new code to cycle through push actions
 								PushAction[] pushActions = option.getPushActions();
 								for (int l = 0; l < pushActions.length; l++) {
 									PushAction pa = pushActions[l];
-									DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+									DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 									pushActionNode.setUserObject(pa);
 									Option[] paOptions = pa.getOptions();
 									for (int m = 0; m < paOptions.length; m++) {
 										Option op = paOptions[m];
 										String paoptionName = op.getInternalName();
-										DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+										DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 										paOptionNode.setUserObject(op);
 									}									
 								} 
@@ -244,20 +244,20 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.AttributeGroup")) {
                     AttributeGroup atGroup = (AttributeGroup) groups.get(j);
                     String grName = atGroup.getInternalName();
-                    DatasetViewTreeNode grNode = new DatasetViewTreeNode("AttributeGroup:" + grName);
+                    DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("AttributeGroup:" + grName);
                     grNode.setUserObject(atGroup);
                     this.add(grNode);
                     AttributeCollection[] collections = atGroup.getAttributeCollections();
                     for (int z = 0; z < collections.length; z++) {
                         AttributeCollection atCollection = collections[z];
                         String colName = atCollection.getInternalName();
-                        DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
+                        DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("AttributeCollection:" + colName);
                         colNode.setUserObject(atCollection);
                         List descriptions = atCollection.getAttributeDescriptions();
                         for (int y = 0; y < descriptions.size(); y++) {
                             AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
                             String desName = atDescription.getInternalName();
-                            DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
+                            DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
                             desNode.setUserObject(atDescription);
                         }
                     }
@@ -265,7 +265,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
                 else if (groups.get(j).getClass().getName().equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
 					DSAttributeGroup atGroup = (DSAttributeGroup) groups.get(j);
 					String grName = atGroup.getInternalName();
-					DatasetViewTreeNode grNode = new DatasetViewTreeNode("DSAttributeGroup:" + grName);
+					DatasetConfigTreeNode grNode = new DatasetConfigTreeNode("DSAttributeGroup:" + grName);
 					grNode.setUserObject(atGroup);
 					this.add(grNode);
                 }
@@ -279,44 +279,44 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             for (int z = 0; z < collections.length; z++) {
                 FilterCollection fiCollection = collections[z];
                 String colName = fiCollection.getInternalName();
-                DatasetViewTreeNode colNode = new DatasetViewTreeNode("FilterCollection:" + colName);
+                DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("FilterCollection:" + colName);
                 colNode.setUserObject(fiCollection);
                 this.add(colNode);
                 List descriptions = fiCollection.getFilterDescriptions();
                 for (int y = 0; y < descriptions.size(); y++) {
                     FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                     String desName = fiDescription.getInternalName();
-                    DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                    DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
                     desNode.setUserObject(fiDescription);
                     Enable[] enables = fiDescription.getEnables();
                     Disable[] disables = fiDescription.getDisables();
                     Option[] options = fiDescription.getOptions();
                     for (int k = 0; k < enables.length; k++) {
                         Enable enable = enables[k];
-                        DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                        DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
                         enableNode.setUserObject(enable);
                     }
                     for (int k = 0; k < disables.length; k++) {
                         Disable disable = disables[k];
-                        DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                        DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
                         disableNode.setUserObject(disable);
                     }
                     for (int k = 0; k < options.length; k++) {
                         Option option = options[k];
                         String optionName = option.getInternalName();
-                        DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                        DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
                         optionNode.setUserObject(option);
 						// new code to cycle through push actions
 						PushAction[] pushActions = option.getPushActions();
 						for (int l = 0; l < pushActions.length; l++) {
 							PushAction pa = pushActions[l];
-							DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+							DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 							pushActionNode.setUserObject(pa);
 							Option[] paOptions = pa.getOptions();
 							for (int m = 0; m < paOptions.length; m++) {
 								Option op = paOptions[m];
 								String paoptionName = op.getInternalName();
-								DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+								DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 								paOptionNode.setUserObject(op);
 							}							
 						} 
@@ -331,14 +331,14 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             for (int z = 0; z < collections.length; z++) {
                 AttributeCollection atCollection = collections[z];
                 String colName = atCollection.getInternalName();
-                DatasetViewTreeNode colNode = new DatasetViewTreeNode("AttributeCollection:" + colName);
+                DatasetConfigTreeNode colNode = new DatasetConfigTreeNode("AttributeCollection:" + colName);
                 this.add(colNode);
                 colNode.setUserObject(atCollection);
                 List descriptions = atCollection.getAttributeDescriptions();
                 for (int y = 0; y < descriptions.size(); y++) {
                     AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
                     String desName = atDescription.getInternalName();
-                    DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
+                    DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
                     desNode.setUserObject(atDescription);
                     //colNode.add(desNode);
                 }
@@ -354,7 +354,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             for (int y = 0; y < descriptions.size(); y++) {
                 FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
                 String desName = fiDescription.getInternalName();
-                DatasetViewTreeNode desNode = new DatasetViewTreeNode("FilterDescription:" + desName);
+                DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
                 desNode.setUserObject(fiDescription);
                 this.add(desNode);
                 Enable[] enables = fiDescription.getEnables();
@@ -363,30 +363,30 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 				
                 for (int k = 0; k < enables.length; k++) {
                     Enable enable = enables[k];
-                    DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+                    DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
                     enableNode.setUserObject(enable);
                 }
                 for (int k = 0; k < disables.length; k++) {
                     Disable disable = disables[k];
-                    DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+                    DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
                     disableNode.setUserObject(disable);
                 }
                 for (int k = 0; k < options.length; k++) {
                     Option option = options[k];
                     String optionName = option.getInternalName();
-                    DatasetViewTreeNode optionNode = new DatasetViewTreeNode("Option: " + optionName);
+                    DatasetConfigTreeNode optionNode = new DatasetConfigTreeNode("Option: " + optionName);
                     optionNode.setUserObject(option);
 					// new code to cycle through push actions
 					PushAction[] pushActions = option.getPushActions();
 					for (int l = 0; l < pushActions.length; l++) {
 						PushAction pa = pushActions[l];
-						DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+						DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 						pushActionNode.setUserObject(pa);
 						Option[] paOptions = pa.getOptions();
 						for (int m = 0; m < paOptions.length; m++) {
 							Option op = paOptions[m];
 							String paoptionName = op.getInternalName();
-							DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+							DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 							paOptionNode.setUserObject(op);
 						}						
 					} 
@@ -400,7 +400,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
             for (int y = 0; y < descriptions.size(); y++) {
                 AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
                 String desName = atDescription.getInternalName();
-                DatasetViewTreeNode desNode = new DatasetViewTreeNode("AttributeDescription:" + desName);
+                DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
                 desNode.setUserObject(atDescription);
                 this.add(desNode);
             }
@@ -414,33 +414,33 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 			Option[] ops = fiDescription.getOptions();
 			for (int k = 0; k < enables.length; k++) {
 				Enable enable = enables[k];
-				DatasetViewTreeNode enableNode = new DatasetViewTreeNode("Enable");
+				DatasetConfigTreeNode enableNode = new DatasetConfigTreeNode("Enable");
 				enableNode.setUserObject(enable);
 				this.add(enableNode);
 			}
 			for (int k = 0; k < disables.length; k++) {
 				Disable disable = disables[k];
-				DatasetViewTreeNode disableNode = new DatasetViewTreeNode("Disable");
+				DatasetConfigTreeNode disableNode = new DatasetConfigTreeNode("Disable");
 				disableNode.setUserObject(disable);
 				this.add(disableNode);
 			}
 			for (int y = 0; y < ops.length; y++) {
 				Option option = (Option) ops[y];
 				String desName = option.getInternalName();
-				DatasetViewTreeNode desNode = new DatasetViewTreeNode("Option:" + desName);
+				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Option:" + desName);
 				desNode.setUserObject(option);
 				this.add(desNode);
 //				new code to cycle through push actions
 				PushAction[] pushActions = option.getPushActions();
 				for (int l = 0; l < pushActions.length; l++) {
 					PushAction pa = pushActions[l];
-					DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+					DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 					pushActionNode.setUserObject(pa);
 					Option[] paOptions = pa.getOptions();
 					for (int m = 0; m < paOptions.length; m++) {
 						Option op = paOptions[m];
 						String paoptionName = op.getInternalName();
-						DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+						DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 						paOptionNode.setUserObject(op);
 					}					
 				} 
@@ -465,7 +465,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 			for (int k = 0; k < pushActions.length; k++) {
 				PushAction pa = pushActions[k];
 				
-				DatasetViewTreeNode pushActionNode = new DatasetViewTreeNode("PushAction");
+				DatasetConfigTreeNode pushActionNode = new DatasetConfigTreeNode("PushAction");
 				pushActionNode.setUserObject(pa);
 				
 				this.add(pushActionNode);
@@ -473,7 +473,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 				for (int m = 0; m < paOptions.length; m++) {
 					Option paop = paOptions[m];
 					String paoptionName = paop.getInternalName();
-					DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option: " + paoptionName);
+					DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option: " + paoptionName);
 					paOptionNode.setUserObject(paop);
 				}				
 			}
@@ -484,7 +484,7 @@ public class DatasetViewTreeNode extends DefaultMutableTreeNode {
 			for (int k = 0; k < paOptions.length; k++) {
 				Option op = paOptions[k];
 				String paoptionName = op.getInternalName();
-				DatasetViewTreeNode paOptionNode = new DatasetViewTreeNode("Option" + paoptionName);
+				DatasetConfigTreeNode paOptionNode = new DatasetConfigTreeNode("Option" + paoptionName);
 				paOptionNode.setUserObject(op);
 				this.add(paOptionNode);			
 			}

@@ -31,10 +31,10 @@ import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
+import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
+import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.FilterDescription;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.gnu.readline.Readline;
@@ -54,7 +54,7 @@ import org.gnu.readline.ReadlineCompleter;
  * <li><p>Help Mode: keyword: "help". Only names added by the client for this mode are made available.</p>
  * <li><p>Get Mode: keyword: "get".  Only attribute_names, and other names added by the client for this mode are made available.</p>
  * <li><p>Sequence Mode: keyword: "sequence".  Only names added by the client for this mode are made available.</p>
- * <li><p>DatasetView Mode: keyword: "datasets".  Only dataset names, and other names added by the client for this mode, are made available.</p>
+ * <li><p>DatasetConfig Mode: keyword: "datasets".  Only dataset names, and other names added by the client for this mode, are made available.</p>
  * <li><p>Where Mode: keyword: "where".  Only filter_names, filter_set_names, and other names added by the client for this mode, are made available.</p>
  * </ul>
  * <br>
@@ -77,7 +77,7 @@ public class MartCompleter implements ReadlineCompleter {
 
   private Iterator possibleValues; // iterator for subsequent calls.
   private SortedSet currentSet = new TreeSet();
-  private CompositeDSViewAdaptor adaptorManager = null;
+  private CompositeDSConfigAdaptor adaptorManager = null;
 
   private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
   private SortedSet domainSpecificSet = new TreeSet(); // will hold sequences
@@ -96,10 +96,10 @@ public class MartCompleter implements ReadlineCompleter {
 
   private SortedSet martSet = new TreeSet(); // will hold  String names for remove, and set 
   private SortedSet adaptorLocationSet = new TreeSet(); // will hold adaptor names for update and remove
-  private SortedSet datasetViewSet = new TreeSet(); // will hold DatasetView names for use, set, remove, and describe 
+  private SortedSet datasetConfigSet = new TreeSet(); // will hold DatasetConfig names for use, set, remove, and describe 
 
   private final List NODATASETWARNING =
-    Collections.unmodifiableList(Arrays.asList(new String[] { "No DatasetViews loaded", "!" }));
+    Collections.unmodifiableList(Arrays.asList(new String[] { "No DatasetConfigs loaded", "!" }));
   private final List NOENVWARNING =
     Collections.unmodifiableList(Arrays.asList(new String[] { "Please set environmenal Mart and Dataset", "!" }));
   private final List ERRORMODE = Collections.unmodifiableList(Arrays.asList(new String[] { "ERROR ENCOUNTERED" }));
@@ -116,8 +116,8 @@ public class MartCompleter implements ReadlineCompleter {
   private final String ENVC = "environment";
   private final String EXECC = "execute";
 
-  private DatasetView envDataset = null;
-  private DatasetView currentDataset = null;
+  private DatasetConfig envDataset = null;
+  private DatasetConfig currentDataset = null;
   private boolean usingLocalDataset = false;
 
   private DetailedDataSource envMart = null;
@@ -144,14 +144,14 @@ public class MartCompleter implements ReadlineCompleter {
    * object, and stores important internal_names into the completion sets that are applicable to the given MartConfiguration object.
    * @param adaptorManager - a MartConfiguration Object
    */
-  public MartCompleter(CompositeDSViewAdaptor adaptorManager) throws ConfigurationException {
+  public MartCompleter(CompositeDSConfigAdaptor adaptorManager) throws ConfigurationException {
     this.adaptorManager = adaptorManager;
 
     if (adaptorManager.getDatasetNames().length > 0) {
-      DatasetView[] dsets = adaptorManager.getDatasetViews();
+      DatasetConfig[] dsets = adaptorManager.getDatasetConfigs();
       for (int i = 0, n = dsets.length; i < n; i++) {
-        DatasetView dataset = dsets[i];
-        datasetViewSet.add(dataset.getInternalName());
+        DatasetConfig dataset = dsets[i];
+        datasetConfigSet.add(dataset.getInternalName());
       }
     }
 
@@ -356,7 +356,7 @@ public class MartCompleter implements ReadlineCompleter {
                   }
                 }
               } else
-                setNoDatasetViewMode();
+                setNoDatasetConfigMode();
             } else if (whereQualifiersMode) {
               if (MartShellLib.ALLQUALIFIERS.contains(lastWord)) {
                 if (lineWords.length > 1) {
@@ -396,13 +396,13 @@ public class MartCompleter implements ReadlineCompleter {
   }
 
   /**
-   * Sets the Environment DatasetView for the session.  This dataset remains in effect
+   * Sets the Environment DatasetConfig for the session.  This dataset remains in effect
    * for the duration of the MartCompleter objects existence, and can only be over ridden
    * by a subsequent call to setEnvDataset, or a local dataset in the command
    * 
-   * @param dataset - datasetview to set as environmental dataset
+   * @param dataset - datasetconfig to set as environmental dataset
    */
-  public void setEnvDataset(DatasetView dsv) {
+  public void setEnvDataset(DatasetConfig dsv) {
     envDataset = dsv;
   }
 
@@ -439,20 +439,20 @@ public class MartCompleter implements ReadlineCompleter {
     lastLine = null;
   }
 
-  private DatasetView getCurrentDatasetFor(String name) {
-    DatasetView ret = null;
+  private DatasetConfig getCurrentDatasetFor(String name) {
+    DatasetConfig ret = null;
     String[] toks = name.split("\\.");
 
     try {
       if (toks.length == 3) {
-        //sourcename.datasetname.viewname
+        //sourcename.datasetname.configname
 
         if (!adaptorManager.supportsAdaptor(toks[0])) {
-          setErrorMode("Sourcename " + toks[0] + " from datasetview request " + name + " is not a known source\n");
+          setErrorMode("Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
           return null;
         }
 
-        DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
 
         if (!adaptor.supportsDataset(toks[1])) {
           setErrorMode(
@@ -460,25 +460,25 @@ public class MartCompleter implements ReadlineCompleter {
               + toks[1]
               + " is not supported by sourcename "
               + toks[0]
-              + " in datasetview request "
+              + " in datasetconfig request "
               + name
               + "\n");
           return null;
         }
 
-        ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], toks[2]);
+        ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], toks[2]);
         
         System.err.println("Recieved dataset " + ret.getDataset() + "." + ret.getInternalName());
       } else if (toks.length == 2) {
-        //either sourcename.datasetname or datasetname.viewname relative to envMart
+        //either sourcename.datasetname or datasetname.configname relative to envMart
         if (adaptorManager.supportsAdaptor(toks[0])) {
           //assume it is sourcename.datasetname
           if (!adaptorManager.supportsAdaptor(toks[0])) {
-            setErrorMode("Sourcename " + toks[0] + " from datasetview request " + name + " is not a known source\n");
+            setErrorMode("Sourcename " + toks[0] + " from datasetconfig request " + name + " is not a known source\n");
             return null;
           }
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(toks[0]);
 
           if (!adaptor.supportsDataset(toks[1])) {
             setErrorMode(
@@ -486,47 +486,47 @@ public class MartCompleter implements ReadlineCompleter {
                 + toks[1]
                 + " is not supported by sourcename "
                 + toks[0]
-                + " in datasetview request "
+                + " in datasetconfig request "
                 + name
                 + "\n");
             return null;
           }
 
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[1], MartShellLib.DEFAULTDATASETVIEWNAME);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[1], MartShellLib.DEFAULTDATASETCONFIGNAME);
         } else {
-          //assume it is datasetname.viewname relative to envMart
+          //assume it is datasetname.configname relative to envMart
           if (envMart == null) {
-            setErrorMode("Must set environmental Mart to manipulate DatasetViews with relative name " + name + "\n");
+            setErrorMode("Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
             return null;
           }
 
-          DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[0], toks[1]);
+          DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], toks[1]);
         }
       } else if (toks.length == 1) {
         if (envMart == null) {
-          setErrorMode("Must set environmental Mart to manipulate DatasetViews with relative name " + name + "\n");
+          setErrorMode("Must set environmental Mart to manipulate DatasetConfigs with relative name " + name + "\n");
           return null;
         }
 
-        DSViewAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
+        DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(envMart.getName());
 
-        //either datasetname relative to envMart or viewname relative to envMart.envDataset
+        //either datasetname relative to envMart or configname relative to envMart.envDataset
         if (adaptorManager.supportsDataset(toks[0])) {
           //assume it is datasetname relative to envMart
-          ret = adaptor.getDatasetViewByDatasetInternalName(toks[0], MartShellLib.DEFAULTDATASETVIEWNAME);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(toks[0], MartShellLib.DEFAULTDATASETCONFIGNAME);
         } else {
-          //assume it is viewname relative to envMart and envDataset
+          //assume it is configname relative to envMart and envDataset
           if (envDataset == null) {
-            setErrorMode("Must set environmental Dataset to manipulate DatasetViews with relative name " + name + "\n");
+            setErrorMode("Must set environmental Dataset to manipulate DatasetConfigs with relative name " + name + "\n");
             return null;
           }
 
-          ret = adaptor.getDatasetViewByDatasetInternalName(envDataset.getDataset(), toks[0]);
+          ret = adaptor.getDatasetConfigByDatasetInternalName(envDataset.getDataset(), toks[0]);
         }
       }
     } catch (Exception e) {
-      setErrorMode("Caught Exception manipulating DatasetView named " + name + " " + e.getMessage() + "\n");
+      setErrorMode("Caught Exception manipulating DatasetConfig named " + name + " " + e.getMessage() + "\n");
       return null;
     }
 
@@ -545,7 +545,7 @@ public class MartCompleter implements ReadlineCompleter {
     if (toks.length <= 1) {
       setListBaseMode();
     } else {
-      if (toks[1].equalsIgnoreCase("datasets") || toks[1].equalsIgnoreCase("datasetviews"))
+      if (toks[1].equalsIgnoreCase("datasets") || toks[1].equalsIgnoreCase("datasetconfigs"))
         setAllAdaptorLocationMode();
     }
   }
@@ -597,8 +597,8 @@ public class MartCompleter implements ReadlineCompleter {
         setFromMode();
       else if (request.equalsIgnoreCase("Dataset"))
         setDatasetReqMode();
-      else if (request.equalsIgnoreCase("DatasetView"))
-        setDatasetViewReqMode();
+      else if (request.equalsIgnoreCase("DatasetConfig"))
+        setDatasetConfigReqMode();
       else if (request.equalsIgnoreCase("Procedure"))
         setProcedureNameMode();
     } else {
@@ -748,7 +748,7 @@ public class MartCompleter implements ReadlineCompleter {
     }
   }
 
-  private void setDatasetViewReqMode() {
+  private void setDatasetConfigReqMode() {
     currentSet = new TreeSet();
     if (envMart == null)
       setNoEnvMode();
@@ -756,20 +756,20 @@ public class MartCompleter implements ReadlineCompleter {
       if (envDataset == null)
         setNoEnvMode();
       else
-        setDatasetViewReqMode(envMart.getName(), envDataset.getDataset());
+        setDatasetConfigReqMode(envMart.getName(), envDataset.getDataset());
     }
   }
 
-  private void setDatasetViewReqMode(String martName, String datasetName) {
+  private void setDatasetConfigReqMode(String martName, String datasetName) {
     try {
       if (adaptorManager.supportsAdaptor(martName)
         && adaptorManager.getAdaptorByName(martName).supportsDataset(datasetName))
         currentSet.addAll(
-          Arrays.asList(adaptorManager.getAdaptorByName(martName).getDatasetViewInternalNamesByDataset(datasetName)));
+          Arrays.asList(adaptorManager.getAdaptorByName(martName).getDatasetConfigInternalNamesByDataset(datasetName)));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       if (logger.isLoggable(Level.INFO))
-        logger.info("Couldng set dataset view req mode, caught Configuration Exception: " + e.getMessage() + "\n");
+        logger.info("Couldng set dataset config req mode, caught Configuration Exception: " + e.getMessage() + "\n");
     }
   }
 
@@ -829,7 +829,7 @@ public class MartCompleter implements ReadlineCompleter {
         }
       }
     } else
-      setNoDatasetViewMode();
+      setNoDatasetConfigMode();
   }
 
   private void setFromMode() {
@@ -841,7 +841,7 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
   }
 
-  private void setNoDatasetViewMode() {
+  private void setNoDatasetConfigMode() {
     currentSet = new TreeSet();
     currentSet.addAll(NODATASETWARNING);
   }
@@ -949,7 +949,7 @@ public class MartCompleter implements ReadlineCompleter {
         }
       }
     } else
-      setNoDatasetViewMode();
+      setNoDatasetConfigMode();
   }
 
   private void setWhereQualifiers() {
@@ -969,7 +969,7 @@ public class MartCompleter implements ReadlineCompleter {
         currentSet.addAll(envDataset.getFilterCompleterQualifiersByInternalName(lastFilterName));
       }
     } else
-      setNoDatasetViewMode();
+      setNoDatasetConfigMode();
   }
 
   private void setWhereValues(String lastWord) {
@@ -990,7 +990,7 @@ public class MartCompleter implements ReadlineCompleter {
           currentSet.addAll(procSet);
       }
     } else
-      setNoDatasetViewMode();
+      setNoDatasetConfigMode();
   }
 
   private void pruneFilterPages() {
@@ -1009,17 +1009,17 @@ public class MartCompleter implements ReadlineCompleter {
 
   /**
    * Set the String names (path, url, Mart name) used to refer
-   * to locations from whence DSViewAdaptor objects were loaded.
-   * @param names -- names of path, url, or Mart names from whence DSViewAdaptor Objects were loaded 
+   * to locations from whence DSConfigAdaptor objects were loaded.
+   * @param names -- names of path, url, or Mart names from whence DSConfigAdaptor Objects were loaded 
    */
   public void setAdaptorLocations(Collection names) {
     adaptorLocationSet = new TreeSet();
     adaptorLocationSet.addAll(names);
   }
 
-  public void setDatasetViewInternalNames(Collection names) {
-    datasetViewSet = new TreeSet();
-    datasetViewSet.addAll(names);
+  public void setDatasetConfigInternalNames(Collection names) {
+    datasetConfigSet = new TreeSet();
+    datasetConfigSet.addAll(names);
   }
 
   /**

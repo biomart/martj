@@ -34,14 +34,14 @@ import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.LoggingUtils;
 
 /**
- * Application allowing users to dump a Naive DatasetView
+ * Application allowing users to dump a Naive DatasetConfig
  * for a given Dataset housed within a given Mart Compliant
  * Database hosted on a given RDMBS host.  
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 
-public class NaiveDatasetViewGenerator {
+public class NaiveDatasetConfigGenerator {
 
   private static String dbName = null;
   private static String dsName = null;
@@ -57,10 +57,10 @@ public class NaiveDatasetViewGenerator {
   private static boolean verbose = false;
 
   private static final String COMMAND_LINE_SWITCHES = "hvH:U:p:P:T:D:M:d:O:R:";
-  private static Logger logger = Logger.getLogger(NaiveDatasetViewGenerator.class.getName());
+  private static Logger logger = Logger.getLogger(NaiveDatasetConfigGenerator.class.getName());
 
   private static String usage() {
-    return "NaiveDatasetViewGenerator <OPTIONS>"
+    return "NaiveDatasetConfigGenerator <OPTIONS>"
       + "\n"
       + "\n-h                             print this message and exit"
       + "\n-v                             turns on verbose debuggin output"
@@ -77,7 +77,7 @@ public class NaiveDatasetViewGenerator {
       + DetailedDataSource.DEFAULTDRIVER
       + ")"
       + "\n-M                             Mart Database Name (required)"
-      + "\n-d                             DatasetName for requested Naive DatasetView (if not provided, a list of potential 'best guess' dataset names will be printed, each with a list of main tables for this dataset for verification purposes)"
+      + "\n-d                             DatasetName for requested Naive DatasetConfig (if not provided, a list of potential 'best guess' dataset names will be printed, each with a list of main tables for this dataset for verification purposes)"
       + "\n-O                             Output File Path (defaults to stdout)"
       + "\n-R                             Registry FileName (If specified, creates a MartRegistry Document pointing to file specified in -o switch (ignored if no -o switch available))"
       + "\n";
@@ -180,7 +180,7 @@ public class NaiveDatasetViewGenerator {
           System.exit(1);
         }
 
-        Getopt g = new Getopt(NaiveDatasetViewGenerator.class.getName(), args, COMMAND_LINE_SWITCHES);
+        Getopt g = new Getopt(NaiveDatasetConfigGenerator.class.getName(), args, COMMAND_LINE_SWITCHES);
         int c;
 
         while ((c = g.getopt()) != -1) {
@@ -292,9 +292,9 @@ public class NaiveDatasetViewGenerator {
           dsvOutput = System.out;
         }
 
-        DatasetView dsv = DatabaseDatasetViewUtils.getNaiveDatasetViewFor(dsource, dbName, dsName);
+        DatasetConfig dsv = DatabaseDatasetConfigUtils.getNaiveDatasetConfigFor(dsource, dbName, dsName);
 
-        DatasetViewXMLUtils.DatasetViewToOutputStream(dsv, dsvOutput);
+        DatasetConfigXMLUtils.DatasetConfigToOutputStream(dsv, dsvOutput);
 
         if (dsvFileName != null)
           dsvOutput.close();
@@ -303,8 +303,8 @@ public class NaiveDatasetViewGenerator {
           if (dsvFileName != null) {
             if (regFileName != null) {
               OutputStream regOut = new FileOutputStream(regFileName);
-              URLDSViewAdaptor dsvadaptor = new URLDSViewAdaptor(dsvFile.toURL());
-              RegistryDSViewAdaptor regadaptor = new RegistryDSViewAdaptor(dsvadaptor);
+              URLDSConfigAdaptor dsvadaptor = new URLDSConfigAdaptor(dsvFile.toURL());
+              RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(dsvadaptor);
               MartRegistryXMLUtils.MartRegistryToOutputStream(regadaptor.getMartRegistry(), regOut);
               regOut.close();
             } else {
@@ -312,16 +312,16 @@ public class NaiveDatasetViewGenerator {
             }
           } else {
             System.err.println(
-              "\nWARNING:Can not print MartRegistry File for DatasetView sent to STDOUT. Run again sending the DatasetView to a file");
+              "\nWARNING:Can not print MartRegistry File for DatasetConfig sent to STDOUT. Run again sending the DatasetConfig to a file");
           }
         }
       } else {
-        String[] potDsvs = DatabaseDatasetViewUtils.getNaiveDatasetNamesFor(dsource, dbName);
+        String[] potDsvs = DatabaseDatasetConfigUtils.getNaiveDatasetNamesFor(dsource, dbName);
         System.out.println("Potential Datasets:");
         for (int i = 0, n = potDsvs.length; i < n; i++) {
           String potDS = potDsvs[i];
           System.out.println("\t" + potDS);
-          String[] mainTables = DatabaseDatasetViewUtils.getNaiveMainTablesFor(dsource, dbName, potDS);
+          String[] mainTables = DatabaseDatasetConfigUtils.getNaiveMainTablesFor(dsource, dbName, potDS);
           for (int j = 0, m = mainTables.length; j < m; j++) {
             String mainTable = mainTables[j];
             System.out.println("\t\t" + mainTable);

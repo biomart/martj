@@ -18,7 +18,7 @@
 package org.ensembl.mart.lib.config;
 
 /**
- * Interface to all Objects that point to Mart DatasetView document collections. 
+ * Interface to all Objects that point to Mart DatasetConfig document collections. 
 * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
 * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
 */

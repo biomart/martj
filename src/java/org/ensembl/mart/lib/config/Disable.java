@@ -38,7 +38,7 @@ public class Disable extends BaseConfigurationObject {
 	}
 	
   /**
-   * Empty Constructor should only be used by DatasetViewEditor
+   * Empty Constructor should only be used by DatasetConfigEditor
    */
   public Disable() {
   	super();

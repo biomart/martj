@@ -115,7 +115,7 @@ public class CompiledSQLQueryTest extends Base {
 	public void testUnprocessedFilterHandlers() throws Exception {
 		Filter chrFilter = new BasicFilter("chr_name", "main",  "gene_id_key", "=", "1");
 
-        // Generic Handler relies on a DatasetView so below tests can't work anymore
+        // Generic Handler relies on a DatasetConfig so below tests can't work anymore
 
 //		//Marker
 //		Query q = new Query(genequery);

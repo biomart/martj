@@ -43,9 +43,9 @@ import javax.swing.UIManager;
 import javax.swing.JOptionPane;
 
 import org.ensembl.mart.lib.DetailedDataSource;
-import org.ensembl.mart.lib.config.DatabaseDatasetViewUtils;
+import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Class MartEditor extends JFrame..
@@ -54,7 +54,7 @@ import org.ensembl.mart.lib.config.DatasetView;
  * </p>
  *
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
- * //@see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetConfig
  */
 
 public class MartEditor extends JFrame {
@@ -117,19 +117,19 @@ public class MartEditor extends JFrame {
 
         //first button
         button = makeNavigationButton("new", NEW,
-                "Create a new dataset view",
+                "Create a new dataset config",
                 "new");
         toolBar.add(button);
 
         //second button
         button = makeNavigationButton("open", OPEN,
-                "Open a dataset view",
+                "Open a dataset config",
                 "open");
         toolBar.add(button);
 
         //third button
         button = makeNavigationButton("save", SAVE,
-                "Save dataset view",
+                "Save dataset config",
                 "save");
         toolBar.add(button);
 
@@ -166,7 +166,7 @@ public class MartEditor extends JFrame {
         //Look for the image.
         String imgLocation = IMAGE_DIR+imageName
                 + ".gif";
-        URL imageURL = DatasetViewTree.class.getClassLoader().getResource(imgLocation);
+        URL imageURL = DatasetConfigTree.class.getClassLoader().getResource(imgLocation);
 
         //Create and initialize the button.
         JButton button = new JButton();
@@ -385,7 +385,7 @@ public class MartEditor extends JFrame {
     //Create a new internal frame.
     protected void createFrame(File file) {
 
-            DatasetViewTreeWidget frame = new DatasetViewTreeWidget(file,this,null,null,null,null);
+            DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(file,this,null,null,null,null);
             frame.setVisible(true);
             desktop.add(frame);
             try {
@@ -412,7 +412,7 @@ public class MartEditor extends JFrame {
         //Create and set up the window.
         MartEditor frame = new MartEditor();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        //ImageIcon icon = createImageIcon(IMAGE_DIR+"MartView_cube.gif");
+        //ImageIcon icon = createImageIcon(IMAGE_DIR+"MartConfig_cube.gif");
         //frame.setIconImage(icon.getImage());
         //Display the window.
         frame.setVisible(true);
@@ -420,7 +420,7 @@ public class MartEditor extends JFrame {
 
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = DatasetViewTreeWidget.class.getClassLoader().getResource(path);
+        java.net.URL imgURL = DatasetConfigTreeWidget.class.getClassLoader().getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
@@ -458,9 +458,9 @@ public class MartEditor extends JFrame {
             else if (e.getActionCommand().equals("Delete"))
                 delete();
             else if (e.getActionCommand().startsWith("New"))
-                newDatasetView();
+                newDatasetConfig();
             else if (e.getActionCommand().startsWith("Open"))
-                openDatasetView();
+                openDatasetConfig();
             else if (e.getActionCommand().equals("Exit"))
                 exit();
             else if (e.getActionCommand().equals("Save"))
@@ -474,15 +474,15 @@ public class MartEditor extends JFrame {
 			else if (e.getActionCommand().startsWith("Database"))
 				databaseConnection();  
 			else if (e.getActionCommand().startsWith("Import"))
-				importDatasetView();  
+				importDatasetConfig();  
 			else if (e.getActionCommand().startsWith("Export"))
-				exportDatasetView();  				  
+				exportDatasetConfig();  				  
 			else if (e.getActionCommand().startsWith("Naive"))
-				naiveDatasetView();  				  
+				naiveDatasetConfig();  				  
 			else if (e.getActionCommand().startsWith("Update"))
-				updateDatasetView();
+				updateDatasetConfig();
 	                else if (e.getActionCommand().startsWith("Delete"))
-				deleteDatasetView();
+				deleteDatasetConfig();
 			else if (e.getActionCommand().startsWith("Hidden"))
 				makeHidden();	
                 	  				  				  																				  
@@ -490,31 +490,31 @@ public class MartEditor extends JFrame {
     }
 
     public void cut() {
-         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).cut();
+         ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).cut();
     }
 
     public void copy() {
-         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).copy();
+         ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).copy();
     }
 
     public void paste() {
-         ((DatasetViewTreeWidget)desktop.getSelectedFrame()).paste();
+         ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).paste();
     }
 
 	public void makeHidden() {
-		 ((DatasetViewTreeWidget)desktop.getSelectedFrame()).makeHidden();
+		 ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).makeHidden();
 	}
 
 
     public void insert() {
-          //((DatasetViewTreeWidget)desktop.getSelectedFrame()).insert();
+          //((DatasetConfigTreeWidget)desktop.getSelectedFrame()).insert();
     }
 
     public void delete() {
-          ((DatasetViewTreeWidget)desktop.getSelectedFrame()).delete();
+          ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).delete();
     }
 
-    public void newDatasetView() {
+    public void newDatasetConfig() {
         createFrame(null);
     }
 
@@ -552,7 +552,7 @@ public class MartEditor extends JFrame {
     	database = databaseDialog.getDatabase();
     }
 
-    public void openDatasetView() {
+    public void openDatasetConfig() {
 
         XMLFileFilter filter = new XMLFileFilter();
         fc.addChoosableFileFilter(filter);
@@ -572,21 +572,21 @@ public class MartEditor extends JFrame {
 
 
 
-	public void importDatasetView() {
+	public void importDatasetConfig() {
 		try{
 		  if (ds == null){
 		    JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
 		    return;
 		  }
 		
-		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
+		  String[] datasets = DatabaseDatasetConfigUtils.getAllDatasetNames(ds,user);
 		  String dataset = (String) JOptionPane.showInputDialog(null,
 				   "Choose one", "Dataset Config",
 				   JOptionPane.INFORMATION_MESSAGE, null,
 				   datasets, datasets[0]);		
 		  if (dataset == null)
 		    return;	
-		  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,user,dataset,null);
+		  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null,this,null,user,dataset,null);
 		  frame.setVisible(true);
 		  desktop.add(frame);
 		  try {
@@ -600,7 +600,7 @@ public class MartEditor extends JFrame {
 
 
 
-	public void exportDatasetView() {
+	public void exportDatasetConfig() {
 		if (ds == null){
 			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
 			return;
@@ -616,17 +616,17 @@ public class MartEditor extends JFrame {
 
 		if (confirm != JOptionPane.OK_OPTION)
 			return;
-		((DatasetViewTreeWidget)desktop.getSelectedFrame()).export();
+		((DatasetConfigTreeWidget)desktop.getSelectedFrame()).export();
 	}
 
-	public void naiveDatasetView(){
+	public void naiveDatasetConfig(){
 	  try{
 		if (ds == null){
 			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
 			return;
 		}	
 		
-  		String[] datasets = DatabaseDatasetViewUtils.getNaiveDatasetNamesFor(ds,database);
+  		String[] datasets = DatabaseDatasetConfigUtils.getNaiveDatasetNamesFor(ds,database);
 		String dataset = (String) JOptionPane.showInputDialog(null,
 				   "Choose one", "Dataset",
 				   JOptionPane.INFORMATION_MESSAGE, null,
@@ -644,7 +644,7 @@ public class MartEditor extends JFrame {
   if (dbtype.startsWith("oracle")) qdb = user.toUpperCase();  // not sure why needs uppercase
   else qdb = database;
     
-  DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,null,null,dataset,qdb);
+  DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null,this,null,null,dataset,qdb);
 
 		frame.setVisible(true);
 		desktop.add(frame);
@@ -657,7 +657,7 @@ public class MartEditor extends JFrame {
 	  }			
 	}
 	
-	public void updateDatasetView() {
+	public void updateDatasetConfig() {
 	  try{	
 		if (ds == null){
 			JOptionPane.showMessageDialog(this,"Connect to database first", "ERROR", 0);
@@ -665,11 +665,11 @@ public class MartEditor extends JFrame {
 		}	
 		
 		// check whether existing filters and atts are still in database
-		DatasetView dsv = DatabaseDatasetViewUtils.getValidatedDatasetView(ds,((DatasetViewTreeWidget)desktop.getSelectedFrame()).getDatasetView());
+		DatasetConfig dsv = DatabaseDatasetConfigUtils.getValidatedDatasetConfig(ds,((DatasetConfigTreeWidget)desktop.getSelectedFrame()).getDatasetConfig());
 		// check for new tables and cols
-		dsv = DatabaseDatasetViewUtils.getNewFiltsAtts(ds,database,dsv);
+		dsv = DatabaseDatasetConfigUtils.getNewFiltsAtts(ds,database,dsv);
 		
-		DatasetViewTreeWidget frame = new DatasetViewTreeWidget(null,this,dsv,null,null,database);
+		DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null,this,dsv,null,null,database);
 		frame.setVisible(true);
 		desktop.add(frame);
 		try {
@@ -683,7 +683,7 @@ public class MartEditor extends JFrame {
 	}
 
 
-	public void deleteDatasetView() {
+	public void deleteDatasetConfig() {
 	 
 		try{
 		  if (ds == null){
@@ -691,7 +691,7 @@ public class MartEditor extends JFrame {
 		    return;
 		  }
 		
-		  String[] datasets = DatabaseDatasetViewUtils.getAllDatasetNames(ds,user);
+		  String[] datasets = DatabaseDatasetConfigUtils.getAllDatasetNames(ds,user);
 		  String dataset = (String) JOptionPane.showInputDialog(null,
 				   "Choose one", "Dataset Config",
 				   JOptionPane.INFORMATION_MESSAGE, null,
@@ -699,7 +699,7 @@ public class MartEditor extends JFrame {
 		  if (dataset == null)
 		    return;	
 		  
-               DatabaseDatasetViewUtils.deleteDatasetView(ds,dataset);
+               DatabaseDatasetConfigUtils.deleteDatasetConfig(ds,dataset);
 
 		  
 		}
@@ -710,11 +710,11 @@ public class MartEditor extends JFrame {
 
 		
     public void save() {
-        ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save();
+        ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).save();
     }
 
     public void save_as() {
-       ((DatasetViewTreeWidget)desktop.getSelectedFrame()).save_as();
+       ((DatasetConfigTreeWidget)desktop.getSelectedFrame()).save_as();
     }
 
     public void exit() {

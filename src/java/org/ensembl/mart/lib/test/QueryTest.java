@@ -14,7 +14,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.SequenceDescription;
-import org.ensembl.mart.lib.config.DatasetView;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Tests Query's setters, getters and listener notification mechanisms.
@@ -290,12 +290,12 @@ public class QueryTest extends TestCase implements QueryListener {
   }
 
   /* (non-Javadoc)
-   * @see org.ensembl.mart.lib.QueryChangeListener#datasetViewChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetView, org.ensembl.mart.lib.config.DatasetView)
+   * @see org.ensembl.mart.lib.QueryChangeListener#datasetConfigChanged(org.ensembl.mart.lib.Query, org.ensembl.mart.lib.config.DatasetConfig, org.ensembl.mart.lib.config.DatasetConfig)
    */
-  public void datasetViewChanged(
+  public void datasetConfigChanged(
     Query query,
-    DatasetView oldDatasetView,
-    DatasetView newDatasetView) {
+    DatasetConfig oldDatasetConfig,
+    DatasetConfig newDatasetConfig) {
     numChanges++;
   }
 

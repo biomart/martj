@@ -29,9 +29,9 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.ensembl.mart.lib.config.DatasetView;
-import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
-import org.ensembl.mart.lib.config.test.URLDSViewAdaptorTest;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
+import org.ensembl.mart.lib.config.test.URLDSConfigAdaptorTest;
 import org.ensembl.mart.lib.test.Base;
 import org.ensembl.mart.util.BigPreferences;
 
@@ -119,13 +119,13 @@ public class BigPreferencesTest extends Base {
     pref.flush();
   }
   
-  public void testDatasetViewStorage() throws Exception {
-    URL testurl = URLDSViewAdaptorTest.getTestDatasetURL();
+  public void testDatasetConfigStorage() throws Exception {
+    URL testurl = URLDSConfigAdaptorTest.getTestDatasetURL();
     InputStream testinput = testurl.openStream();
-    DatasetView testDsv = DatasetViewXMLUtils.XMLStreamToDatasetView( testinput );
+    DatasetConfig testDsv = DatasetConfigXMLUtils.XMLStreamToDatasetConfig( testinput );
     testinput.close();
     
-    byte[] dsvOut = DatasetViewXMLUtils.DatasetViewToByteArray(testDsv);
+    byte[] dsvOut = DatasetConfigXMLUtils.DatasetConfigToByteArray(testDsv);
 
     userPref.remove(TEST_KEY);
     userPref.flush();
@@ -135,7 +135,7 @@ public class BigPreferencesTest extends Base {
     
     assertEquals("Byte Lengths differ between dsvOut and dsvBack\n", dsvOut.length, dsvBack.length);
     
-    DatasetView newDsv = DatasetViewXMLUtils.ByteArrayToDatasetView(dsvBack);
+    DatasetConfig newDsv = DatasetConfigXMLUtils.ByteArrayToDatasetConfig(dsvBack);
     
     assertTrue("testDsv and newDsv differ\n", testDsv.equals(newDsv));    
   }

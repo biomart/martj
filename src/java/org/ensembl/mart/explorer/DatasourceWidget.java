@@ -35,7 +35,7 @@ import javax.swing.event.ChangeListener;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.DSViewAdaptor;
+import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.util.LoggingUtil;
 
 /**
@@ -78,9 +78,9 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
 
     Set items = new HashSet();
 
-    DSViewAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
+    DSConfigAdaptor as[] = adaptorManager.getRootAdaptor().getAdaptors();
     for (int i = 0; i < as.length; i++) {
-      DSViewAdaptor a = as[i];
+      DSConfigAdaptor a = as[i];
       if (a.getDataSource() != null) {
         items.add(a.getName());
         logger.fine( "Adding datasource: " + a.getName() );
@@ -129,7 +129,7 @@ public class DatasourceWidget extends InputPage implements ChangeListener {
     logger.setLevel(Level.FINEST);
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
-    AdaptorManager am = QueryEditor.testDatasetViewSettings();
+    AdaptorManager am = QueryEditor.testDatasetConfigSettings();
     Query q = new Query();
     DatasourceWidget dw = new DatasourceWidget(q, am);
 
