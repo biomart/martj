@@ -184,6 +184,10 @@ public class ExpressionFilterHandler implements UnprocessedFilterHandler {
 			lrs.close();
 			lidBuf.append(")");
 
+
+            if (lidcount == 0){
+				throw new InvalidQueryException("No libraries mapped to this term\n");
+            }
 			idSQL.append(lidBuf);
 			sql = idSQL.toString();
 
