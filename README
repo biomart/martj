@@ -13,8 +13,33 @@ MartExplorer provides access to Mart databases via several means:
 
 APPLICATION USER
 ----------------
-*nix users: To start the application run the script THIS_DIRECTORY/bin/martexplorer.sh.
 
+RUNNING THE PROGRAM
+
+You must have java installed on your computer and the JVM ("java"
+program) should be included in your path.
+
+All users can start the application from a shell like this:
+
+   java -jar mart-explorer-0.01/lib/mart-explorer.jar
+
+Windows users might be able to 'click' on the file
+./lib/mart-explorer.jar.
+
+
+Un*x users can also run the application by running the script
+martexplorer.sh. Do this by either:
+
+a) prompt>chmod +x bin/martexplorer.sh (make it executable, only have to do this once).
+
+   prompt>bin/martexplorer.sh 
+   OR 
+   prompt>martexplorer.sh (if ./bin is in your path.)
+
+b) prompt>sh bin/martexplorer.sh
+
+
+   
 
 
 
