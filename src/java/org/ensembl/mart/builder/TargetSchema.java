@@ -26,7 +26,7 @@ public class TargetSchema {
 	
 		createTransformationsForLinked();
 		createTransformationsForMains();
-		createTransformationsForCentralFilters();
+		//createTransformationsForCentralFilters();
 		
 	}
 	
@@ -44,6 +44,7 @@ public class TargetSchema {
 			transformation.final_table_name=linked.final_table_name;
 			transformation.start_table=linked.getMainTable();
 			transformation.type="linked";
+			transformation.final_table_type=linked.final_table_type;
 			transformation.create(referenced_tables);
 			
 			transformation.transform();
@@ -81,6 +82,7 @@ public class TargetSchema {
             ref.setName(ref.temp_name);
             transformation.start_table=main;
 		    transformation.type="main";
+		    transformation.final_table_type = "MAIN";
             transformation.create(tables);
 		    
             transformation.transform();
@@ -92,8 +94,29 @@ public class TargetSchema {
 	
 	
 	
-	private void createTransformationsForCentralFilters(){
+	public void createTransformationsForCentralFilters(){
 		
+		Transformation [] central = getDMTranformationsForCentral();	
+		Transformation [] mains =   getMainTranformationForCentral();
+		
+		for (int i=0; i<mains.length;i++){
+			Transformation transformation = new Transformation();
+			
+			/**
+			
+			transformation.final_table_name =ref.getName();
+			
+			ref.setName(ref.temp_name);
+			transformation.start_table=main;
+			transformation.type="main";
+			transformation.create(tables);
+			*/
+			
+			
+			transformation.transform();
+			addTransformation(transformation);
+		}
+			
 	}
 	
 	private void transform(){
@@ -121,6 +144,7 @@ public class TargetSchema {
 		reftable.setCardinality(new_table_cardinality);	
 	    
 		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
+		// redo the transformation
 		trans.transform();
 	
 }
@@ -150,6 +174,64 @@ public class TargetSchema {
 		}
 		
 		return trans;
+	}
+	
+
+	public Transformation [] getTransformationsByFinalTableType(String type){
+		
+		ArrayList trans_list = new ArrayList();
+		
+		Transformation [] trans = getTransformations();
+		
+		for (int i=0;i<trans.length;i++){
+			if (trans[i].final_table_type.equals(type)){
+				trans_list.add(trans[i]);
+			}
+		}
+		
+		Transformation [] b = new Transformation[trans_list.size()];
+		return (Transformation []) trans_list.toArray(b);	
+		
+	}	
+	
+	
+	private Transformation [] getDMTranformationsForCentral (){
+		
+		ArrayList list = new ArrayList();
+		
+		Transformation [] trans= getTransformationsByFinalTableType("DM");
+		for (int i=0; i<trans.length;i++){
+			
+			if (trans[i].central){
+				list.add(trans[i]);			
+			}
+		}
+		Transformation [] b = new Transformation[list.size()];
+		return (Transformation []) list.toArray(b);	
+		
+	}
+	
+	private Transformation [] getMainTranformationForCentral(){
+		
+		Transformation [] mains = getTransformationsByFinalTableType("MAIN");
+		
+		ArrayList list = new ArrayList();
+		String name = null;
+		
+		for (int i=0;i<mains.length;i++){
+			
+			System.out.println("getting mains: "+mains[i].final_table_name);
+			
+			if(name.equals(mains[i].final_table_name)){
+				list.set(i-1,mains[i]);		
+			} else {
+				name = mains[i].final_table_name;
+				list.add(mains[i]);
+			}
+		}
+		
+		Transformation [] b = new Transformation[list.size()];
+		return (Transformation []) list.toArray(b);		
 	}
 	
 	

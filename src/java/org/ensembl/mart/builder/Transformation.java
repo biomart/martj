@@ -24,6 +24,7 @@ public class Transformation {
 	String type;
 	private LinkedTables linked;
 	Table start_table;
+	boolean central = false;
 	
 	
 	public void create (Table [] referenced_tables){

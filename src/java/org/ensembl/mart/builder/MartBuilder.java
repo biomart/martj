@@ -19,7 +19,7 @@ import java.util.*;
 public class MartBuilder {
 	
 	private static SourceSchema source_schema;
-	private static String config ="data/builder_connection_oracle.properties";
+	private static String config ="data/builder_connection_mysql.properties";
 	
 	public static void main(String[] args) {
 		
@@ -93,6 +93,21 @@ public class MartBuilder {
 			if (newname != null && ! newname.equals("\n") && !newname.equals(""))
 				transformations[i].setFinalName(newname);
 		}
+		
+		
+		
+		// Add central filters
+		Transformation [] tran = target_schema.getTransformationsByFinalTableType("DM");
+		
+		for (int i=0;i<tran.length;i++){
+			String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
+			if (input.equals("Y")){
+				tran[i].central=true;		
+			}
+		}
+		
+		target_schema.createTransformationsForCentralFilters();
+		
 		
 		
 		// Dump to SQL
