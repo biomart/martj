@@ -319,7 +319,6 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
         dataSource.getDatabaseName(),
         user,
         dbpassword,
-        dataSource.getJdbcDriverClassName(),
         adaptorName);
     return new MartLocation[] { dbloc };
   }

@@ -38,14 +38,13 @@ public class DatabaseLocation extends MartLocationBase {
   private final String INSTANCE_NAME_KEY = "instanceName";
   private final String USER_KEY = "user";
   private final String PASSWORD_KEY = "password";
-  private final String JDBC_DRIVER_CLASS_NAME = "jdbcDriverClassName";
 
   public DatabaseLocation() {
     super();
     type = MartLocationBase.DATABASE;
   }
   
-  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String jdbcDriverClassName, String name) throws ConfigurationException {
+  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String name) throws ConfigurationException {
     super(name, MartLocationBase.DATABASE);
     
     if (host == null || instanceName == null || user == null)
@@ -57,7 +56,6 @@ public class DatabaseLocation extends MartLocationBase {
       setAttribute(DATABASE_TYPE_KEY, databaseType);
       setAttribute(PORT_KEY, port);
       setAttribute(PASSWORD_KEY, password);
-      setAttribute(JDBC_DRIVER_CLASS_NAME, jdbcDriverClassName);
   }
 	
 	/**
@@ -130,18 +128,6 @@ public class DatabaseLocation extends MartLocationBase {
 	
   public void setUser(String user) {
     setAttribute(USER_KEY, user);
-  }
-  
-  /**
-   * Returns the jdbcDriverClassName, if present.
-   * @return String jdbcDriverClassName
-   */
-  public String getJDBCDriverClassName() {
-    return getAttribute(JDBC_DRIVER_CLASS_NAME);
-  }
-  
-  public void setJDBCDriverClassName(String jdbcDriverClassName) {
-    setAttribute(JDBC_DRIVER_CLASS_NAME, jdbcDriverClassName);
   }
   
 	public String toString() {
