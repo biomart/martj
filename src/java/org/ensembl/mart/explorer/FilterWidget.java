@@ -53,6 +53,8 @@ public abstract class FilterWidget
   protected String tableConstraint;
 
   protected String key;
+  
+  protected String qualifier;
 
   protected FilterGroupWidget filterGroupWidget;
 
@@ -78,6 +80,7 @@ public abstract class FilterWidget
     this.fieldName = filterDescription.getFieldFromContext();
     this.tableConstraint = filterDescription.getTableConstraintFromContext();
     this.key = filterDescription.getKeyFromContext();
+    this.qualifier = filterDescription.getQualifierFromContext();
   }
 
   /**
@@ -139,23 +142,31 @@ public abstract class FilterWidget
    * @return true if otherfilter has the same fieldName
    */
   protected boolean equivalentFilter(Object otherFilter) {
-    return //
-    otherFilter != null && otherFilter instanceof Filter
+    if (otherFilter == null || !(otherFilter instanceof Filter))
+      return false;
+
+    Filter of = (Filter) otherFilter;
+    return
     //
-    && fieldName != null
+    fieldName != null
     && !"".equals(fieldName)
-    && ((Filter) otherFilter).getField() != null
-    && ((Filter) otherFilter).getField().equals(fieldName)
+    && of.getField() != null
+    && of.getField().equals(fieldName)
     //
     && tableConstraint != null
     && !"".equals(tableConstraint)
-    && ((Filter) otherFilter).getTableConstraint() != null
-    && ((Filter) otherFilter).getTableConstraint().equals(tableConstraint)
+    && of.getTableConstraint() != null
+    && of.getTableConstraint().equals(tableConstraint)
     //
     && key != null
     && !"".equals(key)
-    && ((Filter) otherFilter).getKey() != null
-    && ((Filter) otherFilter).getKey().equals(key);
+    && of.getKey() != null
+    && of.getKey().equals(key)
+    //
+    && qualifier != null
+    && !"".equals(qualifier)
+    && of.getCondition() != null
+    && of.getCondition().equals(qualifier);
   }
 
   protected abstract void setFilter(Filter filter);
@@ -279,9 +290,10 @@ public abstract class FilterWidget
   protected JLabel createLabel() {
     String label = filterDescription.getDisplayName();
     if (label == null)
-      label ="";
+      label = "";
     else
-        label = StringUtil.wrapLinesAsHTML(
+      label =
+        StringUtil.wrapLinesAsHTML(
           label,
           Constants.LABEL_WIDTH_IN_CHARS,
           false);

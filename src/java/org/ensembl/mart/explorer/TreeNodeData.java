@@ -121,13 +121,15 @@ public class TreeNodeData {
           .getDatasetConfig()
           .getFilterDescriptionByFieldNameTableConstraint(
           filter.getField(),
-          filter.getTableConstraint());
+          filter.getTableConstraint(),
+          filter.getCondition());
 
       if (fd != null)
         fieldName =
           fd.getDisplayNameByFieldNameTableConstraint(
             filter.getField(),
-            filter.getTableConstraint());
+            filter.getTableConstraint(),
+            filter.getCondition());
 
     }
 
