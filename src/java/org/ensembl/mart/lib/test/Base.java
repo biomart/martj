@@ -2,11 +2,13 @@
 
 package org.ensembl.mart.lib.test;
 
+import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import junit.framework.TestCase;
@@ -20,12 +22,17 @@ import org.ensembl.mart.lib.Query;
 
 /**
  * Base class for tests that sets up the logging system if necessary. 
+ * 
+ * Loads logging configuration file from data/junit_logging.conf if it exists. Otherwise
+ * the logging level defaults to WARNING for all classes.
  */
 public abstract class Base extends TestCase {
 
   private Logger logger = Logger.getLogger(Base.class.getName());
 	private final static String connprops = "data/testconnection.conf";
 	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
+  
+  private final static String DEFAULT_LOGGING_CONF_URL = "data/junit_logging.properties";
 
   private final String DEFAULTDBTYPE = "mysql";
   private final String DEFAULTHOST = "kaka.sanger.ac.uk";
@@ -104,6 +111,19 @@ public abstract class Base extends TestCase {
 
 	public Base(String name) {
 		super(name);
+    URL loggingConfig = Base.class.getClassLoader().getResource( DEFAULT_LOGGING_CONF_URL );
+    if ( loggingConfig!=null ) {
+      try {
+        LogManager.getLogManager().readConfiguration( loggingConfig.openStream() );
+  		} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    }
+    else {
+      Logger.getLogger("").setLevel( Level.WARNING );
+    }
 	}
 
   public Connection getDBConnection() throws Exception {
