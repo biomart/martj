@@ -233,7 +233,6 @@ public class FilterPage {
 		buf.append("[");
 		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
-		buf.append(" displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", FilterCollections=").append(filterGroups);
 		buf.append("]");

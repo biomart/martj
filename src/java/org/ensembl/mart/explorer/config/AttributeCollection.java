@@ -33,19 +33,18 @@ public class AttributeCollection {
 	 * so disable parameterless constructor
 	 */
 	private AttributeCollection() throws ConfigurationException {
-		this("", "", 0, "", ""); // will never happen
+		this("", 0, "", ""); // will never happen
 	}
 
 	/**
 	 * Constructor for an AttributeCollection named by internalName, with a type and maxSelect value.
 	 * 
-	* @param internalName String name to internally represent the AttributeCollection.  Must not be null
-	 * @param type String type of the AttributeCollection.  Must not be null
+	*  @param internalName String name to internally represent the AttributeCollection.  Must not be null
 	 * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
 	 * @throws ConfigurationException when the required values are null or empty.
 	 */
-	public AttributeCollection(String internalName, String type, int maxSelect) throws ConfigurationException {
-		this(internalName, type, maxSelect, "", "");
+	public AttributeCollection(String internalName, int maxSelect) throws ConfigurationException {
+		this(internalName, maxSelect, "", "");
 	}
 
 	/**
@@ -53,20 +52,18 @@ public class AttributeCollection {
 	 * May have description description.
 	 * 
 	 * @param internalName String name to internally represent the AttributeCollection.  Must not be null
-	 * @param type String type of the AttributeCollection.  Must not be null
 	 * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
 	 * @param displayName String name to represent the AttributeCollection.
 	 * @param description String description of the AttributeCollection
 	 * @throws ConfigurationException if required parameters are null or empty.
 	 */
-	public AttributeCollection(String internalName, String type, int maxSelect, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals("") || type == null || type.equals("") || maxSelect < 1)
-			throw new ConfigurationException("AttributeCollections must contain an internalName, type, and maxSelect value");
+	public AttributeCollection(String internalName, int maxSelect, String displayName, String description) throws ConfigurationException {
+		if (internalName == null || internalName.equals("") || maxSelect < 1)
+			throw new ConfigurationException("AttributeCollections must contain an internalName and maxSelect value");
 
 		this.internalName = internalName;
 		this.displayName = displayName;
 		this.description = description;
-		this.type = type;
 		this.maxSelect = maxSelect;
 	}
 
@@ -95,15 +92,6 @@ public class AttributeCollection {
 	 */
 	public String getDescription() {
 		return description;
-	}
-
-	/**
-	 * Returns the type of the AttributeCollection.
-	 * 
-	 * @return String type of the AttributeCollection
-	 */
-	public String getType() {
-		return type;
 	}
 
 	/**
@@ -216,7 +204,6 @@ public class AttributeCollection {
 		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
-		buf.append(", type=").append(type);
 		buf.append(", maxSelect=").append(maxSelect);
 		buf.append(", UIAttributes=").append(uiAttributes);
 		buf.append("]");
@@ -224,7 +211,7 @@ public class AttributeCollection {
 		return buf.toString();
 	}
 
-	private final String internalName, displayName, description, type;
+	private final String internalName, displayName, description;
 	private final int maxSelect;
 	private int aRank = 0;
 	private TreeMap uiAttributes = new TreeMap();

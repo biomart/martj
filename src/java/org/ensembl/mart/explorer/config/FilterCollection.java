@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.TreeMap;
 
 /**
@@ -148,7 +147,7 @@ public class FilterCollection {
 	 * @param internalName String name of the requested UIFilterDescription
 	 * @return UIFilterDescription object, or null.
 	 */
-	public UIFilterDescription getUIFilterbyName(String internalName) {
+	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
 		if (uiFilterNameMap.containsKey(internalName))
 			return (UIFilterDescription) uiFilters.get((Integer) uiFilterNameMap.get(internalName));
 		else
@@ -161,63 +160,8 @@ public class FilterCollection {
 	 * @param internalName String name of the requested UIFilterDescription
 	 * @return boolean, true if FilterCollection contains the UIFilterDescription, false if not.
 	 */
-	public boolean containsUIFilter(String internalName) {
-		return uiFilterNameMap.containsKey(internalName);
-	}
-
-	/**
-		* Convenience method for non graphical UI.  Allows a call against the FilterCollection for a particular UIFilterDescription.
-		* Note, it is best to first call containsUIFilterDescription,
-		* as there is a caching system to cache a UIFilterDescription during a call to containsUIFilterDescription.
-		* 
-		* @param internalName name of the requested UIFilterDescription
-		* @return UIFilterDescription object
-		*/
-	public UIFilterDescription getUIFilterDescriptionByName(String internalName) {
-		boolean found = false;
-
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) uiFilters.keySet().iterator(); iter.hasNext();) {
-				UIFilterDescription filter = (UIFilterDescription) uiFilters.get((Integer) iter.next());
-				if (filter.getInternalName().equals(internalName)) {
-					lastFilt = filter;
-					found = true;
-					break;
-				}
-			}
-		}
-		if (found)
-			return lastFilt;
-		else
-			return null;
-	}
-
-	/**
-		* Convenience method for non graphical UI.  Can determine if the FilterCollection contains a specific UIFilterDescription.
-		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
-		*  found, this method caches the UIFilterDescription it has found.
-		* 
-		* @param internalName name of the requested UIFilterDescription object
-		* @return boolean, true if found, false if not.
-		*/
 	public boolean containsUIFilterDescription(String internalName) {
-		boolean found = false;
-
-		if (lastFilt != null && lastFilt.getInternalName().equals(internalName)) {
-			found = true;
-		} else {
-			for (Iterator iter = (Iterator) uiFilters.keySet().iterator(); iter.hasNext();) {
-				UIFilterDescription filter = (UIFilterDescription) uiFilters.get((Integer) iter.next());
-				if (filter.getInternalName().equals(internalName)) {
-					lastFilt = filter;
-					found = true;
-					break;
-				}
-			}
-		}
-		return found;
+		return uiFilterNameMap.containsKey(internalName);
 	}
 
 	public String toString() {

@@ -238,7 +238,7 @@ public class FilterGroup {
 		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
-		buf.append("filterCollections=").append(filterCollections);
+		buf.append(", filterCollections=").append(filterCollections);
 		buf.append("]");
 
 		return buf.toString();

@@ -11,26 +11,17 @@
 <!ATTLIST MartConfiguration %desc_data;>
                    
 <!ELEMENT Dataset (StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
-<!ATTLIST Dataset  
-                    internalName CDATA #REQUIRED  
-                    displayName CDATA #IMPLIED    
-                    description CDATA #IMPLIED>
+<!ATTLIST Dataset %desc_data;>
 
 <!ELEMENT StarBase (#PCDATA)>
 
 <!ELEMENT PrimaryKey (#PCDATA)>
 
 <!ELEMENT FilterPage (FilterGroup+)>
-<!ATTLIST FilterPage 
-                    internalName CDATA #REQUIRED  
-                    displayName CDATA #IMPLIED    
-                    description CDATA #IMPLIED>
+<!ATTLIST FilterPage %desc_data;>
 
 <!ELEMENT FilterGroup (FilterCollection+)>
-<!ATTLIST FilterGroup 
-                    internalName CDATA #REQUIRED  
-                    displayName CDATA #IMPLIED    
-                    description CDATA #IMPLIED>
+<!ATTLIST FilterGroup %desc_data;>
 
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
@@ -49,10 +40,7 @@
 <!ATTLIST AttributePage %desc_data;>
 
 <!ELEMENT AttributeGroup (AttributeCollection+)>
-<!ATTLIST AttributeGroup 
-                    internalName CDATA #REQUIRED  
-                    displayName CDATA #IMPLIED    
-                    description CDATA #IMPLIED>
+<!ATTLIST AttributeGroup %desc_data;>
 
 <!ELEMENT AttributeCollection (UIAttributeDescription+)>
 <!ATTLIST AttributeCollection

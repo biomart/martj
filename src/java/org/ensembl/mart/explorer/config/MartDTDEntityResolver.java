@@ -51,7 +51,7 @@ public class MartDTDEntityResolver implements EntityResolver {
 	 */
 	public InputSource resolveEntity(String publicID, String systemID) throws SAXException, IOException {
 		
-		if (systemID.equals("http://www.ensembl.org/EnsMart/MartConfiguration.dtd")) {
+		if (systemID.equals("MartConfiguration.dtd")) {
 			   try {
 					return org.ensembl.mart.explorer.config.MartXMLutils.getInputSourceFor(conn, systemID);
 				} catch (ConfigurationException e) {

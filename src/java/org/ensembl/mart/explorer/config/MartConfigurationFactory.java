@@ -15,8 +15,14 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
- package org.ensembl.mart.explorer.config;
+
+package org.ensembl.mart.explorer.config;
+
+import java.sql.Connection;
+import java.util.Iterator;
+
+import org.jdom.*;
+import org.jdom.input.SAXBuilder;
 
 /**
  * Factory object to create a MartConfiguration object.
@@ -32,139 +38,230 @@
  */
 public class MartConfigurationFactory {
 
-  /*
-   * Currently designed to return a MartConfiguration specifically for
-   *  dl_testmart_newnames, with Datasets with only the starBases and primaryKeys defined.
-   * Need to impliment the system when the xml has been generated.
-   */
-  public static MartConfiguration getInstance() throws ConfigurationException {
-  	//TODO change dl_testmart_newnames to ensembl_mart_14_1 when it is released
-  	//TODO impliment xml system
-  	String martName = "dl_testmart_newnames";
-  	MartConfiguration martconf = new MartConfiguration(martName);
-  	
-  	String[] keys = new String[] {"gene_id", "transcript_id"}; // always the same
-  	
-  	String displayName = "Homo sapiens Ensembl Genes";
-  	String dmartName = "hsapiens_ensemblgene";
-  	String[] stars = new String[] {"hsapiens_ensemblgene", "hsapiens_ensembltranscript"} ;
-  	Dataset d = new Dataset(dmartName, displayName);
-  	d.setStarBases(stars);
-  	d.setPrimaryKeys(keys);
-  	martconf.addDataset(d);
-  	
-  	displayName = "Homo sapiens Est Genes";
-		dmartName = "hsapiens_estgene";
-  	stars = new String[] {"hsapiens_estgene", "hsapiens_esttranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-  	
-  	displayName = "Homo sapiens Vega Genes";
-		dmartName = "hsapiens_vegagene";
-  	stars = new String[] {"hsapiens_vegagene", "hsapiens_vegatranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-  	
-  	displayName = "Mus musculus Ensembl Genes";
-		dmartName = "mmusculus_ensemblgene";
-		stars = new String[] {"mmusculus_ensemblgene", "mmusculus_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Mus musculus Est Genes";
-		dmartName = "mmusculus_estgene";		
-		stars = new String[] {"mmusculus_estgene", "mmusculus_esttranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Rattus norvegicus Ensembl Genes";
-		dmartName = "rnorvegicus_ensemblgene";				
-		stars = new String[] {"rnorvegicus_ensemblgene", "rnorvegicus_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Rattus norvegicus Est Genes";		
-		dmartName = "rnorvegicus_estgene";
-		stars = new String[] {"rnorvegicus_estgene", "rnorvegicus_esttranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Fugu rubripes Ensembl Genes";
-		dmartName = "fugu_ensemblgene";
-		stars = new String[] {"frubripes_ensemblgene", "frubripes_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-				
-		displayName = "Anopheles gambiae Ensembl Genes";
-		dmartName = "agambiae_ensemblgene";
-		stars = new String[] {"agambiae_ensemblgene", "agambiae_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-				
-		displayName = "Anopheles gambiae EST Genes";
-		dmartName = "agambiae_estgene";
-		stars = new String[] {"agambiae_estgene", "agambiae_esttranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Drosophila melanogaster Ensembl Genes";
-		dmartName = "dmelanogaster_ensemblgene";
-		stars = new String[] {"dmelanogaster_ensemblgene", "dmelanogaster_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Danio rerio Ensembl Genes";
-		dmartName = "drerio_ensemblgene";
-		stars = new String[] {"drerio_ensemblgene", "drerio_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Caenorhabditis briggsae Ensembl Genes";
-		dmartName = "cbriggsae_ensemblgene";
-		stars = new String[] {"cbriggsae_ensemblgene", "cbriggsae_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Caenorhabditis briggsae Est Genes";
-		dmartName = "cbriggsae_estgene";
-		stars = new String[] {"cbriggsae_estgene", "cbriggsae_esttranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-		
-		displayName = "Caenorhabditis elegans Ensembl Genes";
-		dmartName = "celegans_ensemblgene";
-		stars = new String[] {"celegans_ensemblgene", "celegans_ensembltranscript"};
-		d = new Dataset(dmartName, displayName);
-		d.setStarBases(stars);
-		d.setPrimaryKeys(keys);
-		martconf.addDataset(d);
-				
-  	return martconf;
-  }
+	private String martConfSystemID = "MartConfiguration.xml"; // default, but can be over-ridden
+
+	// element names
+	private final String dataset = "Dataset";
+	private final String starbase = "StarBase";
+	private final String primarykey = "PrimaryKey";
+	private final String filterpage = "FilterPage";
+	private final String filtergroup = "FilterGroup";
+	private final String filtercollection = "FilterCollection";
+	private final String filterdescription = "UIFilterDescription";
+	private final String attributepage = "AttributePage";
+	private final String attributegroup = "AttributeGroup";
+	private final String attributecollection = "AttributeCollection";
+	private final String attributedescription = "UIAttributeDescription";
+
+	// attribute names
+	private final String internalName = "internalName";
+	private final String displayName = "displayName";
+	private final String description = "description";
+	private final String type = "type";
+	private final String fieldName = "fieldName";
+	private final String qualifier = "qualifier";
+	private final String tableConstraint = "tableConstraint";
+	private final String maxSelect = "maxSelect";
+	private final String maxLength = "maxLength";
+	private final String source = "source";
+	private final String homepageURL = "homepageURL";
+	private final String linkoutURL = "linkoutURL";
+
+	private MartConfiguration martconf = null;
+
+	/**
+	 * Overloaded getInstance method allowing user to supply an alternate xml configuration to use.  This configuration
+	 * must exist in the database, and must conform to the MartConfiguration.dtd.  Intended mostly for use by the Unit Test
+	 * ConfigurationTest.testMartConfiguration
+	 * 
+	 * @param conn
+	 * @param martName
+	 * @param system_id
+	 * @return
+	 * @throws ConfigurationException
+	 */
+	public MartConfiguration getInstance(Connection conn, String martName, String system_id) throws ConfigurationException {
+		martConfSystemID = system_id;
+		return getInstance(conn, martName);
+	}
+
+	public MartConfiguration getInstance(Connection conn, String martName) throws ConfigurationException {
+
+		try {
+			SAXBuilder builder = new SAXBuilder();
+			builder.setValidation(true); // validate against the DTD
+			builder.setEntityResolver(new MartDTDEntityResolver(conn)); // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the DB.
+
+			Document doc = builder.build(MartXMLutils.getInputSourceFor(conn, martConfSystemID));
+
+			Element martconfElement = doc.getRootElement();
+			String mname = martconfElement.getAttributeValue(internalName);
+			if (!mname.equals(martName))
+				throw new ConfigurationException(
+					"Warning, xml from " + martName + " contains different internalName " + mname + " may need to load a different xml into the mart database");
+
+			String dispname = martconfElement.getAttributeValue(displayName);
+			String desc = martconfElement.getAttributeValue(description);
+
+			martconf = new MartConfiguration(martName, dispname, desc);
+
+			for (Iterator iter = martconfElement.getDescendants(new MartElementFilter(dataset)); iter.hasNext();) {
+				Element datasetElement = (Element) iter.next();
+				martconf.addDataset(getDataset(datasetElement));
+			}
+
+			return martconf;
+		} catch (Exception e) {
+			throw new ConfigurationException(e);
+		}
+	}
+
+	private Dataset getDataset(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+
+		Dataset d = new Dataset(intName, dispname, desc);
+
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(starbase)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			d.addStarBase(element.getTextNormalize());
+		}
+
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(primarykey)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			d.addPrimaryKey(element.getTextNormalize());
+		}
+
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterpage)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			d.addFilterPage(getFilterPage(element));
+		}
+
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributepage)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			d.addAttributePage(getAttributePage(element));
+		}
+		return d;
+	}
+
+	private FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+
+		FilterPage fp = new FilterPage(intName, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filtergroup)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			fp.addFilterGroup(getFilterGroup(element));
+		}
+
+		return fp;
+	}
+
+	private FilterGroup getFilterGroup(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+
+		FilterGroup fg = new FilterGroup(intName, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filtercollection)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			fg.addFilterCollection(getFilterCollection(element));
+		}
+
+		return fg;
+	}
+
+	private FilterCollection getFilterCollection(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+		String typeval = thisElement.getAttributeValue(type);
+
+		FilterCollection fc = new FilterCollection(intName, typeval, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(filterdescription)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			fc.addUIFilter(getUIFilterDescription(element));
+		}
+
+		return fc;
+	}
+
+	private UIFilterDescription getUIFilterDescription(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+		String typeval = thisElement.getAttributeValue(type);
+		String fieldnm = thisElement.getAttributeValue(fieldName);
+		String tableconst = thisElement.getAttributeValue(tableConstraint);
+		String qual = thisElement.getAttributeValue(qualifier);
+
+		UIFilterDescription f = new UIFilterDescription(intName, fieldnm, typeval, qual, dispname, tableconst, desc);
+
+		return f;
+	}
+
+	private AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+
+		AttributePage ap = new AttributePage(intName, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributegroup)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			ap.addAttributeGroup(getAttributeGroup(element));
+		}
+
+		return ap;
+	}
+
+	private AttributeGroup getAttributeGroup(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+
+		AttributeGroup ag = new AttributeGroup(intName, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributecollection)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			ag.addAttributeCollection(getAttributeCollection(element));
+		}
+
+		return ag;
+	}
+
+	private AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+		int maxs = 0;
+		if (thisElement.getAttributeValue(maxSelect) != null)
+			maxs = Integer.parseInt(thisElement.getAttributeValue(maxSelect));
+
+		AttributeCollection ac = new AttributeCollection(intName, maxs, dispname, desc);
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(attributedescription)); iter.hasNext();) {
+			Element element = (Element) iter.next();
+			ac.addUIAttribute(getUIAttributeDescription(element));
+		}
+
+		return ac;
+	}
+
+	private UIAttributeDescription getUIAttributeDescription(Element thisElement) throws ConfigurationException {
+		String intName = thisElement.getAttributeValue(internalName);
+		String dispname = thisElement.getAttributeValue(displayName);
+		String desc = thisElement.getAttributeValue(description);
+		int maxl = 0;
+		if (thisElement.getAttributeValue(maxLength) != null)
+			maxl = Integer.parseInt(thisElement.getAttributeValue(maxLength));
+
+		String fieldnm = thisElement.getAttributeValue(fieldName);
+		String tableconst = thisElement.getAttributeValue(tableConstraint);
+		String src = thisElement.getAttributeValue(source);
+		String hpage = thisElement.getAttributeValue(homepageURL);
+		String link = thisElement.getAttributeValue(linkoutURL);
+
+		UIAttributeDescription a = new UIAttributeDescription(intName, fieldnm, dispname, maxl, tableconst, desc, src, hpage, link);
+		return a;
+	}
 }

@@ -157,16 +157,28 @@ public class Engine {
 	}
 	
 	/**
+	 * Overloaded method allowing user to supply an alternate xml configuration to use.  This configuration
+   * must exist in the database, and must conform to the MartConfiguration.dtd.  Intended mostly for use by the Unit Test
+   * ConfigurationTest.testMartConfiguration
+   * 
+	 * @param system_id -- system_id of the alternate Configuration document
+	 * @return MartConfiguration object
+	 * @throws ConfigurationException
+	 */
+	public MartConfiguration getMartConfiguration(String system_id) throws ConfigurationException {
+		Connection conn = getDatabaseConnection();
+		return new MartConfigurationFactory().getInstance(conn, database, system_id);
+	}
+	
+	/**
 	 * Returns a MartConfiguration object with all of the information needed to interact with
 	 * the mart defined by the connection parameters provided to this Engine.
 	 * 
 	 * @return MartConfiguration object
 	 */
 	public MartConfiguration getMartConfiguration() throws ConfigurationException {
-		// TODO Currently this returns minimal configuration information.  The fully implimented method will throw one or more exceptions.
-		// Also, the getInstance method of the MartConfigurationFactory will most likely take
-		// either a URL file, or Database Connection as an argument.
-		return MartConfigurationFactory.getInstance();
+		Connection conn = getDatabaseConnection();
+		return new MartConfigurationFactory().getInstance(conn, database);
 	}
 
     public int countRows(Query query) {
