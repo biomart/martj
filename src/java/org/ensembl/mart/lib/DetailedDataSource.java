@@ -83,7 +83,8 @@ public class DetailedDataSource implements DataSource {
   public static final String DEFAULTPORT = "3306";
 
   private static final String ORACLEAT = "@";
-  private static final String ORACLETHIN = "oracle:thin";
+  public static final String ORACLETHIN = "oracle:thin";
+  public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
   private static final String SYBASE = "sybase:Tds";
 
   private String databaseType;
@@ -315,7 +316,16 @@ public class DetailedDataSource implements DataSource {
     return dbURL.toString();
   }
 
-  
+  public static String getJDBCDriverClassNameFor(String databaseType) {
+    if (databaseType == null)
+      return null;
+    else if (databaseType.equals(DEFAULTDATABASETYPE))
+      return DEFAULTDRIVER;
+    else if (databaseType.equals(ORACLETHIN))
+      return ORACLEDRIVER;
+    else
+      return null; //add new ones as needed
+  }
  
   /**
    * Convenience method for closing a connection and handling any SQLException
