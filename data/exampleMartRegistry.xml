@@ -2,22 +2,26 @@
 <!DOCTYPE MartRegistry SYSTEM "classpath:data/XML/MartRegistry.dtd">
 <MartRegistry>
 
-<RegistryDBLocation name         = "pointer" 
+<RegistryDBLocation 
+		    name         = "pointer" 
                     databaseType = "mysql"
                     host         = "martdb.ebi.ac.uk" 
                     port         = "3306" 
                     instanceName = "central_registry" 
                     user         = "anonymous"
-                    password     = ""/>
+                    password     = ""
+/>
 
-<DatabaseLocation   name         = "MyBioMart"
-                    visible      = "1"
+<DatabaseLocation   
+		    name         = "MyBioMart"
                     databaseType = "mysql"
                     host         = "localhost"
                     port         = "3306"
                     instanceName = "test"
                     user         = ""
-                    password     = ""/>
+                    password     = ""
+                    visible      ="1"                  
+/>
 
 </MartRegistry>
 
