@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE DatasetView SYSTEM "DatasetView.dtd">
+<!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
 
   <DatasetView description="Mart created from the Vega Manually curated Gene Dataset" displayName="Homo sapiens (NCBI 31) -- Vega Genes" internalName="homo_sapiens__vega_genes">
     <StarBase>hsapiens_vegagene</StarBase>

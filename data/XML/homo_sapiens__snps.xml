@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE DatasetView SYSTEM "DatasetView.dtd">
+<!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
 
   <DatasetView description="Snp Data for Homo Sapiens, with Gene Function Annotation for ensemblgene and vegagene." displayName="Homo sapiens (NCBI 31) -- SNPs" internalName="homo_sapiens__snps">
     <StarBase>hsapiens_snp</StarBase>

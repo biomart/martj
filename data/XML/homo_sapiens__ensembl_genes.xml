@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE DatasetView SYSTEM "DatasetView.dtd">
+<!DOCTYPE DatasetView SYSTEM "file:data/XML/DatasetView.dtd">
   <DatasetView description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Homo sapiens (NCBI 31) -- Ensembl Genes" internalName="homo_sapiens__ensembl_genes">
     <StarBase>hsapiens_ensemblgene</StarBase>
     <StarBase>hsapiens_ensembltranscript</StarBase>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE Dataset SYSTEM "Dataset.dtd">
+<!DOCTYPE Dataset SYSTEM "file:data/XML/Dataset.dtd">
 
   <Dataset description="First Mart built from Mus musculus version 14" displayName="Mus musculus (NCBIM 30) -- Ensembl Genes" internalName="mus_musculus_ensembl_genes">
     <StarBase>mmusculus_ensemblgene</StarBase>
