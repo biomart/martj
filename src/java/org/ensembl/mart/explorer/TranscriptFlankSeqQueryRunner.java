@@ -58,6 +58,7 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 		this.format = format;
 		this.conn = conn;
 		this.osr = new OutputStreamWriter(os);
+		this.dna = new DNAAdaptor(conn);
 	    
 		switch (format.getFormat()) {
 		  case FormatSpec.TABULATED:
@@ -93,7 +94,6 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 	public void execute(int limit)
 		throws SQLException, SequenceException, IOException, InvalidQueryException {
 			SequenceDescription seqd = query.getSequenceDescription();
-			dna = new DNAAdaptor(conn);
 
 			// need to know these indexes specifically
 			int queryIDindex = 0;
@@ -365,18 +365,10 @@ public final class TranscriptFlankSeqQueryRunner implements QueryRunner {
 					  osr.flush();
         
 					  // modify transcript location coordinates depending on flank requested
-					  if (seqd.getLeftFlank() > 0) {
-							 if (tranloc.getStrand() > 0)		
-								 tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getStart() - 1, tranloc.getStart() - seqd.getLeftFlank(), tranloc.getStrand());
-							 else
-								 tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getEnd() + 1, tranloc.getEnd() + seqd.getLeftFlank(), tranloc.getStrand());
-					  } 
-					  else {
-					    if (tranloc.getStrand() > 0)
-						    tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getEnd() + 1, tranloc.getEnd() + seqd.getRightFlank(), tranloc.getStrand());
-						  else
-						    tranloc =  new SequenceLocation(tranloc.getChr(), tranloc.getStart() - 1, tranloc.getStart() - seqd.getRightFlank(), tranloc.getStrand());
-					  }
+					  if (seqd.getLeftFlank() > 0)
+							 tranloc =  tranloc.getLeftFlankOnly(seqd.getLeftFlank());
+					  else 
+						    tranloc =  tranloc.getRightFlankOnly(seqd.getRightFlank());
 				        
 				    if (tranloc.getStrand() < 0)
 					    osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), tranloc.getChr(), tranloc.getStart(), tranloc.getEnd()) ) );

@@ -107,29 +107,70 @@ public final class SequenceDescription {
 		        this.description = "exon and intron sequence for transcript";
 		        this.leftflank = lflank;
 		        this.rightflank = rflank;
+			      if (lflank > 0)
+				      this.description = "upstream flanking sequence plus "+this.description;
+			      if (rflank > 0)
+				      this.description += " plus downstream flanking sequence";		        
+		        break;
+		        
+			case TRANSCRIPTFLANKS:
+			    if (lflank > 0 && rflank > 0)
+				    throw new InvalidQueryException("Cannot create both 3' and 5' transcript flanking sequence in one sequence\n");
+				  if (! (lflank >0 || rflank > 0) )
+				    throw new InvalidQueryException("Transcript flanking requires either 3' or 5' flanking length\n");
+				    
+				  this.seqt = type;
+				  this.seqtype = (String) SEQS.get(TRANSCRIPTFLANKS);
+				  this.description = "flanking sequence of transcript only";
+				  this.leftflank = lflank;
+				  this.rightflank = rflank;
+				  if (lflank > 0)
+				    this.description = "upstream "+this.description;
+				  else
+				    this.description = "downstream "+this.description;
+				  break;
+
+        case GENEEXONS:
+		      this.seqt = type;
+		      this.seqtype = (String) SEQS.get(TRANSCRIPTEXONS);
+		      this.description = "exon";
+		      this.leftflank = lflank;
+		      this.rightflank = rflank;
+		      if (lflank > 0)
+			      this.description = "upstream flanking sequence plus "+this.description;
+		      if (rflank > 0)
+			      this.description += " plus downstream flanking sequence";
+		      break;
+		
+				case GENEEXONINTRON:
+				  this.seqt = type;
+				  this.seqtype = (String) SEQS.get(GENEEXONINTRON);
+				  this.description = "exon and intron sequence for gene";
+				  this.leftflank = lflank;
+				  this.rightflank = rflank;		        
 			    if (lflank > 0)
 				    this.description = "upstream flanking sequence plus "+this.description;
 			    if (rflank > 0)
-				    this.description += " plus downstream flanking sequence";		        
-		        break;
-		        
-			case TRANSCRIPTFLANK:
-			    if (lflank > 0 && rflank > 0)
-				    throw new InvalidQueryException("Cannot create both 3' and 5' transcript flanking sequence in one sequence\n");
-				if (! (lflank >0 || rflank > 0) )
-				    throw new InvalidQueryException("Transcript flanking requires either 3' or 5' flanking length\n");
+				    this.description += " plus downstream flanking sequence";
+		      break;
+
+			case GENEFLANKS:
+				if (lflank > 0 && rflank > 0)
+					throw new InvalidQueryException("Cannot create both 3' and 5' gene flanking sequence in one sequence\n");
+				  if (! (lflank >0 || rflank > 0) )
+					throw new InvalidQueryException("Gene flanking requires either 3' or 5' flanking length\n");
 				    
-				this.seqt = type;
-				this.seqtype = (String) SEQS.get(TRANSCRIPTFLANK);
-				this.description = "flanking sequence of transcript only";
-				this.leftflank = lflank;
-				this.rightflank = rflank;
-				if (lflank > 0)
-				    this.description = "upstream "+this.description;
-				else
-				    this.description = "downstream "+this.description;
-				break;		        
-		              
+				  this.seqt = type;
+				  this.seqtype = (String) SEQS.get(GENEFLANKS);
+				  this.description = "flanking sequence of gene only";
+				  this.leftflank = lflank;
+				  this.rightflank = rflank;
+				  if (lflank > 0)
+					this.description = "upstream "+this.description;
+				  else
+					this.description = "downstream "+this.description;
+				  break;
+				  		      		              
 			default:
 				throw new InvalidQueryException("Unknown sequence type"+type);
 		}
@@ -216,7 +257,10 @@ public final class SequenceDescription {
                                                                                                                                                     "cdna", 
                                                                                                                                                     "transcript_exons", 
                                                                                                                                                     "transcript_exon_intron",
-                                                                                                                                                    "transcript_flanks"
+                                                                                                                                                    "transcript_flanks",
+                                                                                                                                                    "gene_exon_intron",
+                                                                                                                                                    "gene_exons",
+                                                                                                                                                    "gene_flanks"
                                                                                                                                                     }));
 	
 	/**
@@ -227,7 +271,8 @@ public final class SequenceDescription {
 	public static final int TRANSCRIPTCDNA = 2;
 	public static final int TRANSCRIPTEXONS = 3;
 	public static final int TRANSCRIPTEXONINTRON = 4;
-	public static final int TRANSCRIPTFLANK = 5;
+	public static final int TRANSCRIPTFLANKS = 5;
 	public static final int GENEEXONINTRON = 6;
 	public static final int GENEEXONS = 7;
+	public static final int GENEFLANKS = 8;
 }

@@ -131,6 +131,35 @@ public class SequenceLocation {
 		return new SequenceLocation(this.chr, newstart, newend, this.strand);
 	}
 	
+	public SequenceLocation getLeftFlankOnly(int length) {
+		int newstart = start;
+		int newend = end;
+		
+		if (strand == -1) {
+		  newstart = end + 1;
+		  newend = end + length;
+		}
+		else {
+		   newstart = start - length;
+		   newend = start - 1;
+		}
+		return new SequenceLocation(this.chr, newstart, newend, this.strand);
+	}
+	
+	public SequenceLocation getRightFlankOnly(int length) {
+		int newstart = start;
+		int newend = end;
+		
+		if (strand == -1) {
+			newstart = start - length;
+			newend = start - 1;
+		}
+		else {
+			newstart = end + 1;
+			newend = end + length;
+		}
+		return new SequenceLocation(this.chr, newstart, newend, this.strand);
+	}
 	public boolean equals(Object o) {
 		// test object
 		if (! (o instanceof SequenceLocation) )

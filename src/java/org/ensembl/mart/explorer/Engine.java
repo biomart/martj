@@ -123,7 +123,7 @@ public class Engine {
         throws SQLException, SequenceException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
     
           Connection conn = getDatabaseConnection();
-	      QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
+	        QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
           qr.execute(0);
     }
     

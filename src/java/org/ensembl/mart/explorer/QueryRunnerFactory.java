@@ -50,7 +50,7 @@ public class QueryRunnerFactory {
               if (f.getFormat() == FormatSpec.FASTA)
                  throw new FormatException("Fasta format can only be applied to Sequence output");            
 				      
-				      thisQueryRunner = new TabulatedAttributeQueryRunner(q,f,conn,out);
+				      thisQueryRunner = new AttributeQueryRunner(q,f,conn,out);
 				      break;
             
           case Query.SEQUENCE:
@@ -75,19 +75,21 @@ public class QueryRunnerFactory {
 					      thisQueryRunner = new TranscriptEISeqQueryRunner(q,f,conn,out);
 					      break;
 					     
-					    case SequenceDescription.TRANSCRIPTFLANK:
+					    case SequenceDescription.TRANSCRIPTFLANKS:
 					      thisQueryRunner = new TranscriptFlankSeqQueryRunner(q,f,conn,out);
 					      break;
 					    
 					    case SequenceDescription.GENEEXONINTRON:
-					      throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
-//					    thisQueryRunner = new GeneEISeqQueryRunner(q,f,conn,out);
-					      //break;
+					      thisQueryRunner = new GeneEISeqQueryRunner(q,f,conn,out);
+					      break;
 					    					
 					    case SequenceDescription.GENEEXONS:
-					      throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
-//					    thisQueryRunner = new GeneExonSeqQueryRunner(q,f,conn,out);
-					      //break;					
+  					    thisQueryRunner = new GeneExonSeqQueryRunner(q,f,conn,out);
+					      break;
+					      
+					    case SequenceDescription.GENEFLANKS:
+					      thisQueryRunner = new GeneFlankSeqQueryRunner(q,f,conn,out);
+					      break;					
       		  }
       		  break;
 		   }

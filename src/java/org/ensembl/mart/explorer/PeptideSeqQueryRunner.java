@@ -58,6 +58,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		this.format = format;
 		this.conn = conn;
 		this.osr = new OutputStreamWriter(os);
+		this.dna = new DNAAdaptor(conn);
 	    
 		switch (format.getFormat()) {
 		  case FormatSpec.TABULATED:
@@ -88,7 +89,6 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 	
 	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
-		dna = new DNAAdaptor(conn);
 
 		// need to know these indexes specifically
 		int queryIDindex = 0;
