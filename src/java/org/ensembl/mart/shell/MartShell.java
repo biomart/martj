@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -48,7 +49,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.ensembl.mart.lib.Engine;
+import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
+import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeGroup;
@@ -431,7 +434,7 @@ public class MartShell {
 			
 		} catch (Exception e1) {
 			System.out.println("Could not initialize connection: " + e1.getMessage());
-			e1.printStackTrace();
+			
 			System.exit(1);
 		}
 		
@@ -447,6 +450,7 @@ public class MartShell {
 				}
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
+				e.printStackTrace();
 				conline = new StringBuffer();
 				continueQuery = false;
 				thisline = null;
@@ -663,11 +667,9 @@ public class MartShell {
 			martconf = engine.getMartConfiguration();
 
 		if (msl == null)
-			msl = new MartShellLib(engine, martconf);
-		else {
-			msl.setEngine(engine);
-			msl.setConfiguration(martconf);
-		}
+			msl = new MartShellLib(martconf);
+		else
+		  msl.setMartConfiguration(martconf);
 	}
 
 	private void ExitShell() throws IOException {
@@ -1315,7 +1317,7 @@ public class MartShell {
 			throw new InvalidQueryException("Invalid setVerbose command recieved: " + command + "\n");
 
 		String val = command.split("\\s")[1];
-		boolean verbose = (val.equals("on")) ? true : false;
+	  verbose = (val.equals("on")) ? true : false;
 
 		System.out.println("Logging now " + val + "\n");
 		defaultLoggingConfiguration(verbose);
@@ -1683,16 +1685,33 @@ public class MartShell {
 		else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
 			ExitShell();
 		else if (command.startsWith(QSTART)) {
+			Query query = msl.MQLtoQuery(command);
+			
+			OutputStream os = null;
 			if (sessionOutputFile != null)
-				msl.setOutputStream(sessionOutputFile);
+				os = sessionOutputFile;
+		  else
+		    os = System.out;
 
-			if (sessionOutputFormat != null)
-				msl.setOutputFormat(sessionOutputFormat);
+			FormatSpec fspec = null;
+			
+			if (sessionOutputFormat != null) {
+				if ( sessionOutputFormat.equals("fasta") )
+				  fspec = FormatSpec.FASTAFORMAT;
+				else {
+					fspec = new FormatSpec(FormatSpec.TABULATED);
+									  
+				  if (sessionOutputSeparator != null)
+					  fspec.setSeparator(sessionOutputSeparator);
+				  else
+					  fspec.setSeparator(DEFOUTPUTSEPARATOR);
+				}
+			  
+			} else
+			  fspec = FormatSpec.TABSEPARATEDFORMAT;
+      
+      engine.execute(query, fspec, os);
 
-			if (sessionOutputSeparator != null)
-				msl.setOutputSeparator(sessionOutputSeparator);
-
-			msl.parseQuery(command);
 		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
 		}
@@ -1703,7 +1722,8 @@ public class MartShell {
 	private MartConfiguration martconf;
 	private MartShellLib msl = null;
 	private BufferedReader reader;
-
+  private boolean verbose = false;
+  
   private final String history_file = System.getProperty("user.home") + "/.martshell_history";
   
 	private String martHost = null;
