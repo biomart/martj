@@ -1,0 +1,2 @@
+defaultRegistry = data/XML/exampleMartRegistryURL.xml
+initScript = data/exampleInitScriptURL
