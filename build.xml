@@ -294,7 +294,7 @@
     <javadoc 
      sourcepath="${src.dir}"
      packagenames="org.ensembl.mart.explorer
-	     ,org.ensembl.mart.explorer.gui"
+	     ,org.ensembl.mart.explorer.config"
      destdir="${api.dir}"
      author="true"
      version="true"
