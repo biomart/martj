@@ -90,7 +90,7 @@ public class TreeFilterWidget extends FilterWidget {
     nullItem = new JMenuItem(nullOption.getInternalName());
     nullItem.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent event) {
-            selectOption( nullOption);
+            setOption( nullOption);
           }
         });
 
@@ -152,7 +152,7 @@ public class TreeFilterWidget extends FilterWidget {
 				menu.add(item);
 				item.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent event) {
-						selectOption(option);
+						setOption(option);
 					}
 				});
 
@@ -176,10 +176,12 @@ public class TreeFilterWidget extends FilterWidget {
 	 * Sets the currentlySelectedText and node label based on
 	 * the option. If option is null these values are cleared.
 	 * @param option
+   * @throws IllegalArgumentException if option unavailable in filter.
 	 */
 	private void updateDisplay(Option option) {
 		String name = "";
     if (option!=null && option != nullOption ) name = (String) optionToName.get(option);
+    if ( name==null ) throw new IllegalArgumentException("Option unavailable in filter: "+option);
 		currentSelectedText.setText(name);
 		setNodeLabel(null, name);
 	}
@@ -192,14 +194,6 @@ public class TreeFilterWidget extends FilterWidget {
 		return option;
 	}
 
-	/**
-	 * Used for "DatasetSelectionPage"
-	 * @param currentDatasetName
-	 */
-	public void setOption(Option option) {
-		this.option = option;
-		currentSelectedText.setText((String) optionToName.get(option));
-	}
 
 	/**
 	 * Default value is filterDescription.getInternalName().
@@ -287,7 +281,13 @@ public class TreeFilterWidget extends FilterWidget {
 		}
 	}
 
-	private void selectOption(Option option) {
+
+  /**
+   * 
+   * @param option should be one of the options currently available to this filter.
+   * @throws IllegalArgumentException if option unavailable in filter.
+   */
+	public void setOption(Option option) {
 
     if (option == lastSelectedOption)
       return;
@@ -297,15 +297,6 @@ public class TreeFilterWidget extends FilterWidget {
 		Option old = this.option;
 		this.option = option;
 		changeSupport.firePropertyChange(getPropertyName(), old, option);
-
-		//    unassignPushOptions();
-		//    assignPushOptions( option.getPushOptions() );
-		//    
-		//    if ( filter!=null ) removeFilterFromQuery( filter );   
-
-		// TODO create filter and add it to query
-
-
 
 		unassignPushOptions();
 
