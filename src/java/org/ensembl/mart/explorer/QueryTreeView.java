@@ -249,8 +249,6 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     }
   }
 
-  private DatasetView dsv;
-
   private Feedback feedback = new Feedback(this);
 
   private String dsvInternalName;
@@ -427,7 +425,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 
     // preload some default settings
-    query.setDataset("ensembl_genes_homo_sapiens");
+    //query.setDatasetView( adaptor.getDatasetViews()[0] );
     query.addAttribute(new FieldAttribute("ensembl_gene_id"));
     query.addFilter(new BasicFilter("ensembl_gene_id", "=", "ENSG001"));
     query.addFilter(new BasicFilter("chr_name", "=", "3"));
@@ -493,9 +491,9 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     // otherwise use the raw one from attribute
 
     AttributeDescription ad = null;
-    if (dsv != null)
+    if ( query.getDatasetView() != null)
       ad =
-        dsv.getAttributeDescriptionByFieldNameTableConstraint(
+        query.getDatasetView().getAttributeDescriptionByFieldNameTableConstraint(
           attribute.getField(),
           attribute.getTableConstraint());
 
@@ -561,9 +559,9 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     // Try to get a user friendly fieldName, 
     // otherwise use the raw one from filter
     FilterDescription fd = null;
-    if (dsv != null)
+    if ( query.getDatasetView() != null)
       fd =
-        dsv.getFilterDescriptionByFieldNameTableConstraint(
+        query.getDatasetView().getFilterDescriptionByFieldNameTableConstraint(
           filter.getField(),
           filter.getTableConstraint());
     String fieldName = (fd != null) ? fd.getDisplayName() : filter.getField();
@@ -641,6 +639,7 @@ public class QueryTreeView extends JTree implements QueryChangeListener {
     DatasetView oldDatasetView,
     DatasetView newDatasetView) {
   
+
     String s = "";
     if (newDatasetView != null) {
       s = newDatasetView.getDisplayName();
