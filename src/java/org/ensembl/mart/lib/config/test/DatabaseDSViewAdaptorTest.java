@@ -32,6 +32,7 @@ import org.ensembl.mart.lib.config.DatasetViewXMLUtils;
 import org.ensembl.mart.lib.config.MartLocation;
 import org.ensembl.mart.lib.config.MartLocationBase;
 import org.ensembl.mart.lib.test.Base;
+import org.ensembl.mart.util.BigPreferences;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -177,6 +178,10 @@ public class DatabaseDSViewAdaptorTest extends Base {
 	public void setUp() throws Exception {
 		super.setUp();
 
+    //clear the entire DataseDSViewAdaptor preferences, so that it can be properly tested
+    BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).removeNode();
+    BigPreferences.userNodeForPackage(DatabaseDSViewAdaptor.class).flush();
+    
 		if (DatabaseDatasetViewUtils.DSViewUserTableExists(martJDataSource, USER)) {
 			String metaTable = DatabaseDatasetViewUtils.getDSViewTableFor(martJDataSource, USER);
 			Connection conn = martJDataSource.getConnection();
