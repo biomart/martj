@@ -38,14 +38,17 @@ public class TargetSchema {
 			String new_table_key, String new_table_extension, String new_table_cardinality){
 		
 		Transformation trans = getTransformationByFinalName(final_table_name);
-		Table table = source_schema.getTableColumns(new_table_name);
-		System.out.println("length "+table.getColumns().length);
-		table.setName(new_table_name);	
-		table.setKey(new_table_key);
-		table.setExtension(new_table_extension);
-		table.setCardinality(new_table_cardinality);	
+		Column [] columns = source_schema.getTableColumns(new_table_name);
 	
-		trans.addAdditionalUnit(table,final_table_key,final_table_extension);
+		Table reftable = new Table();
+		reftable.setName(new_table_name);
+		reftable.setColumns(columns);
+		reftable.setName(new_table_name);	
+		reftable.setKey(new_table_key);
+		reftable.setExtension(new_table_extension);
+		reftable.setCardinality(new_table_cardinality);	
+	
+		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
 		
 		
 
@@ -54,7 +57,7 @@ public class TargetSchema {
 	
 	public Transformation [] getTransformations() {
 		
-		Transformation [] b = new Transformation[1];
+		Transformation [] b = new Transformation[transformations.size()];
 		return (Transformation []) transformations.toArray(b);	
 		
 	}

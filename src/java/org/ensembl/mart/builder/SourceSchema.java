@@ -43,13 +43,9 @@ public class SourceSchema {
 	}
 	
 	
-	public Table getTableColumns (String name){
-		
-		Table table = new Table();
-		table.setName(name);
-		table.setColumns(resolver.getReferencedColumns(table));
-		
-		return table;
+	public Column [] getTableColumns (String name){
+	
+		return resolver.getReferencedColumns(name);
 	}
 	
 	

@@ -55,7 +55,7 @@ public class MetaDataResolverOracle {
 				table.setName(keys.getString(7));
 				table.setKey(keys.getString(8));
 				table.status="exported";
-				table.setColumns(getReferencedColumns(table));
+				table.setColumns(getReferencedColumns(table.getName()));
 				exported_tabs.add(table);
 				i++;
 			}
@@ -84,7 +84,7 @@ public class MetaDataResolverOracle {
 				table.setName(keys.getString(3));
 				table.setKey(keys.getString(4));
 				table.status="imported";
-				table.setColumns(getReferencedColumns(table));
+				table.setColumns(getReferencedColumns(table.getName()));
 				exported_tabs.add(table);
 				i++;
 			}
@@ -100,20 +100,20 @@ public class MetaDataResolverOracle {
 	
 	
 	
-	public Column [] getReferencedColumns (Table table){
+	public Column [] getReferencedColumns (String name){
 		
 		Column [] col;
 		ArrayList cols = new ArrayList();
 		
 		try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().username,table.getName(),"%");
+			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().username,name,"%");
 			int z=0;
 			while (columns.next()){	
 				
 				Column column = new Column();
 				column.setName(columns.getString(4));
 				column.original_name=columns.getString(4);
-				column.original_table=table.getName();
+				column.original_table=name;
 				cols.add(column);
 				z++;
 			}
@@ -128,7 +128,7 @@ public class MetaDataResolverOracle {
 		
 		Table table = new Table();
 		table.setName(main_name);
-		table.setColumns(getReferencedColumns(table));
+		table.setColumns(getReferencedColumns(table.getName()));
 		
 		try {
 			DatabaseMetaData dmd = getConnection().getMetaData();

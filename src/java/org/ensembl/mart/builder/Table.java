@@ -20,6 +20,7 @@ public class Table  implements Cloneable {
 	public String extension;
 	public String status;
 	public String final_name;
+	public String temp_name;
 	public boolean skip;
 	public boolean final_table;
 	private  String Name = null;
