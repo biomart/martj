@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
+import org.jdom.DocType;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
@@ -50,7 +51,8 @@ public class MartRegistryXMLUtils {
 	private static final String URLLOCATION = "URLLocation";
 	private static final String DATABASELOCATION = "DatabaseLocation";
 	private static final String REGISTRYLOCATION = "RegistryLocation";
-
+  private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
+  
 	//attribute names
 	private static final String HOST = "host";
 	private static final String PORT = "port";
@@ -223,7 +225,9 @@ public class MartRegistryXMLUtils {
 			//else not needed, but may need to add other else ifs in future
 		}
 
-		return new Document(root);
+    Document thisDoc = new Document(root);
+    thisDoc.setDocType( new DocType(MARTREGISTRY, REGISTRYDOCTYPEURL));
+		return thisDoc;
 	}
 
 	//private static ObjectToElement methods
