@@ -41,7 +41,6 @@ import org.ensembl.mart.lib.config.BaseConfigurationObject;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
-import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.FilterPage;
@@ -86,11 +85,12 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	  }
             	  
             	  else{
-            	  	config = DatabaseDatasetConfigUtils.getNaiveDatasetConfigFor(MartEditor.getDetailedDataSource(),database,dataset);
+            	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(database,dataset);
             	  }
             	}
             	else{
-					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user);
+//              ignore cache, do not validate, include hidden members
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
             DatasetConfig lconfig = (DatasetConfig) configs.next();
@@ -103,7 +103,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	}
             } else {
                 URL url = file.toURL();
-                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url, true);
+//            ignore cache, do not validate, include hidden members
+                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false, true);
 
                 // only config one in the file so get that one
                 config = (DatasetConfig) adaptor.getDatasetConfigs().next();

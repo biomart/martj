@@ -663,7 +663,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 			String opName = op.getInternalName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName );
 			
-			pa.addOptions(DatabaseDatasetConfigUtils.getLookupOptions(pushField,pushTableName,field,opName,MartEditor.getDetailedDataSource()));
+			pa.addOptions(MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField,pushTableName,field,opName));
 			
 			if (pa.getOptions().length > 0){  
 			  Enumeration children = parentNode.children();
@@ -700,7 +700,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
 		fd1.setQualifier("=");
 		fd1.setLegalQualifiers("=");
 
-		Option[] options = DatabaseDatasetConfigUtils.getOptions(field, tableName, joinKey, MartEditor.getDetailedDataSource(), dsConfig);
+		Option[] options = MartEditor.getDatabaseDatasetConfigUtils().getOptions(field, tableName, joinKey, dsConfig);
 		for (int k = options.length - 1; k > -1; k-- ){
 			insert(options[k], "Option");
 		}
@@ -727,7 +727,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
         int returnVal = fc.showSaveDialog(frame.getContentPane());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             try {
-                DatasetConfigXMLUtils.DatasetConfigToFile(dsConfig, fc.getSelectedFile());
+                URLDSConfigAdaptor.StoreDatasetConfig(dsConfig, fc.getSelectedFile());
                 frame.setFileChooserPath(fc.getSelectedFile());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -739,7 +739,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll, ClipboardOwn
         dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
         try {
             if(frame.getFileChooserPath() != null)
-                DatasetConfigXMLUtils.DatasetConfigToFile(dsConfig, frame.getFileChooserPath());
+                URLDSConfigAdaptor.StoreDatasetConfig(dsConfig, frame.getFileChooserPath());
 
         } catch (Exception e) {
             e.printStackTrace();
