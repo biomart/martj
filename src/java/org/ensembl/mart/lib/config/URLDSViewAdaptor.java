@@ -28,16 +28,16 @@ import java.util.logging.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class DSViewURLAdaptor implements DSViewAdaptor {
+public class URLDSViewAdaptor implements DSViewAdaptor {
   private final URL dsvurl;
   private final boolean validate;
   
   private DatasetView dsv;
   private String[] inames;
   private String[] dnames;
-  private Logger logger = Logger.getLogger(DSViewURLAdaptor.class.getName());
+  private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
   
-  public DSViewURLAdaptor(URL url, boolean validate) throws ConfigurationException {
+  public URLDSViewAdaptor(URL url, boolean validate) throws ConfigurationException {
      if (url == null)
        throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
     dsvurl = url;

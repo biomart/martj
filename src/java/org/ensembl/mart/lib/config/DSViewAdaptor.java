@@ -57,8 +57,9 @@ public interface DSViewAdaptor {
    * displayName.
    * @param name -- String displayName of requested DatasetView
    * @return true if supported, false otherwise
+   * @throws ConfigurationException for all underlying Exceptions
    */
-  public boolean supportsDisplayName(String name);
+  public boolean supportsDisplayName(String name) throws ConfigurationException ;
   
   /**
    * Returns a specific DatasetView object, named by the given displayName 
@@ -73,8 +74,9 @@ public interface DSViewAdaptor {
    * internalName.
    * @param name -- String internalName of requested DatasetView.
    * @return true if supported, false otherwise
+   * @throws ConfigurationException for all underlying Exceptions
    */
-  public boolean supportsInternalName(String name);
+  public boolean supportsInternalName(String name) throws ConfigurationException;
   
   /**
    * Returns a specific DatasetView object, named by the given internalName.
