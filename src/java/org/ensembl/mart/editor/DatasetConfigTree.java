@@ -572,7 +572,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new SeqModule((SeqModule) editingNode.getUserObject()));
 		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Importable((Importable) editingNode.getUserObject()));
-		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.Exportable"))
+		else if (editingNodeClass.equals("org.ensembl.mart.lib.config.SeqModule"))
 			copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new Exportable((Exportable) editingNode.getUserObject()));
 
 
@@ -621,11 +621,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 			DatasetConfigTreeNode dropnode = setEditingNode();
 			if (dropnode == null) return;
             String result = new String();
-
+            
             if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
             	// make sure internalName is unique within its parent group
 				Enumeration children = dropnode.getParent().children();
-
 				DatasetConfigTreeNode childNode = null;
 				while (children.hasMoreElements()){
 					childNode = (DatasetConfigTreeNode) children.nextElement();
