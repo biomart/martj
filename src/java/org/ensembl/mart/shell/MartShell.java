@@ -128,7 +128,7 @@ public class MartShell {
       + "\n-v                                      - verbose logging output"
       + "\n-l LOGGING_CONFIGURATION_URL            - URL to Java logging system configuration file (example file:data/exampleLoggingConfig.properties)"
       + "\n-e MARTQUERY                            - a well formatted Mart Query to run in Batch Mode"
-      + "\n\nThe following are used in combination with the -e flag:"
+      + "\n\nThe following can be used in combination with the -e or -E flag:"
       + "\n-O OUTPUT_FILE                          - output file, default is standard out"
       + "\n-F OUTPUT_FORMAT                        - output format, either tabulated or fasta"
       + "\n-S OUTPUT_SEPARATOR                     - if OUTPUT_FORMAT is tabulated, can define a separator, defaults to tab separated"
@@ -434,26 +434,28 @@ public class MartShell {
       boolean validQuery = true;
       ms.UnsetCommandCompletion();
 
+      if (mainBatchFile != null) {
+        try {
+          ms.setBatchOutputFile(mainBatchFile);
+        } catch (Exception e) {
+          validQuery = false;
+        }
+      }
+      
+      if (mainBatchFormat != null)
+        ms.setBatchOutputFormat(mainBatchFormat);
+      
+      if (mainBatchSeparator == null)
+        ms.setBatchOutputSeparator("\t"); //default
+      else
+        ms.setBatchOutputSeparator(mainBatchSeparator);
+        
       if (mainBatchSQL == null && mainBatchScriptFile == null) {
         System.out.println("Must supply either a Query command or a query script\n" + usage());
         System.exit(0);
       } else if (mainBatchScriptFile != null) {
         validQuery = ms.RunBatchScript(mainBatchScriptFile);
       } else {
-        if (mainBatchFile != null) {
-          try {
-            ms.setBatchOutputFile(mainBatchFile);
-          } catch (Exception e) {
-            validQuery = false;
-          }
-        }
-        if (mainBatchFormat != null)
-          ms.setBatchOutputFormat(mainBatchFormat);
-        if (mainBatchSeparator == null)
-          ms.setBatchOutputSeparator("\t"); //default
-        else
-          ms.setBatchOutputSeparator(mainBatchSeparator);
-
         validQuery = ms.RunBatch(mainBatchSQL);
       }
       if (!validQuery) {
@@ -842,6 +844,7 @@ public class MartShell {
   }
 
   private void ExitShell() throws IOException {
+    System.out.println(); //ensures that newline is printed before exit
     Readline.cleanup();
 
     // if history and completion are on, save the history file
