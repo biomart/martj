@@ -3351,20 +3351,21 @@ public class DatabaseDatasetConfigUtils {
     try {
       conn = dsource.getConnection();
 
-      String sql = "SELECT " + cname + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL LIMIT 1";
+      String sql = "SELECT " + "count("+cname+")" + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL ";
       //System.out.println("Offending SQL: "+ sql);
       PreparedStatement ps = conn.prepareStatement(sql);
       ResultSet rs = ps.executeQuery();
 
       rs.next();
-      String ret = rs.getString(1);
+      int ret = rs.getInt(1);
 
-      if (ret != null) {
+      if (ret > 0 ) {
         rs.close();
         conn.close();
+        System.out.println("Returning false, ret= "+ret);
         return false;
       } else {
-        //System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
+        System.out.println("ALL NULLS\t" + cname + "\t" + tableName+" ret= "+ret);
         rs.close();
         conn.close();
         return true;
