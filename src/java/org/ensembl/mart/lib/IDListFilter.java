@@ -30,114 +30,193 @@ import java.util.*;
  * you should just use a BasicFilter object instead, this one is more
  * useful for the MartExplorerTool to add multiple ids in succession),
  * a String[] of ids, a File of ids, a URL of ids, or
- * an InputStream of ids.
+ * an InputStream of ids.  For each type of IDListFilter Object other
+ * than STRING, there should be a corresponding IDListFilterHandler object
+ * or objects to resolve the underlying data Object into a STRING type
+ * IDListFilter Object.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
+ * @see IDListFilterHandler
  */
 public class IDListFilter implements Filter {
 
 	/**
-	 * Copy constructor.  Doesnt actually read the input that was originally provided,
-	 * as this has already been parsed. Creates a 
-	 * new IDListFilter(String Field, String[] identifiers) using the identifiers 
-	 * provided by the original input.
+	 * enums over IDListFilter type
+	 */
+	public static final int STRING = 1;
+	public static final int FILE = 2;
+	public static final int URL = 3;
+	public static final int SUBQUERY = 4;
+
+	/**
+	 * Copy constructor.
 	 * 
 	 * @param o - an IDListFilter object
 	 */
 	public IDListFilter(IDListFilter o) {
-		if (o.getName() != null)
-			name = o.getName();
-
-    if (o.getTableConstraint() != null)
-      tableConstraint = o.getTableConstraint();
-      
-		int olen = o.getIdentifiers().length;
-		String[] nvalues = new String[olen];
-
-		if (olen > 0) {
-			String[] ovalues = o.getIdentifiers();
-			for (int i = 0; i < olen; i++) {
-				identifiers.add(ovalues[i]);
-			}
-		}
+		name = o.getName();
+		tableConstraint = o.getTableConstraint();
+    type = o.getType();
+    
+    switch (type) {
+    	case STRING:
+    	  identifiers = new ArrayList( Arrays.asList( o.getIdentifiers() ) );
+    	  break;
+    	  
+    	case FILE:
+    	  file = o.getFile();
+    	  break;
+    	  
+    	case URL:
+    	  url = o.getUrl();
+    	  break;    	 
+    	
+    	case SUBQUERY:
+    	  subQuery = o.getSubQuery();
+    	  break;    	
+    }
 	}
 
 	/**
-	 * Constructor for an IDListFilter object of a given field name
-	 * with a single identifier.
+	 * Constructor for a STRING type IDListFilter object with a given field_name with a single identifier.
+	 * @param name
+	 * @param identifier
+	 */
+	public IDListFilter(String name, String identifier) {
+		this(name, "", identifier);
+	}
+
+	/**
+	 * Constructor for a STRING type IDListFilter object of a given field name,
+	 * and table Constraint, with a single identifier.
 	 * Other identifiers can be added later with addIdentifier.
 	 *  
 	 * @param String name = field name
+	 * @param String tableConstraint = table Constraint for field name
 	 * @param String identifier
 	 */
-	public IDListFilter(String name, String identifier) {
+	public IDListFilter(String name, String tableConstraint, String identifier) {
 		this.name = name;
+		this.tableConstraint = tableConstraint;
 		identifiers.add(identifier);
+		type = STRING;
 	}
 
 	/**
-	 * Construct an IDListFilter object of a given field name on a String[] List of 
+	 * Construct an STRING type IDListFilter object of a given field name on a String[] List of 
 	 * identifiers.
 	 * 
 	 * @param String name - field name
 	 * @param String[] identifiers
 	 */
 	public IDListFilter(String name, String[] identifiers) {
-		this.name = name;
-		this.identifiers = Arrays.asList(identifiers);
+		this(name, "", identifiers);
 	}
 
 	/**
-	 * Construct an IDListFilter object of a given field name from a file
-	 * containing identifiers. Expect one identifier per line.
+	 * Construct an STRING type IDListFilter object of a given field name and tableConstraint, on a String[] List of 
+	 * identifiers.
+	 * 
+	 * @param String name - field name
+	 * @param String tableConstraint - table constraint for field name
+	 * @param String[] identifiers
+	 */
+	public IDListFilter(String name, String tableConstraint, String[] identifiers) {
+		this.name = name;
+		this.tableConstraint = tableConstraint;
+		this.identifiers = Arrays.asList(identifiers);
+		type = STRING;
+	}
+
+	/**
+	 * Construct a FILE type IDListFilter object of a given field name from a file
+	 * containing identifiers.
 	 * 
 	 * @param String name - field name
 	 * @param File file
-	 * @throws IOException
 	 */
-	public IDListFilter(String name, File file) throws IOException {
-		this(name, new InputStreamReader(file.toURL().openStream()));
+	public IDListFilter(String name, File file) {
+		this(name, "", file);
 	}
 
 	/**
-	 * Construct an IDListFilter object of a given field name 
-	 * from a specified URL object containing identifiers. 
-	 * Expect one identifier per line of file.
+	 * Construct a FILE type IDListFilter object of a given field name from a file
+	 * containing identifiers.
+	 * 
+	 * @param String name - field name
+	 * @param String tableConstraint - table constraint for field name
+	 * @param File file
+	 */
+	public IDListFilter(String name, String tableConstraint, File file) {
+		this.name = name;
+		this.tableConstraint = tableConstraint;
+		this.file = file;
+		type = FILE;
+	}
+
+	/**
+	 * Construct a URL type IDListFilter object of a given field name 
+	 * from a specified URL object containing identifiers.  
 	 * 
 	 * @param String name - field name
 	 * @param URL url
-	 * @throws IOException
 	 */
-	public IDListFilter(String name, URL url) throws IOException {
-		this(name, new InputStreamReader(url.openStream()));
+	public IDListFilter(String name, URL url) {
+		this(name, "", url);
 	}
 
 	/**
-	 * Construct an IDListFilter of a given field name from an InputStreamReader
-	 * containing identifiers. Expect one identifier per line of Stream.
-	 * Useful for piping martexplorer output into a new martexplorer as a filter
+	 * Construct a URL type IDListFilter object of a given field name 
+	 * and table constraint, from a specified URL object containing identifiers. 
 	 * 
 	 * @param String name - field name
-	 * @param InputStreamReader instream
-	 * @throws IOException
+	 * @param String tableConstraint - table constraint for field name
+	 * @param URL url - url pointing to resource with IDs
 	 */
-	public IDListFilter(String name, InputStreamReader instream) throws IOException {
+	public IDListFilter(String name, String tableConstraint, URL url) {
 		this.name = name;
-
-		// load entries from instream into identifiers array
-		BufferedReader in = new BufferedReader(instream);
-
-		for (String line = in.readLine(); line != null; line = in.readLine())
-			identifiers.add(line);
+		this.tableConstraint = tableConstraint;
+		this.url = url;
+		type = URL;
 	}
 
 	/**
-	  * add an identifier to the IDListFilter
+	 * Construct a SUBQUERY type IDListFilter object of a given field name
+	 * from a Query object that fits the constraints of a subQuery.
+	 * @param String name - field name
+	 * @param Query subQuery - Query that, when evaluated, returns a list of IDs
+	 * @see QueryIDListFilterHandler 
+	 */
+	public IDListFilter(String name, Query subQuery) {
+		this(name, "", subQuery);
+	}
+
+	/**
+	 * Construct a SUBQUERY type IDListFilter object of a given field name
+	 * and table constraint, from a Query object that fits the constraints of
+	 * a subQuery.
+	 * @param String name - field name
+	 * @param String tableConstraint - table constraint for field name
+	 * @param Query subQuery - Query that, when evaluated, returns a list of IDs
+	 * @see QueryIDListFilterHandler 
+	 */
+	public IDListFilter(String name, String tableConstraint, Query subQuery) {
+		this.name = name;
+		this.tableConstraint = tableConstraint;
+		this.subQuery = subQuery;
+		type = SUBQUERY;
+	}
+
+	/**
+	  * add an identifier to the STRING type IDListFilter
 	  * 
 	  * @param String identifier
 	  */
-	public void addIdentifier(String identifier) {
+	public void addIdentifier(String identifier) throws InvalidListException {
+		if (!(type == STRING))
+			throw new InvalidListException("You can only add identifiers to a STRING type list\n");
+
 		if (!identifiers.contains(identifier))
 			identifiers.add(identifier);
 	}
@@ -146,8 +225,9 @@ public class IDListFilter implements Filter {
 	 * returns the Where Clause for the SQL
 	 * 
 	 * @return String where clause 'IN (quoted list of identifiers)'
+	 * @throws InvalidListException when IDListFilter is not a STRING type.
 	 */
-	public String getWhereClause() {
+	public String getWhereClause() {			
 		StringBuffer buf = new StringBuffer();
 		buf.append(name).append(" IN (");
 		for (int i = 0, n = identifiers.size(); i < n; i++) {
@@ -165,6 +245,7 @@ public class IDListFilter implements Filter {
 	 * same as getWhereClause()
 	 */
 	public String getRightHandClause() {
+		  
 		StringBuffer buf = new StringBuffer();
 		buf.append(" IN (");
 		for (int i = 0, n = identifiers.size(); i < n; i++) {
@@ -189,34 +270,59 @@ public class IDListFilter implements Filter {
 	}
 
 	/**
-	 * get the Name of the IDListFilter
+	 * get the Field Name of the IDListFilter
 	 * 
-	 * @return String name
+	 * @return String field name
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * set the Name of the IDListFilter
-	 * 
-	 * @param String name of the filter
-	 */
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getValue() {
 		return null;
 	}
 
-	public void setTableConstraint(String tableConstraint) {
-		this.tableConstraint = tableConstraint;
-	}
-
+  /**
+   * Returns the tableConstraint for this IDListFilter Object
+   * @return String tableConstriant
+   */
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
+
+	/**
+	 * Returns the File object underlying a FILE type IDListFilter Object.
+	 * 
+	 * @return File file
+	 */
+	public File getFile() {
+		return file;
+	}
+
+	/**
+	 * Returns the Query object underlying a SUBQUERY type IDListFilter Object
+	 * @return Query subQuery
+	 */
+	public Query getSubQuery() {
+		return subQuery;
+	}
+
+	/**
+	 * Returns the type of the IDListFilter Object
+	 * @return int type
+	 */
+	public int getType() {
+		return type;
+	}
+
+	/**
+	 * Returns the underlying URL Object underlying a URL type IDListFilter Object
+	 * @return URL url
+	 */
+	public URL getUrl() {
+		return url;
+	}
+
 
 	/**
 	 * returns a description of the object useful for logging systems.
@@ -229,7 +335,25 @@ public class IDListFilter implements Filter {
 		buf.append("[");
 		buf.append(" field=").append(name);
 		buf.append(", tableConstraint=").append(tableConstraint);
-		buf.append(", identifiers=").append(identifiers);
+
+		switch (type) {
+			case STRING :
+				buf.append(", identifiers=").append(identifiers);
+				break;
+
+			case FILE :
+				buf.append(", File=").append(file);
+				break;
+
+			case URL :
+				buf.append(", URL=").append(url);
+				break;
+
+			case SUBQUERY :
+				buf.append(", Query=").append(subQuery);
+				break;
+		}
+
 		buf.append("]");
 
 		return buf.toString();
@@ -249,14 +373,35 @@ public class IDListFilter implements Filter {
 		int tmp = name.hashCode();
 		tmp = (31 * tmp) + tableConstraint.hashCode();
 
-		for (int i = 0, n = identifiers.size(); i < n; i++) {
-			String element = (String) identifiers.get(i);
-			tmp = (31 * tmp) + element.hashCode();
+		switch (type) {
+			case STRING :
+				for (int i = 0, n = identifiers.size(); i < n; i++) {
+					String element = (String) identifiers.get(i);
+					tmp = (31 * tmp) + element.hashCode();
+				}
+				break;
+
+			case FILE :
+				tmp = (31 * tmp) + file.hashCode();
+				break;
+
+			case URL :
+				tmp = (31 * tmp) + url.hashCode();
+				break;
+
+			case SUBQUERY :
+				tmp = (31 * tmp) + subQuery.hashCode();
+				break;
 		}
 
 		return tmp;
 	}
 
-	private String name, tableConstraint;
+	private final String name, tableConstraint;
+	private final int type;
+	private Query subQuery; // for Query based Filter
+	private File file;
+	private URL url;
+	
 	private List identifiers = new ArrayList();
 }
