@@ -1560,6 +1560,9 @@ public class DatabaseDatasetViewUtils {
       Object group = allGroups.get(i);
 
       if (group instanceof FilterGroup) {
+		FilterGroup gr = (FilterGroup) group;
+	    if ((gr.getInternalName().equals("expression")))
+			continue;// hack for expression - breaks current code - needs fixing
         FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group, dset);
 
         if (validatedGroup.isBroken()) {
