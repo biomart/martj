@@ -29,7 +29,7 @@ public class PageWidget extends InputPage {
     setBorder( BorderFactory.createEmptyBorder( 10, 5, 5, 5 ) );
     setBackground( Color.BLACK );
     
-    tabbedPane = new JTabbedPane();
+    tabbedPane = new JTabbedPane(  JTabbedPane.LEFT  );
     add(tabbedPane);
   }
 
