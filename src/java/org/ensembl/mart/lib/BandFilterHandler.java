@@ -51,7 +51,7 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 	public Query ModifyQuery(Engine engine, List filters, Query query) throws InvalidQueryException {
 		Connection conn;
 		try {
-			conn = engine.getConnection();
+			conn = query.getDataSource().getConnection();
 		} catch (SQLException e1) {
 			throw new InvalidQueryException("Recieved SQLException "+e1.getMessage(), e1);
 		}

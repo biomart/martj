@@ -50,8 +50,8 @@ public class CompiledSQLQueryTest extends Base {
 	 */
 	private void executeQuery(Query query) throws Exception {
 		engine.execute(query, formatspec, stats);
-		System.out.println(query);
-		System.out.println(stats);
+//		System.out.println(query);
+//		System.out.println(stats);
 
 		assertTrue("No text returned from query", stats.getCharCount() > 0);
 		assertTrue("No lines returned from query", stats.getLineCount() > 0);

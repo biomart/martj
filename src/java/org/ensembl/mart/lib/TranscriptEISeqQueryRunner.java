@@ -53,13 +53,11 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 	 * 
 	 * @param query
 	 * @param format
-	 * @param conn
 	 * @param os
 	 */
-	public TranscriptEISeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
+	public TranscriptEISeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
 		this.query = query;
 		this.format = format;
-		this.conn = conn;
 		this.osr = new FormattedSequencePrintStream(maxColumnLen, os, true); //autoflush true
 		this.dna = new DNAAdaptor(conn);
 
@@ -133,7 +131,7 @@ public final class TranscriptEISeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
-			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
+			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
 			String structure_table = dataset + "_structure_dm";

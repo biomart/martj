@@ -71,7 +71,7 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			String[] unversionedIds = null;
     
 			try {
-				unversionedIds = ModifyVersionedIDs(engine.getConnection(), query, ids);
+				unversionedIds = ModifyVersionedIDs(query.getDataSource().getConnection(), query, ids);
 			} catch (SQLException e) {
 				throw new InvalidQueryException( "Problem with db connection: ",e );
 			}

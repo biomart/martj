@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib;
 
 import java.io.OutputStream;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -27,10 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.ensembl.mart.lib.config.ConfigurationException;
-import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.MartConfigurationFactory;
 
 /**
  * Class for interaction between UI and Mart Database.  Manages mySQL database
@@ -70,38 +65,10 @@ public class Engine {
 		loadFallbackDatabaseDrivers();
 	}
 
-	private String baseConnectionString;
-	private Connection connection = null;
-	private String connectionString;
 
-	public Engine(Connection connection) {
-		this.connection = connection;
-
+	public Engine() {
 	}
 
-	public Engine(String databaseURL, String user, String password) throws SQLException {
-		connection = DatabaseUtil.getConnection(databaseURL, user, password);
-	}
-
-	/**
-	 * Creates an Engine connected to a specific mart
-	 * database.
-	 * 
-	 * @param databaseType - type of database to be includeded in 
-	 * jdbc connection string, e.g. "mysql"
-	 * @param host - the host computer name or ip number
-	 * @param port - the database program's port, <code>null</code> if to use default
-	 * @param databaseName - the name of the mart database
-	 * @param user - user name
-	 * @param password - password (can be null)
-	 * @throws SQLException if problem connecting to database.
-	 */
-	public Engine(String databaseType, String host, String port, String databaseName, String user, String password)
-		throws SQLException {
-
-		connection = DatabaseUtil.getConnection(databaseType, host, port, databaseName, user, password);
-
-	}
 
 	public int countFocus(Query query) {
 		throw new RuntimeException();
@@ -193,31 +160,12 @@ public class Engine {
 		}
 
 		logger.info(query.toString());
-		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, getConnection(), os);
+		QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, os);
 		qr.execute(limit);
 	}
 
-	public Connection getConnection() throws SQLException {
-		return connection;
-	}
 
-	/**
-	 * Returns a MartConfiguration object with all of the information needed to interact with
-	 * the mart defined by the connection parameters provided to this Engine.
-	 * 
-	 * @return MartConfiguration object
-	 */
-	public MartConfiguration getMartConfiguration() throws ConfigurationException, SQLException {
 
-		return new MartConfigurationFactory().getInstance(connection);
-	}
-
-	/**
-	 * @param string
-	 */
-	public void setBaseConnectionString(String string) {
-		baseConnectionString = string;
-	}
 
 	public String sql(Query query) {
 		throw new RuntimeException();

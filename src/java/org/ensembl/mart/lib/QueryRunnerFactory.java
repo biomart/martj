@@ -40,7 +40,7 @@ public class QueryRunnerFactory {
      *  @see Query
      *  @see FormatSpec
      */
-    public static QueryRunner getInstance(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException {
+    public static QueryRunner getInstance(Query q, FormatSpec f, OutputStream out) throws FormatException {
     	QueryRunner thisQueryRunner = null;
 		   switch (q.getType()) {
  
@@ -48,53 +48,53 @@ public class QueryRunnerFactory {
               if (f.getFormat() == FormatSpec.FASTA)
                  throw new FormatException("Fasta format can only be applied to Sequence output");            
 				      
-				      thisQueryRunner = new AttributeQueryRunner(q,f,conn,out);
+				      thisQueryRunner = new AttributeQueryRunner(q,f, out);
 				      break;
             
           case Query.SEQUENCE:
       		  switch (q.getSequenceDescription().getType()) {
 					    case SequenceDescription.TRANSCRIPTCODING:
-					      thisQueryRunner = new CodingSeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new CodingSeqQueryRunner(q,f,out);
 					      break;
 					    
 					    case SequenceDescription.TRANSCRIPTPEPTIDE:
-                thisQueryRunner = new PeptideSeqQueryRunner(q,f,conn,out);
+                thisQueryRunner = new PeptideSeqQueryRunner(q,f,out);
 					      break;
 					    
 					    case SequenceDescription.TRANSCRIPTCDNA:
-                thisQueryRunner = new CdnaSeqQueryRunner(q,f,conn,out);
+                thisQueryRunner = new CdnaSeqQueryRunner(q,f,out);
 					      break;
 					    
 					    case SequenceDescription.TRANSCRIPTEXONS:
-					      thisQueryRunner = new TranscriptExonSeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new TranscriptExonSeqQueryRunner(q,f, out);
 					      break;
 					    
 					    case SequenceDescription.TRANSCRIPTEXONINTRON:
-					      thisQueryRunner = new TranscriptEISeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new TranscriptEISeqQueryRunner(q,f, out);
 					      break;
 					     
 					    case SequenceDescription.TRANSCRIPTFLANKS:
-					      thisQueryRunner = new TranscriptFlankSeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new TranscriptFlankSeqQueryRunner(q,f,out);
 					      break;
 					    
 					    case SequenceDescription.GENEEXONINTRON:
-					      thisQueryRunner = new GeneEISeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new GeneEISeqQueryRunner(q,f,out);
 					      break;
 					    					
 					    case SequenceDescription.GENEEXONS:
-  					    thisQueryRunner = new GeneExonSeqQueryRunner(q,f,conn,out);
+  					    thisQueryRunner = new GeneExonSeqQueryRunner(q,f,out);
 					      break;
 					      
 					    case SequenceDescription.GENEFLANKS:
-					      thisQueryRunner = new GeneFlankSeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new GeneFlankSeqQueryRunner(q,f,out);
 					      break;
 					      
 					    case SequenceDescription.DOWNSTREAMUTR:
-					      thisQueryRunner = new DownStreamUTRSeqQueryRunner(q,f,conn,out);
+					      thisQueryRunner = new DownStreamUTRSeqQueryRunner(q,f,out);
 					      break;
 					      
 				      case SequenceDescription.UPSTREAMUTR:
-				        thisQueryRunner = new UpStreamUTRSeqQueryRunner(q,f,conn,out);
+				        thisQueryRunner = new UpStreamUTRSeqQueryRunner(q,f,out);
 				        break;
 				        
 				      default:

@@ -9,6 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import javax.sql.DataSource;
+
 /**
  * Implimentation of the QueryRunner for executing a Query and 
  * generating Tabulated output.
@@ -29,10 +31,9 @@ public final class AttributeQueryRunner implements QueryRunner {
 	 * @param query - a Query Object
 	 * @param format - a FormatSpec object
 	 */
-	public AttributeQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
+	public AttributeQueryRunner(Query query, FormatSpec format, OutputStream os) {
 		this.query = query;
 		this.format = format;
-		this.conn = conn;
 		this.osr = new PrintStream(os, true); // autoflush true
 	}
 
@@ -41,9 +42,10 @@ public final class AttributeQueryRunner implements QueryRunner {
 		// batching output system stops when this is false
 		int batchStart = 0; // start at 0 during batching
 
+    Connection conn = null;
 		String sql = null;
 		try {
-			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
+			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 
 			while (moreRows) {
@@ -61,7 +63,10 @@ public final class AttributeQueryRunner implements QueryRunner {
 				logger.info("QUERY : " + query);
 				logger.info("SQL : " + sql);
 
-				PreparedStatement ps = conn.prepareStatement(sql);
+        DataSource ds = query.getDataSource();
+        if ( ds==null ) throw new RuntimeException("query.dataset is null");
+        conn = ds.getConnection();
+    		PreparedStatement ps = conn.prepareStatement(sql);
 				int p = 1;
 				for (int i = 0, n = query.getFilters().length; i < n; ++i) {
 					Filter f = query.getFilters()[i];
@@ -101,6 +106,9 @@ public final class AttributeQueryRunner implements QueryRunner {
 			logger.warning(e.getMessage());
 			throw new InvalidQueryException(e);
 		}
+    finally {
+      DatabaseUtil.close( conn );
+    }
 	}
 
 	private int batchLength = 200000;
@@ -108,5 +116,4 @@ public final class AttributeQueryRunner implements QueryRunner {
 	private Query query = null;
 	private FormatSpec format = null;
 	private PrintStream osr;
-	private Connection conn;
 }

@@ -21,7 +21,10 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.sql.DataSource;
+
 import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.FormatException;
@@ -29,33 +32,48 @@ import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.SequenceException;
+import org.ensembl.mart.lib.config.ConfigurationException;
 
 public class SimpleLibraryUsageExample {
 
-  public static void main(String[] args) throws SequenceException, FormatException, InvalidQueryException, SQLException  {
-    
-    // Configure the logging system.
-    Logger.getLogger("").setLevel(Level.INFO);
-    
-    // Initialise an engine encapsualting a specific Mart database.
-    Engine engine = new Engine( "jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1", "anonymous", "" );
-    
-    // Create a Query object.
-    Query query = new Query();
-		
-    // prefixes for databases we want to use
-    query.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
-    
-    // primary keys available for sql table joins 
-    query.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
-    
-    // Attribute to return
-    query.addAttribute(new FieldAttribute("gene_stable_id"));
-		
-    // Filter, only consider chromosome 3
-    query.addFilter( new BasicFilter("chr_name", "=", "3") );
-    
-    //Execute the Query and print the results to stdout.
-    engine.execute( query, new FormatSpec( FormatSpec.TABULATED, "\t"),  System.out);    
-  }
+	public static void main(String[] args)
+		throws SequenceException, FormatException, InvalidQueryException, SQLException, ConfigurationException {
+
+		// Configure the logging system.
+		Logger.getLogger("").setLevel(Level.INFO);
+
+		// Initialise an engine encapsualting a specific Mart database.
+		Engine engine = new Engine();
+
+		// Create a Query object.
+		Query query = new Query();
+		query.setDatasetName("hsapiens");
+		DataSource ds =
+			DatabaseUtil.createDataSource(
+				"jdbc:mysql://kaka.sanger.ac.uk:3306/ensembl_mart_15_1",
+				"anonymous",
+				null,
+				10,
+				"com.mysql.jdbc.Driver");
+		query.setDataSource(ds);
+
+		// prefixes for databases we want to use
+		query.setStarBases(
+			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+
+		// primary keys available for sql table joins 
+		query.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+
+		// Attribute to return
+		query.addAttribute(new FieldAttribute("gene_stable_id"));
+
+		// Filter, only consider chromosome 3
+		query.addFilter(new BasicFilter("chr_name", "=", "3"));
+
+		//Execute the Query and print the results to stdout.
+		engine.execute(
+			query,
+			new FormatSpec(FormatSpec.TABULATED, "\t"),
+			System.out);
+	}
 }

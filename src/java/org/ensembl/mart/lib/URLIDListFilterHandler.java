@@ -47,7 +47,7 @@ public class URLIDListFilterHandler extends IDListFilterHandlerBase {
 		
 			if (idURL.getProtocol().equals("file")) {
 				try {
-					unversionedIds = HarvestStream(engine.getConnection(), query, new InputStreamReader( idURL.openStream() ) );
+					unversionedIds = HarvestStream(query.getDataSource().getConnection(), query, new InputStreamReader( idURL.openStream() ) );
 				} catch (SQLException e) {
 					throw new InvalidQueryException("Could not parse URL IDListFilter: " + e.getMessage(), e);
 				} catch (IOException e) {

@@ -20,7 +20,6 @@
 
 package org.ensembl.mart.lib;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,9 +50,8 @@ public class CompiledSQLQuery {
 	 * @throws SQLException
 	 * @see Query
 	 */
-	public CompiledSQLQuery(Connection conn, Query query) throws SQLException {
+	public CompiledSQLQuery(Query query) throws SQLException {
 		this.query = query;
-		this.conn = conn;
 		createMappers();
 	}
 
@@ -276,7 +274,7 @@ public class CompiledSQLQuery {
 		List dimensionTables = new ArrayList();
 		List mainTables = new ArrayList();
 		
-		Table[] tables = TableCache.instance.get(query, conn);
+		Table[] tables = TableCache.instance.get(query);
 		String[] starNames = query.getStarBases();
 
 		// Get all relevant dimension tables and create a mapper for each
@@ -350,7 +348,6 @@ public class CompiledSQLQuery {
 
 	private String sql = null;
 	private Query query = null;
-	private Connection conn = null;
 	private Logger logger = Logger.getLogger(CompiledSQLQuery.class.getName());
 	private String starName = null;
 	private String[] fromTables = null;

@@ -53,13 +53,11 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 	 * 
 	 * @param query a Query Object
 	 * @param format a FormatSpec object
-	 * @param conn a java.sql.Connection object
 	 * @param os an OutputStream object
 	 */
-	public DownStreamUTRSeqQueryRunner(Query query, FormatSpec format, Connection conn, OutputStream os) {
+	public DownStreamUTRSeqQueryRunner(Query query, FormatSpec format, OutputStream os) {
 		this.query = query;
 		this.format = format;
-		this.conn = conn;
 		this.osr = new OutputStreamWriter(os);
 		this.dna = new DNAAdaptor(conn);
 
@@ -131,7 +129,7 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 
 		String sql = null;
 		try {
-			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
+			CompiledSQLQuery csql = new CompiledSQLQuery(query);
 			String sqlbase = csql.toSQL();
 			String structure_table = dataset + "_structure_dm";
 			sqlbase += " order by  "

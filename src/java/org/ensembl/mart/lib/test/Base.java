@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import javax.sql.DataSource;
+
 import junit.framework.TestCase;
 
 import org.ensembl.driver.ConfigurationException;
@@ -34,25 +36,34 @@ import org.ensembl.mart.lib.Query;
  */
 public abstract class Base extends TestCase {
 
-  private Logger logger = Logger.getLogger(Base.class.getName());
-	
-  private final static String MARTJ_DB_CONFIG_URL = "data/test_connection.properties";
-	
-  private final static String ENSJ_DB_CONFIG_URL = "data/test_connection_ensj.properties";
-  
-  private final static String LOGGING_CONFIG_URL = "data/test_logging.properties";
+	private String jdbcDriver;
 
-  private final String DEFAULTDBTYPE = "mysql";
-  private final String DEFAULTHOST = "kaka.sanger.ac.uk";
-  private final String DEFAULTPORT = "3306";
-  private final String DEFAULTDATABASE = "ensembl_mart_16_1";
-  private final String DEFAULTUSER = "anonymous";
-  
-  private String databaseType = null; // default, override in testconnection.conf
+	private Logger logger = Logger.getLogger(Base.class.getName());
+
+	private final static String MARTJ_DB_CONFIG_URL =
+		"data/test_connection.properties";
+
+	private final static String ENSJ_DB_CONFIG_URL =
+		"data/test_connection_ensj.properties";
+
+	private final static String LOGGING_CONFIG_URL =
+		"data/test_logging.properties";
+
+	private final String DEFAULTDBTYPE = "mysql";
+	private final String DEFAULTHOST = "kaka.sanger.ac.uk";
+	private final String DEFAULTPORT = "3306";
+	private final String DEFAULTDATABASE = "ensembl_mart_16_1";
+	private final String DEFAULTUSER = "anonymous";
+  private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
+
+
+
+	private String databaseType = null;
+	// default, override in testconnection.conf
 	private String host = null;
-  private String port = null;
-  private String databaseName = null;
-  private String user = null;
+	private String port = null;
+	private String databaseName = null;
+	private String user = null;
 	private String password = null;
 	private Properties p = new Properties();
 	private URL connectionconf;
@@ -61,83 +72,119 @@ public abstract class Base extends TestCase {
 	protected Engine engine;
 	protected Query genequery = new Query();
 	protected Query snpquery = new Query();
+  protected DataSource martJDataSource;
+
 
 	public void init() {
-    
+
 		connectionconf = ClassLoader.getSystemResource(MARTJ_DB_CONFIG_URL);
 
 		if (connectionconf != null) {
 			try {
 				p.load(connectionconf.openStream());
 
-        String tmp = p.getProperty("databaseType");
+				String tmp = p.getProperty("databaseType");
 				databaseType = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTDBTYPE;
-				
+
 				tmp = p.getProperty("host");
 				host = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTHOST;
-				
-        tmp = p.getProperty("port");
+
+				tmp = p.getProperty("port");
 				port = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTPORT;
-				
-        tmp = p.getProperty("databaseName");
-				databaseName = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
-				
+
+				tmp = p.getProperty("databaseName");
+				databaseName =
+					(tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
+
 				tmp = p.getProperty("user");
-				user =  (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
-				
+        user = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
+
+        tmp = p.getProperty("jdbc_driver");
+        jdbcDriver = (tmp != null && tmp.length() > 1) ? tmp : DEFAULT_JDBC_DRIVER;
+
 				password = p.getProperty("password");
+        
 			} catch (java.io.IOException e) {
 				System.out.println(
-					"Caught IOException when trying to open connection configuration file " + MARTJ_DB_CONFIG_URL + "\n" + e + "\n\nusing default connection parameters");
+					"Caught IOException when trying to open connection configuration file "
+						+ MARTJ_DB_CONFIG_URL
+						+ "\n"
+						+ e
+						+ "\n\nusing default connection parameters");
 			}
 		} else {
-			System.out.println("Failed to find connection configuration file " + MARTJ_DB_CONFIG_URL + " using default connection parameters");
+			System.out.println(
+				"Failed to find connection configuration file "
+					+ MARTJ_DB_CONFIG_URL
+					+ " using default connection parameters");
 
-      databaseType = DEFAULTDBTYPE;
+			databaseType = DEFAULTDBTYPE;
 			host = DEFAULTHOST;
-      databaseName = DEFAULTDATABASE;
+			databaseName = DEFAULTDATABASE;
 			user = DEFAULTUSER;
 		}
 
 		try {
 			ensjDriver = DriverManager.load(ENSJ_DB_CONFIG_URL);
 		} catch (ConfigurationException e) {
-			logger.log(Level.WARNING, "", e );
+			logger.log(Level.WARNING, "", e);
 		}
 
 	}
 
-	public void setUp() throws SQLException {
+	public void setUp() throws Exception {
 		init();
 
-		engine = new Engine( databaseType, host, port, databaseName, user, password);
-    genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
+		martJDataSource =
+			DatabaseUtil.createDataSource(
+				databaseType,
+				host,
+				port,
+        databaseName,
+				user,
+				password,
+				10,
+				jdbcDriver);
+		engine = new Engine();
+    
+		genequery.setStarBases(
+			new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
+    genequery.setDataSource( martJDataSource );
+    genequery.setDatasetName( "hsapiens" );
+    
 		snpquery.setStarBases(new String[] { "hsapiens_snp" });
 		snpquery.setPrimaryKeys(new String[] { "snp_id" });
 	}
 
 	public Base(String name) {
 		super(name);
-    URL loggingConfig = Base.class.getClassLoader().getResource( LOGGING_CONFIG_URL );
-    if ( loggingConfig!=null ) {
-      try {
-        LogManager.getLogManager().readConfiguration( loggingConfig.openStream() );
-  		} catch (SecurityException e) {
+		URL loggingConfig =
+			Base.class.getClassLoader().getResource(LOGGING_CONFIG_URL);
+		if (loggingConfig != null) {
+			try {
+				LogManager.getLogManager().readConfiguration(
+					loggingConfig.openStream());
+			} catch (SecurityException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-    }
-    else {
-      Logger.getLogger("").setLevel( Level.WARNING );
-    }
+		} else {
+			Logger.getLogger("").setLevel(Level.WARNING);
+		}
 	}
 
-  public Connection getDBConnection() throws Exception {
+	public Connection getDBConnection() throws Exception {
 
 		Class.forName("org.gjt.mm.mysql.Driver").newInstance();
-    		
-		return DatabaseUtil.getConnection("mysql", host, port, databaseName, user, password );
-  }
+
+		return DatabaseUtil.getConnection(
+			"mysql",
+			host,
+			port,
+			databaseName,
+			user,
+			password);
+	}
 }

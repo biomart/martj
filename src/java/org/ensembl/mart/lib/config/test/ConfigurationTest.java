@@ -125,7 +125,7 @@ public class ConfigurationTest extends Base {
 	}
 
 	public void testMartConfiguration() throws Exception {
-		MartConfiguration martconf = new MartConfigurationFactory().getInstance(engine.getConnection(), XMLTESTID);
+		MartConfiguration martconf = new MartConfigurationFactory().getInstance(martJDataSource.getConnection(), XMLTESTID);
 
 		//Mart Data Correct
 		String testIName = "ensembl_mart_14_1";
