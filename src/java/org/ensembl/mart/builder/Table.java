@@ -21,9 +21,9 @@ public class Table  implements Cloneable {
 	public String status;
 	public String final_name;
 	public String temp_name;
-	public String type;
+	//public String type;
 	public String FK;
-	public boolean skip;
+	public boolean skip = false;
 	public boolean final_table;
 	private  String Name = null;
 	private Column [] columns;

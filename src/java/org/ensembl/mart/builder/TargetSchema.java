@@ -45,8 +45,9 @@ public class TargetSchema {
 			transformation.start_table=linked.getMainTable();
 			transformation.type="linked";
 			transformation.final_table_type=linked.final_table_type;
-			transformation.create(referenced_tables);
 			
+			transformation.column_operations="addall";
+			transformation.create(referenced_tables);
 			transformation.transform();
 			addTransformation(transformation);
 		    
@@ -83,8 +84,9 @@ public class TargetSchema {
             transformation.start_table=main;
 		    transformation.type="main";
 		    transformation.final_table_type = "MAIN";
-            transformation.create(tables);
 		    
+		    transformation.column_operations="append";
+            transformation.create(tables);
             transformation.transform();
             addTransformation(transformation);
 		
@@ -97,27 +99,56 @@ public class TargetSchema {
 	public void createTransformationsForCentralFilters(){
 		
 		Transformation [] central = getDMTranformationsForCentral();	
+		Table [] central_tables = new Table [central.length];
+		
+		for (int j=0;j<central.length;j++){
+			central_tables[j]=central[j].getFinalUnit().getTemp_end();
+		}
+		
 		Transformation [] mains =   getMainTranformationForCentral();
 		
 		for (int i=0; i<mains.length;i++){
 			Transformation transformation = new Transformation();
 			
-			/**
+			Table main_table=mains[i].getFinalUnit().getTemp_end();
+			transformation.final_table_name=main_table.getName(); 
+			main_table.setName(main_table.temp_name);
+			transformation.start_table=main_table;
+			transformation.type="central";
 			
-			transformation.final_table_name =ref.getName();
-			
-			ref.setName(ref.temp_name);
-			transformation.start_table=main;
-			transformation.type="main";
-			transformation.create(tables);
-			*/
-			
-			
+			transformation.column_operations="addone";
+			transformation.create(central_tables);
 			transformation.transform();
 			addTransformation(transformation);
 		}
 			
 	}
+	
+	
+	
+	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
+									  String new_table_key, String new_table_extension, String new_table_cardinality){
+		
+		Transformation trans = getTransformationByFinalName(final_table_name);
+		Column [] columns = source_schema.getTableColumns(new_table_name);
+		
+		Table reftable = new Table();
+		reftable.setName(new_table_name);
+		reftable.setColumns(columns);
+		reftable.setName(new_table_name);	
+		reftable.setKey(new_table_key);
+		reftable.setExtension(new_table_extension);
+		reftable.setCardinality(new_table_cardinality);	
+		
+		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
+		// redo the transformation
+		trans.transform();
+		
+	}
+	
+	
+	
+	
 	
 	private void transform(){
 		
@@ -129,26 +160,7 @@ public class TargetSchema {
 	}
 	
 	
-	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
-			String new_table_key, String new_table_extension, String new_table_cardinality){
 		
-		Transformation trans = getTransformationByFinalName(final_table_name);
-		Column [] columns = source_schema.getTableColumns(new_table_name);
-	
-		Table reftable = new Table();
-		reftable.setName(new_table_name);
-		reftable.setColumns(columns);
-		reftable.setName(new_table_name);	
-		reftable.setKey(new_table_key);
-		reftable.setExtension(new_table_extension);
-		reftable.setCardinality(new_table_cardinality);	
-	    
-		trans.addAdditionalUnit(reftable,final_table_key,final_table_extension);
-		// redo the transformation
-		trans.transform();
-	
-}
-	
 	public Transformation [] getTransformations() {
 		
 		Transformation [] b = new Transformation[transformations.size()];
@@ -216,11 +228,9 @@ public class TargetSchema {
 		Transformation [] mains = getTransformationsByFinalTableType("MAIN");
 		
 		ArrayList list = new ArrayList();
-		String name = null;
+		String name = "";
 		
 		for (int i=0;i<mains.length;i++){
-			
-			System.out.println("getting mains: "+mains[i].final_table_name);
 			
 			if(name.equals(mains[i].final_table_name)){
 				list.set(i-1,mains[i]);		

@@ -109,11 +109,15 @@ public class MartBuilder {
 		target_schema.createTransformationsForCentralFilters();
 		
 		
+		Transformation [] final_transformations = target_schema.getTransformations();
+		
 		
 		// Dump to SQL
-		for (int i=0;i<transformations.length;i++){
+		for (int i=0;i<final_transformations.length;i++){
 			
-			TransformationUnit [] units = transformations[i].getUnits();
+			System.out.println("trans type "+ final_transformations[i].type);
+			
+			TransformationUnit [] units = final_transformations[i].getUnits();
 			
 			System.out.println("");
 			for (int j=0;j<units.length;j++){
@@ -147,15 +151,11 @@ public class MartBuilder {
 			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
 			if (!cardinality.equals("S")){
+				
 				ref_tab.setCardinality(cardinality);
-				if(cardinality.equals("11")){
-					ref_tab.type="simple";
-				} if (cardinality.equals("0n")){
-					ref_tab.type="left";
-				} if (cardinality.equals("n1")){
-					ref_tab.type="outer";
-				} if (cardinality.equals("1n")){
-					ref_tab.type="skip";
+				
+				if (cardinality.equals("1n")){
+					ref_tab.skip= true;
 				}
 					
 				list.add(ref_tab);

@@ -22,6 +22,7 @@ public class Transformation {
 	String final_table_name;
 	String final_table_type;
 	String type;
+	String column_operations;
 	private LinkedTables linked;
 	Table start_table;
 	boolean central = false;
@@ -29,18 +30,15 @@ public class Transformation {
 	
 	public void create (Table [] referenced_tables){
 		
-		if(type.equals("linked")){
-			createPrimaryTransUnits(referenced_tables);
-		} else if(type.equals("main")){ 
-			createSecondaryTransUnits(referenced_tables);
-		}	
+			createTransUnits(referenced_tables);
+		
 	}
 	
 	
 	
 	public void addAdditionalUnit(Table ref_table,String final_table_key,String final_table_extension){
 		
-		TransformationUnit unit = new TransformationUnitSimple(ref_table);
+		TransformationUnit unit = new TransformationUnit(ref_table);
 		unit.extension_key=final_table_key;
 		unit.extension=final_table_extension;
 		unit.is_extension=true;
@@ -48,20 +46,16 @@ public class Transformation {
 		addUnit(unit);
 	}
 	
-	public TransformationUnit getFinalUnit(){
-		
-		TransformationUnit unit = (TransformationUnit) units.get(units.size()-1);
-		return unit;
-		
-	}
 	
-	private void createPrimaryTransUnits (Table [] ref_tables) {
+	
+	private void createTransUnits (Table [] ref_tables) {
 		
 		Table temp_end = new Table();
 		for (int i=0; i<ref_tables.length; i++){
 			
-			if (ref_tables[i].type.equals("skip")) continue;
-			TransformationUnit unit = new TransformationUnitSimple(ref_tables[i]);
+			if (ref_tables[i].skip) continue;
+			TransformationUnit unit = new TransformationUnit(ref_tables[i]);
+			unit.column_operations=column_operations;
 			units.add(unit);
 		
 		}
@@ -69,26 +63,12 @@ public class Transformation {
 	
 	
 	
-	
-	private void createSecondaryTransUnits (Table [] ref_tables) {
+	public TransformationUnit getFinalUnit(){
 		
-		Table temp_end = new Table();
-		for (int i=0; i<ref_tables.length; i++){
-			
-			if (type.equals("main")){
-				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);
-				units.add(unit);
-			}
-			
-			if (type.equals("central")){
-				TransformationUnit unit = new TransformationUnitMain(ref_tables[i]);	
-				units.add(unit);
-			}
-		}
+		TransformationUnit unit = (TransformationUnit) units.get(units.size()-1);
+		return unit;
+		
 	}
-	
-	
-	
 	
 	
 	
@@ -112,7 +92,7 @@ public class Transformation {
 			boolean final_table = false;
 			temp_end_name ="TEMP"+i;
 			
-			
+			//unit.temp_start.key=unit.ref_table.key;
 			unit.transform(temp_start, temp_end_name);
 			
 			
