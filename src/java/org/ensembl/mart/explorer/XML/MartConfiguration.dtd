@@ -36,7 +36,8 @@
 <!ELEMENT FilterCollection (UIFilterDescription+)>
 <!ATTLIST FilterCollection
                    %desc_data;
-                   type CDATA #REQUIRED>
+                   filterSetName       CDATA #IMPLIED
+                   type                CDATA #REQUIRED>
                     
 <!ELEMENT UIFilterDescription EMPTY>
 <!ATTLIST UIFilterDescription
@@ -44,8 +45,7 @@
                    type               CDATA #REQUIRED
                    fieldName          CDATA #REQUIRED
                    qualifier          CDATA #IMPLIED
-                   fieldSetName       CDATA #IMPLIED
-                   fieldSetReq        CDATA #IMPLIED
+                   filterSetReq       CDATA #IMPLIED
                    tableConstraint    CDATA #IMPLIED>
                    
 <!ELEMENT AttributePage (AttributeGroup+)>

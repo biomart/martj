@@ -17,10 +17,16 @@
        <FilterPage internalName="testFilterPage"
        	           displayName="Test A Filter Page"
        	           description="For Testing Purposes Only">
-  
+
 	       <FilterGroup internalName="testFilterGroup" 
                         displayName="Test A FilterGroup:" 
                         description="For Testing Purposes Only">
+
+  	             <FilterSet internalName="testFilterSet" displayName="Test of a Filter Set" description="For Testing Purposes Only" type="radio">
+
+	               <FilterSetDescription internalName="testFilterSetDescription" displayName="Test of a FilterSetDescription" description="For Testing Purposes Only" tableConstraintModifier="ensemblgene" fieldNameModifier="ensembl"/>
+
+	             </FilterSet>
 
 		     <FilterCollection internalName="testFilterCollection" displayName="Test of a FilterCollection" description="For Testing Purposes Only" type="list">
 
@@ -33,6 +39,14 @@
                                     tableConstraint="gene_main"/>
 
 		     </FilterCollection>
+
+	             <FilterCollection internalName="testFilterSetCollection" displayName="A TEST OF FILTER SETS" description="For Testing Purposes Only" filterSetName="testFilterSet" type="list">
+
+	               <UIFilterDescription internalName="filterSetUIFilterDescriptionField" displayName="A TEST FIELD MODIFIER" description="For Testing Purposes Only" type="list" fieldName="syn_exclusive" qualifier="in" filterSetReq="1" tableConstraint="gene_main"/>
+
+ 	               <UIFilterDescription internalName="filterSetUIFilterDescriptionTable" displayName="A TEST TABLE MODIFIER" description="For Testing Purposes Only" type="list" fieldName="gene_stable_id_v" qualifier="in" filterSetReq="2" tableConstraint="_dm"/>
+
+	            </FilterCollection>
 
 	       </FilterGroup>
 
