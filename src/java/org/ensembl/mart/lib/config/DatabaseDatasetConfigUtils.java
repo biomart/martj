@@ -3129,7 +3129,7 @@ System.out.println("Going to null ");
     String pushInternalName = fd2.getInternalName();
     String pushTableName = fd2.getTableConstraint();
 
-	String orderSQL = JOptionPane.showInputDialog("ORDER BY FOR " + pushInternalName + " :");		
+	String orderSQL = JOptionPane.showInputDialog("Optional column name to order " + pushInternalName + " :");		
 	
 
     // can add push actions to existing push actions so need to know the class of the node
