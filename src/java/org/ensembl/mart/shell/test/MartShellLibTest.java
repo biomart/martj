@@ -105,7 +105,7 @@ public class MartShellLibTest extends Base {
     response = msl.QueryToMQL(testQuery);
     assertEquals(test, response);
     
-    test = "using ensembl_genes_homo_sapiens get ensembl_gene_id where disease_genes included";
+    test = "using ensembl_genes_homo_sapiens get ensembl_gene_id where disease_genes only";
     testQuery = msl.MQLtoQuery(test);
     response = msl.QueryToMQL(testQuery);
     assertEquals(test, response);
@@ -135,8 +135,8 @@ public class MartShellLibTest extends Base {
     response = msl.QueryToMQL(testQuery);
     assertEquals(test, response);
     
-    String subMQL = "using ensembl_genes_mus_musculus get human_homologue_ensembl_gene_id where transmembrane_domains included as MouseHumanTrans";
-    String subMQLQ = "using ensembl_genes_mus_musculus get human_homologue_ensembl_gene_id where transmembrane_domains included";
+    String subMQL = "using ensembl_genes_mus_musculus get human_homologue_ensembl_gene_id where transmembrane_domains only as MouseHumanTrans";
+    String subMQLQ = "using ensembl_genes_mus_musculus get human_homologue_ensembl_gene_id where transmembrane_domains only";
     String subMQLK = "MouseHumanTrans";
     
     msl.addStoredMQLCommand(subMQLK, subMQLQ);
@@ -146,17 +146,17 @@ public class MartShellLibTest extends Base {
     response = msl.QueryToMQL(testQuery);
     assertEquals(subMQL + ";" + test, response);
     
-    test = "using ensembl_genes_homo_sapiens get ensembl_gene_id where ensembl_gene_id in MouseHumanTrans and disease_genes included and snp_ka_ks_ratio > 0.1";
+    test = "using ensembl_genes_homo_sapiens get ensembl_gene_id where ensembl_gene_id in MouseHumanTrans and disease_genes only and snp_ka_ks_ratio > 0.1";
     testQuery = msl.MQLtoQuery(test);
     response = msl.QueryToMQL(testQuery);
     assertEquals(subMQL + ";" + test, response);
     
-    test = "using ensembl_genes_homo_sapiens get sequence peptide where disease_genes included";
+    test = "using ensembl_genes_homo_sapiens get sequence peptide where disease_genes only";
     testQuery = msl.MQLtoQuery(test);
     response = msl.QueryToMQL(testQuery);
     assertEquals(test, response);
        
-    test = "using ensembl_genes_homo_sapiens get ensembl_transcript_id sequence 1000+gene_exons+1000 where disease_genes included";
+    test = "using ensembl_genes_homo_sapiens get ensembl_transcript_id sequence 1000+gene_exons+1000 where disease_genes only";
     testQuery = msl.MQLtoQuery(test);
     response = msl.QueryToMQL(testQuery);
     assertEquals(test, response);
