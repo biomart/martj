@@ -56,7 +56,7 @@ public class QueryRunnerFactory {
 
         case Query.SEQUENCE:
             if (f.getFormat() == FormatSpec.TABULATED) {
-				switch (q.getSequenceDescription().getSeqCode()) {
+				switch (q.getSequenceDescription().getType()) {
 					case SequenceDescription.TRANSCRIPTCODING:
 					    thisQueryRunner = new TabulatedCodingSeqQueryRunner(q,f,conn,out);
 					    break;
@@ -76,21 +76,25 @@ public class QueryRunnerFactory {
 					case SequenceDescription.TRANSCRIPTEXONINTRON:
 					     thisQueryRunner = new TabulatedTranscriptEISeqQueryRunner(q,f,conn,out);
 					     break;
+					     
+					case SequenceDescription.TRANSCRIPTFLANK:
+					    thisQueryRunner = new TabulatedTFlankSeqQueryRunner(q,f,conn,out);
+					    break;
 					    
 					case SequenceDescription.GENEEXONINTRON:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
 //					thisQueryRunner = new TabulatedGeneEISeqQueryRunner(q,f,conn,out);
 					    //break;
 					    					
 					case SequenceDescription.GENEEXONS:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
 //					thisQueryRunner = new TabulatedGeneExonSeqQueryRunner(q,f,conn,out);
 					    //break;					
 				}
 				break;
             }
             else {
-				switch (q.getSequenceDescription().getSeqCode()) {
+				switch (q.getSequenceDescription().getType()) {
 					case SequenceDescription.TRANSCRIPTCODING:
 					    thisQueryRunner = new FastaCodingSeqQueryRunner(q,f,conn,out);
 					    break;
@@ -110,14 +114,18 @@ public class QueryRunnerFactory {
 				    case SequenceDescription.TRANSCRIPTEXONINTRON:
 					    thisQueryRunner = new FastaTranscriptEISeqQueryRunner(q,f,conn,out);
 					    break;
-					    
+
+					case SequenceDescription.TRANSCRIPTFLANK:
+						thisQueryRunner = new FastaTFlankSeqQueryRunner(q,f,conn,out);
+						break;
+											    
 				    case SequenceDescription.GENEEXONINTRON:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
 					    //thisQueryRunner = new FastaGeneEISeqQueryRunner(q,f,conn,out);
 					    //break;
 					    					
 				    case SequenceDescription.GENEEXONS:
-					    throw new NotImplementedYetException(q.getSequenceDescription().getType()+" not implimented yet\n");
+					    throw new NotImplementedYetException(q.getSequenceDescription().getTypeAsString()+" not implimented yet\n");
 					    //thisQueryRunner = new FastaGeneExonSeqQueryRunner(q,f,conn,out);
 					    //break;
 				}            	

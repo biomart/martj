@@ -1,4 +1,4 @@
-/**
+/*
     Copyright (C) 2003 EBI, GRL
 
     This library is free software; you can redistribute it and/or
@@ -95,6 +95,10 @@ public final class SequenceDescription {
 			    this.description = "exon";
 			    this.leftflank = lflank;
 			    this.rightflank = rflank;
+			    if (lflank > 0)
+			        this.description = "upstream flanking sequence plus "+this.description;
+			    if (rflank > 0)
+			        this.description += " plus downstream flanking sequence";
 			    break;
 			
 		    case TRANSCRIPTEXONINTRON:
@@ -103,7 +107,28 @@ public final class SequenceDescription {
 		        this.description = "exon and intron sequence for transcript";
 		        this.leftflank = lflank;
 		        this.rightflank = rflank;
+			    if (lflank > 0)
+				    this.description = "upstream flanking sequence plus "+this.description;
+			    if (rflank > 0)
+				    this.description += " plus downstream flanking sequence";		        
 		        break;
+		        
+			case TRANSCRIPTFLANK:
+			    if (lflank > 0 && rflank > 0)
+				    throw new InvalidQueryException("Cannot create both 3' and 5' transcript flanking sequence in one sequence\n");
+				if (! (lflank >0 || rflank > 0) )
+				    throw new InvalidQueryException("Transcript flanking requires either 3' or 5' flanking length\n");
+				    
+				this.seqt = type;
+				this.seqtype = (String) SEQS.get(TRANSCRIPTFLANK);
+				this.description = "flanking sequence of transcript only";
+				this.leftflank = lflank;
+				this.rightflank = rflank;
+				if (lflank > 0)
+				    this.description = "upstream "+this.description;
+				else
+				    this.description = "downstream "+this.description;
+				break;		        
 		              
 			default:
 				throw new InvalidQueryException("Unknown sequence type"+type);
@@ -115,7 +140,7 @@ public final class SequenceDescription {
 	 *  
 	 * @return String type
 	 */
-    public String getType() {
+    public String getTypeAsString() {
     	return seqtype;
     }
     
@@ -126,7 +151,7 @@ public final class SequenceDescription {
      * 
      * @return int seqt
      */
-    public int getSeqCode() {
+    public int getType() {
     	return seqt;
     }
     /**
@@ -186,7 +211,13 @@ public final class SequenceDescription {
 	private Logger logger = Logger.getLogger(SequenceDescription.class.getName());
 	
 	//TODO: add new enums as new types of sequences are implimented
-	public static final List SEQS = Collections.unmodifiableList(Arrays.asList( new String[]{"coding", "peptide" , "cdna", "transcript_exons", "transcript_exon_intron"}));
+	public static final List SEQS = Collections.unmodifiableList(Arrays.asList( new String[]{"coding", 
+                                                                                                                                                    "peptide" , 
+                                                                                                                                                    "cdna", 
+                                                                                                                                                    "transcript_exons", 
+                                                                                                                                                    "transcript_exon_intron",
+                                                                                                                                                    "transcript_flanks"
+                                                                                                                                                    }));
 	
 	/**
 	 * enums over sequence type that objects can use to test the type, and SequenceDescription can use to set seqtype
@@ -196,6 +227,7 @@ public final class SequenceDescription {
 	public static final int TRANSCRIPTCDNA = 2;
 	public static final int TRANSCRIPTEXONS = 3;
 	public static final int TRANSCRIPTEXONINTRON = 4;
-	public static final int GENEEXONINTRON = 5;
-	public static final int GENEEXONS = 6;
+	public static final int TRANSCRIPTFLANK = 5;
+	public static final int GENEEXONINTRON = 6;
+	public static final int GENEEXONS = 7;
 }
