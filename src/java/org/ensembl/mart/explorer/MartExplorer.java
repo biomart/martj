@@ -55,6 +55,8 @@ import org.ensembl.mart.util.LoggingUtil;
 /**
  * MartExplorer is a graphical application that enables a 
  * user to construct queries and execute them against Mart databases.
+ * 
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class MartExplorer extends JFrame {
 

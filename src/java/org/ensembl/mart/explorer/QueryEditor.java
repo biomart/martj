@@ -48,7 +48,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
@@ -84,13 +83,9 @@ import org.ensembl.util.ExtensionFileFilter;
 // TODO add user defined size for preview buffer
 
 /**
- * Provides a panel in which a user can create and edit
- * a Query.
+ * Widget for creating, loading, saving and editing Queries.
  * 
- * <p>
- * The Panel represents the queries made available in the 
- * MartConfiguration object it is initialised with.
- * </p>
+ * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class QueryEditor extends JPanel {
 
@@ -253,7 +248,8 @@ public class QueryEditor extends JPanel {
 
 		JComponent toolBar = createToolbar();
 		QueryTreeView treeView = new QueryTreeView(query, datasetViewAdaptor);
-		InputPageContainer inputPanelContainer = new InputPageContainer(query);
+    InputPageContainer inputPanelContainer = new InputPageContainer(query);
+    treeView.addTreeSelectionListener(inputPanelContainer);
 		outputPanel = new JEditorPane();
 		outputPanel.setEditable(false);
 

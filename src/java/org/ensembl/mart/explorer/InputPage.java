@@ -39,6 +39,9 @@ public class InputPage extends JPanel {
     setLayout(new BorderLayout());   
   }
 
+  public InputPage(Query query) {
+      this(query, null);   
+    }
   public MutableTreeNode getNode() {
     return node;
   }
