@@ -46,6 +46,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.ensembl.mart.lib.DatabaseUtil;
 import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.mart.lib.config.URLDSViewAdaptor;
@@ -70,7 +71,7 @@ public class MartExplorer extends JFrame {
 	// TODO delete datasource
 
 	// TODO list datasetviews
- 	// TODO delete datasetviews
+	// TODO delete datasetviews
 
 	// TODO load query
 	// TODO save query
@@ -85,8 +86,6 @@ public class MartExplorer extends JFrame {
 
 	// TODO clone query
 	// TODO load registry file
-	
-	
 
 	private Logger logger = Logger.getLogger(MartExplorer.class.getName());
 
@@ -99,6 +98,8 @@ public class MartExplorer extends JFrame {
 
 	/** Currently available datasets. */
 	private List datasetViews = new ArrayList();
+
+	private DSViewAdaptor dsvAdaptor;
 
 	/** Currently available databases. */
 	private List databaseDSViewAdaptors = new ArrayList();
@@ -115,14 +116,11 @@ public class MartExplorer extends JFrame {
 	/** Persistent preferences object used to hold user history. */
 	private Preferences prefs;
 
-	public DatasetView[] getDatasetViews() {
-		return (DatasetView[]) datasetViews.toArray(
-			new DatasetView[datasetViews.size()]);
+	public DatasetView[] getDatasetViews() throws ConfigurationException {
+		return dsvAdaptor.getDatasetViews();
 	}
 
 	private Feedback feedback = new Feedback(this);
-	
-	
 
 	public static void main(String[] args) throws ConfigurationException {
 
@@ -146,11 +144,10 @@ public class MartExplorer extends JFrame {
 					null,
 					10,
 					"com.mysql.jdbc.Driver"));
-			me.doNewQuery();
+			//me.doNewQuery();
 		} else if (true) {
-			DatasetView[] dsViews = QueryEditor.testDSViews();
-			me.resolveAndAddDatasetVies(dsViews);
-			me.doNewQuery();
+			//me.resolveAndAddDatasetVies(dsViews);
+			me.doNewQuery(QueryEditor.testDSViewAdaptor());
 		}
 	}
 
@@ -275,12 +272,13 @@ public class MartExplorer extends JFrame {
 		JMenuItem newQuery = new JMenuItem("New Query");
 		newQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				doNewQuery();
+				doNewQuery(dsvAdaptor);
 			}
 		});
 		query.add(newQuery);
 
 		JMenuItem newVirtualQuery = new JMenuItem("New Virtual Query");
+		newVirtualQuery.setEnabled(false);
 		newVirtualQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				doNewVirtualQuery();
@@ -304,13 +302,12 @@ public class MartExplorer extends JFrame {
 
 		});
 		query.add(load);
-		
+
 		query.addSeparator();
 		JMenuItem importQuery = new JMenuItem("Import MQL");
 		importQuery.setEnabled(false);
 		query.add(importQuery);
-		
-		
+
 		JMenu help = new JMenu("Help");
 		JMenuItem about = new JMenuItem("About");
 		about.setEnabled(false);
@@ -330,8 +327,6 @@ public class MartExplorer extends JFrame {
 		all.add(help);
 		return all;
 	}
-
-	
 
 	/**
 	 * 
@@ -409,23 +404,26 @@ public class MartExplorer extends JFrame {
 		}
 	}
 
-
-
-		/**
-			 * 
-			 */
-		public void doLoadQueryFromMQL() {
-			QueryEditor qe = null;
-			try {
-				qe = new QueryEditor();
-				addQueryEditor(qe);
-				qe.doLoadQuery();
-			} catch (IOException e) {
-				feedback.warn(e);
-				if (qe != null)
-					queryEditorTabbedPane.remove(qe);
-			}
+	/**
+		 * 
+		 */
+	public void doLoadQueryFromMQL() {
+		QueryEditor qe = null;
+		try {
+			qe = new QueryEditor();
+			qe.setDataSetViewAdaptor(dsvAdaptor);
+			addQueryEditor(qe);
+			qe.doLoadQuery();
+		} catch (IOException e) {
+			feedback.warn(e);
+			if (qe != null)
+				queryEditorTabbedPane.remove(qe);
+		} catch (ConfigurationException e) {
+			feedback.warn(e);
+			if (qe != null)
+				queryEditorTabbedPane.remove(qe);
 		}
+	}
 
 	/**
 	 * Exits the programs.
@@ -508,7 +506,8 @@ public class MartExplorer extends JFrame {
 	 * to resolve any name.version clashes.  
 	 * @param newViews
 	 */
-	private void resolveAndAddDatasetVies(DatasetView[] newViews) {
+	private void resolveAndAddDatasetVies(DatasetView[] newViews)
+		throws ConfigurationException {
 
 		DatasetView[] currentViews = getDatasetViews();
 		// TODO find any clashes
@@ -519,58 +518,51 @@ public class MartExplorer extends JFrame {
 	/**
 		 * 
 		 */
-	public void doNewQuery() {
+	public void doNewQuery(DSViewAdaptor dsvAdaptor) {
 
-		DatasetView[] views = getDatasetViews();
-		if (views.length == 0) {
-			feedback.warn(
-				"No datasets available. You need load one or more "
-					+ "datasets before you can create a query.");
-		} else {
-      
-			QueryEditor qe;
-      try {
-        qe = new QueryEditor();
-        qe.setDatasetViews(views);
-        qe.setName(nextQueryBuilderTabLabel());
-        addQueryEditor(qe);
-      } catch (IOException e) {
-      feedback.warn(e);
-      }
-			
+		try {
+
+			if (dsvAdaptor.getDatasetViews().length == 0) {
+				feedback.warn(
+					"No datasets available. You need load one or more "
+						+ "datasets before you can create a query.");
+
+			} else {
+
+				QueryEditor qe;
+				qe = new QueryEditor();
+				qe.setDataSetViewAdaptor(dsvAdaptor);
+				qe.setName(nextQueryBuilderTabLabel());
+				addQueryEditor(qe);
+
+			}
+		} catch (ConfigurationException e) {
+			feedback.warn(e);
+		} catch (IOException e) {
+			feedback.warn(e);
 		}
 
 	}
 
+	/**
+	 * TODO Creates a new query from the results of other queries.
+	 */
 	public void doNewVirtualQuery() {
 
-		DatasetView[] views = getDatasetViews();
-		if (views.length == 0) {
-			feedback.warn("No datasets available. You need load one or more "
-					+ "datasets before you can create a query.");
-		} else if (queryEditorTabbedPane.getComponentCount() < 1) {
-			feedback.warn(
-				"No queries available. You need one or more "
-					+ "queriess before you can create a virtual query.");
-		} else {
-			VirtualQueryEditor qe = new VirtualQueryEditor();
-			qe.setName(nextQueryBuilderTabLabel());
-			addQueryEditor(qe);
-			System.out.println("Added vqe");
-		}
-
 	}
 
-	public void doSave() {
-		// TODO Auto-generated method stub
-
+	/**
+	 * @return
+	 */
+	public DSViewAdaptor getDsvAdaptor() {
+		return dsvAdaptor;
 	}
 
-	public void doSaveAs() {
-		// TODO Auto-generated method stub
-
+	/**
+	 * @param adaptor
+	 */
+	public void setDsvAdaptor(DSViewAdaptor adaptor) {
+		dsvAdaptor = adaptor;
 	}
 
-	
-	
 }

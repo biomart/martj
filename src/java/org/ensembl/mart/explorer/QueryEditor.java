@@ -247,7 +247,7 @@ public class QueryEditor
 	/**
 	 * 
 	 */
-	private void doLoadQuery() {
+	public void doLoadQuery() {
 
 		if (getMqlFileChooser().showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
 			return;
