@@ -4,7 +4,7 @@
 
     <DatabaseLocation name="Uniprot" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
-    host="martdb.ebi.ac.uk" port="3306" instanceName="proteome_mart_1" user="anonymous"/>
+    host="martdb.ebi.ac.uk" port="3306" instanceName="uniprot_mart_1" user="anonymous"/>
 
     <DatabaseLocation name="MSD" databaseType="mysql"
     jdbcDriverClassName="com.mysql.jdbc.Driver"
