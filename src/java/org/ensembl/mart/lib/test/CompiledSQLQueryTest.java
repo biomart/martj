@@ -108,63 +108,65 @@ public class CompiledSQLQueryTest extends Base {
 		Query q = new Query(genequery);
 
 		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-		q.addAttribute(new FieldAttribute("pfam","main","gene_id_key"));
+		q.addAttribute(new FieldAttribute("pfam_bool","main","gene_id_key"));
 		executeQuery(q);
 	}
 
 	public void testUnprocessedFilterHandlers() throws Exception {
 		Filter chrFilter = new BasicFilter("chr_name", "main",  "gene_id_key", "=", "1");
 
-		//Marker
-		Query q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-		q.addFilter(chrFilter);
+        // Generic Handler relies on a DatasetView so below tests can't work anymore
 
-		Filter start = new BasicFilter("marker_start","main","gene_id_key", "=", "AFMA272XC9", "org.ensembl.mart.lib.MarkerFilterHandler");
-	  Filter end = new BasicFilter("marker_end","main","gene_id_key", "=", "RH10794", "org.ensembl.mart.lib.MarkerFilterHandler");
-		
-		q.addFilter(start);
-		q.addFilter(end);
-
-		executeQuery(q);
-
-		//Band
-		q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id", "main","gene_id_key"));
-		q.addFilter(chrFilter);
-		
-		start = new BasicFilter("band_start","main","gene_id_key", "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
-		end = new BasicFilter("band_end","main","gene_id_key", "=", "p36.33", "org.ensembl.mart.lib.BandFilterHandler");
-
-		q.addFilter(start);
-		q.addFilter(end);
-		executeQuery(q);
-
-		//Encode
-		q = new Query(genequery);
-
-		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-
-		Filter test = new BasicFilter("encode","main","gene_id_key", "=", "13:29450016:29950015", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
-
-		q.addFilter(test);
-		executeQuery(q);
-
-		//Qtl
-		q = new Query(genequery);
-		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
-
-		test = new BasicFilter("qtl","main","gene_id_key", "=", "4:82189556:83189556", "org.ensembl.mart.lib.EncodeQtlFilterHandler");
-
-		q.addFilter(test);
-		executeQuery(q);
+//		//Marker
+//		Query q = new Query(genequery);
+//		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+//		q.addFilter(chrFilter);
+//
+//		Filter start = new BasicFilter("glook_marker_start","hsapiens__marker__look",null, "=", "AFMA272XC9", "org.ensembl.mart.lib.GenericHandler");
+//	  Filter end = new BasicFilter("glook_marker_end","hsapiens__marker__look",null, "=", "RH10794", "org.ensembl.mart.lib.GenericHandler");
+//		
+//		q.addFilter(start);
+//		q.addFilter(end);
+//
+//		executeQuery(q);
+//
+//		//Band
+//		q = new Query(genequery);
+//		q.addAttribute(new FieldAttribute("gene_stable_id", "main","gene_id_key"));
+//		q.addFilter(chrFilter);
+//		
+//		start = new BasicFilter("glook_band_start","hsapiens__karotype__look",null, "=", "p36.33", "org.ensembl.mart.lib.GenericHandler");
+//		end = new BasicFilter("glook_band_end","hsapiens__karotype__look",null, "=", "p36.33", "org.ensembl.mart.lib.GenericHandler");
+//
+//		q.addFilter(start);
+//		q.addFilter(end);
+//		executeQuery(q);
+//
+////		//Encode
+//		q = new Query(genequery);
+//
+//		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+//
+//		Filter test = new BasicFilter("glook_encode_region","main","gene_id_key", "=", "13:29450016:29950015", "org.ensembl.mart.lib.GenericHandler");
+//
+//		q.addFilter(test);
+//		executeQuery(q);
+////
+////		//Qtl
+//		q = new Query(genequery);
+//		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
+//
+//		test = new BasicFilter("qtl","main","gene_id_key", "=", "4:82189556:83189556", "org.ensembl.mart.lib.GenericHandler");
+//
+//		q.addFilter(test);
+//		executeQuery(q);
 
 		//Expression
-		q = new Query(genequery);
+		Query q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id","main","gene_id_key"));
 
 		Filter anatomical_filter = new BasicFilter("est.anatomical_site","main","gene_id_key", "=", "ovary", "org.ensembl.mart.lib.ExpressionFilterHandler");
-		Filter development_filter = new BasicFilter("est.developmental_stage","main","gene_id_key", "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
+		Filter development_filter = new BasicFilter("est.development_stage","main","gene_id_key", "=", "adult", "org.ensembl.mart.lib.ExpressionFilterHandler");
 		
 		q.addFilter(anatomical_filter);
 		q.addFilter(development_filter);

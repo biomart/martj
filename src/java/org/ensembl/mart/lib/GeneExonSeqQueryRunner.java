@@ -88,8 +88,9 @@ public final class GeneExonSeqQueryRunner extends BaseSeqQueryRunner {
 
     StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
     species = tokens.nextToken();
-	focus = tokens.nextToken();
-	dset = species + "_" + focus;
+	//focus = tokens.nextToken();
+	//dset = species + "_" + focus;
+	dset = dataset.split("__")[0];
 	structureTable = dset + "__structure__dm";
   }
 
