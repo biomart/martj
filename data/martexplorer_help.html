@@ -10,7 +10,8 @@
 <li><a href="#overview">Overview</a></li>
 <li><a href="#running">Running MartExplorer</a></li>
 <li><a href="#building">Building and executing a query</a></li>
-<li><a href="#marts">Adding and removing Marts</a></li>
+<li><a href="#marts">Adding Mart Databases</a></li>
+<li><a href="#files">Adding Registry and Configuration Files</a></li>
 <li><a href="#advanced">Advanced Features</a></li>
 </ul>
 
@@ -48,7 +49,7 @@ development of complex queries.
 
 <a name="running"></a><h2>Running MartExplorer</h2>
 
-MartExplorer can be started by running the script <i>bin/martexplorer.bat</i>.
+MartExplorer can be started by running the script <i>bin/martexplorer.bat or martexplorer.sh on windows and *nix OS repspectively</i>.
 <p></p>
 <a href="#top">top</a>
 
@@ -101,30 +102,36 @@ Query</b> and all queries by <b>File -> Close All Queries</b>.
 
 
 
-<a name="marts"></a><h2>Adding and Removing Marts</h2>
+<a name="marts"></a><h2>Adding Mart Databases</h2>
 
-MartExplorer connects to marts and datasets through adaptors. By
-controlling which adaptors are loaded the user can determine which
-marts and datasets are available. This can be done by specifying an
-initialisation file and/or interactively using the Adaptors Settings
-window.
+It is possible to add new Mart databases in addition to the default 
+ones already present when the application starts up. This can be done in two ways: 
+<br>
+<br>
+A. by specifying an initialisation file 
+<br>
+B. interactively during MartExplorer session
 
-<p>At start up MartExplorer reads an initialisation file which
-specifies a set of adaptors. If there is a file called
-.martj_adaptors.xml in the user's home directory then that is loaded
-instead of the default one. This must be a valid registry file. See
-the default file (data/defaultRegistry.xml) for an example and the
-documentation for more details.
+<p>
+A. Initialisation file
+<br>
+At start up MartExplorer reads an initialisation file which
+specifies a set mart databases. The defalut registry file is located in the data directory:
+defaultMartRegistry.xml. It is possible to overide its contents by placing a 
+.userMartRegistry.xml file in the user's home directory. This must be a valid registry file. See
+the default file (data/defaultMartRegistry.xml) for an example and the
+documentation for more details. The easiest approach is to simply copy the defaultMartRegistry.xml to user home directory
+changing its name to .userMartRegistry.xml and edit the file according to one's requirements.
 <p>
 
+B. Interactively
+<br>
+Mart databases can also be added using the
+"Add Mart" settings window. This is opened with the menu item
+<b>Settings -> Add Mart</b>. 
 
-<p>Adaptors can also be added and removed interactively using the
-Adaptors settings window. This is opened with the menu item
-<b>Settings -> Adaptors</b>. The window contains a drop down list of
-loaded adaptors plus several buttons for adding and removing them:
-</p>
 
-<dl>
+<br>
 
 
 <dt><b>Add Database</b></dt><dd>This button opens the database connection
@@ -173,6 +180,15 @@ then a default name is used.</dd>
 </dd>
 
 
+<a name="files"></a><h2>Adding Registry and Configuration Files</h2>
+
+<p>Registry and Configuration Files can be added and removed interactively using the
+Add File settings window. This is opened with the menu item
+<b>Settings -> Add File</b>. The window contains a drop down list of
+loaded adaptors plus several buttons for adding and removing them:
+</p>
+
+<dl>
 <dt><b>Add Registry File</b></dt> <dd>This button opens a file selection
 dialog box from which the user can select a registry file. Once the
 registry file has been imported the marts it specifies will be
@@ -180,7 +196,7 @@ available.  </dd>
 
 
 <dt><b>Add Dataset Configuration File</b></dt><dd>This is only really
-useful for people developing there own dataset configuration
+useful for people developing their own dataset configuration
 files. The button opens a file selection dialog box from which the
 user can select a dataset configuration file. Once the file has been
 loaded the mart it specifies will be available for building

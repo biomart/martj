@@ -1,0 +1,8 @@
+satellog_ensdb	D	go	ensdb_support_verynew	n1
+satellog_ensdb	D	go	go	S
+satellog_ensdb	D	go	satellog_ensdb__ens_db__main	S
+satellog_ensdb	D	go	satellog_ensdb__go_terms__dm	S
+satellog_ensdb	D	go	satellog_ensdb__transcripts__dm	S
+satellog_ensdb	D	go	temp0	S
+satellog_ensdb	D	go	ens_db	S
+satellog_ensdb	D	go	go_terms	S
