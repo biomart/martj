@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
-<DatasetView dataset="multi_proteomeprotein" displayName="multi_proteomeprotein ( proteome_mart_1 )" internalName="multi_proteomeprotein"><StarBase>multi_proteomeprotein</StarBase><PrimaryKey>protein_id</PrimaryKey><FilterPage displayName="filters" internalName="filters"><FilterGroup displayName="FILTERS" internalName="filters">
+<DatasetView dataset="multi_proteomeprotein" displayName="multi_proteomeprotein ( proteome_mart_1 )" internalName="default"><StarBase>multi_proteomeprotein</StarBase><PrimaryKey>protein_id</PrimaryKey><FilterPage displayName="filters" internalName="filters"><FilterGroup displayName="FILTERS" internalName="filters">
 
 <FilterCollection displayName="SPECIES" internalName="species"><FilterDescription displayName="Taxonomy ID" field="proteome_taxid" internalName="proteome_taxid" legal_qualifiers="=" qualifier="=" tableConstraint="multi_proteomeprotein_main" type="text" /><FilterDescription displayName="Species name" field="proteome_name" internalName="proteome_name" legal_qualifiers="=" qualifier="=" tableConstraint="multi_proteomeprotein_main" type="text" /></FilterCollection>
 
