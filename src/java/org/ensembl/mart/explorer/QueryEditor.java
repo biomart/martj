@@ -68,7 +68,6 @@ import org.ensembl.mart.util.FileUtil;
 import org.ensembl.mart.util.LoggingUtil;
 import org.ensembl.mart.util.MaximumBytesInputFilter;
 import org.ensembl.mart.util.PollingInputStream;
-import org.ensembl.util.ExtensionFileFilter;
 
 // TODO 1 Finish testing filter addition and removal
 // TODO selecting an attribute / filter should cause it to be shown in InputPanel
@@ -164,7 +163,7 @@ public class QueryEditor extends JPanel {
       new JScrollPane(outputPanel));
 
     mqlFileChooser.addChoosableFileFilter(
-      new ExtensionFileFilter("mql", "MQL Files"));
+      new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
 
     tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
     tmpFile.deleteOnExit();

@@ -59,6 +59,7 @@ import javax.swing.KeyStroke;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
+import org.ensembl.util.SystemUtil;
 
 /**
  * MartExplorer is a graphical application that enables a 
@@ -517,6 +518,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       } else {
 
         try {
+          
+          logger.finer("BEFORE New query: " + SystemUtil.memoryStatus());
+          
           disableCursor();
           final QueryEditor qe = new QueryEditor(this, adaptorManager);
           qe.setName(nextQueryBuilderTabLabel());
