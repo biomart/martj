@@ -44,8 +44,6 @@ public class DatasetViewWidget
 
   private DatasetViewSettings datasetViewSettings;
 
-  private DatasetView datasetView;
-
   private Logger logger = Logger.getLogger(DatasetViewWidget.class.getName());
 
   private Feedback feedback = new Feedback(this);
@@ -86,12 +84,17 @@ public class DatasetViewWidget
    * Opens DatasetViewSettings dialog.
    */
   public void doChange() {
-    datasetViewSettings.setSelected(query.getDatasetView());
+    
+    DatasetView oldDsv = query.getDatasetView();
+    
+    datasetViewSettings.setSelected( oldDsv );
 
+    DatasetView dsv = null;
     if (datasetViewSettings.showDialog(this)) {
-
-      DatasetView dsv = datasetViewSettings.getSelected();
-      if (datasetView != dsv
+      
+      dsv = datasetViewSettings.getSelected();
+      
+      if ( oldDsv != dsv
         && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
 
         int o =
@@ -107,7 +110,6 @@ public class DatasetViewWidget
 
       }
 
-      setDatasetView(dsv);
       query.clear();
       query.setDatasetView(dsv);
       query.setPrimaryKeys(dsv.getPrimaryKeys());
@@ -135,12 +137,7 @@ public class DatasetViewWidget
 
   }
 
-  /**
-   * @return
-   */
-  public DatasetView getDatasetView() {
-    return datasetView;
-  }
+
 
   /**
    * Responds to a change in dataset view on the query. Updates the state of
@@ -161,8 +158,7 @@ public class DatasetViewWidget
    * Update the label to show which dataset view is currently selected.
    * @param object
    */
-  private void setDatasetView(DatasetView dsv) {
-    datasetView = dsv;
+  private void setDatasetView(DatasetView datasetView) {
     String s = "";
     if (datasetView != null)
       s = datasetView.getDisplayName();
