@@ -95,8 +95,12 @@
                  isSelectable  CDATA #REQUIRED
                  value         CDATA #IMPLIED
 		      ref           CDATA #IMPLIED
-                 field         CDATA #IMPLIED
-                 tableConstraint CDATA #IMPLIED>
+                 type          CDATA #IMPLIED
+                 fieldName     CDATA #IMPLIED
+                 qualifier     CDATA #IMPLIED
+                 filterSetReq  CDATA #IMPLIED
+                 tableConstraint    CDATA #IMPLIED
+>
 
 <!ELEMENT OptionPush (Option)+>
 <!ATTLIST OptionPush
