@@ -46,7 +46,6 @@ public abstract class Base extends TestCase {
 	private final String DEFAULTHOST = "ensembldb.ensembl.org";
 	private final String DEFAULTPORT = "3306";
 	private final String DEFAULTDATABASE = "ensembl_mart_19_2";
-  private final String DEFAULT_CONNECTION_STRING = "jdbc:mysql://kaka.sanger.ac.uk/ensembl_mart_19_1";
 	private final String DEFAULTUSER = "anonymous";
   private final String DEFAULT_JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
@@ -57,7 +56,6 @@ public abstract class Base extends TestCase {
 	private String host;
 	private String port;
 	private String databaseName;
-  private String connectionString;
   private String user;
 	private String password;
 	private Properties p = new Properties();
@@ -89,9 +87,6 @@ public abstract class Base extends TestCase {
 				tmp = p.getProperty("databaseName");
 				databaseName =
 					(tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
-
-        tmp = p.getProperty("connection_string");
-                connectionString = (tmp != null && tmp.length() > 1) ? tmp : DEFAULT_CONNECTION_STRING;
 
 				tmp = p.getProperty("user");
         user = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
@@ -133,10 +128,9 @@ public abstract class Base extends TestCase {
 				host,
 				port,
         databaseName,
-      connectionString,
 				user,
 				password,
-				10,
+				DetailedDataSource.DEFAULTPOOLSIZE,
 				jdbcDriver);
 		engine = new Engine();
     
