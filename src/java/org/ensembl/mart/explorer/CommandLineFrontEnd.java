@@ -29,6 +29,6 @@ public class CommandLineFrontEnd {
         }
     }
 
-    public void execute(Connection conn, Query query, ResultRenderer renderer) {
+    public void execute(Connection conn, Query query, Formatter formatter) {
     }
 }

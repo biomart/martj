@@ -4,23 +4,55 @@ package org.ensembl.mart.explorer.gui;
 
 import org.ensembl.mart.explorer.*;
 import javax.swing.*;
+import org.apache.log4j.Logger;
+import java.awt.event.*;
+import java.awt.*;
+import java.sql.*;
+import java.io.*;
+
+public class ResultWindow extends JFrame implements ResultTarget, Comparable {
+
+		private final static int WIDTH = 600;
+		private final static int HEIGHT = 600;
 
 
-public class ResultWindow extends JFrame implements ResultTarget {
-
-
-    public ResultWindow(String name, ResultRenderer renderer) {
-			super(name);
-      this.name = name;
-      this.renderer = renderer;
+    /** Creates new form JFrame */
+    public ResultWindow() {
+			this(null, null);
     }
 
-    public ResultRenderer getRenderer(){
-            return renderer;
+    public ResultWindow(String name, Formatter formatter) {
+      super(name);
+      this.name = name;
+      this.formatter = formatter;
+        initGUI();
+        setSize( WIDTH, HEIGHT );
+    }
+
+
+    /** This method is called from within the constructor to initialize the form. */
+    private void initGUI() {
+        addWindowListener(
+            new java.awt.event.WindowAdapter() {
+                public void windowClosing(java.awt.event.WindowEvent evt) {
+                    exitForm(evt);
+                }
+            });
+        getContentPane().add(textArea, java.awt.BorderLayout.CENTER);
+        setTitle("Results");
+    }
+
+    /** Exit the Application */
+    private void exitForm(WindowEvent evt) {
+        dispose();
+    }
+
+    public Formatter getFormatter(){
+            return formatter;
         }
 
-    public void setRenderer(ResultRenderer renderer){
-            this.renderer = renderer;
+    public void setFormatter(Formatter formatter){
+            this.formatter = formatter;
         }
 
     public String toString() {
@@ -28,7 +60,7 @@ public class ResultWindow extends JFrame implements ResultTarget {
 
 			buf.append("[");
       buf.append(" name=").append(name);
-      buf.append(" ,renderer=").append(renderer);
+      buf.append(" ,formatter=").append(formatter);
       buf.append("]");
 
       return buf.toString();
@@ -42,6 +74,44 @@ public class ResultWindow extends JFrame implements ResultTarget {
             this.name = name;
         }
 
-    private ResultRenderer renderer;
+    public void output(ResultSet rs)  throws FormatterException {
+        logger.info("Outputing to window: " + name);
+        setTitle( "Results - " + name );
+        textArea.setText( "Dummy text" );
+        setVisible( true );
+        //toFront();
+      try {
+        formatter.setResultSet( rs );
+        buffer.delete(0, buffer.length() );
+				for( String line = formatter.readLine(); line!=null; line=formatter.readLine() )
+        	buffer.append( line );
+				textArea.setText( buffer.toString() );
+      }
+      catch (SQLException e) {
+				throw new FormatterException ( e );
+      }
+
+    }
+
+
+    /**
+     * Orders by ascending window names.
+     */
+    public int compareTo(Object other){
+        if ( other==null || !(other instanceof ResultWindow) ) return -1;
+        else {
+          if ( name==null ) return -1;
+          else {
+            String otherName =((ResultWindow)other).name;
+            if ( otherName==null ) return 1;
+            else return name.compareTo( otherName );
+          }
+        }
+    }
+
+    private Formatter formatter;
     private String name;
+    private static final Logger logger = Logger.getLogger(ResultWindow.class.getName());
+    private TextArea textArea = new TextArea();
+    private StringBuffer buffer = new StringBuffer();
 }

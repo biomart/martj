@@ -11,8 +11,9 @@ import org.ensembl.mart.explorer.*;
 /** Panel in which user enters a query. */
 public class QueryPanel extends JPanel {
     /** Creates new form QueryPanel */
-    public QueryPanel() {
+    public QueryPanel( MartExplorerGUI martExplorerGUI) {
         initGUI();
+        this.martExplorerGUI = martExplorerGUI;
     }
 
 	private void clear() {
@@ -47,9 +48,17 @@ public class QueryPanel extends JPanel {
       return query;
     }
 
+    public MartExplorerGUI getMartExplorerGUI(){
+            return martExplorerGUI;
+        }
+
+    public void setMartExplorerGUI(MartExplorerGUI martExplorerGUI){
+            this.martExplorerGUI = martExplorerGUI;
+        }
+
     private JTabbedPane queryTabs = new JTabbedPane();
     private DatabaseConfigPage databaseTab = new DatabaseConfigPage();
-    private ExportPanel exportTab = new ExportPanel();
+    private ExportPanel exportTab = new ExportPanel( this );
     private RegionPanel regionTab = new RegionPanel();
     private IncludePanel includeTab = new IncludePanel();
     private QueryInputPage[] inputPages = new QueryInputPage[] {
@@ -59,4 +68,5 @@ public class QueryPanel extends JPanel {
 			,includeTab
     };
     private Query query = new Query();
+    private MartExplorerGUI martExplorerGUI;
 }

@@ -14,11 +14,13 @@ import javax.swing.BorderFactory;
 import javax.swing.border.TitledBorder;
 import javax.swing.ButtonGroup;
 
+
 /** Input panel where user selects export format, compression and file name. */
 public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
     /** Creates new form ExportPanel */
-    public ExportPanel() {
+    public ExportPanel(QueryPanel queryPanel) {
         initGUI();
+        this.queryPanel = queryPanel;
     }
 
     /** This method is called from within the constructor to initialize the form. */
@@ -70,10 +72,15 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
     }
 
     public void updateQuery(Query query) {
-        ResultRenderer r = null;
-        if (tsvFormatButton.isSelected()) r = new TSVRenderer();
+        Formatter r = null;
+        if (tsvFormatButton.isSelected()) r = new SeparatedValueFormatter ("\t");
         if (exportToWindowButton.isSelected()) {
-            query.setResultTarget(new ResultWindow(Tool.selected(windowName), r));
+          // Get the ResultWindow from the main GUI. This is so the main GUI can manage the windows.
+          String name = Tool.selected(windowName);
+          if ( name==null ) name = "";
+          ResultWindow rw
+            = queryPanel.getMartExplorerGUI().createResultWindow( name, r);
+            query.setResultTarget( rw );
         }
         else if (exportToFileButton.isSelected()) {
             query.setResultTarget(new ResultFile(Tool.selected(fileName), r));
@@ -93,13 +100,21 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
                 Tool.prepend(rt.getName(), windowName);
                 exportToWindowButton.setSelected(true);
             }
-            // Set GUI to reflect which renderers included
-            ResultRenderer r = rt.getRenderer();
+            // Set GUI to reflect which formatters included
+            Formatter r = rt.getFormatter();
             if (r != null) {
-                if (r instanceof TSVRenderer) tsvFormatButton.setSelected(true);
+                if (r instanceof SeparatedValueFormatter) tsvFormatButton.setSelected(true);
             }
         }
     }
+
+    public QueryPanel getQueryPanel(){
+            return queryPanel;
+        }
+
+    public void setQueryPanel(QueryPanel queryPanel){
+            this.queryPanel = queryPanel;
+        }
 
     private JPanel fileNamePanel = new JPanel();
     private JLabel fileNameLabel = new JLabel();
@@ -118,4 +133,5 @@ public class ExportPanel extends JPanel implements org.ensembl.mart.explorer.gui
     private JLabel compressionLabel = new JLabel();
     private JLabel formatLabel = new JLabel();
     private JPanel jPanel1 = new JPanel();
+    private QueryPanel queryPanel;
 }

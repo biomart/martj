@@ -4,26 +4,17 @@ package org.ensembl.mart.explorer.gui;
 
 import org.apache.log4j.*;
 import java.util.*;
-import javax.swing.JFrame;
 import java.awt.event.WindowEvent;
-import javax.swing.JTabbedPane;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JToolBar;
-import javax.swing.JButton;
+import javax.swing.*;
+import java.awt.event.*;
 import org.ensembl.mart.explorer.*;
-import java.awt.Dimension;
+import java.awt.*;
+import java.sql.*;
 
 
 public class MartExplorerGUI extends JFrame {
-
 	private final static int WIDTH = 600;
-	private final static int HEIGHT = 800;
+	private final static int HEIGHT = 400;
 
 
     /** Creates new form JFrame */
@@ -43,10 +34,6 @@ public class MartExplorerGUI extends JFrame {
         exportToolBarButton.setText("jButton1");
         exportToolBarButton.setLabel("Export");
         exportToolBarButton.setActionCommand("export");
-        resultTextArea.setText("");
-        resultTextArea.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(
-            new java.awt.Color(153, 153, 153), 1), "Result", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP,
-            new java.awt.Font("SansSerif", 0, 11), new java.awt.Color(60, 60, 60)));
         addWindowListener(
             new java.awt.event.WindowAdapter() {
                 public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -60,7 +47,6 @@ public class MartExplorerGUI extends JFrame {
         getContentPane().add(toolBar);
         getContentPane().add(queryPanel);
         getContentPane().add(summaryPanel);
-        getContentPane().add(resultTextArea);
         summaryPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(
             new java.awt.Color(153, 153, 153), 1), "Summary", javax.swing.border.TitledBorder.LEADING, javax.swing.border.TitledBorder.TOP,
             new java.awt.Font("SansSerif", 0, 11), new java.awt.Color(60, 60, 60)));
@@ -138,13 +124,20 @@ public class MartExplorerGUI extends JFrame {
 		private void executeQuery() {
 			Query q = queryPanel.retrieveQuery();
       logger.warn( "Executing query: " + q );
-			engine.execute( q );
+      try {
+				engine.execute( q );
+      } catch( Exception e ) {
+				logger.warn( "Failed to execute query", e );
+				JOptionPane.showMessageDialog( this, "Failed to execute query: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+      }
     }
 
 		private void kakaPartialQuery() {
 			Query q = new Query();
       q.setHost( "kaka.sanger.ac.uk" );
       q.setUser( "anonymous" );
+      //q.setResultTarget( new ResultFile( "/tmp/kaka.txt", new SeparatedValueFormatter("\t") ) );
+      q.setResultTarget( new ResultWindow( "Results_1", new SeparatedValueFormatter ("\t") ) );
       logger.warn( "Initialising partial kaka query: " + q );
 			queryPanel.updatePage( q );
     }
@@ -166,9 +159,32 @@ public class MartExplorerGUI extends JFrame {
 			newQuery();
     }
 
+    /**
+     * If a ResultWindow
+     * with the same name already exists that is returned, otherwise a new one
+     * is created.
+     * @return ResultWindow with specified name and formatter.
+     */
+    public ResultWindow createResultWindow(String name, Formatter formatter) {
+
+			ResultWindow rw = null;
+			logger.warn( "name="+name );
+			logger.warn( "resultWindows="+resultWindows );
+      if ( name!=null && resultWindows.containsKey( name ) ) {
+        rw = (ResultWindow) resultWindows.get( name );
+        rw.setFormatter( formatter );
+      }
+			else {
+      	rw = new ResultWindow( name, formatter );
+				resultWindows.put( name, rw );
+      }
+
+      return rw;
+    }
+
+    private Map resultWindows = new TreeMap();
     private static final Logger logger = Logger.getLogger(MartExplorerGUI.class.getName());
-    private JTextArea resultTextArea = new JTextArea();
-    private QueryPanel queryPanel = new QueryPanel();
+    private QueryPanel queryPanel = new QueryPanel( this );
     private JMenuBar menuBar = new JMenuBar();
     private JMenu fileMenu = new JMenu();
     private JMenuItem exitMenuItem = new JMenuItem();

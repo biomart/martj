@@ -65,12 +65,18 @@ public class Engine {
         return conn;
     }
 
-    public void execute(Query query) {
+    public void execute(Query query) throws SQLException, FormatterException {
       logger.warn( "Pretending to execute query : " + query );
 
+
+      init( query.getHost(), query.getPort(), query.getUser(), query.getPassword() );
+      // test query!
+      Connection conn = createConnection(null);
+      ResultSet rs = conn.createStatement().executeQuery("show databases");
+      query.getResultTarget().output( rs );
     }
 
-    public OutputStream execute(Query query, ResultRenderer renderer) {
+    public OutputStream execute(Query query, Formatter formatter) {
         throw new RuntimeException();
     }
 

@@ -2,10 +2,17 @@
 
 package org.ensembl.mart.explorer;
 
+import java.sql.*;
+import java.io.*;
+import org.apache.log4j.*;
+
 public class ResultFile implements ResultTarget {
-	public ResultFile(String fileName, ResultRenderer renderer) {
+
+	private final static Logger logger = Logger.getLogger( ResultFile.class.getName() );
+
+	public ResultFile(String fileName, Formatter formatter) {
   	this.name = fileName;
-    this.renderer = renderer;
+    this.formatter = formatter;
   }
 
     public String getName() {
@@ -16,12 +23,12 @@ public class ResultFile implements ResultTarget {
         this.name = fileName;
     }
 
-    public ResultRenderer getRenderer() {
-        return renderer;
+    public Formatter getFormatter() {
+        return formatter;
     }
 
-    public void setRenderer(ResultRenderer renderer) {
-        this.renderer = renderer;
+    public void setFormatter(Formatter formatter) {
+        this.formatter = formatter;
     }
 
     public boolean isZipCompreesion(){
@@ -46,7 +53,7 @@ public class ResultFile implements ResultTarget {
 
 			buf.append("[");
       buf.append(" name=").append(name);
-      buf.append(" ,renderer=").append(renderer);
+      buf.append(" ,formatter=").append(formatter);
       buf.append(" ,zipCompreesion=").append(zipCompreesion);
       buf.append(" ,gzipCompression=").append(gzipCompression);
       buf.append("]");
@@ -54,8 +61,24 @@ public class ResultFile implements ResultTarget {
       return buf.toString();
     }
 
+    public void output(ResultSet rs) throws FormatterException {
+      try {
+        logger.info( "Writing results to file: " + name );
+        formatter.setResultSet( rs );
+				FileWriter out = new FileWriter( name );
+      	for( String line = formatter.readLine(); line!=null; line=formatter.readLine() )
+        	out.write( line );
+        out.close();
+      }catch ( IOException e ) {
+				throw new FormatterException ( e );
+      }
+      catch (SQLException e) {
+				throw new FormatterException ( e );
+      }
+    }
+
     private String name;
-    private ResultRenderer renderer;
+    private Formatter formatter;
     private boolean zipCompreesion;
     private boolean gzipCompression;
 }
