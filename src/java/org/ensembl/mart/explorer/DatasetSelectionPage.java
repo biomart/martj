@@ -8,6 +8,8 @@ package org.ensembl.mart.explorer;
 
 import java.awt.FlowLayout;
 
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -23,6 +25,8 @@ import org.ensembl.mart.lib.config.MartConfiguration;
  */
 public class DatasetSelectionPage extends InputPage implements ChangeListener{
 
+
+  private Object currentSeletion;
 
   /**
    * Proxy for a Dataset where toString() returns dataset.displayName(). Used for printing in ComboName.
@@ -83,21 +87,45 @@ public class DatasetSelectionPage extends InputPage implements ChangeListener{
    * redraw.
    * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
    */
-  public void stateChanged(ChangeEvent e) {
-    
-    String selection = combo.getText();
-    if ( selection!="" ) { 
+	public void stateChanged(ChangeEvent e) {
 
-      // update the nodes label      
-      setNodeLabel( getName(), selection );
-    
-      // set new value on query
-      Dataset dataset = getSelectedDataset();
-      query.setStarBases( dataset.getStarBases() );
-      query.setPrimaryKeys( dataset.getPrimaryKeys() );
-      
-    }
-  }
+		String selection = combo.getText();
+		if (selection != "") {
+
+			boolean update = true;
+
+			if ( currentSeletion!=null 
+            && combo.getSelectedItem() != currentSeletion
+				    && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
+
+				int option =
+					JOptionPane.showConfirmDialog(
+						this,
+						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
+						"Change Attributes",
+						JOptionPane.YES_NO_OPTION);
+
+			 if (option != JOptionPane.OK_OPTION) {
+         update = false;
+         combo.removeChangeListener( this );
+         combo.setSelectedItem( currentSeletion );
+         combo.addChangeListener( this );
+			 }
+			}
+
+			if (update) {
+				// update the nodes label      
+				setNodeLabel(getName(), selection);
+
+				// set new value on query
+				Dataset dataset = getSelectedDataset();
+				query.setStarBases(dataset.getStarBases());
+				query.setPrimaryKeys(dataset.getPrimaryKeys());
+			}
+		}
+
+		currentSeletion = combo.getSelectedItem();
+	}
 
   
   public Dataset getSelectedDataset() {
