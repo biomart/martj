@@ -87,6 +87,9 @@ public class DatasetViewTree extends PopUpTreeCombo {
 				// if we are only showing default views.
 				if (!optional && !containsDefaultView(adaptor))
 					continue;
+        
+        if (adaptor.getDatasetViews().length==0 )
+          continue;
 
 				LabelledTreeNode adaptorNode =
 					new LabelledTreeNode(adaptor.getName(), null);
