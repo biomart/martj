@@ -19,7 +19,7 @@ import java.util.*;
 public class MartBuilder {
 	
 	
-	private static String config ="data/builder/kegg_connection.properties";
+	private static String config ="data/builder/connection.properties";
 	private static ArrayList schemas = new ArrayList();
 	private static TargetSchema target_schema = null;
 	
