@@ -29,7 +29,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
-import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -230,6 +229,8 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
     unassignPushOptions();
 
     removeFilterFromQuery( filter );
+
+    filter = null;
 
     filterValueToItem = resetList(list, options);
 

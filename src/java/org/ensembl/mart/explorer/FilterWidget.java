@@ -33,196 +33,215 @@ import org.ensembl.mart.lib.config.PushOptions;
  * Base class for FilterWidgets.
  */
 public abstract class FilterWidget
-  extends InputPage
-  implements PropertyChangeListener {
+	extends InputPage
+	implements PropertyChangeListener {
 
-  private final static Logger logger =
-    Logger.getLogger(FilterWidget.class.getName());
+	private final static Logger logger =
+		Logger.getLogger(FilterWidget.class.getName());
 
-  protected String fieldName;
+	protected String fieldName;
 
-  protected FilterGroupWidget filterGroupWidget;
+	protected FilterGroupWidget filterGroupWidget;
 
-  protected FilterDescription filterDescription;
+	protected FilterDescription filterDescription;
 
-  /**
-   * @param query
-   * @param name
-   */
-  public FilterWidget(
-    FilterGroupWidget filterGroupWidget,
-    Query query,
-    FilterDescription filterDescription) {
+	/**
+	 * @param query
+	 * @param name
+	 */
+	public FilterWidget(
+		FilterGroupWidget filterGroupWidget,
+		Query query,
+		FilterDescription filterDescription) {
 
-    super(query, filterDescription.getDisplayName());
-    this.filterDescription = filterDescription;
-    this.filterGroupWidget = filterGroupWidget;
-    this.fieldName = filterDescription.getField();
+		super(query, filterDescription.getDisplayName());
+		this.filterDescription = filterDescription;
+		this.filterGroupWidget = filterGroupWidget;
+		this.fieldName = filterDescription.getField();
 
-  }
+	}
 
-  /**
-   * @return
-   */
-  public FilterDescription getFilterDescription() {
-    return filterDescription;
-  }
+	/**
+	 * @return
+	 */
+	public FilterDescription getFilterDescription() {
+		return filterDescription;
+	}
 
-  /**
-     * Updates the filter(s) on the query. Removes oldFilter if set and
-     * adds newFilter if set.
-     * @param oldFilter
-     * @param newFilter
-     */
-  protected void updateQueryFilters(Filter oldFilter, Filter newFilter) {
+	/**
+	   * Updates the filter(s) on the query. Removes oldFilter if set and
+	   * adds newFilter if set.
+	   * @param oldFilter
+	   * @param newFilter
+	   */
+	protected void updateQueryFilters(Filter oldFilter, Filter newFilter) {
 
-    query.removePropertyChangeListener(this);
+		query.removePropertyChangeListener(this);
 
-    if (oldFilter != null && newFilter != null)
-      query.replaceFilter(oldFilter, newFilter);
-    else if (newFilter != null)
-      query.addFilter(newFilter);
-    else if (oldFilter != null)
-      query.removeFilter(oldFilter);
+		if (oldFilter != null && newFilter != null)
+			query.replaceFilter(oldFilter, newFilter);
+		else if (newFilter != null)
+			query.addFilter(newFilter);
+		else if (oldFilter != null)
+			query.removeFilter(oldFilter);
 
-    query.addPropertyChangeListener(this);
+		query.addPropertyChangeListener(this);
 
-  }
+	}
 
-  public abstract void setOptions(Option[] options);
+	public abstract void setOptions(Option[] options);
 
-  protected OptionWrapper emptySelection = new OptionWrapper(null);
+	protected OptionWrapper emptySelection = new OptionWrapper(null);
 
-  /**
-   * Holds an Option and returns option.getDisplayName() from
-   * toString(). This class is used to add Options to the
-   * combo box.
-   */
-  protected class OptionWrapper {
-    protected Option option;
+	/**
+	 * Holds an Option and returns option.getDisplayName() from
+	 * toString(). This class is used to add Options to the
+	 * combo box.
+	 */
+	protected class OptionWrapper {
+		protected Option option;
 
-    protected OptionWrapper(Option option) {
-      this.option = option;
-    }
+		protected OptionWrapper(Option option) {
+			this.option = option;
+		}
 
-    public String toString() {
-      return (option == null) ? "No Filter" : option.getDisplayName();
-    }
-  }
+		public String toString() {
+			return (option == null) ? "No Filter" : option.getDisplayName();
+		}
+	}
 
-  /**
-   * validates strings, checking if not null and not empty.
-   * @param s
-   * @return true if string is not null and not empty
-   */
-  public static final boolean isInvalid(String s) {
-    return s == null && "".equals(s);
-  }
+	/**
+	 * validates strings, checking if not null and not empty.
+	 * @param s
+	 * @return true if string is not null and not empty
+	 */
+	public static final boolean isInvalid(String s) {
+		return s == null && "".equals(s);
+	}
 
-  protected PushOptionsHandler[] pushOptionHandlers;
+	protected PushOptionsHandler[] pushOptionHandlers;
 
-  /**
-     * Removes all options from the push targets.
-     */
-  protected void unassignPushOptions() {
+	/**
+	   * Removes all options from the push targets.
+	   */
+	protected void unassignPushOptions() {
 
-    int n = (pushOptionHandlers == null) ? 0 : pushOptionHandlers.length;
-    for (int i = 0; i < n; i++)
-      pushOptionHandlers[i].remove();
+		int n = (pushOptionHandlers == null) ? 0 : pushOptionHandlers.length;
+		for (int i = 0; i < n; i++)
+			pushOptionHandlers[i].remove();
 
-  }
+	}
 
-  /**
-     * @param pushs
-     */
-  protected void assignPushOptions(PushOptions[] optionPushes) {
+	/**
+	   * @param pushs
+	   */
+	protected void assignPushOptions(PushOptions[] optionPushes) {
 
-    pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
+		pushOptionHandlers = new PushOptionsHandler[optionPushes.length];
 
-    for (int i = 0; i < optionPushes.length; i++) {
-      pushOptionHandlers[i] =
-        new PushOptionsHandler(optionPushes[i], filterGroupWidget);
-      pushOptionHandlers[i].push();
-      System.out.println( "Pushing options" + optionPushes[i]);
-    }
-  }
+		for (int i = 0; i < optionPushes.length; i++) {
+			pushOptionHandlers[i] =
+				new PushOptionsHandler(optionPushes[i], filterGroupWidget);
+			pushOptionHandlers[i].push();
+			//System.out.println( "Pushing options" + optionPushes[i]);
+		}
+	}
 
-  /**
-     * Responds to the removal or addition of relevant filters from the query. Updates the state of
-     * this widget by changing the currently selected item in the list.
-     * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-     */
-  public void propertyChange(PropertyChangeEvent evt) {
+	/**
+	   * Responds to the removal or addition of relevant filters from the query. Updates the state of
+	   * this widget by changing the currently selected item in the list.
+	   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+	   */
+	public void propertyChange(PropertyChangeEvent evt) {
 
-    if (evt.getSource() == query) {
+		if (evt.getSource() == query) {
 
-      if (evt.getPropertyName().equals("filter")) {
+			if (evt.getPropertyName().equals("filter")) {
 
-        Object oldValue = evt.getOldValue();
-        Filter f;
-        if (oldValue != null
-          && oldValue instanceof Filter
-          && (f = (Filter) oldValue).getField().equals(fieldName)) {
+				//				Object oldValue = evt.getOldValue();
+				//				
+				//				if (oldValue != null
+				//					&& oldValue instanceof Filter
+				//					&& (f = (Filter) oldValue).getField().equals(fieldName)) {
+				//
+				//					setFilter(null);
+				//				}
+				//
+				//				Object newValue = evt.getNewValue();
+				//				if (newValue != null
+				//					&& newValue instanceof Filter
+				//					&& (f = (Filter) newValue).getField().equals(fieldName)) {
+				//
+				//					System.out.println("filedName=>" + fieldName + "<" + f);
+				//					setFilter(f);
+				//				}
 
-          setFilter(null);
-        }
+				
+        Filter oldFilter = equivalentFilter( evt.getOldValue() );
+				if (oldFilter != null ) setFilter(null);
+				
 
-        Object newValue = evt.getNewValue();
-        if (newValue != null
-          && newValue instanceof Filter
-          && (f = (Filter) newValue).getField().equals(fieldName)) {
+				Filter newFilter = equivalentFilter( evt.getNewValue() );
+				if (newFilter != null ) setFilter( newFilter );
+				
 
-          setFilter(f);
-        }
-      }
-    }
+			}
+		}
 
-  }
+	}
 
-  protected abstract void setFilter(Filter filter);
+	protected final Filter equivalentFilter(Object possibleFilter) {
+		Filter filter = null;
+		if ( fieldName != null 
+      && !"".equals(fieldName)
+      && possibleFilter != null
+			&& possibleFilter instanceof Filter
+			&& (filter = (Filter) possibleFilter).getField().equals(fieldName)) {
+			return filter;
+		} else {
+			return null;
+		}
+	}
 
-  protected void removeFilterFromQuery(Filter filter) {
+	protected abstract void setFilter(Filter filter);
+	protected void removeFilterFromQuery(Filter filter) {
 
-    if (filter != null) {
+		if (filter != null) {
 
-      query.removePropertyChangeListener(this);
-      query.removeFilter(filter);
-      query.addPropertyChangeListener(this);
-      filter = null;
-      
-    }
-  }
+			query.removePropertyChangeListener(this);
+			query.removeFilter(filter);
+			query.addPropertyChangeListener(this);
+			filter = null;
+		}
+	} /**
+				 * BasicFilter containing an InputPage, this page is used by the QueryEditor
+				 * when it detects the filter has been added or removed from the query.
+				 */
+	static class InputPageAwareBasicFilter
+		extends BasicFilter
+		implements InputPageAware {
 
-  /**
-   * BasicFilter containing an InputPage, this page is used by the QueryEditor
-   * when it detects the filter has been added or removed from the query.
-   */
-  static class InputPageAwareBasicFilter
-    extends BasicFilter
-    implements InputPageAware {
-  
-    private InputPage inputPage;
-  
-    public InputPageAwareBasicFilter(
-      String field,
-      String condition,
-      String value,
-      InputPage inputPage) {
-      this(field, null, condition, value, inputPage);
-    }
-  
-    public InputPageAwareBasicFilter(
-      String field,
-      String tableConstraint,
-      String condition,
-      String value,
-      InputPage inputPage) {
-      super(field, tableConstraint, condition, value);
-      this.inputPage = inputPage;
-    }
-  
-    public InputPage getInputPage() {
-      return inputPage;
-    }
-  }
+		private InputPage inputPage;
+		public InputPageAwareBasicFilter(
+			String field,
+			String condition,
+			String value,
+			InputPage inputPage) {
+			this(field, null, condition, value, inputPage);
+		}
+
+		public InputPageAwareBasicFilter(
+			String field,
+			String tableConstraint,
+			String condition,
+			String value,
+			InputPage inputPage) {
+			super(field, tableConstraint, condition, value);
+			this.inputPage = inputPage;
+		}
+
+		public InputPage getInputPage() {
+			return inputPage;
+		}
+	}
 }

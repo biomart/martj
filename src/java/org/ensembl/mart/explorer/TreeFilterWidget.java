@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,284 +48,304 @@ import org.ensembl.mart.lib.config.FilterDescription;
  */
 public class TreeFilterWidget extends FilterWidget {
 
-  private JMenuItem nullItem;
+	private JMenuItem nullItem;
 
-  private Option nullOption;
+	private Option nullOption;
 
-  private Option lastSelectedOption;
+	private Option lastSelectedOption;
 
-  private Logger logger = Logger.getLogger(TreeFilterWidget.class.getName());
+	private Logger logger = Logger.getLogger(TreeFilterWidget.class.getName());
 
-  /** represent a "tree" of options. */
-  private JMenuBar treeMenu = new JMenuBar();
-  private JMenu treeTopOptions = null;
-  private JLabel label = null;
-  private JTextField currentSelectedText = new JTextField(30);
-  private JButton button = new JButton("change");
-  private String propertyName;
-  private Map optionToName = new HashMap();
-  private Map valueToOption = new HashMap();
-  private Option option = null;
-  private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
+	/** represent a "tree" of options. */
+	private JMenuBar treeMenu = new JMenuBar();
+	private JMenu treeTopOptions = null;
+	private JLabel label = null;
+	private JTextField currentSelectedText = new JTextField(30);
+	private JButton button = new JButton("change");
+	private String propertyName;
+	private Map optionToName = new HashMap();
+	private Map valueToOption = new HashMap();
+	private Option option = null;
+	private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
-  private Filter filter = null;
+	private Filter filter = null;
 
-  /**
-   * 
-   * @param query
-   * @param filterDescription
-   */
-  public TreeFilterWidget(
-    FilterGroupWidget filterGroupWidget,
-    Query query,
-    FilterDescription filterDescription) {
-    super(filterGroupWidget, query, filterDescription);
+	/**
+	 * 
+	 * @param query
+	 * @param filterDescription
+	 */
+	public TreeFilterWidget(
+		FilterGroupWidget filterGroupWidget,
+		Query query,
+		FilterDescription filterDescription) {
+		super(filterGroupWidget, query, filterDescription);
 
-    try {
-      nullOption = new Option("None", true);
-      nullItem = new JMenuItem(nullOption.getInternalName());
-    } catch (ConfigurationException e) {
-      // shouldn't happen
-      e.printStackTrace();
-    }
-
-    // default property name.
-    this.propertyName = filterDescription.getInternalName();
-
-    label = new JLabel(filterDescription.getDisplayName());
-    currentSelectedText.setEditable(false);
-    currentSelectedText.setMaximumSize(new Dimension(400, 27));
-
-    button.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        showTree();
-      }
-    });
-
-    // make the menu appear beneath the row of components 
-    // containing the label, textField and button when displayed.
-    treeMenu.setMaximumSize(new Dimension(0, 100));
-    setOptions(filterDescription.getOptions());
-
-    Box box = Box.createHorizontalBox();
-    box.add(treeMenu);
-    box.add(label);
-    box.add(Box.createHorizontalStrut(5));
-    box.add(button);
-    box.add(Box.createHorizontalStrut(5));
-    box.add(currentSelectedText);
-
-    setLayout(new BorderLayout());
-    add(box, BorderLayout.NORTH);
-
-  }
-
-  /**
-   * Recursively add menus of menu items and submenus made up of options of options.
-   * @param menu
-   * @param options
-   */
-  private void addOptions(JMenu menu, Option[] options, String baseName) {
-
-    for (int i = 0, n = options.length; i < n; i++) {
-
-      final Option option = options[i];
-
-      if (option.getOptions().length == 0) {
-
-        // add menu item
-        JMenuItem item = new JMenuItem(option.getDisplayName());
-        menu.add(item);
-        item.addActionListener(new ActionListener() {
+		try {
+			nullOption = new Option("No Filter", true);
+		} catch (ConfigurationException e) {
+			// shouldn't happen
+			e.printStackTrace();
+		}
+    nullItem = new JMenuItem(nullOption.getInternalName());
+    nullItem.addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent event) {
-            selectOption(option);
+            selectOption( nullOption);
           }
         });
 
-        optionToName.put(option, baseName + " " + option.getDisplayName());
-        valueToOption.put(option.getValue(), option);
+		// default property name.
+		this.propertyName = filterDescription.getInternalName();
 
-      } else {
+		label = new JLabel(filterDescription.getDisplayName());
+		currentSelectedText.setEditable(false);
+		currentSelectedText.setMaximumSize(new Dimension(400, 27));
+    
 
-        // Add sub menu
-        String name = option.getDisplayName();
-        JMenu subMenu = new JMenu(name);
-        menu.add(subMenu);
-        addOptions(subMenu, option.getOptions(), baseName + " " + name);
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				showTree();
+			}
+		});
 
-      }
-    }
+		// make the menu appear beneath the row of components 
+		// containing the label, textField and button when displayed.
+		treeMenu.setMaximumSize(new Dimension(0, 100));
+		setOptions(filterDescription.getOptions());
 
-  }
+		Box box = Box.createHorizontalBox();
+		box.add(treeMenu);
+		box.add(label);
+		box.add(Box.createHorizontalStrut(5));
+		box.add(button);
+		box.add(Box.createHorizontalStrut(5));
+		box.add(currentSelectedText);
 
-  /**
-   * Sets the currentlySelectedText and node label based on
-   * the option. If option is null these values are cleared.
-   * @param option
-   */
-  private void updateDisplay(Option option) {
-    String name = (option == null) ? null : (String) optionToName.get(option);
-    currentSelectedText.setText(name);
-    setNodeLabel(null, name);
-  }
+		setLayout(new BorderLayout());
+		add(box, BorderLayout.NORTH);
 
-  /**
-   * 
-   * @return selected option if one is selected, otherwise null.
-   */
-  public Option getOption() {
-    return option;
-  }
+    option = nullOption;
+    lastSelectedOption = option;
 
-  /**
-   * Used for "DatasetSelectionPage"
-   * @param currentDatasetName
-   */
-  public void setOption(Option option) {
-    this.option = option;
-    currentSelectedText.setText((String) optionToName.get(option));
-  }
+	}
 
-  /**
-   * Default value is filterDescription.getInternalName().
-   * @return propertyName included in PropertyChangeEvents.
-   */
-  public String getPropertyName() {
-    return propertyName;
-  }
+	/**
+	 * Adds menu items and submenus to menu based on contents of _options_. A submenu is added 
+   * when an option contains
+   * sub options. If an option has no sub options it is added as a leaf node. This method calls
+   * itself recursively to build up the menu tree.
+	 * @param menu menu to add options to
+	 * @param options options to be added, method does nothing if null.
+   * @param prefix prepended to option.getDisplayName() to create internal name for menu item 
+   * created for each option.
+	 */
+	private void addOptions(JMenu menu, Option[] options, String prefix) {
 
-  /**
-   * Set the propertyName to some specific value.
-   * @param string
-   */
-  public void setPropertyName(String string) {
-    propertyName = string;
-  }
+		for (int i = 0; options != null && i < options.length; i++) {
 
-  /* (non-Javadoc)
-   * @see javax.swing.JComponent#addPropertyChangeListener(java.beans.PropertyChangeListener)
-   */
-  public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
-    changeSupport.addPropertyChangeListener(listener);
-  }
+			final Option option = options[i];
 
-  /* (non-Javadoc)
-   * @see javax.swing.JComponent#removePropertyChangeListener(java.beans.PropertyChangeListener)
-   */
-  public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
-    changeSupport.removePropertyChangeListener(listener);
-  }
+			if (option.getOptions().length == 0) {
 
-  /* (non-Javadoc)
-   * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
-   */
-  public void setOptions(Option[] options) {
+				// add menu item
+				JMenuItem item = new JMenuItem(option.getDisplayName());
+				menu.add(item);
+				item.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent event) {
+						selectOption(option);
+					}
+				});
 
-    setFilter(null);
-    if (filter != null)
-      removeFilterFromQuery(filter);
+				optionToName.put(option, prefix + " " + option.getDisplayName());
+				valueToOption.put(option.getValue(), option);
 
-    // reset the maps so we can can find things later
-    optionToName.clear();
-    valueToOption.clear();
+			} else {
 
-    treeMenu.removeAll();
+				// Add sub menu
+				String name = option.getDisplayName();
+				JMenu subMenu = new JMenu(name);
+				menu.add(subMenu);
+				addOptions(subMenu, option.getOptions(), prefix + " " + name);
 
-    treeTopOptions = new JMenu();
-    treeMenu.add(treeTopOptions);
+			}
+		}
 
-    //  add the nullItem to the top of the list, user selects this to clear
-    // choice.
-    treeTopOptions.add(nullItem);
-    optionToName.put(nullOption, nullItem);
-    valueToOption.put(nullOption.getValue(), nullOption);
+	}
 
-    addOptions(treeTopOptions, filterDescription.getOptions(), "");
-  }
+	/**
+	 * Sets the currentlySelectedText and node label based on
+	 * the option. If option is null these values are cleared.
+	 * @param option
+	 */
+	private void updateDisplay(Option option) {
+		String name = "";
+    if (option!=null && option != nullOption ) name = (String) optionToName.get(option);
+		currentSelectedText.setText(name);
+		setNodeLabel(null, name);
+	}
 
-  private void showTree() {
-    treeTopOptions.doClick();
-  }
+	/**
+	 * 
+	 * @return selected option if one is selected, otherwise null.
+	 */
+	public Option getOption() {
+		return option;
+	}
 
-  /**
-   * Causes the appropriate item in the tree to be selected and any relevant
-   * PushOptions to be assigned. If filter is null then "No Filter" is selected
-   * and and PushOptions are unassigned.
-   * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
-   */
-  protected void setFilter(Filter filter) {
-    this.filter = filter;
+	/**
+	 * Used for "DatasetSelectionPage"
+	 * @param currentDatasetName
+	 */
+	public void setOption(Option option) {
+		this.option = option;
+		currentSelectedText.setText((String) optionToName.get(option));
+	}
 
-    if (filter == null) {
+	/**
+	 * Default value is filterDescription.getInternalName().
+	 * @return propertyName included in PropertyChangeEvents.
+	 */
+	public String getPropertyName() {
+		return propertyName;
+	}
 
-      updateDisplay(null);
-      unassignPushOptions();
+	/**
+	 * Set the propertyName to some specific value.
+	 * @param string
+	 */
+	public void setPropertyName(String string) {
+		propertyName = string;
+	}
 
-    } else {
+	/* (non-Javadoc)
+	 * @see javax.swing.JComponent#addPropertyChangeListener(java.beans.PropertyChangeListener)
+	 */
+	public synchronized void addPropertyChangeListener(PropertyChangeListener listener) {
+		changeSupport.addPropertyChangeListener(listener);
+	}
 
-      Option option = (Option) valueToOption.get(filter.getValue());
-      updateDisplay(option);
-      assignPushOptions(option.getPushOptions());
+	/* (non-Javadoc)
+	 * @see javax.swing.JComponent#removePropertyChangeListener(java.beans.PropertyChangeListener)
+	 */
+	public synchronized void removePropertyChangeListener(PropertyChangeListener listener) {
+		changeSupport.removePropertyChangeListener(listener);
+	}
 
-    }
-  }
+	/* (non-Javadoc)
+	 * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
+	 */
+	public void setOptions(Option[] options) {
 
-  private void selectOption(Option option) {
+		if (filter != null)
+			removeFilterFromQuery(filter);
 
-    updateDisplay(option);
+		setFilter(null);
 
-    Option old = this.option;
-    this.option = option;
-    changeSupport.firePropertyChange(getPropertyName(), old, option);
+		// reset the maps so we can can find things later
+		optionToName.clear();
+		valueToOption.clear();
 
-    //    unassignPushOptions();
-    //    assignPushOptions( option.getPushOptions() );
-    //    
-    //    if ( filter!=null ) removeFilterFromQuery( filter );   
+		treeMenu.removeAll();
 
-    // TODO create filter and add it to query
+		treeTopOptions = new JMenu();
+		treeMenu.add(treeTopOptions);
+
+		//  add the nullItem to the top of the list, user selects this to clear
+		// choice.
+		treeTopOptions.add(nullItem);
+		optionToName.put(nullOption, nullItem.getText());
+		valueToOption.put(nullOption.getValue(), nullOption);
+		
+
+		addOptions(treeTopOptions, options, "");
+	}
+
+	private void showTree() {
+		treeTopOptions.doClick();
+	}
+
+	/**
+	 * Sets filter and also causes the appropriate item in the tree to be selected and any relevant
+	 * PushOptions to be assigned. If filter is null then "No Filter" is selected
+	 * and and PushOptions are unassigned.
+	 * @see org.ensembl.mart.explorer.FilterWidget#setFilter(org.ensembl.mart.lib.Filter)
+	 */
+	protected void setFilter(Filter filter) {
+		this.filter = filter;
+
+		if (filter == null) {
+
+			updateDisplay(null);
+			unassignPushOptions();
+
+		} else {
+
+			Option option = (Option) valueToOption.get(filter.getValue());
+			updateDisplay(option);
+			assignPushOptions(option.getPushOptions());
+
+		}
+	}
+
+	private void selectOption(Option option) {
 
     if (option == lastSelectedOption)
       return;
+      
+    updateDisplay(option);
 
-    unassignPushOptions();
+		Option old = this.option;
+		this.option = option;
+		changeSupport.firePropertyChange(getPropertyName(), old, option);
 
-    Filter oldFilter = filter;
+		//    unassignPushOptions();
+		//    assignPushOptions( option.getPushOptions() );
+		//    
+		//    if ( filter!=null ) removeFilterFromQuery( filter );   
 
-    if (option == nullOption) {
+		// TODO create filter and add it to query
 
-      filter = null;
 
-    } else {
 
-      String value = null;
-      if (option != null) {
-        String tmp = option.getValue();
-        if (tmp != null && !"".equals(tmp)) {
-          value = tmp;
-        }
+		unassignPushOptions();
 
-        if (value != null) {
+		Filter oldFilter = filter;
 
-          filter =
-            new InputPageAwareBasicFilter(
-              filterDescription.getField(),
-              option.getTableConstraint(),
-              "=",
-              value,
-              this);
-        }
+		if (option == nullOption) {
 
-        setNodeLabel(  fieldName, option.getDisplayName() );
+			removeFilterFromQuery(filter);
+			filter = null;
 
-        assignPushOptions(option.getPushOptions());
-      }
-    }
+		} else {
 
-    lastSelectedOption = option;
-    // query=null when used for dataset so must precheck
-    if (query != null)
-      updateQueryFilters(oldFilter, filter);
+			String value = null;
+			if (option != null) {
+				String tmp = option.getValue();
+				if (tmp != null && !"".equals(tmp)) {
+					value = tmp;
+				}
 
-  }
+				if (value != null) {
+
+					filter =
+						new InputPageAwareBasicFilter(
+							filterDescription.getField(),
+							option.getTableConstraint(),
+							"=",
+							value,
+							this);
+				}
+
+				setNodeLabel(fieldName, option.getDisplayName());
+
+				assignPushOptions(option.getPushOptions());
+			}
+		}
+
+		lastSelectedOption = option;
+		// query=null when used for dataset so must precheck
+		if (query != null)
+			updateQueryFilters(oldFilter, filter);
+
+	}
 }
