@@ -28,9 +28,9 @@ import java.util.List;
  * logic outside of the simple main/dimension table SQL where clauses that most 
  * filters work with.  For this reason, a DomainSpecificFilterHandler system
  * has been implimented to allow mart developers to create objects implimenting
- * this interface to resolve Complex filters into simple Query Filters.  The objectCode
+ * this interface to resolve Complex filters into simple Query Filters.  The handler
  * for a DomainSpecificFilter must match an enum of one of the DomainSpecificFilterHandler 
- * implimenting objects available.  The handlerParameter is then passed as a string to the 
+ * implimenting objects available.  The cludgyParameter is then passed as a string to the 
  * DomainSpecificFilterHandler modifyQuery method to provide the information it needs.
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -50,12 +50,12 @@ public class DomainSpecificFilter {
 	/**
 	 * Constructor for a DomainSpecificFilter object
 	 * 
-	 * @param objectCode - String referencing a specific DomainSpecificFilterHandler implimenting object enum
-	 * @param handlerParameter - String parameter to pass to the DomainSpecificFilterHandler objects modifyQuery method.
+	 * @param handler - name of handler class which handles this filter (or currently a key to built in types).
+	 * @param cludgyParameter - Encodes fieldname and value in a really cludgy way. To be changed!
 	 */
 	public DomainSpecificFilter(String objectCode, String handlerParameter) {
-		this.objectCode = objectCode;
-		this.handlerParameter = handlerParameter;
+		this.handler = objectCode;
+		this.cludgyParameter = handlerParameter;
     
     hashcode = handlerParameter.hashCode();
     hashcode = (31 * hashcode) + objectCode.hashCode();
@@ -66,37 +66,37 @@ public class DomainSpecificFilter {
    * @param o - a DomainSpecificFilter object to copy
    */
   public DomainSpecificFilter(DomainSpecificFilter o) {
-  	objectCode = o.getObjectCode();
-  	handlerParameter = o.getHandlerParameter();
+  	handler = o.getHandler();
+  	cludgyParameter = o.getCludgyParameter();
     
-    hashcode = handlerParameter.hashCode();
-    hashcode = (31 * hashcode) + objectCode.hashCode();
+    hashcode = cludgyParameter.hashCode();
+    hashcode = (31 * hashcode) + handler.hashCode();
   }
   
 	/**
-	 * Returns the handlerParameter.
+	 * Returns the cludgyParameter.
 	 * 
-	 * @return String handlerParameter
+	 * @return String cludgyParameter
 	 */
-	public String getHandlerParameter() {
-		return handlerParameter;
+	public String getCludgyParameter() {
+		return cludgyParameter;
 	}
 
 	/**
-	 * Returns the objectCode.
+	 * Returns the handler.
 	 * 
-	 * @return String objectCode
+	 * @return String handler
 	 */
-	public String getObjectCode() {
-		return objectCode;
+	public String getHandler() {
+		return handler;
 	}
 	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append("objectCode=").append(objectCode);
-		buf.append(", handlerParam=").append(handlerParameter);
+		buf.append("handler=").append(handler);
+		buf.append(", handlerParam=").append(cludgyParameter);
 		buf.append("]");
 
 		return buf.toString();
@@ -116,6 +116,7 @@ public class DomainSpecificFilter {
 		return hashcode;
 	}
 
-  private final String handlerParameter, objectCode;
+  private final String cludgyParameter;
+  private final String handler;
   private int hashcode = 0; //hashcode for immutable object
 }
