@@ -28,6 +28,13 @@ public abstract class Base extends TestCase {
 	private final static String connprops = "data/testconnection.conf";
 	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
 
+  private final String DEFAULTDBTYPE = "mysql";
+  private final String DEFAULTHOST = "kaka.sanger.ac.uk";
+  private final String DEFAULTPORT = "3306";
+  private final String DEFAULTDATABASE = "ensembl_mart_15_1";
+  private final String DEFAULTUSER = "anonymous";
+  
+  private String databaseType = null; // default, override in testconnection.conf
 	private String host = null;
   private String port = null;
   private String databaseName = null;
@@ -49,11 +56,22 @@ public abstract class Base extends TestCase {
 			try {
 				p.load(connectionconf.openStream());
 
-				host = p.getProperty("mysqlhost");
-        port = p.getProperty("mysqlport");
-        databaseName = p.getProperty("mysqldatabase");
-				user = p.getProperty("mysqluser");
-				password = p.getProperty("mysqlpass");
+        String tmp = p.getProperty("databaseType");
+				databaseType = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTDBTYPE;
+				
+				tmp = p.getProperty("host");
+				host = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTHOST;
+				
+        tmp = p.getProperty("port");
+				port = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTPORT;
+				
+        tmp = p.getProperty("databaseName");
+				databaseName = (tmp != null && tmp.length() > 1) ? tmp : DEFAULTDATABASE;
+				
+				tmp = p.getProperty("user");
+				user =  (tmp != null && tmp.length() > 1) ? tmp : DEFAULTUSER;
+				
+				password = p.getProperty("password");
 			} catch (java.io.IOException e) {
 				System.out.println(
 					"Caught IOException when trying to open connection configuration file " + connprops + "\n" + e + "\n\nusing default connection parameters");
@@ -61,9 +79,10 @@ public abstract class Base extends TestCase {
 		} else {
 			System.out.println("Failed to find connection configuration file " + connprops + " using default connection parameters");
 
-			host = "kaka.sanger.ac.uk";
-      databaseName = "ensembl_mart_15_1";
-			user = "anonymous";
+      databaseType = DEFAULTDBTYPE;
+			host = DEFAULTHOST;
+      databaseName = DEFAULTDATABASE;
+			user = DEFAULTUSER;
 		}
 
 		try {
@@ -77,7 +96,7 @@ public abstract class Base extends TestCase {
 	public void setUp() throws SQLException {
 		init();
 
-		engine = new Engine( "mysql", host, port, databaseName, user, password);
+		engine = new Engine( databaseType, host, port, databaseName, user, password);
     genequery.setStarBases(new String[] { "hsapiens_ensemblgene", "hsapiens_ensembltranscript" });
 		genequery.setPrimaryKeys(new String[] { "gene_id", "transcript_id" });
 		snpquery.setStarBases(new String[] { "hsapiens_snp" });
