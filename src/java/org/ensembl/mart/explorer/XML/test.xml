@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE MartConfiguration SYSTEM "MartConfiguration.dtd" >
+
+<MartConfiguration internalName="ensembl_mart_14_1"
+                   displayName="Ensembl Mart version 14.1"
+                   description="First Mart Created from version 14 Ensembl Datasources">
+
+  <Dataset  internalName="test_dataset"
+  	        displayName="Test of a Dataset"
+            description="For Testing Purposes Only">
+ 
+       <StarBase>test_starbase</StarBase>
+       
+       <PrimaryKey>test_primaryKey</PrimaryKey>
+       
+       <FilterPage internalName="testFilterPage"
+       	           displayName="Test A Filter Page"
+       	           description="For Testing Purposes Only">
+
+	       <FilterGroup internalName="testFilterGroup" 
+                        displayName="Test A FilterGroup:" 
+                        description="For Testing Purposes Only">
+
+  	             <FilterSet internalName="testFilterSet" displayName="Test of a Filter Set" description="For Testing Purposes Only" type="radio">
+
+	               <FilterSetDescription internalName="testFilterSetDescription" displayName="Test of a FilterSetDescription" description="For Testing Purposes Only" tableConstraintModifier="ensemblgene" fieldNameModifier="ensembl"/>
+
+	             </FilterSet>
+
+		     <FilterCollection internalName="testFilterCollection" displayName="Test of a FilterCollection" description="For Testing Purposes Only" type="list">
+
+		       <UIFilterDescription internalName="testUIFilterDescription" 
+                                    displayName="A TEST ID, DOESNT EXIST"
+                                    description="For Testing Purposes Only"
+                                    type="list" 
+                                    fieldName="test_id"
+                                    qualifier="in" 
+                                    tableConstraint="gene_main"/>
+
+		     </FilterCollection>
+
+	             <FilterCollection internalName="testFilterSetCollection" displayName="A TEST OF FILTER SETS" description="For Testing Purposes Only" filterSetName="testFilterSet" type="list">
+
+	               <UIFilterDescription internalName="filterSetUIFilterDescriptionField" displayName="A TEST FIELD MODIFIER" description="For Testing Purposes Only" type="list" fieldName="syn_exclusive" qualifier="in" filterSetReq="1" tableConstraint="gene_main"/>
+
+ 	               <UIFilterDescription internalName="filterSetUIFilterDescriptionTable" displayName="A TEST TABLE MODIFIER" description="For Testing Purposes Only" type="list" fieldName="gene_stable_id_v" qualifier="in" filterSetReq="2" tableConstraint="_dm"/>
+
+	            </FilterCollection>
+
+	       </FilterGroup>
+
+       </FilterPage>
+       
+       <AttributePage internalName="testAttributePage"
+       	              displayName="Test of an Attribute Page"
+       	              description="For Testing Purposes Only">
+
+	        <AttributeGroup internalName="testAttributeGroup" 
+                            displayName="test of an Attribute Group:" 
+                            description="For Testing Purposes Only">
+
+		      <AttributeCollection internalName="testAttributeCollection" 
+                                   displayName="Test of an AttributeCollection:" 
+                                   description="For Testing Purposes Only"
+                                   maxSelect="1">
+
+		         <UIAttributeDescription internalName="testUIAttributeDescription"
+                                         displayName="Test of a UIAttributeDescription" 
+                                         description="For Testing Purposes Only"
+                                         fieldName="test_id" 
+                                         tableConstraint="gene_main" 
+                                         maxLength="1"
+                                         source="test source"
+                                         homepageURL="http://test.org"
+                                         linkoutURL="http://test.org?test"/>
+
+		      </AttributeCollection>
+
+            </AttributeGroup>
+       	    
+       	</AttributePage>
+
+   </Dataset>
+
+</MartConfiguration>
