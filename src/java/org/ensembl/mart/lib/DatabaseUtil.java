@@ -12,6 +12,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -23,11 +24,23 @@ import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ewin.javax.sql.DefaultPoolingAlgorithm;
 import org.ewin.javax.sql.DriverManagerDataSource;
 import org.ewin.javax.sql.PoolingAlgorithmDataSource;
+import org.ewin.common.util.Log;
 
 /**
  * Utility class for working with JDBC databases.
  */
 public class DatabaseUtil {
+
+  static {
+    // Configure Ewin logging - remove all defined loggers
+    Iterator ewinLoggers = Log.loggers();
+    while (ewinLoggers.hasNext()) {
+      Log.removeLogger((Log.Logger) ewinLoggers.next());
+    }
+  }
+
+
+
   /**
    * Default settings for DataSource creation parameters
    */
