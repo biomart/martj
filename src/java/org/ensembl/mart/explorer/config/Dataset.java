@@ -406,53 +406,39 @@ public class Dataset {
 	/**
 	 * Convenience method for non graphical UIs.
 	 * Returns the FilterPage containing a specific UIFilterDescription, named by internalName
+	 * Note, if a UIFlilterDescription is contained within multiple FilterPages, this
+	 * will return the first FilterPage that contains the requested UIFilterDescription.
 	 * 
 	 * @param internalName -- String name of the FilterPage containing the requested UIFilterDescription
 	 * 
 	 * @return FilterPage object containing the requested UIFilterDescription
 	 */
 	public FilterPage getPageForUIFilterDescription(String internalName) {
-	  boolean found = false;
-		FilterPage page = null;
-		
 		for (Iterator iter = (Iterator) filterPages.keySet().iterator();iter.hasNext();) {
-			page = (FilterPage) filterPages.get((Integer) iter.next());
+			FilterPage page = (FilterPage) filterPages.get((Integer) iter.next());
 			
-			if (page.containsUIFilterDescription(internalName)) {
-				found = true;
-				break;
-			}
+			if (page.containsUIFilterDescription(internalName))
+        return page;
 		}
-		
-		if (found)
-		  return page;
-		else
-		  return null;
+		return null;
 	}
 
 /**
  * Returns the AttributePage containing a specific UIAttributeDescription named by internalName.
+ * Note, if a UIAttributeDescription is contained in multiple AttributePages, this will
+ * return the first AttributePage that contains the requested UIAttributeDescription.
  * 
  * @param internalName -- String internalName of the requested UIAttributeDescription
  * @return AttributePage containing requested UIAttributeDescription
  */
   public AttributePage getPageForUIAttributeDescription(String internalName) {
-    boolean found = false;
-    AttributePage page = null;
-    
-    for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
-      page = (AttributePage) attributePages.get( (Integer) iter.next());
+     for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
+      AttributePage page = (AttributePage) attributePages.get( (Integer) iter.next());
       
-      if (page.containsUIAttributeDescription(internalName)) {
-      	found = true;
-      	break;
-      }
+      if (page.containsUIAttributeDescription(internalName))
+      	return page;
     }
-    
-    if (found)
-      return page;
-    else
-      return null;
+    return null;
   }
   
 	/**
