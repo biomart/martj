@@ -960,9 +960,9 @@ public class MartShellLib {
     if (adaptor instanceof CompositeDSConfigAdaptor) {
       DSConfigAdaptor[] adaptors = adaptor.getLeafAdaptors();
 
-      //recursively harvest until adaptor is not a CompositeDSConfigAdaptor
+      //returns all leaf adaptors (DatabaseDSConfigAdaptor, URLDSConfigAdaptor) from a CompositeDSViewAdaptor
       for (int i = 0, n = adaptors.length; i < n; i++)
-        harvestAdaptorsFrom(adaptors[i]);
+        adaptorManager.add(adaptors[i]);
     } else
       adaptorManager.add(adaptor);
   }
