@@ -147,39 +147,41 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
   }
 
   /**
-   * Update query when text filter change. Adds filter to query
-   * when text entered first time, changes filter if text changed, 
-   * removes filter if text cleared.
-   * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+   * Update query when user presses enter in this text widget. If this filter currently
+   * has a filter which is in the query that is removed. If the text field is not empty then
+   * a new filter is added to query using this value.
    */
   public void actionPerformed(ActionEvent e) {
 
+    if (filter != null)
+      query.removeFilter(filter);
+    filter = null;
+      
     String value = textField.getText();
 
     // remove filter
-    if (value == null || "".equals(value))
-      setFilter(null);
-    else
-      setFilter(
+    if (value != null && !"".equals(value)) {
+
+      filter =
         new BasicFilter(
           filterDescription.getField(),
           filterDescription.getTableConstraint(),
           filterDescription.getLegalQualifiers(),
-          value));
-
+          value);
+      query.addFilter(filter);
+    }
   }
 
-  protected void setFilter(Filter filter) {
-
-    if (this.filter != null)
-      query.removeFilter(this.filter);
+  /**
+   * Callback method used to update this widget if a relevant filter is added.
+   */
+  public void setFilter(Filter filter) {
 
     this.filter = filter;
-
-    if (filter != null)
-      query.addFilter(filter);
-
+    if (filter==null) textField.setText( "" );
+    else textField.setText( filter.getValue() );
   }
+
   /**
    * Does nothing.
    * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
