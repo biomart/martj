@@ -51,4 +51,4 @@ case "$PLATFORM" in
   ;;
 esac
 
-LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell -Mdata/exampleDotMartShellURL $@
+LD_LIBRARY_PATH=$TMP_LD_LIBPATH java -ea -classpath ${TMP_CLASSPATH} org.ensembl.mart.shell.MartShell -Mdata/exampleDotMartShellURL $@

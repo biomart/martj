@@ -27,4 +27,4 @@ SET com=%com% %test%
 GOTO ARGUMENT
 
 :PROCESS
-java -cp %TMP_CLASSPATH% %com%
+java -ea -cp %TMP_CLASSPATH% %com%

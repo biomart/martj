@@ -25,4 +25,4 @@ SET com=%com% %test%
 GOTO ARGUMENT
 
 :PROCESS
-..\jre\windows\bin\java -cp %TMP_CLASSPATH% %com%
+..\jre\windows\bin\java -ea -cp %TMP_CLASSPATH% %com%

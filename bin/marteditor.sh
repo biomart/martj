@@ -23,7 +23,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/martj.jar
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-java -cp $TMP_CLASSPATH org.ensembl.mart.vieweditor.MartViewEditor $@
+java -ea -cp $TMP_CLASSPATH org.ensembl.mart.vieweditor.MartViewEditor $@
 
 
 
