@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE DatasetView SYSTEM "classpath:data/XML/DatasetView.dtd">
-<DatasetView dataset="homo_sapiens_ensembl_genes" description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Ensembl Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
+<DatasetView dataset="ensembl_genes_homo_sapiens" description="Ensembl Mart Dataset comprised of the Ensembl Core Data" displayName="Ensembl Genes__Homo sapiens (NCBI 34 dbSNP 117)" internalName="default">
   <StarBase>hsapiens_ensemblgene</StarBase>
   <StarBase>hsapiens_ensembltranscript</StarBase>
   <PrimaryKey>gene_id</PrimaryKey>
