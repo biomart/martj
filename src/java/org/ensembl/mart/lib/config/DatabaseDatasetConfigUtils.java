@@ -1932,7 +1932,7 @@ public class DatabaseDatasetConfigUtils {
       conn.close();
 
       if (!(fieldValid) || !(tableValid)) {
-        System.out.println("CHNAGING OPTION\t" + validatedOption);
+        //System.out.println("CHNAGING OPTION\t" + validatedOption);
         validatedOption.setHidden("true");
 
       } else if (validatedOption.getHidden() != null && validatedOption.getHidden().equals("true")) {
@@ -2315,7 +2315,7 @@ public class DatabaseDatasetConfigUtils {
 
     if (dsource.getDatabaseType().equals("oracle:thin")) {
 
-      System.out.println("database type: " + dsource.getDatabaseType());
+      //System.out.println("database type: " + dsource.getDatabaseType());
 
       ResultSet rsSch = dmd.getSchemas();
       while (rsSch.next()) {
@@ -2335,7 +2335,7 @@ public class DatabaseDatasetConfigUtils {
         while (rsTab.next()) {
           String tableName = rsTab.getString(3);
           //NN
-          System.out.println(tableName);
+          //System.out.println(tableName);
 
           if (!potentials.contains(tableName))
             potentials.add(tableName);
@@ -2623,7 +2623,7 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = starbases.size(); i < n; i++) {
       String tableName = (String) starbases.get(i);
-      System.out.println("getting table name "+tableName);
+      //System.out.println("getting table name "+tableName);
       TableDescription table = getTableDescriptionFor(databaseName, tableName);
 
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
@@ -2664,9 +2664,9 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
-      System.out.println ("Second time tablename "+ tableName);
+      //System.out.println ("Second time tablename "+ tableName);
       String content = null;
-
+      String fullTableName = tableName;
       String[] tableTokenizer = tableName.split("__");
       content = tableTokenizer[1];
 
@@ -2725,13 +2725,13 @@ public class DatabaseDatasetConfigUtils {
           logger.fine(tableName + ": " + cname + "-- type : " + ctype + "\n");
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
-System.out.println ("tableName before AllNULL "+tableName);
-          //if (isAllNull(cname, tableName))
-           // continue;
+//System.out.println ("tableName before AllNULL "+tableName);
+          if (isAllNull(cname, fullTableName))
+            continue;
 
           if (isMainTable(tableName)) {
             tableName = "main";
-             System.out.println("Resetting table name to: "+ tableName);
+             //System.out.println("Resetting table name to: "+ tableName);
 
             allCols.add(cname);
             if (!cname.endsWith("_bool"))
@@ -2864,7 +2864,7 @@ System.out.println ("tableName before AllNULL "+tableName);
     for (int i = 0, n = allTables.size(); i < n; i++) {
       String tableName = (String) allTables.get(i);
       String content = null;
-
+      String fullTableName = tableName;
       String[] tableTokenizer = tableName.split("__");
       content = tableTokenizer[1];
 
@@ -2922,7 +2922,7 @@ System.out.println ("tableName before AllNULL "+tableName);
 
         if (isMainTable(tableName) || isDimensionTable(tableName)) {
 
-          if (isAllNull(cname, tableName))
+          if (isAllNull(cname, fullTableName))
             continue;
 
           if (isMainTable(tableName)) {
@@ -3167,7 +3167,7 @@ System.out.println ("tableName before AllNULL "+tableName);
       pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName));
 
       if (pa.getOptions().length > 0) {
-        System.out.println("ADDING PA\t" + op.getInternalName());
+        //System.out.println("ADDING PA\t" + op.getInternalName());
         op.addPushAction(pa);
       }
     }
@@ -3352,7 +3352,7 @@ System.out.println ("tableName before AllNULL "+tableName);
       conn = dsource.getConnection();
 
       String sql = "SELECT " + cname + " FROM " + tableName + " WHERE " + cname + " IS NOT NULL LIMIT 1";
-      System.out.println("Offending SQL: "+ sql);
+      //System.out.println("Offending SQL: "+ sql);
       PreparedStatement ps = conn.prepareStatement(sql);
       ResultSet rs = ps.executeQuery();
 
@@ -3364,7 +3364,7 @@ System.out.println ("tableName before AllNULL "+tableName);
         conn.close();
         return false;
       } else {
-        System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
+        //System.out.println("ALL NULLS\t" + cname + "\t" + tableName);
         rs.close();
         conn.close();
         return true;
