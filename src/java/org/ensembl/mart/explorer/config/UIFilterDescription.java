@@ -27,11 +27,11 @@ package org.ensembl.mart.explorer.config;
  */
 public class UIFilterDescription {
 
-	/*
-	 * UIFilterDescriptions require a internalName, fieldName, type, and qualifier.  disable parameterless constructor
+	/**
+	 * This will throw a ConfigurationException.
 	 */
-	private UIFilterDescription() throws ConfigurationException {
-		this("", "", "", "", "", "", ""); // this will never happen
+	public UIFilterDescription() throws ConfigurationException {
+		this("", "", "", "", "", "", 0, "");
 	}
 
 /**
@@ -41,10 +41,10 @@ public class UIFilterDescription {
  * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
  * @param type String type of filter.  Must not be null or empty.
  * @param qualifier String qualifier to use in a SQL where clause.
- * @throws ConfigurationException when required values are null or empty.
+ * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
  */
   public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier) throws ConfigurationException {
-  	this(internalName, fieldName, type, qualifier, "", "", "");
+  	this(internalName, fieldName, type, qualifier, "", "", 0, "");
   }
   
 	/**
@@ -56,22 +56,39 @@ public class UIFilterDescription {
 	 * @param qualifier String qualifier to use in a SQL where clause.
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL fieldName
+	 * @param filterSetReq int, which of the modifications specified by a FilterSetDescription are required by this UIFilterDescription
 	 * @param description String description of the Filter
-	 * @throws ConfigurationException when required values are null or empty.
+	 * 
+	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
+	 * @see FilterSet, FilterDescription
 	 */
-	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	String description) throws ConfigurationException {
+	public UIFilterDescription(String internalName, String fieldName, String type,	String qualifier,	String displayName, String tableConstraint,	int filterSetReq, String description) throws ConfigurationException {
 		if (internalName == null || internalName.equals("") 
 		  || fieldName == null || fieldName.equals("")
 			|| type == null || type.equals("")) 
 			throw new ConfigurationException("UIFilterDescription requires a displayName, fieldName, type, and qualifier");
-
-    this.internalName = internalName;
+      
+        this.internalName = internalName;
 		this.displayName = displayName;
 		this.fieldName = fieldName;
 		this.type = type;
 		this.qualifier = qualifier;
 		this.tableConstraint = tableConstraint;
+		this.filterSetReq = filterSetReq;
+		
+		if (filterSetReq > 0)
+		  inFilterSet = true;
+		  
 		this.description = description;
+		
+		hshcode = internalName.hashCode();
+		hshcode = (31 * hshcode) + displayName.hashCode();
+		hshcode = (31 * hshcode) + fieldName.hashCode();
+		hshcode = (31 * hshcode) + type.hashCode();
+		hshcode = (31 * hshcode) + qualifier.hashCode();
+		hshcode = (31 * hshcode) + tableConstraint.hashCode();
+		hshcode = (31 * hshcode) + filterSetReq;
+        hshcode = (31 * hshcode) + description.hashCode();
 	}
 
 /**
@@ -126,7 +143,27 @@ public class UIFilterDescription {
 	public String getTableConstraint() {
 		return tableConstraint;
 	}
-
+  
+  /**
+   * Returns a value to determine which UIFilterDescription SQL specifier (tableConstraint or fieldName) to modify
+   * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
+   * 
+   * @return int filterSetReq
+   * @see FilterSetDescription
+   */
+  public int getFilterSetReq() {
+  	return filterSetReq;
+  }
+  
+  /**
+   * Check to see if ths UIFilterDescription is in a FilterSet
+   * 
+   * @return true if it is in a FilterSet, false if not
+   */
+  public boolean inFilterSet() {
+  	return inFilterSet;
+  }
+  
 /**
  * Returns the description.
  * 
@@ -146,11 +183,61 @@ public class UIFilterDescription {
 		buf.append(", type=").append(type);
 		buf.append(", qualifier=").append(qualifier);
 		buf.append(", tableConstraint=").append(tableConstraint);
+		
+		if (inFilterSet)
+		  buf.append(", filterSetReq=").append(filterSetReq);
+		  
 		buf.append(", description=").append(description);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
-	private final String internalName, displayName,	fieldName,	type,	qualifier,	tableConstraint,	description;
+  public boolean equals(Object o) {
+		if (!(o instanceof UIFilterDescription))
+			return false;
+
+		UIFilterDescription otype = (UIFilterDescription) o;
+		
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+
+		if (! ( fieldName.equals(otype.getFieldName() ) ) )
+					return false;
+
+		if (! ( type.equals(otype.getType() ) ) )
+					return false;
+
+		if (! ( qualifier.equals(otype.getQualifier() ) ) )
+					return false;
+
+		if (! ( tableConstraint.equals(otype.getTableConstraint() ) ) )
+					return false;
+		
+		if (! ( filterSetReq == otype.getFilterSetReq() ) )
+		  return false;
+		  									  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;
+
+        if (inFilterSet && ! (otype.inFilterSet()) )
+          return false;
+          
+        if (otype.inFilterSet() && ! ( inFilterSet ) )
+          return false;
+          
+		return true;
+	}
+	
+	public int hashCode() {
+     return hshcode;
+	}
+	
+	private final String internalName, displayName,	fieldName,	type,	qualifier,	tableConstraint, description;
+	private final int filterSetReq;
+	private boolean inFilterSet = false;
+	private int hshcode = 0;
 }

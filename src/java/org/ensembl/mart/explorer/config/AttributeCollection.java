@@ -37,14 +37,14 @@ public class AttributeCollection {
 	}
 
 	/**
-	 * Constructor for an AttributeCollection named by internalName, with a type and maxSelect value.
+	 * Constructor for an AttributeCollection named by internalName, with a type.
 	 * 
 	*  @param internalName String name to internally represent the AttributeCollection.  Must not be null
 	 * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
 	 * @throws ConfigurationException when the required values are null or empty.
 	 */
-	public AttributeCollection(String internalName, int maxSelect) throws ConfigurationException {
-		this(internalName, maxSelect, "", "");
+	public AttributeCollection(String internalName) throws ConfigurationException {
+		this(internalName, 0, "", "");
 	}
 
 	/**
@@ -52,13 +52,13 @@ public class AttributeCollection {
 	 * May have description description.
 	 * 
 	 * @param internalName String name to internally represent the AttributeCollection.  Must not be null
-	 * @param maxSelect int maximum allowable combined attribute selections.  Must not be less than 1
+	 * @param maxSelect int maximum allowable combined attribute selections.
 	 * @param displayName String name to represent the AttributeCollection.
 	 * @param description String description of the AttributeCollection
 	 * @throws ConfigurationException if required parameters are null or empty.
 	 */
 	public AttributeCollection(String internalName, int maxSelect, String displayName, String description) throws ConfigurationException {
-		if (internalName == null || internalName.equals("") || maxSelect < 1)
+		if (internalName == null || internalName.equals(""))
 			throw new ConfigurationException("AttributeCollections must contain an internalName and maxSelect value");
 
 		this.internalName = internalName;
@@ -205,12 +205,56 @@ public class AttributeCollection {
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", maxSelect=").append(maxSelect);
-		buf.append(", UIAttributes=").append(uiAttributes);
+		buf.append(", UIAttributeDescriptions=").append(uiAttributes);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
+  public boolean equals(Object o) {
+		if (!(o instanceof AttributeCollection))
+			return false;
+
+		AttributeCollection otype = (AttributeCollection) o;
+
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;				
+
+    if (! ( maxSelect == otype.getMaxSelect() ) )
+      return false;
+
+    //other AttributeCollection must contain all UIAttributeDescriptions that this AttributeCollection contains
+    for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+			UIAttributeDescription element = (UIAttributeDescription) iter.next();
+			
+			if (! ( otype.containsUIAttributeDescription( element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getUIAttributeDescriptionByName( element.getInternalName() ) ) ) )
+			  return false;
+		}  
+		
+		return true;
+	}
+
+	public int hashCode() {
+		int tmp = internalName.hashCode();
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+		
+		for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
+			UIAttributeDescription element = (UIAttributeDescription) iter.next();
+			tmp = (31 * tmp) + element.hashCode();	
+		}
+		
+		return tmp;
+	}
+  
 	private final String internalName, displayName, description;
 	private final int maxSelect;
 	private int aRank = 0;

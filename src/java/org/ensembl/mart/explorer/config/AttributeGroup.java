@@ -242,6 +242,46 @@ public final class AttributeGroup {
 		return buf.toString();
 	}
 
+  public boolean equals(Object o) {
+		if (!(o instanceof AttributeGroup))
+			return false;
+
+		AttributeGroup otype = (AttributeGroup) o;
+		
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;				
+		
+		//other AttributeGroup must contain all AttributeCollections contained in this AttributeGroup
+		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+			AttributeCollection element = (AttributeCollection) iter.next();
+			if (! ( otype.containsAttributeCollection( element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getAttributeCollectionByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+		
+		return true;
+	}
+
+  public int hashCode() {
+		int tmp = internalName.hashCode();
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+		
+		for (Iterator iter = attributeCollections.values().iterator(); iter.hasNext();) {
+			AttributeCollection element = (AttributeCollection) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		
+		return tmp;
+  }
+  
 	private final String internalName, displayName, description;
 	private int cRank = 0;
 	private TreeMap attributeCollections = new TreeMap();

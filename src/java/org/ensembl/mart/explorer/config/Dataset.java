@@ -498,7 +498,27 @@ public class Dataset {
 		atts.toArray(a);
 		return a;  	
 	}
-		  
+
+   /**
+    * Convenience method to facilitate equals comparisons of datasets.
+    * 
+    * @param starBase -- String name of the starBase requested
+    * @return true if Dataset contains the starBase, false if not
+    */
+   public boolean containsStarBase(String starBase) {
+   	  return starBases.contains(starBase);		  
+   }
+   
+	/**
+	 * Convenience method to facilitate equals comparisons of datasets.
+	 * 
+	 * @param pkey -- String name of the primary key requested
+	 * @return true if Dataset contains the primary key, false if not
+	 */   
+   public boolean containsPrimaryKey(String pkey) {
+   	return primaryKeys.contains(pkey);
+   }
+   
 	/**
 	 * Provides output useful for debugging purposes.
 	 */
@@ -517,6 +537,117 @@ public class Dataset {
 		return buf.toString();
 	}
 
+  public boolean equals(Object o) {
+		if (!(o instanceof Dataset))
+			return false;
+
+		Dataset otype = (Dataset) o;
+
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;
+		
+		// other dataset must contain all starBases that this dataset contains	
+		for (int i = 0; i < starBases.size(); i++) {
+			String element = (String) starBases.get(i);
+			if (! (otype.containsStarBase(element)) )
+			  return false;
+		}
+		
+		// this dataset must contain all starBases that other dataset contains
+		String[] stars = otype.getStarBases();
+    for (int i = 0, n = stars.length; i < n; i++) {
+			if (! (starBases.contains(stars[i])) )
+			  return false;
+		}
+		
+		// other dataset must contain all primary keys that this dataset contains	
+    for (int i = 0; i < primaryKeys.size(); i++) {
+			String element = (String) primaryKeys.get(i);
+			if (! ( otype.containsPrimaryKey(element) ) )
+			  return false;
+		}
+
+    // this dataset must contain all primary keys that other dataset contains
+    String[] pkeys = otype.getPrimaryKeys();
+    for (int i = 0, n = pkeys.length; i < n; i++) {
+			if (! (primaryKeys.contains(pkeys[i])) )
+			  return false;
+		}
+		
+		//other dataset must contain all FilterPages that this dataset contains
+		for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+			FilterPage element = (FilterPage) iter.next();
+			
+			if (! ( otype.containsFilterPage( element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getFilterPageByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+		
+		// this dataset must contain all FilterPages that other dataset contains
+		FilterPage[] fpages = otype.getFilterPages();
+		for (int i = 0, n = fpages.length; i < n; i++) {
+			FilterPage page = fpages[i];
+			if (! (filterPages.containsValue(page) ) )
+			  return false;
+		}
+		
+		//other dataset must contain all AttributePages that this dataset contains
+    for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+			AttributePage element = (AttributePage) iter.next();
+			
+			if (! ( otype.containsAttributePage(element.getInternalName() ) ) )
+			  return false;
+			if(! ( element.equals( otype.getAttributePageByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+
+    // this dataset must contain all AttributePages that other dataset contains
+    AttributePage[] apages = otype.getAttributePages();
+    for (int i = 0, n = apages.length; i < n; i++) {
+			AttributePage page = apages[i];
+			if (! attributePages.containsValue(page) )
+			  return false;
+		}
+
+		return true;
+	}
+	
+  public int hashCode() {
+  	int tmp = internalName.hashCode();
+  	
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+		
+		for (int i = 0, n = starBases.size(); i < n; i++) {
+			String element = (String) starBases.get(i);
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		
+		for (int i = 0, n = primaryKeys.size(); i < n; i++) {
+			String element = (String) primaryKeys.get(i);
+			tmp = (31 * tmp) + element.hashCode();
+		}
+
+    for (Iterator iter = filterPages.values().iterator(); iter.hasNext();) {
+			FilterPage element = (FilterPage) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		
+		for (Iterator iter = attributePages.values().iterator(); iter.hasNext();) {
+			AttributePage element = (AttributePage) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		
+  	return tmp;
+  }
+  
 	//keep track of ordering of filter and attribute pages
 	private int apageRank = 0;
 	private int fpageRank = 0;

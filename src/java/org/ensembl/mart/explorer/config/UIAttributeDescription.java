@@ -61,7 +61,7 @@ public UIAttributeDescription(String internalName, String fieldName, String disp
 	if(internalName == null || internalName.equals("") || fieldName == null || fieldName.equals(""))
 	  throw new ConfigurationException("UIAttributeDescriptions require a displayName, and fieldName");
 	  
-	  this.internalName = internalName;
+	this.internalName = internalName;
 	this.displayName = displayName;
 	this.fieldName = fieldName;
 	this.maxLength = maxLength;
@@ -70,6 +70,16 @@ public UIAttributeDescription(String internalName, String fieldName, String disp
 	this.source = source;
 	this.homepageURL = homePageURL;
 	this.linkoutURL = linkoutURL;
+	
+	hshcode = internalName.hashCode();
+	hshcode = (31 * hshcode) + displayName.hashCode();
+	hshcode = (31 * hshcode) + fieldName.hashCode();
+	hshcode = (31 * hshcode) + maxLength;
+	hshcode = (31 * hshcode) + tableConstraint.hashCode();
+	hshcode = (31 * hshcode) + description.hashCode();
+	hshcode = (31 * hshcode) + source.hashCode();
+	hshcode = (31 * hshcode) + homepageURL.hashCode();
+	hshcode = (31 * hshcode) + linkoutURL.hashCode();
 }
 
 /**
@@ -170,6 +180,48 @@ public String toString() {
 	return buf.toString();
 }
 
-public final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
-public final int maxLength; 
+public boolean equals(Object o) {
+	if (!(o instanceof UIAttributeDescription))
+		return false;
+
+	UIAttributeDescription otype = (UIAttributeDescription) o;
+	
+	if (! (internalName.equals(otype.getInternalName()) ) )
+		return false;
+	  
+	if (! (displayName.equals(otype.getDisplayName()) ) )
+		return false;
+
+	if (! ( fieldName.equals(otype.getFieldName() ) ) )
+				return false;
+				
+  if (! (maxLength == otype.getMaxLength() ) )
+    return false;
+    
+	if (! ( tableConstraint.equals(otype.getTableConstraint() ) ) )
+				return false;
+											  
+	if (! (description.equals(otype.getDescription()) ) )
+		return false;
+
+	if (! (source.equals(otype.getSource()) ) )
+			return false;
+	
+	if (! (homepageURL.equals(otype.getHomePageURL()) ) )
+			return false;
+	
+	if (! (linkoutURL.equals(otype.getLinkoutURL()) ) )
+			return false;
+					
+	return true;
+}
+
+public int hashCode() {
+	return hshcode;
+}
+
+private final String internalName, displayName, fieldName, tableConstraint, description, source, homepageURL, linkoutURL;
+private final int maxLength;
+private int hshcode = 0;
+ 
 }

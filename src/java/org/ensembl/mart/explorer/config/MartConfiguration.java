@@ -19,6 +19,7 @@
  package org.ensembl.mart.explorer.config;
 
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.TreeMap;
 
 /**
@@ -173,13 +174,13 @@ public Dataset[] getDatasets() {
  * Returns a particular Dataset based on a supplied Dataset internalName.
  * 
  * @param internalName String internalName of the Dataset
- * @return Dataset with the provided internalName
+ * @return Dataset with the provided internalName, or null if not found
  */
-public Dataset getDatasetByName(String internalName) throws ConfigurationException {
-	if (! datasetNameMap.containsKey(internalName))
-	  throw new ConfigurationException("MartConfiguration does not contain "+internalName);
-	  
-	return (Dataset) datasets.get((Integer) datasetNameMap.get(internalName));
+public Dataset getDatasetByName(String internalName) {
+	if ( datasetNameMap.containsKey(internalName))
+	  return (Dataset) datasets.get((Integer) datasetNameMap.get(internalName));
+	else
+	  return null;
 }
 
 /**
@@ -207,7 +208,55 @@ public String toString() {
 	
 	return buf.toString();
 }	
+
+public boolean equals(Object o) {
+	if (! (o instanceof MartConfiguration) )
+	  return false;
 	
+	MartConfiguration otype = (MartConfiguration) o;
+	
+	if (! (internalName.equals(otype.getInternalName()) ) )
+	  return false;
+	  
+	if (! (displayName.equals(otype.getDisplayName()) ) )
+	  return false;
+	  
+	if (! (description.equals(otype.getDescription()) ) )
+	  return false;
+
+  // other MartConfiguration must contain all Datasets contained in this MartConfiguration
+  for (Iterator iter = datasets.values().iterator(); iter.hasNext();) {
+		Dataset dataset = (Dataset) iter.next();
+		if (! (otype.containsDataset(dataset.getInternalName()) ))
+		  return false;
+		if (! ( dataset.equals( otype.getDatasetByName(dataset.getInternalName() ) ) ) )
+		  return false;
+	}
+
+  // this MartConfiguration must contain all Datasets contained by other MartConfiguration
+  Dataset[] dsets = otype.getDatasets();
+  for (int i = 0, n = dsets.length; i < n; i++) {
+		Dataset dataset = dsets[i];
+		
+		if (! (datasets.containsValue(dataset)) )
+		  return false;
+	}
+	
+  return true;
+}
+
+public int hashCode() {
+  int tmp = internalName.hashCode();
+	tmp = (31 * tmp) + displayName.hashCode();
+	tmp = (31 * tmp) + description.hashCode();
+	
+	for (Iterator iter = datasets.keySet().iterator(); iter.hasNext();) {
+			Dataset d = (Dataset) iter.next();
+			tmp = (31 * tmp) + d.hashCode();
+	}
+  return tmp;	
+}
+
 private final String internalName, description, displayName;
 private int thisRank = 0;
 private TreeMap datasets = new TreeMap();

@@ -122,6 +122,34 @@ public class FilterGroup {
 		}
 	}
 
+  /**
+   * Add a FilterSet to the FilterGroup.
+   * 
+   * @param f a FilterSet object
+   */
+  public void addFilterSet(FilterSet f) {
+  	if (! hasFilterSets )
+  	  hasFilterSets = true;
+  	  
+  	filterSets.put(f.getInternalName(), f);
+  }
+  
+  /**
+   * Set a group of FilterSet objects in one call. Note, subsequent calls to addFilterSet, setFilterSets
+   * will add to what was added before.
+   * 
+   * @param f an array of FilterSet objects
+   */
+  public void setFilterSets(FilterSet[] f) {
+		if (! hasFilterSets )
+			hasFilterSets = true;
+			  	
+  	for (int i = 0, n = f.length; i < n; i++) {
+			FilterSet set = f[i];
+			filterSets.put(set.getInternalName(), set);
+		}
+  }
+  
 	/**
 	 * Returns an array of FilterCollection objects, in the order they were added
 	 * 
@@ -157,6 +185,49 @@ public class FilterGroup {
 		return filterCollectionNameMap.containsKey(internalName);
 	}
 
+  /**
+   * Returns all FilterSets contained by this FilterGroup.
+   * 
+   * @return an array of FilterSet objects.
+   */
+  public FilterSet[] getFilterSets() {
+  	FilterSet[] f = new FilterSet[ filterSets.size() ];
+  	filterSets.values().toArray(f);
+  	return f;
+  }
+  
+  /**
+   * Returns a specific FilterSet, named by internalName.
+   * 
+   * @param internalName - String internal name of the requested FilterSet.
+   * @return FilterSet named by internalName, or null.
+   */
+  public FilterSet getFilterSetByName(String internalName) {
+  	if (filterSets.containsKey(internalName))
+  	  return (FilterSet) filterSets.get(internalName);
+  	else
+  	  return null;
+  }
+  
+  /**
+   * Check if a FilterGroup contains a specific FilterSet, named by internalName.
+   * 
+   * @param internalName - String internal name of the FilterSet.
+   * @return boolean, true if found, false if not.
+   */
+  public boolean containsFilterSet(String internalName) {
+  	return filterSets.containsKey(internalName);
+  }
+  
+  /**
+   * Method for UI to determine if a FilterGroup has FilterSets to render.
+   *  
+   * @return boolean, true if FilterSets have been added to this FilterGroup, false if not.
+   */
+  public boolean hasFilterSets() {
+  	return hasFilterSets;
+  }
+  
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular UIFilterDescription.
 		* Note, it is best to first call containsUIFilterDescription,
@@ -239,16 +310,101 @@ public class FilterGroup {
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", filterCollections=").append(filterCollections);
+		if (hasFilterSets)
+		  buf.append(", filterSets=").append(filterSets);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
+  public boolean equals(Object o) {
+		if (!(o instanceof FilterGroup))
+			return false;
+
+		FilterGroup otype = (FilterGroup) o;
+		
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;				
+		
+		//other FilterGroup must contain all FilterCollections contained by this FilterGroup
+		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+			FilterCollection element = (FilterCollection) iter.next();
+			if (! ( otype.containsFilterCollection(element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getFilterCollectionByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+		
+		//this FilterGroup must contain all FilterCollections contained by other FilterGroup
+		FilterCollection[] fcollections = otype.getFilterCollections();
+		for (int i = 0, n = fcollections.length; i < n; i++) {
+			FilterCollection fcollection = fcollections[i];
+			if (! ( filterCollections.containsValue( fcollection ) ) )
+			  return false;
+		}
+		
+		if (hasFilterSets) {
+			//other FilterGroup must contain all FilterSets contained in this FilterGroup
+			if (! otype.hasFilterSets())
+			  return false;
+			for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
+				FilterSet element = (FilterSet) iter.next();
+				if (! ( otype.containsFilterSet( element.getInternalName() ) ) )
+				  return false;
+				if (! ( element.equals( otype.getFilterSetByName( element.getInternalName() ) ) ) )
+				  return false;	
+			}
+		}
+		
+		if (otype.hasFilterSets()) {
+			//this FilterGroup must contain all FilterSets contained by other FilterGroup
+			if (! hasFilterSets)
+			  return false;
+			FilterSet[] fsets = otype.getFilterSets();
+			for (int i = 0, n = fsets.length; i < n; i++) {
+				FilterSet set = fsets[i];
+				if (! ( filterSets.containsValue( set ) ) )
+				  return false;
+			}
+		}
+		
+		return true;
+	}
+
+  public int hashCode() {
+		int tmp = internalName.hashCode();
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+		
+		for (Iterator iter = filterCollections.values().iterator(); iter.hasNext();) {
+			FilterCollection element = (FilterCollection) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+		
+		if (hasFilterSets) {
+			for (Iterator iter = filterSets.values().iterator(); iter.hasNext();) {
+				FilterSet element = (FilterSet) iter.next();
+				tmp = (31 * tmp) + element.hashCode();
+			}
+		}
+		
+		return tmp;
+  }
+  
 	private final String internalName, displayName, description;
 	private int cRank = 0; //keep track of collection order
+	private boolean hasFilterSets = false;
+	
 	private TreeMap filterCollections = new TreeMap();
 	private Hashtable filterCollectionNameMap = new Hashtable();
-
+  private Hashtable filterSets = new Hashtable(); // do not need to presever order of filterSets
+  
 	//cache one UIFilterDescription for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private UIFilterDescription lastFilt = null;
 }

@@ -19,6 +19,7 @@
 package org.ensembl.mart.explorer.config;
 
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.TreeMap;
 
 /**
@@ -33,7 +34,7 @@ public class FilterCollection {
 	 * FilterCollection must have a internalName, and type.  So disable parameterless constructor
 	 */
 	private FilterCollection() throws ConfigurationException {
-		this("", "", "", "");
+		this("", "", "", "", "");
 	}
 
 	/**
@@ -44,7 +45,7 @@ public class FilterCollection {
 	 * @throws ConfigurationException when paremeter requirements are not met
 	 */
 	public FilterCollection(String internalName, String type) throws ConfigurationException {
-		this(internalName, type, "", "");
+		this(internalName, type, "", "", "");
 	}
 
 	/**
@@ -53,15 +54,17 @@ public class FilterCollection {
 	 * @param internalName String name to internally represent the FilterCollection.  Must not be null or empty.
 	 * @param type String type of the FilterCollection. Must not be null or empty.
 	 * @param displayName String name to represent the FilterCollection.
+	 * @param filterSetName String internalName of the FilterSet this FilterCollection to which this FilterCollection is a member.  May be null. 
 	 * @param description String description of the FilterCollection.
 	 * @throws ConfigurationException when paremeters are null or empty
 	 */
-	public FilterCollection(String internalName, String type, String displayName, String description) throws ConfigurationException {
+	public FilterCollection(String internalName, String type, String displayName, String filterSetName, String description) throws ConfigurationException {
 		if (internalName == null || internalName.equals("") || type == null || type.equals(""))
 			throw new ConfigurationException("FilterCollections must have an internalName and type");
 
 		this.internalName = internalName;
 		this.displayName = displayName;
+		this.filterSetName = filterSetName;
 		this.description = description;
 		this.type = type;
 	}
@@ -130,6 +133,23 @@ public class FilterCollection {
 		}
 	}
 
+   /**
+    * Returns the internalName of the FilterSet this Collection belongs within.
+    * 
+    * @return String filterSetName
+    */
+    public String getFilterSetName() {
+    	return filterSetName;
+    }
+    
+    /**
+     * Check if this FilterCollection is a member of a FilterSet.
+     * 
+     * @return boolean true if member of a FilterSet, false if not
+     */
+    public boolean inFilterSet() {
+    	return inFilterSet;
+    }
 	/**
 	 * Returns a array of UIFilterDescription objects, in the order they were added.
 	 * 
@@ -172,13 +192,78 @@ public class FilterCollection {
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
 		buf.append(", type=").append(type);
-		buf.append(", UIFilters=").append(uiFilters);
+
+        if (inFilterSet)
+          buf.append(", filterSetName=").append(filterSetName);
+          
+		buf.append(", UIFilterDescriptions=").append(uiFilters);
 		buf.append("]");
 
 		return buf.toString();
 	}
 
-	private final String internalName, displayName, description, type;
+  public boolean equals(Object o) {
+		if (!(o instanceof FilterCollection))
+			return false;
+
+		FilterCollection otype = (FilterCollection) o;
+		
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;				
+
+    if (! ( type.equals( otype.getType() ) ) )
+      return false;
+    
+    if (inFilterSet) {
+    	if (! otype.inFilterSet() )
+    	  return false;
+    	if (! ( filterSetName.equals( otype.getFilterSetName() )  ) )
+    	  return false;  
+    }
+    
+    if (otype.inFilterSet()) {
+    	if (! inFilterSet )
+    	  return false;
+    	  
+    	if (! ( otype.getFilterSetName().equals(filterSetName) ) )
+    	  return false;
+    }
+    
+    //other FilterCollection must contain all UIFilterDescriptions that this FilterCollection contains
+    for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+			UIFilterDescription element = (UIFilterDescription) iter.next();
+			if (! ( otype.containsUIFilterDescription( element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getUIFilterDescriptionByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+		
+		return true;
+	}
+
+  public int hashCode() {
+	int tmp = internalName.hashCode();
+	tmp = (31 * tmp) + displayName.hashCode();
+	tmp = (31 * tmp) + filterSetName.hashCode();
+	tmp = (31 * tmp) + description.hashCode();
+		
+    for (Iterator iter = uiFilters.values().iterator(); iter.hasNext();) {
+			UIFilterDescription element = (UIFilterDescription) iter.next();
+			tmp = (31 * tmp) + element.hashCode();	
+		}
+		
+		return tmp;
+  }
+
+	private final String internalName, displayName, description, filterSetName, type;
+	private boolean inFilterSet = false;
+	
 	private int fRank = 0;
 	private TreeMap uiFilters = new TreeMap();
 	private Hashtable uiFilterNameMap = new Hashtable();

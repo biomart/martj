@@ -234,11 +234,59 @@ public class FilterPage {
 		buf.append(" internalName=").append(internalName);
 		buf.append(", displayName=").append(displayName);
 		buf.append(", description=").append(description);
-		buf.append(", FilterCollections=").append(filterGroups);
+		buf.append(", FilterGroups=").append(filterGroups);
 		buf.append("]");
 		return buf.toString();
 	}
 
+  public boolean equals(Object o) {
+		if (!(o instanceof FilterPage))
+			return false;
+
+		FilterPage otype = (FilterPage) o;
+		
+		if (! (internalName.equals(otype.getInternalName()) ) )
+			return false;
+	  
+		if (! (displayName.equals(otype.getDisplayName()) ) )
+			return false;
+	  
+		if (! (description.equals(otype.getDescription()) ) )
+			return false;		
+
+    // other FilterPage must contain all FilterGroups that this FilterPage contains
+    for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+			FilterGroup element = (FilterGroup) iter.next();
+			if (! ( otype.containsFilterGroup( element.getInternalName() ) ) )
+			  return false;
+			if (! ( element.equals( otype.getFilterGroupByName( element.getInternalName() ) ) ) )
+			  return false;
+		}
+		
+		// this FilterPage must contain all FilterGroups that the other FilterPage contains
+		FilterGroup[] gpages = otype.getFilterGroups();
+		for (int i = 0, n = gpages.length; i < n; i++) {
+			FilterGroup group = gpages[i];
+			if (! ( filterGroups.containsValue(group) ) )
+			  return false;
+		}
+		
+		return true;
+	}
+	
+	public int hashCode() {
+	  int tmp = internalName.hashCode();
+		tmp = (31 * tmp) + displayName.hashCode();
+		tmp = (31 * tmp) + description.hashCode();
+		
+		for (Iterator iter = filterGroups.values().iterator(); iter.hasNext();) {
+			FilterPage element = (FilterPage) iter.next();
+			tmp = (31 * tmp) + element.hashCode();
+		}
+
+	  return tmp;
+	}
+	
 	private final String displayName, description, internalName;
 
 	private int fcRank = 0;
