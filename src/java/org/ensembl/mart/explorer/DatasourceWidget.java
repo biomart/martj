@@ -68,16 +68,17 @@ public class DatasourceWidget extends InputPage {
     });
 
     Box b = Box.createHorizontalBox();
-    b.add(new JLabel("Mart"));
+    b.add(new JLabel("Datasource "));
     b.add(cb);
     b.add(martName);
     add(b, BorderLayout.NORTH);
   }
 
   /**
-   * 
+   * Opens MartManager dialog and if the user selects a new datasource
+   * that is set on the query.
    */
-  protected void doChange() {
+  public void doChange() {
     
     martManager.setSelected(query.getDataSource());
       
