@@ -12,8 +12,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.sql.DataSource;
+
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ewin.javax.sql.DefaultPoolingAlgorithm;
+import org.ewin.javax.sql.DriverManagerDataSource;
+import org.ewin.javax.sql.PoolingAlgorithmDataSource;
+
 
 /**
  * Utility class for working with JDBC databases.
@@ -99,4 +108,117 @@ public class DatabaseUtil {
     return elements;
   }
   
+  
+  
+  private static Logger logger = Logger.getLogger(DatabaseUtil.class.getName());
+
+  /**
+   * Convenience method which constructs a connection URL and calls createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName).
+   * @see #createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName)
+   * @param dbType database type e.g. mysql
+   * @param host host name e.g. ensembldb.ensembl.org
+   * @param port port number, can be null. e.g. 3036
+   * @param database name of database on database server  
+   * @param user username
+   * @param password password, can be null
+   * @param maxPoolSize maximum poolsize
+   * @param jdbcDriverClassName name of jdbc driver to back the datasource.
+   * @return connection pool capable datasource
+   * @throws ConfigurationException thrown if a problem occurs creating the datasource
+   */
+  public static DataSource createDataSource(
+    String dbType,
+    String host,
+    String port,
+    String database,
+    String user,
+    String password,
+    int maxPoolSize,
+    String jdbcDriverClassName)
+    throws ConfigurationException {
+
+    StringBuffer connString = new StringBuffer();
+    connString.append("jdbc:").append(dbType).append("://");
+    connString.append(host);
+    if (port != null)
+      connString.append(":").append(port);
+    connString.append("/");
+    if (database != null)
+      connString.append(database);
+
+    return createDataSource(
+      connString.toString(),
+      user,
+      password,
+      maxPoolSize,
+      jdbcDriverClassName);
+  }
+
+  /**
+   * Creates a datasource backed by a connection pool. Users should <code>Connection conn = dataSource.getConnection()</code> 
+   * to retrieve a connection from the pool and <code>conn.close()</code> to return it to the pool.
+   * @param connectionString database connectionString, e.g. jdbc:mysql://ensembldb.ensembl.org:3036
+   * @param user username
+   * @param password password, can be null
+   * @param maxPoolSize maximum poolsize
+   * @param jdbcDriverClassName name of jdbc driver to back the datasource.
+   * @return connection pool capable datasource
+   * @throws ConfigurationException thrown if a problem occurs creating the datasource
+   **/
+  public static DataSource createDataSource(
+    String connectionString,
+    String user,
+    String password,
+    int maxPoolSize,
+    String jdbcDriverClassName)
+    throws ConfigurationException {
+
+
+    try {
+
+      // load driver
+      Class.forName( jdbcDriverClassName ).newInstance();
+
+      DataSource dataSource =
+        new DriverManagerDataSource(
+          jdbcDriverClassName,
+          connectionString,
+          user,
+          password);
+
+      // Wrap data source in connection pool
+      PoolingAlgorithmDataSource tmp =
+        new PoolingAlgorithmDataSource(dataSource);
+      DefaultPoolingAlgorithm poolAlgorithm = new DefaultPoolingAlgorithm();
+      poolAlgorithm.setPoolMax(maxPoolSize);
+      tmp.setPoolingAlgorithm(poolAlgorithm);
+      dataSource = tmp;
+
+      return dataSource;
+
+    } catch (InstantiationException e) {
+      throw new ConfigurationException(
+        "Failed to initialise database connection pool "
+          + "(is the connection pool jar available?) : ",
+        e);
+    } catch (ClassNotFoundException e) {
+      throw new ConfigurationException(
+        "Failed to initialise database connection pool "
+          + "(is the connection pool jar available?) : ",
+        e);
+    } catch (IllegalAccessException e) {
+      throw new ConfigurationException(
+        "Failed to initialise database connection pool "
+          + "(is the connection pool jar available?) : ",
+        e);
+    } catch (NoClassDefFoundError e) {
+      e.printStackTrace();
+      // can't pass it to ConfigurationExcpeption so print stack trace here       
+      throw new ConfigurationException(
+        "Failed to initialise database connection pool "
+          + "(is the connection pool jar available?) : ");
+
+    }
+  }
+
 }
