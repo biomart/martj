@@ -272,7 +272,10 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 		for (int i = 0, n = locs.length; i < n; i++) {
 			MartLocation location = locs[i];
 
-			if ((includeHiddenMembers) || (location.isVisible())) {
+			if ( ( location.getType().equals(MartLocationBase.REGISTRYDB) )
+			  || (includeHiddenMembers)
+			  || (location.isVisible())
+			   ) {
 				if (location.getType().equals(MartLocationBase.REGISTRYFILE)) {
 					//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
 
