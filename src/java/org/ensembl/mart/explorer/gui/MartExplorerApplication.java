@@ -208,7 +208,7 @@ public class MartExplorerApplication extends JFrame {
     Query q = new Query();
     q.setHost( "kaka.sanger.ac.uk" );
     q.setUser( "anonymous" );
-    q.setDatabase( "ensembl_mart_10_1" );
+    q.setDatabase( "ensembl_mart_11_1" );
     q.setSpecies( "homo_sapiens" );
     q.setFocus( "gene" );
     //q.addFilter( new IDListFilter("gene_stable_id", new String[]{"ENSG00000170057"}) );
@@ -219,7 +219,7 @@ public class MartExplorerApplication extends JFrame {
 
       q.addFilter( new IDListFilter("gene_stable_id", new URL( "file://" +System.getProperty("user.home")+"/dev/mart-explorer/data/gene_stable_id.test") ) );
       q.addFilter( new IDListFilter("gene_stable_id", new
-        String[]{"ENSG00000170057"} ) );
+        String[]{"ENSG00000177741"} ) );
     }catch( IOException e ) {
       logger.warn("Failed to construct partial kaka query", e );
     }
