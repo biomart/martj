@@ -22,7 +22,25 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.ensembl.mart.lib.config.*;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.BaseNamedConfigurationObject;
+import org.ensembl.mart.lib.config.DSAttributeGroup;
+import org.ensembl.mart.lib.config.DatasetConfig;
+import org.ensembl.mart.lib.config.Disable;
+import org.ensembl.mart.lib.config.Enable;
+import org.ensembl.mart.lib.config.Exportable;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.FilterPage;
+import org.ensembl.mart.lib.config.Importable;
+import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.lib.config.PushAction;
+import org.ensembl.mart.lib.config.SeqModule;
+ 
 
 /**
  * Class DatasetConfigTreeNode extends DefaultMutableTreeNode.
@@ -36,6 +54,59 @@ import org.ensembl.mart.lib.config.*;
 
 public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 
+  /**
+   * Each Node stores all child objects in a single Vector, but some DatasetConfigTree
+   * userObjects store heterogenous groups of children in different lists in a particular 
+   * order. This method calculates the index adjustment to apply to any node Vector index 
+   * to get the DatasetConfigTree userObject index, which could be 0 for any DatasetConfigTree
+   * object that only stores one type of child object.  In general, for a DatasetConfigTree
+   * userObject which stores separate lists of objects a, b, and c in order, the relationship
+   * between the node Vector index (V) and the individual object index within the
+   * parent DatasetConfigTree userObject is:
+   * (a) V[i] = a[i]
+   * (b) V[i] = b[i - (a.length)]
+   * (c) V[i] = c[i - (a.length + b.length)] 
+   * @param parent - DatasetConfigTree userObject into which dropnode is to be dropped 
+   * @param child - DatasetConfigTree userObject object for which an index inside parent is needed 
+   * @return adjustment for any index of child inside parent.
+   */
+  protected static int getHeterogenousOffset(Object parent, Object child) {
+    int hetOffset = -1;
+    if (child instanceof org.ensembl.mart.lib.config.Exportable) {
+      //Exportables go after Importables within a DatasetConfig
+      hetOffset = ((DatasetConfig) parent).getImportables().length;
+    } else if (child instanceof org.ensembl.mart.lib.config.FilterPage) {
+      //FilterPages go after Importables and Exportables within a DatasetConfig
+      DatasetConfig dsc = (DatasetConfig) parent;
+      hetOffset = dsc.getImportables().length + dsc.getExportables().length;
+    } else if (child instanceof org.ensembl.mart.lib.config.AttributePage) {
+      //AttributePages go after Importables, Exportables, and FilterPages within a DatasetConfig
+      DatasetConfig dsc = (DatasetConfig) parent;
+      hetOffset = dsc.getImportables().length + dsc.getExportables().length + dsc.getFilterPages().length;
+    } else if (child instanceof org.ensembl.mart.lib.config.Disable) {
+      //Disables go after Enables within a FilterDescription
+      FilterDescription fdesc = (FilterDescription) parent;
+      hetOffset = fdesc.getEnables().length;
+    } else if (child instanceof org.ensembl.mart.lib.config.Option) {
+      if (parent instanceof org.ensembl.mart.lib.config.FilterDescription) {
+        //Options go after Enables and Disables within a FilterDescription
+        FilterDescription fdesc = (FilterDescription) parent;
+        hetOffset = fdesc.getEnables().length + fdesc.getDisables().length;
+      } else {
+        //Options go first within an Option
+        hetOffset = 0;
+      }
+    } else if (child instanceof org.ensembl.mart.lib.config.PushAction) {
+      //PushActions go after Options within an Option
+      Option op = (Option) parent;
+      hetOffset = op.getOptions().length;
+    } else {
+      //for all others insert at top of list
+      hetOffset = 0;
+    }
+    return hetOffset;
+  }
+  
 	protected String name;
 
 	public DatasetConfigTreeNode(String name) {
@@ -75,7 +146,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			for (int i = 0; i < exps.length; i++) {
 				Exportable exportable = exps[i];
 				String expName = exportable.getLinkName();
-				DatasetConfigTreeNode expNode = new DatasetConfigTreeNode("Exportable:" + expName);        
+				DatasetConfigTreeNode expNode = new DatasetConfigTreeNode("Exportable:" + expName);
 				expNode.setUserObject(exportable);
 				this.add(expNode);
 			}
@@ -392,7 +463,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.DSAttributeGroup")) {
 			setName("DSAttributGroup: " + ((BaseNamedConfigurationObject) obj).getInternalName());
-			DSAttributeGroup atGroup = (DSAttributeGroup) obj;
+//			DSAttributeGroup atGroup = (DSAttributeGroup) obj;
 
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterCollection")) {
 			setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
