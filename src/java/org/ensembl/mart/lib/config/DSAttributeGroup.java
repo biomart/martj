@@ -20,7 +20,7 @@ package org.ensembl.mart.lib.config;
 
 /**
  * Place Holder object to signal to the UI where to render complex
- * Domain Specific Attribute widgets that do not fit the generic
+ * Domain Specific Attribute leafWidgets that do not fit the generic
  * MartConfiguration scheme.  Does not contain any lower level objects.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>

@@ -18,38 +18,23 @@
 
 package org.ensembl.mart.explorer;
 
-import java.util.ArrayList;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.Dataset;
 
 /**
- * Holds all the attribute pages.
+ * @author craig
+ *
+ * To change the template for this generated type comment go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
  */
-public class AttributePageSetWidget extends PageSetWidget {
+public class GroupWidget extends InputPage {
 
   /**
-	 * @param query
-	 */
-	public AttributePageSetWidget(Query query, Dataset dataset) {
-		super("Attributes", query);
-
-
-    
-    leafWidgets = new ArrayList();
-    
-		AttributePage[] attributePages = dataset.getAttributePages();
-		for (int i = 0, n = attributePages.length; i < n; i++) {
-			AttributePage page = attributePages[i];
-      String name = page.getDisplayName();
-      AttributePageWidget p = new AttributePageWidget(query, name, page); 
-			tabbedPane.add( name, p );
-      leafWidgets.addAll( p.getLeafWidgets() );
-		}
-    resetTabColors(); 
-    
-    
-    
-	}
+   * @param name
+   * @param query
+   */
+  public GroupWidget(String name, Query query) {
+    super(name, query);
+    // TODO Auto-generated constructor stub
+  }
 
 }

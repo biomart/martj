@@ -21,7 +21,7 @@ package org.ensembl.mart.lib.config;
 /**
  * Place Holder object for the MartConfiguration System
  * to signal to the UI where to render a group of
- * filter widgets that do not fit the generic MartConfiguration
+ * filter leafWidgets that do not fit the generic MartConfiguration
  * scheme.  Does not hold any lower level objects.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>

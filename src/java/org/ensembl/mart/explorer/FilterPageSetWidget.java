@@ -19,37 +19,50 @@
 package org.ensembl.mart.explorer;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Dataset;
 
 /**
- * Holds all the attribute pages.
+ * Holds all filter pages.
  */
-public class AttributePageSetWidget extends PageSetWidget {
+public class FilterPageSetWidget extends PageSetWidget {
 
-  /**
+  private List filterDescriptionWidgets;
+  
+	/**
 	 * @param query
 	 */
-	public AttributePageSetWidget(Query query, Dataset dataset) {
-		super("Attributes", query);
+	public FilterPageSetWidget(Query query, Dataset dataset) {
+		super("Filters", query);
 
 
     
-    leafWidgets = new ArrayList();
+    filterDescriptionWidgets = new ArrayList();
     
-		AttributePage[] attributePages = dataset.getAttributePages();
-		for (int i = 0, n = attributePages.length; i < n; i++) {
-			AttributePage page = attributePages[i];
+		FilterPage[] filterPages = dataset.getFilterPages();
+		for (int i = 0, n = filterPages.length; i < n; i++) {
+			FilterPage page = filterPages[i];
       String name = page.getDisplayName();
-      AttributePageWidget p = new AttributePageWidget(query, name, page); 
+      FilterPageWidget p = new FilterPageWidget(query, name, page); 
 			tabbedPane.add( name, p );
-      leafWidgets.addAll( p.getLeafWidgets() );
+      filterDescriptionWidgets.addAll( p.getLeafWidgets() );
 		}
     resetTabColors(); 
     
     
     
 	}
+
+  /**
+   * 
+   * @return all filterDescriptionWidgets contained in sub pages.
+   */
+  public List getFilterDescriptionWidgets() {
+    return filterDescriptionWidgets;
+  }
+
 
 }

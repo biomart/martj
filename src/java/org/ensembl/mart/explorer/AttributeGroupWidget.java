@@ -39,14 +39,13 @@ import org.ensembl.mart.lib.config.UIAttributeDescription;
 /**
  * Widget representing an AttibuteGroup. 
  */
-public class AttributeGroupWidget extends InputPage {
+public class AttributeGroupWidget extends GroupWidget {
 
   private int lastWidth;
 	private final static int NUM_COLUMNS = 2;
   private final static int ROW_HEIGHT = 25;
 
 	private AttributeGroup group;
-  private List attributeDescriptionWidgets;
   
 
 	/**
@@ -61,14 +60,11 @@ public class AttributeGroupWidget extends InputPage {
 
     setLayout( new BoxLayout(this, BoxLayout.Y_AXIS) ); 
     Box panel = Box.createVerticalBox();
-    attributeDescriptionWidgets = addCollections(panel, group.getAttributeCollections());
+    leafWidgets = addCollections(panel, group.getAttributeCollections());
     add( new JScrollPane( panel ) );
     add( Box.createVerticalGlue() );
 	}
 
-  public List getAttributeDescriptionWidgets() {
-    return attributeDescriptionWidgets;
-  }
 
 	/**
 	 * @param collections
@@ -106,7 +102,7 @@ public class AttributeGroupWidget extends InputPage {
     
     
 	/**
-	 * Resizes widgets if the width of this component has changed.
+	 * Resizes leafWidgets if the width of this component has changed.
 	 */
 	private void resizeAttributes() {
 
@@ -118,9 +114,9 @@ public class AttributeGroupWidget extends InputPage {
 			int height = ROW_HEIGHT;
 			Dimension size = new Dimension(noScrollWidth, height);
 
-			for (int i = 0, n = attributeDescriptionWidgets.size(); i < n; i++) {
-        AttributeDescriptionWidget w 
-        = (AttributeDescriptionWidget)attributeDescriptionWidgets.get(i);
+			for (int i = 0, n = leafWidgets.size(); i < n; i++) {
+        InputPage w 
+        = (InputPage)leafWidgets.get(i);
 				w.setPreferredSize(size);
 				w.setMinimumSize(size);
 				w.setMaximumSize(size);

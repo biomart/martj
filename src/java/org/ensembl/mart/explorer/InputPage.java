@@ -1,12 +1,9 @@
-/*
- * Created on Aug 4, 2003
- *
- * To change the template for this generated file go to
- * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
- */
+
 package org.ensembl.mart.explorer;
 
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -26,13 +23,15 @@ public class InputPage extends JPanel {
   private String nodeLabel;  
   private MutableTreeNode node;
   private String defaultNodeLabel;
-  
+
+  protected List leafWidgets;  
 
   public InputPage(String name, Query query) {
     setName(name);
     this.query = query;
     setNodeLabel(name, null );
     node = new DefaultMutableTreeNode(this);
+    leafWidgets = new ArrayList();
      
     //  use border layout so that a single item added to InputPage fills all available space in panel
     setLayout(new BorderLayout());   
@@ -84,8 +83,15 @@ public class InputPage extends JPanel {
   /**
    * User object is an object that the user has attached to 
    * this page.
+   * @return user object if set, otherwise null.
    */
   public void setUserObject( Object userObject ) {
     this.userObject = userObject;
+  }
+
+
+
+  public List getLeafWidgets() {
+    return leafWidgets;
   }
 }

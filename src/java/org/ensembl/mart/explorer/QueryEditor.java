@@ -45,12 +45,15 @@ import javax.swing.tree.TreePath;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
+
+// TODO Support attribute order rearrangment via DnD
+// TODO Support attribute / filter removal by DELETE key
+// TODO selecting an attribute / filter should cause it to be shown in InputPanel
+
 
 /**
  * Provides a panel in which a user can create and edit
@@ -64,6 +67,8 @@ import org.ensembl.mart.lib.config.UIAttributeDescription;
 public class QueryEditor
 	extends JPanel
 	implements PropertyChangeListener, TreeSelectionListener {
+    
+  
 
   /** Maps attribute fieldnames to the corresponding InputPage. */
 	private Map attributeFieldNameToPage;
@@ -361,28 +366,40 @@ public class QueryEditor
 
 		currentDataset = datasetSelectionPage.getSelectedDataset();
 
-		// Add attribute, filter and output pages to the views.
 		addAttributePages();
-
-    
-		// todo add filter page here
-		outputSettingsPage = new OutputSettingsPage();
-		outputSettingsPage.addPropertyChangeListener(this);
-		addPage(outputSettingsPage);
-
+		addFilterPages();
+    addOutputPage();
+	
     // select the attributes page
     treeView.setSelectionPath( new TreePath( rootNode ).pathByAddingChild( attributesPage.getNode() ) );
 
 	}
 
 	/**
+   * Adds output page to tree and InputPanel.
+   */
+  private void addOutputPage() {
+    outputSettingsPage = new OutputSettingsPage();
+        outputSettingsPage.addPropertyChangeListener(this);
+        addPage(outputSettingsPage);
+  }
+
+  /**
+   * 
+   */
+  private void addFilterPages() {
+    // TODO :1 NEXT
+        //filtersPage = new FilterPageSetWidget( query, currentDataset );  
+  }
+
+  /**
    * Creates the attribute pages, adds them to the GUI and creates
    * useful maps that are used later.
    */
   private void addAttributePages() {
     
     attributesPage = new AttributePageSetWidget(query, currentDataset);
-    List list = attributesPage.getAttributeDescriptionWidgets();
+    List list = attributesPage.getLeafWidgets();
     AttributeDescriptionWidget[] attributePages = (AttributeDescriptionWidget[]) list.toArray(new AttributeDescriptionWidget[list.size()]);
     for (int i = 0; i < attributePages.length; i++) {
       AttributeDescriptionWidget w = attributePages[i];

@@ -18,15 +18,9 @@
 
 package org.ensembl.mart.explorer;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.JTabbedPane;
+import java.util.logging.Logger;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeGroup;
@@ -36,13 +30,11 @@ import org.ensembl.mart.lib.config.DSAttributeGroup;
 /**
  * Widget representing an AttributePage.
  */
-public class AttributePageWidget extends InputPage {
+public class AttributePageWidget extends PageWidget {
+
+  private final Logger logger = Logger.getLogger( AttributePageWidget.class.getName() );
 
 	private AttributePage page;
-	private JTabbedPane tabbedPane;
-  
-  private List attributeDescriptionWidgets;
-
 	/**
 	 * @param name
 	 * @param query
@@ -52,14 +44,9 @@ public class AttributePageWidget extends InputPage {
 		super(name, query);
 
 		this.page = page;
-    this.attributeDescriptionWidgets = new ArrayList();
-
-    //setBorder( new LineBorder( Color.BLACK ) );
-    setBorder( BorderFactory.createEmptyBorder( 10, 5, 5, 5 ) );
-    setBackground( Color.BLACK );
     
-		tabbedPane = new JTabbedPane();
-    add(tabbedPane);
+
+    
     
 		List attributeGroups = page.getAttributeGroups();
     for (Iterator iter = attributeGroups.iterator(); iter.hasNext();) {
@@ -70,10 +57,11 @@ public class AttributePageWidget extends InputPage {
     
         AttributeGroupWidget w = new AttributeGroupWidget( query, groupName, group );
         tabbedPane.add( groupName, w);  
-        attributeDescriptionWidgets.addAll( w.getAttributeDescriptionWidgets() );
+        leafWidgets.addAll( w.getLeafWidgets() );
 			}
       else if ( element instanceof DSAttributeGroup ) {
-        System.out.println( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
+        // TODO handle DSAttributeGroup
+        logger.warning( "TODO: handle DSAttributeGroup: " + element.getClass().getName() );
         // create page
         // add pag as tab
       }
@@ -83,10 +71,6 @@ public class AttributePageWidget extends InputPage {
       }
       
 		}
-  }
-  
-  public List getAttributeDescriptionWidgets() {
-    return attributeDescriptionWidgets;
   }
 
 }
