@@ -290,22 +290,20 @@
    description="Build javadocs.">
 
     <javadoc 
-       destdir="${api.dir}"
-      author="true"
-      version="true"
-      use="true"
-      windowtitle="MartExplorer API"
-      doctitle="MartExplorer API" >
+     sourcepath="${src.dir}"
+     packagenames="org.ensembl.mart.explorer
+	     ,org.ensembl.mart.explorer.gui"
+     destdir="${api.dir}"
+     author="true"
+     version="true"
+     use="true"
+     windowtitle="MartExplorer API"
+     doctitle="MartExplorer API" >
 
-      <fileset dir="${src.dir}" defaultexcludes="yes">
-        <include name="org/ensembl/mart/**/*.java" />
-        <exclude name="**/*Test*" />
-      </fileset>
-
-      <classpath>
-        <pathelement path="${build.classes}" />
-        <fileset refid="lib.classpath" />
-      </classpath>
+     <classpath>
+       <pathelement path="${build.classes}" />
+       <fileset refid="lib.classpath" />
+     </classpath>
 
     </javadoc>    
 
