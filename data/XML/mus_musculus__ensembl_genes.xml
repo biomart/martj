@@ -16,30 +16,1000 @@
             <Enable ref="marker_end"/>
             <Enable ref="band_start"/>
             <Enable ref="band_end"/>
-            <Option displayName="1" internalName="1" isSelectable="true" value="1">
-              <PushAction internalName="band_start_push_chr1" ref="band_start">
-                <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
-                <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
-                <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushAction>
-              <PushAction internalName="band_end_push_chr_1" ref="band_end">
-                <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
-                <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
-                <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushAction>
-            </Option>
-            <Option displayName="2" internalName="2" isSelectable="true" value="2">
-              <PushAction internalName="band_start_push_chr2" ref="band_start">
-                <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
-                <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
-                <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushAction>
-              <PushAction internalName="band_end_push_chr2" ref="band_end">
-                <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
-                <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
-                <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
-              </PushAction>
-            </Option>
+<Option displayName="1" internalName="chr1" isSelectable="true" value="1">
+  <PushAction internalName="band_start_push_chr1" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="F" internalName="F" isSelectable="true" value="F"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="H5" internalName="H5" isSelectable="true" value="H5"/>
+    <Option displayName="H6" internalName="H6" isSelectable="true" value="H6"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr1" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="F" internalName="F" isSelectable="true" value="F"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="H5" internalName="H5" isSelectable="true" value="H5"/>
+    <Option displayName="H6" internalName="H6" isSelectable="true" value="H6"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="2" internalName="chr2" isSelectable="true" value="2">
+  <PushAction internalName="band_start_push_chr2" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr2" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="3" internalName="chr3" isSelectable="true" value="3">
+  <PushAction internalName="band_start_push_chr3" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr3" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="H1" internalName="H1" isSelectable="true" value="H1"/>
+    <Option displayName="H2" internalName="H2" isSelectable="true" value="H2"/>
+    <Option displayName="H3" internalName="H3" isSelectable="true" value="H3"/>
+    <Option displayName="H4" internalName="H4" isSelectable="true" value="H4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="4" internalName="chr4" isSelectable="true" value="4">
+  <PushAction internalName="band_start_push_chr4" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="C6" internalName="C6" isSelectable="true" value="C6"/>
+    <Option displayName="C7" internalName="C7" isSelectable="true" value="C7"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2.1" internalName="D2.1" isSelectable="true" value="D2.1"/>
+    <Option displayName="D2.2" internalName="D2.2" isSelectable="true" value="D2.2"/>
+    <Option displayName="D2.3" internalName="D2.3" isSelectable="true" value="D2.3"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr4" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="C6" internalName="C6" isSelectable="true" value="C6"/>
+    <Option displayName="C7" internalName="C7" isSelectable="true" value="C7"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2.1" internalName="D2.1" isSelectable="true" value="D2.1"/>
+    <Option displayName="D2.2" internalName="D2.2" isSelectable="true" value="D2.2"/>
+    <Option displayName="D2.3" internalName="D2.3" isSelectable="true" value="D2.3"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="5" internalName="chr5" isSelectable="true" value="5">
+  <PushAction internalName="band_start_push_chr5" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3.1" internalName="C3.1" isSelectable="true" value="C3.1"/>
+    <Option displayName="C3.2" internalName="C3.2" isSelectable="true" value="C3.2"/>
+    <Option displayName="C3.3" internalName="C3.3" isSelectable="true" value="C3.3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="F" internalName="F" isSelectable="true" value="F"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr5" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3.1" internalName="C3.1" isSelectable="true" value="C3.1"/>
+    <Option displayName="C3.2" internalName="C3.2" isSelectable="true" value="C3.2"/>
+    <Option displayName="C3.3" internalName="C3.3" isSelectable="true" value="C3.3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="F" internalName="F" isSelectable="true" value="F"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="6" internalName="chr6" isSelectable="true" value="6">
+  <PushAction internalName="band_start_push_chr6" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr6" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="G1" internalName="G1" isSelectable="true" value="G1"/>
+    <Option displayName="G2" internalName="G2" isSelectable="true" value="G2"/>
+    <Option displayName="G3" internalName="G3" isSelectable="true" value="G3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="7" internalName="chr7" isSelectable="true" value="7">
+  <PushAction internalName="band_start_push_chr7" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="F5" internalName="F5" isSelectable="true" value="F5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr7" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="F5" internalName="F5" isSelectable="true" value="F5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="8" internalName="chr8" isSelectable="true" value="8">
+  <PushAction internalName="band_start_push_chr8" ref="band_start">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1.1" internalName="B1.1" isSelectable="true" value="B1.1"/>
+    <Option displayName="B1.2" internalName="B1.2" isSelectable="true" value="B1.2"/>
+    <Option displayName="B1.3" internalName="B1.3" isSelectable="true" value="B1.3"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3.1" internalName="B3.1" isSelectable="true" value="B3.1"/>
+    <Option displayName="B3.2" internalName="B3.2" isSelectable="true" value="B3.2"/>
+    <Option displayName="B3.3" internalName="B3.3" isSelectable="true" value="B3.3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr8" ref="band_end">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1.1" internalName="B1.1" isSelectable="true" value="B1.1"/>
+    <Option displayName="B1.2" internalName="B1.2" isSelectable="true" value="B1.2"/>
+    <Option displayName="B1.3" internalName="B1.3" isSelectable="true" value="B1.3"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3.1" internalName="B3.1" isSelectable="true" value="B3.1"/>
+    <Option displayName="B3.2" internalName="B3.2" isSelectable="true" value="B3.2"/>
+    <Option displayName="B3.3" internalName="B3.3" isSelectable="true" value="B3.3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="C5" internalName="C5" isSelectable="true" value="C5"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="9" internalName="chr9" isSelectable="true" value="9">
+  <PushAction internalName="band_start_push_chr9" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5.1" internalName="A5.1" isSelectable="true" value="A5.1"/>
+    <Option displayName="A5.2" internalName="A5.2" isSelectable="true" value="A5.2"/>
+    <Option displayName="A5.3" internalName="A5.3" isSelectable="true" value="A5.3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3.1" internalName="E3.1" isSelectable="true" value="E3.1"/>
+    <Option displayName="E3.2" internalName="E3.2" isSelectable="true" value="E3.2"/>
+    <Option displayName="E3.3" internalName="E3.3" isSelectable="true" value="E3.3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr9" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5.1" internalName="A5.1" isSelectable="true" value="A5.1"/>
+    <Option displayName="A5.2" internalName="A5.2" isSelectable="true" value="A5.2"/>
+    <Option displayName="A5.3" internalName="A5.3" isSelectable="true" value="A5.3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3.1" internalName="E3.1" isSelectable="true" value="E3.1"/>
+    <Option displayName="E3.2" internalName="E3.2" isSelectable="true" value="E3.2"/>
+    <Option displayName="E3.3" internalName="E3.3" isSelectable="true" value="E3.3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="10" internalName="chr10" isSelectable="true" value="10">
+  <PushAction internalName="band_start_push_chr10" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5.1" internalName="B5.1" isSelectable="true" value="B5.1"/>
+    <Option displayName="B5.2" internalName="B5.2" isSelectable="true" value="B5.2"/>
+    <Option displayName="B5.3" internalName="B5.3" isSelectable="true" value="B5.3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr10" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5.1" internalName="B5.1" isSelectable="true" value="B5.1"/>
+    <Option displayName="B5.2" internalName="B5.2" isSelectable="true" value="B5.2"/>
+    <Option displayName="B5.3" internalName="B5.3" isSelectable="true" value="B5.3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="11" internalName="chr11" isSelectable="true" value="11">
+  <PushAction internalName="band_start_push_chr11" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1.1" internalName="B1.1" isSelectable="true" value="B1.1"/>
+    <Option displayName="B1.2" internalName="B1.2" isSelectable="true" value="B1.2"/>
+    <Option displayName="B1.3" internalName="B1.3" isSelectable="true" value="B1.3"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr11" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1.1" internalName="B1.1" isSelectable="true" value="B1.1"/>
+    <Option displayName="B1.2" internalName="B1.2" isSelectable="true" value="B1.2"/>
+    <Option displayName="B1.3" internalName="B1.3" isSelectable="true" value="B1.3"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="12" internalName="chr12" isSelectable="true" value="12">
+  <PushAction internalName="band_start_push_chr12" ref="band_start">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E" internalName="E" isSelectable="true" value="E"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr12" ref="band_end">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E" internalName="E" isSelectable="true" value="E"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="13" internalName="chr13" isSelectable="true" value="13">
+  <PushAction internalName="band_start_push_chr13" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2.1" internalName="D2.1" isSelectable="true" value="D2.1"/>
+    <Option displayName="D2.2" internalName="D2.2" isSelectable="true" value="D2.2"/>
+    <Option displayName="D2.3" internalName="D2.3" isSelectable="true" value="D2.3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr13" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2.1" internalName="D2.1" isSelectable="true" value="D2.1"/>
+    <Option displayName="D2.2" internalName="D2.2" isSelectable="true" value="D2.2"/>
+    <Option displayName="D2.3" internalName="D2.3" isSelectable="true" value="D2.3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="14" internalName="chr14" isSelectable="true" value="14">
+  <PushAction internalName="band_start_push_chr14" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2.1" internalName="E2.1" isSelectable="true" value="E2.1"/>
+    <Option displayName="E2.2" internalName="E2.2" isSelectable="true" value="E2.2"/>
+    <Option displayName="E2.3" internalName="E2.3" isSelectable="true" value="E2.3"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr14" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2.1" internalName="E2.1" isSelectable="true" value="E2.1"/>
+    <Option displayName="E2.2" internalName="E2.2" isSelectable="true" value="E2.2"/>
+    <Option displayName="E2.3" internalName="E2.3" isSelectable="true" value="E2.3"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="15" internalName="chr15" isSelectable="true" value="15">
+  <PushAction internalName="band_start_push_chr15" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3.1" internalName="B3.1" isSelectable="true" value="B3.1"/>
+    <Option displayName="B3.2" internalName="B3.2" isSelectable="true" value="B3.2"/>
+    <Option displayName="B3.3" internalName="B3.3" isSelectable="true" value="B3.3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr15" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3.1" internalName="B3.1" isSelectable="true" value="B3.1"/>
+    <Option displayName="B3.2" internalName="B3.2" isSelectable="true" value="B3.2"/>
+    <Option displayName="B3.3" internalName="B3.3" isSelectable="true" value="B3.3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="16" internalName="chr16" isSelectable="true" value="16">
+  <PushAction internalName="band_start_push_chr16" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C1.1" internalName="C1.1" isSelectable="true" value="C1.1"/>
+    <Option displayName="C1.2" internalName="C1.2" isSelectable="true" value="C1.2"/>
+    <Option displayName="C1.3" internalName="C1.3" isSelectable="true" value="C1.3"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3.1" internalName="C3.1" isSelectable="true" value="C3.1"/>
+    <Option displayName="C3.2" internalName="C3.2" isSelectable="true" value="C3.2"/>
+    <Option displayName="C3.3" internalName="C3.3" isSelectable="true" value="C3.3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr16" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3" internalName="A3" isSelectable="true" value="A3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="B4" internalName="B4" isSelectable="true" value="B4"/>
+    <Option displayName="B5" internalName="B5" isSelectable="true" value="B5"/>
+    <Option displayName="C1.1" internalName="C1.1" isSelectable="true" value="C1.1"/>
+    <Option displayName="C1.2" internalName="C1.2" isSelectable="true" value="C1.2"/>
+    <Option displayName="C1.3" internalName="C1.3" isSelectable="true" value="C1.3"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3.1" internalName="C3.1" isSelectable="true" value="C3.1"/>
+    <Option displayName="C3.2" internalName="C3.2" isSelectable="true" value="C3.2"/>
+    <Option displayName="C3.3" internalName="C3.3" isSelectable="true" value="C3.3"/>
+    <Option displayName="C4" internalName="C4" isSelectable="true" value="C4"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="17" internalName="chr17" isSelectable="true" value="17">
+  <PushAction internalName="band_start_push_chr17" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1.1" internalName="E1.1" isSelectable="true" value="E1.1"/>
+    <Option displayName="E1.2" internalName="E1.2" isSelectable="true" value="E1.2"/>
+    <Option displayName="E1.3" internalName="E1.3" isSelectable="true" value="E1.3"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr17" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1.1" internalName="E1.1" isSelectable="true" value="E1.1"/>
+    <Option displayName="E1.2" internalName="E1.2" isSelectable="true" value="E1.2"/>
+    <Option displayName="E1.3" internalName="E1.3" isSelectable="true" value="E1.3"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="E5" internalName="E5" isSelectable="true" value="E5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="18" internalName="chr18" isSelectable="true" value="18">
+  <PushAction internalName="band_start_push_chr18" ref="band_start">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr18" ref="band_end">
+    <Option displayName="A1" internalName="A1" isSelectable="true" value="A1"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="B1" internalName="B1" isSelectable="true" value="B1"/>
+    <Option displayName="B2" internalName="B2" isSelectable="true" value="B2"/>
+    <Option displayName="B3" internalName="B3" isSelectable="true" value="B3"/>
+    <Option displayName="C" internalName="C" isSelectable="true" value="C"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="E4" internalName="E4" isSelectable="true" value="E4"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="19" internalName="chr19" isSelectable="true" value="19">
+  <PushAction internalName="band_start_push_chr19" ref="band_start">
+    <Option displayName="A" internalName="A" isSelectable="true" value="A"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chr19" ref="band_end">
+    <Option displayName="A" internalName="A" isSelectable="true" value="A"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D1" internalName="D1" isSelectable="true" value="D1"/>
+    <Option displayName="D2" internalName="D2" isSelectable="true" value="D2"/>
+    <Option displayName="D3" internalName="D3" isSelectable="true" value="D3"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
+<Option displayName="X" internalName="chrX" isSelectable="true" value="X">
+  <PushAction internalName="band_start_push_chrX" ref="band_start">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="A6" internalName="A6" isSelectable="true" value="A6"/>
+    <Option displayName="A7.1" internalName="A7.1" isSelectable="true" value="A7.1"/>
+    <Option displayName="A7.2" internalName="A7.2" isSelectable="true" value="A7.2"/>
+    <Option displayName="A7.3" internalName="A7.3" isSelectable="true" value="A7.3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="F5" internalName="F5" isSelectable="true" value="F5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+  <PushAction internalName="band_end_push_chrX" ref="band_end">
+    <Option displayName="A1.1" internalName="A1.1" isSelectable="true" value="A1.1"/>
+    <Option displayName="A1.2" internalName="A1.2" isSelectable="true" value="A1.2"/>
+    <Option displayName="A1.3" internalName="A1.3" isSelectable="true" value="A1.3"/>
+    <Option displayName="A2" internalName="A2" isSelectable="true" value="A2"/>
+    <Option displayName="A3.1" internalName="A3.1" isSelectable="true" value="A3.1"/>
+    <Option displayName="A3.2" internalName="A3.2" isSelectable="true" value="A3.2"/>
+    <Option displayName="A3.3" internalName="A3.3" isSelectable="true" value="A3.3"/>
+    <Option displayName="A4" internalName="A4" isSelectable="true" value="A4"/>
+    <Option displayName="A5" internalName="A5" isSelectable="true" value="A5"/>
+    <Option displayName="A6" internalName="A6" isSelectable="true" value="A6"/>
+    <Option displayName="A7.1" internalName="A7.1" isSelectable="true" value="A7.1"/>
+    <Option displayName="A7.2" internalName="A7.2" isSelectable="true" value="A7.2"/>
+    <Option displayName="A7.3" internalName="A7.3" isSelectable="true" value="A7.3"/>
+    <Option displayName="B" internalName="B" isSelectable="true" value="B"/>
+    <Option displayName="C1" internalName="C1" isSelectable="true" value="C1"/>
+    <Option displayName="C2" internalName="C2" isSelectable="true" value="C2"/>
+    <Option displayName="C3" internalName="C3" isSelectable="true" value="C3"/>
+    <Option displayName="cenp" internalName="cenp" isSelectable="true" value="cenp"/>
+    <Option displayName="cenq" internalName="cenq" isSelectable="true" value="cenq"/>
+    <Option displayName="D" internalName="D" isSelectable="true" value="D"/>
+    <Option displayName="E1" internalName="E1" isSelectable="true" value="E1"/>
+    <Option displayName="E2" internalName="E2" isSelectable="true" value="E2"/>
+    <Option displayName="E3" internalName="E3" isSelectable="true" value="E3"/>
+    <Option displayName="F1" internalName="F1" isSelectable="true" value="F1"/>
+    <Option displayName="F2" internalName="F2" isSelectable="true" value="F2"/>
+    <Option displayName="F3" internalName="F3" isSelectable="true" value="F3"/>
+    <Option displayName="F4" internalName="F4" isSelectable="true" value="F4"/>
+    <Option displayName="F5" internalName="F5" isSelectable="true" value="F5"/>
+    <Option displayName="tip" internalName="tip" isSelectable="true" value="tip"/>
+  </PushAction>
+</Option>
           </FilterDescription>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates">
