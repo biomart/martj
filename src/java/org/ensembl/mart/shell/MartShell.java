@@ -2853,68 +2853,50 @@ public class MartShell {
 			if (envDataset != null)
 				msl.setDataset(envDataset);
 
-			Query query = msl.MQLtoQuery(command);
+			//is it a store command
+			Matcher storeMatcher = MartShellLib.STOREPAT.matcher(command);
+			if (storeMatcher.matches()) {
 
-			OutputStream os = null;
-			if (sessionOutputFile != null)
-				os = sessionOutputFile;
-			else
-				os = System.out;
+				mainLogger.info("Recieved storeCommand " + command + "\n");
 
-			FormatSpec fspec = null;
+				String storedCommand = storeMatcher.group(1);
+				String key = storeMatcher.group(4);
 
-			if (sessionOutputFormat != null) {
-				if (sessionOutputFormat.equals("fasta"))
-					fspec = FormatSpec.FASTAFORMAT;
-				else {
-					fspec = new FormatSpec(FormatSpec.TABULATED);
+				mainLogger.info(
+					"as command " + command + "\n\nkey = " + key + "\nstoredCommand = " + storedCommand + "\n");
 
-					if (sessionOutputSeparator != null)
-						fspec.setSeparator(sessionOutputSeparator);
-					else
-						fspec.setSeparator(DEFOUTPUTSEPARATOR);
-				}
+				if (key.indexOf(LINEEND) > 0)
+					key = key.substring(0, key.indexOf(LINEEND));
 
-			} else
-				fspec = FormatSpec.TABSEPARATEDFORMAT;
+				msl.addStoredMQLCommand(key, storedCommand.toString());
+			} else {
+				Query query = msl.MQLtoQuery(command);
 
-			engine.execute(query, fspec, os);
+				OutputStream os = null;
+				if (sessionOutputFile != null)
+					os = sessionOutputFile;
+				else
+					os = System.out;
 
-		} else if (command.startsWith(MartShellLib.STOREC)) {
-			//storedCommand, should only be one 'as'
-			
-			mainLogger.info("Recieved storeCommand " + command + "\n");
-			
-			command = command.substring(MartShellLib.STOREC.length() + 1).trim();
-			
-      mainLogger.info(" now " + command + "\n");
-      
-			StringTokenizer toks = new StringTokenizer(command, " ");
-				
-			StringBuffer storedCommand = new StringBuffer();
-			String key = null;
-			boolean getKey = false;
-				
-			while (toks.hasMoreTokens()) {
-				if (getKey) {
-					key = toks.nextToken();
-				} else {
-					String tok = toks.nextToken();
-					if (tok.equalsIgnoreCase(ASC))
-						getKey = true;
+				FormatSpec fspec = null;
+
+				if (sessionOutputFormat != null) {
+					if (sessionOutputFormat.equals("fasta"))
+						fspec = FormatSpec.FASTAFORMAT;
 					else {
-						if (storedCommand.length() > 0)
-							storedCommand.append(" ");
-						storedCommand.append(tok);
+						fspec = new FormatSpec(FormatSpec.TABULATED);
+
+						if (sessionOutputSeparator != null)
+							fspec.setSeparator(sessionOutputSeparator);
+						else
+							fspec.setSeparator(DEFOUTPUTSEPARATOR);
 					}
-				}
+
+				} else
+					fspec = FormatSpec.TABSEPARATEDFORMAT;
+
+				engine.execute(query, fspec, os);
 			}
-			mainLogger.info("as command " + command + "\n\nkey = " + key + "\nstoredCommand = " + storedCommand.toString() + "\n" );
-				
-			if (key.indexOf(LINEEND) > 0 )
-				key = key.substring(0, key.indexOf(LINEEND));
-				  
-			msl.addStoredMQLCommand(key, storedCommand.toString());
 		} else {
 			throw new InvalidQueryException("\nInvalid Command: please try again " + command + "\n");
 		}
