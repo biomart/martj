@@ -34,7 +34,7 @@ public class UIDSFilterDescription {
 	 * @throws ConfigurationException
 	 */
 	public UIDSFilterDescription() throws ConfigurationException {
-		this("", "", 0, "", "");
+		this("", "", "", "", "");
 	}
 	
 	/**
@@ -42,12 +42,12 @@ public class UIDSFilterDescription {
 	 * 
 	 * @param internalName - String name to internally reference this Description
 	 * @param type - String type of UI Display
-	 * @param objectCode - int type of DomainSpecificFilterHandler to use to resolve this Filter
+	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this Filter
 	 * 
 	 * @throws ConfigurationException when internalName or type are null, or when the objectCode == 0
 	 * @see DomainSpecificFilterHandler
 	 */
-	public UIDSFilterDescription(String internalName, String type, int objectCode) throws ConfigurationException {
+	public UIDSFilterDescription(String internalName, String type, String objectCode) throws ConfigurationException {
 	  this(internalName, type, objectCode, "", "");	
 	}
 
@@ -56,16 +56,16 @@ public class UIDSFilterDescription {
    * 
 	 * @param internalName - String name to internally reference this FilterDescription
 	 * @param type - String type of UI Display
-	 * @param objectCode - int type of DomainSpecificFilterHandler to use to resolve this FilterDescription
+	 * @param objectCode - String type of DomainSpecificFilterHandler to use to resolve this FilterDescription
    * @param displayName - String name to display in a UI for this FilterDescription
    * @param description - String descriptive information for this FilterDescription
    * 
-   * @throws ConfigurationException when internalName or type are null, or when the objectCode == 0
+   * @throws ConfigurationException when internalName, type, or objectCode are null
    */
-  public UIDSFilterDescription(String internalName, String type, int objectCode, String displayName, String description) throws ConfigurationException {
+  public UIDSFilterDescription(String internalName, String type, String objectCode, String displayName, String description) throws ConfigurationException {
   	if (internalName == null || internalName.equals("")
   	  || type == null || type.equals("")
-  	  || objectCode == 0)
+  	  || objectCode == null || objectCode.equals(""))
   	  throw new ConfigurationException("UIDSFilterDescription object must have an internalName, type and objectCode");
   	  
   	this.internalName = internalName;
@@ -79,7 +79,7 @@ public class UIDSFilterDescription {
 		hshcode = (31 * hshcode) + displayName.hashCode();
 		hshcode = (31 * hshcode) + type.hashCode();
 	  hshcode = (31 * hshcode) + description.hashCode();
-	  hshcode = (31 * hshcode) + objectCode;
+	  hshcode = (31 * hshcode) + objectCode.hashCode();
   }  
   
 	/**
@@ -112,9 +112,9 @@ public class UIDSFilterDescription {
 	/**
 	 * Returns the objectCode of this UIDSFilterDescription
 	 * 
-	 * @return int objectCode
+	 * @return String objectCode
 	 */
-	public int getObjectCode() {
+	public String getObjectCode() {
 		return objectCode;
 	}
 
@@ -165,7 +165,7 @@ public class UIDSFilterDescription {
     if (! type.equals(otype.getType()))
       return false;
       
-    if (! ( objectCode == otype.getObjectCode() ) )
+    if (! objectCode.equals( otype.getObjectCode() ) )
       return false;
       
 		return true;
@@ -178,7 +178,6 @@ public class UIDSFilterDescription {
 		 return hshcode;
 	}
 	
-  private final String internalName, displayName, description, type;
-  private final int objectCode;
+  private final String internalName, displayName, description, type, objectCode;
   private int hshcode = 0;
 }

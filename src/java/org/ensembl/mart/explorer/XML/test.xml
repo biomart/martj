@@ -32,7 +32,7 @@
 
 		       <UIFilterDescription internalName="testUIFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" fieldName="test_id" qualifier="in" tableConstraint="gene_main"/>
 
-		       <UIDSFilterDescription internalName="testUIDSFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" objectCode="1"/>
+		       <UIDSFilterDescription internalName="testUIDSFilterDescription" displayName="A TEST ID, DOESNT EXIST" description="For Testing Purposes Only" type="list" objectCode="testObjectCode"/>
 
 		     </FilterCollection>
 

@@ -361,8 +361,8 @@ public class ConfigurationTest extends Base {
 		Desc = dsf.getDescription();
 		Type = dsf.getType();
 		testFieldName = "test_id";
-    int testObjectCode = 1;
-    int ObjectCode = dsf.getObjectCode();
+    String testObjectCode = "testObjectCode";
+    String ObjectCode = dsf.getObjectCode();
 
 		assertEquals("Warning, Internal Name not correctly set for UIDSFilterDescription\n", testIName, IName);
 		assertEquals("Warning, Display Name not correctly set for UIDSFilterDescription\n", testDName, DName);
