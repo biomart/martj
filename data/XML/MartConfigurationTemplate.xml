@@ -178,7 +178,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -288,7 +288,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -329,7 +329,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <AttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -350,7 +350,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -408,7 +408,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -574,7 +574,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -625,7 +625,7 @@
           <AttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -666,7 +666,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <AttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -687,7 +687,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -721,7 +721,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -821,7 +821,7 @@
         <AttributeCollection description="Chromosomal Location of SNPs" displayName="Chromosome Attributes:" internalName="chromosomeatts">
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="6" tableConstraint="snp_main"/>
           <AttributeDescription description="Chromosomal Start Coordinate" displayName="Start Position (bp)" fieldName="snp_chrom_start" internalName="chromosome_start_position" maxLength="9" tableConstraint="snp_main"/>
-          <AttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
+          <AttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="SNP IDs and Features" displayName="SNP:" internalName="snp">
@@ -877,7 +877,7 @@
         <AttributeCollection description="Chromosomal Location of SNPs" displayName="Chromosome Attributes:" internalName="chromosomeatts">
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="6" tableConstraint="snp_main"/>
           <AttributeDescription description="Chromosomal Start Coordinate" displayName="Start Position (bp)" fieldName="snp_chrom_start" internalName="chromosome_start_position" maxLength="9" tableConstraint="snp_main"/>
-          <AttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
+          <AttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="SNP IDs and Features" displayName="SNP:" internalName="snp">
@@ -1045,7 +1045,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -1143,7 +1143,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -1180,7 +1180,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <AttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <AttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <AttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -1201,7 +1201,7 @@
           <AttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -1235,7 +1235,7 @@
           <AttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <AttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <AttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <AttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
           <AttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
