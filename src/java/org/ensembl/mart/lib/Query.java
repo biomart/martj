@@ -135,15 +135,28 @@ public class Query {
   }
 
   /**
-   * test to determine if a specified attribute object is 
-   * contained within the attribute list of the Query.
+   * Determines if the specified attribute object is 
+   * contained within the attribute array of the Query.
    * 
-   * @param attribute
-   * @return boolean
+   * @param attribute attribute to look for
+   * @return boolean true if attribute is present, otherwise false.
    */
   public boolean hasAttribute(Attribute attribute) {
     return attributes.contains(attribute);
   }
+
+
+  /**
+   * Determines if the specified filter object is 
+   * contained within the filter array of the Query.
+   * 
+   * @param filter filter to look for
+   * @return boolean true if filter is present, otherwise false.
+   */
+  public boolean hasFilter(Attribute filter) {
+    return filters.contains(filter);
+  }
+
 
   /**
    * Adds attribute to the end of the attributes array. 
