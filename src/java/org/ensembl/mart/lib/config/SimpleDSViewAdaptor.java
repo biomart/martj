@@ -33,6 +33,7 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
   private final String[] inames;
   private final String[] dnames;
   private final int hashcode;
+  private String adaptorName = null;
 
   /**
    * Constructor for an immutable SimpleDSViewAdaptor object.
@@ -217,5 +218,92 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
     else
       return null;
     }
+
+  /**
+   * SimpleDSViewAdaptor Objects do not contain child DSViewAdaptor Objects
+   * @returns null
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorByName(java.lang.String)
+   */
+  public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
+      return null;
+  }
+
+  /**
+   * SimpleDSViewAdaptor objects do not contain child DSViewAdaptor Objects
+   * @return Empty String[]
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorNames()
+   */
+  public String[] getAdaptorNames() throws ConfigurationException {
+    return new String[0];
+  }
+
+  /**
+   * SimpleDSViewAdaptor objects do not contain child DSViewAdaptor Objects
+   * @return Empty DSViewAdaptor[]
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptors()
+   */
+  public DSViewAdaptor[] getAdaptors() throws ConfigurationException {
+    return new DSViewAdaptor[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames()
+   */
+  public String[] getDatasetNames() throws ConfigurationException {
+    return new String[] { dsv.getDataset() };
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames(java.lang.String)
+   */
+  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+    if (this.adaptorName.equals(adaptorName))
+      return getDatasetNames();
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewDisplayNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException {
+    if (dsv.getDataset().equals(dataset))
+      return new String[] { dsv.getDisplayName() };
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewInternalNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException {
+    if (dsv.getDataset().equals(dataset))
+      return new String[] { dsv.getInternalName() };
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
+   */
+  public String getName() {
+    return adaptorName;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#setName(java.lang.String)
+   */
+  public void setName(String adaptorName) {
+    this.adaptorName = adaptorName;
+  }
+
+  /**
+   * SimpleDSViewAdaptor objects do not contain child DSViewAdaptor Objects
+   * @return false
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsAdaptor(java.lang.String)
+   */
+  public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
+    return false;
+  }
 
 }

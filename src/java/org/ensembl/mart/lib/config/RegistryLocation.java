@@ -27,11 +27,17 @@ import java.net.URL;
 public class RegistryLocation extends MartLocationBase {
 	private final URL url;
 	private final int hashcode;
-	private final String type = MartLocationBase.REGISTRY;
 	
-	public RegistryLocation(URL url) {
+	public RegistryLocation(URL url, String name) {
+    this.type = MartLocationBase.REGISTRY;
 		this.url = url;
-		hashcode = url.hashCode();
+		int tmp = url.hashCode();
+    
+    if (name != null) {
+      this.name = name;
+      tmp += (31 * tmp) + name.hashCode();
+    }
+    hashcode = tmp;
 	}
 	
 	/* (non-Javadoc)

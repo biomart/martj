@@ -21,9 +21,9 @@ package org.ensembl.mart.lib.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
@@ -39,7 +39,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 	private MartRegistry martreg; // single, underlying MartRegistry for this Adaptor
 	private URL url;
-	private List martRegs = new ArrayList(); // keep a list of MartRegistry Objects pulled from RegistryLocation elements
+	private Set martRegs = new TreeSet(); // keep a list of MartRegistry Objects pulled from RegistryLocation elements
 
 	/**
 	 * Constructs an empty RegistryDSViewAdaptor.  A URL for
@@ -180,6 +180,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 
 				if (!martRegs.contains(subreg)) {
 					RegistryDSViewAdaptor adaptor = new RegistryDSViewAdaptor(subreg, url);
+          
 					if (!adaptors.contains(adaptor)) {
 						DatasetView[] dsvs = adaptor.getDatasetViews();
 						for (int j = 0, m = dsvs.length; j < m; j++) {
@@ -189,6 +190,8 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 								adaptor.removeDatasetView(view); // assume they are the same
 						}
 
+            adaptor.setName(location.getName());
+            
 						if (adaptor.getDatasetInternalNames().length > 0)
 							add(adaptor);
 					}
@@ -196,6 +199,7 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 				}
 			} else if (location.getType().equals(MartLocationBase.URL)) {
 				URLDSViewAdaptor adaptor = new URLDSViewAdaptor(((URLLocation) location).getUrl(), false);
+        adaptor.setName(location.getName());
 				add(adaptor);
 			} else if (location.getType().equals(MartLocationBase.DATABASE)) {
 				DatabaseLocation dbloc = (DatabaseLocation) location;
@@ -230,6 +234,8 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 							adaptor.removeDatasetView(view); // assume they are the same
 					}
 
+          adaptor.setName(location.getName());
+          
 					if (adaptor.getDatasetInternalNames().length > 0)
 						add(adaptor);
 				}
@@ -238,15 +244,15 @@ public class RegistryDSViewAdaptor extends CompositeDSViewAdaptor {
 		}
 	}
 
-	/**
-	 * Adds adaptor.  
-	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSViewAdaptor
-	 * to this instance or you will cause circular references when the getXXX() methods are called.
-	 */
-	public void add(DSViewAdaptor adaptor) {
-		if (!adaptors.contains(adaptor))
-			adaptors.add(adaptor);
-	}
+//	/**
+//	 * Adds adaptor.  
+//	 * @param adaptor adaptor to be added. Do not add an ancestor CompositeDSViewAdaptor
+//	 * to this instance or you will cause circular references when the getXXX() methods are called.
+//	 */
+//	public void add(DSViewAdaptor adaptor) {
+//		if (!adaptors.contains(adaptor))
+//			adaptors.add(adaptor);
+//	}
 
 	/**
 	 * Returns a new MartRegistry object, with MartLocations for all of the adaptors present.

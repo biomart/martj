@@ -35,15 +35,15 @@ public class DatabaseLocation extends MartLocationBase {
   private final String instanceName;
   private final String user;
   private final String password;
-  private final String type = MartLocationBase.DATABASE;
   private final String jdbcDriverClassName;
 
   private final int hashcode;
 
-  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String jdbcDriverClassName) throws ConfigurationException {
+  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String jdbcDriverClassName, String name) throws ConfigurationException {
     if (host == null || instanceName == null || user == null)
       throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
       
+      this.type = MartLocationBase.DATABASE;
       this.host = host;
 		  this.instanceName = instanceName;
       this.user = user;
@@ -59,7 +59,13 @@ public class DatabaseLocation extends MartLocationBase {
       tmp = (databaseType != null) ? (31 * tmp) + databaseType.hashCode() : tmp;
       tmp = (password != null) ? (31 * tmp) + password.hashCode() : tmp;
       tmp = (jdbcDriverClassName != null) ? (31 * tmp) + jdbcDriverClassName.hashCode() : tmp;
-      hashcode = tmp;      
+      
+      if (name != null) {
+        this.name = name;
+        tmp = (31 * tmp) + name.hashCode();
+      }
+        
+      hashcode = tmp;
   }
 
 	/* (non-Javadoc)

@@ -31,11 +31,18 @@ public class URLLocation extends MartLocationBase {
 
   private final URL url;
   private final int hashcode;
-  private final String type = MartLocationBase.URL;
   
-	public URLLocation(URL url) {
+	public URLLocation(URL url, String name) {
     this.url = url;
-    hashcode = url.hashCode();
+    this.type = MartLocationBase.URL;
+    
+    int tmp = url.hashCode();
+    
+    if (name != null) {
+      this.name = name;
+      tmp = (31 * tmp) + name.hashCode();
+    }    
+    hashcode = tmp;
 	}
 
 	/**

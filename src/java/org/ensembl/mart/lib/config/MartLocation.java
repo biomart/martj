@@ -31,4 +31,10 @@ public interface MartLocation {
    * @return String , one of the MartLocationBase static String enums 
    */
   public String getType();
+  
+  /**
+   * Returns the name of the Location.  Each implimentation must return a suitable default value, instead of null.
+   * @return String name of the location
+   */
+  public String getName();
 }

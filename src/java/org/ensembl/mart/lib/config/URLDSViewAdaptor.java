@@ -33,14 +33,15 @@ import org.ensembl.util.StringUtil;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
-	private final URL dsvurl;
-	private final boolean validate;
+  private final URL dsvurl;
+  private final boolean validate;
   private final int hashcode;
 
-	private DatasetView dsv;
-	private String[] inames;
-	private String[] dnames;
-	private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
+  private DatasetView dsv;
+  private String[] inames;
+  private String[] dnames;
+  private Logger logger = Logger.getLogger(URLDSViewAdaptor.class.getName());
+  private String adaptorName = null;
 
   /**
    * Construct a DSViewAdaptor from a url containing a DatasetView.dtd compliant XML Document.
@@ -51,7 +52,7 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   public URLDSViewAdaptor(URL url) throws ConfigurationException {
     this(url, false);
   }
-  
+
   /**
    * Construct a DSViewAdaptor from a url containing a DatasetView.dtd compliant XML Document,
    * with optional JDOM validation.
@@ -59,104 +60,106 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
    * @param validate -- if true, JDOM validates the Document against the DatasetView.dtd contained in the CLASSPATH
    * @throws ConfigurationException for all underlying Exceptions.
    */
-	public URLDSViewAdaptor(URL url, boolean validate) throws ConfigurationException {
-		if (url == null)
-			throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
-		dsvurl = url;
-		this.validate = validate;
-    
+  public URLDSViewAdaptor(URL url, boolean validate) throws ConfigurationException {
+    if (url == null)
+      throw new ConfigurationException("DSViewURLAdaptors must be instantiated with a URL\n");
+    dsvurl = url;
+    this.validate = validate;
+
     hashcode = dsvurl.hashCode();
-		update();
-	}
+    update();
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
-	 */
-	public String[] getDatasetDisplayNames() throws ConfigurationException {
-		return dnames;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetDisplayNames()
+   */
+  public String[] getDatasetDisplayNames() throws ConfigurationException {
+    return dnames;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
-	 */
-	public String[] getDatasetInternalNames() throws ConfigurationException {
-		return inames;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetInternalNames()
+   */
+  public String[] getDatasetInternalNames() throws ConfigurationException {
+    return inames;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
-	 */
-	public DatasetView[] getDatasetViews() throws ConfigurationException {
-		return new DatasetView[] { dsv };
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViews()
+   */
+  public DatasetView[] getDatasetViews() throws ConfigurationException {
+    return new DatasetView[] { dsv };
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
-	 */
-	public boolean supportsDisplayName(String name) {
-		if (dnames[0].equals(name))
-			return true;
-		else
-			return false;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDisplayName(java.lang.String)
+   */
+  public boolean supportsDisplayName(String name) {
+    if (dnames[0].equals(name))
+      return true;
+    else
+      return false;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
-	 */
-	public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
-		if (!supportsDisplayName(name))
-			throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
-		return dsv;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
+   */
+  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
+    if (!supportsDisplayName(name))
+      throw new ConfigurationException(name + " does not match the displayName of this SimpleDatasetView object\n");
+    return dsv;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
-	 */
-	public boolean supportsInternalName(String name) {
-		if (inames[0].equals(name))
-			return true;
-		else
-			return false;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsInternalName(java.lang.String)
+   */
+  public boolean supportsInternalName(String name) {
+    if (inames[0].equals(name))
+      return true;
+    else
+      return false;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
-	 */
-	public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
-		if (!supportsInternalName(name))
-			throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
-		return dsv;
-	}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
+   */
+  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
+    if (!supportsInternalName(name))
+      throw new ConfigurationException(name + " does not match the internalName of this SimpleDatasetView object\n");
+    return dsv;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
-	 */
-	public void update() throws ConfigurationException {
-		try {
-				dsv = DatasetViewXMLUtils.XMLStreamToDatasetView( InputSourceUtil.getStreamForURL(dsvurl), validate);
-		} catch (Exception e) {
-			throw new ConfigurationException("Could not load DatasetView from URL: " + dsvurl.toString() + " " + e.getMessage(), e);
-		}
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
+   */
+  public void update() throws ConfigurationException {
+    try {
+      dsv = DatasetViewXMLUtils.XMLStreamToDatasetView(InputSourceUtil.getStreamForURL(dsvurl), validate);
+    } catch (Exception e) {
+      throw new ConfigurationException(
+        "Could not load DatasetView from URL: " + dsvurl.toString() + " " + e.getMessage(),
+        e);
+    }
 
-		inames = new String[] { dsv.getInternalName()};
-		dnames = new String[] { dsv.getDisplayName()};
+    inames = new String[] { dsv.getInternalName()};
+    dnames = new String[] { dsv.getDisplayName()};
 
-		dsv.setDSViewAdaptor(this);
-	}
+    dsv.setDSViewAdaptor(this);
+  }
 
-	/**
-	 * Useful debug output
-	 */
-	public String toString() {
-		StringBuffer buf = new StringBuffer();
+  /**
+   * Useful debug output
+   */
+  public String toString() {
+    StringBuffer buf = new StringBuffer();
 
-		buf.append("[");
+    buf.append("[");
     buf.append(" url=").append(dsvurl.toString());
-		buf.append(", dataset DisplayName=").append(dsv.getDisplayName());
-		buf.append("]");
+    buf.append(", dataset DisplayName=").append(dsv.getDisplayName());
+    buf.append("]");
 
-		return buf.toString();
-	}
+    return buf.toString();
+  }
 
   /**
    * Allows Equality Comparisons manipulation of DSViewAdaptor objects.  Although
@@ -164,9 +167,9 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
    * consistency with the compareTo method, in practice, it is almost impossible for different DSVIewAdaptor
    * implimentations to equal.
    */
-	public boolean equals(Object o) {
-		return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
-	}
+  public boolean equals(Object o) {
+    return o instanceof DSViewAdaptor && hashCode() == o.hashCode();
+  }
 
   /**
    * Based solely on the underlying URL.
@@ -175,9 +178,9 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
    * has changed between instantiation of the two URLDSViewAdaptor objects,
    * a call to update() should resolve this.
    */
-	public int hashCode() {
-		return hashcode;
-	}
+  public int hashCode() {
+    return hashcode;
+  }
 
   /**
    * allows any DSViewAdaptor implimenting object to be compared to any other
@@ -185,24 +188,24 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   public int compareTo(Object o) {
-    return hashCode() - ( (DSViewAdaptor) o).hashCode();
+    return hashCode() - ((DSViewAdaptor) o).hashCode();
   }
-  
-	/**
-	 * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
-	 */
-	public void lazyLoad(DatasetView dsv) throws ConfigurationException {
-		// Currently does not do anything, as URL DSViews are fully loaded at instantiation.  Could change in the future.
 
-	}
+  /**
+   * Currently doesnt do anything, as URL DatasetView objects are fully loaded at instantiation.  Could change in the future.
+   */
+  public void lazyLoad(DatasetView dsv) throws ConfigurationException {
+    // Currently does not do anything, as URL DSViews are fully loaded at instantiation.  Could change in the future.
 
-	/* (non-Javadoc)
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
-	 */
-	public MartLocation[] getMartLocations() throws ConfigurationException {
-		return new MartLocation[] { new URLLocation(dsvurl)};
-	}
-  
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getMartLocations()
+   */
+  public MartLocation[] getMartLocations() throws ConfigurationException {
+    return new MartLocation[] { new URLLocation(dsvurl, adaptorName)};
+  }
+
   /**
    * Writes a DatasetView object as DatasetView.dtd compliant XML to a File.
    * @param dsv -- DatasetView object to store to the file system
@@ -212,42 +215,38 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
   public static void StoreDatasetView(DatasetView dsv, File file) throws ConfigurationException {
     DatasetViewXMLUtils.DatasetViewToFile(dsv, file);
   }
-  
+
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
    */
-  public boolean supportsDataset(String dataset)
-    throws ConfigurationException {
+  public boolean supportsDataset(String dataset) throws ConfigurationException {
     return dsv.getDataset().equals(dataset);
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset)
-    throws ConfigurationException {
+  public DatasetView[] getDatasetViewByDataset(String dataset) throws ConfigurationException {
 
     if (supportsDataset(dataset))
       return new DatasetView[] { dsv };
     else
       return new DatasetView[0];
   }
-	/**
+  /**
    * @return "URL"
-	 * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
-	 */
-	public String getDisplayName() {
-		return "URL";
-	}
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDisplayName()
+   */
+  public String getDisplayName() {
+    return "URL";
+  }
 
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
    */
-  public DatasetView getDatasetViewByDatasetInternalName(
-    String dataset,
-    String internalName)
+  public DatasetView getDatasetViewByDatasetInternalName(String dataset, String internalName)
     throws ConfigurationException {
-    
+
     boolean same = StringUtil.compare(dataset, dsv.getDataset()) == 0;
     same = same && StringUtil.compare(internalName, dsv.getInternalName()) == 0;
 
@@ -255,6 +254,93 @@ public class URLDSViewAdaptor implements DSViewAdaptor, Comparable {
       return dsv;
     else
       return null;
-    }
+  }
 
+  /**
+   * URLDSViewAdaptor Objects do not contain child DSViewAdaptor Objects.
+   * @return null
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorByName(java.lang.String)
+   */
+  public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
+    return null;
+  }
+
+  /**
+   * URLDSViewAdaptor Objects do not contain child DSViewAdaptor Objects.
+   * @return empty String[]
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorNames()
+   */
+  public String[] getAdaptorNames() throws ConfigurationException {
+    return new String[0];
+  }
+
+  /**
+   * URLDSViewAdaptor Objects do not contain child DSViewAdaptor Objects.
+   * @return empty DSViewAdaptor[] 
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptors()
+   */
+  public DSViewAdaptor[] getAdaptors() throws ConfigurationException {
+    return new DSViewAdaptor[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames()
+   */
+  public String[] getDatasetNames() throws ConfigurationException {
+    return new String[] { dsv.getDataset()};
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames(java.lang.String)
+   */
+  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+    if (this.adaptorName.equals(adaptorName))
+      return getDatasetNames();
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewDisplayNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException {
+    if (dsv.getDataset().equals(dataset))
+      return new String[] { dsv.getDisplayName()};
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewInternalNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException {
+    if (dsv.getDataset().equals(dataset))
+      return new String[] { dsv.getInternalName()};
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
+   */
+  public String getName() {
+    return adaptorName;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#setName(java.lang.String)
+   */
+  public void setName(String adaptorName) {
+    this.adaptorName = adaptorName;
+  }
+  
+  /**
+   * URLDSViewAdaptor Objects do not contain child DSViewAdaptor Objects.
+   * @return false
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsAdaptor(java.lang.String)
+   */
+  public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
+    // TODO Auto-generated method stub
+    return false;
+  }
 }

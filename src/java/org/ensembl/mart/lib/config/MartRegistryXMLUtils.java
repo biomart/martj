@@ -56,6 +56,7 @@ public class MartRegistryXMLUtils {
   private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
   
 	//attribute names
+  private static final String NAME = "name";
 	private static final String HOST = "host";
 	private static final String PORT = "port";
 	private static final String DATABASETYPE = "databaseType";
@@ -129,7 +130,8 @@ public class MartRegistryXMLUtils {
 			throw new ConfigurationException("Could not create URL for " + urlstring + " from URLLocation Element within MartRegistry " + e.getMessage(), e);
 		}
 
-		return new URLLocation(url);
+    String name = urlloc.getAttributeValue(NAME);
+		return new URLLocation(url, name);
 	}
 
 	private static MartLocation getDBLocation(Element dbloc) throws ConfigurationException {
@@ -140,8 +142,9 @@ public class MartRegistryXMLUtils {
 		String user = dbloc.getAttributeValue(USER);
 		String password = dbloc.getAttributeValue(PASSWORD);
 		String jdbcDriverClassName = dbloc.getAttributeValue(JDBCDRIVER);
+    String name = dbloc.getAttributeValue(NAME);
 
-		return new DatabaseLocation(host, port, databaseType, instanceName, user, password, jdbcDriverClassName);
+		return new DatabaseLocation(host, port, databaseType, instanceName, user, password, jdbcDriverClassName, name);
 	}
 
 	private static MartLocation getRegLocation(Element regloc) throws ConfigurationException {
@@ -154,7 +157,8 @@ public class MartRegistryXMLUtils {
 			throw new ConfigurationException("Could not create URL from RegistryLocation Element within MartRegistry " + e.getMessage(), e);
 		}
 
-		return new RegistryLocation(url);
+    String name = regloc.getAttributeValue(NAME);
+		return new RegistryLocation(url,name);
 	}
 
   /**

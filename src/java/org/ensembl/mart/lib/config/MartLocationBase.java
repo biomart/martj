@@ -29,9 +29,18 @@ public abstract class MartLocationBase implements MartLocation {
   public static final String URL = "url";
   public static final String REGISTRY = "registry";
   
+  protected String name;
+  protected String type;
+  
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.config.MartLocation#getType()
 	 */
 	public abstract String getType();
 
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MartLocation#getName()
+   */
+  public String getName() {
+    return name;
+  }
 }

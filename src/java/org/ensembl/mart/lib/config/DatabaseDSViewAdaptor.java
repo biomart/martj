@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
@@ -50,12 +52,10 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   Preferences xmlCache = null;
 
   private String dbpassword;
-  private Logger logger =
-    Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
+  private Logger logger = Logger.getLogger(DatabaseDSViewAdaptor.class.getName());
   private List dsviews = new ArrayList();
-  private int inameIndex = 0;
+  private SortedSet datasetNameMap = new TreeSet();
   private HashMap inameMap = new HashMap();
-  private int dnameIndex = 0;
   private HashMap dnameMap = new HashMap();
 
   private final DataSource dsvsource;
@@ -65,6 +65,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
 
   private final String user;
   private final int hashcode;
+  private String adaptorName = null;
 
   /**
    * Constructor for a DatabaseDSViewAdaptor
@@ -72,8 +73,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param user -- user for RDBMS connection, AND _meta_DatasetView_user table
    * @throws ConfigurationException if DataSource or user is null
    */
-  public DatabaseDSViewAdaptor(DataSource ds, String user)
-    throws ConfigurationException {
+  public DatabaseDSViewAdaptor(DataSource ds, String user) throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSViewAdaptor Objects must be instantiated with a DataSource and User\n");
 
@@ -92,27 +92,19 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
           els.host + "/" + els.port + "/" + els.databaseName);
     } catch (IllegalArgumentException e) {
       throw new ConfigurationException(
-        "Caught IllegalArgumentException during parse of Connection for Connection Parameters "
-          + e.getMessage(),
+        "Caught IllegalArgumentException during parse of Connection for Connection Parameters " + e.getMessage(),
         e);
     } catch (SQLException e) {
       throw new ConfigurationException(
-        "Caught SQLException during parse of Connection for Connection Parameters "
-          + e.getMessage(),
+        "Caught SQLException during parse of Connection for Connection Parameters " + e.getMessage(),
         e);
     }
 
     int tmp = user.hashCode();
     tmp = (31 * tmp) + els.host.hashCode();
     tmp = (els.port != null) ? (31 * tmp) + els.port.hashCode() : tmp;
-    tmp =
-      (els.databaseType != null)
-        ? (31 * tmp) + els.databaseType.hashCode()
-        : tmp;
-    tmp =
-      (els.databaseName != null)
-        ? (31 * tmp) + els.databaseName.hashCode()
-        : tmp;
+    tmp = (els.databaseType != null) ? (31 * tmp) + els.databaseType.hashCode() : tmp;
+    tmp = (els.databaseName != null) ? (31 * tmp) + els.databaseName.hashCode() : tmp;
     tmp = (31 * tmp) + els.jdbcDriverClassName.hashCode();
     hashcode = tmp;
     update();
@@ -166,8 +158,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDisplayName(java.lang.String)
    */
-  public DatasetView getDatasetViewByDisplayName(String name)
-    throws ConfigurationException {
+  public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException {
     return (DatasetView) dnameMap.get(name);
   }
 
@@ -181,14 +172,13 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByInternalName(java.lang.String)
    */
-  public DatasetView getDatasetViewByInternalName(String name)
-    throws ConfigurationException {
+  public DatasetView getDatasetViewByInternalName(String name) throws ConfigurationException {
     return (DatasetView) inameMap.get(name);
   }
 
   public void addDatasetView(DatasetView dsv) throws ConfigurationException {
-    if (!(inameMap.containsKey(dsv.getInternalName())
-      && dnameMap.containsKey(dsv.getDisplayName()))) {
+    if (!(inameMap.containsKey(dsv.getInternalName()) && dnameMap.containsKey(dsv.getDisplayName()))) {
+      datasetNameMap.add( dsv.getDataset() );
       dsv.setDatasource(dsvsource);
       dsv.setDSViewAdaptor(this);
 
@@ -210,8 +200,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
         DatasetView dsv = (DatasetView) inameMap.get(iname);
 
         if (xmlCache.nodeExists(iname)) {
-          byte[] md5 =
-            xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
+          byte[] md5 = xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
 
           if (!MessageDigest.isEqual(md5, dsv.getMessageDigest()))
             addToXMLCache(dsv);
@@ -235,9 +224,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   private void addToXMLCache(DatasetView dsv) throws ConfigurationException {
     String iname = dsv.getInternalName();
     xmlCache.node(iname).putByteArray(DIGESTKEY, dsv.getMessageDigest());
-    xmlCache.node(iname).putByteArray(
-      XMLKEY,
-      DatasetViewXMLUtils.DatasetViewToByteArray(dsv));
+    xmlCache.node(iname).putByteArray(XMLKEY, DatasetViewXMLUtils.DatasetViewToByteArray(dsv));
 
     try {
       xmlCache.flush();
@@ -251,8 +238,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     }
   }
 
-  private void removeFromXMLCache(DatasetView dsv)
-    throws ConfigurationException {
+  private void removeFromXMLCache(DatasetView dsv) throws ConfigurationException {
     String iname = dsv.getInternalName();
     xmlCache.node(iname).remove(iname); //removes this node entirely
     try {
@@ -270,14 +256,14 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.MultiDSViewAdaptor#removeDatasetView(org.ensembl.mart.lib.config.DatasetView)
    */
-  public boolean removeDatasetView(DatasetView dsv)
-    throws ConfigurationException {
+  public boolean removeDatasetView(DatasetView dsv) throws ConfigurationException {
     if (inameMap.containsKey(dsv.getInternalName())) {
+      datasetNameMap.remove( dsv.getDataset() );
       inameMap.remove(dsv.getInternalName());
       dnameMap.remove(dsv.getDisplayName());
       dsviews.remove(dsv);
       dsv.setDSViewAdaptor(null);
-      removeFromXMLCache(dsv);
+      removeFromXMLCache(dsv);      
       return true;
     } else
       return false;
@@ -287,8 +273,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#update()
    */
   public void update() throws ConfigurationException {
-    String[] inms =
-      DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
+    String[] inms = DatabaseDatasetViewUtils.getAllInternalNames(dsvsource, user);
     for (int i = 0, n = inms.length; i < n; i++) {
       String iname = inms[i];
       boolean cacheExists = false;
@@ -307,29 +292,16 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
       }
 
       if (inameMap.containsKey(iname)) {
-        byte[] nDigest =
-          DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(
-            dsvsource,
-            user,
-            iname);
+        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
         byte[] oDigest = ((DatasetView) inameMap.get(iname)).getMessageDigest();
 
         if (!MessageDigest.isEqual(oDigest, nDigest)) {
           removeDatasetView((DatasetView) inameMap.get(iname));
-          addDatasetView(
-            DatabaseDatasetViewUtils.getDatasetViewByInternalName(
-              dsvsource,
-              user,
-              iname));
+          addDatasetView(DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname));
         }
       } else if (cacheExists) {
-        byte[] nDigest =
-          DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(
-            dsvsource,
-            user,
-            iname);
-        byte[] oDigest =
-          xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
+        byte[] nDigest = DatabaseDatasetViewUtils.getDSViewMessageDigestByInternalName(dsvsource, user, iname);
+        byte[] oDigest = xmlCache.node(iname).getByteArray(DIGESTKEY, new byte[0]);
         //if the cache cannot return the digest for some reason, it should return null
 
         if (MessageDigest.isEqual(oDigest, nDigest)) {
@@ -337,33 +309,20 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
           // should return a null if it cant load for some reason
 
           if (cachedXML != null) {
-            DatasetView newDSV =
-              DatasetViewXMLUtils.ByteArrayToDatasetView(cachedXML);
+            DatasetView newDSV = DatasetViewXMLUtils.ByteArrayToDatasetView(cachedXML);
             newDSV.setMessageDigest(oDigest);
             addDatasetView(newDSV);
           } else {
             //get it from the database
-            DatasetView newDSV =
-              DatabaseDatasetViewUtils.getDatasetViewByInternalName(
-                dsvsource,
-                user,
-                iname);
+            DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
             addDatasetView(newDSV);
           }
         } else {
-          DatasetView newDSV =
-            DatabaseDatasetViewUtils.getDatasetViewByInternalName(
-              dsvsource,
-              user,
-              iname);
+          DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
           addDatasetView(newDSV);
         }
       } else {
-        DatasetView newDSV =
-          DatabaseDatasetViewUtils.getDatasetViewByInternalName(
-            dsvsource,
-            user,
-            iname);
+        DatasetView newDSV = DatabaseDatasetViewUtils.getDatasetViewByInternalName(dsvsource, user, iname);
         addDatasetView(newDSV);
       }
     }
@@ -378,11 +337,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
    * @param compress -- if true, the resulting XML will be gzip compressed before storing into the table.
    * @throws ConfigurationException for all underlying Exceptions
    */
-  public static void storeDatasetView(
-    DataSource ds,
-    String user,
-    DatasetView dsv,
-    boolean compress)
+  public static void storeDatasetView(DataSource ds, String user, DatasetView dsv, boolean compress)
     throws ConfigurationException {
     DatabaseDatasetViewUtils.storeConfiguration(
       ds,
@@ -401,10 +356,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   public void lazyLoad(DatasetView dsv) throws ConfigurationException {
     DatasetViewXMLUtils.LoadDatasetViewWithDocument(
       dsv,
-      DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(
-        dsvsource,
-        user,
-        dsv.getInternalName()));
+      DatabaseDatasetViewUtils.getDatasetViewDocumentByInternalName(dsvsource, user, dsv.getInternalName()));
   }
 
   /**
@@ -426,7 +378,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
         els.databaseName,
         user,
         dbpassword,
-        els.jdbcDriverClassName);
+        els.jdbcDriverClassName, adaptorName);
     return new MartLocation[] { dbloc };
   }
 
@@ -461,21 +413,19 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsDataset(java.lang.String)
    */
-  public boolean supportsDataset(String dataset)
-    throws ConfigurationException {
+  public boolean supportsDataset(String dataset) throws ConfigurationException {
     return getDatasetViewByDataset(dataset).length > 0;
   }
 
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDataset(java.lang.String)
    */
-  public DatasetView[] getDatasetViewByDataset(String dataset)
-    throws ConfigurationException {
+  public DatasetView[] getDatasetViewByDataset(String dataset) throws ConfigurationException {
 
     ArrayList l = new ArrayList();
-    DatasetView[] views = getDatasetViews();
-    for (int i = 0, n = views.length; i < n; i++) {
-      DatasetView view = views[i];
+
+    for (int i = 0, n = dsviews.size(); i < n; i++) {
+      DatasetView view = (DatasetView) dsviews.get(i);
       if (view.getDataset().equals(dataset)) {
         l.add(view);
       }
@@ -498,9 +448,7 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
   /**
    * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewByDatasetInternalName(java.lang.String, java.lang.String)
    */
-  public DatasetView getDatasetViewByDatasetInternalName(
-    String dataset,
-    String internalName)
+  public DatasetView getDatasetViewByDatasetInternalName(String dataset, String internalName)
     throws ConfigurationException {
 
     DatasetView view = null;
@@ -513,6 +461,109 @@ public class DatabaseDSViewAdaptor implements MultiDSViewAdaptor, Comparable {
     }
 
     return view;
+  }
+
+  /**
+   * DatabaseDSViewAdaptor objects do not contain child adaptors
+   * @return null
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorByName(java.lang.String)
+   */
+  public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException {
+    // DatabaseDSViewAdaptor objects do not contain child adaptors
+    return null;
+  }
+
+  /**
+   * DatabaseDSViewAdaptor objects do not contain child adaptors
+   * return empty String[]
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptorNames()
+   */
+  public String[] getAdaptorNames() throws ConfigurationException {
+    return new String[0];
+  }
+
+  /**
+   * DatabaseDSViewAdaptor objects do not contain child adaptors
+   * return empty DSViewAdaptor[]
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getAdaptors()
+   */
+  public DSViewAdaptor[] getAdaptors() throws ConfigurationException {
+    // DatabaseDSViewAdaptor objects do not contain child adaptors
+    return new DSViewAdaptor[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames()
+   */
+  public String[] getDatasetNames() throws ConfigurationException {
+    return (String[]) datasetNameMap.toArray(new String[datasetNameMap.size()]);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetNames(java.lang.String)
+   */
+  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+    if (adaptorName.equals(this.adaptorName))
+      return getDatasetNames();
+    else
+      return new String[0];
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewDisplayNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException {
+    List names = new ArrayList();
+    DatasetView[] views = getDatasetViewByDataset(dataset);
+
+    for (int i = 0, n = views.length; i < n; i++) {
+      DatasetView dsv = (DatasetView) views[i];
+
+      if (dsv.getDataset().equals(dataset))
+        names.add(dsv.getDisplayName());
+    }
+
+    return (String[]) names.toArray(new String[names.size()]);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getDatasetViewInternalNamesByDataset(java.lang.String)
+   */
+  public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException {
+    List names = new ArrayList();
+    DatasetView[] views = getDatasetViewByDataset(dataset);
+
+    for (int i = 0, n = views.length; i < n; i++) {
+      DatasetView dsv = (DatasetView) views[i];
+
+      if (dsv.getDataset().equals(dataset))
+        names.add(dsv.getInternalName());
+    }
+
+    return (String[]) names.toArray(new String[names.size()]);
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#getName()
+   */
+  public String getName() {
+    return adaptorName;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#setName(java.lang.String)
+   */
+  public void setName(String adaptorName) {
+    this.adaptorName = adaptorName;
+  }
+
+  /**
+   * DatabaseDSViewAdaptor objects do not contain child adaptors
+   * return false
+   * @see org.ensembl.mart.lib.config.DSViewAdaptor#supportsAdaptor(java.lang.String)
+   */
+  public boolean supportsAdaptor(String adaptorName) throws ConfigurationException {
+    return false;
   }
 
 }

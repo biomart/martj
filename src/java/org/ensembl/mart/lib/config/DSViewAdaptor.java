@@ -29,6 +29,18 @@ package org.ensembl.mart.lib.config;
 public interface DSViewAdaptor {
 
   /**
+   * sets the name of this DSViewAdptor
+   * @param adaptorName - name of the adaptor
+   */
+  public void setName(String adaptorName);
+  
+  /**
+   * Returns the name of this DSViewAdaptor
+   * @return String name of DSViewAdaptor
+   */
+  public String getName();
+  
+  /**
    * Returns a String[] consisting of the displayNames of all DatasetView objects provided by
    * a particular DSViewAdaptor object. 
    * @return String[] displayNames
@@ -124,6 +136,74 @@ public interface DSViewAdaptor {
   public DatasetView[] getDatasetViewByDataset(String dataset)
     throws ConfigurationException;
 
+  /**
+   * Returns a list of the DatasetView internalNames for a particular dataset.
+   * @param dataset - name of the dataset for which internalNames are required.
+   * @return String[] list of datasetview internalNames associated with the dataset.
+   * @throws ConfigurationException
+   */
+  public String[] getDatasetViewInternalNamesByDataset(String dataset) throws ConfigurationException;
+  
+  /**
+   * Returns a list of the DatasetView displayNames for a particular dataset.
+   * @param dataset - name of the dataset for which displayNames are required.
+   * @return String[] list of datasetview displayNames associated with the dataset.
+   * @throws ConfigurationException
+   */
+  public String[] getDatasetViewDisplayNamesByDataset(String dataset) throws ConfigurationException;
+  
+  /**
+   * Returns a list of the names of the Datasets for which DatasetViews are held
+   * for an Adaptor.
+   * @return String[] list of dataset names
+   * @throws ConfigurationException
+   */
+  public String[] getDatasetNames() throws ConfigurationException;
+  
+  /**
+   * Returns a list of the names of Datasets for which DatasetViews are held, given a particular
+   * adaptor name.  May return an empty list for adaptors with zero child adaptors.
+   * @param adaptorName - name of DSViewAdaptor object for which DatasetNames are required
+   * @return String[] list of datatset names
+   * @throws ConfigurationException
+   */
+  public String[] getDatasetNames(String adaptorName) throws ConfigurationException;
+  
+  /**
+   * Returns all DSViewAdaptor objects contained with this Object (which may be a zero length list
+   * for some implimentations). Note, this only returns the adaptors contained by this adaptor, and does
+   * not return child adaptors of children to this Adaptor.
+   * @return Array of DSViewAdaptor objects
+   * @throws ConfigurationException
+   */
+  public DSViewAdaptor[] getAdaptors() throws ConfigurationException;
+  
+  /**
+   * Determine if a DSViewAdaptor supports (contains somewhere in its adaptors, or its adaptors child adaptors)
+   * a given DSViewAdaptor named by adaptorName
+   * @param adaptorName - name of requested DSViewAdaptor
+   * @return boolean true if the requested DSViewAdaptor is supported by this DSViewAdaptor, false otherwise
+   * @throws ConfigurationException
+   */
+  public boolean supportsAdaptor(String adaptorName) throws ConfigurationException;
+  
+  /**
+   * Returns a DSViewAdaptor object named by the given adaptor name
+   * @param adaptorName - name of DSViewAdaptor required 
+   * @return DSViewAdaptor named by adaptorName
+   * @throws ConfigurationException
+   */
+  public DSViewAdaptor getAdaptorByName(String adaptorName) throws ConfigurationException;
+  
+  /**
+   * Returns the names of all DSViewAdaptor objects contained within this Object (which may be a zero
+   * length list for some implimentations). Note, this only returns the names of Adaptors held by this Adaptor,
+   * and does not return names of child adaptors of children to this Adaptor.
+   * @return String[] names of all adaptors in this Object.
+   * @throws ConfigurationException
+   */
+  public String[] getAdaptorNames() throws ConfigurationException;
+  
   /**
     * If a DSViewAdaptor implimenting object caches names and DatasetView objects, this method updates the cache contents
     * based on a comparison with the information stored in the object's target source.  May not actually do anything for some implimentations.
