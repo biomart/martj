@@ -48,6 +48,8 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   private HashMap datasetNameMap = new HashMap();
 
   private final DetailedDataSource dataSource;
+  private final DatasetConfigXMLUtils dscutils;
+  private final DatabaseDatasetConfigUtils dbutils;
 
   private final String user;
   private final int hashcode;
@@ -55,6 +57,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
   private boolean clearCache = false; //developer hack to clear the cache
   //will be replaced soon with user supported clearing
+  private boolean ignoreCache = false;
 
   //To propogate update exceptions from thread
   private Thread updateThread = null;
@@ -64,25 +67,42 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    * Constructor for a DatabaseDSConfigAdaptor
    * @param ds -- DataSource for Mart RDBMS
    * @param user -- user for RDBMS connection, AND meta_DatasetConfig_user table
+   * @param ignoreCache -- if true, cached XML is completely ignored, and all XML is pulled from the Database
+   * @param validate -- if true, all XML is validated as it is parsed
+   * @param includeHiddenMembers -- if true, hidden members are included in DatasetConfig objects, otherwise they are not included
    * @throws ConfigurationException if DataSource or user is null
    */
-  public DatabaseDSConfigAdaptor(DetailedDataSource ds, String user) throws ConfigurationException {
+  public DatabaseDSConfigAdaptor(
+    DetailedDataSource ds,
+    String user,
+    boolean ignoreCache,
+    boolean validate,
+    boolean includeHiddenMembers)
+    throws ConfigurationException {
     if (ds == null || user == null)
       throw new ConfigurationException("DatabaseDSConfigAdaptor Objects must be instantiated with a DataSource and User\n");
 
     this.user = user;
     dataSource = ds;
+    this.ignoreCache = ignoreCache;
+
+    dscutils = new DatasetConfigXMLUtils(validate, includeHiddenMembers);
+    dbutils = new DatabaseDatasetConfigUtils(dscutils, dataSource);
+
     String host = ds.getHost();
     String port = ds.getPort();
     String databaseName = ds.getDatabaseName();
 
     adaptorName = ds.getName();
-    String cacheName = ds.getHost() + "__" + ds.getDatabaseName();
-    cache = new DatasetConfigCache(this, new String[] { cacheName, user });
-    
-    //set up the preferences node with the datasource information as the root node
-    if (clearCache) {
-      cache.clearCache();
+
+    if (!ignoreCache) {
+      String cacheName = ds.getHost() + "__" + ds.getDatabaseName();
+      cache = new DatasetConfigCache(this, new String[] { cacheName, user }, dscutils);
+
+      //set up the preferences node with the datasource information as the root node
+      if (clearCache) {
+        cache.clearCache();
+      }
     }
 
     int tmp = user.hashCode();
@@ -184,8 +204,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     if (logger.isLoggable(Level.FINE))
       logger.fine(" Already loaded, check for update\n");
 
-    byte[] nDigest =
-      DatabaseDatasetConfigUtils.getDSConfigMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
+    byte[] nDigest = dbutils.getDSConfigMessageDigestByDatasetInternalName(user, dataset, iname);
     byte[] oDigest = ((DatasetConfig) inameMap.get(iname)).getMessageDigest();
 
     if (!MessageDigest.isEqual(oDigest, nDigest)) {
@@ -199,37 +218,36 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   }
 
   private boolean cacheUpToDate(String dataset, String iname) throws ConfigurationException {
-    byte[] sourceDigest = DatabaseDatasetConfigUtils.getDSConfigMessageDigestByDatasetInternalName(dataSource, user, dataset, iname);
-    
+    byte[] sourceDigest = dbutils.getDSConfigMessageDigestByDatasetInternalName(user, dataset, iname);
+
     return cache.cacheUpToDate(sourceDigest, dataset, iname);
   }
-  
+
   private void loadCacheOrUpdate(String dataset, String iname) throws ConfigurationException {
     if (cacheUpToDate(dataset, iname)) {
       if (logger.isLoggable(Level.FINE))
         logger.fine("Attempting to load from cache\n");
-        
-        DatasetConfig newDSV = null;
-        try {
-          newDSV = cache.getDatasetConfig(dataset, iname, this);
-        } catch (ConfigurationException e) {
-          if (logger.isLoggable(Level.FINE))
-            logger.fine("Could not load " + dataset + " " + iname + " from cache: " + e.getMessage() + "\nloading from database!\n");
-            loadFromDatabase(dataset, iname);  
-        }
-        addDatasetConfig(newDSV);
-    } else
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("Cache is not up to date for " + dataset + " " + iname + "\n loading from Database!\n");
-      loadFromDatabase(dataset, iname);
+
+      DatasetConfig newDSV = null;
+      try {
+        newDSV = cache.getDatasetConfig(dataset, iname, this);
+      } catch (ConfigurationException e) {
+        if (logger.isLoggable(Level.FINE))
+          logger.fine(
+            "Could not load " + dataset + " " + iname + " from cache: " + e.getMessage() + "\nloading from database!\n");
+        loadFromDatabase(dataset, iname);
+      }
+      addDatasetConfig(newDSV);
+    } else if (logger.isLoggable(Level.FINE))
+      logger.fine("Cache is not up to date for " + dataset + " " + iname + "\n loading from Database!\n");
+    loadFromDatabase(dataset, iname);
   }
 
   private void loadFromDatabase(String dataset, String iname) throws ConfigurationException {
     if (logger.isLoggable(Level.FINE))
       logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
 
-    DatasetConfig newDSV =
-      DatabaseDatasetConfigUtils.getDatasetConfigByDatasetInternalName(dataSource, user, dataset, iname);
+    DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname);
     addDatasetConfig(newDSV);
   }
 
@@ -253,14 +271,16 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public static void storeDatasetConfig(DetailedDataSource ds, String user, DatasetConfig dsv, boolean compress)
     throws ConfigurationException {
-    DatabaseDatasetConfigUtils.storeConfiguration(
-      ds,
+    DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, false);
+    DatabaseDatasetConfigUtils dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+
+    dbutils.storeDatasetConfiguration(
       user,
       dsv.getInternalName(),
       dsv.getDisplayName(),
       dsv.getDataset(),
       dsv.getDescription(),
-      DatasetConfigXMLUtils.DatasetConfigToDocument(dsv),
+      dscutils.getDocumentForDatasetConfig(dsv),
       compress);
   }
 
@@ -268,17 +288,15 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     if (logger.isLoggable(Level.FINE))
       logger.fine("lazy loading from database\n");
 
-    DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(
+    dscutils.loadDatasetConfigWithDocument(
       dsv,
-      DatabaseDatasetConfigUtils.getDatasetConfigDocumentByDatasetInternalName(
-        dataSource,
-        user,
-        dsv.getDataset(),
-        dsv.getInternalName()));
+      dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dsv.getDataset(), dsv.getInternalName()));
 
-    //cache this DatasetConfig, as, for some reason, it is needing to be cached
-    cache.removeDatasetConfig(dsv.getDataset(), dsv.getInternalName());
-    cache.addDatasetConfig(dsv);
+    if (!ignoreCache) {
+      //cache this DatasetConfig, as, for some reason, it is needing to be cached
+      cache.removeDatasetConfig(dsv.getDataset(), dsv.getInternalName());
+      cache.addDatasetConfig(dsv);
+    }
   }
 
   private void lazyLoadWithCache(DatasetConfig dsv) throws ConfigurationException {
@@ -286,11 +304,12 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       cache.lazyLoadWithCache(dsv);
     } catch (ConfigurationException e) {
       if (logger.isLoggable(Level.FINE))
-        logger.fine("Recieved Exception attempting to lazyLoad from cache: " + e.getMessage() + "\nlazyLoading from Database!\n");
+        logger.fine(
+          "Recieved Exception attempting to lazyLoad from cache: " + e.getMessage() + "\nlazyLoading from Database!\n");
       lazyLoadWithDatabase(dsv);
     }
   }
-  
+
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#lazyLoad(org.ensembl.mart.lib.config.DatasetConfig)
    */
@@ -298,12 +317,12 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     String dataset = dsv.getDataset();
     String iname = dsv.getInternalName();
 
-    if (cacheUpToDate(dataset, iname))
+    if (!ignoreCache && cacheUpToDate(dataset, iname))
       lazyLoadWithCache(dsv);
     else
       lazyLoadWithDatabase(dsv);
   }
-  
+
   /**
    * Note, this method will only include the DataSource password in the resulting MartLocation object
    * if the user set the password using the setDatabasePassword method of this adaptor. Otherwise, 
@@ -546,7 +565,14 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
    */
   public int getNumDatasetConfigs() {
-    return dsviews.size();
+    try {
+      checkUpdateException();
+      return dsviews.size();
+    } catch (ConfigurationException e) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Recieved Exception during update Thread: " + updateException + "\nReturning 0\n");
+      return 0;
+    }
   }
 
   /* (non-Javadoc)
@@ -554,13 +580,18 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public int getNumDatasetConfigsByDataset(String dataset) {
     int ret = 0;
+    try {
+      checkUpdateException();
 
-    for (int i = 0; i < dsviews.size(); ++i) {
-      DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
-      if (StringUtil.compare(dataset, dsv.getDataset()) == 0)
-        ret++;
+      for (int i = 0; i < dsviews.size(); ++i) {
+        DatasetConfig dsv = (DatasetConfig) dsviews.get(i);
+        if (StringUtil.compare(dataset, dsv.getDataset()) == 0)
+          ret++;
+      }
+    } catch (ConfigurationException e) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("Recieved Exception during update Thread: " + updateException + "\nReturning 0\n");
     }
-
     return ret;
   }
 
@@ -582,7 +613,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
           updateThread.join();
         }
       } catch (InterruptedException e1) {
-        updateException = new ConfigurationException("Update Thread was interrupted: "+ e1.getMessage() + "\n", e1);  
+        updateException = new ConfigurationException("Update Thread was interrupted: " + e1.getMessage() + "\n", e1);
       } finally {
         //all getters use this to check if there was an exception in the underlying update Thread
         if (updateException != null) {
@@ -601,10 +632,10 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public void run() {
     try {
-      String[] datasets = DatabaseDatasetConfigUtils.getAllDatasetNames(dataSource, user);
+      String[] datasets = dbutils.getAllDatasetNames(user);
       for (int i = 0, n = datasets.length; i < n; i++) {
         String dataset = datasets[i];
-        String[] inms = DatabaseDatasetConfigUtils.getAllInternalNamesForDataset(dataSource, user, dataset);
+        String[] inms = dbutils.getAllInternalNamesForDataset(user, dataset);
 
         if (datasetNameMap.containsKey(dataset)) {
           //dataset is loaded, check for update of its datasetview
@@ -619,29 +650,29 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
             if (inameMap.containsKey(iname))
               checkMemoryForUpdate(dataset, inameMap, iname);
-            else if (cache.cacheExists(dataset, iname))
+            else if (!ignoreCache && cache.cacheExists(dataset, iname))
               loadCacheOrUpdate(dataset, iname);
             else
               loadFromDatabase(dataset, iname);
           }
-        } else if (cache.cacheExists(dataset, null)) {
-          //not already loaded, check for its datasetviews in cache
-          for (int k = 0, m = inms.length; k < m; k++) {
-            String iname = inms[k];
+        } else if ( !ignoreCache ) {
+            //not already loaded, check for its datasetviews in cache
+            for (int k = 0, m = inms.length; k < m; k++) {
+              String iname = inms[k];
 
-            if (logger.isLoggable(Level.FINE))
-              logger.fine("Checking for dataset " + dataset + " internamName " + iname + "\n");
-
-            if (cache.cacheExists(dataset, iname))
-              loadCacheOrUpdate(dataset, iname);
-            else {
-              //load datasetview from database
               if (logger.isLoggable(Level.FINE))
-                logger.fine("Dataset " + dataset + " internalName " + iname + " not in cache, loading from database\n");
+                logger.fine("Checking for dataset " + dataset + " internamName " + iname + "\n");
 
-              loadFromDatabase(dataset, iname);
+              if (cache.cacheExists(dataset, iname))
+                loadCacheOrUpdate(dataset, iname);
+              else {
+                //load datasetview from database
+                if (logger.isLoggable(Level.FINE))
+                  logger.fine("Dataset " + dataset + " internalName " + iname + " not in cache, loading from database\n");
+
+                loadFromDatabase(dataset, iname);
+              }
             }
-          }
         } else {
           //load dataset from database
           if (logger.isLoggable(Level.FINE))
@@ -655,8 +686,6 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
       }
     } catch (ConfigurationException e) {
       updateException = e;
-    } finally {
-      return;
     }
   }
 }

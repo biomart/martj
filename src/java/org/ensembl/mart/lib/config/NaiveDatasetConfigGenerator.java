@@ -55,6 +55,8 @@ public class NaiveDatasetConfigGenerator {
   private static String regFileName = null;
   private static boolean printRegistry = false;
   private static boolean verbose = false;
+  private static DatasetConfigXMLUtils dscutils = null;
+  private static DatabaseDatasetConfigUtils dbutils = null;
 
   private static final String COMMAND_LINE_SWITCHES = "hvH:U:p:P:T:D:M:d:O:R:";
   private static Logger logger = Logger.getLogger(NaiveDatasetConfigGenerator.class.getName());
@@ -259,6 +261,8 @@ public class NaiveDatasetConfigGenerator {
 
       LoggingUtils.setVerbose(verbose);
 
+      dscutils = new DatasetConfigXMLUtils(false, true);
+      
       long start = System.currentTimeMillis();
 
       if (dbType == null)
@@ -281,6 +285,8 @@ public class NaiveDatasetConfigGenerator {
           DetailedDataSource.DEFAULTPOOLSIZE,
           dbDriver, "Naive");
 
+      dbutils = new DatabaseDatasetConfigUtils(dscutils, dsource);
+      
       if (dsName != null) {
         OutputStream dsvOutput = null;
 
@@ -292,9 +298,9 @@ public class NaiveDatasetConfigGenerator {
           dsvOutput = System.out;
         }
 
-        DatasetConfig dsv = DatabaseDatasetConfigUtils.getNaiveDatasetConfigFor(dsource, dbName, dsName);
+        DatasetConfig dsv = dbutils.getNaiveDatasetConfigFor(dbName, dsName);
 
-        DatasetConfigXMLUtils.DatasetConfigToOutputStream(dsv, dsvOutput);
+        dscutils.writeDatasetConfigToOutputStream(dsv, dsvOutput);
 
         if (dsvFileName != null)
           dsvOutput.close();
@@ -303,7 +309,7 @@ public class NaiveDatasetConfigGenerator {
           if (dsvFileName != null) {
             if (regFileName != null) {
               OutputStream regOut = new FileOutputStream(regFileName);
-              URLDSConfigAdaptor dsvadaptor = new URLDSConfigAdaptor(dsvFile.toURL());
+              URLDSConfigAdaptor dsvadaptor = new URLDSConfigAdaptor(dsvFile.toURL(), true, false, true);
               RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(dsvadaptor);
               MartRegistryXMLUtils.MartRegistryToOutputStream(regadaptor.getMartRegistry(), regOut);
               regOut.close();
@@ -316,12 +322,12 @@ public class NaiveDatasetConfigGenerator {
           }
         }
       } else {
-        String[] potDsvs = DatabaseDatasetConfigUtils.getNaiveDatasetNamesFor(dsource, dbName);
+        String[] potDsvs = dbutils.getNaiveDatasetNamesFor(dbName);
         System.out.println("Potential Datasets:");
         for (int i = 0, n = potDsvs.length; i < n; i++) {
           String potDS = potDsvs[i];
           System.out.println("\t" + potDS);
-          String[] mainTables = DatabaseDatasetConfigUtils.getNaiveMainTablesFor(dsource, dbName, potDS);
+          String[] mainTables = dbutils.getNaiveMainTablesFor(dbName, potDS);
           for (int j = 0, m = mainTables.length; j < m; j++) {
             String mainTable = mainTables[j];
             System.out.println("\t\t" + mainTable);

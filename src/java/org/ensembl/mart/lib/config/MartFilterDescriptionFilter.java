@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import org.jdom.Element;
-import org.jdom.filter.Filter;
 
 /**
  * JDOM Filter specific to FilterDescription/MapFilterDescription objects in a Mart FilterCollection.
@@ -29,19 +28,23 @@ import org.jdom.filter.Filter;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartFilterDescriptionFilter implements Filter {
-
+public class MartFilterDescriptionFilter extends BaseMartElementFilter {
+  
+  public MartFilterDescriptionFilter(boolean includeHiddenMembers) {
+    super(includeHiddenMembers);
+  }
+  
 	/* (non-Javadoc)
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
 	public boolean matches(Object obj) {
-		if (obj instanceof Element) {
+    boolean ret = super.matches(obj);
+		
+    if (ret) {
 			Element e = (Element) obj;
-			
-			if (e.getName().equals(UIFILTER) || e.getName().equals(UIDSFILTER))
-				return true;
+      ret = (e.getName().equals(UIFILTER) || e.getName().equals(UIDSFILTER));
 		}
-		return false;
+		return ret;
 	}
 
   private final String UIFILTER = "FilterDescription";

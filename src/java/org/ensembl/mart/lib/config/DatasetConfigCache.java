@@ -51,6 +51,7 @@ public class DatasetConfigCache {
   private Preferences xmlPrefs = null;
   private DSConfigAdaptor caller = null;
   private String[] keys = null;
+  private DatasetConfigXMLUtils dscutils = null;
 
   /**
    * Constructs a cache for a given DatasetConfigAdaptor. Passing
@@ -58,10 +59,12 @@ public class DatasetConfigCache {
    * DSConfigAdaptor implementation.
    * @param caller - DSConfigAdaptor that needs caching
    * @param keys - String[] list of keys to use in creating the cache.
+   * @param dscutils - DatasetConfigXMLUtils object to read and write XML
    */
-  public DatasetConfigCache(DSConfigAdaptor caller, String[] keys) {
+  public DatasetConfigCache(DSConfigAdaptor caller, String[] keys, DatasetConfigXMLUtils dscutils) {
     this.caller = caller;
     this.keys = keys;
+    this.dscutils = dscutils;
     initCache();
   }
 
@@ -156,7 +159,7 @@ public class DatasetConfigCache {
     deleteFile(dataset, iname);
 
     File xmlFile = getFile(dataset, iname);
-    DatasetConfigXMLUtils.DatasetConfigToFile(dsc, xmlFile);
+    dscutils.writeDatasetConfigToFile(dsc, xmlFile);
 
     //if no exception thrown, store values to preferences for lazy load
     xmlPrefs.node(dataset).node(iname).put(DNAMEKEY, dname);
@@ -220,7 +223,10 @@ public class DatasetConfigCache {
           byte[] digest = xmlPrefs.node(dataset).node(iname).getByteArray(DIGESTKEY, null);
 
           if (adaptor == null) {
-            dsv = DatasetConfigXMLUtils.XMLStreamToDatasetConfig(getXMLStream(dataset, iname), digest, false, true);
+
+            dscutils.setFullyLoadMode(true); //temporarily
+            dsv = dscutils.getDatasetConfigForXMLStream(getXMLStream(dataset, iname));
+            dscutils.setFullyLoadMode(false);            
           } else {
             String displayName = xmlPrefs.node(dataset).node(iname).get(DNAMEKEY, null);
             String description = xmlPrefs.node(dataset).node(iname).get(DESCKEY, null);
@@ -262,9 +268,9 @@ public class DatasetConfigCache {
     if (cacheExists(dataset, iname)) {
       try {
         InputStream xmlinput = getXMLStream(dataset, iname);
-        DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(
+        dscutils.loadDatasetConfigWithDocument(
           dsv,
-          DatasetConfigXMLUtils.XMLStreamToDocument(xmlinput, false));
+          dscutils.getDocumentForXMLStream(xmlinput));
         xmlinput.close();
       } catch (ConfigurationException e) {
         throw e;

@@ -19,7 +19,6 @@
 package org.ensembl.mart.lib.config;
 
 import org.jdom.Element;
-import org.jdom.filter.Filter;
 
 /**
  * JDOM Filter for specific MartConfiguration Elements.  Allows
@@ -29,11 +28,12 @@ import org.jdom.filter.Filter;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartElementFilter implements Filter {
+public class MartElementFilter extends BaseMartElementFilter {
 
   private final String thisName;
   
-  public MartElementFilter(String thisName) {
+  public MartElementFilter(boolean includeHiddenMembers, String thisName) {
+    super(includeHiddenMembers);
   	this.thisName = thisName;
   }
   
@@ -41,14 +41,12 @@ public class MartElementFilter implements Filter {
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
 	public boolean matches(Object obj) {
-		if (obj instanceof Element) {
+    boolean ret = super.matches(obj);
+		if (ret) {
 			Element e = (Element) obj;
 			
-			if (e.getName().equals(thisName))
-			  return true;
-			else
-			  return false;
+			ret = (e.getName().equals(thisName));
 		}
-		return false;
+		return ret;
 	}
 }

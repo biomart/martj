@@ -19,25 +19,28 @@
 package org.ensembl.mart.lib.config;
 
 import org.jdom.Element;
-import org.jdom.filter.Filter;
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartFilterGroupFilter implements Filter {
+public class MartFilterGroupFilter extends BaseMartElementFilter {
 
+  public MartFilterGroupFilter(boolean includeHiddenMembers) {
+    super(includeHiddenMembers);
+  }
+  
 	/* (non-Javadoc)
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
 	public boolean matches(Object obj) {
-		if (obj instanceof Element) {
+    boolean ret = super.matches(obj);
+		if (ret) {
 			Element e = (Element) obj;
 			
-			if (e.getName().equals(FILTERGROUP) || e.getName().equals(DSFILTERGROUP))
-				return true;
+			ret = (e.getName().equals(FILTERGROUP) || e.getName().equals(DSFILTERGROUP));
 		}
-		return false;
+		return ret;
 	}
 
   private final String FILTERGROUP = "FilterGroup";

@@ -112,7 +112,7 @@ public class DatasetConfigUploader {
         if ( file.exists() ) url = file.toURL();
         if ( url==null ) url = new URL(files[i]);
         
-				URLDSConfigAdaptor fileLoader = new URLDSConfigAdaptor(url, true);
+				URLDSConfigAdaptor fileLoader = new URLDSConfigAdaptor(url, true, false, true); //dont want to use the cached copy, dont want to loadfully, but do want hidden members
 
         DatasetConfigIterator iter = fileLoader.getDatasetConfigs();
         if (!iter.hasNext())

@@ -38,7 +38,6 @@ import org.ensembl.util.StringUtil;
  */
 public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigAdaptor, Comparable {
   private final URL dsvurl;
-  private final boolean validate;
   private final int hashcode;
 
   private DatasetConfig dsv;
@@ -46,32 +45,27 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
   private String[] dnames;
   private Logger logger = Logger.getLogger(URLDSConfigAdaptor.class.getName());
   private String adaptorName;
-
-  /**
-   * Construct a DSConfigAdaptor from a url containing a DatasetConfig.dtd compliant XML Document.
-   * JDOM validation is set to false.
-   * @param url -- url containing a DatasetConfig.dtd compliant XML document
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public URLDSConfigAdaptor(URL url) throws ConfigurationException {
-    this(url, false);
-  }
-
+  private boolean ignoreCache = false;
+  private DatasetConfigXMLUtils dscutils = null;
+  
   /**
    * Construct a DSConfigAdaptor from a url containing a DatasetConfig.dtd compliant XML Document,
    * with optional JDOM validation.
    * @param url -- url containing a DatasetConfig.dtd compliant XML document
+   * @param ignoreCache -- if true, never caches and always parses the source URL for its DatasetConfig objects
    * @param validate -- if true, JDOM validates the Document against the DatasetConfig.dtd contained in the CLASSPATH
+   * @param includeHiddenMembers -- if true, hidden members will be included in DatasetConfig objects, if false they will be skipped
    * @throws ConfigurationException for all underlying Exceptions.
    */
-  public URLDSConfigAdaptor(URL url, boolean validate) throws ConfigurationException {
+  public URLDSConfigAdaptor(URL url, boolean ignoreCache, boolean validate, boolean includeHiddenMembers) throws ConfigurationException {
     if (url == null)
       throw new ConfigurationException("DSConfigURLAdaptors must be instantiated with a URL\n");
     dsvurl = url;
-    
+    this.ignoreCache = ignoreCache;
+      
     setName(dsvurl.toString());
     
-    this.validate = validate;
+    dscutils = new DatasetConfigXMLUtils(validate, includeHiddenMembers);
 
     hashcode = dsvurl.hashCode();
     update();
@@ -91,7 +85,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    */
   public void update() throws ConfigurationException {
     try {
-      dsv = DatasetConfigXMLUtils.XMLStreamToDatasetConfig(InputSourceUtil.getStreamForURL(dsvurl), validate, false);
+      dsv = dscutils.getDatasetConfigForXMLStream(InputSourceUtil.getStreamForURL(dsvurl));
     } catch (Exception e) {
       throw new ConfigurationException(
         "Could not load DatasetConfig from URL: " + dsvurl.toString() + " " + e.getMessage(),
@@ -154,7 +148,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    */
   public void lazyLoad(DatasetConfig dsv) throws ConfigurationException {
     try {
-      DatasetConfigXMLUtils.LoadDatasetConfigWithDocument(dsv, DatasetConfigXMLUtils.XMLStreamToDocument(InputSourceUtil.getStreamForURL(dsvurl), validate));
+      dscutils.loadDatasetConfigWithDocument( dsv, dscutils.getDocumentForXMLStream( InputSourceUtil.getStreamForURL( dsvurl ) ) );
     } catch (IOException e) {
       throw new ConfigurationException("Recieved IOException lazyLoading DatasetConfig: " + e.getMessage(), e);
     }
@@ -174,7 +168,8 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    * @throws ConfigurationException for underlying Exceptions
    */
   public static void StoreDatasetConfig(DatasetConfig dsv, File file) throws ConfigurationException {
-    DatasetConfigXMLUtils.DatasetConfigToFile(dsv, file);
+    DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, false); //validation and hidden members are only applicable to incoming XML streams
+    dscutils.writeDatasetConfigToFile(dsv, file);
   }
 
   /**

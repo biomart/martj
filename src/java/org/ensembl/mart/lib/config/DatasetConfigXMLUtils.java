@@ -51,73 +51,57 @@ import org.xml.sax.InputSource;
  */
 public class DatasetConfigXMLUtils {
 
-	private static Logger logger = Logger.getLogger(DatasetConfigXMLUtils.class.getName());
+	private  Logger logger = Logger.getLogger(DatasetConfigXMLUtils.class.getName());
 
-	public static String DEFAULTDIGESTALGORITHM = "MD5";
-
+  //this is the only digest algorithm we support
+  public static String DEFAULTDIGESTALGORITHM = "MD5";
+  
 	// element names
-	private static final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetConfig.dtd";
-	private static final String DATASETCONFIG = "DatasetConfig";
-	private static final String STARBASE = "MainTable";
-	private static final String PRIMARYKEY = "Key";
-	private static final String ENABLE = "Enable";
-	private static final String DISABLE = "Disable";
-	private static final String FILTERPAGE = "FilterPage";
-	private static final String FILTERGROUP = "FilterGroup";
-	private static final String DSFILTERGROUP = "DSFilterGroup";
-	private static final String FILTERCOLLECTION = "FilterCollection";
-	private static final String FILTERDESCRIPTION = "FilterDescription";
-	private static final String ATTRIBUTEPAGE = "AttributePage";
-	private static final String ATTRIBUTEGROUP = "AttributeGroup";
-	private static final String ATTRIBUTECOLLECTION = "AttributeCollection";
-	private static final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
-	private static final String DSATTRIBUTEGROUP = "DSAttributeGroup";
-	private static final String OPTION = "Option";
-	private static final String PUSHACTION = "PushAction";
-	private static final String DEFAULTFILTER = "DefaultFilter";
+	private  final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetConfig.dtd";
+	private  final String DATASETCONFIG = "DatasetConfig";
+	private  final String STARBASE = "MainTable";
+	private  final String PRIMARYKEY = "Key";
+	private  final String ENABLE = "Enable";
+	private  final String DISABLE = "Disable";
+	private  final String FILTERPAGE = "FilterPage";
+	private  final String FILTERGROUP = "FilterGroup";
+	private  final String DSFILTERGROUP = "DSFilterGroup";
+	private  final String FILTERCOLLECTION = "FilterCollection";
+	private  final String FILTERDESCRIPTION = "FilterDescription";
+	private  final String ATTRIBUTEPAGE = "AttributePage";
+	private  final String ATTRIBUTEGROUP = "AttributeGroup";
+	private  final String ATTRIBUTECOLLECTION = "AttributeCollection";
+	private  final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
+	private  final String DSATTRIBUTEGROUP = "DSAttributeGroup";
+	private  final String OPTION = "Option";
+	private  final String PUSHACTION = "PushAction";
+	private  final String DEFAULTFILTER = "DefaultFilter";
 
 	// attribute names needed by code
-	private static final String INTERNALNAME = "internalName";
+	private  final String INTERNALNAME = "internalName";
 
-  /**
-   * Returns a DatasetConfig from an XML stored as a byte[].
-   * Returns a fully loaded DatasetConfig.
-   * @see ByteArrayToDatasetConfig(byte[] b, boolean loadFully) for information on how to get
-   * a DatasetConfig which defers loading its elements to the lazyLoad system.
-   * @param b - byte[] holding XML
-   * @return DatasetConfig for xml in byte[]
-   * @throws ConfigurationException
-   */
-  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b) throws ConfigurationException {
-    return ByteArrayToDatasetConfig(b, true);
+  private boolean validate = false;
+  private boolean loadFully = false;
+  private boolean includeHiddenMembers = false;
+  
+  public DatasetConfigXMLUtils(boolean validate, boolean includeHiddenMembers) {
+    this.validate = validate;
+    this.includeHiddenMembers = includeHiddenMembers;
   }
 
   /**
-   * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
-   * load all Elements, or defer this to the lazyLoad system. This does not validate the XML.
-   * @see ByteArrayToDatasetConfig(byte[] b, boolean validate, boolean loadFully) for information on how to validate
-   * the xml as well as specify its load state. 
-   * @param b - byte[] holding XML
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
-   * @return DatasetConfig for xml in byte[]
-   * @throws ConfigurationException
+   * Set the load behavior of the getDatasetConfigXXX methods. If set to true, all DatasetConfig objects are
+   * fully loaded, if false, this is deferred to the lazyLoad system. This is primarily for the DatasetConfigCache
+   * object. 
+   * @param loadFully -- boolean, if true instructs all subsequent getDatasetConfigXXX calls to fully load the DatasetConfig
+   * object before loading it, if false defers this to the lazyLoad system
    */
-  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, boolean loadFully) throws ConfigurationException {  
-    return ByteArrayToDatasetConfig(b, null, false, loadFully);
+  protected void setFullyLoadMode(boolean loadFully) {
+    this.loadFully = loadFully;
   }
   
-  /**
-   * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
-   * load all Elements, or defer this to the lazyLoad system, and whether to validate.
-   * 
-   * @param b - byte[] holding XML
-   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
-   * @return DatasetConfig for xml in byte[]
-   * @throws ConfigurationException
-   */
-  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, boolean validate, boolean loadFully) throws ConfigurationException {
-    return ByteArrayToDatasetConfig(b, null, validate, loadFully);
+  public DatasetConfig getDatasetConfigForByteArray(byte[] b) throws ConfigurationException {
+    return getDatasetConfigForByteArray(b, null);  
   }
   
   /**
@@ -127,106 +111,41 @@ public class DatasetConfigXMLUtils {
    *  
    * @param b - byte[] holding XML
    * @param digest -- byte[] containing the digest
-   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
    * @return DatasetConfig for xml in byte[]
    * @throws ConfigurationException
    */
-  public static DatasetConfig ByteArrayToDatasetConfig(byte[] b, byte[] digest, boolean validate, boolean loadFully) throws ConfigurationException {
+  public DatasetConfig getDatasetConfigForByteArray(byte[] b, byte[] digest) throws ConfigurationException {
     ByteArrayInputStream bin = new ByteArrayInputStream(b);
-    return XMLStreamToDatasetConfig(bin, digest, validate, loadFully);
+    return getDatasetConfigForXMLStream(bin, digest);
+  }
+
+  public DatasetConfig getDatasetConfigForXMLStream(InputStream xmlinput) throws ConfigurationException {
+    return getDatasetConfigForXMLStream(xmlinput, null);
   }
   
-	/**
-	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object.
-   * This returns a fully loaded, non-validated DatasetConfig, without validation. 
-   * @see XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) for information
-   * on how to specify validation, or whether to defer loading to the lazyLoad system.
-	 * 
-	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
-	 * @return DatasetConfig
-	 * @throws ConfigurationException for all underlying Exceptions
-	 */
-	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput) throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, null, false, true);
-	}
-
-	/**
-	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object,
-	 * with optional validation of the XML against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * This returns a fully loaded DatasetConfig object.
-   * @see XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) for information
-   * on how to specify validation, or whether to defer loading to the lazyLoad system.
-   * 
-	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
-	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-	 * @return DatasetConfig
-	 * @throws ConfigurationException for all underlying Exceptions.
-	 */
-	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate)
-		throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, null, validate, true);
-	}
-
-  /**
-   * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object,
-   * with optional validation of the XML against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * Allows system to specify whether to validate, or whether to defer loading underlying elements to the
-   * lazyLoad system.
-   * 
-   * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
-   * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
-   * @return DatasetConfig
-   * @throws ConfigurationException for all underlying Exceptions.
-   */
-  public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, boolean validate, boolean loadFully) throws ConfigurationException {
-    return XMLStreamToDatasetConfig(xmlinput, null, validate, loadFully);
-  }
-  
-	/**
-	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a DatasetConfig object, with
-	 * a precomputed Message Digest using md5sum.  This returns a non-validated, fully loaded DatasetConfig object.
-   * @see XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate, boolean loadFully) for information on how to specify
-   * whether to validate, or defer loading of the DatasetConfig elements to the lazyLoad system.
-	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
-	 * @param digest -- byte[] containing the digest
-	 * @return DatasetConfig
-	 * @throws ConfigurationException for all underlying Exceptions
-	 * @see java.security.MessageDigest
-	 */
-	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest) throws ConfigurationException {
-		return XMLStreamToDatasetConfig(xmlinput, digest, false, true);
-	}
-
 	/**
 	 * Takes an InputStream containing XML, and creates a DatasetConfig object.
-	 * Optional parameters exist for creating a DatasetConfig with a message digest
-	 * created by a sun.security.MessageDigest MD5SUM object, for validating the xml against
-	 * the DatasetConfig.dtd stored in the java CLASSPATH, and for defering the loading of DatasetConfig elements
-   * to the lazyLoad system.
+	 * If a MessageDigest is supplied, this will be added to the DatasetConfig object
+   * before returning it.
    *  
 	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML
 	 * @param digest -- byte[] containing the digest
-	 * @param validate -- if true, XML is validated against the DatasetConfig.dtd contained in the Java CLASSPATH.
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
    * @return DatasetConfig
 	 * @throws ConfigurationException for all underlying Exceptions
 	 * @see java.security.MessageDigest
 	 */
-	public static DatasetConfig XMLStreamToDatasetConfig(InputStream xmlinput, byte[] digest, boolean validate, boolean loadFully)
+	public  DatasetConfig getDatasetConfigForXMLStream(InputStream xmlinput, byte[] digest)
 		throws ConfigurationException {
-		return DocumentToDatasetConfig(XMLStreamToDocument(xmlinput, validate), digest, loadFully);
+		return getDatasetConfigForDocument(getDocumentForXMLStream(xmlinput), digest);
 	}
 
 	/**
 	 * Takes an InputStream containing DatasetConfig.dtd compliant XML, and creates a JDOM Document.
 	 * @param xmlinput -- InputStream containin DatasetConfig.dtd compliant XML
-	 * @param validate -- if true, JDOM validates the XML against the DatasetConfig.dtd in the CLASSPATH
 	 * @return org.jdom.Document
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static Document XMLStreamToDocument(InputStream xmlinput, boolean validate) throws ConfigurationException {
+	public  Document getDocumentForXMLStream(InputStream xmlinput) throws ConfigurationException {
 		try {
 			SAXBuilder builder = new SAXBuilder();
 			// set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the Classpath.
@@ -245,67 +164,33 @@ public class DatasetConfigXMLUtils {
 
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
-	 * XML document, and returns a DatasetConfig object. Note, this returns a fully loaded
-   * DatasetConfig object.
-   * @see DocumentToDatasetConfig(Document doc, boolean fullyLoad) for information on how
-   * to get a DatasetConfig which defers the loading of its elements to the lazyLoad system.
+	 * XML document, and returns a DatasetConfig object.
 	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
-	public static DatasetConfig DocumentToDatasetConfig(Document doc) throws ConfigurationException {
-		return DocumentToDatasetConfig(doc, null, true);
+	public  DatasetConfig getDatasetConfigForDocument(Document doc) throws ConfigurationException {
+		return getDatasetConfigForDocument(doc, null);
 	}
 
-  /**
-  /**
-   * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
-   * XML document, and returns a DatasetConfig object. Allows system to specify whether to fully load
-   * the DatasetConfig with its Elements, or defer this to the lazyLoad system.
-   * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
-   * @return DatasetConfig object
-   * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
-   */
-  public static DatasetConfig DocumentToDatasetConfig(Document doc, boolean loadFully) throws ConfigurationException {
-    return DocumentToDatasetConfig(doc, null, loadFully);
-  }
-  
+
 	/**
 	 * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
-	 * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
-	 * Message Digest are supplied, these are added to the DatasetConfig. Note, this returns a fully loaded
-   * DatasetConfig object.
-   * @see DocumentToDatasetConfig(Document doc, byte[] digest, boolean loadFully) for information on how
-   * to get a DatasetConfig which defers the loading of its elements to the lazyLoad system.
+	 * XML document, and returns a DatasetConfig object.  If a MD5SUM Message Digest is
+   * supplied, this is added to the DatasetConfig.
 	 * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
 	 * @param digest -- a digest computed with the given digestAlgorithm
 	 * @return DatasetConfig object
 	 * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
 	 */
-	public static DatasetConfig DocumentToDatasetConfig(Document doc, byte[] digest) throws ConfigurationException {
-		return DocumentToDatasetConfig(doc, digest, true);
-	}
-
-  /**
-   * Takes a org.jdom.Document Object representing a DatasetConfig.dtd compliant
-   * XML document, and returns a DatasetConfig object.  If a digestAlgorithm and
-   * Message Digest are supplied, these are added to the DatasetConfig. If loadFully is true,
-   * the DatasetConfig is fully populated with its Elements, otherwise, this is deferred to the lazyLoad system.
-   * @param doc -- Document representing a DatasetConfig.dtd compliant XML document
-   * @param digest -- a digest computed with the given digestAlgorithm
-   * @param loadFully -- boolean, if true, all DatasetConfig elements are loaded. If false, this is deferred to the lazyLoad system
-   * @return DatasetConfig object
-   * @throws ConfigurationException for non compliant Objects, and all underlying Exceptions.
-   */
-  public static DatasetConfig DocumentToDatasetConfig(Document doc, byte[] digest, boolean loadFully) throws ConfigurationException {
+  public  DatasetConfig getDatasetConfigForDocument(Document doc, byte[] digest) throws ConfigurationException {
     Element thisElement = doc.getRootElement();
 
     DatasetConfig d = new DatasetConfig();
     loadAttributesFromElement(thisElement, d);
 
     if (loadFully)
-      LoadDatasetConfigWithDocument(d, doc);
+      loadDatasetConfigWithDocument(d, doc);
 
     if (digest != null)
       d.setMessageDigest(digest);
@@ -313,7 +198,7 @@ public class DatasetConfigXMLUtils {
     return d;
   }
   
-  private static void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
+  private  void loadAttributesFromElement(Element thisElement, BaseConfigurationObject obj) {
 		List attributes = thisElement.getAttributes();
 		
 		for (int i = 0, n = attributes.size(); i < n; i++) {
@@ -332,7 +217,7 @@ public class DatasetConfigXMLUtils {
 	 * @throws ConfigurationException when the internalName returned by the JDOM Document does not match
 	 *         that of the dsv reference, and for any other underlying Exception
 	 */
-	public static void LoadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
+	public void loadDatasetConfigWithDocument(DatasetConfig dsv, Document doc) throws ConfigurationException {
 		Element thisElement = doc.getRootElement();
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 
@@ -346,27 +231,27 @@ public class DatasetConfigXMLUtils {
 			dsv.addOption(getOption(option));
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(DEFAULTFILTER)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, DEFAULTFILTER)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			dsv.addDefaultFilter(getDefaultFilter(element));
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(STARBASE)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, STARBASE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			dsv.addStarBase(element.getTextNormalize());
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(PRIMARYKEY)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, PRIMARYKEY)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			dsv.addPrimaryKey(element.getTextNormalize());
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERPAGE)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, FILTERPAGE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			dsv.addFilterPage(getFilterPage(element));
 		}
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEPAGE)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTEPAGE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			dsv.addAttributePage(getAttributePage(element));
 		}
@@ -380,7 +265,7 @@ public class DatasetConfigXMLUtils {
 		}
 	}
 
-	private static DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
+	private  DefaultFilter getDefaultFilter(Element thisElement) throws ConfigurationException {
 		FilterDescription desc = getFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
 
 		DefaultFilter df = new DefaultFilter();
@@ -390,11 +275,11 @@ public class DatasetConfigXMLUtils {
 		return df;
 	}
 
-	private static FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
+	private  FilterPage getFilterPage(Element thisElement) throws ConfigurationException {
 		FilterPage fp = new FilterPage();
 		loadAttributesFromElement(thisElement, fp);
 		
-		for (Iterator iter = thisElement.getDescendants(new MartFilterGroupFilter()); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartFilterGroupFilter(includeHiddenMembers)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			if (element.getName().equals(FILTERGROUP))
 				fp.addFilterGroup(getFilterGroup(element));
@@ -405,11 +290,11 @@ public class DatasetConfigXMLUtils {
 		return fp;
 	}
 
-	private static FilterGroup getFilterGroup(Element thisElement) throws ConfigurationException {
+	private  FilterGroup getFilterGroup(Element thisElement) throws ConfigurationException {
 		FilterGroup fg = new FilterGroup();
 		loadAttributesFromElement(thisElement, fg);
 
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(FILTERCOLLECTION)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, FILTERCOLLECTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			fg.addFilterCollection(getFilterCollection(element));
 		}
@@ -417,18 +302,18 @@ public class DatasetConfigXMLUtils {
 		return fg;
 	}
 
-	private static DSFilterGroup getDSFilterGroup(Element thisElement) throws ConfigurationException {
+	private  DSFilterGroup getDSFilterGroup(Element thisElement) throws ConfigurationException {
 		DSFilterGroup fg = new DSFilterGroup();
 		loadAttributesFromElement(thisElement, fg);
 
 		return fg;
 	}
 
-	private static FilterCollection getFilterCollection(Element thisElement) throws ConfigurationException {
+	private  FilterCollection getFilterCollection(Element thisElement) throws ConfigurationException {
 		FilterCollection fc = new FilterCollection();
 		loadAttributesFromElement(thisElement, fc);
 
-		for (Iterator iter = thisElement.getDescendants(new MartFilterDescriptionFilter()); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartFilterDescriptionFilter(includeHiddenMembers)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			fc.addFilterDescription(getFilterDescription(element));
 		}
@@ -436,7 +321,7 @@ public class DatasetConfigXMLUtils {
 		return fc;
 	}
 
-	private static Option getOption(Element thisElement) throws ConfigurationException {
+	private  Option getOption(Element thisElement) throws ConfigurationException {
 		Option o =	new Option();
 		loadAttributesFromElement(thisElement, o);
 
@@ -454,7 +339,7 @@ public class DatasetConfigXMLUtils {
 		return o;
 	}
 
-	private static PushAction getPushOptions(Element thisElement) throws ConfigurationException {
+	private  PushAction getPushOptions(Element thisElement) throws ConfigurationException {
 		PushAction pa = new PushAction();
 		loadAttributesFromElement(thisElement, pa);
 
@@ -465,7 +350,7 @@ public class DatasetConfigXMLUtils {
 		return pa;
 	}
 
-	private static FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
+	private  FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
 		FilterDescription f = new FilterDescription();
 		loadAttributesFromElement(thisElement, f);
 		
@@ -493,19 +378,19 @@ public class DatasetConfigXMLUtils {
 		return f;
 	}
 
-	private static Enable getEnable(Element thisElement) throws ConfigurationException {
+	private  Enable getEnable(Element thisElement) throws ConfigurationException {
 		Enable e = new Enable();
 		loadAttributesFromElement(thisElement, e);
 		return e;
 	}
 
-	private static Disable getDisable(Element thisElement) throws ConfigurationException {
+	private  Disable getDisable(Element thisElement) throws ConfigurationException {
 		Disable d = new Disable();
 		loadAttributesFromElement(thisElement, d);
 		return d;
 	}
 
-	private static AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
+	private  AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
 		AttributePage ap = new AttributePage();
 		loadAttributesFromElement(thisElement, ap);
 
@@ -520,11 +405,11 @@ public class DatasetConfigXMLUtils {
 		return ap;
 	}
 
-	private static AttributeGroup getAttributeGroup(Element thisElement) throws ConfigurationException {
+	private  AttributeGroup getAttributeGroup(Element thisElement) throws ConfigurationException {
 		AttributeGroup ag = new AttributeGroup();
 		loadAttributesFromElement(thisElement, ag);
 		
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTECOLLECTION)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTECOLLECTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			ag.addAttributeCollection(getAttributeCollection(element));
 		}
@@ -532,17 +417,17 @@ public class DatasetConfigXMLUtils {
 		return ag;
 	}
 
-	private static DSAttributeGroup getDSAttributeGroup(Element thisElement) throws ConfigurationException {
+	private  DSAttributeGroup getDSAttributeGroup(Element thisElement) throws ConfigurationException {
 		DSAttributeGroup ag = new DSAttributeGroup();
 		loadAttributesFromElement(thisElement, ag);
 		return ag;
 	}
 
-	private static AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
+	private  AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
 		AttributeCollection ac = new AttributeCollection();
 		loadAttributesFromElement(thisElement, ac);
 		
-		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(ATTRIBUTEDESCRIPTION)); iter.hasNext();) {
+		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTEDESCRIPTION)); iter.hasNext();) {
 			Element element = (Element) iter.next();
 			ac.addAttributeDescription(getAttributeDescription(element));
 		}
@@ -550,7 +435,7 @@ public class DatasetConfigXMLUtils {
 		return ac;
 	}
 
-	private static AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
+	private  AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
 		AttributeDescription a = new AttributeDescription();
 		loadAttributesFromElement(thisElement, a);
 		return a;
@@ -562,8 +447,8 @@ public class DatasetConfigXMLUtils {
 	 * @param file -- File to write XML
 	 * @throws ConfigurationException for underlying Exceptions
 	 */
-	public static void DatasetConfigToFile(DatasetConfig dsv, File file) throws ConfigurationException {
-		DocumentToFile(DatasetConfigToDocument(dsv), file);
+	public  void writeDatasetConfigToFile(DatasetConfig dsv, File file) throws ConfigurationException {
+		writeDocumentToFile(getDocumentForDatasetConfig(dsv), file);
 	}
 
 	/**
@@ -573,8 +458,8 @@ public class DatasetConfigXMLUtils {
 	 * @param out -- OutputStream to write, not closed after writing
 	 * @throws ConfigurationException for underlying Exceptions
 	 */
-	public static void DatasetConfigToOutputStream(DatasetConfig dsv, OutputStream out) throws ConfigurationException {
-		DocumentToOutputStream(DatasetConfigToDocument(dsv), out);
+	public  void writeDatasetConfigToOutputStream(DatasetConfig dsv, OutputStream out) throws ConfigurationException {
+		writeDocumentToOutputStream(getDocumentForDatasetConfig(dsv), out);
 	}
 
 	/**
@@ -583,10 +468,10 @@ public class DatasetConfigXMLUtils {
 	 * @param file -- File to write.
 	 * @throws ConfigurationException for underlying Exceptions.
 	 */
-	public static void DocumentToFile(Document doc, File file) throws ConfigurationException {
+	public  void writeDocumentToFile(Document doc, File file) throws ConfigurationException {
 		try {
 			FileOutputStream out = new FileOutputStream(file);
-			DocumentToOutputStream(doc, out);
+			writeDocumentToOutputStream(doc, out);
 			out.close();
 		} catch (FileNotFoundException e) {
 			throw new ConfigurationException(
@@ -607,7 +492,7 @@ public class DatasetConfigXMLUtils {
 	 * @param out -- OutputStream to write to, not closed after writing
 	 * @throws ConfigurationException for underlying IOException
 	 */
-	public static void DocumentToOutputStream(Document doc, OutputStream out) throws ConfigurationException {
+	public  void writeDocumentToOutputStream(Document doc, OutputStream out) throws ConfigurationException {
 		XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
 
 		try {
@@ -617,7 +502,7 @@ public class DatasetConfigXMLUtils {
 		}
 	}
 
-  private static void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
+  private  void loadElementAttributesFromObject(BaseConfigurationObject obj, Element thisElement) {
   	String[] titles = obj.getXmlAttributeTitles();
   	
   	//sort the attribute titles before writing them out, so that MD5SUM is supported
@@ -637,7 +522,7 @@ public class DatasetConfigXMLUtils {
 	 * @param dsconfig -- DatasetConfig object to be converted into a JDOM Document
 	 * @return Document object
 	 */
-	public static Document DatasetConfigToDocument(DatasetConfig dsconfig) {
+	public  Document getDocumentForDatasetConfig(DatasetConfig dsconfig) {
 		Element root = new Element(DATASETCONFIG);
 		loadElementAttributesFromObject(dsconfig, root);
 		
@@ -671,7 +556,7 @@ public class DatasetConfigXMLUtils {
 		return thisDoc;
 	}
 
-	private static Element getAttributePageElement(AttributePage apage) {
+	private  Element getAttributePageElement(AttributePage apage) {
 		Element page = new Element(ATTRIBUTEPAGE);
 		loadElementAttributesFromObject(apage, page);
 		
@@ -687,13 +572,13 @@ public class DatasetConfigXMLUtils {
 		return page;
 	}
 
-	private static Element getDSAttributeGroupElement(DSAttributeGroup group) {
+	private  Element getDSAttributeGroupElement(DSAttributeGroup group) {
 		Element dsag = new Element(DSATTRIBUTEGROUP);
 		loadElementAttributesFromObject(group, dsag);
 		return dsag;
 	}
 
-	private static Element getAttributeGroupElement(AttributeGroup group) {
+	private  Element getAttributeGroupElement(AttributeGroup group) {
 		Element ag = new Element(ATTRIBUTEGROUP);
 		loadElementAttributesFromObject(group, ag);
 		
@@ -704,7 +589,7 @@ public class DatasetConfigXMLUtils {
 		return ag;
 	}
 
-	private static Element getAttributeCollectionElement(AttributeCollection collection) {
+	private  Element getAttributeCollectionElement(AttributeCollection collection) {
 		Element ac = new Element(ATTRIBUTECOLLECTION);
     loadElementAttributesFromObject(collection, ac);
 
@@ -716,13 +601,13 @@ public class DatasetConfigXMLUtils {
 		return ac;
 	}
 
-	private static Element getAttributeDescriptionElement(AttributeDescription attribute) {
+	private  Element getAttributeDescriptionElement(AttributeDescription attribute) {
 		Element att = new Element(ATTRIBUTEDESCRIPTION);
 		loadElementAttributesFromObject(attribute, att);
 		return att;
 	}
 
-	private static Element getFilterPageElement(FilterPage fpage) {
+	private  Element getFilterPageElement(FilterPage fpage) {
 		Element page = new Element(FILTERPAGE);
 		loadElementAttributesFromObject(fpage, page);
 		
@@ -738,7 +623,7 @@ public class DatasetConfigXMLUtils {
 		return page;
 	}
 
-	private static Element getDSFilterGroupElement(DSFilterGroup group) {
+	private  Element getDSFilterGroupElement(DSFilterGroup group) {
 		Element dsfg = new Element(DSFILTERGROUP);
 		loadElementAttributesFromObject(group, dsfg);
 		return dsfg;
@@ -748,7 +633,7 @@ public class DatasetConfigXMLUtils {
 	 * @param group
 	 * @return
 	 */
-	private static Element getFilterGroupElement(FilterGroup group) {
+	private  Element getFilterGroupElement(FilterGroup group) {
 		Element fg = new Element(FILTERGROUP);
 		loadElementAttributesFromObject(group, fg);
 
@@ -759,7 +644,7 @@ public class DatasetConfigXMLUtils {
 		return fg;
 	}
 
-	private static Element getFilterCollectionElement(FilterCollection collection) {
+	private  Element getFilterCollectionElement(FilterCollection collection) {
 		Element fc = new Element(FILTERCOLLECTION);
 		loadElementAttributesFromObject(collection, fc);
 		
@@ -771,19 +656,19 @@ public class DatasetConfigXMLUtils {
 		return fc;
 	}
 
-	private static Element getPrimaryKeyElement(String primaryKeyString) {
+	private  Element getPrimaryKeyElement(String primaryKeyString) {
 		Element pkey = new Element(PRIMARYKEY);
 		pkey.setText(primaryKeyString);
 		return pkey;
 	}
 
-	private static Element getStarBaseElement(String starbaseString) {
+	private  Element getStarBaseElement(String starbaseString) {
 		Element sbase = new Element(STARBASE);
 		sbase.setText(starbaseString);
 		return sbase;
 	}
 
-	private static Element getDefaultFilterElement(DefaultFilter filter) {
+	private  Element getDefaultFilterElement(DefaultFilter filter) {
 		Element def = new Element(DEFAULTFILTER);
 		loadElementAttributesFromObject(filter, def);
 		def.addContent(getFilterDescriptionElement(filter.getFilterDescription()));
@@ -791,7 +676,7 @@ public class DatasetConfigXMLUtils {
 		return def;
 	}
 
-	private static Element getOptionElement(Option o) {
+	private  Element getOptionElement(Option o) {
 		Element option = new Element(OPTION);
 		loadElementAttributesFromObject(o, option);
 		
@@ -806,7 +691,7 @@ public class DatasetConfigXMLUtils {
 		return option;
 	}
 
-	private static Element getPushActionElement(PushAction pa) {
+	private  Element getPushActionElement(PushAction pa) {
 		Element pushAction = new Element(PUSHACTION);
 		loadElementAttributesFromObject(pa, pushAction);
 		
@@ -817,7 +702,7 @@ public class DatasetConfigXMLUtils {
 		return pushAction;
 	}
 
-	private static Element getFilterDescriptionElement(FilterDescription filter) {
+	private  Element getFilterDescriptionElement(FilterDescription filter) {
 		Element fdesc = new Element(FILTERDESCRIPTION);
 		loadElementAttributesFromObject(filter, fdesc);
 		
@@ -836,19 +721,19 @@ public class DatasetConfigXMLUtils {
 		return fdesc;
 	}
 
-	private static Element getDisableElement(Disable disable) {
+	private  Element getDisableElement(Disable disable) {
 		Element dsbl = new Element(DISABLE);
 		loadElementAttributesFromObject(disable, dsbl);
 		return dsbl;
 	}
 
-	private static Element getEnableElement(Enable enable) {
+	private  Element getEnableElement(Enable enable) {
 		Element enbl = new Element(ENABLE);
 		loadElementAttributesFromObject(enable, enbl);
 		return enbl;
 	}
 
-	private static boolean validString(String test) {
+	private  boolean validString(String test) {
 		return (test != null && test.length() > 0);
 	}
 
@@ -861,67 +746,37 @@ public class DatasetConfigXMLUtils {
 	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
 	 * @see java.security.DigestOutputStream
 	 */
-	public static byte[] DocumentToMessageDigest(Document doc) throws ConfigurationException {
-		return DocumentToMessageDigest(doc, DEFAULTDIGESTALGORITHM);
-	}
+	public  byte[] getMessageDigestForDocument(Document doc) throws ConfigurationException {
+    try {
+      MessageDigest mdigest = MessageDigest.getInstance(DEFAULTDIGESTALGORITHM);
+      ByteArrayOutputStream bout = new ByteArrayOutputStream();
+      DigestOutputStream dout = new DigestOutputStream(bout, mdigest);
+      XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
 
-	/**
-	 * Given a Document object and a digestAlgorithm, converts the given document to
-	 * a digest using the JDOM XMLOutputter writing to a DigestOutputStream.  This is the default
-	 * method for calculating the MessageDigest of a DatasetConfig object used in various places in the MartJ system.
-	 * If the digestAlgorithm is null, defaults to DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM.
-	 * @param doc -- Document object representing a DatasetConfig.dtd compliant XML document.
-	 * @param digestAlgorithm -- Algorithm to use to compute the MessageDigest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
-	 * @return byte[] digest algorithm
-	 * @throws ConfigurationException for NoSuchAlgorithmException, and IOExceptions.
-	 * @see java.security.DigestOutputStream
-	 */
-	public static byte[] DocumentToMessageDigest(Document doc, String digestAlgorithm) throws ConfigurationException {
-		String dalg = (digestAlgorithm != null) ? digestAlgorithm : DEFAULTDIGESTALGORITHM;
+      xout.output(doc, dout);
 
-		try {
-			MessageDigest mdigest = MessageDigest.getInstance(dalg);
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			DigestOutputStream dout = new DigestOutputStream(bout, mdigest);
-			XMLOutputter xout = new XMLOutputter(org.jdom.output.Format.getRawFormat());
+      byte[] digest = mdigest.digest();
 
-			xout.output(doc, dout);
+      bout.close();
+      dout.close();
 
-			byte[] digest = mdigest.digest();
-
-			bout.close();
-			dout.close();
-
-			return digest;
-		} catch (NoSuchAlgorithmException e) {
-			throw new ConfigurationException("Digest Algorithm " + dalg + " does not exist\n", e);
-		} catch (IOException e) {
-			throw new ConfigurationException("Caught IOException converting Docuement to Digest\n", e);
-		}
+      return digest;
+    } catch (NoSuchAlgorithmException e) {
+      throw new ConfigurationException("Digest Algorithm " + DEFAULTDIGESTALGORITHM + " does not exist, possibly a problem with the Java Installation\n", e);
+    } catch (IOException e) {
+      throw new ConfigurationException("Caught IOException converting Docuement to Digest\n", e);
+    }
 	}
 
 	/**
 	 * Returns a MessageDigest digest for a DatasetConfig by first creating a JDOM Document object, and then
-	 * calculuating its digest using DatasetConfigXMLUtils.DocumentToMEssageDigest(dsv, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM). 
+	 * calculuating its digest using DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM. 
 	 * @param dsv -- A DatasetConfig object
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static byte[] DatasetConfigToMessageDigest(DatasetConfig dsv) throws ConfigurationException {
-		return DatasetConfigToMessageDigest(dsv, DEFAULTDIGESTALGORITHM);
-	}
-
-	/**
-	 * Returns a MessageDigest digest for a DatasetConfig by first creating a JDOM Document object, and then
-	 * calculuating its digest using DatasetConfigXMLUtils.DocumentToMEssageDigest(dsv, digestAlgorithm). 
-	 * @param dsv -- A DatasetConfig object
-	 * @param digestAlgorithm -- String digest algorithm to use. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
-	 * @return byte[] digest
-	 * @throws ConfigurationException for all underlying Exceptions
-	 */
-	public static byte[] DatasetConfigToMessageDigest(DatasetConfig dsv, String digestAlgorithm)
-		throws ConfigurationException {
-		return DocumentToMessageDigest(DatasetConfigToDocument(dsv), digestAlgorithm);
+	public  byte[] getMessageDigestForDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
+		return getMessageDigestForDocument( getDocumentForDatasetConfig(dsv) );
 	}
 
 	/**
@@ -935,29 +790,19 @@ public class DatasetConfigXMLUtils {
 	 * @return byte[] digest
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public static byte[] XMLStreamToMessageDigest(InputStream is) throws ConfigurationException {
-		return XMLStreamToMessageDigest(is, DEFAULTDIGESTALGORITHM);
+	public  byte[] getMessageDigestForXMLStream(InputStream is) throws ConfigurationException {
+		return getMessageDigestForDocument( getDocumentForXMLStream(is) );
 	}
 
-	/**
-	 * This method does not convert the raw bytes of a given InputStream into a Message Digest.  It is intended to calculate a Message Digest
-	 * that is comparable between multiple XML representations of the same DatasetConfig Object (despite one representation having an Element with
-	 * an Attribute specified with an empty string, and the other having the same Element with that Attribute specification missing entirely, or each
-	 * containing the same Element with the same attribute specifications, but occuring in a different order within the XML string defining the Element).  
-	 * It does this by first converting the InputStream into a DatasetConfig Object (using XMLStreamToDatasetConfig(is)), and then calculating the 
-	 * digest on the resulting DatasetConfig Object (using DatasetConfigToMessageDigest(dsv, digestAlgorithm)).
-	 * @param xmlinput -- InputStream containing DatasetConfig.dtd compliant XML.
-	 * @param digestAlgorithm -- MessageDigest Algorithm to compute the digest. If null, DatasetConfigXMLUtils.DEFAULTDIGESTALGORITHM is used.
-	 * @return byte[] digest
-	 * @throws ConfigurationException for all underlying Exceptions
-	 */
-	public static byte[] XMLStreamToMessageDigest(InputStream is, String digestAlgorithm) throws ConfigurationException {
-		return DatasetConfigToMessageDigest(XMLStreamToDatasetConfig(is), digestAlgorithm);
-	}
-
-  public static byte[] DatasetConfigToByteArray(DatasetConfig dsv) throws ConfigurationException {
+  /**
+   * Returns a byte[] of XML for the given DatasetConfig object.
+   * @param dsv - DatasetConfig object to be parsed into a byte[]
+   * @return byte[] representing XML for DatasetConfig
+   * @throws ConfigurationException for underlying exceptions
+   */
+  public  byte[] getByteArrayForDatasetConfig(DatasetConfig dsv) throws ConfigurationException {
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    DatasetConfigToOutputStream(dsv, bout);
+    writeDatasetConfigToOutputStream(dsv, bout);
     return bout.toByteArray();
   }
   

@@ -56,6 +56,8 @@ public class DatasetConfigIterator implements Iterator {
     return ret;
   }
 
+  //TODO: this method currently returns a non lazyLoaded DatasetConfig object, and defers loading to the lazyLoad system. When MartExplorer and MartEditor are redesigned to better manage DatasetConfig objects in memory, this should me made to return preLoaded DatasetConfig objects
+  
   /* (non-Javadoc)
    * @see java.util.Iterator#next()
    */
@@ -65,7 +67,7 @@ public class DatasetConfigIterator implements Iterator {
 
     DatasetConfig next = null;
     try {
-      next = new DatasetConfig((DatasetConfig) current.next(), false, true);
+      next = new DatasetConfig((DatasetConfig) current.next(), false, false);
     } catch (ConfigurationException e) {
       //ignore, because we are not violating the contract for the exception
     } //lazyloaded copy
