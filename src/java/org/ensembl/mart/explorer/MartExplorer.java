@@ -178,7 +178,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 			} catch (MalformedURLException e) {
 				feedback.warning(e);
 			} 
-    logger.warning("Loading default registry file: " + url);
+    logger.fine("Loading default registry file: " + url);
     adaptorManager.importRegistry( url );
   }
 
