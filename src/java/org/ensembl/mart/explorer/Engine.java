@@ -97,7 +97,7 @@ public class Engine {
     
     ResultSet rs = null;
     try {
-      ps.executeQuery();
+      rs = ps.executeQuery();
     } catch (SQLException e) {
       logger.warn(e.getMessage()+ " : " + sql);
       throw e;
