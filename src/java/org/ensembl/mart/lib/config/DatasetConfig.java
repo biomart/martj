@@ -61,8 +61,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
   private Hashtable attributePageNameMap = new Hashtable();
   private Hashtable filterPageNameMap = new Hashtable();
-  private List starBases = new ArrayList();
-  private boolean hasBrokenStarBases = false;
+  private List mainTables = new ArrayList();
+  private boolean hasBrokenMainTables = false;
 
   private List primaryKeys = new ArrayList();
   private boolean hasBrokenPrimaryKeys = false;
@@ -131,7 +131,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     //is loaded, and __NOT__ insert themselves into the DatasetConfig that they manage.
     if (ds.getAdaptor() == null || propogateExistingElements) {
 
-      addStarBases(ds.getStarBases());
+      addMainTables(ds.getStarBases());
       addPrimaryKeys(ds.getPrimaryKeys());
 
       DefaultFilter[] dfilts = ds.getDefaultFilters();
@@ -328,13 +328,13 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   * 
   * @param starname  String name of a main table for a mart.
   */
-  public void addStarBase(String starname) {
-    starBases.add(starname);
+  public void addMainTable(String starname) {
+    mainTables.add(starname);
   }
 
-  public void removeStarBase(String starname) {
+  public void removeMainTable(String starname) {
     lazyLoad();
-    starBases.remove(starname);
+    mainTables.remove(starname);
   }
 
   /**
@@ -344,8 +344,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * 
    * @param starnames String[] Array of star names.
    */
-  public void addStarBases(String[] starnames) {
-    starBases.addAll(Arrays.asList(starnames));
+  public void addMainTables(String[] starnames) {
+    mainTables.addAll(Arrays.asList(starnames));
   }
 
   /**
@@ -571,8 +571,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public String[] getStarBases() {
     lazyLoad();
-    String[] s = new String[starBases.size()];
-    starBases.toArray(s);
+    String[] s = new String[mainTables.size()];
+    mainTables.toArray(s);
     return s;
   }
 
@@ -986,7 +986,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public boolean containsStarBase(String starBase) {
     lazyLoad();
-    return starBases.contains(starBase);
+    return mainTables.contains(starBase);
   }
 
   /**
@@ -1232,7 +1232,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 
     buf.append("[");
     buf.append(super.toString());
-    buf.append(", starnames=").append(starBases);
+    buf.append(", starnames=").append(mainTables);
     buf.append(", primarykeys=").append(primaryKeys);
     buf.append("]");
 
@@ -1266,8 +1266,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     if (adaptor != null && !(adaptor instanceof SimpleDSConfigAdaptor)) {
       tmp = (31 * tmp) + adaptor.hashCode();
     } else {
-      for (int i = 0, n = starBases.size(); i < n; i++) {
-        String element = (String) starBases.get(i);
+      for (int i = 0, n = mainTables.size(); i < n; i++) {
+        String element = (String) mainTables.get(i);
         tmp = (31 * tmp) + element.hashCode();
       }
 
@@ -1304,15 +1304,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * particular Mart instance.
    */
   public void setStarsBroken() {
-    hasBrokenStarBases = true;
+    hasBrokenMainTables = true;
   }
 
   /**
    * Determine if this DatasetConfig has broken StarBases.
    * @return boolean
    */
-  public boolean hasBrokenStarBases() {
-    return hasBrokenStarBases;
+  public boolean hasBrokenMainTables() {
+    return hasBrokenMainTables;
   }
 
   /**
@@ -1393,7 +1393,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @return boolean
    */
   public boolean isBroken() {
-    return hasBrokenStarBases
+    return hasBrokenMainTables
       || hasBrokenPrimaryKeys
       || hasBrokenDefaultFilters
       || hasBrokenOptions

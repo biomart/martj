@@ -238,7 +238,7 @@ public class DatasetConfigXMLUtils {
 
 		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, STARBASE)); iter.hasNext();) {
 			Element element = (Element) iter.next();
-			dsv.addStarBase(element.getTextNormalize());
+			dsv.addMainTable(element.getTextNormalize());
 		}
 
 		for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, PRIMARYKEY)); iter.hasNext();) {

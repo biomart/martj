@@ -1446,24 +1446,12 @@ public class DatabaseDatasetConfigUtils {
   }
 
   public DatasetConfig getValidatedDatasetConfig(DatasetConfig dsv) throws SQLException, ConfigurationException {
-    String schema = null;
-    String catalog = null;
-    Connection conn = null;
-
-    try {
-      conn = dsource.getConnection();
-      ResultSet schemas = conn.getMetaData().getSchemas();
-      while (schemas.next()) {
-        schema = schemas.getString(1);
-        catalog = schemas.getString(2);
-
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
-      }
-    } finally {
-      //this will throw any SQLExceptions encountered, but always closes the Connection rather an exception occurs or not
-      DetailedDataSource.close(conn);
-    }
+    
+  	
+  	String catalog="";
+    String schema = getSchema();
+  	
+  	
 
     DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
     //want to copy existing Elements to the new Object as is
@@ -1478,7 +1466,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (!validatedStar.equals(starbase)) {
         hasBrokenStars = true;
-        validatedDatasetConfig.removeStarBase(starbase);
+        validatedDatasetConfig.removeMainTable(starbase);
       }
 
       validatedStars[i] = validatedStar;
@@ -1486,7 +1474,7 @@ public class DatabaseDatasetConfigUtils {
 
     if (hasBrokenStars) {
       validatedDatasetConfig.setStarsBroken();
-      validatedDatasetConfig.addStarBases(validatedStars);
+      validatedDatasetConfig.addMainTables(validatedStars);
     }
 
     boolean hasBrokenPKeys = false;
@@ -1768,18 +1756,12 @@ public class DatabaseDatasetConfigUtils {
   }
 
   private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset) throws SQLException {
-    String schema = null;
-    String catalog = null;
-    Connection conn = dsource.getConnection();
-    ResultSet schemas = conn.getMetaData().getSchemas();
-    while (schemas.next()) {
-      schema = schemas.getString(1);
-      catalog = schemas.getString(2);
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
-    }
-    conn.close();
+    
+    String catalog="";
+    String schema = getSchema();
+    
+    
+    
     FilterCollection validatedFilterCollection = new FilterCollection(collection);
 
     List allFilts = collection.getFilterDescriptions();
@@ -2109,20 +2091,11 @@ public class DatabaseDatasetConfigUtils {
 
   private AttributeCollection getValidatedAttributeCollection(AttributeCollection collection, String dset)
     throws SQLException {
-    String schema = null;
-    String catalog = null;
-
-    Connection conn = dsource.getConnection();
-    ResultSet schemas = conn.getMetaData().getSchemas();
-    while (schemas.next()) {
-      schema = schemas.getString(1);
-      catalog = schemas.getString(2);
-
-      if (logger.isLoggable(Level.FINE))
-        logger.fine("schema: " + schema + " - catalog: " + catalog + "\n");
-    }
-    conn.close();
-
+    
+    String catalog = "";
+    String schema=getSchema();
+    
+   
     AttributeCollection validatedAttributeCollection = new AttributeCollection(collection);
     boolean hasBrokenAttributes = false;
     HashMap brokenAtts = new HashMap();
@@ -2639,7 +2612,7 @@ public class DatabaseDatasetConfigUtils {
 
     String[] sbases = new String[starbases.size()];
     starbases.toArray(sbases);
-    dsv.addStarBases(sbases);
+    dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
     primaryKeys.toArray(pkeys);
@@ -2838,7 +2811,7 @@ public class DatabaseDatasetConfigUtils {
 
     String[] sbases = new String[starbases.size()];
     starbases.toArray(sbases);
-    dsv.addStarBases(sbases);
+    dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
     primaryKeys.toArray(pkeys);
@@ -3404,4 +3377,29 @@ System.out.println("Going to null ");
       DetailedDataSource.close(conn);
     }
   }
+
+private String getSchema(){
+	
+	String schema = null;
+   
+    try {
+		Connection conn = dsource.getConnection();
+		ResultSet schemas = conn.getMetaData().getSchemas();
+		while (schemas.next()) {
+		  schema = schemas.getString(1);
+
+		  if (logger.isLoggable(Level.FINE))
+		    logger.fine("schema: " + schema + "\n");
+		}
+		conn.close();
+	} catch (SQLException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}	
+
+    return schema;
+    
+}
+
+
 }

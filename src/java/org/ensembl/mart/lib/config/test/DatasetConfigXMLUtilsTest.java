@@ -1485,7 +1485,7 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 			newDSV.addDefaultFilter(newDF);
 		}
 
-		newDSV.addStarBases(reference.getStarBases());
+		newDSV.addMainTables(reference.getStarBases());
 		newDSV.addPrimaryKeys(reference.getPrimaryKeys());
 
 		FilterPage[] fpages = reference.getFilterPages();
@@ -1508,7 +1508,7 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 
 		//test remove
 		newDSV.removeOption(os[0]);
-		newDSV.removeStarBase(reference.getStarBases()[0]);
+		newDSV.removeMainTable(reference.getStarBases()[0]);
 		newDSV.removePrimaryKey(reference.getPrimaryKeys()[0]);
 		newDSV.removeDefaultFilter(df[0]);
 		newDSV.removeFilterPage(fpages[0]);
@@ -1516,7 +1516,7 @@ public class DatasetConfigXMLUtilsTest extends TestCase {
 
 		//test insert* functionality after a remove
 		newDSV.insertOption(0, os[0]);
-		newDSV.addStarBase(reference.getStarBases()[0]);
+		newDSV.addMainTable(reference.getStarBases()[0]);
 		newDSV.addPrimaryKey(reference.getPrimaryKeys()[0]);
 		newDSV.addDefaultFilter(df[0]);
 		newDSV.insertFilterPage(0, fpages[0]);
