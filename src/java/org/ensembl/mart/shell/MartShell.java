@@ -598,7 +598,10 @@ public class MartShell {
 
         if (helpLoaded)
           mcl.AddAvailableCommandsTo(HELPC, commandHelp.keySet());
-          
+        
+        if (envDataset != null)
+          mcl.setEnvDataset(envDataset);
+            
 				mcl.SetCommandMode();
 
 				Readline.setCompleter(mcl);
