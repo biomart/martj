@@ -61,6 +61,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.BasicFilter;
+import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
@@ -455,7 +456,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 
 		String s = (newDataset != null) ? newDataset : "";
 		((TreeNodeData) datasetNode.getUserObject()).setRightText(s);
-		treeModel.reload( datasetNode );
+		treeModel.reload(datasetNode);
 	}
 
 	/**
@@ -467,9 +468,16 @@ public class QueryTreeView extends JTree implements QueryListener {
 		DataSource oldDatasource,
 		DataSource newDatasource) {
 
-      String s = (newDatasource != null) ? newDatasource.toString() : "";
-      ((TreeNodeData) dataSourceNode.getUserObject()).setRightText(s);
-      treeModel.reload( dataSourceNode );
+		String s = (newDatasource != null) ? newDatasource.toString() : "";
+    // TODO query.datasource:DataSource -> DetailedDataSource and propagate changes
+    // through QueryListener.
+		if (newDatasource!=null && newDatasource instanceof DetailedDataSource) {
+			DetailedDataSource ds = (DetailedDataSource) newDatasource;
+			s = ds.getDatabaseName() + "@" + ds.getHost();
+		}
+
+		((TreeNodeData) dataSourceNode.getUserObject()).setRightText(s);
+		treeModel.reload(dataSourceNode);
 
 	}
 
@@ -621,9 +629,9 @@ public class QueryTreeView extends JTree implements QueryListener {
 					p = ((Option) p).getParent();
 
 				} else if (p instanceof FilterDescription) {
-          
-          // If parent in dataset view was a PushAction then
-          // parent will have been set to PushAction.ref
+
+					// If parent in dataset view was a PushAction then
+					// parent will have been set to PushAction.ref
 					FilterDescription fd2 = (FilterDescription) p;
 					if (fd2.getDisplayName() != null) {
 						displayName = fd2.getDisplayName();
@@ -684,7 +692,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 	}
 
 	/**
-   * Do nothing.
+	 * Do nothing.
 	 * @see org.ensembl.mart.lib.QueryChangeListener#queryPrimaryKeysChanged(org.ensembl.mart.lib.Query, java.lang.String[], java.lang.String[])
 	 */
 	public void primaryKeysChanged(
@@ -693,14 +701,13 @@ public class QueryTreeView extends JTree implements QueryListener {
 		String[] newPrimaryKeys) {
 	}
 
-  /**
-   * Do nothing. 
-   */
+	/**
+	 * Do nothing. 
+	 */
 	public void datasetViewChanged(
 		Query query,
 		DatasetView oldDatasetView,
 		DatasetView newDatasetView) {
-
 
 	}
 
