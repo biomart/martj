@@ -82,7 +82,7 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 		String[] mainTables = query.getStarBases();
 
 		for (int i = 0; i < mainTables.length; i++) {
-			if (Pattern.matches("gene", mainTables[i]))
+			if (Pattern.matches(".*gene", mainTables[i]))
 				dataset = mainTables[i];
 		}
 
@@ -140,7 +140,7 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 		try {
 			CompiledSQLQuery csql = new CompiledSQLQuery(conn, query);
 			String sqlbase = csql.toSQL();
-			String structure_table = dataset + "_structure";
+			String structure_table = dataset + "_structure_dm";
 			sqlbase += " order by  "
 				+ structure_table
 				+ ".gene_id, "
@@ -240,7 +240,7 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 						Hashtable tranatts = new Hashtable();
 						tranatts.put(Locations, new TreeMap());
 						tranatts.put(hasUTR, Boolean.FALSE);
-						// initialize to falst, over ride if necessary
+						// initialize to false, over ride if necessary
 						traniDs.put(tranID, tranatts);
 					}
 					Hashtable tranatts = (Hashtable) traniDs.get(tranID);
@@ -363,9 +363,7 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 			Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 			TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 			SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
-			String assemblyout = (String) geneatts.get(Assembly);
-			String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-
+			
 			try {
 				for (Iterator tranIter = traniDs.keySet().iterator();
 					tranIter.hasNext();
@@ -374,6 +372,11 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 						(Hashtable) traniDs.get((Integer) tranIter.next());
 
 					if (((Boolean) tranatts.get(hasUTR)).booleanValue()) {
+						String assemblyout = (String) geneatts.get(Assembly);
+			
+						int gstrand = geneloc.getStrand();
+						String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
+
 						osr.write((String) tranatts.get(DisplayID));
 
 						osr.write(
@@ -514,8 +517,6 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 			Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
 			TreeMap traniDs = (TreeMap) geneatts.get(Transcripts);
 			SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
-			String assemblyout = (String) geneatts.get(Assembly);
-			String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
 
 			try {
 				for (Iterator tranIter = traniDs.keySet().iterator();
@@ -525,6 +526,9 @@ public final class DownStreamUTRSeqQueryRunner implements QueryRunner {
 						(Hashtable) traniDs.get((Integer) tranIter.next());
 
 					if (((Boolean) tranatts.get(hasUTR)).booleanValue()) {
+						String assemblyout = (String) geneatts.get(Assembly);
+						String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
+						
 						// write the header, starting with the displayID
 						osr.write(">" + (String) tranatts.get(DisplayID));
 

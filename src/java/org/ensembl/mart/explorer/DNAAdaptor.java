@@ -111,7 +111,13 @@ public class DNAAdaptor {
 	  // cut out the requested section from the big segment
 		int seqstart = start - cachedSeqStart;
 		int seqend = seqstart + len;
-		return cachedSeq.substring(seqstart,seqend);   
+		int cacheLen = cachedSeq.length();
+		
+		//user may ask for more sequence than is available, return as much as possible
+		if (len > cacheLen - seqstart -1)
+		  return cachedSeq.substring(seqstart);
+		else
+		  return cachedSeq.substring(seqstart,seqend);   
 	}
 	
 	/**
