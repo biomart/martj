@@ -191,6 +191,7 @@
       deprecation="${build.deprecation}"
       depend="no"
       debug="true"
+      source="1.4"
     >
       <classpath>
         <fileset refid="lib.classpath"/>
