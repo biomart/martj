@@ -18,12 +18,15 @@
 
 package org.ensembl.mart.shell;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.ensembl.mart.lib.SequenceDescription;
+import org.apache.log4j.Logger;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterGroup;
@@ -49,39 +52,35 @@ public class MartCompleter implements ReadlineCompleter {
 	private SortedSet currentSet = new TreeSet();
 
 	private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
-	private SortedSet selectSet = new TreeSet(); // will hold commandSet + attribute names
-	private SortedSet sequenceSet = new TreeSet(); // will hold commandSet + sequences
-	private SortedSet fromSet = new TreeSet(); // will hold commandSet + datasets
-	private SortedSet whereSet = new TreeSet(); // will hold commandSet + filters 
-	private SortedSet describeSet = new TreeSet(); // will hold commandSet + pages
+	private Map setMapper = new HashMap();  // will hold special sets, with String keys
+	
+	private SortedSet selectSet = new TreeSet(); // will hold attribute names
+	private SortedSet sequenceSet = new TreeSet(); // will hold sequences
+	private SortedSet fromSet = new TreeSet(); // will hold datasets
+	private SortedSet whereSet = new TreeSet(); // will hold filters 
+	private SortedSet describeSet = new TreeSet(); // will hold pages
+	private SortedSet helpSet = new TreeSet(); // will hold help keys available
 
 	private SortedSet backupSet = new TreeSet();
 
 	//sequence possibilities
+	private final String COMMANDS = "commands";
 	private final String DESCRIBE = "describe";
+	private final String HELP = "help";
 	private final String SELECT = "select";
 	private final String SEQUENCE = "sequence";
 	private final String FROM = "from";
 	private final String WHERE = "where";
 
-	private boolean defaultMode = true;
-	private boolean selectMode = false;
-	private boolean seqMode = false;
-	private boolean fromMode = false;
-	private boolean whereMode = false;
-	private boolean describeMode = false;
-
 	public MartCompleter(MartConfiguration martconf) {
-		// add commands
-		commandSet.addAll(new MartShell().availableCommands);
-		//selectSet.addAll(commandSet);
-		//fromSet.addAll(commandSet);
-		//whereSet.addAll(commandSet);
-		//describeSet.addAll(commandSet);
-
-		// add sequences
-		sequenceSet.addAll(SequenceDescription.SEQS);
-
+		setMapper.put(COMMANDS, commandSet);
+		setMapper.put(DESCRIBE, describeSet);
+		setMapper.put(HELP, helpSet);
+		setMapper.put(SELECT, selectSet);
+		setMapper.put(SEQUENCE, sequenceSet);
+		setMapper.put(FROM, fromSet);
+		setMapper.put(WHERE, whereSet);
+		
 		Dataset[] dsets = martconf.getDatasets();
 		for (int i = 0, n = dsets.length; i < n; i++) {
 			Dataset dataset = dsets[i];
@@ -100,7 +99,9 @@ public class MartCompleter implements ReadlineCompleter {
 
 			if (Readline.getLineBuffer().indexOf(DESCRIBE) >= 0)
 				SetDescribeMode();
-				
+			if (Readline.getLineBuffer().indexOf(HELP) >= 0)
+			  SetHelpMode();
+			  	
       int selectInd = Readline.getLineBuffer().lastIndexOf(SELECT);
       int seqInd = Readline.getLineBuffer().lastIndexOf(SEQUENCE);
       int fromInd = Readline.getLineBuffer().lastIndexOf(FROM);
@@ -205,29 +206,21 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	private void SetDescribeMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(describeSet);
-
-		defaultMode = false;
-		seqMode = false;
-		fromMode = false;
-		whereMode = false;
-		describeMode = true;
+		currentSet.addAll( (SortedSet) setMapper.get(DESCRIBE) );
 	}
 
+  private void SetHelpMode() {
+  	currentSet = new TreeSet();
+  	currentSet.addAll( (SortedSet) setMapper.get(HELP) );
+  }
+  
 	/**
 	 * Sets the MartCompleter into the default mode, with only commands available in the choices set
 	 *
 	 */
 	public void SetDefaultMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(commandSet);
-
-		defaultMode = true;
-		selectMode = false;
-		seqMode = false;
-		fromMode = false;
-		whereMode = false;
-		describeMode = false;
+		currentSet.addAll( (SortedSet) setMapper.get(COMMANDS) );
 	}
 
 	/**
@@ -236,14 +229,7 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void SetSelectMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(selectSet);
-
-		defaultMode = false;
-		selectMode = true;
-		seqMode = false;
-		fromMode = false;
-		whereMode = false;
-		describeMode = false;
+		currentSet.addAll( (SortedSet) setMapper.get(SELECT) );
 	}
 
 	/**
@@ -252,14 +238,7 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void SetSequenceMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(sequenceSet);
-
-		defaultMode = false;
-		selectMode = false;
-		seqMode = true;
-		fromMode = false;
-		whereMode = false;
-		describeMode = false;
+		currentSet.addAll( (SortedSet) setMapper.get(SEQUENCE) );
 	}
 
 	/**
@@ -268,14 +247,7 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void SetFromMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(fromSet);
-
-		defaultMode = false;
-		selectMode = false;
-		seqMode = false;
-		fromMode = true;
-		whereMode = false;
-		describeMode = false;
+		currentSet.addAll( (SortedSet) setMapper.get(FROM) );
 	}
 
 	/**
@@ -284,13 +256,18 @@ public class MartCompleter implements ReadlineCompleter {
 	 */
 	public void SetWhereMode() {
 		currentSet = new TreeSet();
-		currentSet.addAll(whereSet);
-
-		defaultMode = false;
-		selectMode = false;
-		seqMode = false;
-		fromMode = false;
-		whereMode = true;
-		describeMode = false;
+		currentSet.addAll( (SortedSet) setMapper.get(WHERE) );
 	}
+	
+	public void AddAvailableCommandsTo(String key, Collection commands) {
+		if (! setMapper.containsKey(key))
+		  logger.warn("Key " + key + " is not a member of the command completion system\n");
+		else {
+			SortedSet set = (SortedSet) setMapper.get(key);
+			set.addAll(commands);
+			setMapper.put(key, set);
+		}		  
+	}
+	
+	private Logger logger = Logger.getLogger(MartCompleter.class.getName());
 }
