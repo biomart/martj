@@ -21,9 +21,7 @@ package org.ensembl.mart.lib;
 import java.io.ByteArrayOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * UnprocessedFilterHandler implementing object designed to process SUBQUERY
@@ -56,19 +54,8 @@ public class SubQueryIDListFilterHandler extends IDListFilterHandlerBase {
 			} catch (Exception e) {
 				throw new InvalidQueryException("Could not execute subquery: "+ e.getMessage());
 			}
-    
-			StringTokenizer lines = new StringTokenizer(results, "\n");
-			List idlist = new ArrayList();
-
-			while (lines.hasMoreTokens()) {
-				String id = lines.nextToken();
-				if (! idlist.contains(id))
-					idlist.add(id);
-			}
-
-			String[] ids = new String[idlist.size()];
-			idlist.toArray(ids);
 		
+      String[] ids = results.split("\n+");
 			String[] unversionedIds = null;
     
       Connection conn = null;
