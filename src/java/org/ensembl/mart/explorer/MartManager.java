@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 
 import javax.sql.DataSource;
 import javax.swing.Box;
@@ -35,14 +36,19 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
+import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.config.ConfigurationException;
+
 /**
  * Widget for selecting, adding and removing Marts.
+ * Database addition dialog uses the preferences for this user in this package.XS
  * <p>Normal usage: martManager.showDialog(component), martManager.getSelected() 
  * </p>
  * <p></p>
- * TODO support add button
  */
 public class MartManager extends Box {
+
+  private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog();
 
   private final static Logger logger =
     Logger.getLogger(MartManager.class.getName());
@@ -52,12 +58,17 @@ public class MartManager extends Box {
   private LabelledComboBox combo;
   private String none = "None";
   private String selected = none;
+  private Feedback feedback = new Feedback(this);
 
   public MartManager() {
 
     super(BoxLayout.Y_AXIS);
 
-    combo = new LabelledComboBox("Mart");
+    databaseDialog.addDatabaseType("mysql");
+    databaseDialog.addDriver("com.mysql.jdbc.Driver");
+    databaseDialog.setPrefs(Preferences.userNodeForPackage(this.getClass()));
+
+    combo = new LabelledComboBox("Datasource");
     combo.setEditable(false);
 
     JButton add = new JButton("Add");
@@ -96,7 +107,30 @@ public class MartManager extends Box {
    * 
    */
   public void doAdd() {
-    // TODO Auto-generated method stub
+    if (databaseDialog.showDialog(this)) {
+
+      try {
+
+        DataSource ds =
+          DatabaseUtil.createDataSource(
+            databaseDialog.getDatabaseType(),
+            databaseDialog.getHost(),
+            databaseDialog.getPort(),
+            databaseDialog.getDatabase(),
+            databaseDialog.getUser(),
+            databaseDialog.getPassword(),
+            10,
+            databaseDialog.getDriver());
+
+        add(ds);
+        selected = ds.toString();
+        initialiseCombo();
+
+      } catch (ConfigurationException e) {
+        e.printStackTrace();
+        feedback.warn("Failed to connect to database: " + e.getMessage());
+      }
+    }
 
   }
 
@@ -175,7 +209,7 @@ public class MartManager extends Box {
     stringToMart.remove(mart.toString());
 
     // select the "next" item in the list
-    if (mart.toString().equals( combo.getSelectedItem())) {
+    if (mart.toString().equals(combo.getSelectedItem())) {
       if (index >= marts.size())
         selected = none;
       else
@@ -192,7 +226,7 @@ public class MartManager extends Box {
    */
   private void initialiseCombo() {
 
-    logger.info("selected="+selected);
+    logger.info("selected=" + selected);
     combo.removeAllItems();
     String[] keys = getAsStrings();
     combo.addItem(none);

@@ -30,7 +30,7 @@ import org.ensembl.mart.lib.Filter;
 public class TreeNodeData {
 
   public static final TreeNodeData DATASOURCE =
-    new TreeNodeData("DataSource", ":", null);
+    new TreeNodeData("Datasource", ":", null);
   
   public static final TreeNodeData DATASET =
     new TreeNodeData("Dataset", ":", null);
