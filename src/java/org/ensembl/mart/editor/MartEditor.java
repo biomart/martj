@@ -687,6 +687,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     } catch (ConfigurationException e) {
       JOptionPane.showMessageDialog(this, "Problems exporting requested dataset. Check that you have write permission " +
       		"and the meta_configuration table is in required format", "ERROR", 0);
+      e.printStackTrace();
     } finally {
       enableCursor();
     }
