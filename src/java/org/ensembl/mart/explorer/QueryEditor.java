@@ -284,6 +284,9 @@ public class QueryEditor
 		outputSettingsPage.addPropertyChangeListener(this);
 		addPage(outputSettingsPage);
 
+    // select the attributes page
+    treeView.setSelectionPath( new TreePath( rootNode ).pathByAddingChild( attributesPage.getNode() ) );
+
 	}
 
 	/**
