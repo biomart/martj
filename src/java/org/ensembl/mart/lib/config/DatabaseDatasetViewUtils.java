@@ -60,7 +60,7 @@ public class DatabaseDatasetViewUtils {
   private static final String BASEMETATABLE = "meta_DatasetView"; // append user if necessary
 
   /*
-   * _meta_DatasetView<_username>
+   * meta_DatasetView<_username>
    * -----------------------
    * internalName   varchar(100)
    * displayName    varchar(100)
@@ -112,58 +112,36 @@ public class DatabaseDatasetViewUtils {
   private static Logger logger = Logger.getLogger(DatabaseDatasetViewUtils.class.getName());
 
   /**
-   * Verify if a _meta_DatasetView_[user] table exists.  Returns false if user is null, or
+   * Verify if a meta_DatasetView_[user] table exists.  Returns false if user is null, or
    * if the table does not exist. 
    * @param dsource - DetailedDataSource containing connection to Mart Database
    * @param user - user to query
-   * @return true if _meta_DatasetView_[user] exists, false otherwise
+   * @return true if meta_DatasetView_[user] exists, false otherwise
    * @throws ConfigurationException for SQLExceptions
    */
   public static boolean DSViewUserTableExists(DetailedDataSource dsource, String user) throws ConfigurationException {
+    boolean exists = true;
+    String table = BASEMETATABLE + "_" + user;
+    
     if (user == null)
       return false;
-    else {
-      String table = BASEMETATABLE + "_" + user;
-      String tcheck = null;
 
-      try {
-        Connection conn = dsource.getConnection();
-        String catalog = conn.getCatalog();
+    exists = tableExists(dsource, table);
 
-        ResultSet vr = conn.getMetaData().getTables(catalog, null, table, null);
-
-        //expect at most one result, if no results, tcheck will remain null
-        if (vr.next())
-          tcheck = vr.getString(3);
-
-        vr.close();
-        conn.close();
-      } catch (SQLException e) {
-        throw new ConfigurationException("Recieved SQL exception attempting to verify table " + table + "\n", e);
-      }
-
-      if (tcheck == null) {
-          logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
-        return false;
-      }
-
-      if (!(table.equals(tcheck))) {
-        if (logger.isLoggable(Level.WARNING))
-          logger.warning("Returned Wrong table for verifyTable: wanted " + table + " got " + tcheck + "\n");
-        return false;
-      }
-      return true;
+    if (!exists) {
+      //try upper casing the name
+      exists = tableExists(dsource, table.toUpperCase());
     }
+    
+    if (!exists) {
+      //try lower casing the name
+      exists = tableExists(dsource, table.toLowerCase());
+    }
+    
+    return exists;
   }
 
-  /**
-   * Determine if _meta_DatasetView exists in a Mart Database defined by the given DetailedDataSource.
-   * @param dsource -- DetailedDataSource for the Mart Database being querried.
-   * @return true if _meta_DatasetView exists, false if it does not exist
-   * @throws ConfigurationException for all underlying Exceptions
-   */
-  public static boolean BaseDSViewTableExists(DetailedDataSource dsource) throws ConfigurationException {
-    String table = BASEMETATABLE;
+  private static boolean tableExists(DetailedDataSource dsource, String table) throws ConfigurationException {
     String tcheck = null;
 
     try {
@@ -171,6 +149,7 @@ public class DatabaseDatasetViewUtils {
       String catalog = conn.getCatalog();
 
       ResultSet vr = conn.getMetaData().getTables(catalog, null, table, null);
+
       //expect at most one result, if no results, tcheck will remain null
       if (vr.next())
         tcheck = vr.getString(3);
@@ -182,8 +161,7 @@ public class DatabaseDatasetViewUtils {
     }
 
     if (tcheck == null) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning("BASE META TABLE " + table + " does not exist\n");
+        logger.info("Table " + table + " does not exist, using " + BASEMETATABLE + " instead\n");
       return false;
     }
 
@@ -192,21 +170,41 @@ public class DatabaseDatasetViewUtils {
         logger.warning("Returned Wrong table for verifyTable: wanted " + table + " got " + tcheck + "\n");
       return false;
     }
+    
     return true;
+  }
+  
+  /**
+   * Determine if meta_DatasetView exists in a Mart Database defined by the given DetailedDataSource.
+   * @param dsource -- DetailedDataSource for the Mart Database being querried.
+   * @return true if meta_DatasetView exists, false if it does not exist
+   * @throws ConfigurationException for all underlying Exceptions
+   */
+  public static boolean BaseDSViewTableExists(DetailedDataSource dsource) throws ConfigurationException {
+    String table = BASEMETATABLE;
+    boolean exists = true;
+    
+    exists = tableExists(dsource, table);
+    if (!exists)
+      exists = tableExists(dsource, table.toUpperCase());
+    if (!exists)
+      exists = tableExists(dsource, table.toLowerCase());
+      
+    return exists;
   }
 
   /**
    * Store a DatesetView.dtd compliant (compressed or uncompressed) XML Document in the Mart Database with a given internalName and displayName.  
-   * If user is not null and _meta_DatsetView_[user] exists, this table is the target, otherwise, _meta_DatasetView is the target.
+   * If user is not null and meta_DatsetView_[user] exists, this table is the target, otherwise, meta_DatasetView is the target.
    * Along with the internalName and displayName of the XML, an MD5 messageDigest of the xml is computed, and stored as well. 
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
+   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
    * @param internalName -- internalName of the DatasetViewXML being stored.
    * @param displayName -- displayName of the DatasetView XML being stored.
    * @param dataset -- dataset of the DatasetView XML being stored
    * @param doc - JDOM Document object representing the XML for the DatasetView   
    * @param compress -- if true, the XML is compressed using GZIP.
-   * @throws ConfigurationException when no _meta_DatasetView table exists, and for all underlying Exceptions
+   * @throws ConfigurationException when no meta_DatasetView table exists, and for all underlying Exceptions
    */
   public static void storeConfiguration(
     DetailedDataSource dsource,
@@ -357,11 +355,11 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns all dataset names from the _meta_DatasetView table for the given user.
+   * Returns all dataset names from the meta_DatasetView table for the given user.
    * @param ds -- DetailedDataSource for mart database
-   * @param user -- user for _meta_DatasetView table, if _meta_DatasetView_user does not exist, _meta_DatasetView is attempted.
+   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
    * @return String[] dataset names
-   * @throws ConfigurationException when valid _meta_DatasetView table does not exist, and for all underlying SQL Exceptions
+   * @throws ConfigurationException when valid meta_DatasetView table does not exist, and for all underlying SQL Exceptions
    */
   public static String[] getAllDatasetNames(DetailedDataSource ds, String user) throws ConfigurationException {
     SortedSet names = new TreeSet();
@@ -393,13 +391,13 @@ public class DatabaseDatasetViewUtils {
   }
   
   /**
-   * Returns all of the internalNames for the given dataset, as stored in the _meta_DatasetView table for
+   * Returns all of the internalNames for the given dataset, as stored in the meta_DatasetView table for
    * the Mart Database for the given user.
    * @param ds -- DetailedDataSource for Mart database
-   * @param user -- user for _meta_DatasetView table, if _meta_DatasetView_user does not exist, _meta_DatasetView is attempted.
+   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
    * @param dataset -- dataset for which internalNames are requested
    * @return String[] containing all of the internalNames for the requested dataset.
-   * @throws ConfigurationException when valid _meta_DatasetView tables do not exist, and for all underlying Exceptons.
+   * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
   public static String[] getAllInternalNamesForDataset(DetailedDataSource ds, String user, String dataset) throws ConfigurationException {
     List names = new ArrayList();
@@ -433,13 +431,13 @@ public class DatabaseDatasetViewUtils {
   }
 
   /**
-   * Returns all of the displayNames for the requested dataset, as stored in the _meta_DatasetView table for
+   * Returns all of the displayNames for the requested dataset, as stored in the meta_DatasetView table for
    * the Mart Database for the given user.
    * @param ds -- DetailedDataSource for Mart database
-   * @param user -- user for _meta_DatasetView table, if _meta_DatasetView_user does not exist, _meta_DatasetView is attempted.
+   * @param user -- user for meta_DatasetView table, if meta_DatasetView_user does not exist, meta_DatasetView is attempted.
    * @param dataset -- dataset for which displayNames are requested
    * @return String[] containing all of the displayNames for the requested dataset
-   * @throws ConfigurationException when valid _meta_DatasetView tables do not exist, and for all underlying Exceptons.
+   * @throws ConfigurationException when valid meta_DatasetView tables do not exist, and for all underlying Exceptons.
    */
   public static String[] getAllDisplayNamesForDataset(DetailedDataSource ds, String user, String dataset) throws ConfigurationException {
     List names = new ArrayList();
@@ -476,11 +474,11 @@ public class DatabaseDatasetViewUtils {
    * Returns a DatasetView object from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
+   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
    * @param dataset -- dataset for which DatasetView is requested
    * @param internalName -- internalName of desired DatasetView object
    * @return DatasetView defined by given internalName
-   * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
   public static DatasetView getDatasetViewByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
     throws ConfigurationException {
@@ -524,11 +522,11 @@ public class DatabaseDatasetViewUtils {
    * Returns a DatasetView JDOM Document from the Mart Database using a supplied DetailedDataSource for a given user, defined with the
    * given internalName and dataset.
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
-   * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
+   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
    * @param dataset -- dataset for which DatasetView document is requested
    * @param internalName -- internalName of desired DatasetView document
    * @return DatasetView JDOM Document defined by given displayName and dataset
-   * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
   public static Document getDatasetViewDocumentByDatasetInternalName(DetailedDataSource dsource, String user, String dataset, String internalName)
     throws ConfigurationException {
@@ -578,10 +576,10 @@ public class DatabaseDatasetViewUtils {
    * given dataset and displayName
    * @param dsource -- DetailedDataSource object containing connection information for the Mart Database
    * @param dataset -- dataset for which DatsetView is requested
-   * @param user -- Specific User to look for _meta_DatasetView_[user] table, if null, or non-existent, uses _meta_DatasetView
+   * @param user -- Specific User to look for meta_DatasetView_[user] table, if null, or non-existent, uses meta_DatasetView
    * @param displayName -- String displayName for requested DatasetView
    * @return DatasetView with given displayName and dataset
-   * @throws ConfigurationException when valid _meta_DatasetView tables are absent, and for all underlying Exceptions
+   * @throws ConfigurationException when valid meta_DatasetView tables are absent, and for all underlying Exceptions
    */
   public static DatasetView getDatasetViewByDatasetDisplayName(DetailedDataSource dsource, String user, String dataset, String displayName)
     throws ConfigurationException {
@@ -670,7 +668,7 @@ public class DatabaseDatasetViewUtils {
   /**
    * Get a message digest for a given DatasetView, given by dataset and internalName
    * @param dsource -- connection to mart database
-   * @param user -- user for _meta_DatasetView_[user] table, if null, _meta_DatasetView is attempted
+   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which digest is requested
    * @param internalName -- internalName for DatasetView digest desired.
    * @return byte[] digest for given dataset and displayName
@@ -711,7 +709,7 @@ public class DatabaseDatasetViewUtils {
   /**
    * Get the displayName for a given dataset and internalName.
    * @param dsource -- connection to mart database
-   * @param user -- user for _meta_DatasetView_[user] table, if null, _meta_DatasetView is attempted
+   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which displayName is requested
    * @param internalName -- internalName for DatasetView internalName desired.
    * @return String displayName for given dataset and internalName
@@ -751,7 +749,7 @@ public class DatabaseDatasetViewUtils {
   /**
    * Get a message digest for a given DatasetView, given by dataset and displayName
    * @param dsource -- connection to mart database
-   * @param user -- user for _meta_DatasetView_[user] table, if null, _meta_DatasetView is attempted
+   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which digest is requested
    * @param displayName -- displayName for DatasetView digest desired.
    * @return byte[] digest for given displayName and dataset
@@ -792,7 +790,7 @@ public class DatabaseDatasetViewUtils {
   /**
    * Get the internalName for a given dataset and displayName.
    * @param dsource -- connection to mart database
-   * @param user -- user for _meta_DatasetView_[user] table, if null, _meta_DatasetView is attempted
+   * @param user -- user for meta_DatasetView_[user] table, if null, meta_DatasetView is attempted
    * @param dataset -- dataset for which internalName is requested
    * @param displayName -- displayName for DatasetView internalName desired.
    * @return String internalName for given displayName and dataset
@@ -867,7 +865,7 @@ public class DatabaseDatasetViewUtils {
    * Removes all records in a given metatable for the given dataset, internalName and displayName.  
    * Throws an error if the rows deleted do not equal the number of rows obtained using DatabaseDatasetViewAdaptor.getDSViewEntryCountFor(). 
    * @param dsrc - DetailedDataSource for Mart Database
-   * @param metatable - _meta_DatasetView table to use to delete entries
+   * @param metatable - meta_DatasetView table to use to delete entries
    * @param dataset - dataset for DatasetView entries to delete from metatable
    * @param internalName - internalName of DatasetView entries to delete from metatable
    * @param displayName - displayName of DatasetView entries to delete from metatable
@@ -917,10 +915,10 @@ public class DatabaseDatasetViewUtils {
    * Get the correct DatasetView table for a given user in the Mart Database
    * stored in the given DetailedDataSource.
    * @param ds -- DetailedDataSource for Mart Database.
-   * @param user -- user to retrieve a DatasetView table.  If user is null, or if _meta_DatasetView_[user] does not exist
+   * @param user -- user to retrieve a DatasetView table.  If user is null, or if meta_DatasetView_[user] does not exist
    *                returns DatabaseDatasetViewUtils.BASEMETATABLE.
    * @return String meta table name
-   * @throws ConfigurationException if both _meta_DatasetView_[user] and DatabaseDatasetViewUtils.BASEMETATABLE are absent, and for all underlying exceptions.
+   * @throws ConfigurationException if both meta_DatasetView_[user] and DatabaseDatasetViewUtils.BASEMETATABLE are absent, and for all underlying exceptions.
    */
   public static String getDSViewTableFor(DetailedDataSource ds, String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
