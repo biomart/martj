@@ -509,17 +509,32 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 
     public void cut() {
         cut = true;
+		editingNode = setEditingNode();
+		if (editingNode == null) return;
         editingNodeParent = (DatasetConfigTreeNode) editingNode.getParent();
         editingNodeIndex = editingNode.getParent().getIndex(editingNode);
         treemodel.removeNodeFromParent(editingNode);
         copy();
     }
 
-    public void copy() {
+    private DatasetConfigTreeNode setEditingNode(){
+    	
+		TreePath path = getSelectionPath();
+		return ((DatasetConfigTreeNode)path.getLastPathComponent());
+    }
 
+
+    public void copy() {
+    	     
+    	//TreePath path = getSelectionPath();
+    	//if (path==null) return;
+		//editingNode= ((DatasetConfigTreeNode)path.getLastPathComponent());     
+        
+        editingNode = setEditingNode();
+        if (editingNode == null) return;
         String editingNodeClass = editingNode.getUserObject().getClass().getName();
         DatasetConfigTreeNode copiedNode = new DatasetConfigTreeNode("");
-
+		
         if ((editingNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
             copiedNode = new DatasetConfigTreeNode(editingNode.toString(), new FilterPage((FilterPage) editingNode.getUserObject()));
         else if (editingNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
@@ -581,7 +596,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
         try {
 
             DatasetConfigTreeNode selnode = (DatasetConfigTreeNode) t.getTransferData(new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));
-            DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+            //DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+			DatasetConfigTreeNode dropnode = setEditingNode();
+			if (dropnode == null) return;
             String result = new String();
             
             if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
@@ -742,7 +759,9 @@ public class DatasetConfigTree extends JTree implements Autoscroll {//, Clipboar
 	}
 
     public void delete() {
-        DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
+		DatasetConfigTreeNode node = setEditingNode();
+		if (node == null) return;
+        //DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
         treemodel.removeNodeFromParent(node);
     }
 
