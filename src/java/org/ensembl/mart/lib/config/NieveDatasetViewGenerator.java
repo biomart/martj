@@ -279,7 +279,7 @@ public class NieveDatasetViewGenerator {
           dbUser,
           dbPass,
           DetailedDataSource.DEFAULTPOOLSIZE,
-          dbDriver);
+          dbDriver, "nieve");
 
       if (dsName != null) {
         OutputStream dsvOutput = null;

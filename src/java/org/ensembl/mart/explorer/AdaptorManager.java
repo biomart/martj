@@ -274,6 +274,7 @@ public class AdaptorManager extends Box {
 
 		if (databaseDialog.showDialog(this)) {
 
+      String defaultSourceName = DetailedDataSource.defaultName(databaseDialog.getHost(), databaseDialog.getPort(), databaseDialog.getDatabase(), databaseDialog.getUser());
 			DetailedDataSource ds =
 				new DetailedDataSource(
 					databaseDialog.getDatabaseType(),
@@ -283,7 +284,7 @@ public class AdaptorManager extends Box {
 					databaseDialog.getUser(),
 					databaseDialog.getPassword(),
 					10,
-					databaseDialog.getDriver());
+					databaseDialog.getDriver(), defaultSourceName);
 
 			try {
 				DSViewAdaptor a =

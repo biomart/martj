@@ -80,7 +80,7 @@ public class DatasetViewUploader {
 					user,
 					password,
 					10,
-					driver);
+					driver, null);
 
 			// make a test connection to ensure connection corrent
 			dataSource.getConnection().close();
