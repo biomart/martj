@@ -224,7 +224,12 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
 				op.insertPushAction(index,(PushAction) editingNode.getUserObject());
 			}            
         }
-        
+		else if (parent instanceof org.ensembl.mart.lib.config.PushAction) {
+			if (child instanceof org.ensembl.mart.lib.config.Option) {
+				PushAction pa = (PushAction) parentNode.getUserObject();
+				pa.insertOption(index,(Option) editingNode.getUserObject());
+			}            
+		}        
          else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
             if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                 AttributePage ap = (AttributePage) parentNode.getUserObject();
@@ -298,7 +303,17 @@ public class DatasetViewTreeModel extends DefaultTreeModel {
                 FilterDescription fd = (FilterDescription) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 fd.removeOption((Option) node.getUserObject());
             }
-        } else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
+        } else if (parent instanceof org.ensembl.mart.lib.config.Option) {
+		    if (child instanceof org.ensembl.mart.lib.config.PushAction) {
+			    Option op = (Option) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+			    op.removePushAction((PushAction) node.getUserObject());
+		    }		    
+        } else if (parent instanceof org.ensembl.mart.lib.config.PushAction) {
+			if (child instanceof org.ensembl.mart.lib.config.Option) {
+				PushAction pa = (PushAction) ((DatasetViewTreeNode) node.getParent()).getUserObject();
+				pa.removeOption((Option) node.getUserObject());
+			}		    
+		} else if (parent instanceof org.ensembl.mart.lib.config.AttributePage) {
             if (child instanceof org.ensembl.mart.lib.config.AttributeGroup) {
                 AttributePage ap = (AttributePage) ((DatasetViewTreeNode) node.getParent()).getUserObject();
                 ap.removeAttributeGroup((AttributeGroup) node.getUserObject());
