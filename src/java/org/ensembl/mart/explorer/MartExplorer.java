@@ -152,7 +152,6 @@ public class MartExplorer extends JFrame {
 
 		super(TITLE);
 
-    initDatabaseSettings();
 		setJMenuBar(createMenuBar());
 		getContentPane().add(queryEditorTabbedPane);
 		setSize(PREFERRED_SIZE);
@@ -365,14 +364,6 @@ public class MartExplorer extends JFrame {
 		System.exit(0);
 	}
 
-
-
-	private void initDatabaseSettings() {
-		databaseDialog = new DatabaseSettingsDialog();
-		databaseDialog.addDatabaseType("mysql");
-		databaseDialog.addDriver("com.mysql.jdbc.Driver");
-		databaseDialog.setPrefs(prefs);
-	}
 
 
 	/**
