@@ -618,10 +618,7 @@ public class QueryEditor extends JPanel {
 
 		} catch (FileNotFoundException e) {
 			feedback.warn(e);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 
 	}
 
