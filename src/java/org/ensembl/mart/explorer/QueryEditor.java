@@ -50,6 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
+import org.ensembl.mart.guiutils.QuickFrame;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.FormatException;
@@ -377,18 +378,16 @@ public class QueryEditor extends JPanel {
     // enable logging messages
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     logger.setLevel(Level.FINEST);
+    Logger.getLogger(Query.class.getName()).setLevel(Level.FINEST);
 
     AdaptorManager dvs = testDatasetConfigSettings();
     final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
+    editor.setPreferredSize(new Dimension(900,700));
 
-    JFrame f = new JFrame("Query Editor (Test Frame)");
     Box p = Box.createVerticalBox();
     p.add(editor);
-    f.getContentPane().add(p);
-    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    f.setSize(950, 750);
-    f.setVisible(true);
+    new QuickFrame("Query Editor (Test Frame)", p);
 
     // set 1st dsv to save having to do it while testing.
     editor.getQuery().setDatasetConfig((DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
