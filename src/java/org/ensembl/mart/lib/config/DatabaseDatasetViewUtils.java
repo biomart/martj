@@ -1560,9 +1560,9 @@ public class DatabaseDatasetViewUtils {
       Object group = allGroups.get(i);
 
       if (group instanceof FilterGroup) {
-		FilterGroup gr = (FilterGroup) group;
-	    if ((gr.getInternalName().equals("expression")))
-			continue;// hack for expression - breaks current code - needs fixing
+		//FilterGroup gr = (FilterGroup) group;
+	    //if ((gr.getInternalName().equals("expression")))
+		//	continue;// hack for expression - breaks current code - needs fixing
         FilterGroup validatedGroup = getValidatedFilterGroup(dsource, (FilterGroup) group, dset);
 
         if (validatedGroup.isBroken()) {
@@ -1776,7 +1776,9 @@ public class DatabaseDatasetViewUtils {
   public static Option getValidatedOption(DetailedDataSource dsource, String schema, String catalog, Option option, String dset)
     throws SQLException {
     Option validatedOption = new Option(option);
-
+    // hack to ignore the expression drop down menu
+    if (option.getType().equals("tree"))
+       return validatedOption;
     if (option.getField() != null) {
       //test
       boolean fieldValid = false;
@@ -2732,8 +2734,6 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 		fg.setDisplayName("NEW_FILTERS");		
 		
 
-
-
 		//need to sort starbases in order of the number of keys they contain
 		//primaryKeys should be in this same order
     
@@ -2862,21 +2862,41 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 				    	    updateDropDown(dsv, dsource, currFilt);
 				    }
 				
-				} else{
+				} else{// is a main table bool filter
 				  FilterDescription fdBool = getFilterDescription(cname, tableName, ctype, joinKey, dsource, fullTableName, dsv);	
 		      
 				  Option opBool = new Option(fdBool);
 				  boolean newOption = true;
 				  
-				  Option[] ops = dsv.getOptions();//this is not working as getOptions returns 0 options
-				  for (int p = 0, q = ops.length; p < q; p++) {
-				    if ((ops[p].getField() != null && ops[p].getField().equals(cname))
-				       && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
-				    	newOption = false;
-				    	break;
-				    }
+				  
+				  // cycle through all options looking for a match
+				  FilterPage[] fps = dsv.getFilterPages();
+				  outer:for (int k = 0; k < fps.length; k++){
+				  	List fds = new ArrayList();
+				  	fds = fps[k].getAllFilterDescriptions();
+					for (int l = 0; l < fds.size(); l++) {
+						FilterDescription fdCurrent = (FilterDescription) fds.get(l);
+						Option[] ops = fdCurrent.getOptions();
+						for (int p = 0, q = ops.length; p < q; p++) {
+						  if ((ops[p].getField() != null && ops[p].getField().equals(cname))
+							 && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
+							  System.out.println("EXCLUDING BOOL OPTION\t" + ops[p]);
+							  newOption = false;
+							  break outer;
+						  }
+						}
+					}
 				  }
-				  if (newOption)
+
+				  
+				  // could be present as a FD as well
+				  FilterDescription currFilt = null;
+				  if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName) != null)
+					currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName);				    
+				  if (currFilt != null)	
+					newOption = false;
+				  
+				  if (newOption)// option with this field and table name doesn't already exist
 				    fdBools.addOption(opBool);
 		      
 				}
@@ -2892,16 +2912,35 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 					Option op = new Option(fdList);
 				
 					boolean newOption = true;
-				    
-					Option[] ops = dsv.getOptions();//this is not working as getOptions returns 0 options
-					for (int p = 0, q = ops.length; p < q; p++) {
-					  
-					  if ((ops[p].getField() != null && ops[p].getField().equals(cname))
-						 && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
-						  newOption = false;
-						  break;
+
+
+					// cycle through all options looking for a match
+					FilterPage[] fps = dsv.getFilterPages();
+					outer:for (int k = 0; k < fps.length; k++){
+					  List fds = new ArrayList();
+					  fds = fps[k].getAllFilterDescriptions();
+					  for (int l = 0; l < fds.size(); l++) {
+						  FilterDescription fdCurrent = (FilterDescription) fds.get(l);
+						  Option[] ops = fdCurrent.getOptions();
+						  for (int p = 0, q = ops.length; p < q; p++) {
+							if ((ops[p].getField() != null && ops[p].getField().equals(cname))
+							   && (ops[p].getTableConstraint() != null && ops[p].getTableConstraint().equals(tableName))){
+								System.out.println("EXCLUDING LIST OPTION\t" + ops[p]);
+								newOption = false;
+								break outer;
+							}
+						  }
 					  }
 					}
+					
+					// could be present as a FD as well
+					FilterDescription currFilt = null;
+					if (dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName) != null)
+					  currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname,tableName);				    
+					if (currFilt != null)	
+					  newOption = false;
+					
+					
 					if (newOption)
 					  fdLists.addOption(op);
             	
@@ -2943,10 +2982,13 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 		  if (fc != null && fc.getFilterDescriptions().size() > 0)
 			fg.addFilterCollection(fc);
 		}
-    
-		fcList.addFilterDescription(fdBools);
-		fcList.addFilterDescription(fdLists);
-		fg.addFilterCollection(fcList);	
+         
+		if (fdBools != null && fdBools.getOptions().length > 0) 
+		  fcList.addFilterDescription(fdBools);
+		if (fdLists != null && fdLists.getOptions().length > 0) 
+		  fcList.addFilterDescription(fdLists);
+		if (fcList != null && fcList.getFilterDescriptions().size() > 0) 
+		   fg.addFilterCollection(fcList);	
         if (ag != null && ag.getAttributeCollections().length > 0)    
 		  ap.addAttributeGroup(ag);
 		if (fg != null && fg.getFilterCollections().length > 0)  
@@ -2964,13 +3006,14 @@ System.out.println("database type: "+ dsource.getDatabaseType());
   private static void updateDropDown(DatasetView dsView, DetailedDataSource dsource, FilterDescription fd1)
 	  throws ConfigurationException, SQLException {
       
-      
-      System.out.println("UPDATING DROP DOWN" + fd1.getInternalName());
       Option[] ops = fd1.getOptions();
       if (ops[0].getTableConstraint() != null)
           return;// drop down lists of options shouldn't be updated
       
       PushAction[] pas = ops[0].getPushActions();
+	  Option[] paOps = pas[0].getOptions();
+	  PushAction[] pas2 = paOps[0].getPushActions();          
+          
           
       for (int i = 0; i < ops.length; i++){
       	fd1.removeOption(ops[i]);
@@ -2989,12 +3032,33 @@ System.out.println("database type: "+ dsource.getDatabaseType());
 	  // update push actions if any
 	  
 	  for (int k = 0; k < pas.length; k++){
-	    //String internalName = "band_start";
+	    
+	    
+	    
 	    String ref = pas[k].getRef();
 	    FilterDescription fd2 = dsView.getFilterDescriptionByInternalName(ref);
 	    updatePushAction(dsView, fd1, fd2, dsource);
+	    
 	  }
-	  
+	  Option[] newOps = fd1.getOptions();
+	  for (int k = 0; k < newOps.length; k++){
+		for (int l = 0; l < pas.length; l++){
+		  PushAction[] newPas = newOps[k].getPushActions();
+		  PushAction newPa = null;
+		  for (int z = 0; z < newPas.length ; z++){
+		  	if (newPas[z].getRef().equals(pas[l].getRef())){
+		  		newPa = newPas[z];
+		  		break;
+		  	}
+		  }
+		  	
+		  for (int m = 0; m < pas2.length; m++){
+		    String ref2 = pas2[m].getRef();
+		    FilterDescription fd3 = dsView.getFilterDescriptionByInternalName(ref2);
+		    updatePushAction(dsView, newPa, fd3, dsource);
+		  }	 	    	    
+	    }
+	  }
   }
 
 
