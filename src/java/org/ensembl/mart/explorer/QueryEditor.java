@@ -60,18 +60,19 @@ import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 import org.ensembl.mart.shell.MartShellLib;
 import org.ensembl.mart.util.LoggingUtil;
 
-// TODO 1 Finish testing filter addition and removal
-// TODO selecting an attribute / filter should cause it to be shown in InputPanel
-// TODO support boolean_list filter type
-// TODO support id list filters
-// TODO add user defined size for preconfig buffer
-
 /**
  * Widget for creating, loading, saving and editing Queries.
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
 public class QueryEditor extends JPanel {
+
+  /** run engine.execute(...) */
+  private static final int EXECUTE = 0;
+  /** run engine.countRows(...) */
+  private static final int COUNT_ROWS = 1;
+  /** run engine.countFocus(...) */
+  private static final int COUNT_FOCUS = 2;
 
   private int preconfigLimit = 1000;
   private int maxPreconfigBytes = 100000;
@@ -82,7 +83,8 @@ public class QueryEditor extends JPanel {
 
   private OutputStream os = null;
 
-  private static final Logger logger = Logger.getLogger(QueryEditor.class.getName());
+  private static final Logger logger =
+    Logger.getLogger(QueryEditor.class.getName());
 
   /** default percentage of total width allocated to the tree constituent component. */
   private double TREE_WIDTH = 0.27d;
@@ -115,7 +117,7 @@ public class QueryEditor extends JPanel {
   private File currentDirectory;
 
   /** File for temporarily storing results in while this instance exists. */
-//  private File tmpFile;
+  //  private File tmpFile;
 
   private JSplitPane leftAndRight;
 
@@ -128,24 +130,33 @@ public class QueryEditor extends JPanel {
    * 
    * @throws IOException if fails to create temporary results file.
    */
-  public QueryEditor(QueryEditorContext editorManager, AdaptorManager datasetConfigSettings) throws IOException {
+  public QueryEditor(
+    QueryEditorContext editorManager,
+    AdaptorManager datasetConfigSettings)
+    throws IOException {
 
     this.adaptorManager = datasetConfigSettings;
     this.editorManager = editorManager;
     this.query = new Query();
 
-    QueryTreeView treeConfig = new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
-    inputPanelContainer = new InputPageContainer(query, treeConfig, datasetConfigSettings);
+    QueryTreeView treeConfig =
+      new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
+    inputPanelContainer =
+      new InputPageContainer(query, treeConfig, datasetConfigSettings);
 
     outputPanel = new JEditorPane();
     outputPanel.setEditable(false);
 
-    addWidgets(new JScrollPane(treeConfig), inputPanelContainer, new JScrollPane(outputPanel));
+    addWidgets(
+      new JScrollPane(treeConfig),
+      inputPanelContainer,
+      new JScrollPane(outputPanel));
 
-    mqlFileChooser.addChoosableFileFilter(new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
+    mqlFileChooser.addChoosableFileFilter(
+      new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
 
-//    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
-//    tmpFile.deleteOnExit();
+    //    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
+    //    tmpFile.deleteOnExit();
 
     // set default working directory
     setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -173,7 +184,8 @@ public class QueryEditor extends JPanel {
    */
   public void doLoadQuery() {
 
-    if (getMqlFileChooser().showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+    if (getMqlFileChooser().showOpenDialog(this)
+      != JFileChooser.APPROVE_OPTION)
       return;
 
     logger.fine("Previous query: " + query);
@@ -207,7 +219,7 @@ public class QueryEditor extends JPanel {
    * Save results to file, user must select file if no output file selected. 
    */
   public void doSaveResults() {
-    runQuery(true, false, 0);
+    runQuery(EXECUTE, true, false, 0);
   }
 
   /**
@@ -215,16 +227,19 @@ public class QueryEditor extends JPanel {
    */
   public void doSaveResultsAs() {
 
-    runQuery(true, true, 0);
+    runQuery(EXECUTE, true, true, 0);
   }
 
   /**
    * convenience method.
    * @param label
    * @param listener
-   * @return
+   * @return button configured with the parameters
    */
-  private JButton createButton(String label, ActionListener listener, boolean enabled) {
+  private JButton createButton(
+    String label,
+    ActionListener listener,
+    boolean enabled) {
     JButton b = new JButton(label);
     b.setEnabled(enabled);
     b.addActionListener(listener);
@@ -263,7 +278,10 @@ public class QueryEditor extends JPanel {
    *      bottom
    * </pre>
    */
-  private void addWidgets(JComponent left, JComponent right, JComponent bottom) {
+  private void addWidgets(
+    JComponent left,
+    JComponent right,
+    JComponent bottom) {
 
     left.setMinimumSize(MINIMUM_SIZE);
     right.setMinimumSize(MINIMUM_SIZE);
@@ -272,7 +290,8 @@ public class QueryEditor extends JPanel {
     leftAndRight = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, left, right);
     leftAndRight.setOneTouchExpandable(true);
 
-    middleAndBottom = new JSplitPane(JSplitPane.VERTICAL_SPLIT, leftAndRight, bottom);
+    middleAndBottom =
+      new JSplitPane(JSplitPane.VERTICAL_SPLIT, leftAndRight, bottom);
     middleAndBottom.setOneTouchExpandable(true);
 
     // don't use default FlowLayout manager because it won't resize components if
@@ -295,7 +314,8 @@ public class QueryEditor extends JPanel {
    * @return preloaded dataset configs
    * @throws ConfigurationException
    */
-  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor) throws ConfigurationException {
+  static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor)
+    throws ConfigurationException {
 
     //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
@@ -307,7 +327,8 @@ public class QueryEditor extends JPanel {
     for (int i = 0; i < urls.length; i++) {
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
       //dont ignore cache, dont validate, dont include hidden members (these are only for MartEditor)
-       ((CompositeDSConfigAdaptor) adaptor).add(new URLDSConfigAdaptor(dvURL, false, false, false));
+      ((CompositeDSConfigAdaptor) adaptor).add(
+        new URLDSConfigAdaptor(dvURL, false, false, false));
     }
 
     return adaptor;
@@ -358,11 +379,12 @@ public class QueryEditor extends JPanel {
     new QuickFrame("Query Editor (Test Frame)", p);
 
     // set 1st dsv to save having to do it while testing.
-    editor.getQuery().setDatasetConfig((DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
+    editor.getQuery().setDatasetConfig(
+      (DatasetConfig) dvs.getRootAdaptor().getDatasetConfigs().next());
   }
 
   /**
-   * @return
+   * @return query associated with this editor.
    */
   public Query getQuery() {
     return query;
@@ -374,7 +396,7 @@ public class QueryEditor extends JPanel {
    *
    */
   public void doPreview() {
-    runQuery(false, false, preconfigLimit);
+    runQuery(EXECUTE, false, false, preconfigLimit);
   }
 
   /**
@@ -382,8 +404,31 @@ public class QueryEditor extends JPanel {
    *
    */
   public void doExecute() {
-    runQuery(false, false, 0);
+    runQuery(EXECUTE, false, false, 0);
   }
+
+
+  /**
+   * Counts the focus objects that would be returned if the
+   * query were executed and prints the value in the
+   * preview window.
+   *
+   */
+  public void doCountFocus() {
+    runQuery(COUNT_FOCUS, false, false, 0);
+  }
+
+
+  /**
+     * Counts the rows that would be returned if the
+     * query were executed and prints the value in the
+     * preview window.
+     *
+     */
+    public void doCountRows() {
+      runQuery(COUNT_ROWS, false, false, 0);
+    }
+
 
   /**
    * Stops running query. Does nothing if query not running.
@@ -409,20 +454,23 @@ public class QueryEditor extends JPanel {
   }
 
   /**
-   * Executes query and stores the results in a temporary file. These results 
-   * may be stored in a user specified results file.
+   * Executes the query on a separate thread and 
+   * stores the results in a file if necesary.
    * 
-   * Part of the temporary file is read and
-   * displyed in the preconfig pane. Saving is implemented by copying the tmp
-   * file to the file selected by the user.
-   * 
-   * Threads are used for concurrent writing and reading from the temporary file.
-   * 
+   * @param method method with which to run the query, EXECUTE,
+   * COUNT_ROWS or COUNT_FOCUS
    * @param save whether results file should be saved
    * @param changeResultsFile if true the results file chooser is displayed
    * @param limit max number of rows in result set
+   * @see #EXECUTE
+   * @see #COUNT_ROWS
+   * @see #COUNT_FOCUS
    */
-  private void runQuery(final boolean save, final boolean changeResultsFile, final int limit) {
+  private void runQuery(
+    final int method,
+    final boolean save,
+    final boolean changeResultsFile,
+    final int limit) {
 
     if (os != null) {
       feedback.info("Query is already running.");
@@ -430,7 +478,9 @@ public class QueryEditor extends JPanel {
     }
 
     //  user select result file if necessary
-    if (save && resultsFileChooser.getSelectedFile() == null || changeResultsFile) {
+    if (save
+      && resultsFileChooser.getSelectedFile() == null
+      || changeResultsFile) {
 
       if (resultsFileChooser.getSelectedFile() == null)
         resultsFileChooser.setSelectedFile(new File(getName() + ".mart"));
@@ -447,14 +497,7 @@ public class QueryEditor extends JPanel {
     new Thread() {
 
       public void run() {
-        execute(save, limit);
-        // copy tmp file to results file if necessary
-//        try {
-//          if (save)
-//            FileUtil.copyFile(tmpFile, resultsFileChooser.getSelectedFile());
-//        } catch (IOException e) {
-//          feedback.warning(e);
-//        }
+        execute(method, save, limit);
       }
     }
     .start();
@@ -462,38 +505,72 @@ public class QueryEditor extends JPanel {
   }
 
   /**
-   * 
+   * Runs the query using the specified method, writes
+   * results to the preview panel and saves the results 
+   * to file if required.
+   *
+   * @param method method with which to run the query, EXECUTE,
+   * COUNT_ROWS or COUNT_FOCUS
+   * @param save whether results file should be saved
+   * @param limit max number of rows in result set
+   * @see #EXECUTE
+   * @see #COUNT_ROWS
+   * @see #COUNT_FOCUS   
    */
-  private void execute(final boolean save, final int limit) {
+  private synchronized void execute(final int method, final boolean save, final int limit) {
 
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
       return;
-    } else if (query.getAttributes().length == 0 && query.getSequenceDescription() == null) {
+    } else if (
+      query.getAttributes().length == 0
+        && query.getSequenceDescription() == null) {
       feedback.warning("Attributes must be set before executing query.");
       return;
     }
 
     try {
       File outFile = null;
-      
+
       if (save) {
         outFile = resultsFileChooser.getSelectedFile();
         os = new FileOutputStream(outFile);
       } else
         os = new PreviewPaneOutputStream(null, outputPanel, maxPreconfigBytes);
-         
+
       int oldLimit = query.getLimit();
       if (limit > 0)
         query.setLimit(limit);
 
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-      engine.execute(query, inputPanelContainer.getOutputSettingsPage().getFormat(), os);
+      switch (method) {
+
+        case EXECUTE :
+          engine.execute(
+            query,
+            inputPanelContainer.getOutputSettingsPage().getFormat(),
+            os);
+          break;
+
+        case COUNT_ROWS :
+        engine.countRows(os, query);
+          break;
+
+        case COUNT_FOCUS :
+          engine.countFocus(os, query);
+          break;
+
+        default :
+          throw new RuntimeException("Unsupported method: " + method);
+      }
+
       os.close();
       os = null;
 
-      if (save && outFile != null && outFile.toURL().openConnection().getContentLength() < 1)
+      if (save
+        && outFile != null
+        && outFile.toURL().openConnection().getContentLength() < 1)
         feedback.warning("Empty result set.");
 
       if (limit > 0)
@@ -551,7 +628,8 @@ public class QueryEditor extends JPanel {
 
       String mql = getQueryAsMQL();
 
-      if (getMqlFileChooser().showSaveDialog(this) != JFileChooser.APPROVE_OPTION)
+      if (getMqlFileChooser().showSaveDialog(this)
+        != JFileChooser.APPROVE_OPTION)
         return;
 
       File f = getMqlFileChooser().getSelectedFile().getAbsoluteFile();
@@ -591,7 +669,7 @@ public class QueryEditor extends JPanel {
   }
 
   /**
-   * @return 
+   * @return current directory. 
    */
   public File getCurrentDirectory() {
     return currentDirectory;
@@ -605,7 +683,8 @@ public class QueryEditor extends JPanel {
     if (!directory.exists())
       throw new IllegalArgumentException("Directory not exist: " + directory);
     if (!directory.isDirectory())
-      throw new IllegalArgumentException("File is not a directory: " + directory);
+      throw new IllegalArgumentException(
+        "File is not a directory: " + directory);
     currentDirectory = directory;
   }
 
