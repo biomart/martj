@@ -26,19 +26,19 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see org.ensembl.mart.lib.DSFilterHandler
  */
-public class UIDSFilterDescription extends BaseConfigurationObject {
+public class MapFilterDescription extends BaseConfigurationObject {
 	
 	/**
 	 * This will throw a ConfigurationException
 	 * 
 	 * @throws ConfigurationException
 	 */
-	public UIDSFilterDescription() throws ConfigurationException {
+	public MapFilterDescription() throws ConfigurationException {
 		this("", "", "", "", "", "");
 	}
 	
 	/**
-	 * Constructor for a minimal UIDSFilterDescription, with internalName, type, and handler set.
+	 * Constructor for a minimal MapFilterDescription, with internalName, type, and handler set.
 	 * 
 	 * @param internalName - String name to internally reference this Description
 	 * @param type - String type of UI Display
@@ -46,12 +46,12 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	 * 
 	 * @throws ConfigurationException when internalName or type are null, or when the handler == 0
 	 */
-	public UIDSFilterDescription(String internalName, String type, String handler) throws ConfigurationException {
+	public MapFilterDescription(String internalName, String type, String handler) throws ConfigurationException {
 	  this(internalName, type, handler, "", "", "");	
 	}
 
   /**
-   * Constructor for a fully defined UIDSFilterDescription.
+   * Constructor for a fully defined MapFilterDescription.
    * 
 	 * @param internalName - String name to internally reference this FilterDescription
 	 * @param type - String type of UI Display
@@ -59,17 +59,17 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	 * @param filterSetReq - String FilterSet Modification Requirement.  If this is not null, inFilterSet is set to true.
    * @param displayName - String name to display in a UI for this FilterDescription
    * @param description - String descriptive information for this FilterDescription
-   * @param optionName String name represention an Option that holds Options for this UIDSFilterDescription
+   * @param optionName String name represention an Option that holds Options for this MapFilterDescription
    * 
    * @throws ConfigurationException when internalName, type, or handler are null
    */
-  public UIDSFilterDescription(String internalName, String type, String handler, String filterSetReq, String displayName, String description) throws ConfigurationException {
+  public MapFilterDescription(String internalName, String type, String handler, String filterSetReq, String displayName, String description) throws ConfigurationException {
   	
     super( internalName, displayName, description );
     
     if ( type == null || type.equals("")
   	  || handler == null || handler.equals(""))
-  	  throw new ConfigurationException("UIDSFilterDescription object must have a type and handler");
+  	  throw new ConfigurationException("MapFilterDescription object must have a type and handler");
   	  
   	this.type = type;
   	this.handler = handler;
@@ -90,7 +90,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
   }  
   
 	/**
-	 * Returns the handler of this UIDSFilterDescription
+	 * Returns the handler of this MapFilterDescription
 	 * 
 	 * @return String handler
 	 */
@@ -99,7 +99,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the Type of this UIDSFilterDescription
+	 * Returns the Type of this MapFilterDescription
 	 * 
 	 * @return String type
 	 */
@@ -116,7 +116,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Check if this UIDSFilterDescription is in a FilterSet.
+	 * Check if this MapFilterDescription is in a FilterSet.
 	 * @return boolean, true if filterSetReq is set, false if null or empty.
 	 */
 	public boolean IsInFilterSet() {
@@ -129,7 +129,7 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
   public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[ UIDSFilterDescription:");
+		buf.append("[ MapFilterDescription:");
 		buf.append( super.toString() );
 		buf.append(", type=").append(type);
 		buf.append(", handler=").append(handler);
@@ -144,10 +144,10 @@ public class UIDSFilterDescription extends BaseConfigurationObject {
 	}
 	
 	/**
-	 * Allows equality comparisons of UIDSFilterDescription objects
+	 * Allows equality comparisons of MapFilterDescription objects
 	 */
 	public boolean equals(Object o) {
-    return o instanceof UIDSFilterDescription && hashCode() == ( (UIDSFilterDescription) o).hashCode(); 
+    return o instanceof MapFilterDescription && hashCode() == ( (MapFilterDescription) o).hashCode(); 
 	}
 
 	/**

@@ -66,11 +66,11 @@ import java.sql.Connection;
 public interface DSFilterHandler {
 	
 	/**
-	 * Method that Resolves the DomainSpecificFilter into one or more Normal Filters on a Query.  
+	 * Method that Resolves the MapFilter into one or more Normal Filters on a Query.  
 	 * All information that a specific DSFilterHandler implementing object needs to function should be 
 	 * provided in the String parameter. The ModifyFilter method should then be able to process this String 
 	 * using an implementation specific method. The User Interface is responsible for constructing the parameter 
-	 * to meet the needs of the specific DomainSpecificFilter that it is adding to the Query.
+	 * to meet the needs of the specific MapFilter that it is adding to the Query.
 	 * The method should take a Query object as an argument, construct
 	 * a copy of that Query using its copy constructor, add all Filter objects to the new Query depending
 	 * on the results of its implementation dependent logic, and return the new Query.  
@@ -79,7 +79,7 @@ public interface DSFilterHandler {
 	 * 
 	 * @param conn - A java.sql.Connection object connected to a Mart Database.
 	 * @param parameter - A string containing all information that a specific DSFilterHandler implementing object needs to function.
-	 * @param query - A Query object with all filters/attributes defined by the UI, including the DomainSpecificFilter objects.
+	 * @param query - A Query object with all filters/attributes defined by the UI, including the MapFilter objects.
 	 * @return Query q - A copy of the input Query object, modified with new Filters which map to the Domain Specific Filter functionality.
 	 * @throws InvalidQueryException - The method should chain all underlying checked Exceptions (SQLExceptions, IOExceptions, etc.) in an InvalidQueryException
 	 */

@@ -33,7 +33,7 @@ import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.OptionPush;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Represents a list of user options. Some options cause the
@@ -104,7 +104,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
    * @param query model to bv synchronised
    * @param filterDescription parameters for this widget
    */
-  public ListFilterWidget(Query query, UIFilterDescription filterDescription) {
+  public ListFilterWidget(Query query, FilterDescription filterDescription) {
     super(query, filterDescription);
 
     list = new JComboBox();
@@ -125,7 +125,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
    */
   private void configureList(
     JComboBox list,
-    UIFilterDescription filterDescription) {
+    FilterDescription filterDescription) {
 
     String field = filterDescription.getFieldName();
     if (field == null || "".equals(field))

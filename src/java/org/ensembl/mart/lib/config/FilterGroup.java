@@ -197,12 +197,12 @@ public class FilterGroup extends BaseConfigurationObject {
   }
   
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular UIFilterDescription/UIDSFilterDescription object.
-		* Note, it is best to first call containsUIFilterDescription, as there is a caching system to cache a UIFilterDescription during a call 
+		* Convenience method for non graphical UI.  Allows a call against the FilterGroup for a particular FilterDescription/MapFilterDescription object.
+		* Note, it is best to first call containsUIFilterDescription, as there is a caching system to cache a FilterDescription during a call 
 		* to containsUIFilterDescription.
 		* 
-		* @param internalName name of the requested UIFilterDescription
-		* @return requested Object (either instanceof UIFilterDescription or UIDSFilterDescription), or null.
+		* @param internalName name of the requested FilterDescription
+		* @return requested Object (either instanceof FilterDescription or MapFilterDescription), or null.
 		*/
 	public Object getUIFilterDescriptionByName(String internalName) {
 		if ( containsUIFilterDescription(internalName) )
@@ -212,11 +212,11 @@ public class FilterGroup extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific UIFilterDescription/UIDSFilterDescription object.
+		* Convenience method for non graphical UI.  Can determine if the FilterGroup contains a specific FilterDescription/MapFilterDescription object.
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
-		*  found, this method caches the UIFilterDescription it has found.
+		*  found, this method caches the FilterDescription it has found.
 		* 
-		* @param internalName name of the requested UIFilterDescription object
+		* @param internalName name of the requested FilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIFilterDescription(String internalName) {
@@ -234,10 +234,10 @@ public class FilterGroup extends BaseConfigurationObject {
 		}
 		else {
 			String lastIntName;
-			if (lastFilt instanceof UIFilterDescription)
-			  lastIntName = ( (UIFilterDescription) lastFilt).getInternalName();
-			else if (lastFilt instanceof UIDSFilterDescription)
-			  lastIntName = ( (UIDSFilterDescription) lastFilt).getInternalName();
+			if (lastFilt instanceof FilterDescription)
+			  lastIntName = ( (FilterDescription) lastFilt).getInternalName();
+			else if (lastFilt instanceof MapFilterDescription)
+			  lastIntName = ( (MapFilterDescription) lastFilt).getInternalName();
 			else
 			  lastIntName = ""; // should not get here
 			  
@@ -252,7 +252,7 @@ public class FilterGroup extends BaseConfigurationObject {
 	}
 
   /**
-   * Convenience method to get all UIFilterDescription/UIDSFilterDescription objects 
+   * Convenience method to get all FilterDescription/MapFilterDescription objects 
    * contained in all FilterCollections in this FilterGroup.
    * 
    * @return List of FilterDescription objects.
@@ -331,7 +331,7 @@ public class FilterGroup extends BaseConfigurationObject {
   }
   
 	/**
-	 * Returns the FilterCollection for a particular Filter (UIFilterDescription or UIDSFilterDescription)
+	 * Returns the FilterCollection for a particular Filter (FilterDescription or MapFilterDescription)
 	 * based on its internalName.
 	 * 
 	 * @param internalName - String internalName of the Filter Description for which the collection is being requested.

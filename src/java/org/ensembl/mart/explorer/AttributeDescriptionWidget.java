@@ -28,7 +28,7 @@ import javax.swing.JCheckBox;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
 
 /**
  * @author craig
@@ -40,7 +40,7 @@ public class AttributeDescriptionWidget
 	extends InputPage
 	implements PropertyChangeListener {
 
-	private UIAttributeDescription attributeDescription;
+	private AttributeDescription attributeDescription;
 	private Query query;
 	private Attribute attribute;
 	private JCheckBox button;
@@ -76,7 +76,7 @@ public class AttributeDescriptionWidget
    */
 	public AttributeDescriptionWidget(
 		final Query query,
-		UIAttributeDescription attributeDescription) {
+		AttributeDescription attributeDescription) {
 
 		super(query, attributeDescription.getDisplayName());
 

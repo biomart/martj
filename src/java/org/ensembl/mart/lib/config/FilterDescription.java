@@ -29,46 +29,46 @@ import java.util.TreeMap;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class UIFilterDescription extends BaseConfigurationObject {
+public class FilterDescription extends BaseConfigurationObject {
 
 	/**
 	 * This will throw a ConfigurationException.
 	 */
-	public UIFilterDescription() throws ConfigurationException {
+	public FilterDescription() throws ConfigurationException {
 		this("", "", "", "", "", "", "", "");
 	}
 
 	/**
-	 * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
+	 * Constructor for a FilterDescription named by internalName internally, with a fieldName, type, and qualifier.
 	 * 
-	 * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
+	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
 	 * @param type String type of filter.  Must not be null or empty.
 	 * @param qualifier String qualifier to use in a SQL where clause.
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 */
-	public UIFilterDescription(String internalName, String fieldName, String type, String qualifier) throws ConfigurationException {
+	public FilterDescription(String internalName, String fieldName, String type, String qualifier) throws ConfigurationException {
 		this(internalName, fieldName, type, qualifier, "", "", "", "");
 	}
 
 	/**
-	 * Constructor for a UIFilterDescription named by internalName internally, with a fieldName, type, and qualifier.
+	 * Constructor for a FilterDescription named by internalName internally, with a fieldName, type, and qualifier.
 	 * 
-	 * @param internalName String internal name of the UIFilterDescription. Must not be null or empty.
+	 * @param internalName String internal name of the FilterDescription. Must not be null or empty.
 	 * @param fieldName String name of the field to reference in the mart. Must not be null or empty.
 	 * @param type String type of filter.  Must not be null or empty.
 	 * @param qualifier String qualifier to use in a SQL where clause.
 	 * @param displayName String name to display in a UI
 	 * @param tableConstraint String table basename to constrain SQL fieldName
-	 * @param filterSetReq String, which of the modifications specified by a FilterSetDescription are required by this UIFilterDescription
+	 * @param filterSetReq String, which of the modifications specified by a FilterSetDescription are required by this FilterDescription
 	 * @param description String description of the Filter
-	 * @param optionName String name represention an Option that holds Options for this UIFilterDescription
+	 * @param optionName String name represention an Option that holds Options for this FilterDescription
 	 * 
 	 * @throws ConfigurationException when required values are null or empty, or when a filterSetName is set, but no filterSetReq is submitted.
 	 * @see FilterSet
-	 * @see UIFilterDescription
+	 * @see FilterDescription
 	 */
-	public UIFilterDescription(
+	public FilterDescription(
 		String internalName,
 		String fieldName,
 		String type,
@@ -82,7 +82,7 @@ public class UIFilterDescription extends BaseConfigurationObject {
     super( internalName, displayName, description );
       
 		if ( fieldName == null || fieldName.equals("") || type == null || type.equals(""))
-			throw new ConfigurationException("UIFilterDescription requires a fieldName and type.");
+			throw new ConfigurationException("FilterDescription requires a fieldName and type.");
 
 		this.fieldName = fieldName;
 		this.type = type;
@@ -133,7 +133,7 @@ public class UIFilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns a value to determine which UIFilterDescription SQL specifier (tableConstraint or fieldName) to modify
+	 * Returns a value to determine which FilterDescription SQL specifier (tableConstraint or fieldName) to modify
 	 * with contents from the FilterSetDescription.  Must match one of the static ints defined by FilterSetDescription.
 	 * 
 	 * @return String filterSetReq
@@ -144,7 +144,7 @@ public class UIFilterDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Check to see if ths UIFilterDescription is in a FilterSet
+	 * Check to see if ths FilterDescription is in a FilterSet
 	 * 
 	 * @return true if it is in a FilterSet, false if not
 	 */
@@ -155,7 +155,7 @@ public class UIFilterDescription extends BaseConfigurationObject {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[ UIFilterDescription:");
+		buf.append("[ FilterDescription:");
 		buf.append( super.toString());
 		buf.append(", fieldName=").append(fieldName);
 		buf.append(", type=").append(type);
@@ -173,10 +173,10 @@ public class UIFilterDescription extends BaseConfigurationObject {
 	}
 
   /**
-	 * Allows Collections manipulation of UIFilterDescription objects
+	 * Allows Collections manipulation of FilterDescription objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof UIFilterDescription && hashCode() == ((UIFilterDescription) o).hashCode();
+		return o instanceof FilterDescription && hashCode() == ((FilterDescription) o).hashCode();
 	}
 	
 	public int hashCode() {

@@ -30,8 +30,8 @@ import javax.swing.JScrollPane;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterGroup;
-import org.ensembl.mart.lib.config.UIDSFilterDescription;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.MapFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * @author craig
@@ -94,9 +94,9 @@ public class FilterGroupWidget extends PageWidget {
     for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
       Object element = iter.next();
 
-      if (element instanceof UIFilterDescription) {
+      if (element instanceof FilterDescription) {
 
-        UIFilterDescription a = (UIFilterDescription) element;
+        FilterDescription a = (FilterDescription) element;
         FilterPageSetWidget.TYPES.add( a.getType() );
         
         //FilterWidget w = new FilterWidget(query, a);
@@ -104,7 +104,7 @@ public class FilterGroupWidget extends PageWidget {
         if ( w!=null ) 
           pages.add(w);
       } 
-      else if (element instanceof UIDSFilterDescription) {
+      else if (element instanceof MapFilterDescription) {
 
         logger.warning("TODO Unsupported domain specific filter description: " + element.getClass().getName() + element);
       }
@@ -120,7 +120,7 @@ public class FilterGroupWidget extends PageWidget {
 
   private FilterWidget createFilterWidget(
     Query query,
-    UIFilterDescription filterDescription) {
+    FilterDescription filterDescription) {
       
     String type = filterDescription.getType();
     FilterWidget w = null;

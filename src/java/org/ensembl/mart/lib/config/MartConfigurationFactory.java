@@ -56,12 +56,12 @@ public class MartConfigurationFactory {
 	private final String FILTERGROUP = "FilterGroup";
 	private final String DSFILTERGROUP = "DSFilterGroup";
 	private final String FILTERCOLLECTION = "FilterCollection";
-	private final String FILTERDESCRIPTION = "UIFilterDescription";
-	private final String DSFILTERDESCRIPTION = "UIDSFilterDescription";
+	private final String FILTERDESCRIPTION = "FilterDescription";
+	private final String DSFILTERDESCRIPTION = "MapFilterDescription";
 	private final String ATTRIBUTEPAGE = "AttributePage";
 	private final String ATTRIBUTEGROUP = "AttributeGroup";
 	private final String ATTRIBUTECOLLECTION = "AttributeCollection";
-	private final String ATTRIBUTEDESCRIPTION = "UIAttributeDescription";
+	private final String ATTRIBUTEDESCRIPTION = "AttributeDescription";
 	private final String DSATTRIBUTEGROUP = "DSAttributeGroup";
 	private final String OPTION = "Option";
   private final String OPTIONPUSH = "OptionPush";
@@ -246,7 +246,7 @@ public class MartConfigurationFactory {
 
 	private DefaultFilter getDefaultFilter(Element thisElement)
 		throws ConfigurationException {
-		UIFilterDescription desc =
+		FilterDescription desc =
 			getUIFilterDescription(thisElement.getChildElement(FILTERDESCRIPTION));
 		String value = thisElement.getAttributeValue(VALUE);
 		return new DefaultFilter(desc, value);
@@ -428,7 +428,7 @@ public class MartConfigurationFactory {
     return op;
   }
 
-  private UIDSFilterDescription getUIDSFilterDescription(Element thisElement)
+  private MapFilterDescription getUIDSFilterDescription(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
@@ -437,8 +437,8 @@ public class MartConfigurationFactory {
 		String objCode = thisElement.getAttributeValue(HANDLER, "");
 		String filterSetReq = thisElement.getAttributeValue(FILTERSETREQ, "");
 
-		UIDSFilterDescription f =
-			new UIDSFilterDescription(
+		MapFilterDescription f =
+			new MapFilterDescription(
 				intName,
 				typeval,
 				objCode,
@@ -449,7 +449,7 @@ public class MartConfigurationFactory {
 		return f;
 	}
 
-	private UIFilterDescription getUIFilterDescription(Element thisElement)
+	private FilterDescription getUIFilterDescription(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
@@ -462,8 +462,8 @@ public class MartConfigurationFactory {
 
 		String qual = thisElement.getAttributeValue(QUALIFIER, "");
 
-		UIFilterDescription f =
-			new UIFilterDescription(
+		FilterDescription f =
+			new FilterDescription(
 				intName,
 				fieldnm,
 				typeval,
@@ -558,7 +558,7 @@ public class MartConfigurationFactory {
 		return ac;
 	}
 
-	private UIAttributeDescription getUIAttributeDescription(Element thisElement)
+	private AttributeDescription getUIAttributeDescription(Element thisElement)
 		throws ConfigurationException {
 		String intName = thisElement.getAttributeValue(INTERNALNAME, "");
 		String dispname = thisElement.getAttributeValue(DISPLAYNAME, "");
@@ -573,8 +573,8 @@ public class MartConfigurationFactory {
 		String hpage = thisElement.getAttributeValue(HOMEPAGEURL, "");
 		String link = thisElement.getAttributeValue(LINKOUTURL, "");
 
-		UIAttributeDescription a =
-			new UIAttributeDescription(
+		AttributeDescription a =
+			new AttributeDescription(
 				intName,
 				fieldnm,
 				dispname,

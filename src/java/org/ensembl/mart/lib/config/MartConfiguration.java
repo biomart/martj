@@ -38,18 +38,18 @@ import java.util.TreeMap;
  *                <ul>
  *                    <li><p>AttributeCollection: contains a List of UIAttributes.</p>
  *                       <ul>
- *                           <li><p>UIAttributeDescription: holds all of the information needed by the UI
+ *                           <li><p>AttributeDescription: holds all of the information needed by the UI
  *                                        for displaying an attribute and its information, and the 
  *                                        Attribute it needs to add to a mart Query.</p>
  *                       </ul>
  *                
  *                   <li><p>FilterPage:  contains a List of FilterCollections</p>
  *                     <ul>
- *                         <li><p>FilterCollection: contains a List of UIFilterDescription/UIDSFilterDescription objects</p>
+ *                         <li><p>FilterCollection: contains a List of FilterDescription/MapFilterDescription objects</p>
  *                            <ul>
- *                                <li><p>UIFilterDescription: holds all of the information needed by the UI for displaying a filter,
+ *                                <li><p>FilterDescription: holds all of the information needed by the UI for displaying a filter,
  *                                             and the information that it needs to add a filter to a mart Query</p>
- *                                <li><p>UIDSFilterDescription: holds all of the information needed by the UI for displaying a Domain Specific Filter,
+ *                                <li><p>MapFilterDescription: holds all of the information needed by the UI for displaying a Domain Specific Filter,
  *                                             and the information that it needs to add a Domain Specific Filter to a mart Query</p> 
  *                            </ul>
  *                </ul>
@@ -204,7 +204,7 @@ public class MartConfiguration extends BaseConfigurationObject {
 	}
 
 
-  private UIFilterDescription layout = null;
+  private FilterDescription layout = null;
 	private int thisRank = 0;
 	private TreeMap datasets = new TreeMap();
 	private Hashtable datasetNameMap = new Hashtable();
@@ -213,14 +213,14 @@ public class MartConfiguration extends BaseConfigurationObject {
 	/**
 	 * @return
 	 */
-	public UIFilterDescription getLayout() {
+	public FilterDescription getLayout() {
 		return layout;
 	}
 
 	/**
 	 * @param description
 	 */
-	public void setLayout(UIFilterDescription description) {
+	public void setLayout(FilterDescription description) {
 		layout = description;
 	}
 

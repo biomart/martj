@@ -29,7 +29,7 @@ import java.util.List;
  * filters work with.  For this reason, a DomainSpecificFilterHandler system
  * has been implimented to allow mart developers to create objects implimenting
  * this interface to resolve Complex filters into simple Query Filters.  The handler
- * for a DomainSpecificFilter must match an enum of one of the DomainSpecificFilterHandler 
+ * for a MapFilter must match an enum of one of the DomainSpecificFilterHandler 
  * implimenting objects available.  The cludgyParameter is then passed as a string to the 
  * DomainSpecificFilterHandler modifyQuery method to provide the information it needs.
  * 
@@ -37,7 +37,7 @@ import java.util.List;
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see DSFilterHandler
  */
-public class DomainSpecificFilter {
+public class MapFilter {
 	
 	public static String MARKER = "Marker";
 	public static String BAND = "Band";
@@ -48,12 +48,12 @@ public class DomainSpecificFilter {
 	public static final List SUPPORTED_DSFILTERS = Collections.unmodifiableList(Arrays.asList( new String[] {"Marker", "Band", "Encode", "Qtl", "Expression" } ) );
 	
 	/**
-	 * Constructor for a DomainSpecificFilter object
+	 * Constructor for a MapFilter object
 	 * 
 	 * @param handler - name of handler class which handles this filter (or currently a key to built in types).
 	 * @param cludgyParameter - Encodes fieldname and value in a really cludgy way. To be changed!
 	 */
-	public DomainSpecificFilter(String objectCode, String handlerParameter) {
+	public MapFilter(String objectCode, String handlerParameter) {
 		this.handler = objectCode;
 		this.cludgyParameter = handlerParameter;
     
@@ -63,9 +63,9 @@ public class DomainSpecificFilter {
 
   /**
    * Copy constructor.
-   * @param o - a DomainSpecificFilter object to copy
+   * @param o - a MapFilter object to copy
    */
-  public DomainSpecificFilter(DomainSpecificFilter o) {
+  public MapFilter(MapFilter o) {
   	handler = o.getHandler();
   	cludgyParameter = o.getCludgyParameter();
     
@@ -103,10 +103,10 @@ public class DomainSpecificFilter {
 	}
 	
 	/**
-	 * Allows Equality Comparisons manipulation of DomainSpecificFilter objects
+	 * Allows Equality Comparisons manipulation of MapFilter objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof DomainSpecificFilter && hashCode() == ((DomainSpecificFilter) o).hashCode();
+		return o instanceof MapFilter && hashCode() == ((MapFilter) o).hashCode();
 	}
 	
 	/* (non-Javadoc)

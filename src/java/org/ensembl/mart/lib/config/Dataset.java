@@ -342,12 +342,12 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular UIAttributeDescription.
+		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular AttributeDescription.
 		* Note, it is best to first call containsUIAttributeDescription,
-		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
+		* as there is a caching system to cache a AttributeDescription during a call to containsUIAttributeDescription.
 		* 
-		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription
+		* @param internalName name of the requested AttributeDescription
+		* @return AttributeDescription
 		*/
 	public Object getUIAttributeDescriptionByName(String internalName) {
 		if (containsUIAttributeDescription(internalName))
@@ -357,11 +357,11 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific UIAttributeDescription.
+		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific AttributeDescription.
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
-		*  found, this method caches the UIAttributeDescription it has found.
+		*  found, this method caches the AttributeDescription it has found.
 		* 
-		* @param internalName name of the requested UIAttributeDescription
+		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName) {
@@ -389,12 +389,12 @@ public class Dataset extends BaseConfigurationObject {
 
 	/**
 		* Convenience method for non graphical UI.  Allows a call against the Dataset for a particular 
-		* UIFilterDescription/UIDSFilterDescription Object. Note, it is best to first call 
+		* FilterDescription/MapFilterDescription Object. Note, it is best to first call 
 		* containsUIFilterDescription, as there is a caching system to cache a FilterDescription Object 
 		* during a call to containsUIFilterDescription.
 		* 
-		* @param displayName name of the requested UIFilterDescription
-		* @return Object (either instanceof UIFilterDescription or UIDSFilterDescription)
+		* @param displayName name of the requested FilterDescription
+		* @return Object (either instanceof FilterDescription or MapFilterDescription)
 		*/
 	public Object getUIFilterDescriptionByName(String internalName) {
 		if (containsUIFilterDescription(internalName))
@@ -404,11 +404,11 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific UIFilterDescription/UIDSFilterDescription object.
+		* Convenience method for non graphical UI.  Can determine if the Dataset contains a specific FilterDescription/MapFilterDescription object.
 		*  As an optimization for initial calls to containsUIFilterDescription with an immediate call to getUIFilterDescriptionByName if
-		*  found, this method caches the UIFilterDescription Object it has found.
+		*  found, this method caches the FilterDescription Object it has found.
 		* 
-		* @param displayName name of the requested UIFilterDescription object
+		* @param displayName name of the requested FilterDescription object
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIFilterDescription(String internalName) {
@@ -425,10 +425,10 @@ public class Dataset extends BaseConfigurationObject {
 			}
 		} else {
 			String lastIntName;
-			if (lastFilt instanceof UIFilterDescription)
-				lastIntName = ((UIFilterDescription) lastFilt).getInternalName();
-			else if (lastFilt instanceof UIDSFilterDescription)
-				lastIntName = ((UIDSFilterDescription) lastFilt).getInternalName();
+			if (lastFilt instanceof FilterDescription)
+				lastIntName = ((FilterDescription) lastFilt).getInternalName();
+			else if (lastFilt instanceof MapFilterDescription)
+				lastIntName = ((MapFilterDescription) lastFilt).getInternalName();
 			else
 				lastIntName = ""; // should not get here
 
@@ -444,13 +444,13 @@ public class Dataset extends BaseConfigurationObject {
 
 	/**
 	 * Convenience method for non graphical UIs.
-	 * Returns the FilterPage containing a specific UIFilterDescription, named by internalName
+	 * Returns the FilterPage containing a specific FilterDescription, named by internalName
 	 * Note, if a UIFlilterDescription is contained within multiple FilterPages, this
-	 * will return the first FilterPage that contains the requested UIFilterDescription.
+	 * will return the first FilterPage that contains the requested FilterDescription.
 	 * 
-	 * @param internalName -- String name of the FilterPage containing the requested UIFilterDescription
+	 * @param internalName -- String name of the FilterPage containing the requested FilterDescription
 	 * 
-	 * @return FilterPage object containing the requested UIFilterDescription
+	 * @return FilterPage object containing the requested FilterDescription
 	 */
 	public FilterPage getPageForFilter(String internalName) {
 		for (Iterator iter = (Iterator) filterPages.keySet().iterator(); iter.hasNext();) {
@@ -463,12 +463,12 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns the AttributePage containing a specific UIAttributeDescription named by internalName.
-	 * Note, if a UIAttributeDescription is contained in multiple AttributePages, this will
-	 * return the first AttributePage that contains the requested UIAttributeDescription.
+	 * Returns the AttributePage containing a specific AttributeDescription named by internalName.
+	 * Note, if a AttributeDescription is contained in multiple AttributePages, this will
+	 * return the first AttributePage that contains the requested AttributeDescription.
 	 * 
-	 * @param internalName -- String internalName of the requested UIAttributeDescription
-	 * @return AttributePage containing requested UIAttributeDescription
+	 * @param internalName -- String internalName of the requested AttributeDescription
+	 * @return AttributePage containing requested AttributeDescription
 	 */
 	public AttributePage getPageForAttribute(String internalName) {
 		for (Iterator iter = (Iterator) attributePages.keySet().iterator(); iter.hasNext();) {
@@ -483,7 +483,7 @@ public class Dataset extends BaseConfigurationObject {
 	/**
 	 * Convenience Method to get all FilterDescription Objects in all Pages/Groups/Collections within a Dataset.
 	 * 
-	 * @return List of UIFilterDescription/UIDSFilterDescription objects
+	 * @return List of FilterDescription/MapFilterDescription objects
 	 */
 	public List getAllUIFilterDescriptions() {
 		List filts = new ArrayList();
@@ -501,9 +501,9 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Convenience Method to get all UIAttributeDescription objects in all Pages/Groups/Collections within a Dataset.
+	 * Convenience Method to get all AttributeDescription objects in all Pages/Groups/Collections within a Dataset.
 	 * 
-	 * @return List of UIAttributeDescription objects
+	 * @return List of AttributeDescription objects
 	 */
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
@@ -540,7 +540,7 @@ public class Dataset extends BaseConfigurationObject {
 		return primaryKeys.contains(pkey);
 	}
   /**
-   * Returns a FilterGroup object for a specific Filter Description (UIFilterDescription, UIDSFilterDescription)
+   * Returns a FilterGroup object for a specific Filter Description (FilterDescription, MapFilterDescription)
    * based on its internalName.
    * 
    * @param internalName - String internalName of Filter Description for which a group is requested.
@@ -563,7 +563,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
   /**
-   * Returns a FilterCollection object for a specific Filter Description (UIFilterDescription, UIDSFilterDescription)
+   * Returns a FilterCollection object for a specific Filter Description (FilterDescription, MapFilterDescription)
    * based on its internalName.
    * 
    * @param internalName - String internalName of Filter Description for which a collection is requested.
@@ -586,7 +586,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
 
   /**
-   * Returns an AttributeGroup object for a specific Attribute Description (UIAttributeDescription, UIDSAttributeDescription)
+   * Returns an AttributeGroup object for a specific Attribute Description (AttributeDescription, UIDSAttributeDescription)
    * based on its internalName.
    * 
    * @param internalName - String internalName of Attribute Description for which a group is requested.
@@ -609,7 +609,7 @@ public class Dataset extends BaseConfigurationObject {
 	}
   
   /**
-   * Returns an AttributeCollection object for a specific Attribute Description (UIAttributeDescription, UIDSAttributeDescription)
+   * Returns an AttributeCollection object for a specific Attribute Description (AttributeDescription, UIDSAttributeDescription)
    * based on its internalName.
    * 
    * @param internalName - String internalName of Attribute Description for which a collection is requested.
@@ -699,8 +699,8 @@ public class Dataset extends BaseConfigurationObject {
   private Hashtable uiOptionNameMap = new Hashtable();
   private boolean hasOptions = false;  
 	
-	// cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	// cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private AttributeDescription lastAtt = null;
 	//cache one FilterDescription Object for call to containsUIFilterDescription or getUIFiterDescriptionByName
 	private Object lastFilt = null;
 

@@ -38,7 +38,7 @@ import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Represents a set of user options as a tree.
@@ -60,7 +60,7 @@ public class TreeFilterWidget extends FilterWidget {
 	 * @param query
 	 * @param filterDescription
 	 */
-	public TreeFilterWidget(Query query, UIFilterDescription filterDescription) {
+	public TreeFilterWidget(Query query, FilterDescription filterDescription) {
 		super(query, filterDescription);
 
     // default property name.
@@ -89,7 +89,7 @@ public class TreeFilterWidget extends FilterWidget {
 	 * pressses cause the menu to be displayed.
 	 * @return
 	 */
-	private void initMenu(UIFilterDescription filterDescription) {
+	private void initMenu(FilterDescription filterDescription) {
 
 		// We use a JMenuBar to represent a "tree" of options.
 

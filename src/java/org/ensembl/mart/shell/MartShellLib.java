@@ -31,7 +31,7 @@ import java.util.StringTokenizer;
 import org.apache.log4j.Logger;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.BasicFilter;
-import org.ensembl.mart.lib.DomainSpecificFilter;
+import org.ensembl.mart.lib.MapFilter;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.IDListFilter;
@@ -45,9 +45,9 @@ import org.ensembl.mart.lib.config.Dataset;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
-import org.ensembl.mart.lib.config.UIDSFilterDescription;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.MapFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * <p>Library allowing client code to parse Mart Query Language (MQL)
@@ -168,8 +168,8 @@ public class MartShellLib {
 				List attributes = dataset.getAllUIAttributeDescriptions();
 				for (int j = 0, k = attributes.size(); j < k; j++) {
 					Object attribute = attributes.get(j);
-					if (attribute instanceof UIAttributeDescription) {
-						UIAttributeDescription uiattribute = (UIAttributeDescription) attribute;
+					if (attribute instanceof AttributeDescription) {
+						AttributeDescription uiattribute = (AttributeDescription) attribute;
 
 						String iname = uiattribute.getInternalName();
 						String fname = uiattribute.getFieldName();
@@ -214,8 +214,8 @@ public class MartShellLib {
 				for (Iterator iter = filters.iterator(); iter.hasNext();) {
 					Object filter = iter.next();
 
-					if (filter instanceof UIFilterDescription) {
-						UIFilterDescription uifilter = (UIFilterDescription) filter;
+					if (filter instanceof FilterDescription) {
+						FilterDescription uifilter = (FilterDescription) filter;
 
 						String iname = uifilter.getInternalName();
 						String fname = uifilter.getFieldName();
@@ -230,7 +230,7 @@ public class MartShellLib {
 						if (!fieldMaps.contains(fieldMap))
 							fieldMaps.add(fieldMap);
 					} else {
-						UIDSFilterDescription uifilter = (UIDSFilterDescription) filter;
+						MapFilterDescription uifilter = (MapFilterDescription) filter;
 						fieldMaps.add(new UIMapper(uifilter.getHandler(), uifilter.getInternalName()));
 					}
 				}
@@ -367,13 +367,13 @@ public class MartShellLib {
 		List FiltSetMaps = (ArrayList) field_FilterSet.get(dataset.getInternalName());
 
 		if (query.hasDomainSpecificFilters()) {
-			DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
+			MapFilter[] dsfilters = query.getDomainSpecificFilters();
 
 			for (int i = 0, n = dsfilters.length;(success && (i < n)); i++) {
 				if (i > 0)
 					mqlbuf.append(", ");
 
-				DomainSpecificFilter dsfilter = dsfilters[i];
+				MapFilter dsfilter = dsfilters[i];
 				boolean thisMapped = false;
 
 				String objectCode = dsfilter.getHandler();
@@ -414,7 +414,7 @@ public class MartShellLib {
 					String filterSetReq = null;
 
 					if (filtMapper.canMap(fname)) {
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -423,7 +423,7 @@ public class MartShellLib {
 							success = mapIDListFilter(idfilter, mqlbuf.append(filtMapper.getInternalName()).append(" in "));
 						}
 					} else if (filtMapper.canMap(fname, tconstraint)) {
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -434,7 +434,7 @@ public class MartShellLib {
 					} else {
 						// filterSet
 						String filterInternalName = filtMapper.getInternalName();
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a UIFilterDescription
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a FilterDescription
 
 						if (uifilter.inFilterSet()) {
 							if (uifilter.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
@@ -493,7 +493,7 @@ public class MartShellLib {
 					String filterSetReq = null;
 
 					if (filtMapper.canMap(fname)) {
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -502,7 +502,7 @@ public class MartShellLib {
 							success = mapBasicFilter(filter, mqlbuf.append(filtMapper.getInternalName()).append(" "));
 						}
 					} else if (filtMapper.canMap(fname, tconstraint)) {
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filtMapper.getInternalName());
 						filterSetReq = uifilter.getFilterSetReq();
 
 						if (filterSetReq == null || filterSetReq.equals("")) {
@@ -513,7 +513,7 @@ public class MartShellLib {
 					} else {
 						// filterSet
 						String filterInternalName = filtMapper.getInternalName();
-						UIFilterDescription uifilter = (UIFilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a UIFilterDescription
+						FilterDescription uifilter = (FilterDescription) dataset.getUIFilterDescriptionByName(filterInternalName); // must be a FilterDescription
 
 						if (uifilter.inFilterSet()) {
 							if (uifilter.getFilterSetReq().equals(FilterSetDescription.MODFIELDNAME)) {
@@ -915,7 +915,7 @@ public class MartShellLib {
 					currentApage = dset.getPageForAttribute(attname);
 
 					for (int i = 0, n = atts.size(); i < n; i++) {
-						UIAttributeDescription element = (UIAttributeDescription) atts.get(i);
+						AttributeDescription element = (AttributeDescription) atts.get(i);
 
 						if (!currentApage.containsUIAttributeDescription(element.getInternalName()))
 							throw new InvalidQueryException(
@@ -945,7 +945,7 @@ public class MartShellLib {
 		}
 
 		for (int i = 0, n = atts.size(); i < n; i++) {
-			UIAttributeDescription attd = (UIAttributeDescription) atts.get(i);
+			AttributeDescription attd = (AttributeDescription) atts.get(i);
 			Attribute attr = new FieldAttribute(attd.getFieldName(), attd.getTableConstraint());
 			newQuery.addAttribute(attr);
 		}
@@ -1052,7 +1052,7 @@ public class MartShellLib {
 					String thisFieldName = null;
 					String thisTableConstraint = null;
 
-					UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+					FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
 
 					if (fds.inFilterSet()) {
 						if (fset == null)
@@ -1125,7 +1125,7 @@ public class MartShellLib {
 						String thisFieldName = null;
 						String thisTableConstraint = null;
 
-						UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+						FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
 						if (!fds.getType().equals("list"))
 							throw new InvalidQueryException("Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
 
@@ -1182,7 +1182,7 @@ public class MartShellLib {
 							String thisFieldName = null;
 							String thisTableConstraint = null;
 
-							UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+							FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
 							if (!fds.getType().equals("list"))
 								throw new InvalidQueryException("Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
 
@@ -1231,7 +1231,7 @@ public class MartShellLib {
 							String thisFieldName = null;
 							String thisTableConstraint = null;
 
-							UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+							FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
 							if (!fds.getType().equals("list"))
 								throw new InvalidQueryException("Cannot query this filter with a list input using in qualifier: " + filterName + "\n");
 
@@ -1273,11 +1273,11 @@ public class MartShellLib {
 					if (thisToken.endsWith(","))
 						thisToken = thisToken.substring(0, thisToken.length() - 1);
 
-					if (dset.getUIFilterDescriptionByName(filterName) instanceof UIFilterDescription) {
+					if (dset.getUIFilterDescriptionByName(filterName) instanceof FilterDescription) {
 						String thisFieldName = null;
 						String thisTableConstraint = null;
 
-						UIFilterDescription fds = (UIFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+						FilterDescription fds = (FilterDescription) dset.getUIFilterDescriptionByName(filterName);
 						if (!fds.getType().equals("list"))
 							throw new InvalidQueryException("Cannot query this filter with a list input using in: " + filterName + "\n");
 
@@ -1305,7 +1305,7 @@ public class MartShellLib {
 					} else {
 						String thisHandlerParam = null;
 
-						UIDSFilterDescription fds = (UIDSFilterDescription) dset.getUIFilterDescriptionByName(filterName);
+						MapFilterDescription fds = (MapFilterDescription) dset.getUIFilterDescriptionByName(filterName);
 
 						if (fds.IsInFilterSet()) {
 							if (fset == null)
@@ -1320,7 +1320,7 @@ public class MartShellLib {
 						} else
 							thisHandlerParam = thisToken;
 
-						DomainSpecificFilter thisFilter = new DomainSpecificFilter(fds.getHandler(), thisHandlerParam);
+						MapFilter thisFilter = new MapFilter(fds.getHandler(), thisHandlerParam);
 						newQuery.addDomainSpecificFilter(thisFilter);
 						start = true;
 						value = false;

@@ -74,11 +74,11 @@ public class AttributeCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Add a UIAttributeDescription to the AtttributeCollection.
+	 * Add a AttributeDescription to the AtttributeCollection.
 	 * 
-	 * @param a a UIAttributeDescription object.
+	 * @param a a AttributeDescription object.
 	 */
-	public void addUIAttribute(UIAttributeDescription a) {
+	public void addUIAttribute(AttributeDescription a) {
 		Integer aRankInt = new Integer(aRank);
 		uiAttributes.put(aRankInt, a);
 		uiAttributeNameMap.put(a.getInternalName(), aRankInt);
@@ -86,12 +86,12 @@ public class AttributeCollection extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Set a group of UIAttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute, setUIAttribute,
+	 * Set a group of AttributeDescription objects in one call.  Note, subsequent calls to addUIAttribute, setUIAttribute,
 	 * addUIDSAttribute or setUIDSAttributes will add to what was added before.
 	 * 
-	 * @param a an Array of UIAttributeDescription objects.
+	 * @param a an Array of AttributeDescription objects.
 	 */
-	public void setUIAttributes(UIAttributeDescription[] a) {
+	public void setUIAttributes(AttributeDescription[] a) {
 		for (int i = 0, n = a.length; i < n; i++) {
 			Integer aRankInt = new Integer(aRank);
 			uiAttributes.put(aRankInt, a[i]);
@@ -101,9 +101,9 @@ public class AttributeCollection extends BaseConfigurationObject {
 	}
 	
 	/**
-	 * Returns a List of UIAttributeDescription objects, in the order they were added.
+	 * Returns a List of AttributeDescription objects, in the order they were added.
 	 * 
-	 * @return List of UIAttributeDescription objects.
+	 * @return List of AttributeDescription objects.
 	 */
 	public List getUIAttributeDescriptions() {
 		return new ArrayList(uiAttributes.values());
@@ -111,23 +111,23 @@ public class AttributeCollection extends BaseConfigurationObject {
 
 
 	/**
-		* Get a specific UIAttributeDescription, named by internalName.
+		* Get a specific AttributeDescription, named by internalName.
 		*  
-		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription requested, or null
+		* @param internalName name of the requested AttributeDescription
+		* @return AttributeDescription requested, or null
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
-			return (UIAttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
+			return (AttributeDescription) uiAttributes.get( (Integer) uiAttributeNameMap.get(internalName));
 		else
 			return null;
 	}
 
 	/**
-		* Check if this AttributeCollection contains a specific UIAttributeDescription named
+		* Check if this AttributeCollection contains a specific AttributeDescription named
 		* by internalName.
 		*  
-		* @param internalName name of the requested UIAttributeDescription object
+		* @param internalName name of the requested AttributeDescription object
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName) {
@@ -157,7 +157,7 @@ public class AttributeCollection extends BaseConfigurationObject {
 		int tmp = super.hashCode();
 		
 		for (Iterator iter = uiAttributes.values().iterator(); iter.hasNext();) {
-			UIAttributeDescription element = (UIAttributeDescription) iter.next();
+			AttributeDescription element = (AttributeDescription) iter.next();
 			tmp = (31 * tmp) + element.hashCode();
 		}
 		return tmp;
@@ -168,6 +168,6 @@ public class AttributeCollection extends BaseConfigurationObject {
 	private TreeMap uiAttributes = new TreeMap();
 	private Hashtable uiAttributeNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	//cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private AttributeDescription lastAtt = null;
 }

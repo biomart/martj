@@ -31,8 +31,8 @@ import javax.swing.JScrollPane;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeGroup;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
-import org.ensembl.mart.lib.config.UIDSFilterDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.MapFilterDescription;
 
 /**
  * Widget representing an AttibuteGroup. 
@@ -90,7 +90,7 @@ public class AttributeGroupWidget extends GroupWidget {
    * Converts collection.UIAttributeDescriptions into InputPages.
    * @param collection
    * @return array of AttributeDescriptionWidgets, one for each 
-   * UIAttributeDescription in the collection.
+   * AttributeDescription in the collection.
    */
   private InputPage[] getAttributeWidgets(AttributeCollection collection) {
 
@@ -100,12 +100,12 @@ public class AttributeGroupWidget extends GroupWidget {
     for (Iterator iter = attributeDescriptions.iterator(); iter.hasNext();) {
       Object element = iter.next();
 
-      if (element instanceof UIAttributeDescription) {
+      if (element instanceof AttributeDescription) {
 
-        UIAttributeDescription a = (UIAttributeDescription) element;
+        AttributeDescription a = (AttributeDescription) element;
         AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a);
         pages.add(w);
-      } else if ( element instanceof UIDSFilterDescription ){
+      } else if ( element instanceof MapFilterDescription ){
         logger.warning("TODO Unsupported domain specific attribute description: " + element.getClass().getName() + element);
       }
       else {

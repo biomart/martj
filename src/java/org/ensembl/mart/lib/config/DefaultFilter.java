@@ -19,7 +19,7 @@
 package org.ensembl.mart.lib.config;
 
 /**
- * Default Filter for a Dataset.  Holds a UIFilterDescription, and
+ * Default Filter for a Dataset.  Holds a FilterDescription, and
  * the value to apply for that filter.  This allows the Dataset to
  * provide the UI with any default filters that need to be added to a 
  * query when it is selected.
@@ -37,17 +37,17 @@ public class DefaultFilter {
    }
    
    /**
-    * Constructor for a DefaultFilter with a UIFilterDescription, and a value to apply
+    * Constructor for a DefaultFilter with a FilterDescription, and a value to apply
     * to that Description.
     * 
-    * @param fdesc - UIFilterDescription to apply as default
-    * @param value - value to apply for the UIFilterDescription
-    * @throws ConfigurationException when value is null or empty, or UIFilterDescription is null
+    * @param fdesc - FilterDescription to apply as default
+    * @param value - value to apply for the FilterDescription
+    * @throws ConfigurationException when value is null or empty, or FilterDescription is null
     */
-   public DefaultFilter(UIFilterDescription fdesc, String value) throws ConfigurationException {
+   public DefaultFilter(FilterDescription fdesc, String value) throws ConfigurationException {
      if (value == null || value.equals("")
          || fdesc == null)
-       throw new ConfigurationException("DefaultFilter Objects must be instantiated with a UIFilterDescription and a value for that filter\n");
+       throw new ConfigurationException("DefaultFilter Objects must be instantiated with a FilterDescription and a value for that filter\n");
      
      this.fdesc = fdesc;
      int tmp = fdesc.hashCode();
@@ -59,10 +59,10 @@ public class DefaultFilter {
    }
 
   /**
-   * Returns the UIFilterDescription
-   * @return UIFilterDescription object
+   * Returns the FilterDescription
+   * @return FilterDescription object
    */
-  public UIFilterDescription getUIFilterDescription() {
+  public FilterDescription getUIFilterDescription() {
     return fdesc;
   }
 
@@ -78,7 +78,7 @@ public class DefaultFilter {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" UIFilterDescription=").append(fdesc);
+		buf.append(" FilterDescription=").append(fdesc);
     buf.append(", value=").append(value);
 		buf.append("]");
 
@@ -100,6 +100,6 @@ public class DefaultFilter {
 	}
 
    private final String value;
-   private final UIFilterDescription fdesc;
+   private final FilterDescription fdesc;
    private final int hashcode;
 }

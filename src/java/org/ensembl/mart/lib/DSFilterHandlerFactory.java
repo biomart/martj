@@ -25,29 +25,29 @@ package org.ensembl.mart.lib;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  * @see org.ensembl.mart.lib.DSFilterHandler
- * @see org.ensembl.mart.lib.DomainSpecificFilter
+ * @see org.ensembl.mart.lib.MapFilter
  */
 public class DSFilterHandlerFactory {
 	/**
 	 * Resolves the given objectCode into a specific DSFilterHandler implementing object,
-	 * based on the DomainSpecificFilter static String enums. It is planned that a future
+	 * based on the MapFilter static String enums. It is planned that a future
 	 * version will allow the objectCode to reference objects outside the mart explorer package
 	 * that can be loaded in using the ClassLoader system.
 	 * 
-	 * @param objectCode - String matching one of the DomainSpecificFilter static String enums.
+	 * @param objectCode - String matching one of the MapFilter static String enums.
 	 * @return DSFilterHandler dsfh - a DSFilterHandler implementing object.
 	 * @throws InvalidQueryException -- currently for unsuported objectCode.
 	 */
   public static DSFilterHandler getInstance(String objectCode) throws InvalidQueryException {
   	DSFilterHandler dsfh = null;
   	
-  	if ( objectCode.equals(DomainSpecificFilter.MARKER) )
+  	if ( objectCode.equals(MapFilter.MARKER) )
   	  dsfh = new DSMarkerFilterHandler();
-  	else if ( objectCode.equals(DomainSpecificFilter.BAND) )
+  	else if ( objectCode.equals(MapFilter.BAND) )
   	  dsfh = new DSBandFilterHandler();
-  	else if ( objectCode.equals(DomainSpecificFilter.ENCODE) || objectCode.equals(DomainSpecificFilter.QTL) )
+  	else if ( objectCode.equals(MapFilter.ENCODE) || objectCode.equals(MapFilter.QTL) )
   	  dsfh = new DSEncodeQtlFilterHandler();
-  	else if ( objectCode.equals(DomainSpecificFilter.EXPRESSION) )
+  	else if ( objectCode.equals(MapFilter.EXPRESSION) )
   	  dsfh = new DSExpressionFilterHandler();
   	else
 //TODO: implement object class loader system

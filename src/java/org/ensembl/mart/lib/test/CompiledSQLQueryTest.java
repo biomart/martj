@@ -7,7 +7,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.ensembl.mart.lib.BasicFilter;
-import org.ensembl.mart.lib.DomainSpecificFilter;
+import org.ensembl.mart.lib.MapFilter;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.FormatSpec;
@@ -116,8 +116,8 @@ public class CompiledSQLQueryTest extends Base {
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(chrFilter);
 
-		DomainSpecificFilter start = new DomainSpecificFilter("Marker", "AFMA272XC9:start");
-		DomainSpecificFilter end = new DomainSpecificFilter("Marker", "RH10794:end");
+		MapFilter start = new MapFilter("Marker", "AFMA272XC9:start");
+		MapFilter end = new MapFilter("Marker", "RH10794:end");
 		q.addDomainSpecificFilter(start);
 		q.addDomainSpecificFilter(end);
 
@@ -127,8 +127,8 @@ public class CompiledSQLQueryTest extends Base {
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 		q.addFilter(chrFilter);
-		start = new DomainSpecificFilter("Band", "p36.33:start");
-		end = new DomainSpecificFilter("Band", "p36.33:end");
+		start = new MapFilter("Band", "p36.33:start");
+		end = new MapFilter("Band", "p36.33:end");
 
 		q.addDomainSpecificFilter(start);
 		q.addDomainSpecificFilter(end);
@@ -139,7 +139,7 @@ public class CompiledSQLQueryTest extends Base {
 
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		DomainSpecificFilter test = new DomainSpecificFilter("Encode", "13:29450016:29950015");
+		MapFilter test = new MapFilter("Encode", "13:29450016:29950015");
 
 		q.addDomainSpecificFilter(test);
 		executeQuery(q);
@@ -148,7 +148,7 @@ public class CompiledSQLQueryTest extends Base {
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		test = new DomainSpecificFilter("Qtl", "4:82189556:83189556");
+		test = new MapFilter("Qtl", "4:82189556:83189556");
 
 		q.addDomainSpecificFilter(test);
 		executeQuery(q);
@@ -157,7 +157,7 @@ public class CompiledSQLQueryTest extends Base {
 		q = new Query(genequery);
 		q.addAttribute(new FieldAttribute("gene_stable_id"));
 
-		test = new DomainSpecificFilter("Expression", "est:anatomical_site=ovary,development_stage=adult");
+		test = new MapFilter("Expression", "est:anatomical_site=ovary,development_stage=adult");
 
 		q.addDomainSpecificFilter(test);
 		executeQuery(q);

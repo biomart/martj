@@ -24,31 +24,31 @@ package org.ensembl.mart.lib.config;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class UIAttributeDescription extends BaseConfigurationObject {
+public class AttributeDescription extends BaseConfigurationObject {
 
 	/*
 	 * UIAttributeDescriptions must contain an internalName and fieldName.  Disable parameterless construction.
 	 */
-	private UIAttributeDescription() throws ConfigurationException {
+	private AttributeDescription() throws ConfigurationException {
 		this("", "", "", 0, "", "", "", "", ""); // this will never happen
 	}
 
 	/**
-	 * Constructs a UIAttributeDescription with just the internalName and fieldName.
+	 * Constructs a AttributeDescription with just the internalName and fieldName.
 	 * 
-	 * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty
+	 * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty
 	 * @param fieldName String name of the field in the mart for this Attribute. Must not be null or empty.
 	 * @throws ConfigurationException when values are null or empty.
 	 */
-	public UIAttributeDescription(String internalName, String fieldName) throws ConfigurationException {
+	public AttributeDescription(String internalName, String fieldName) throws ConfigurationException {
 		this(internalName, fieldName, "", 0, "", "", "", "", "");
 	}
 	/**
-	 * Constructor for a UIAttributeDescription.
+	 * Constructor for a AttributeDescription.
 	 * 
-	 * @param internalName String name to internally represent the UIAttributeDescription. Must not be null or empty.
+	 * @param internalName String name to internally represent the AttributeDescription. Must not be null or empty.
 	 * @param fieldName String name of the field in the mart for this attribute.  Must not be null or empty.
-	 * @param displayName String name of the UIAttributeDescription.
+	 * @param displayName String name of the AttributeDescription.
 	 * @param maxLength Int maximum possible length of the field in the mart.
 	 * @param tableConstraint String base name of a specific table containing this UIAttribute.
 	 * @param description String description of this UIAttribute.
@@ -57,7 +57,7 @@ public class UIAttributeDescription extends BaseConfigurationObject {
 	 * @param linkoutURL String Base for a link to a specific entry in a source website.
 	 * @throws ConfigurationException when required parameters are null or empty
 	 */
-	public UIAttributeDescription(
+	public AttributeDescription(
 		String internalName,
 		String fieldName,
 		String displayName,
@@ -148,7 +148,7 @@ public class UIAttributeDescription extends BaseConfigurationObject {
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
-		buf.append("[ UIAttributeDescription:");
+		buf.append("[ AttributeDescription:");
 		buf.append( super.toString() );
 		buf.append(", fieldName=").append(fieldName);
 		buf.append(", maxLength=").append(maxLength);
@@ -162,10 +162,10 @@ public class UIAttributeDescription extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Allows Equality Comparisons of UIAttributeDescription objects
+	 * Allows Equality Comparisons of AttributeDescription objects
 	 */
 	public boolean equals(Object o) {
-		return o instanceof UIAttributeDescription && hashCode() == ((UIAttributeDescription) o).hashCode();
+		return o instanceof AttributeDescription && hashCode() == ((AttributeDescription) o).hashCode();
 	}
 
 	public int hashCode() {

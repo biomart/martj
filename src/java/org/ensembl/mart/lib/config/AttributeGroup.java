@@ -124,14 +124,14 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the AttributeGroup for a particular UIAttributeDescription.
+		* Convenience method for non graphical UI.  Allows a call against the AttributeGroup for a particular AttributeDescription.
 	  * Note, it is best to first call containsUIAttributeDescription,
-		* as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
+		* as there is a caching system to cache a AttributeDescription during a call to containsUIAttributeDescription.
 		* 
-		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription requested, or null
+		* @param internalName name of the requested AttributeDescription
+		* @return AttributeDescription requested, or null
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -139,11 +139,11 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the AttributeGroup contains a specific UIAttributeDescription.
+		* Convenience method for non graphical UI.  Can determine if the AttributeGroup contains a specific AttributeDescription.
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
-		*  found, this method caches the UIAttributeDescription it has found.
+		*  found, this method caches the AttributeDescription it has found.
 		* 
-		* @param internalName name of the requested UIAttributeDescription
+		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName){
@@ -171,10 +171,10 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	}
 
   /**
-   * Convenience method. Returns all of the UIAttributeDescription objects 
+   * Convenience method. Returns all of the AttributeDescription objects 
    * contained in all of the AttributeCollections.
    * 
-   * @return List of UIAttributeDescription objects
+   * @return List of AttributeDescription objects
    */
   public List getAllUIAttributeDescriptions() {
   	List atts = new ArrayList();
@@ -189,7 +189,7 @@ public final class AttributeGroup extends BaseConfigurationObject {
   }
   
   /**
-   * Returns the AttributeCollection for a particular Attribute (UIAttributeDescription or UIDSAttributeDescription)
+   * Returns the AttributeCollection for a particular Attribute (AttributeDescription or UIDSAttributeDescription)
    * based on its internalName.
    * 
    * @param internalName - String internalName of the Attribute Description for which the collection is being requested.
@@ -254,8 +254,8 @@ public final class AttributeGroup extends BaseConfigurationObject {
 	private TreeMap attributeCollections = new TreeMap();
 	private Hashtable attributeCollectionNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	//cache one AttributeDescription for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private AttributeDescription lastAtt = null;
 	//cache one AttributeCollecton for call to getCollectionForAttribute
 	private AttributeCollection lastColl = null;
 }

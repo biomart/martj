@@ -161,9 +161,9 @@ public class Engine {
 
 		Connection conn = getConnection();
 		if (query.hasDomainSpecificFilters()) {
-			DomainSpecificFilter[] dsfilters = query.getDomainSpecificFilters();
+			MapFilter[] dsfilters = query.getDomainSpecificFilters();
 			for (int i = 0, n = dsfilters.length; i < n; i++) {
-				DomainSpecificFilter dsf = dsfilters[i];
+				MapFilter dsf = dsfilters[i];
 				DSFilterHandler dsfh = DSFilterHandlerFactory.getInstance(dsf.getHandler());
 				query = dsfh.ModifyQuery(conn, dsf.getCludgyParameter(), query);
 			}

@@ -70,9 +70,9 @@ import org.ensembl.mart.lib.config.FilterSet;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
 import org.ensembl.mart.lib.config.MartConfigurationFactory;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
-import org.ensembl.mart.lib.config.UIDSFilterDescription;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.MapFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineLibrary;
 
@@ -2482,8 +2482,8 @@ public class MartShell {
 	private String[] DescribeFilter(Object filtero) {
 		List lines = new ArrayList();
 
-		if (filtero instanceof UIFilterDescription) {
-			UIFilterDescription desc = (UIFilterDescription) filtero;
+		if (filtero instanceof FilterDescription) {
+			FilterDescription desc = (FilterDescription) filtero;
 			lines.add(
 				"\t\t"
 					+ desc.getInternalName()
@@ -2493,7 +2493,7 @@ public class MartShell {
 					+ desc.getType()
 					+ ")");
 		} else {
-			UIDSFilterDescription desc = (UIDSFilterDescription) filtero;
+			MapFilterDescription desc = (MapFilterDescription) filtero;
 			String disp = "\t\t" + desc.getInternalName();
 			if (desc.getDisplayName().length() > 0)
 				disp += " - " + desc.getDisplayName();
@@ -2511,8 +2511,8 @@ public class MartShell {
 	private String[] DescribeAttribute(Object attributeo) {
 		List lines = new ArrayList();
 
-		if (attributeo instanceof UIAttributeDescription) {
-			UIAttributeDescription desc = (UIAttributeDescription) attributeo;
+		if (attributeo instanceof AttributeDescription) {
+			AttributeDescription desc = (AttributeDescription) attributeo;
 			lines.add(
 				"\t\t"
 					+ desc.getInternalName()

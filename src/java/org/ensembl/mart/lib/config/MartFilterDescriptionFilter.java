@@ -22,7 +22,7 @@ import org.jdom.filter.Filter;
 import org.jdom.Element;
 
 /**
- * JDOM Filter specific to UIFilterDescription/UIDSFilterDescription objects in a Mart FilterCollection.
+ * JDOM Filter specific to FilterDescription/MapFilterDescription objects in a Mart FilterCollection.
  * Allows MartConfigurationFactory to harvest all FilterDescription objects of both types, in the order
  * they occur in the xml configuration document.
  * 
@@ -44,6 +44,6 @@ public class MartFilterDescriptionFilter implements Filter {
 		return false;
 	}
 
-  private final String UIFILTER = "UIFilterDescription";
-  private final String UIDSFILTER = "UIDSFilterDescription";
+  private final String UIFILTER = "FilterDescription";
+  private final String UIDSFILTER = "MapFilterDescription";
 }

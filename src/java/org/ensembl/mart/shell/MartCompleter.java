@@ -44,9 +44,9 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.FilterSet;
 import org.ensembl.mart.lib.config.FilterSetDescription;
 import org.ensembl.mart.lib.config.MartConfiguration;
-import org.ensembl.mart.lib.config.UIAttributeDescription;
-import org.ensembl.mart.lib.config.UIDSFilterDescription;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.MapFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 import org.gnu.readline.Readline;
 import org.gnu.readline.ReadlineCompleter;
 
@@ -350,10 +350,10 @@ public class MartCompleter implements ReadlineCompleter {
 						for (int i = 0, n = fdesc.size(); i < n; i++) {
 							Object desc = fdesc.get(i);
 
-							if (desc instanceof UIFilterDescription)
-								currentSet.add(((UIFilterDescription) desc).getInternalName());
+							if (desc instanceof FilterDescription)
+								currentSet.add(((FilterDescription) desc).getInternalName());
 							else
-								currentSet.add(((UIDSFilterDescription) desc).getInternalName());
+								currentSet.add(((MapFilterDescription) desc).getInternalName());
 						}
 					} else if (pageKey.equals("AttributePage")) {
 
@@ -368,8 +368,8 @@ public class MartCompleter implements ReadlineCompleter {
 						for (int i = 0, n = adesc.size(); i < n; i++) {
 							Object desc = adesc.get(i);
 
-							if (desc instanceof UIAttributeDescription) {
-								currentSet.add(((UIAttributeDescription) desc).getInternalName());
+							if (desc instanceof AttributeDescription) {
+								currentSet.add(((AttributeDescription) desc).getInternalName());
 							} // else if we add UIDSAttributeDescriptions, add code here
 						}
 					}
@@ -422,10 +422,10 @@ public class MartCompleter implements ReadlineCompleter {
 								List descs = martconf.getDatasetByName(datasetName).getFilterPageByName(pageName).getAllUIFilterDescriptions();
 								for (int i = 0, n = descs.size(); i < n; i++) {
 									Object desc = descs.get(i);
-									if (desc instanceof UIFilterDescription)
-										currentSet.add(((UIFilterDescription) desc).getInternalName());
+									if (desc instanceof FilterDescription)
+										currentSet.add(((FilterDescription) desc).getInternalName());
 									else
-										currentSet.add(((UIDSFilterDescription) desc).getInternalName());
+										currentSet.add(((MapFilterDescription) desc).getInternalName());
 								}
 							}
 						}
@@ -508,10 +508,10 @@ public class MartCompleter implements ReadlineCompleter {
 										List descs = ((FilterGroup) group).getAllUIFilterDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = (Object) descs.get(i);
-											if (desc instanceof UIFilterDescription)
-												currentSet.add(((UIFilterDescription) desc).getInternalName());
+											if (desc instanceof FilterDescription)
+												currentSet.add(((FilterDescription) desc).getInternalName());
 											else
-												currentSet.add(((UIDSFilterDescription) desc).getInternalName());
+												currentSet.add(((MapFilterDescription) desc).getInternalName());
 										}
 
 									}
@@ -542,8 +542,8 @@ public class MartCompleter implements ReadlineCompleter {
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
 
-											if (desc instanceof UIAttributeDescription) {
-												currentSet.add(((UIAttributeDescription) desc).getInternalName());
+											if (desc instanceof AttributeDescription) {
+												currentSet.add(((AttributeDescription) desc).getInternalName());
 											} // else, if we add UIDSAttributeDescriptions, add code here
 
 										}
@@ -608,10 +608,10 @@ public class MartCompleter implements ReadlineCompleter {
 										List descs = group.getFilterCollectionByName(collectionName).getUIFilterDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
-											if (desc instanceof UIFilterDescription)
-												currentSet.add(((UIFilterDescription) desc).getInternalName());
+											if (desc instanceof FilterDescription)
+												currentSet.add(((FilterDescription) desc).getInternalName());
 											else
-												currentSet.add(((UIDSFilterDescription) desc).getInternalName());
+												currentSet.add(((MapFilterDescription) desc).getInternalName());
 										}
 									}
 								}
@@ -632,8 +632,8 @@ public class MartCompleter implements ReadlineCompleter {
 										List descs = group.getAttributeCollectionByName(collectionName).getUIAttributeDescriptions();
 										for (int i = 0, n = descs.size(); i < n; i++) {
 											Object desc = descs.get(i);
-											if (desc instanceof UIAttributeDescription)
-												currentSet.add(((UIAttributeDescription) desc).getInternalName());
+											if (desc instanceof AttributeDescription)
+												currentSet.add(((AttributeDescription) desc).getInternalName());
 											// else, if we add UIDSAttributeDescriptions, put them here
 
 										}
@@ -679,8 +679,8 @@ public class MartCompleter implements ReadlineCompleter {
 			List attributes = lastLocalDataset.getAllUIAttributeDescriptions();
 			for (int i = 0, n = attributes.size(); i < n; i++) {
 				Object attribute = attributes.get(i);
-				if (attribute instanceof UIAttributeDescription)
-					currentSet.add(((UIAttributeDescription) attribute).getInternalName());
+				if (attribute instanceof AttributeDescription)
+					currentSet.add(((AttributeDescription) attribute).getInternalName());
 				//else, if we impliment UIDSAttributeDescription
 			}
 		} else if (envDataset != null) {
@@ -690,8 +690,8 @@ public class MartCompleter implements ReadlineCompleter {
 			List attributes = envDataset.getAllUIAttributeDescriptions();
 			for (int i = 0, n = attributes.size(); i < n; i++) {
 				Object attribute = attributes.get(i);
-				if (attribute instanceof UIAttributeDescription)
-					currentSet.add(((UIAttributeDescription) attribute).getInternalName());
+				if (attribute instanceof AttributeDescription)
+					currentSet.add(((AttributeDescription) attribute).getInternalName());
 				//else, if we impliment UIDSAttributeDescription
 			}
 
@@ -733,10 +733,10 @@ public class MartCompleter implements ReadlineCompleter {
 			for (int i = 0, n = filters.size(); i < n; i++) {
 				Object filter = filters.get(i);
 
-				if (filter instanceof UIDSFilterDescription)
-					currentSet.add(((UIDSFilterDescription) filter).getInternalName());
+				if (filter instanceof MapFilterDescription)
+					currentSet.add(((MapFilterDescription) filter).getInternalName());
 				else
-					currentSet.add(((UIFilterDescription) filter).getInternalName());
+					currentSet.add(((FilterDescription) filter).getInternalName());
 			}
 		} else if (envDataset != null) {
 			currentSet = new TreeSet();
@@ -746,10 +746,10 @@ public class MartCompleter implements ReadlineCompleter {
 			for (int i = 0, n = filters.size(); i < n; i++) {
 				Object filter = filters.get(i);
 
-				if (filter instanceof UIDSFilterDescription)
-					currentSet.add(((UIDSFilterDescription) filter).getInternalName());
+				if (filter instanceof MapFilterDescription)
+					currentSet.add(((MapFilterDescription) filter).getInternalName());
 				else
-					currentSet.add(((UIFilterDescription) filter).getInternalName());
+					currentSet.add(((FilterDescription) filter).getInternalName());
 			}
 		} else
 			currentSet.add(NODATASETWARNING);

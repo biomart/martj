@@ -33,7 +33,7 @@ import javax.swing.JTextField;
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Widget with a label and text entry area which adds/removes
@@ -90,7 +90,7 @@ public class TextFilterWidget
    * @param query
    * @param filterDescription
    */
-  public TextFilterWidget(Query query, UIFilterDescription filterDescription) {
+  public TextFilterWidget(Query query, FilterDescription filterDescription) {
 
     super(query, filterDescription);
     setLayout(new BoxLayout(this, BoxLayout.X_AXIS));

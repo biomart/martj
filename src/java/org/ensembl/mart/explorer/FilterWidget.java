@@ -23,7 +23,7 @@ import java.beans.PropertyChangeListener;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * Base class for FilterWidgets.
@@ -31,13 +31,13 @@ import org.ensembl.mart.lib.config.UIFilterDescription;
 public abstract class FilterWidget extends InputPage
 implements PropertyChangeListener {
 
-  protected UIFilterDescription filterDescription;
+  protected FilterDescription filterDescription;
 
 	/**
 	 * @param query
 	 * @param name
 	 */
-	public FilterWidget(Query query, UIFilterDescription filterDescription) {
+	public FilterWidget(Query query, FilterDescription filterDescription) {
 		
     super(query, filterDescription.getDisplayName() );
     this.filterDescription = filterDescription;
@@ -49,7 +49,7 @@ implements PropertyChangeListener {
   /**
    * @return
    */
-  public UIFilterDescription getFilterDescription() {
+  public FilterDescription getFilterDescription() {
     return filterDescription;
   }
 

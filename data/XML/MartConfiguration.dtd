@@ -7,7 +7,7 @@
 <!-- Ensembl Source, Homepage, and LinkoutURL for AttributeDescriptions -->
 
 <!-- Top-level Objects --> 
-<!ELEMENT MartConfiguration (UIFilterDescription, Dataset+)>
+<!ELEMENT MartConfiguration (FilterDescription, Dataset+)>
 <!ATTLIST MartConfiguration %desc_data;>
                    
 <!ELEMENT Dataset (Option*, DefaultFilter*, StarBase+, PrimaryKey+, FilterPage+, AttributePage+)>
@@ -37,14 +37,14 @@
                        tableConstraintModifier CDATA #IMPLIED
                        fieldNameModifier CDATA #IMPLIED> 
 
-<!ELEMENT FilterCollection (UIFilterDescription|UIDSFilterDescription|UIDSFilterDescription|UIFilterDescription)+>
+<!ELEMENT FilterCollection (FilterDescription|MapFilterDescription|MapFilterDescription|FilterDescription)+>
 <!ATTLIST FilterCollection
                    %desc_data;
                    filterSetName       CDATA #IMPLIED
                    type                CDATA #REQUIRED>
                     
-<!ELEMENT UIFilterDescription (Option)*>
-<!ATTLIST UIFilterDescription
+<!ELEMENT FilterDescription (Option)*>
+<!ATTLIST FilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
                    fieldName          CDATA #REQUIRED
@@ -53,8 +53,8 @@
                    tableConstraint    CDATA #IMPLIED
                    optionName         CDATA #IMPLIED>
 
-<!ELEMENT UIDSFilterDescription (Option)*>
-<!ATTLIST UIDSFilterDescription
+<!ELEMENT MapFilterDescription (Option)*>
+<!ATTLIST MapFilterDescription
                    %desc_data;
                    type               CDATA #REQUIRED
                    filterSetReq       CDATA #IMPLIED
@@ -71,13 +71,13 @@
 <!ATTLIST DSAttributeGroup %desc_data;
                            handler CDATA #IMPLIED>
 
-<!ELEMENT AttributeCollection (UIAttributeDescription+)>
+<!ELEMENT AttributeCollection (AttributeDescription+)>
 <!ATTLIST AttributeCollection
                   %desc_data;
                    maxSelect    CDATA #IMPLIED>
 
-<!ELEMENT UIAttributeDescription EMPTY>
-<!ATTLIST UIAttributeDescription
+<!ELEMENT AttributeDescription EMPTY>
+<!ATTLIST AttributeDescription
                     %desc_data;
                     fieldName          CDATA #REQUIRED
                     tableConstraint  CDATA #IMPLIED
@@ -101,5 +101,5 @@
 				ref CDATA #REQUIRED>
 
 
-<!ELEMENT DefaultFilter (UIFilterDescription)>
+<!ELEMENT DefaultFilter (FilterDescription)>
 <!ATTLIST DefaultFilter value CDATA #REQUIRED>

@@ -77,8 +77,8 @@ public class Query {
   	}
   	
   	if (oq.hasDomainSpecificFilters) {
-      DomainSpecificFilter[] odsfilts = oq.getDomainSpecificFilters();
-      DomainSpecificFilter[] ndsfilts = new DomainSpecificFilter[odsfilts.length];
+      MapFilter[] odsfilts = oq.getDomainSpecificFilters();
+      MapFilter[] ndsfilts = new MapFilter[odsfilts.length];
       System.arraycopy(odsfilts, 0, ndsfilts,0,odsfilts.length);
   		setDomainSpecificFilters(ndsfilts);
     }
@@ -252,23 +252,23 @@ public class Query {
   }
 
   /**
-   * get all DomainSpecificFilter objects as a DomainSpecificFilter[] Array
+   * get all MapFilter objects as a MapFilter[] Array
    * 
-   * @return DomainSpecificFilter[] dsfilters
+   * @return MapFilter[] dsfilters
    */
-  public DomainSpecificFilter[] getDomainSpecificFilters() {
-  	DomainSpecificFilter[] dsf = new DomainSpecificFilter[dsfilters.size()];
+  public MapFilter[] getDomainSpecificFilters() {
+  	MapFilter[] dsf = new MapFilter[dsfilters.size()];
   	dsfilters.toArray(dsf);
   	return dsf;
   }
   
   /**
-   * set an entire list of DomainSpecificFilter objects
+   * set an entire list of MapFilter objects
    * subsequent calls to setDomainSpecificFilter will add to what was added before
    * 
-   * @param DomainSpecificFilter[] dsfilters
+   * @param MapFilter[] dsfilters
    */
-  public void setDomainSpecificFilters(DomainSpecificFilter[] dsfilters) {
+  public void setDomainSpecificFilters(MapFilter[] dsfilters) {
     Object old = getDomainSpecificFilters();
   	hasDomainSpecificFilters = true;
   	this.dsfilters.addAll(Arrays.asList(dsfilters));
@@ -277,11 +277,11 @@ public class Query {
   }
   
   /**
-   * add a single DomainSpecificFilter object
+   * add a single MapFilter object
    * 
-   * @param DomainSpecificFilter dsfilter
+   * @param MapFilter dsfilter
    */
-  public void addDomainSpecificFilter(DomainSpecificFilter dsfilter) {
+  public void addDomainSpecificFilter(MapFilter dsfilter) {
     
     hasDomainSpecificFilters = true;
    	dsfilters.add(dsfilter);
@@ -477,7 +477,7 @@ public class Query {
 		
 		if (hasDomainSpecificFilters) {
 			for (int i = 0, n = dsfilters.size(); i < n; i++) {
-				DomainSpecificFilter element = (DomainSpecificFilter) dsfilters.get(i);
+				MapFilter element = (MapFilter) dsfilters.get(i);
 				tmp = (31 * tmp) + element.hashCode();
       }
 		}
@@ -487,7 +487,7 @@ public class Query {
 	
 	private List attributes = new Vector();
 	private List filters = new Vector();
-  private List dsfilters = new Vector(); // will hold DomainSpecificFilter objects
+  private List dsfilters = new Vector(); // will hold MapFilter objects
   private List unprocessedfilters = new Vector(); // will hold non STRING type IDListFilter objects
 
   private boolean hasDomainSpecificFilters = false; // will be set to true if a DomainSpecificFilterObject is added

@@ -44,8 +44,8 @@ public class FilterSetDescription extends BaseConfigurationObject {
 	 * and fieldNameModifier defined.
 	 * 
 	 * @param internalName - name to internally reference the FilterSetDescription
-	 * @param tableConstraintModifier - string used to further qualify the tableConstraint for a UIFilterDescription.
-	 * @param fieldNameModifier - string used to further qualify the fieldName for a UIFilterDescription.
+	 * @param tableConstraintModifier - string used to further qualify the tableConstraint for a FilterDescription.
+	 * @param fieldNameModifier - string used to further qualify the fieldName for a FilterDescription.
 	 * 
 	 * @throws ConfigurationException when any of the three values are null.
 	 */
@@ -57,8 +57,8 @@ public class FilterSetDescription extends BaseConfigurationObject {
 	 * Constructor for a fully defined FilterSetDescription.
 	 * 
 	 * @param internalName - name to internally reference the FilterSetDescription.
-	 * @param tableConstraintModifier - string used to further qualify the tableConstraint for a UIFilterDescription. 
-	 * @param fieldNameModifier - string used to further qualify the fieldName for a UIFilterDescription.
+	 * @param tableConstraintModifier - string used to further qualify the tableConstraint for a FilterDescription. 
+	 * @param fieldNameModifier - string used to further qualify the fieldName for a FilterDescription.
 	 * @param displayName - information to display in a UI
 	 * @param description - description of the FilterSet.
 	 * 
@@ -133,7 +133,7 @@ public class FilterSetDescription extends BaseConfigurationObject {
 	
 	public static final List SUPPORTED_MOD = Collections.unmodifiableList(Arrays.asList( new String[] {"field", "table" } ) );
 	
-	//static enums for UIFilterDescription FilterSetRequirements
+	//static enums for FilterDescription FilterSetRequirements
 	public static final String MODFIELDNAME = "field";
 	public static final String MODTABLECONSTRAINT = "table";
 }

@@ -150,14 +150,14 @@ public class AttributePage extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular UIAttributeDescription.
+		* Convenience method for non graphical UI.  Allows a call against the AttributePage for a particular AttributeDescription.
 	 *  Note, it is best to first call containsUIAttributeDescription,  
-		*  as there is a caching system to cache a UIAttributeDescription during a call to containsUIAttributeDescription.
+		*  as there is a caching system to cache a AttributeDescription during a call to containsUIAttributeDescription.
 		*  
-		* @param internalName name of the requested UIAttributeDescription
-		* @return UIAttributeDescription requested, or null
+		* @param internalName name of the requested AttributeDescription
+		* @return AttributeDescription requested, or null
 		*/
-	public UIAttributeDescription getUIAttributeDescriptionByName(String internalName) {
+	public AttributeDescription getUIAttributeDescriptionByName(String internalName) {
 		if ( containsUIAttributeDescription(internalName) )
 			return lastAtt;
 		else
@@ -165,11 +165,11 @@ public class AttributePage extends BaseConfigurationObject {
 	}
 
 	/**
-		* Convenience method for non graphical UI.  Can determine if the AttributePage contains a specific UIAttributeDescription.
+		* Convenience method for non graphical UI.  Can determine if the AttributePage contains a specific AttributeDescription.
 		*  As an optimization for initial calls to containsUIAttributeDescription with an immediate call to getUIAttributeDescriptionByName if
-		*  found, this method caches the UIAttributeDescription it has found.
+		*  found, this method caches the AttributeDescription it has found.
 		* 
-		* @param internalName name of the requested UIAttributeDescription
+		* @param internalName name of the requested AttributeDescription
 		* @return boolean, true if found, false if not.
 		*/
 	public boolean containsUIAttributeDescription(String internalName){
@@ -199,7 +199,7 @@ public class AttributePage extends BaseConfigurationObject {
 	/**
 	 * Convenience method. Returns all of the UIAttributeDescriptions contained in all of the AttributeGroups.
 	 * 
-	 * @return List of UIAttributeDescription objects
+	 * @return List of AttributeDescription objects
 	 */
 	public List getAllUIAttributeDescriptions() {
 		List atts = new ArrayList();
@@ -215,7 +215,7 @@ public class AttributePage extends BaseConfigurationObject {
 	}
 
 	/**
-	 * Returns a AttributeGroup for a particular Attribute Description (UIAttributeDescription or UIDSAttributeDescription)
+	 * Returns a AttributeGroup for a particular Attribute Description (AttributeDescription or UIDSAttributeDescription)
 	 * based on its internalName.
 	 * 
 	 * @param internalName - String internalname for which a group is requested
@@ -252,7 +252,7 @@ public class AttributePage extends BaseConfigurationObject {
 	}
   
 	/**
-	 * Returns a AttributeCollection for a particular Attribute Description (UIAttributeDescription or UIDSAttributeDescription)
+	 * Returns a AttributeCollection for a particular Attribute Description (AttributeDescription or UIDSAttributeDescription)
 	 * based on its internalName.
 	 * 
 	 * @param internalName - String internalname for which a collection is requested
@@ -313,8 +313,8 @@ private int agroupRank = 0;
 	private TreeMap attributeGroups = new TreeMap();
 	private Hashtable attGroupNameMap = new Hashtable();
 
-	//cache one UIAttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
-	private UIAttributeDescription lastAtt = null;
+	//cache one AttributeDescription object for call to containsUIAttributeDescription or getUIAttributeDescriptionByName
+	private AttributeDescription lastAtt = null;
 	
 	//cache one AttributeGroup for call to getGroupForAttribute
 	private AttributeGroup lastGroup = null;

@@ -31,7 +31,7 @@ import javax.swing.JRadioButton;
 import org.ensembl.mart.lib.BooleanFilter;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.Option;
-import org.ensembl.mart.lib.config.UIFilterDescription;
+import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
  * A boolean filter widget has a description and three radio buttons;
@@ -82,7 +82,7 @@ implements PropertyChangeListener , ActionListener{
    * @param query
    * @param filterDescription
    */
-  public BooleanFilterWidget(Query query, UIFilterDescription filterDescription) {
+  public BooleanFilterWidget(Query query, FilterDescription filterDescription) {
     super(query, filterDescription);
     
     
