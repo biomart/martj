@@ -382,7 +382,7 @@ public class QueryEditor extends JPanel {
     AdaptorManager dvs = testDatasetConfigSettings();
     final QueryEditor editor = new QueryEditor(null, dvs);
     editor.setName("test_query");
-    editor.setPreferredSize(new Dimension(900,700));
+    editor.setPreferredSize(new Dimension(1024, 768));
 
     Box p = Box.createVerticalBox();
     p.add(editor);
