@@ -140,7 +140,7 @@ public class MartCompleter implements ReadlineCompleter {
 	public MartCompleter(CompositeDSViewAdaptor adaptorManager) throws ConfigurationException {
 		this.adaptorManager = adaptorManager;
 
-		if (adaptorManager.getDatasetInternalNames().length > 0) {
+		if (adaptorManager.getDatasetNames().length > 0) {
 			DatasetView[] dsets = adaptorManager.getDatasetViews();
 			for (int i = 0, n = dsets.length; i < n; i++) {
 				DatasetView dataset = dsets[i];

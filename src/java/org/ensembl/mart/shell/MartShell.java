@@ -530,7 +530,7 @@ public class MartShell {
 
     try {
       // load help file
-      LoadHelpFiles();
+      loadHelpFiles();
 
       //display startup information
       System.out.println();
@@ -882,7 +882,7 @@ public class MartShell {
     return Readline.readline("% ", historyOn);
   }
 
-  private String NormalizeCommand(String command) {
+  private String normalizeCommand(String command) {
     String normalizedcommand = null;
 
     if (command.endsWith(LINEEND))
@@ -895,7 +895,7 @@ public class MartShell {
 
   public String Help(String command) throws InvalidQueryException {
     if (!helpLoaded)
-      LoadHelpFiles();
+      loadHelpFiles();
 
     StringBuffer buf = new StringBuffer();
 
@@ -951,7 +951,7 @@ public class MartShell {
     }
   }
 
-  private void LoadHelpFiles() throws InvalidQueryException {
+  private void loadHelpFiles() throws InvalidQueryException {
     URL help = ClassLoader.getSystemResource(HELPFILE);
     URL dshelp = ClassLoader.getSystemResource(DSHELPFILE);
     URL helpsupport = ClassLoader.getSystemResource(HELPSUPPORT);
@@ -982,7 +982,7 @@ public class MartShell {
     helpLoaded = true;
   }
 
-  private void PageOutput(String[] lines) {
+  private void pageOutput(String[] lines) {
     int linesout = 0;
     for (int i = 0, n = lines.length; i < n; i++) {
       if (linesout > MAXLINECOUNT) {
@@ -1005,7 +1005,7 @@ public class MartShell {
     }
   }
 
-  private void ListRequest(String command) throws InvalidQueryException, ConfigurationException {
+  private void listRequest(String command) throws InvalidQueryException, ConfigurationException {
     System.out.println();
     String[] toks = command.split("\\s+");
 
@@ -1029,14 +1029,14 @@ public class MartShell {
         throw new InvalidQueryException("Invalid list command recieved: " + command + "\n");
 
       if (lines != null) {
-        PageOutput(lines);
+        pageOutput(lines);
       }
     } else
       throw new InvalidQueryException("Invalid list command recieved: " + command + "\n");
     System.out.println();
   }
 
-  private void DescribeRequest(String command) throws InvalidQueryException, ConfigurationException {
+  private void describeRequest(String command) throws InvalidQueryException, ConfigurationException {
     StringTokenizer toks = new StringTokenizer(command, " ");
     int tokCount = toks.countTokens();
     toks.nextToken(); // skip describe
@@ -1055,7 +1055,7 @@ public class MartShell {
       } else if (request.equalsIgnoreCase(DATASETREQ)) {
         String[] lines = msl.DescribeDataset(name);
 
-        PageOutput(lines);
+        pageOutput(lines);
       } else if (request.equalsIgnoreCase(FILTERREQ)) {
         if (name == null)
           throw new InvalidQueryException("Invalid Describe filter request " + command + "\n" + Help(DESCC));
@@ -2102,34 +2102,34 @@ public class MartShell {
     if (cLen == 0)
       return;
     else if (command.startsWith(USEC))
-      useRequest(NormalizeCommand(command));
+      useRequest(normalizeCommand(command));
     else if (command.startsWith(ENVC))
-      envRequest(NormalizeCommand(command));
+      envRequest(normalizeCommand(command));
     else if (command.startsWith(HELPC))
-      System.out.print(Help(NormalizeCommand(command)));
+      System.out.print(Help(normalizeCommand(command)));
     else if (command.startsWith(DESCC))
-      DescribeRequest(NormalizeCommand(command));
+      describeRequest(normalizeCommand(command));
     else if (command.startsWith(LISTC))
-      ListRequest(NormalizeCommand(command));
+      listRequest(normalizeCommand(command));
     else if (command.startsWith(ADDC))
-      addRequest(NormalizeCommand(command));
+      addRequest(normalizeCommand(command));
     else if (command.startsWith(REMOVEC))
-      removeRequest(NormalizeCommand(command));
+      removeRequest(normalizeCommand(command));
     else if (command.startsWith(SETC))
-      setRequest(NormalizeCommand(command));
+      setRequest(normalizeCommand(command));
     else if (command.startsWith(UNSETC))
-      unsetRequest(NormalizeCommand(command));
+      unsetRequest(normalizeCommand(command));
     else if (command.startsWith(UPDATEC))
-      updateRequest(NormalizeCommand(command));
+      updateRequest(normalizeCommand(command));
     else if (command.startsWith(HISTORYC))
-      History(NormalizeCommand(command));
+      History(normalizeCommand(command));
     else if (command.startsWith(EXECC))
-      executeRequest(NormalizeCommand(command));
+      executeRequest(normalizeCommand(command));
     else if (command.startsWith(LOADSCRPTC))
-      LoadScript(NormalizeCommand(command));
+      LoadScript(normalizeCommand(command));
     else if (command.startsWith(SAVETOSCRIPTC))
-      WriteHistory(NormalizeCommand(command));
-    else if (NormalizeCommand(command).equals(EXITC) || NormalizeCommand(command).equals(QUITC))
+      WriteHistory(normalizeCommand(command));
+    else if (normalizeCommand(command).equals(EXITC) || normalizeCommand(command).equals(QUITC))
       ExitShell();
     else if (command.startsWith(MartShellLib.GETQSTART) || command.startsWith(MartShellLib.USINGQSTART)) {
       //is it a store command
