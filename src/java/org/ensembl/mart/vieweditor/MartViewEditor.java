@@ -89,34 +89,34 @@ public class MartViewEditor extends JFrame {
         JButton button = null;
 
         //first button
-        button = makeNavigationButton("new", NEW,
+        button = makeNavigationButton("NEW", NEW,
                 "Create a new dataset view",
                 "New");
         toolBar.add(button);
 
         //second button
-        button = makeNavigationButton("open", OPEN,
+        button = makeNavigationButton("OPEN", OPEN,
                 "Open a dataset view",
                 "Open");
         toolBar.add(button);
 
         //third button
-        button = makeNavigationButton("save", SAVE,
+        button = makeNavigationButton("SAVE", SAVE,
                 "Save dataset view",
                 "Next");
         toolBar.add(button);
 
-        button = makeNavigationButton("copy", COPY,
+        button = makeNavigationButton("COPY", COPY,
                 "Copy a tree node",
                 "Copy");
         toolBar.add(button);
 
-        button = makeNavigationButton("cut", CUT,
+        button = makeNavigationButton("CUT", CUT,
                 "Cut a tree node",
                 "Cut");
         toolBar.add(button);
 
-        button = makeNavigationButton("paste", PASTE,
+        button = makeNavigationButton("PASTE", PASTE,
                 "Paste tree node",
                 "Paste");
         toolBar.add(button);
