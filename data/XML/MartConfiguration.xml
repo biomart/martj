@@ -9,7 +9,7 @@
     <FilterPage description="" displayName="Filter" internalName="default_page">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="select"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
           <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
@@ -142,7 +142,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -252,7 +252,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -293,7 +293,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <UIAttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -314,7 +314,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -372,7 +372,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -439,7 +439,7 @@
     <FilterPage description="" displayName="Filter" internalName="default_page">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="select"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
           <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
@@ -518,7 +518,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -567,10 +567,10 @@
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
@@ -610,7 +610,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <UIAttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -631,7 +631,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -665,7 +665,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -710,7 +710,7 @@
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="select"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
           <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
@@ -765,7 +765,7 @@
         <AttributeCollection description="Chromosomal Location of SNPs" displayName="Chromosome Attributes:" internalName="chromosomeatts">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="6" tableConstraint="snp_main"/>
           <UIAttributeDescription description="Chromosomal Start Coordinate" displayName="Start Position (bp)" fieldName="snp_chrom_start" internalName="chromosome_start_position" maxLength="9" tableConstraint="snp_main"/>
-          <UIAttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
+          <UIAttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="SNP IDs and Features" displayName="SNP:" internalName="snp">
@@ -821,7 +821,7 @@
         <AttributeCollection description="Chromosomal Location of SNPs" displayName="Chromosome Attributes:" internalName="chromosomeatts">
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="6" tableConstraint="snp_main"/>
           <UIAttributeDescription description="Chromosomal Start Coordinate" displayName="Start Position (bp)" fieldName="snp_chrom_start" internalName="chromosome_start_position" maxLength="9" tableConstraint="snp_main"/>
-          <UIAttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
+          <UIAttributeDescription description="Orientation of SNP on the Chromosome" displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2" tableConstraint="snp_main"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="SNP IDs and Features" displayName="SNP:" internalName="snp">
@@ -880,7 +880,7 @@
     <FilterPage description="" displayName="Filter" internalName="DefaultPage">
       <FilterGroup description="Filter for Genes in Specified Regions of the Golden Path" displayName="Region:" internalName="region">
         <FilterCollection description="Limit to Genes on a specific Chromosome. " displayName="Chromosome" internalName="chromosome" type="select">
-          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="select"/>
+          <UIFilterDescription description="Filter for Genes on a specified Chromosome" displayName="Chromosome name" fieldName="chr_name" internalName="chromosome_name" qualifier="=" type="list"/>
         </FilterCollection>
         <FilterCollection description="Limit to Genes within prescribed Chromosomal Coordinates." displayName="Base Pair" internalName="chromosome_coordinates" type="select">
           <UIFilterDescription description="Determine which base pair on the specified chromosome to begin range" displayName="Start" fieldName="gene_chrom_start" internalName="base_pair_start" qualifier="&gt;=" type="range"/>
@@ -989,7 +989,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -1087,7 +1087,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
@@ -1124,7 +1124,7 @@
         <AttributeCollection description="Details of SNP Location on Gene" displayName="SNP Location Attributes" internalName="snplocatts">
           <UIAttributeDescription description="Start of SNP on Transcript in Chromosomal Coordinates" displayName="Transcript Location (bp)" fieldName="snp_cdna_start" internalName="snp_cdna_start" maxLength="6" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of SNP on the CDS Sequence in Chromosomal Coordinates" displayName="CDS Location (bp)" fieldName="snp_cds_start" internalName="snp_cds_start" maxLength="5" tableConstraint="gene_snp_dm"/>
-          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chrom_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
+          <UIAttributeDescription description="Orientation of the SNP on the Transcript" displayName="SNP Chrom Strand" fieldName="chromosome_strand" internalName="snp_chromosome_strand" maxLength="2" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Location of the SNP in the peptide" displayName="Peptide Location (aa)" fieldName="aa_position" internalName="snp_peptide_start" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Start of the SNP on the Chromosome in Chromosomal Coordinates" displayName="Chromosome Location (bp)" fieldName="snp_chrom_start" internalName="snp_start_chromosome" maxLength="9" tableConstraint="gene_snp_dm"/>
           <UIAttributeDescription description="Contig containing the SNP" displayName="Contig" fieldName="contig" internalName="snp_contig" maxLength="9" tableConstraint="gene_snp_dm"/>
@@ -1143,10 +1143,10 @@
       <AttributeGroup description="Attributes relating to the location of genes on the golden path." displayName="Region:" internalName="region">
         <AttributeCollection description="Attributes related to chromosomal positioning of genes." displayName="Chromosome Attributes:" internalName="chromosome_attributes">
           <UIAttributeDescription description="&quot;Chromosome Name&quot;" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome" maxLength="12"/>
-          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chrom_start" maxLength="9"/>
-          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chrom_end" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chrom_strand" maxLength="2"/>
-          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chrom_band" maxLength="7"/>
+          <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start" maxLength="9"/>
+          <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromosome_end" maxLength="9"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
       <AttributeGroup description="Features of Genes" displayName="GENE:" internalName="GENE">
@@ -1179,7 +1179,7 @@
           <UIAttributeDescription description="Chromosome Name" displayName="Chromosome Name" fieldName="chr_name" internalName="chromosome_name" maxLength="12"/>
           <UIAttributeDescription description="Start Coordinate of the gene in chromosomal coordinates." displayName="Start Position (bp)" fieldName="gene_chrom_start" internalName="chromosome_start_position" maxLength="9"/>
           <UIAttributeDescription description="End Coordinate of the gene in chromosomal coordinates." displayName="End Position (bp)" fieldName="gene_chrom_end" internalName="chromomsome_end_position" maxLength="9"/>
-          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chrom_strand" internalName="chromosome_strand" maxLength="2"/>
+          <UIAttributeDescription description="Orientation of genes on chromosome." displayName="Strand" fieldName="chromosome_strand" internalName="chromosome_strand" maxLength="2"/>
           <UIAttributeDescription description="Band of chromosome where genes occur." displayName="Band" fieldName="band" internalName="chromosome_band" maxLength="7"/>
         </AttributeCollection>
       </AttributeGroup>
