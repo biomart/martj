@@ -84,17 +84,17 @@ public class DatasetViewWidget
    * Opens DatasetViewSettings dialog.
    */
   public void doChange() {
-    
+
     DatasetView oldDsv = query.getDatasetView();
-    
-    datasetViewSettings.setSelected( oldDsv );
+
+    datasetViewSettings.setSelected(oldDsv);
 
     DatasetView dsv = null;
     if (datasetViewSettings.showDialog(this)) {
-      
+
       dsv = datasetViewSettings.getSelected();
-      
-      if ( oldDsv != dsv
+
+      if (oldDsv != dsv
         && (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
 
         int o =
@@ -112,10 +112,12 @@ public class DatasetViewWidget
 
       query.clear();
       query.setDatasetView(dsv);
-      query.setPrimaryKeys(dsv.getPrimaryKeys());
-      query.setStarBases(dsv.getStarBases());
-      query.setDataset(dsv.getDataset());
+      if (dsv != null) {
 
+        query.setPrimaryKeys(dsv.getPrimaryKeys());
+        query.setStarBases(dsv.getStarBases());
+        query.setDataset(dsv.getDataset());
+      }
     }
 
   }
@@ -136,8 +138,6 @@ public class DatasetViewWidget
     f.setVisible(true);
 
   }
-
-
 
   /**
    * Responds to a change in dataset view on the query. Updates the state of

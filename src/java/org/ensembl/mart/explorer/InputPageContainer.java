@@ -19,7 +19,6 @@
 package org.ensembl.mart.explorer;
 
 import java.awt.CardLayout;
-import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
@@ -53,9 +52,9 @@ public class InputPageContainer
     QueryTreeView tree,
     MartSettings martManager,
     DatasetViewSettings datasetViewSettings) {
-    
+
     super();
-    
+
     if (tree != null)
       tree.addTreeSelectionListener(this);
     setLayout(cardLayout);
@@ -65,6 +64,9 @@ public class InputPageContainer
     add(
       new DatasourceWidget(query, martManager),
       TreeNodeData.DATASOURCE.getLabel());
+    add(
+      new DatasetWidget(query),
+      TreeNodeData.DATASET.getLabel());
     add(
       new AttributesWidget(query, datasetViewAdaptor, tree),
       TreeNodeData.ATTRIBUTES.getLabel());
