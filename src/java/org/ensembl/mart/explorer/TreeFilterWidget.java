@@ -46,7 +46,6 @@ import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.util.LoggingUtil;
 
-
 /**
  * Represents a set of user options as a tree.
  * Component consists of a label, text area and button. 
@@ -59,11 +58,11 @@ public class TreeFilterWidget extends FilterWidget {
    */
   public static void main(String[] args)
     throws org.ensembl.mart.lib.config.ConfigurationException {
-  
+
     // switch on logging for test purposes.
     LoggingUtil.setAllRootHandlerLevelsToFinest();
     Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
-  
+
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
@@ -78,15 +77,17 @@ public class TreeFilterWidget extends FilterWidget {
         "someTableConstraint",
         null,
         "someDescription");
-  
+
     TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd);
-  
+
     JFrame f = new JFrame("Tree Filter - test");
     f.getContentPane().add(tfw);
     f.pack();
     f.setVisible(true);
-  
+
   }
+
+  private Feedback feedback = new Feedback(this);
 
   private HashSet allOptions;
 
@@ -304,7 +305,9 @@ public class TreeFilterWidget extends FilterWidget {
   }
 
   /**
-   * 
+   * Callback method called in response to user selecting an item.
+   * Updates query by removing any relevant query and adding a new one, also
+   * updates other widgets with push options.
    * @param option should be one of the options currently available to this filter.
    * @throws IllegalArgumentException if option unavailable in filter.
    */
@@ -319,35 +322,44 @@ public class TreeFilterWidget extends FilterWidget {
 
     updateDisplay(option);
 
-    Option old = this.option;
     this.option = option;
 
     unassignPushOptions();
 
-    Filter oldFilter = filter;
+    if (filter != null)
+      query.removeFilter(filter);
+    filter = null;
+    
+    if (option != nullOption) {
 
-    if (option == nullOption) {
+      assignPushOptions(option.getPushActions());
 
-      setFilter(null);
+      String tmp = option.getValueFromContext();
+      String value = (tmp != null && !"".equals(tmp)) ? tmp : null;
 
-    } else {
-
-      String value = null;
-      if (option != null) {
-        String tmp = option.getValueFromContext();
-        if (tmp != null && !"".equals(tmp)) {
-          value = tmp;
-        }
-
-        if (value != null)
-          setFilter(
+      if (value != null) {
+        
+        if (filterDescription.getField() == null) {
+          String s = 
+          "Can't add filter because of configuration problem in DatsetView." ;          String s2 = s + "filterDescription.field==null. "
+            + " filterDescription="+filterDescription + ", option.getValueFromContext()=" + value;
+          logger.warning( s2 );
+          feedback.warn( s );
+          
+          // tidy up after disovering problem. Force the selected item
+          // to be removed.
+          lastSelectedOption = option;
+          setOption( nullOption );
+          
+        } else {
+          filter =
             new BasicFilter(
               filterDescription.getField(),
               option.getTableConstraint(),
               "=",
-              value));
-
-        assignPushOptions(option.getPushActions());
+              value);
+          query.addFilter(filter);
+        }
       }
     }
 
