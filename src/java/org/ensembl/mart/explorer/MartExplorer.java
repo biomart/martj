@@ -46,6 +46,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 
+import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -96,7 +97,12 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   private Feedback feedback = new Feedback(this);
 
+
   public static void main(String[] args) throws ConfigurationException {
+
+    // enable logging messages
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
 
     if (!LoggingUtil.isLoggingConfigFileSet())
       Logger.getLogger("org.ensembl.mart").setLevel(Level.WARNING);
@@ -192,9 +198,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     }
   };
 
-  private Action executeAction = new AbstractAction("Execute", createImageIcon("run.png")) {
+  private Action executeAction = new AbstractAction("Execute", createImageIcon("run.gif")) {
     public void actionPerformed(ActionEvent event) {
-      doExecute();
+      doPreview();
     }
   };
 
@@ -288,13 +294,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     JMenu query = new JMenu("Query");
 
-    JMenuItem execute = new JMenuItem("Execute");
-    execute.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        doExecute();
-      }
-
-    });
+    JMenuItem execute = new JMenuItem( executeAction);
     query.add(execute).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK));
 
@@ -340,10 +340,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
   /**
    * 
    */
-  protected void doExecute() {
-    // TODO Auto-generated method stub
+  protected void doPreview() {
     if (isQueryEditorSelected())
-      getSelectedQueryEditor().doExecute();
+      getSelectedQueryEditor().doPreview();
   }
 
   /**

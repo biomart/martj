@@ -393,7 +393,8 @@ public class Query {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-		buf.append(" dataset=").append(dataset);
+    buf.append(" datasetView=").append( datasetView==null ? "unset" : datasetView.getInternalName() );
+    buf.append(" dataset=").append(dataset);
 		buf.append(", dataSource=").append(dataSource);
 		buf.append(", starBases=[").append(StringUtil.toString(starBases));
 		buf.append("], primaryKeys=[").append(StringUtil.toString(primaryKeys));

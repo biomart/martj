@@ -39,7 +39,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.sql.DataSource;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
@@ -51,16 +50,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
-import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
-import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.FormatException;
 import org.ensembl.mart.lib.FormatSpec;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryListener;
-import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -89,107 +84,9 @@ import org.ensembl.util.ExtensionFileFilter;
  */
 public class QueryEditor extends JPanel {
 
-  /**
-   * An instance of this class is used to determine if the tmp results file
-   * is up tdate with regard to the query. stale = true if the query changes
-   * after the listener is addded.
-   */
-  private class ResultsStatus implements QueryListener {
-
-    private boolean stale = true;
-
-    public ResultsStatus() {
-    }
-
-    public void queryNameChanged(
-      Query sourceQuery,
-      String oldName,
-      String newName) {
-    }
-
-    public void datasetChanged(
-      Query sourceQuery,
-      String oldDatasetInternalName,
-      String newDatasetInternalName) {
-      stale = true;
-    }
-
-    public void datasourceChanged(
-      Query sourceQuery,
-      DataSource oldDatasource,
-      DataSource newDatasource) {
-      stale = true;
-    }
-
-    public void attributeAdded(
-      Query sourceQuery,
-      int index,
-      Attribute attribute) {
-      stale = true;
-    }
-
-    public void attributeRemoved(
-      Query sourceQuery,
-      int index,
-      Attribute attribute) {
-      stale = true;
-    }
-
-    public void filterAdded(Query sourceQuery, int index, Filter filter) {
-      stale = true;
-    }
-
-    public void filterRemoved(Query sourceQuery, int index, Filter filter) {
-      stale = true;
-    }
-
-    public void filterChanged(
-      Query sourceQuery,
-      Filter oldFilter,
-      Filter newFilter) {
-      stale = true;
-    }
-
-    public void sequenceDescriptionChanged(
-      Query sourceQuery,
-      SequenceDescription oldSequenceDescription,
-      SequenceDescription newSequenceDescription) {
-      stale = true;
-    }
-
-    public void limitChanged(Query query, int oldLimit, int newLimit) {
-      stale = true;
-    }
-
-    public void starBasesChanged(
-      Query sourceQuery,
-      String[] oldStarBases,
-      String[] newStarBases) {
-      stale = true;
-    }
-
-    public void primaryKeysChanged(
-      Query sourceQuery,
-      String[] oldPrimaryKeys,
-      String[] newPrimaryKeys) {
-      stale = true;
-    }
-
-    public void setStale(boolean v) {
-      this.stale = v;
-    }
-
-    public boolean isStale() {
-      return stale;
-    }
-
-    public void datasetViewChanged(
-      Query query,
-      DatasetView oldDatasetView,
-      DatasetView newDatasetView) {
-    }
-  }
-
+  private int previewLimit    = 10000;
+  private int maxPreviewBytes = 100000;
+  
   private AdaptorManager datasetViewSettings;
 
   private QueryEditorContext editorManager;
@@ -230,9 +127,7 @@ public class QueryEditor extends JPanel {
   /** File for temporarily storing results in while this instance exists. */
   private File tmpFile;
 
-  private ResultsStatus resultsStatus = new ResultsStatus();
-
-  private int maxPreviewBytes = 10000;
+  
 
   private JSplitPane leftAndRight;
 
@@ -252,7 +147,6 @@ public class QueryEditor extends JPanel {
     this.datasetViewSettings = datasetViewSettings;
     this.editorManager = editorManager;
     this.query = new Query();
-    this.query.addQueryChangeListener(resultsStatus);
 
     JComponent toolBar = createToolbar();
     QueryTreeView treeView = new QueryTreeView(query, datasetViewSettings.getRootAdaptor());
@@ -362,7 +256,7 @@ public class QueryEditor extends JPanel {
    * Save results to file, user must select file if no output file selected. 
    */
   public void doSaveResults() {
-    runQuery(true, false);
+    runQuery(true, false, 0);
   }
 
   /**
@@ -370,7 +264,7 @@ public class QueryEditor extends JPanel {
    */
   public void doSaveResultsAs() {
 
-    runQuery(true, true);
+    runQuery(true, true, 0);
   }
 
   /**
@@ -549,12 +443,23 @@ public class QueryEditor extends JPanel {
     return query;
   }
 
+
+  /**
+   * Executes query and writes results to preview panel, limits number
+   * of result rows printed to previewLimit.
+   *
+   */
+  public void doPreview() {
+    runQuery(false, false, previewLimit);
+  }
+
+
   /**
    * Executes query and writes results to temporary file.
    *
    */
   public void doExecute() {
-    runQuery(false, false);
+    runQuery(false, false, 0);
   }
 
   /**
@@ -569,8 +474,9 @@ public class QueryEditor extends JPanel {
    * 
    * @param save whether results file should be saved
    * @param changeResultsFile if true the results file chooser is displayed
+   * @param limit max number of rows in result set
    */
-  private void runQuery(final boolean save, final boolean changeResultsFile) {
+  private void runQuery(final boolean save, final boolean changeResultsFile, final int limit) {
 
     // Possible OPTIMISATION could write out to a dual outputStream, one outputStream goes
     // to a file, the other is a pipe into the application. This would prevent the
@@ -611,7 +517,7 @@ public class QueryEditor extends JPanel {
       new Thread() {
 
         public void run() {
-          execute();
+          execute(limit);
           // copy tmp file to results file if necessary
           try {
             if (save)
@@ -658,7 +564,7 @@ public class QueryEditor extends JPanel {
   /**
    * 
    */
-  private void execute() {
+  private void execute(final int limit) {
 
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
@@ -667,11 +573,6 @@ public class QueryEditor extends JPanel {
       feedback.warning("Attributes must be set before executing query.");
       return;
     }
-
-    // TODO check output format set query.
-
-    if (!resultsStatus.isStale())
-      return;
 
     try {
 
@@ -683,9 +584,14 @@ public class QueryEditor extends JPanel {
           new FileOutputStream(tmpFile),
           maxPreviewBytes);
 
+      
+      int oldLimit = query.getLimit();
+      if ( limit>0 ) query.setLimit( limit );
+
       engine.execute(query, FormatSpec.TABSEPARATEDFORMAT, os);
       os.close();
-      resultsStatus.setStale(false);
+      
+      if ( limit>0 ) query.setLimit( oldLimit );
 
     } catch (SequenceException e) {
       feedback.warning(e);
@@ -815,5 +721,21 @@ public class QueryEditor extends JPanel {
     return dvs;
 
   }
+
+	/**
+   * When doPreview() is called a limit is set on the query with this value.
+	 * @return max number of rows in preview results.
+	 */
+	public int getPreviewLimit() {
+		return previewLimit;
+	}
+
+	/**
+	 * Set the maximum number of rows to be displayed during a doPreview() cal.
+   * @return max number of rows to include in preview results pane.
+	 */
+	public void setPreviewLimit(int i) {
+		previewLimit = i;
+	}
 
 }
