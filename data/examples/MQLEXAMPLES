@@ -28,7 +28,7 @@
  using MSD.msd get pdb_id where resolution_less < 0.9;
   
  # chain examples
- using MSD.msd get pdb_id where resolution_less < 1.5 and experiment_type and has_ec_info only as q;
+ using MSD.msd get pdb_id where resolution_less < 1.5 and has_ec_info only as q;
  using Ensembl.hsapiens_gene_ensembl get sequence transcript_flanks+1000 where pdb in q;
   
  using Ensembl.hsapiens_gene_ensembl get uniprot_sptrembl where disease_gene_boolean only and chr_name=22 as q;
