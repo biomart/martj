@@ -17,9 +17,6 @@
  */
 package org.ensembl.mart.explorer;
 
-import java.sql.*;
-import java.io.*;
-
 /**
  * Interface for all QueryRunner Objects.  Defines a consistent behavior
  * for objects returned by a QueryRunnerFactory.
@@ -41,5 +38,5 @@ public interface QueryRunner {
 	 * @throws IOException
 	 * @throws InvalidQueryException
 	 */
-	public void execute(int limit) throws SQLException, SequenceException , IOException, InvalidQueryException;
+	public void execute(int limit) throws SequenceException , InvalidQueryException;
 }

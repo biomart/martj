@@ -27,10 +27,12 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.ensembl.util.SequenceUtil;
@@ -70,6 +72,17 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 			this.seqWriter = fastaWriter;
 			break;
 		}
+		
+		//resolve dataset, species, and focus
+		String[] mainTables = query.getStarBases();
+
+		for (int i = 0; i < mainTables.length; i++) {
+			if (Pattern.matches("gene", mainTables[i]))
+				dataset = mainTables[i];
+		}
+
+		StringTokenizer tokens = new StringTokenizer( dataset, "_", false);
+		species = tokens.nextToken();
 	}
 
 	private void updateQuery() {
@@ -89,7 +102,9 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
     
 	public void execute(int limit) throws SequenceException, InvalidQueryException {
 		SequenceDescription seqd = query.getSequenceDescription();
-
+    boolean moreRows = true;
+    int batchStart = 0;
+    
 		// need to know these indexes specifically
 		int queryIDindex = 0;
 		int tranIDindex = 0;
@@ -114,64 +129,74 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 
     try {
 		  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
-		  String sql = csql.toSQL();
-		  
-		  String structure_table = query.getSpecies()+"_core_"+query.getFocus()+"_structure";
-		  sql += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
-			  
-		  if (limit > 0)
-			  sql = sql+" limit "+limit;
+		  String sqlbase = csql.toSQL();
+		  String structure_table = dataset+"_structure";
+		  sqlbase += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
 
-		  logger.info( "QUERY : " + query );
-		  logger.info( "SQL : " +sql );
+     while (moreRows) {
+       String sql = sqlbase;
+       			  
+		    if (limit > 0) {
+			    sql += " limit "+limit;
+			    moreRows = false;
+		    }
+		    else {
+		    	sql += " limit "+batchStart+" , "+batchLength;
+		    	batchStart += batchLength;
+		    }
 
-			PreparedStatement ps = conn.prepareStatement( sql );
-			int p=1;
-			for( int i=0, n=query.getFilters().length; i<n; ++i) {
-				Filter f = query.getFilters()[i];
-				String value = f.getValue();
-				if ( value!=null ) {
-					logger.info("SQL (prepared statement value) : "+p+" = " + value);
-					ps.setString( p++, value);
-				}
-			}
+		    logger.info( "QUERY : " + query );
+		    logger.info( "SQL : " +sql );
+
+			  PreparedStatement ps = conn.prepareStatement( sql );
+			  int p=1;
+			  for( int i=0, n=query.getFilters().length; i<n; ++i) {
+				  Filter f = query.getFilters()[i];
+				  String value = f.getValue();
+				  if ( value!=null ) {
+					  logger.info("SQL (prepared statement value) : "+p+" = " + value);
+					  ps.setString( p++, value);
+				  }
+			  }
      
-			ResultSet rs = ps.executeQuery();
-			ResultSetMetaData rmeta = rs.getMetaData();
+			  ResultSet rs = ps.executeQuery();
+			  ResultSetMetaData rmeta = rs.getMetaData();
 				
-			// process columnNames for required attribute indices
-			for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
-				String column = rmeta.getColumnName(i);
-				if (column.equals(queryID))
-					queryIDindex = i;
+			  // process columnNames for required attribute indices
+			  for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
+				  String column = rmeta.getColumnName(i);
+				  if (column.equals(queryID))
+					  queryIDindex = i;
 			    else if (column.equals(TranscriptID))
 				    tranIDindex = i;
-				else if (column.equals(Rank))
-					rankIndex = i;
-				else if (column.equals(AssemblyColumn))
-					assemblyIndex = i;
-				else if (column.equals(coordStart))
-					startIndex = i;
-				else if (column.equals(coordEnd))
-					endIndex = i;
-				else if (column.equals(Chr))
-					chromIndex = i;
-				else if (column.equals(StrandColumn))
-					strandIndex = i;
-				else if (displayIDs.contains(column))
-					displayIDindices.add(new Integer(i));
-				else
-					otherIndices.add(new Integer(i));
-			}
-			
-			Integer lastGene = new Integer(0); // will nold last geneID when new one is encountered
-			while ( rs.next() ) {
-				Integer geneID = new Integer(rs.getInt(queryIDindex));
-				Integer tranID = new Integer(rs.getInt(tranIDindex));
-				Integer rank = new Integer(rs.getInt(rankIndex));
+				  else if (column.equals(Rank))
+					  rankIndex = i;
+				  else if (column.equals(AssemblyColumn))
+					  assemblyIndex = i;
+				  else if (column.equals(coordStart))
+					  startIndex = i;
+				  else if (column.equals(coordEnd))
+					  endIndex = i;
+				  else if (column.equals(Chr))
+					  chromIndex = i;
+				  else if (column.equals(StrandColumn))
+					  strandIndex = i;
+				  else if (displayIDs.contains(column))
+					  displayIDindices.add(new Integer(i));
+				  else
+					  otherIndices.add(new Integer(i));
+			  }
+
+        int rows = 0; //rowcount			
+			  Integer lastGene = new Integer(0); // will nold last geneID when new one is encountered
+		  	while ( rs.next() ) {
+		  		rows++;
+				  Integer geneID = new Integer(rs.getInt(queryIDindex));
+				  Integer tranID = new Integer(rs.getInt(tranIDindex));
+				  Integer rank = new Integer(rs.getInt(rankIndex));
 				
-				if (! geneiDs.containsKey(geneID)) {
-				  if (geneiDs.size() > 0) {
+				  if (! geneiDs.containsKey(geneID)) {
+				    if (geneiDs.size() > 0) {
 				      // write the previous genes data, and refresh the geneiDs TreeMap
 						  seqWriter.writeSequences(lastGene);
 						  geneiDs = new TreeMap();
@@ -183,93 +208,97 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					  atts.put(Transcripts, new TreeMap());
 					  atts.put(Assembly, rs.getString(assemblyIndex));
 					  geneiDs.put(geneID, atts);
-				}
+				  }
 				
-				Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
-				TreeMap ordtrans = (TreeMap) geneatts.get(Transcripts);
-				if (! (ordtrans.containsKey(tranID)))
-				  ordtrans.put(tranID, new Hashtable());
+				  Hashtable geneatts = (Hashtable) geneiDs.get(geneID);
+				  TreeMap ordtrans = (TreeMap) geneatts.get(Transcripts);
+				  if (! (ordtrans.containsKey(tranID)))
+				    ordtrans.put(tranID, new Hashtable());
 				
-				int start = rs.getInt(startIndex);
-				if (start > 0) {
-					// if start is not null, create a new SequenceLocation object from the chr, start, end, and strand
-					String chr = rs.getString(chromIndex);
-					int end = rs.getInt(endIndex);
-					int strand = rs.getInt(strandIndex);
+				  int start = rs.getInt(startIndex);
+				  if (start > 0) {
+					   // if start is not null, create a new SequenceLocation object from the chr, start, end, and strand
+					  String chr = rs.getString(chromIndex);
+					  int end = rs.getInt(endIndex);
+					  int strand = rs.getInt(strandIndex);
 
-					Hashtable tranatts = (Hashtable) ordtrans.get(tranID);
+					  Hashtable tranatts = (Hashtable) ordtrans.get(tranID);
                     						
-					// keep track of the lowest start and highest end for the gene
-					if (! ( geneatts.containsKey(Geneloc) ) ) {
-						geneatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
-					}
-					else {
-						SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
-						if (start < geneloc.getStart())
-							geneatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand)); // overwrite the previous copy
-						if (end > geneloc.getEnd())
-							geneatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand)); // overwrite the previous copy
-					}
+					  // keep track of the lowest start and highest end for the gene
+					  if (! ( geneatts.containsKey(Geneloc) ) ) {
+						  geneatts.put(Geneloc, new SequenceLocation(chr, start, end, strand));
+					  }
+					  else {
+						  SequenceLocation geneloc = (SequenceLocation) geneatts.get(Geneloc);
+						  if (start < geneloc.getStart())
+							  geneatts.put(Geneloc, new SequenceLocation(chr, start, geneloc.getEnd(), strand)); // overwrite the previous copy
+						  if (end > geneloc.getEnd())
+							  geneatts.put(Geneloc, new SequenceLocation(chr, geneloc.getStart(), end, strand)); // overwrite the previous copy
+					  }
 					
-					// store each exon in rank order
-					if (!( tranatts.containsKey(Exons))) {
-						TreeMap exonMap = new TreeMap();
+					  // store each exon in rank order
+					  if (!( tranatts.containsKey(Exons))) {
+						  TreeMap exonMap = new TreeMap();
 					    tranatts.put(Exons, new TreeMap());
-					}
+					  }
 					
-					// need to add this exon to the Exons
-					Hashtable exonatts = new Hashtable();
-					exonatts.put(Location, new SequenceLocation(chr, start, end, strand));
-					( (TreeMap) ( tranatts.get(Exons) ) ).put(rank, exonatts);  
-				}
+					  // need to add this exon to the Exons
+					  Hashtable exonatts = new Hashtable();
+					  exonatts.put(Location, new SequenceLocation(chr, start, end, strand));
+					  ( (TreeMap) ( tranatts.get(Exons) ) ).put(rank, exonatts);  
+				  }
 
-				Hashtable exonatts = (Hashtable) ( (TreeMap) ((Hashtable) ordtrans.get(tranID)).get(Exons) ).get(rank); // just need the information for this exon
+				  Hashtable exonatts = (Hashtable) ( (TreeMap) ((Hashtable) ordtrans.get(tranID)).get(Exons) ).get(rank); // just need the information for this exon
 				
-				//	process displayID, if necessary
-				if (! ( exonatts.containsKey(DisplayID) )) {								
-					StringBuffer displayID = new StringBuffer();
+				  //	process displayID, if necessary
+				  if (! ( exonatts.containsKey(DisplayID) )) {								
+					  StringBuffer displayID = new StringBuffer();
                 
-					for (int i = 0, n = displayIDindices.size(); i < n; i++) {
-						if (i>0) displayID.append( separator );
-						int currindex = ((Integer) displayIDindices.get(i)).intValue();
-						if ( rs.getString(currindex) != null )
-							displayID.append( rs.getString(currindex) );
-					}
+					  for (int i = 0, n = displayIDindices.size(); i < n; i++) {
+						  if (i>0) displayID.append( separator );
+						  int currindex = ((Integer) displayIDindices.get(i)).intValue();
+						  if ( rs.getString(currindex) != null )
+							  displayID.append( rs.getString(currindex) );
+					  }
 				
-					exonatts.put(DisplayID, displayID.toString());
-				}
+					  exonatts.put(DisplayID, displayID.toString());
+				  }
                    
-				// Rest can be duplicates, or novel values for a given field, collect lists of values for each field
-				// currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
+				  // Rest can be duplicates, or novel values for a given field, collect lists of values for each field
+				  // currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
 				
-				for (int i = 0, n = otherIndices.size(); i < n; i++) {
-					int currindex = ((Integer) otherIndices.get(i)).intValue();
-					if (rs.getString(currindex) != null ) { 					    
-						String field = attributes[currindex-1].getName();
-						if (! fields.contains(field)) 
-							fields.add(field);
+				  for (int i = 0, n = otherIndices.size(); i < n; i++) {
+					  int currindex = ((Integer) otherIndices.get(i)).intValue();
+					  if (rs.getString(currindex) != null ) { 					    
+						  String field = attributes[currindex-1].getName();
+						  if (! fields.contains(field)) 
+							  fields.add(field);
+						  String value = rs.getString(currindex);
 						
-						String value = rs.getString(currindex);
-						
-						if (exonatts.containsKey(field)) {
-							if (! ( (ArrayList) exonatts.get(field) ).contains(value))
-								( (ArrayList) exonatts.get(field) ).add(value);
-						}
-						else {
-							List values = new ArrayList();
-							values.add(value); 
-							exonatts.put(field, values);
-						}
-					}
-				}
+						  if (exonatts.containsKey(field)) {
+							  if (! ( (ArrayList) exonatts.get(field) ).contains(value))
+								  ( (ArrayList) exonatts.get(field) ).add(value);
+						  }
+						  else {
+							  List values = new ArrayList();
+							  values.add(value); 
+							  exonatts.put(field, values);
+						  }
+					  }
+				  }
 				
-				// add the description, if necessary
-				if (! exonatts.containsKey(Description))
-					exonatts.put( Description, seqd.getDescription() );
-			}
-		  // write the last genes data
-	    seqWriter.writeSequences(lastGene);
-	    osr.close();
+				  // add the description, if necessary
+				  if (! exonatts.containsKey(Description))
+					  exonatts.put( Description, seqd.getDescription() );
+		  	}
+		    // write the last genes data, if present
+		    if (lastGene.intValue() > 0)
+	        seqWriter.writeSequences(lastGene);
+
+        if (rows < batchLength)
+          moreRows = false;
+     }	      
+	   osr.close();
 		} catch (SQLException e) {
 			logger.warn(e.getMessage());
 			throw new InvalidQueryException(e);
@@ -278,37 +307,6 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 			throw new SequenceException(e);
     }
 	}
-	
-	private String separator;
-	private Logger logger = Logger.getLogger(TranscriptExonSeqQueryRunner.class.getName());
-	private Query query = null;
-	private FormatSpec format = null;
-	private OutputStreamWriter osr = null;
-	private Connection conn = null;
-	
-	private TreeMap geneiDs = new TreeMap(); // holds each objects information, in order
-	private List fields = new ArrayList(); // holds unique list of resultset description fields from the query
-	private DNAAdaptor dna;
-    
-	// Used for colating required fields
-	private String queryID;
-	private String coordStart, coordEnd;
-	private List displayIDs = new ArrayList();
-	private final String TranscriptID = "transcript_id";
-	private final String Rank = "rank";
-	private final String Chr =  "chr_name";
-	private final String AssemblyColumn = "assembly_type";
-	private final String StrandColumn = "exon_chrom_strand";
-    
-	// Strings for use in idattribute Hashtable keys
-	private final String Exons = "exons";
-	private final String Transcripts = "transcripts";
-	private final String Assembly = "assembly";
-	private final String Strand = "strand";	
-	private final String Geneloc = "geneloc";
-	private final String Location = "location";
-	private final String DisplayID = "displayID";
-	private final String Description = "description";
 	
 	// SeqWriter object
 	SeqWriter seqWriter; 
@@ -324,7 +322,7 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					String assemblyout = (String) geneatts.get(Assembly);
 				
 					// cache the gene sequence
-					dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+					dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 				
 					for (Iterator tranIter = ( (TreeMap) geneatts.get(Transcripts) ).keySet().iterator(); tranIter.hasNext();) {
 						Hashtable tranatts = (Hashtable) ( (TreeMap) geneatts.get(Transcripts) ).get(tranIter.next());
@@ -377,9 +375,9 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					
 							// write out the sequence
 							if (exonloc.getStrand() < 0)
-								osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
+								osr.write( SequenceUtil.reverseComplement( dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
 							else
-								osr.write( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
+								osr.write( dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
 							osr.flush();
 							osr.write("\n");
 							osr.flush();
@@ -403,7 +401,7 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 				  String assemblyout = (String) geneatts.get(Assembly);
 				
 				  // cache the gene sequence
-				  dna.CacheSequence(query.getSpecies(), geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
+				  dna.CacheSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd());
 				
 				  for (Iterator tranIter = ( (TreeMap) geneatts.get(Transcripts) ).keySet().iterator(); tranIter.hasNext();) {
 					  Hashtable tranatts = (Hashtable) ( (TreeMap) geneatts.get(Transcripts) ).get(tranIter.next());
@@ -456,9 +454,9 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 					
 						  // write out the sequence
 						  if (exonloc.getStrand() < 0)
-							  osr.write( SequenceUtil.reverseComplement( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
+							  osr.write( SequenceUtil.reverseComplement( dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) ) );
 						  else
-							  osr.write( dna.getSequence(query.getSpecies(), exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
+							  osr.write( dna.getSequence(species, exonloc.getChr(), exonloc.getStart(), exonloc.getEnd()) );
 						  osr.flush();
 						  osr.write("\n");
 						  osr.flush();
@@ -472,6 +470,40 @@ public final class TranscriptExonSeqQueryRunner implements QueryRunner {
 				throw new SequenceException(e);	
 			}		  	
 		}		  			
-	};	
+	};
+
+	private int batchLength = 200000; // number of records to process in each batch	
+	private String separator;
+	private Logger logger = Logger.getLogger(TranscriptExonSeqQueryRunner.class.getName());
+	private Query query = null;
+	private String dataset = null;
+	private String species = null;
+	private FormatSpec format = null;
+	private OutputStreamWriter osr = null;
+	private Connection conn = null;
+	
+	private TreeMap geneiDs = new TreeMap(); // holds each objects information, in order
+	private List fields = new ArrayList(); // holds unique list of resultset description fields from the query
+	private DNAAdaptor dna;
+    
+	// Used for colating required fields
+	private String queryID;
+	private String coordStart, coordEnd;
+	private List displayIDs = new ArrayList();
+	private final String TranscriptID = "transcript_id";
+	private final String Rank = "rank";
+	private final String Chr =  "chr_name";
+	private final String AssemblyColumn = "assembly_type";
+	private final String StrandColumn = "exon_chrom_strand";
+    
+	// Strings for use in idattribute Hashtable keys
+	private final String Exons = "exons";
+	private final String Transcripts = "transcripts";
+	private final String Assembly = "assembly";
+	private final String Strand = "strand";	
+	private final String Geneloc = "geneloc";
+	private final String Location = "location";
+	private final String DisplayID = "displayID";
+	private final String Description = "description";	
 }
 

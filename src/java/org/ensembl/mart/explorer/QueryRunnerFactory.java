@@ -20,8 +20,6 @@ package org.ensembl.mart.explorer;
 import java.sql.*;
 import java.io.*;
 
-import org.ensembl.util.NotImplementedYetException;
-
 /**
  * Factory class for generating QueryRunner implimenting objects 
  * based upon the specified Query and FormatSpec.
@@ -42,7 +40,7 @@ public class QueryRunnerFactory {
      *  @see Query
      *  @see FormatSpec
      */
-    public static QueryRunner getInstance(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException, NotImplementedYetException {
+    public static QueryRunner getInstance(Query q, FormatSpec f, Connection conn, OutputStream out) throws FormatException {
     	QueryRunner thisQueryRunner = null;
 		   switch (q.getType()) {
  

@@ -34,21 +34,19 @@ public final class AttributeQueryRunner implements QueryRunner {
         this.query = query;
         this.format = format;
         this.conn = conn;
-        this.os = os;
+        this.osr = new OutputStreamWriter(os);
 	}
 
-    public void execute(int limit) throws SQLException, SequenceException, IOException, InvalidQueryException {
-        OutputStreamWriter osr =  new OutputStreamWriter(os);
+    public void execute(int limit) throws SequenceException, InvalidQueryException {
+  			try {
+           CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
+            String sql = csql.toSQL();
+            if (limit > 0)
+              sql = sql+" limit "+limit;
 
-        CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
-        String sql = csql.toSQL();
-        if (limit > 0)
-            sql = sql+" limit "+limit;
+            logger.debug( "QUERY : " + query );
+            logger.debug( "SQL : " +sql );
 
-        logger.debug( "QUERY : " + query );
-        logger.debug( "SQL : " +sql );
-
-        try {
             PreparedStatement ps = conn.prepareStatement( sql );
             int p=1;
             for( int i=0, n=query.getFilters().length; i<n; ++i) {
@@ -76,17 +74,17 @@ public final class AttributeQueryRunner implements QueryRunner {
         }
         catch (IOException e) {
             logger.warn("Couldnt write to OutputStream\n"+e.getMessage());
-            throw e;
+            throw new InvalidQueryException(e);
 		} 
         catch (SQLException e) {
-            logger.warn(e.getMessage()+ " : " + sql);
-            throw e;
+            logger.warn(e.getMessage());
+            throw new InvalidQueryException(e);
         }
 	}
 
     private Logger logger = Logger.getLogger(AttributeQueryRunner.class.getName());
     private Query query = null;
     private FormatSpec format = null;
-    private OutputStream os;
+    private OutputStreamWriter osr;
     private Connection conn;
 }

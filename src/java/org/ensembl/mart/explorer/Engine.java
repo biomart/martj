@@ -108,11 +108,9 @@ public class Engine {
      * @param query - A Query Object
      * @param formatspec - A FormatSpec Object
      * @param os - An OutputStream
-     * @throws SQLException
-     * @throws SequenceException
-     * @throws IOException
-     * @throws FormatException
-     * @throws InvalidQueryException
+     * @throws FormatException - unsupported Format supplied to the QueryRunnerFactory
+     * @throws SequenceException - general Exception thrown for a variety of reasons that the SeqQueryRunners cannot write out sequence data
+     * @throws InvalidQueryException - general Exception thrown when invalid query parameters have been presented, and the resulting SQL will not work.
      * @see Query
      * @see FormatSpec
      * @see QueryRunnerFactory
@@ -120,7 +118,7 @@ public class Engine {
      * @see TabulatedQueryRunner
      */
     public void execute(Query query, FormatSpec formatspec, OutputStream os) 
-        throws SQLException, SequenceException, IOException, FormatException, InvalidQueryException, NotImplementedYetException {
+        throws FormatException, SequenceException, InvalidQueryException {
     
           Connection conn = getDatabaseConnection();
 	        QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, conn, os);
