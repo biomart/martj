@@ -17,19 +17,9 @@ Or, you can:
 
 shell> cp libJavaReadline.so $MARTJ_HOME/lib/macosx/libJavaReadline.jnilib
 
-The following instructions were pulled from the this website,
-which is not affiliated with the MartJ project:
+The following instructions were pulled from the this website
 
 http://telly.bravo5.org/blojsom/blog/?month=8&year=2004
-
-
-I've really let someone down. This blog's been up for all of a week, now, and someone's already been here looking for java-readline mac os x.
-
-And of course I didn't have this entry written just yet...
-
-The process isn't really all that hard, but it is non-obvious. Someone should probably contribute this tidbit back to the source...
-
-I found an initial set of instructions by Ian Cooke (dated September '02) that referenced only "OS X". I find things to be a fair bit simpler with Panther and DarwinPorts than Ian dealt with.
 
 For starters, you'll need to get DarwinPorts up and running if you haven't already done so. Once that's done, just do a port install readline. You should know your DarwinPorts install root once you've installed it; in my case it's /opt/local.
 
