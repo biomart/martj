@@ -43,6 +43,7 @@ public interface DatasetViewAdaptor {
    * @throws ConfigurationException
    */
   public String[] getDatasetInternalNames() throws ConfigurationException;
+  
   /**
    * Returns a DatasetView[] consisting of all DatasetView objects provided by a particular
    * DatasetViewAdaptor object.
@@ -52,12 +53,28 @@ public interface DatasetViewAdaptor {
   public DatasetView[] getDatasetViews() throws ConfigurationException;
   
   /**
+   * Determine if a DatasetViewAdaptor object contains a DatasetView with the given
+   * displayName.
+   * @param name -- String displayName of requested DatasetView
+   * @return true if supported, false otherwise
+   */
+  public boolean supportsDisplayName(String name);
+  
+  /**
    * Returns a specific DatasetView object, named by the given displayName 
    * @param name -- String displayName
    * @return DatasetView named by the given displayName
    * @throws ConfigurationException for all underlying Exceptions
    */
   public DatasetView getDatasetViewByDisplayName(String name) throws ConfigurationException;
+  
+  /**
+   * Determine if a DatasetViewAdaptor object contains a DatasetView with the given
+   * internalName.
+   * @param name -- String internalName of requested DatasetView.
+   * @return true if supported, false otherwise
+   */
+  public boolean supportsInternalName(String name);
   
   /**
    * Returns a specific DatasetView object, named by the given internalName.
