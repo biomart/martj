@@ -289,7 +289,7 @@ public class DatasetWidget
      */
   public void propertyChange(PropertyChangeEvent evt) {
 
-    if (evt.getSource() == query && evt.getPropertyName().equals("dataset")) {
+    if (evt.getSource() == query && evt.getPropertyName().equals("datasetInternalName")) {
 
       String datasetName = (String) evt.getNewValue();
 
@@ -572,5 +572,14 @@ public class DatasetWidget
   public DatasetView getDatasetView() {
     return selectedDatasetView;
   }
+
+	/**
+	 * 
+	 */
+	public void setDatasetViewByInternalName(String internalName) {
+		// TODO Auto-generated method stub
+		DatasetView dsv = (DatasetView)datasetNameToDatasetView.get( internalName);
+		setDatasetViewByInternalName( dsv.getDisplayName() );
+	}
 
 }

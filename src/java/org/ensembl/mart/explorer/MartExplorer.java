@@ -64,11 +64,7 @@ public class MartExplorer extends JFrame {
 	  a+f+os
 	 */
 
-	// TODO add buttons: execute, cancel, save results, save query
-	// TODO adout dialog
-	// TODO selecting tree node -> corresponding page to front
-
-  // TODO support boolean_list filter type
+	// TODO about dialog
 
 	// TODO list datasources
 	// TODO delete datasource
@@ -80,16 +76,11 @@ public class MartExplorer extends JFrame {
 	// TODO save query
 
 	// TODO manage datatabases: list, remove
-	// TODO user change q.dataSource, select from list [fire query at different databases]
 
-	// TODO support id list filters
 	// TODO chained queries
 	// TODO user resolve datasetView name space clashes
 	// TODO support multiple, user added, jdbc drivers [initDatabaseSettings()]
 
-	// TODO refactor tree into separate component
-
-	// TODO add user defined size for preview buffer
 	// TODO support user renaming queries 
 
 	// TODO clone query
@@ -305,37 +296,21 @@ public class MartExplorer extends JFrame {
 		});
 		query.add(removeQuery);
 
-		JMenuItem execute = new JMenuItem("Execute");
-		execute.addActionListener(new ActionListener() {
+		JMenuItem load = new JMenuItem("Load");
+		load.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
-				doExecuteQuery();
+				doLoadQueryFromMQL();
 			}
 
 		});
-		query.add(execute);
-		JMenuItem save = new JMenuItem("Save Results");
-		save.setEnabled(false);
-		save.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doSave();
-			}
-
-		});
-		query.add(save);
-
+		query.add(load);
+		
 		query.addSeparator();
 		JMenuItem importQuery = new JMenuItem("Import MQL");
 		importQuery.setEnabled(false);
 		query.add(importQuery);
-		JMenuItem exportQuery = new JMenuItem("Export MQL");
-		exportQuery.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				doExportMQL();
-			}
-		});
-		//exportQuery.setEnabled(false);
-		query.add(exportQuery);
-
+		
+		
 		JMenu help = new JMenu("Help");
 		JMenuItem about = new JMenuItem("About");
 		about.setEnabled(false);
@@ -356,20 +331,7 @@ public class MartExplorer extends JFrame {
 		return all;
 	}
 
-	/**
-	 * 
-	 */
-	protected void doExportMQL() {
-		int index = queryEditorTabbedPane.getSelectedIndex();
-		if (index > -1) {
-			QueryEditor qe =
-				(QueryEditor) queryEditorTabbedPane.getComponentAt(index);
-			qe.doExportMQL();
-			
-		} else {
-			feedback.warn("No Query to export to MQL.");
-		}
-	}
+	
 
 	/**
 	 * 
@@ -447,27 +409,23 @@ public class MartExplorer extends JFrame {
 		}
 	}
 
-	public void doExecuteQuery() {
 
-		if (queryEditorTabbedPane.getTabCount() < 1) {
 
-			feedback.warn("You must add or import a query to execute it.");
-
-		} else {
-
-			QueryEditor qe =
-				(QueryEditor) queryEditorTabbedPane.getSelectedComponent();
-			if (qe == null) {
-
-				feedback.warn("Can not execute query because none selected. Select one of the queries. ");
-
-			} else {
-
-					qe.doExecute();
-
+		/**
+			 * 
+			 */
+		public void doLoadQueryFromMQL() {
+			QueryEditor qe = null;
+			try {
+				qe = new QueryEditor();
+				addQueryEditor(qe);
+				qe.doLoadQuery();
+			} catch (IOException e) {
+				feedback.warn(e);
+				if (qe != null)
+					queryEditorTabbedPane.remove(qe);
+			}
 		}
-		}
-	}
 
 	/**
 	 * Exits the programs.
