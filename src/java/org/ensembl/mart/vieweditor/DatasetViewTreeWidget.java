@@ -54,7 +54,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
                 true);//iconifiable
         this.editor = editor;
         try {
-            this.setFrameIcon(createImageIcon("MartView_cube.gif"));
+            this.setFrameIcon(createImageIcon(MartViewEditor.IMAGE_DIR+"MartView_cube.gif"));
             DatasetView view = new DatasetView();
             if (file == null) {
                 view = new DatasetView("new", "new", "new");
@@ -194,7 +194,7 @@ public class DatasetViewTreeWidget extends JInternalFrame {
 
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = DatasetViewTreeWidget.class.getResource(path);
+        java.net.URL imgURL = DatasetViewTreeWidget.class.getClassLoader().getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {

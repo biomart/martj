@@ -42,6 +42,7 @@ public class MartViewEditor extends JFrame {
     private JDesktopPane desktop;
     static private final String newline = "\n";
     private JFileChooser fc;
+    final static String IMAGE_DIR="data/image/";
     static final private String NEW = "New";
     static final private String OPEN = "Open";
     static final private String SAVE = "Save";
@@ -135,9 +136,9 @@ public class MartViewEditor extends JFrame {
                                            String toolTipText,
                                            String altText) {
         //Look for the image.
-        String imgLocation = imageName
+        String imgLocation = IMAGE_DIR+imageName
                 + ".gif";
-        URL imageURL = DatasetViewTree.class.getResource(imgLocation);
+        URL imageURL = DatasetViewTree.class.getClassLoader().getResource(imgLocation);
 
         //Create and initialize the button.
         JButton button = new JButton();
@@ -173,7 +174,7 @@ public class MartViewEditor extends JFrame {
         menuBar.add(menu);
 
         //a group of JMenuItems
-        ImageIcon icon = createImageIcon("new.gif");
+        ImageIcon icon = createImageIcon(IMAGE_DIR+"new.gif");
         menuItem = new JMenuItem("New Dataset View", icon);
         MartViewEditor.MenuActionListener menuActionListener = new MartViewEditor.MenuActionListener();
         menuItem.addActionListener(menuActionListener);
@@ -184,13 +185,13 @@ public class MartViewEditor extends JFrame {
                 "Creates a new file");
         menu.add(menuItem);
 
-        icon = createImageIcon("open.gif");
+        icon = createImageIcon(IMAGE_DIR+"open.gif");
         menuItem = new JMenuItem("Open Dataset View", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_O);
         menu.add(menuItem);
 
-        icon = createImageIcon("save.gif");
+        icon = createImageIcon(IMAGE_DIR+"save.gif");
         menuItem = new JMenuItem("Save", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_S);
@@ -221,14 +222,14 @@ public class MartViewEditor extends JFrame {
         menu.getAccessibleContext().setAccessibleDescription(
                 "this is the edit menu");
         menuBar.add(menu);
-        icon = createImageIcon("undo.gif");
+        icon = createImageIcon(IMAGE_DIR+"undo.gif");
         menuItem = new JMenuItem("Undo", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_U); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "undo");
         menu.add(menuItem);
-        icon = createImageIcon("redo.gif");
+        icon = createImageIcon(IMAGE_DIR+"redo.gif");
         menuItem = new JMenuItem("Redo", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -236,21 +237,21 @@ public class MartViewEditor extends JFrame {
                 "redo");
         menu.add(menuItem);
         menu.addSeparator();
-        icon = createImageIcon("cut.gif");
+        icon = createImageIcon(IMAGE_DIR+"cut.gif");
         menuItem = new JMenuItem("Cut", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "cuts to clipboard");
         menu.add(menuItem);
-        icon = createImageIcon("copy.gif");
+        icon = createImageIcon(IMAGE_DIR+"copy.gif");
         menuItem = new JMenuItem("Copy", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "copies to clipboard");
         menu.add(menuItem);
-        icon = createImageIcon("paste.gif");
+        icon = createImageIcon(IMAGE_DIR+"paste.gif");
         menuItem = new JMenuItem("Paste", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -259,14 +260,14 @@ public class MartViewEditor extends JFrame {
         menu.add(menuItem);
 
         menu.addSeparator();
-        icon = createImageIcon("remove.gif");
+        icon = createImageIcon(IMAGE_DIR+"remove.gif");
         menuItem = new JMenuItem("Delete", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
         menuItem.getAccessibleContext().setAccessibleDescription(
                 "deletes");
         menu.add(menuItem);
-        icon = createImageIcon("add.gif");
+        icon = createImageIcon(IMAGE_DIR+"add.gif");
         menuItem = new JMenuItem("Insert", icon);
         menuItem.addActionListener(menuActionListener);
         menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
@@ -282,7 +283,7 @@ public class MartViewEditor extends JFrame {
         menuBar.add(menu);
 
         //Build help menu in the menu bar.
-        icon = createImageIcon("help.gif");
+        icon = createImageIcon(IMAGE_DIR+"help.gif");
         menu = new JMenu("Help");
         menu.setMnemonic(KeyEvent.VK_H);
         menu.getAccessibleContext().setAccessibleDescription(
@@ -335,7 +336,7 @@ public class MartViewEditor extends JFrame {
         //Create and set up the window.
         MartViewEditor frame = new MartViewEditor();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        ImageIcon icon = createImageIcon("MartView_cube.gif");
+        ImageIcon icon = createImageIcon(IMAGE_DIR+"MartView_cube.gif");
         frame.setIconImage(icon.getImage());
         //Display the window.
         frame.setVisible(true);
@@ -343,7 +344,7 @@ public class MartViewEditor extends JFrame {
 
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = DatasetViewTreeWidget.class.getResource(path);
+        java.net.URL imgURL = DatasetViewTreeWidget.class.getClassLoader().getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {

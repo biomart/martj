@@ -3680,13 +3680,13 @@
     </FilterGroup>
     <FilterGroup description="Filter for genes associated with SNPs" displayName="SNP" internalName="snp">
       <FilterCollection description="Filter for Genes associated with specified types of SNPs" displayName="Entries associated with SNPs of type:" internalName="snptype">
-        <FilterDescription internalName="snptype_filters" type="boolean">
-          <Option description="Include/exclude genes with coding SNPs" displayName="coding SNPs" field="coding" internalName="coding_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
-          <Option description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" field="intronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
-          <Option description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" field="5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
-          <Option description="Include/exclude genes with 3' UTR SNPs" displayName="3' UTR SNPS" field="3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
-          <Option description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" field="5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
-          <Option description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" field="3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" type="boolean"/>
+        <FilterDescription internalName="snptype_filters" type="boolean_list">
+          <Option description="Include/exclude genes with coding SNPs" displayName="coding SNPs" field="coding" internalName="coding_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
+          <Option description="Include/exclude genes having Intronic SNPs" displayName="Intronic snps" field="intronic" internalName="intronic_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
+          <Option description="Include/exclude genes with 5' UTR SNPS" displayName="5' UTR SNPS" field="5utr" internalName="5utr_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
+          <Option description="Include/exclude genes with 3' UTR SNPs" displayName="3' UTR SNPS" field="3utr" internalName="3utr_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
+          <Option description="Include/exclude genes with 5' Upstream SNPs" displayName="5' Upstream SNPs" field="5upstream" internalName="5upstream_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
+          <Option description="Include/exclude genes with 3' Downstream SNPs" displayName="3' Downstream SNPs" field="3downstream" internalName="3downstream_snps" isSelectable="true" legal_qualifiers="only,excluded" tableConstraint="main" />
         </FilterDescription>
       </FilterCollection>
       <FilterCollection internalName="synonomy">
