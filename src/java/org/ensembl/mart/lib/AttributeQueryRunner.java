@@ -1,4 +1,3 @@
-//TODO: test, and if necessary, revert to cvs version 1.7
 package org.ensembl.mart.lib;
 
 import java.io.IOException;
@@ -42,7 +41,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     this.osr = new PrintStream(os, true); // autoflush true
   }
 
-  public void executeNEW(int limit) throws SequenceException, InvalidQueryException {
+  public void execute(int limit) throws SequenceException, InvalidQueryException {
     //TODO: this should be moved into the Query object, so you can just do if (query.hasBigList())
     Filter[] filters = query.getFilters();
 
@@ -167,92 +166,6 @@ public final class AttributeQueryRunner implements QueryRunner {
   }
 
   protected void executeSQLLimit(int limit) throws SequenceException, InvalidQueryException {
-    boolean moreRows = true;
-    boolean userLimit = false;
-
-    attributes = query.getAttributes();
-    filters = query.getFilters();
-
-    Connection conn = null;
-    String sql = null;
-    try {
-      csql = new CompiledSQLQuery(query);
-      String sqlbase = csql.toSQLWithKey();
-      String primaryKey = csql.getQualifiedPrimaryKey();
-      queryID = csql.getPrimaryKey();
-
-      DataSource ds = query.getDataSource();
-      if (ds == null)
-        throw new RuntimeException("query.DataSource is null");
-      conn = ds.getConnection();
-
-      while (moreRows) {
-        sql = sqlbase;
-
-        if (sqlbase.indexOf("WHERE") >= 0)
-          sql += " AND " + primaryKey + " >= " + lastID;
-        else
-          sql += " WHERE " + primaryKey + " >= " + lastID;
-
-        sql += " ORDER BY " + primaryKey;
-
-        if (logger.isLoggable(Level.INFO)) {
-          logger.info("QUERY : " + query);
-          logger.info("SQL : " + sql);
-        }
-
-        PreparedStatement ps = conn.prepareStatement(sql);
-
-        if (limit > 0) {
-          userLimit = true;
-          ps.setMaxRows(limit);
-          moreRows = false;
-        } else
-          ps.setMaxRows(batchLength);
-
-        int p = 1;
-        for (int i = 0, n = filters.length; i < n; ++i) {
-          Filter f = query.getFilters()[i];
-          String value = f.getValue();
-          if (value != null) {
-            logger.info("SQL (prepared statement value) : " + p + " = " + value);
-            ps.setString(p++, value);
-          }
-        }
-
-        ResultSet rs = ps.executeQuery();
-        resultSetRowsProcessed = 0;
-
-        processResultSet(conn, skipNewBatchRedundantRecords(rs));
-
-        // on the odd chance that the last result set is equal in size to the batchLength, it will need to make an extra attempt.
-        if ((!userLimit) && (resultSetRowsProcessed < batchLength))
-          moreRows = false;
-
-        if (batchLength < maxBatchLength) {
-          batchLength =
-            (batchLength * batchModifiers[modIter] < maxBatchLength)
-              ? batchLength * batchModifiers[modIter]
-              : maxBatchLength;
-          modIter = (modIter == 0) ? 1 : 0;
-        }
-
-        rs.close();
-      }
-    } catch (IOException e) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning("Couldnt write to OutputStream\n" + e.getMessage());
-      throw new InvalidQueryException(e);
-    } catch (SQLException e) {
-      if (logger.isLoggable(Level.WARNING))
-        logger.warning(e.getMessage());
-      throw new InvalidQueryException(e);
-    } finally {
-      DetailedDataSource.close(conn);
-    }
-  }
-
-  public void execute(int limit) throws SequenceException, InvalidQueryException {
     boolean moreRows = true;
     boolean userLimit = false;
 
