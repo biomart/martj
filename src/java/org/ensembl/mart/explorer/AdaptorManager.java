@@ -152,6 +152,7 @@ public class AdaptorManager extends Box {
 
 		try {
 			updateWidget(rootAdaptor.getAdaptors());
+      storePrefs();
 		} catch (ConfigurationException e) {
 			feedback.warning(e);
 		}
@@ -177,15 +178,10 @@ public class AdaptorManager extends Box {
 		List l = new ArrayList(optionToView.keySet());
 		Collections.sort(l);
 
-		// Add "none"
-		//    optionToView.put(none, null);
-		//    l.add(0, none);
-
-		// set on combo
 		combo.removeAllItems();
 		combo.addAll(l);
 
-		storePrefs();
+
 	}
 
 	/**
@@ -207,8 +203,11 @@ public class AdaptorManager extends Box {
 			if (reg != null) {
 				RegistryDSViewAdaptor tmp = new RegistryDSViewAdaptor(reg);
 				DSViewAdaptor[] adaptors = tmp.getAdaptors();
-				for (int i = 0; i < adaptors.length; i++)
+				for (int i = 0; i < adaptors.length; i++) {
 					add(adaptors[i]);
+          logger.fine("Loaded Adaptor:" + adaptors[i].getName() 
+                      +", num datasetViews=" + adaptors[i].getDatasetViews().length);
+        }
 
 			}
 		} catch (ConfigurationException e1) {
@@ -244,13 +243,15 @@ public class AdaptorManager extends Box {
 			// select the "next" item
 			if (newIndex > -1)
 				combo.setSelectedItem(combo.getItemAt(newIndex));
-
+      
+      storePrefs();
+      
 		} catch (ConfigurationException e) {
 			feedback.warning(
 				"Failed to delete adaptor " + combo.getSelectedItem(),
 				e);
 		}
-
+    
 	}
 
 	/**
@@ -370,6 +371,7 @@ public class AdaptorManager extends Box {
 	public void add(DSViewAdaptor a) throws ConfigurationException {
     rootAdaptor.add(a);
     updateWidget(rootAdaptor.getAdaptors());
+    storePrefs();
 	}
 
 	

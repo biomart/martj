@@ -23,21 +23,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.QueryListener;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
 import org.ensembl.mart.lib.config.DatasetView;
@@ -47,10 +42,12 @@ import org.ensembl.mart.util.LoggingUtil;
  * Widget representing currently available datasource.dataset options.
  * Once user selects a datasource.dataset the default datasource.dataset.datasetView
  * is selected.
+ * 
+ * TODO upgrade to drop down tree
  */
 public class DatasetViewWidget
 	extends InputPage
-	implements QueryListener, ChangeListener {
+	implements ChangeListener {
 
 	private DatasetView[] oldViews;
 
@@ -67,8 +64,6 @@ public class DatasetViewWidget
 
 	private String noneOption = "None";
 
-	//	private JTextField datasetViewName = new JTextField(30);
-	//	private JButton button = new JButton("change");
 
 	/**
 	 * @param query underlying model for this widget.
@@ -132,50 +127,9 @@ public class DatasetViewWidget
 
 	}
 
-	/**
-	 * TODO move this test to drop down dsv chooser in QueryEditor.
-   * Opens DatasetViewSettings dialog.
-	 */
-	public void doChange() {
 
-		DatasetView oldDsv = query.getDatasetView();
-
-		//adaptorManager.setSelected(oldDsv);
-
-    // TODO choose it properly.f rom tree.
-		DatasetView dsv = null;
-		adaptorManager.showDialog(this)) {
-
-			//dsv = adaptorManager.getSelected();
-
-			if (oldDsv != dsv
-				&& (query.getAttributes().length > 0 || query.getFilters().length > 0)) {
-
-				int o =
-					JOptionPane.showConfirmDialog(
-						this,
-						new JLabel("Changing the dataset will cause the query settings to be cleared. Continue?"),
-						"Delete current Change Attributes",
-						JOptionPane.YES_NO_OPTION);
-
-				// undo if user changes mind
-				if (o != JOptionPane.OK_OPTION)
-					return;
 
 		
-
-			query.clear();
-			query.setDatasetView(dsv);
-
-			if (dsv != null) {
-
-				query.setPrimaryKeys(dsv.getPrimaryKeys());
-				query.setStarBases(dsv.getStarBases());
-				query.setDataset(dsv.getDataset());
-			}
-		}
-
-	}
 
 	/**
 	 * Runs a test; an instance of this class is shown in a Frame.
@@ -236,8 +190,7 @@ public class DatasetViewWidget
 	private String toOption(DatasetView view) {
 
 		DSViewAdaptor a = view.getAdaptor();
-		String aName = (a != null) ? a.getDisplayName() : "Unkown";
-		return aName + " -> " + view.getDataset();
+		return a.getName() + " -> " + view.getDataset();
 	}
 
 	/**
