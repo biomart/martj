@@ -18,6 +18,7 @@
 
 package org.ensembl.mart.explorer;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.logging.Level;
@@ -47,6 +48,18 @@ public class BooleanFilterWidget
   extends FilterWidget
   implements ActionListener {
 
+  private class OptionToStringProxy {
+    private Option option;
+
+    OptionToStringProxy(Option o) {
+      this.option = o;
+    }
+
+    public String toString() {
+      return option.getDisplayName();
+    }
+  }
+
   private Box panel = Box.createHorizontalBox();
 
   private JRadioButton require = new JRadioButton("require");
@@ -71,43 +84,19 @@ public class BooleanFilterWidget
 
     super(filterGroupWidget, query, fd, tree);
 
-    if ("boolean".equals(fd.getType())) {
+    if ("boolean".equals(fd.getType()))
+      initBoolean();
 
-      requireFilter =
-        new BooleanFilter(
-          fd.getField(),
-          fd.getTableConstraint(),
-          fd.getKey(),
-          BooleanFilter.isNotNULL, 
-          fd.getHandlerFromContext());
-
-      excludeFilter =
-        new BooleanFilter(
-          fd.getField(),
-          fd.getTableConstraint(),
-		  fd.getKey(),
-          BooleanFilter.isNULL, 
-          fd.getHandlerFromContext());
-
-    } else {
-
-      requireFilter =
-        new BooleanFilter(
-          fd.getField(),
-          fd.getTableConstraint(),
-		  fd.getKey(),
-          BooleanFilter.isNotNULL_NUM, 
-          fd.getHandlerFromContext());
-
-      excludeFilter =
-        new BooleanFilter(
-          fd.getField(),
-          fd.getTableConstraint(),
-		  fd.getKey(),
-          BooleanFilter.isNULL_NUM, 
-          fd.getHandlerFromContext());
-
-    }
+    else if ("boolean_num".equals(fd.getType()))
+      initBooleanNum();
+    else if ("boolean_num".equals(fd.getType()))
+      initBooleanList();
+    else
+      new RuntimeException(
+        "BooleanFilterWidget does not support filter description: "
+          + fd
+          + " becasue unrecognised type:"
+          + fd.getType());
 
     irrelevant.setSelected(true);
     currentButton = irrelevant;
@@ -136,6 +125,71 @@ public class BooleanFilterWidget
   }
 
   /**
+   * 
+   */
+  private void initBooleanList() {
+    // load options into list
+
+    setOptions(filterDescription.getOptions());
+  }
+
+  /**
+   * 
+   */
+  private void initBooleanNum() {
+
+    requireFilter =
+      new BooleanFilter(
+        filterDescription.getField(),
+        filterDescription.getTableConstraint(),
+        filterDescription.getKey(),
+        BooleanFilter.isNotNULL_NUM,
+        filterDescription.getHandlerFromContext());
+
+    excludeFilter =
+      new BooleanFilter(
+        filterDescription.getField(),
+        filterDescription.getTableConstraint(),
+        filterDescription.getKey(),
+        BooleanFilter.isNULL_NUM,
+        filterDescription.getHandlerFromContext());
+
+  }
+
+  private void initBoolean() {
+    requireFilter =
+      new BooleanFilter(
+        filterDescription.getField(),
+        filterDescription.getTableConstraint(),
+        filterDescription.getKey(),
+        BooleanFilter.isNotNULL,
+        filterDescription.getHandlerFromContext());
+
+    excludeFilter =
+      new BooleanFilter(
+        filterDescription.getField(),
+        filterDescription.getTableConstraint(),
+        filterDescription.getKey(),
+        BooleanFilter.isNULL,
+        filterDescription.getHandlerFromContext());
+
+  }
+
+  /**
+   * Handles user selcting an item in list.
+   * @param event
+   */
+  private void doSelectIListtem(ActionEvent event) {
+    System.out.println("Handle user selcting item in list.");
+    
+    // TODO convert event to option.
+    
+    // TODO remove filter if set
+    
+    // TODO add filter if "required" selected.
+  }
+
+  /**
    * Responds to user button actions. Adds and removes filters to/from
    * query.
    * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -151,6 +205,8 @@ public class BooleanFilterWidget
     if (filter != null)
       query.removeFilter(filter);
 
+    // TODO dynamically determine require and exclude filter for list
+    // use getRequireFilter() and getExcludeFilter()
     if (currentButton == require)
       filter = requireFilter;
     else if (currentButton == exclude)
@@ -158,7 +214,7 @@ public class BooleanFilterWidget
     else
       filter = null;
 
-    if ( filter!=null )
+    if (filter != null)
       query.addFilter(filter);
   }
 
@@ -173,12 +229,22 @@ public class BooleanFilterWidget
 
       if (list == null) {
         list = new JComboBox();
-        list.addActionListener(this);
+        list.setMaximumSize(new Dimension(100, 25));
+        list.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent event) {
+            doSelectIListtem(event);
+          }
+
+        });
         panel.add(list, 1);
       }
 
-      // TODO add options to list.
-
+      for (int i = 0; i < options.length; i++) {
+        Option o = options[i];
+        if (o.isSelectable())
+          list.addItem(new OptionToStringProxy(o));
+      }
+      panel.validate();
     }
 
   }
@@ -208,8 +274,8 @@ public class BooleanFilterWidget
 
     // switch on logging for test purposes.
     LoggingUtil.setAllRootHandlerLevelsToFinest();
-    Logger.getLogger(Query.class.getName()).setLevel( Level.FINE );
-    
+    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
+
     Query q = new Query();
     FilterGroup fg = new FilterGroup();
     FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg, null);
@@ -220,17 +286,56 @@ public class BooleanFilterWidget
         "boolean",
         "someQualifier",
         "someLegalQualifiers",
-        "someDisplayName",
+        "test boolean",
         "someTableConstraint",
         "someKey",
         null,
         "someDescription");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
+    FilterDescription fd2 =
+      new FilterDescription(
+        "someInternalName",
+        "someField",
+        "boolean_num",
+        "someQualifier",
+        "someLegalQualifiers",
+        "test boolean_num ",
+        "someTableConstraint",
+        "someKey",
+        null,
+        "someDescription");
+    BooleanFilterWidget bfw2 = new BooleanFilterWidget(fgw, q, fd2, null);
+
+    FilterDescription fd3 =
+      new FilterDescription(
+        "someInternalName",
+        "someField",
+        "boolean_list",
+        "someQualifier",
+        "someLegalQualifiers",
+        "test boolean_list ",
+        "someTableConstraint",
+        "someKey",
+        null,
+        "someDescription");
+    Option o = new Option("fred_id", "true");
+    o.setDisplayName("Fred");
+    fd3.addOption(o);
+    Option o2 = new Option("barney_id", "true");
+    o2.setDisplayName("Barney");
+    fd3.addOption(o2);
+    BooleanFilterWidget bfw3 = new BooleanFilterWidget(fgw, q, fd3, null);
+
+    Box p = Box.createVerticalBox();
+    p.add(bfw);
+    p.add(bfw2);
+    p.add(bfw3);
+
     JFrame f = new JFrame("Boolean Filter - test");
-    f.getContentPane().add(bfw);
-    f.pack();
+    f.getContentPane().add(p);
     f.setVisible(true);
+    f.pack();
 
   }
 
