@@ -31,6 +31,9 @@ import java.util.*;
  */
 public class ColumnMapper {
 
+	private String primaryKey = null;
+	
+
   /** column -> table */
   private Properties map = new Properties();
 
@@ -42,7 +45,9 @@ public class ColumnMapper {
    *@param tables list of tables to create mappings for. 
    *
    */
-  public ColumnMapper (Table[] tables){
+  public ColumnMapper (Table[] tables, String primaryKey){
+
+		this.primaryKey = primaryKey;
 
     for(int i=0; i<tables.length; ++i) {
 
@@ -71,6 +76,8 @@ public class ColumnMapper {
     }
   }
 
+
+	
 
   /**
    * @return table.column if mapping is available, otherwise null.
@@ -125,9 +132,17 @@ public class ColumnMapper {
       StringBuffer buf = new StringBuffer();
 
       buf.append("[");
-      buf.append(" map=").append(map);
+      buf.append(" #map=").append(map.size());
       buf.append("]");
 
       return buf.toString();
   }
+
+	public void setPrimaryKey(String primaryKey) {
+		this.primaryKey = primaryKey;
+	}
+
+	public String getPrimaryKey() {
+		return primaryKey;
+	}
 }

@@ -29,7 +29,15 @@ package org.ensembl.mart.explorer;
  */
 public interface Attribute {
 	/**
-	 * returns the name of the attribute
+	 * @return name of the attribute
 	 */
     String getName();
+    
+    
+    /**
+     * Sub string that must appear in the name of any table containing 
+     * the column __name__.
+     * @return null or part of a tablename.
+     */
+    String getTableConstraint();
 }

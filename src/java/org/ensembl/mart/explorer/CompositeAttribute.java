@@ -7,4 +7,15 @@ public class CompositeAttribute implements Attribute {
         // Write your code here
         return null;
     }
+    
+	public void setTableConstraint(String tableConstraint) {
+		this.tableConstraint = tableConstraint;
+	}
+
+	public String getTableConstraint() {
+		return tableConstraint;
+	}
+
+
+	private String tableConstraint; 
 }

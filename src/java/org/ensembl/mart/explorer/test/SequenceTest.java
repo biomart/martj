@@ -27,7 +27,7 @@ import org.ensembl.mart.explorer.SequenceDescription;
  */
 public class SequenceTest extends Base {
 	
-	public static void main(String[] args){
+	 public static void main(String[] args){
 		if (args.length > 0)
 		    TestRunner.run( TestClass(args[0]) );
 		else

@@ -61,12 +61,14 @@ public class FormatSpec {
      
      /**
       * Constructor for when you just want to set FASTA, or 
-      * you want to set the separator later.
+      * you want to set the separator later. Defaults to
+      * setting separator to tab ("\t").
       * 
       * @param format int
       */
      public FormatSpec(int format) {
      	this.format = format;
+     	this.separator = "\t";
      }
      /**
       * set the Format for the FormatSpec.

@@ -6,16 +6,16 @@ import java.net.URL;
 import org.python.core.PyException;
 import org.python.util.PythonInterpreter;
 
-
 /**
  * @author craig
  *	
  * Runs the GUI from jar.
  */
 public class Runner {
-
+	
 	public static void main(String[] args) throws PyException, IOException {
 
+	
 	  	// convert command line params to a form that can be passed 
 	  	// to main() method in python script
 		StringBuffer argList = new StringBuffer();

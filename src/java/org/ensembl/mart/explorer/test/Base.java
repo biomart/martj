@@ -70,10 +70,10 @@ public abstract class Base extends TestCase {
 	  init();
 
       engine = new Engine(host, port, user, password, database);
-
       query.setStarBases(new String[] {"hsapiens_ensemblgene", "hsapiens_ensembltranscript"});
+			query.setPrimaryKeys(new String[] {"gene_id", "transcript_id"});
     }
-
+    
     public Base(String name) {
         super(name);
 		if ( System.getProperty("log4j.configuration")==null ) {
