@@ -259,8 +259,14 @@ public class QueryEditor
       datasetPage.showTree();
   }
 
-  public static void main(String[] args) throws ConfigurationException {
 
+  /**
+   * Loads dataset views from files in classpath for test
+   * purposes.
+   * @return preloaded dataset views
+   * @throws ConfigurationException
+   */
+  static DatasetView[] testDSViews() throws ConfigurationException {
     CompositeDSViewAdaptor adaptor = new CompositeDSViewAdaptor();
 
     String[] urls = new String[] { 
@@ -272,10 +278,19 @@ public class QueryEditor
       URL dvURL = QueryEditor.class.getClassLoader().getResource(urls[i]);
       adaptor.add(new URLDSViewAdaptor(dvURL, true));
       System.out.println("Using DatasetView: " + dvURL);
-    }
+    } 
+    
+    return adaptor.getDatasetViews();   
+  }
+  
+  
+
+  public static void main(String[] args) throws ConfigurationException {
+
+
 
     QueryEditor editor = new QueryEditor();
-    editor.setDatasetViews(adaptor.getDatasetViews());
+    editor.setDatasetViews( testDSViews() );
     JFrame f = new JFrame("Query Editor");
     f.getContentPane().add(editor);
     f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -304,7 +319,7 @@ public class QueryEditor
 
     if (evt.getSource() == query) {
 
-      if ("datasetName".equals(propertyName)) {
+      if ("datasetInternalName".equals(propertyName)) {
 
         //        if ( newValue!=null )
         datasetChanged(datasetPage.getDatasetView());
