@@ -56,7 +56,7 @@ public class DatasetViewTree extends PopUpTreeCombo {
 	private AdaptorManager manager;
 
 	public DatasetViewTree(AdaptorManager manager) {
-		super("DatasetView");
+		super("Dataset");
 		this.manager = manager;
 	}
 
