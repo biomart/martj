@@ -23,6 +23,8 @@ package org.ensembl.mart.explorer;
 import java.util.*;
 
 import org.apache.log4j.Logger;
+import org.ensembl.util.StringUtil;
+
 import java.sql.*;
 
 /**
@@ -297,6 +299,9 @@ public class CompiledSQLQuery {
 
 				// Find a mapper for each star's "main" table
 				Table table = Table.findTable( tableName, tables);
+				if ( table==null ) 
+					throw new RuntimeException("Failed to find a table in database called: " + tableName 
+																			+ ". Known databases are: [" + StringUtil.toString(tables)+ "]");
 				mainMappers.add(new FieldMapper(new Table[] { table }, primaryKey));
 				mainTables.add(table);
 

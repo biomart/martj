@@ -19,6 +19,7 @@
 
 package org.ensembl.mart.explorer;
 
+import org.apache.log4j.Logger;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,8 @@ import java.util.regex.Pattern;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  */
 public class FieldMapper {
+	
+	private final static Logger logger = Logger.getLogger( FieldMapper.class.getName()); 
 
 	private String primaryKey = null;
 	
@@ -57,6 +60,10 @@ public class FieldMapper {
     for(int i=0; i<tables.length; ++i) {
 
       Table table = tables[i];
+      if ( logger.isDebugEnabled() ) {
+      	logger.debug("table="+table);
+				logger.debug("table.columns.length="+table.columns.length);
+      }
       for(int j=0; j<table.columns.length; ++j){
 		    
         // this is how we resolve name ambiguity; first encountered mappings

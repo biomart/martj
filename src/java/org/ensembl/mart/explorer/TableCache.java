@@ -70,14 +70,19 @@ public class TableCache {
 
 		ArrayList tablesTmp = new ArrayList();
 
+		
 		// load all the tables that begin with one of the star names
 		ResultSet rs = conn.createStatement().executeQuery("show tables");
 		while (rs.next()) {
 			String tableName = rs.getString(1);
 			for (int i = 0; i < query.getStarBases().length; i++) {
-				if (tableName.startsWith(query.getStarBases()[i]))
+				if (tableName.startsWith(query.getStarBases()[i])) {
 					tablesTmp.add(
-						new Table(tableName, columns(tableName, conn), ""));
+											new Table(tableName, columns(tableName, conn), ""));
+					System.out.println("loading tables from db: " + tableName);
+			
+				}
+					
 			}
 
 		}

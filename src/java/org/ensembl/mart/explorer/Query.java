@@ -20,6 +20,8 @@ package org.ensembl.mart.explorer;
 
 import java.util.*;
 
+import org.ensembl.util.StringUtil;
+
 /**
  * Object for storing the parameters to construct a query against a Mart
  * database.  Parameters consist of at least one Attribute (a requested field
@@ -157,9 +159,9 @@ public class Query {
          StringBuffer buf = new StringBuffer();
 
 		 buf.append("[");
-         buf.append(", primaryKeys=").append(primaryKeys);
-         buf.append(", starBases=").append(starBases);
-         buf.append(", querytype=").append(stringquerytype);
+         buf.append(", starBases=[").append( StringUtil.toString( starBases ) );
+				 buf.append("], primaryKeys=[").append( StringUtil.toString( primaryKeys ) );
+         buf.append("], querytype=").append(stringquerytype);
          buf.append(", attributes=").append(attributes);
          buf.append(", filters=").append(filters);
          
