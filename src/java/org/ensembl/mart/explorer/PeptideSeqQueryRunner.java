@@ -96,7 +96,7 @@ public final class PeptideSeqQueryRunner implements QueryRunner {
 		query.addAttribute(new FieldAttribute(StrandColumn,"_structure_dm"));
 		
 		for (int i=0; i< displayIDs.size(); i++) {
-			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
+			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i), "_structure_dm") );
 		}
 	}
 	

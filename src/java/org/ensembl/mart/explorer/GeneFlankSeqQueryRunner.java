@@ -87,15 +87,15 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 
 
 	private void updateQuery() {
-		query.addAttribute(new FieldAttribute(queryID));
-		query.addAttribute(new FieldAttribute(AssemblyColumn));
-		query.addAttribute(new FieldAttribute(coordStart));
-		query.addAttribute(new FieldAttribute(coordEnd));
-		query.addAttribute(new FieldAttribute(Chr));
-		query.addAttribute(new FieldAttribute(StrandColumn));
+		query.addAttribute(new FieldAttribute(queryID,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(AssemblyColumn,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordStart,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordEnd,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(Chr,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(StrandColumn,"_structure_dm"));
 		
 		for (int i=0; i< displayIDs.size(); i++) {
-			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
+			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ,"_structure_dm") );
 		}
 	}
 
@@ -126,6 +126,7 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 				
 			Attribute[] attributes = query.getAttributes();
 
+    String sql = null;
 		try {
 			  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 			  String sqlbase = csql.toSQL();
@@ -134,7 +135,7 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 			  sqlbase += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
 
 			while (moreRows) {
-				  String sql = sqlbase;
+				  sql = sqlbase;
 				  			  
 			    if (limit > 0) {
 				    sql += " limit "+limit;
@@ -273,10 +274,8 @@ public final class GeneFlankSeqQueryRunner implements QueryRunner {
 			      moreRows = false; // on the odd chance that the last result set has equal rowcount with the batchLength, it will need to make an extra attempt
         }
 			} catch (SQLException e) {
-				logger.warn(e.getMessage());
-				throw new InvalidQueryException(e);
+				throw new InvalidQueryException(e+":"+sql);
 			} catch (IOException e) {
-				logger.warn("Could not write to IO "+e.getMessage());
 				throw new SequenceException(e);
 		}
 	}

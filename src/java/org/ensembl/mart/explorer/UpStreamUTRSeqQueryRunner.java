@@ -87,17 +87,17 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 	}
 	
 	private void updateQuery() {
-		query.addAttribute(new FieldAttribute(queryID));
-		query.addAttribute(new FieldAttribute(GeneID));
-		query.addAttribute(new FieldAttribute(Rank));
-		query.addAttribute(new FieldAttribute(AssemblyColumn));
-		query.addAttribute(new FieldAttribute(coordStart));
-		query.addAttribute(new FieldAttribute(coordEnd));
-		query.addAttribute(new FieldAttribute(Chr));
-		query.addAttribute(new FieldAttribute(StrandColumn));
+		query.addAttribute(new FieldAttribute(queryID,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(GeneID,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(Rank,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(AssemblyColumn,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordStart,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(coordEnd,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(Chr,"_structure_dm"));
+		query.addAttribute(new FieldAttribute(StrandColumn,"_structure_dm"));
 		
 		for (int i=0; i< displayIDs.size(); i++) {
-			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ) );
+			query.addAttribute( new FieldAttribute( (String) displayIDs.get(i) ,"_structure_dm") );
 		}
 	}
 	
@@ -127,6 +127,7 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 				
 		Attribute[] attributes = query.getAttributes();
 
+  String sql = null;
 	try {
 		  CompiledSQLQuery csql = new CompiledSQLQuery( conn, query );
 		  String sqlbase = csql.toSQL();
@@ -135,7 +136,7 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 		  sqlbase += " order by  "+structure_table+".gene_id, "+structure_table+".transcript_id, "+structure_table+".rank";
 
 		while (moreRows) {
-			  String sql = sqlbase;
+			  sql = sqlbase;
 			  		
 		    if (limit > 0) {
 			    sql += " limit "+limit;
@@ -298,11 +299,9 @@ public final class UpStreamUTRSeqQueryRunner implements QueryRunner {
 		  }
 		  osr.close();
 		} catch (IOException e) {
-			logger.warn(e.getMessage());
 			throw new InvalidQueryException(e);
 	} catch (SQLException e) {
-			logger.warn(e.getMessage());
-			throw new SequenceException(e);
+			throw new SequenceException(e+":"+sql);
 		}
 	}
 
