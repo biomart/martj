@@ -556,4 +556,33 @@ public class Query {
     changeSupport.removePropertyChangeListener(propertyName, listener);
   }
 
+	/**
+	 * Removes all attributes from the query. Each removed attribute will
+   * generate a separate property change event.
+	 */
+	public void removeAllAttributes() {
+    
+		Attribute[] attributes = getAttributes();
+    
+    for (int i = 0, n = attributes.length; i < n; i++) {
+			removeAttribute( attributes[i] );
+		}
+		
+	}
+
+
+  /**
+   * Removes all Filters from the query. Each removed Filter will
+   * generate a separate property change event.
+   */
+  public void removeAllFilters() {
+    
+    Filter[] filters = getFilters();
+    
+    for (int i = 0, n = filters.length; i < n; i++) {
+      removeFilter( filters[i] );
+    }
+    
+  }
+
 }
