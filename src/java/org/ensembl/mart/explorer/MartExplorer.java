@@ -194,7 +194,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
   private Action executeAction = new AbstractAction("Execute", createImageIcon("run.png")) {
     public void actionPerformed(ActionEvent event) {
-      doSave();
+      doExecute();
     }
   };
 
