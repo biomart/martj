@@ -84,6 +84,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
                     config.addFilterPage(new FilterPage("new"));
                     config.addAttributePage(new AttributePage("new"));
             	  }
+            	  
             	  else{
             	  	config = DatabaseDatasetConfigUtils.getNaiveDatasetConfigFor(MartEditor.getDetailedDataSource(),database,dataset);
             	  }
@@ -109,7 +110,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             }
           }
           else{
-          	config = new DatasetConfig(dsv, false, false);
+          	config = new DatasetConfig(dsv, true, false);
           }
             this.setTitle(config.getInternalName());
 
