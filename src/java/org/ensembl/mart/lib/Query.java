@@ -125,6 +125,13 @@ public class Query {
 		}
 
 		limit = oq.getLimit();
+    
+    if (oq.hasSort()) {
+      Attribute[] sortAtts = oq.getSortByAttributes();
+      for (int i = 0, n = sortAtts.length; i < n; i++) {
+        addSortByAttribute(sortAtts[i]);        
+      }
+    }
 
 	}
 
@@ -410,6 +417,10 @@ public class Query {
 		if (sequenceDescription != null)
 			buf.append(", sequencedescription=").append(sequenceDescription);
 
+    if (hasSort) {
+      buf.append(", sortBy=").append(sortAttributes);
+    }
+    
 		buf.append(", limit=").append(limit);
 		buf.append("]");
 
@@ -697,5 +708,34 @@ public class Query {
 				old,
 				datasetConfig);
 	}
+  
+  //special sortby feature, only an advanced MartShell feature, so no need to link with the QueryListener
+  private boolean hasSort = false;
+  private List sortAttributes = null;
+  
+  public synchronized void addSortByAttribute(Attribute sortAtt) {
+    if (!hasSort) {
+      hasSort = true;
+      sortAttributes = new ArrayList();
+    }
+    sortAttributes.add(sortAtt);
+  }
 
+  public synchronized void removeSortBy() {
+    hasSort = false;
+    sortAttributes = null;
+  }
+  
+  public boolean hasSort() {
+    return hasSort;
+  }
+  
+  public Attribute[] getSortByAttributes() {
+    if (!hasSort)
+      return null;
+    
+    Attribute[] ret = new Attribute[sortAttributes.size()];
+    sortAttributes.toArray(ret);
+    return ret;
+  }
 }

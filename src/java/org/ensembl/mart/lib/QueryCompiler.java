@@ -109,21 +109,6 @@ public class QueryCompiler {
   }
 
   /**
-   * creates a String SQL statement suitable for preparing in
-   * a PreparedStatement using a JDBC Connection, whereby the
-   * select clause is select count(*), eg counts all rows returned
-   * by the filters.
-   * 
-   * @return String SQL - SQL to be executed
-   * @throws InvalidQueryException
-   */
-  public String toRowCountSQL() throws InvalidQueryException {
-    if (rcountSQL == null)
-      compileRowCountSQL();
-    return rcountSQL;
-  }
-  
-  /**
    * Returns the lowest level key
    * @return String lowest level key used in join clauses
    * @throws InvalidQueryException same as getPrimaryKey
@@ -165,6 +150,13 @@ public class QueryCompiler {
         logger.fine("select + from clauses:" + buf.toString());
 
       success = whereClause(buf);
+    }
+
+    if (success && query.hasSort()) {
+      if (logger.isLoggable(Level.FINE))
+        logger.fine("select + from + where clauses:" + buf.toString());
+        
+      success = sortByClause(buf);
     }
 
     if (success && logger.isLoggable(Level.FINE))
@@ -222,40 +214,6 @@ public class QueryCompiler {
 
     if (logger.isLoggable(Level.INFO))
       logger.info("fcountSQL: " + fcountSQL + "\n");
-  }
-
-  private void compileRowCountSQL() throws InvalidQueryException {
-    StringBuffer buf = new StringBuffer(SELECT);
-    buf.append(" count(*)");
-    
-    if (query.getAttributes().length < 1 && query.getFilters().length < 1) {
-      buf.append(FROM).append(" ").append(query.getMainTables()[0]);
-    } else {
-      boolean success = false;
-    
-      mainTable = null;
-
-      success = fromClause(buf);
-
-      if (success) {
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("from clause:" + buf.toString());
-
-        success = whereClause(buf);
-      }
-
-      if (success && logger.isLoggable(Level.FINE))
-        logger.fine("from + where clauses:" + buf.toString());
-
-      //}
-      if (!success)
-        throw new InvalidQueryException("Failed to compile query :" + query);
-    }
-
-    rcountSQL = buf.toString();
-
-    if (logger.isLoggable(Level.INFO))
-      logger.info("rcountSQL: " + rcountSQL + "\n");
   }
 
   /**
@@ -405,6 +363,24 @@ public class QueryCompiler {
     return true;
   }
 
+  private boolean sortByClause(StringBuffer buf) throws InvalidQueryException {
+
+    final int nAttributes = query.getSortByAttributes().length;
+
+    buf.append(SORTBY).append(" ");
+
+    for (int i = 0; i < nAttributes; ++i) {
+
+      Attribute a = query.getSortByAttributes()[i];
+      buf.append(a.getTableConstraint()).append(".").append(a.getField());
+
+      if (i + 1 < nAttributes)
+        buf.append(", ");
+    }
+
+    return true;
+  }
+  
   //	private String[] toStringArray(List list) {
   //		return (String[]) list.toArray(new String[list.size()]);
   //	}
@@ -412,7 +388,6 @@ public class QueryCompiler {
   private String sql = null;
   private String pksql = null;
   private String fcountSQL = null;
-  private String rcountSQL = null;
   private Query query = null;
   private Logger logger = Logger.getLogger(QueryCompiler.class.getName());
   private String mainTable = null; // either the _main table, or the single dimension table when that is chosen
@@ -428,4 +403,5 @@ public class QueryCompiler {
   private final String SELECT = "SELECT ";
   private final String FROM = " FROM ";
   private final String WHERE = " WHERE ";
+  private final String SORTBY = " ORDER BY ";
 }

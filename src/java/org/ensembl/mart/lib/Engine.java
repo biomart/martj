@@ -112,41 +112,6 @@ public class Engine {
     writeSQLResults(pstream, query, fcountSQL);
   }
 
-  public void countRows(OutputStream os, Query oquery) throws InvalidQueryException, SQLException {
-    PrintStream pstream = new PrintStream(os, true); //autoflush true
-    //ensure that we are using a copy of the Query
-    Query query = new Query(oquery);
-
-    //process any unprocessed filters
-    Hashtable needsHandler = new Hashtable();
-
-    Filter[] filters = query.getFilters();
-    for (int i = 0, n = filters.length; i < n; i++) {
-      Filter filter = filters[i];
-      if (filter.getHandler() != null) {
-        String handler = filter.getHandler();
-        if (!needsHandler.containsKey(handler))
-          needsHandler.put(handler, new ArrayList());
-
-        List unhandledFilters = (ArrayList) needsHandler.get(handler);
-        if (!unhandledFilters.contains(filter))
-          unhandledFilters.add(filter);
-        needsHandler.put(handler, unhandledFilters);
-      }
-    }
-
-    for (Iterator iter = needsHandler.keySet().iterator(); iter.hasNext();) {
-      String handler = (String) iter.next();
-      List unprocessedFilters = (ArrayList) needsHandler.get(handler);
-      UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
-      query = idhandler.ModifyQuery(this, unprocessedFilters, query);
-    }
-
-    QueryCompiler csql = new QueryCompiler(query);
-    String rcountSQL = csql.toRowCountSQL();
-    writeSQLResults(pstream, query, rcountSQL);
-  }
-
   private void writeSQLResults(PrintStream pstream, Query query, String sql) throws InvalidQueryException {
     DetailedDataSource dsource = query.getDataSource();
     if (dsource == null)
