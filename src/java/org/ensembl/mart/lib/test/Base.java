@@ -6,12 +6,11 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import junit.framework.TestCase;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.ensembl.driver.ConfigurationException;
 import org.ensembl.driver.Driver;
 import org.ensembl.driver.DriverManager;
@@ -24,7 +23,7 @@ import org.ensembl.mart.lib.Query;
  */
 public abstract class Base extends TestCase {
 
-	private final static Logger logger = Logger.getLogger(Base.class.getClass());
+  private Logger logger = Logger.getLogger(Base.class.getName());
 	private final static String connprops = "data/testconnection.conf";
 	private final static String connpropsEnsj = "data/testconnection_ensj.conf";
 
@@ -88,7 +87,7 @@ public abstract class Base extends TestCase {
 		try {
 			ensjDriver = DriverManager.load(connpropsEnsj);
 		} catch (ConfigurationException e) {
-			logger.warn("", e);
+			logger.log(Level.WARNING, "", e );
 		}
 
 	}
@@ -105,10 +104,6 @@ public abstract class Base extends TestCase {
 
 	public Base(String name) {
 		super(name);
-		if (System.getProperty("log4j.configuration") == null) {
-			BasicConfigurator.configure();
-			Logger.getRoot().setLevel(Level.WARN);
-		}
 	}
 
   public Connection getDBConnection() throws Exception {
