@@ -210,7 +210,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
 
 			setNodeLabel(null, filterDescription.getField() + " = " + option.getValue());
 
-			pushOptions(option.getOptionPushes());
+			pushOptions(option.getPushOptions());
 		}
 
 	}

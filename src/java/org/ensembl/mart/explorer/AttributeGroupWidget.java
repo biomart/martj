@@ -32,7 +32,6 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.MapFilterDescription;
 
 /**
  * Widget representing an AttibuteGroup. 
@@ -105,8 +104,6 @@ public class AttributeGroupWidget extends GroupWidget {
         AttributeDescription a = (AttributeDescription) element;
         AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a);
         pages.add(w);
-      } else if ( element instanceof MapFilterDescription ){
-        logger.warning("TODO Unsupported domain specific attribute description: " + element.getClass().getName() + element);
       }
       else {
 

@@ -32,7 +32,6 @@ import javax.swing.JScrollPane;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.FilterCollection;
 import org.ensembl.mart.lib.config.FilterGroup;
-import org.ensembl.mart.lib.config.MapFilterDescription;
 import org.ensembl.mart.lib.config.FilterDescription;
 
 /**
@@ -98,7 +97,7 @@ public class FilterGroupWidget extends PageWidget {
     for (Iterator iter = filterDescriptions.iterator(); iter.hasNext();) {
       Object element = iter.next();
 
-      if (element instanceof FilterDescription || element instanceof MapFilterDescription) {
+      if (element instanceof FilterDescription ) {
 
         FilterDescription a = (FilterDescription) element;
         FilterPageSetWidget.TYPES.add( a.getType() );
