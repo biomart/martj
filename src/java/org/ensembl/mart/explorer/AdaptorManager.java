@@ -114,25 +114,25 @@ public class AdaptorManager extends Box {
         doAddDatabase();
       }
     });
-    JButton importRegistry = new JButton("Import Registry");
+    JButton importRegistry = new JButton("Add Registry File");
     importRegistry.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doImportRegistry();
       }
     });
-    JButton addFile = new JButton("Add File");
+    JButton addFile = new JButton("Add Dataset Configuration File");
     addFile.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doAddFile();
       }
     });
-    JButton delete = new JButton("Delete");
+    JButton delete = new JButton("Remove");
     delete.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doDelete();
       }
     });
-    JButton deleteAll = new JButton("Delete All");
+    JButton deleteAll = new JButton("Remove All");
     deleteAll.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doDeleteAll();
