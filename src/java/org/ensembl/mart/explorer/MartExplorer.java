@@ -237,7 +237,7 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
       }
     }
 
-    return "Query_" + next;
+    return "Results_" + next;
   }
 
   private Action newQueryAction =

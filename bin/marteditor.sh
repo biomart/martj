@@ -23,6 +23,8 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/martj.jar
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
+echo "This is a DEMO of MartEditor (developement version) " 
+
 java -ea -cp $TMP_CLASSPATH org.ensembl.mart.vieweditor.MartViewEditor $@
 
 
