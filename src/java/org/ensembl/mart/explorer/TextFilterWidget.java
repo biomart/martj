@@ -20,18 +20,22 @@ package org.ensembl.mart.explorer;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import org.ensembl.mart.lib.BasicFilter;
 import org.ensembl.mart.lib.Filter;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterGroup;
+import org.ensembl.mart.lib.config.Option;
+import org.ensembl.mart.util.LoggingUtil;
 
 /**
  * Widget with a label and text entry area which adds/removes
@@ -39,61 +43,104 @@ import org.ensembl.mart.lib.config.FilterDescription;
  * <code>return</code> causes a filter to be added or changed. Clearing the text
  * and pressing <code>return</code> removes the filter.
  */
-public class TextFilterWidget
-  extends FilterWidget
-  implements ActionListener, PropertyChangeListener {
+public class TextFilterWidget extends FilterWidget implements ActionListener {
 
-  private BasicFilter filter;
+  private final static Logger logger =
+    Logger.getLogger(TextFilterWidget.class.getName());
+
+  /**
+   * Test program; a simple GUI using test data.
+   * @param args
+   * @throws org.ensembl.mart.lib.config.ConfigurationException
+   */
+  public static void main(String[] args)
+    throws org.ensembl.mart.lib.config.ConfigurationException {
+
+    // switch on logging for test purposes.
+    LoggingUtil.setAllRootHandlerLevelsToFinest();
+    Logger.getLogger(Query.class.getName()).setLevel(Level.FINE);
+
+    Query q = new Query();
+    FilterGroup fg = new FilterGroup();
+    FilterGroupWidget fgw = new FilterGroupWidget(q, "fgw", fg);
+    FilterDescription fd =
+      new FilterDescription(
+        "someInternalName",
+        "someField",
+        "text",
+        "someQualifier",
+        "someLegalQualifiers",
+        "someDisplayName",
+        "someTableConstraint",
+        null,
+        "someDescription");
+
+    TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd);
+
+    JFrame f = new JFrame("Text Filter - test");
+    f.getContentPane().add(tfw);
+    f.pack();
+    f.setVisible(true);
+
+  }
+
+  private Filter filter;
 
   private JTextField textField;
   /**
-	   * BooleanFilter that has contains a tree node.
-	   */
-	private class InputPageAwareBasicFilter
-		extends BasicFilter
-		implements InputPageAware {
-		private InputPage inputPage;
+     * BooleanFilter that has contains a tree node.
+     */
+  private class InputPageAwareBasicFilter
+    extends BasicFilter
+    implements InputPageAware {
+    private InputPage inputPage;
 
-		public InputPageAwareBasicFilter(
-			String field,
-			String condition,
-			String value,
-			InputPage inputPage) {
+    public InputPageAwareBasicFilter(
+      String field,
+      String condition,
+      String value,
+      InputPage inputPage) {
 
-			super(field, condition, value);
-			this.inputPage = inputPage;
+      super(field, condition, value);
+      this.inputPage = inputPage;
 
-		}
+    }
 
-		public InputPageAwareBasicFilter(
-			String field,
-			String tableConstraint,
-			String condition,
-			String value,
-			InputPage inputPage) {
+    public InputPageAwareBasicFilter(
+      String field,
+      String tableConstraint,
+      String condition,
+      String value,
+      InputPage inputPage) {
 
-			super(field, tableConstraint, condition, value);
-			this.inputPage = inputPage;
+      super(field, tableConstraint, condition, value);
+      this.inputPage = inputPage;
 
-		}
+    }
 
-		public InputPage getInputPage() {
-			return inputPage;
-		}
-	}
-
+    public InputPage getInputPage() {
+      return inputPage;
+    }
+  }
 
   /**
    * @param query
    * @param filterDescription
    */
-  public TextFilterWidget(FilterGroupWidget filterGroupWidget, Query query, FilterDescription filterDescription) {
+  public TextFilterWidget(
+    FilterGroupWidget filterGroupWidget,
+    Query query,
+    FilterDescription filterDescription) {
 
     super(filterGroupWidget, query, filterDescription);
+    String type = filterDescription.getType();
+    if (!"text".equals(type))
+      throw new IllegalArgumentException(
+        "FilterDescription.type is not text:" + type);
+
     setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
     textField = new JTextField(5);
     textField.addActionListener(this); // listen for user entered changes
-    query.addPropertyChangeListener(this); // listen for changes to query
     add(new JLabel(filterDescription.getDisplayName()));
     add(textField);
     add(Box.createHorizontalGlue());
@@ -110,93 +157,29 @@ public class TextFilterWidget
     String value = textField.getText();
 
     // remove filter
-    if (value == null || "".equals(value)) {
-      if (filter != null) {
-        query.removeFilter(filter);
-        filter = null;
-        setField(null);
-        setNodeLabel(null, null);
-      }
-      return;
-    }
+    if (value == null || "".equals(value))
+      setFilter(null);
+    else
+      setFilter(
+        new BasicFilter(
+          filterDescription.getField(),
+          filterDescription.getTableConstraint(),
+          filterDescription.getLegalQualifiers(),
+          value));
 
-    // Add / change filter
-    BasicFilter old = filter;
-    setFilter(
-      new InputPageAwareBasicFilter(
-        filterDescription.getField(),
-        filterDescription.getTableConstraint(),
-        filterDescription.getLegalQualifiers(),
-        value,
-        this ));
-
-    updateQueryFilters( old, filter );
-
-  }
-
-
-//  /**
-//   * Update text field when relevant Filter is added or
-//   * removed from query. Filter is relevant if 
-//   * <code>filter.getFieldName().equals(  )</code>
-//   * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
-//   */
-//  public void propertyChange(PropertyChangeEvent evt) {
-//
-//    if (evt.getSource() == query && "filter".equals(evt.getPropertyName())) {
-//
-//      Object newValue = evt.getNewValue();
-//      Object oldValue = evt.getOldValue();
-//
-//      // a relevant filter has been added to query 
-//      if (newValue != null
-//        && newValue instanceof BasicFilter
-//        && oldValue == null) {
-//
-//        BasicFilter f = (BasicFilter) newValue;
-//        if ( relevantFilter(f) ) setFilter(f);
-//
-//      }
-//
-//      // a relevant filter has been removed from the query
-//      if (newValue == null
-//        && oldValue != null
-//        && oldValue instanceof BasicFilter) {
-//
-//        BasicFilter f = (BasicFilter) oldValue;
-//        if ( relevantFilter(f) ) setFilter( null );
-//
-//      }
-//
-//    }
-//  }
-//
-
-
-  private boolean relevantFilter(BasicFilter f) {
-    return f.getField().equals( filterDescription.getField() );
   }
 
   protected void setFilter(Filter filter) {
 
-    this.filter = (BasicFilter)filter;
+    if (this.filter != null)
+      query.removeFilter(this.filter);
 
-    String rhs = null;
+    this.filter = filter;
+
     if (filter != null)
-      rhs =
-        filterDescription.getDisplayName()
-          + filterDescription.getLegalQualifiers()
-          + filter.getValue();
-    setNodeLabel(null, rhs);
-    
-    // Must do this BEFORE adding the filter
-    // to the query because the QueryEditor, which reponds
-    // to Query property changes, uses the field as a key 
-    // to look up THIS page in order to get it's node for
-    // displaying in the tree.
-    setField(filter);
+      query.addFilter(filter);
+
   }
-  
   /**
    * Does nothing.
    * @see org.ensembl.mart.explorer.FilterWidget#setOptions(org.ensembl.mart.lib.config.Option[])
