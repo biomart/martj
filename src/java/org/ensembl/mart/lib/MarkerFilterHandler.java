@@ -25,14 +25,13 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
+
 /**
  * This UnprocessedFilterHandler implementing object resolves Requests for
  * Genes/Snps located between known chromosomal markers into
  * a chromosomal start coordinate BasicFilter, or a chromosomal 
  * end coordinate BasicFilter.
- * The String paremeter should match one of the following formats:
- *  - markerid:start -- adds chr_start coordinates for the marker identified by markerid
- *  - markerid:end -- adds chr_end coordinates for the marker identified by markerid
  * 
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
@@ -42,6 +41,7 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 	private final String START_FIELD = "marker_start";
 	private final String END_FIELD = "marker_end";
 	private final String CHRNAME = "chr_name";
+	private Logger logger = Logger.getLogger(MarkerFilterHandler.class.getName());
 
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.explorer.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
@@ -101,6 +101,8 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 				throw new InvalidQueryException("Recieved invalid field for MarkerFilterHandler " + field + "\n");
 
 			try {
+				logger.info("SQL: " + sql + "\nparameter 1: " + chrvalue + " parameter 2: " + marker_value + "\n");
+				
 				ps = conn.prepareStatement(sql);
 				ps.setString(1, chrvalue);
 				ps.setString(2, marker_value);
@@ -108,12 +110,16 @@ public class MarkerFilterHandler implements UnprocessedFilterHandler {
 				ResultSet rs = ps.executeQuery();
 				rs.next(); // will only be one result
 				filterValue = rs.getString(1);
+				logger.info("Recieved filterValue " + filterValue + " from SQL\n");
 			} catch (SQLException e) {
 				throw new InvalidQueryException("Recieved SQLException " + e.getMessage());
 			}
 
+      if (filterValue != null && filterValue.length() > 0) {
 			Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
 			newQuery.addFilter(posFilter);
+      } else
+        throw new InvalidQueryException("Did not recieve a filterValue for Marker " + marker_value + ", Marker may not be on chromosome " + chrvalue + "\n");
 		}
 		return newQuery;
 	}

@@ -25,6 +25,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.log4j.Logger;
+
 /**
  * This DSFilterHandler implementing object resolves requests for
  * Genes/Snps located between known chromosomal bands into 
@@ -42,6 +44,7 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 	private final String START_FIELD = "band_start";
 	private final String END_FIELD= "band_end";
 	private final String CHRNAME = "chr_name";
+	private Logger logger = Logger.getLogger(BandFilterHandler.class.getName());
 	
 	/* (non-Javadoc)
 	 * @see org.ensembl.mart.lib.UnprocessedFilterHandler#ModifyQuery(org.ensembl.mart.lib.Engine, java.util.List, org.ensembl.mart.lib.Query)
@@ -76,12 +79,12 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 		filterName = focus+"_chrom_start";
 		
 		if (species == null || species.equals(""))
-			throw new InvalidQueryException("Species is required for a Marker Filter, check the MartConfiguration for the correct starBases for this Dataset.");
+			throw new InvalidQueryException("Species is required for a Band Filter, check the MartConfiguration for the correct starBases for this Dataset.");
 		lookupTable = species+"_karyotype_lookup";
 		  
 		chrFilter = newQuery.getFilterByName(CHRNAME);
 		if (chrFilter == null)
-			throw new InvalidQueryException("Marker Filters require a Chromosome Filter to have already been added to the Query.");
+			throw new InvalidQueryException("Band Filters require a Chromosome Filter to have been added to the Query.");
 		  
 		chrvalue = chrFilter.getValue();
 				
@@ -102,6 +105,9 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 			  throw new InvalidQueryException("Recieved invalid field for BandFilterHandler " + field + "\n");
 		
 			try {
+				
+				logger.info("sql = " + sql + "\nparameter 1 = " + chrvalue + " parameter2 = " + band_value + "\n");
+				
 				ps = conn.prepareStatement(sql);
 				ps.setString(1, chrvalue);
 				ps.setString(2, band_value);
@@ -109,12 +115,17 @@ public class BandFilterHandler implements UnprocessedFilterHandler {
 				ResultSet rs = ps.executeQuery();
 				rs.next(); // will only be one result
 				filterValue = rs.getString(1);
+				
+				logger.info("Recieved " + filterValue + " from sql\n");
 			} catch (SQLException e) {
 				throw new InvalidQueryException("Recieved SQLException "+e.getMessage(), e);
 			}
 		
+		  if (filterValue != null && filterValue.length() > 0) {
 			Filter posFilter = new BasicFilter(filterName, filterCondition, filterValue);
 			newQuery.addFilter(posFilter);		
+		  } else
+			throw new InvalidQueryException("Did not recieve a filterValue for Band Filter " + band_value + ", Band may not be on chromosome " + chrvalue + "\n");
 		}
 	  		
 		return newQuery;
