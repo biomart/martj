@@ -39,6 +39,10 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
 
   /**
    * Constructor for an immutable SimpleDSViewAdaptor object.
+   * Really only for development purposes.  If you do use this, make sure you pass in either
+   * a fully instantiated DatasetView object (all FilterPage and AttributePage objects loaded) or
+   * a DatasetView object with a different underlying DatasetViewAdaptor object (this DSViewAdaptor implementation
+   * doesnt insert itself as the adaptor for a given DatasetView object, and its lazyLoad() is never called.
    * @param dset -- DatasetView object
    * @throws ConfigurationException when the DatasetView is null
    */
@@ -49,7 +53,6 @@ public class SimpleDSViewAdaptor implements DSViewAdaptor, Comparable {
     dnames = new String[] { dset.getDisplayName()};
     dsv = dset;
 
-    dsv.setDSViewAdaptor(this);
     hashcode = dsv.hashCode();
   }
 
