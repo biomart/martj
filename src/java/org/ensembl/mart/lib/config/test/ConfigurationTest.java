@@ -105,7 +105,7 @@ public class ConfigurationTest extends Base {
 		String initxml = out.toString();
 		out.close();
 
-		MartXMLutils.storeConfiguration(conn, XMLTESTID, doc);
+		MartXMLutils.storeConfiguration(conn, XMLTESTID, doc, false);
 
 		SAXBuilder newbuilder = new SAXBuilder();
 		newbuilder.setValidation(true);
