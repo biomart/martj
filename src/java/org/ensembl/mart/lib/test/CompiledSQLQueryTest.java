@@ -165,6 +165,24 @@ public class CompiledSQLQueryTest extends Base {
 		q.addFilter(anatomical_filter);
 		q.addFilter(development_filter);
 		executeQuery(q);
+		
+		//TODO:GO
+		/*
+    mol Function          GO:0003673
+    biol proc             GO:0008150
+    cell comp             GO:0005575
+    go_evidence_code:IEA  excluded
+  
+    5345 entries
+     
+    ======  
+    mol Function          chaperone activity
+    biol proc             development
+    cell comp             cell
+    go_evidence_code:IEA  excluded
+
+  3 entries
+		 */
 	}
 
 	public static void main(String[] args) {
