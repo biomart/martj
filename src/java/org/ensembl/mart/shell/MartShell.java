@@ -1183,7 +1183,7 @@ public class MartShell {
         if (lastDBSettings[HOSTITER] != null)
           Readline.addToHistory(lastDBSettings[HOSTITER]);
 
-        thisLine = Readline.readline("\nPlease enter the host address of the mart database: ", false);
+        thisLine = Readline.readline("\nHost: ", false);
         if (thisLine != null)
           martHost = thisLine;
 
@@ -1193,11 +1193,9 @@ public class MartShell {
 
         thisLine =
           Readline.readline(
-            "\nPlease enter the type of RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
+            "\nDatabase Type (default "
               + DetailedDataSource.DEFAULTDATABASETYPE
-              + " and "
-              + DetailedDataSource.DEFAULTDRIVER
-              + " respectively): ",
+               +"): ",
             false);
         if (thisLine != null)
           martDatabaseType = thisLine;
@@ -1208,11 +1206,9 @@ public class MartShell {
 
         thisLine =
           Readline.readline(
-            "\nPlease enter the Driver Class Name of the RDBMS hosting the mart database (if both type and jdbc driver are left blank, defaults to "
-              + DetailedDataSource.DEFAULTDATABASETYPE
-              + " and "
+            "\nDriver Class Name (default "
               + DetailedDataSource.DEFAULTDRIVER
-              + " respectively): ",
+              +"): ",
             false);
         if (thisLine != null)
           martDriver = thisLine;
@@ -1223,11 +1219,10 @@ public class MartShell {
 
         thisLine =
           Readline.readline(
-            "\nPlease enter the port on which the mart database is running (defaults to "
+            "\nPort (default: "
+
               + DetailedDataSource.DEFAULTPORT
-              + " for "
-              + DetailedDataSource.DEFAULTDATABASETYPE
-              + " database systems): ",
+               +"): ",
             false);
         if (thisLine != null)
           martPort = thisLine;
@@ -1236,7 +1231,7 @@ public class MartShell {
         if (lastDBSettings[USERITER] != null)
           Readline.addToHistory(lastDBSettings[USERITER]);
 
-        thisLine = Readline.readline("\nPlease enter the user name used to connect to the mart database: ", false);
+        thisLine = Readline.readline("\nUser: ", false);
         if (thisLine != null)
           martUser = thisLine;
 
@@ -1244,7 +1239,7 @@ public class MartShell {
         if (lastDBSettings[PASSITER] != null)
           Readline.addToHistory(lastDBSettings[PASSITER]);
 
-        thisLine = Readline.readline("\nPlease enter the password used to connect to the mart database: ", false);
+        thisLine = Readline.readline("\nPassword: ", false);
         if (thisLine != null)
           martPass = thisLine;
 
@@ -1252,7 +1247,7 @@ public class MartShell {
         if (lastDBSettings[DBNAMEITER] != null)
           Readline.addToHistory(lastDBSettings[DBNAMEITER]);
 
-        thisLine = Readline.readline("\nPlease enter the name of the mart database you wish to query: ", false);
+        thisLine = Readline.readline("\nDatabase: ", false);
         if (thisLine != null)
           martDatabase = thisLine;
 
@@ -1262,7 +1257,7 @@ public class MartShell {
 
         thisLine =
           Readline.readline(
-            "\nPlease enter a name to refer to this Mart in Shell commands (defaults to "
+            "\nConnection name:  (defaults to "
               + martDatabase
               + "@"
               + martHost
