@@ -31,11 +31,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.sql.DataSource;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -44,13 +47,17 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.guiutils.PreviewPaneOutputStream;
 import org.ensembl.mart.guiutils.QuickFrame;
+import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.Engine;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.QueryAdaptor;
 import org.ensembl.mart.lib.config.CompositeDSConfigAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
@@ -82,6 +89,10 @@ public class QueryEditor extends JPanel {
   private QueryEditorContext editorManager;
 
   private OutputStream os = null;
+
+  private boolean running = false;
+  private List listeners = new ArrayList();
+  private ChangeEvent changeEvent = new ChangeEvent(this);
 
   private static final Logger logger =
     Logger.getLogger(QueryEditor.class.getName());
@@ -139,6 +150,39 @@ public class QueryEditor extends JPanel {
     this.editorManager = editorManager;
     this.query = new Query();
 
+    // notify any state listeners when these 
+    // aspects of the query are changed.
+    this.query.addQueryChangeListener(new QueryAdaptor() {
+      public void attributeAdded(
+        Query sourceQuery,
+        int index,
+        Attribute attribute) {
+        notifyAllListeners();
+      }
+
+      public void attributeRemoved(
+        Query sourceQuery,
+        int index,
+        Attribute attribute) {
+        notifyAllListeners();
+      }
+
+      public void datasetChanged(
+        Query source,
+        String oldDataset,
+        String newDataset) {
+        notifyAllListeners();
+      }
+
+      public void datasourceChanged(
+        Query sourceQuery,
+        DataSource oldDatasource,
+        DataSource newDatasource) {
+        notifyAllListeners();
+      }
+
+    });
+
     QueryTreeView treeConfig =
       new QueryTreeView(query, datasetConfigSettings.getRootAdaptor());
     inputPanelContainer =
@@ -154,9 +198,6 @@ public class QueryEditor extends JPanel {
 
     mqlFileChooser.addChoosableFileFilter(
       new org.ensembl.gui.ExtensionFileFilter("mql", "MQL Files"));
-
-    //    tmpFile = File.createTempFile("mart" + System.currentTimeMillis(), ".tmp");
-    //    tmpFile.deleteOnExit();
 
     // set default working directory
     setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -407,7 +448,6 @@ public class QueryEditor extends JPanel {
     runQuery(EXECUTE, false, false, 0);
   }
 
-
   /**
    * Counts the focus objects that would be returned if the
    * query were executed and prints the value in the
@@ -418,17 +458,15 @@ public class QueryEditor extends JPanel {
     runQuery(COUNT_FOCUS, false, false, 0);
   }
 
-
   /**
      * Counts the rows that would be returned if the
      * query were executed and prints the value in the
      * preview window.
      *
      */
-    public void doCountRows() {
-      runQuery(COUNT_ROWS, false, false, 0);
-    }
-
+  public void doCountRows() {
+    runQuery(COUNT_ROWS, false, false, 0);
+  }
 
   /**
    * Stops running query. Does nothing if query not running.
@@ -517,7 +555,10 @@ public class QueryEditor extends JPanel {
    * @see #COUNT_ROWS
    * @see #COUNT_FOCUS   
    */
-  private synchronized void execute(final int method, final boolean save, final int limit) {
+  private synchronized void execute(
+    final int method,
+    final boolean save,
+    final int limit) {
 
     if (query.getDataSource() == null) {
       feedback.warning("Data base must be set before executing query.");
@@ -542,7 +583,7 @@ public class QueryEditor extends JPanel {
       if (limit > 0)
         query.setLimit(limit);
 
-      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+      setRunning(true);
 
       switch (method) {
 
@@ -554,7 +595,7 @@ public class QueryEditor extends JPanel {
           break;
 
         case COUNT_ROWS :
-        engine.countRows(os, query);
+          engine.countRows(os, query);
           break;
 
         case COUNT_FOCUS :
@@ -582,7 +623,7 @@ public class QueryEditor extends JPanel {
       if (os != null)
         feedback.warning(e);
     } finally {
-      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      setRunning(false);
     }
 
   }
@@ -724,6 +765,43 @@ public class QueryEditor extends JPanel {
    */
   public void openDatasetConfigMenu() {
     inputPanelContainer.openDatasetConfigMenu();
+  }
+
+  /**
+   * Set the cursor to busy for this component and notify 
+   * listeners that the QueryEdotor is running a query or has 
+   * finished running one.
+   * @param running whether the query is running or not
+   */
+  private void setRunning(boolean running) {
+    this.running = running;
+    if (running)
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    else
+      setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+    notifyAllListeners();
+
+  }
+
+  public boolean isRunning() {
+    return running;
+  }
+
+  public void addChangeListener(ChangeListener listener) {
+    listeners.add(listener);
+  }
+
+  public void removeChangeListener(ChangeListener listener) {
+    listeners.remove(listener);
+  }
+
+  /**
+   * Notify all listeners of a state change.
+   */
+  private void notifyAllListeners() {
+    for (Iterator iter = listeners.iterator(); iter.hasNext();)
+       ((ChangeListener) iter.next()).stateChanged(changeEvent);
+
   }
 
 }

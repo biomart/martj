@@ -56,6 +56,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.util.LoggingUtil;
@@ -73,7 +75,9 @@ import org.ensembl.mart.util.LoggingUtil;
  * </p>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartExplorer extends JFrame implements QueryEditorContext {
+public class MartExplorer
+  extends JFrame
+  implements QueryEditorContext, ChangeListener {
 
   // TODO test save/load query
 
@@ -170,15 +174,21 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
         getSelectedQueryEditor().doSaveResults();
     }
   };
-  
+
+  private Action saveResultsAsAction =
+    new AbstractAction("Save Results As", null) {
+    public void actionPerformed(ActionEvent event) {
+      if (isQueryEditorSelected())
+        getSelectedQueryEditor().doSaveResultsAs();
+    }
+  };
   private Action stopAction =
     new AbstractAction("Stop query", createImageIcon("stop.gif")) {
     public void actionPerformed(ActionEvent event) {
       doStop();
     }
   };
-  
-  
+
   private Action saveAction = new AbstractAction("Save", null) {
     public void actionPerformed(ActionEvent event) {
       if (isQueryEditorSelected())
@@ -225,6 +235,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     createUI();
     doLogging(false);
+
+    tabs.addChangeListener(this);
   }
 
   /**
@@ -283,7 +295,8 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
    * Adds component to application as a tabbed pane. The tab's
    * name id component.getName().
    */
-  private void addQueryEditor(JComponent component) {
+  private void addQueryEditor(QueryEditor component) {
+    component.addChangeListener(this);
     tabs.add(component.getName(), component);
   }
 
@@ -317,8 +330,10 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     tb.add(new ExtendedButton(saveResultsAction, "Save Results to file"));
     tb.addSeparator();
     tb.add(new ExtendedButton(executeAction, "Execute Query"));
-    tb.add(new ExtendedButton(countFocusAction, "Count Number Of Focus objects"));
-    tb.add(new ExtendedButton(countRowsAction, "Count Number of Focus objects"));
+    tb.add(
+      new ExtendedButton(countFocusAction, "Count Number Of Focus objects"));
+    tb.add(
+      new ExtendedButton(countRowsAction, "Count Number of Focus objects"));
     tb.add(new ExtendedButton(stopAction, "Stop running Query"));
     return tb;
   }
@@ -386,20 +401,9 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
 
     query.addSeparator();
 
-    JMenuItem saveResults = new JMenuItem(saveResultsAction);
-    query.add(saveResults).setAccelerator(
+    query.add(new JMenuItem(saveResultsAction)).setAccelerator(
       KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK));
-
-    JMenuItem saveResultsAs = new JMenuItem("Save Results As");
-    saveResultsAs.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent event) {
-        if (isQueryEditorSelected())
-          getSelectedQueryEditor().doSaveResultsAs();
-      }
-
-    });
-
-    query.add(saveResultsAs);
+    query.add(new JMenuItem(saveResultsAsAction));
 
     query.addSeparator();
 
@@ -631,6 +635,36 @@ public class MartExplorer extends JFrame implements QueryEditorContext {
     } else {
       System.err.println("Couldn't find file: " + path);
       return null;
+    }
+  }
+
+  public void stateChanged(ChangeEvent e) {
+
+    executeAction.setEnabled(false);
+    countFocusAction.setEnabled(false);
+    countRowsAction.setEnabled(false);
+    saveResultsAction.setEnabled(false);
+    saveResultsAsAction.setEnabled(false);
+    stopAction.setEnabled(false);
+
+    QueryEditor qe = getSelectedQueryEditor();
+    if (qe != null) {
+      if (qe.isRunning()) {
+      
+        stopAction.setEnabled(true);
+      
+      } else if (
+        qe.getQuery().getAttributes().length > 0
+          && qe.getQuery().getDataset() != null
+          && qe.getQuery().getDataSource() != null) {
+
+        executeAction.setEnabled(true);
+        countFocusAction.setEnabled(true);
+        countRowsAction.setEnabled(true);
+        saveResultsAction.setEnabled(true);
+        saveResultsAsAction.setEnabled(true);
+
+      }
     }
   }
 

@@ -111,6 +111,7 @@ public abstract class QueryAdaptor implements QueryListener {
    */
   public void filterChanged(
     Query sourceQuery,
+    int index,
     Filter oldFilter,
     Filter newFilter) {
     
