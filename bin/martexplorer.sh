@@ -24,7 +24,7 @@ TMP_CLASSPATH=${TMP_CLASSPATH}:${TMP_ROOT}/lib/p6spy.jar
 
 TMP_JYTHON_LIB=${TMP_ROOT}/lib
 
-echo "This is a partial DEMO of MartExplorer. It demonstrates part of the application, the query editor, rather than the full application."
+echo "This is a DEMO of MartExplorer (developement version) "
 java -ea -cp $TMP_CLASSPATH org.ensembl.mart.explorer.MartExplorer $@
 
 
