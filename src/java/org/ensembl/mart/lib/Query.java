@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import javax.sql.DataSource;
 
+import org.ensembl.mart.lib.config.DatasetView;
 import org.ensembl.util.StringUtil;
 
 /**
@@ -152,13 +153,14 @@ public class Query {
    * @param Filter filter
    */
   public void removeFilter(Filter filter) {
-    int index = filters.indexOf( filter );
-    if ( index>-1 ) {
-      filters.remove( index );
+    int index = filters.indexOf(filter);
+    if (index > -1) {
+      filters.remove(index);
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).queryFilterRemoved(
           this,
-          index, filter);
+          index,
+          filter);
     }
   }
 
@@ -217,7 +219,10 @@ public class Query {
   public void addFilter(int index, Filter filter) {
     filters.add(index, filter);
     for (int i = 0; i < listeners.size(); ++i)
-       ((QueryChangeListener) listeners.get(i)).queryFilterAdded(this, index, filter);
+      ((QueryChangeListener) listeners.get(i)).queryFilterAdded(
+        this,
+        index,
+        filter);
   }
 
   /**
@@ -226,13 +231,14 @@ public class Query {
    * @param Attribute attribute to be removed.
    */
   public void removeAttribute(Attribute attribute) {
-    int index = attributes.indexOf( attribute );
-    if ( index>-1 ) {
-      attributes.remove( index);
+    int index = attributes.indexOf(attribute);
+    if (index > -1) {
+      attributes.remove(index);
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).queryAttributeRemoved(
           this,
-          index, attribute);
+          index,
+          attribute);
     }
   }
 
@@ -397,6 +403,15 @@ public class Query {
     for (int i = 0, n = filters.size(); i < n; i++)
       tmp = (31 * tmp) + filters.get(i).hashCode();
 
+    tmp *= 31;
+    if (datasetView != null)
+      tmp += datasetView.hashCode();
+
+    tmp *= 31;
+    if (queryName != null)
+      tmp += queryName.hashCode();
+
+
     return tmp;
   }
 
@@ -409,6 +424,7 @@ public class Query {
   private SequenceDescription sequenceDescription;
   private String[] primaryKeys;
   private String[] starBases;
+  private DatasetView datasetView;
   private int limit = 0; // add a limit clause to the SQL with an int > 0
 
   /**
@@ -563,7 +579,8 @@ public class Query {
       for (int i = 0; i < listeners.size(); ++i)
         ((QueryChangeListener) listeners.get(i)).queryAttributeAdded(
           this,
-          index, attribute);
+          index,
+          attribute);
     }
 
   }
@@ -579,6 +596,20 @@ public class Query {
     setLimit(0);
     setPrimaryKeys(null);
     setStarBases(null);
+  }
+
+  public DatasetView getDatasetView() {
+    return datasetView;
+  }
+
+  public void setDatasetView(DatasetView datasetView) {
+    DatasetView old = this.datasetView;
+    this.datasetView = datasetView;
+    for (int i = 0; i < listeners.size(); ++i)
+      ((QueryChangeListener) listeners.get(i)).queryDatasetViewChanged(
+        this,
+        old,
+        datasetView);
   }
 
 }
