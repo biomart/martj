@@ -7,165 +7,209 @@ import org.ensembl.mart.explorer.*;
 import java.util.*;
 import java.io.*;
 import java.net.*;
+import org.apache.log4j.*;
+
 
 /** Input options for specifying region to search. */
-public class FilterPanel extends JPanel implements org.ensembl.mart.explorer.gui.QueryInputPage {
-    /** Creates new form RegionTab */
-    public FilterPanel() {
-        initGUI();
+public class FilterPanel extends JPanel 
+  implements QueryInputPage {
+
+  private Logger logger = Logger.getLogger( FilterPanel.class.getName() );
+
+  /** Creates new form RegionTab */
+  public FilterPanel() {
+    initGUI();
+  }
+
+  /** This method is called from within the constructor to initialize the form. */
+  private void initGUI() {
+    stableIDs.setText("");
+    jPanel6.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    jPanel6.add(stableIDURLButton);
+    jPanel6.add(stableIDURL);
+    stableIDURL.setEditable(true);
+    jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    jPanel3.add(stableIDFileButton);
+    jPanel3.add(stableIDFile);
+    stableIDFile.setEditable(true);
+    stableIDField.setEditable(true);
+    jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    jPanel1.add(jLabel1);
+    jPanel1.add(stableIDField);
+    jLabel1.setText("Type of Stable ID");
+    jLabel1.setToolTipText("");
+    stableIDPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    stableIDPanel.add(stableIDButton);
+    stableIDPanel.add(jPanel2);
+    stableIDButton.setText("Stable IDs");
+    stableIDButton.setToolTipText("Limit to this chromosome");
+    entireGenomeButton.setText("Entire Genome");
+    entireGenomeButton.setToolTipText("Get data for whole genome");
+    entireGenomeButton.setSelected(true);
+    chromosomePanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    chromosomePanel.add(chromosomeButton);
+    chromosomePanel.add(chromosome);
+    chromosomeButton.setText("Chromosome");
+    chromosomeButton.setToolTipText("Limit to this chromosome");
+    setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
+    add(entireGenomePanel);
+    add(chromosomePanel);
+    add(stableIDPanel);
+    entireGenomePanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    entireGenomePanel.add(entireGenomeButton);
+    regionGroup.add(entireGenomeButton);
+    regionGroup.add(chromosomeButton);
+    regionGroup.add( stableIDButton );
+    chromosome.setEditable(true);
+    jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.Y_AXIS));
+    jPanel2.add(jPanel1);
+    jPanel2.add(jPanel3);
+    jPanel2.add(jPanel6);
+    jPanel2.add(jPanel4);
+    jPanel4.add(stableIDStringButton);
+    jPanel4.add(new JScrollPane( stableIDs ));
+    stableIDStringButton.setText("jRadioButton1");
+    stableIDStringButton.setLabel("IDs");
+    stableIDURLButton.setText("jRadioButton1");
+    stableIDURLButton.setLabel("URL");
+    stableIDFileButton.setText("jRadioButton1");
+    stableIDFileButton.setLabel("File");
+
+    stableIDGroup.add( stableIDFileButton );
+    stableIDGroup.add( stableIDURLButton );
+    stableIDGroup.add( stableIDStringButton );
+    stableIDs.setText("");
+    stableIDs.setRows(10);
+    stableIDs.setColumns(30);
+  }
+
+
+  private void updateQueryRegion(Query query) {
+    if (entireGenomeButton.isSelected()) {
+      // do nothing in this case
+    }
+    else if (chromosomeButton.isSelected()) {
+      query.addFilter(new BasicFilter("chromosome_id", "=", Tool.selected(chromosome)));
     }
 
-    /** This method is called from within the constructor to initialize the form. */
-    private void initGUI() {
-        stableIDs.setText("");
-        jPanel6.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        jPanel6.add(stableIDURLButton);
-        jPanel6.add(stableIDURL);
-        stableIDURL.setEditable(true);
-        jPanel3.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        jPanel3.add(stableIDFileButton);
-        jPanel3.add(stableIDFile);
-        stableIDFile.setEditable(true);
-        stableIDField.setEditable(true);
-        jPanel1.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        jPanel1.add(jLabel1);
-        jPanel1.add(stableIDField);
-        jLabel1.setText("Type of Stable ID");
-        jLabel1.setToolTipText("");
-        stableIDPanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        stableIDPanel.add(stableIDButton);
-        stableIDPanel.add(jPanel2);
-        stableIDButton.setText("Stable IDs");
-        stableIDButton.setToolTipText("Limit to this chromosome");
-        entireGenomeButton.setText("Entire Genome");
-        entireGenomeButton.setToolTipText("Get data for whole genome");
-        entireGenomeButton.setSelected(true);
-        chromosomePanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        chromosomePanel.add(chromosomeButton);
-        chromosomePanel.add(chromosome);
-        chromosomeButton.setText("Chromosome");
-        chromosomeButton.setToolTipText("Limit to this chromosome");
-        setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.Y_AXIS));
-        add(entireGenomePanel);
-        add(chromosomePanel);
-        add(stableIDPanel);
-        entireGenomePanel.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        entireGenomePanel.add(entireGenomeButton);
-        regionGroup.add(entireGenomeButton);
-        regionGroup.add(chromosomeButton);
-        regionGroup.add( stableIDButton );
-        chromosome.setEditable(true);
-        jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.Y_AXIS));
-        jPanel2.add(jPanel1);
-        jPanel2.add(jPanel3);
-        jPanel2.add(jPanel6);
-        jPanel2.add(jPanel4);
-        jPanel4.add(stableIDStringButton);
-        jPanel4.add(new JScrollPane( stableIDs ));
-        stableIDStringButton.setText("jRadioButton1");
-        stableIDStringButton.setLabel("IDs");
-        stableIDURLButton.setText("jRadioButton1");
-        stableIDURLButton.setLabel("URL");
-        stableIDFileButton.setText("jRadioButton1");
-        stableIDFileButton.setLabel("File");
+  }
 
-        stableIDGroup.add( stableIDFileButton );
-        stableIDGroup.add( stableIDURLButton );
-        stableIDGroup.add( stableIDStringButton );
-        stableIDs.setText("");
-        stableIDs.setRows(10);
-        stableIDs.setColumns(30);
-    }
+  private void updateQueryStableIDs(Query query) throws InvalidQueryException {
+    if ( stableIDButton.isSelected() ) {
 
+      String fieldType = (String)stableIDField.getSelectedItem();
 
-		private void updateQueryRegion(Query query) {
-        if (entireGenomeButton.isSelected()) {
-            // do nothing in this case
-        }
-        else if (chromosomeButton.isSelected()) {
-            query.addFilter(new BasicFilter("chromosome_id", "=", Tool.selected(chromosome)));
+      if ( stableIDStringButton.isSelected() ) {
+
+        StringTokenizer tokens = new StringTokenizer( stableIDs.getText() );
+        String[] identifiers = new String[ tokens.countTokens() ];
+        int i = 0;
+        while( tokens.hasMoreTokens() )
+          identifiers[ i++ ] = tokens.nextToken();
+        query.addFilter( new IDListFilter( fieldType, identifiers) );
+      }
+
+      else if ( stableIDFileButton.isSelected() ) {
+
+        String fileName = (String)stableIDFile.getSelectedItem();
+        try {
+          query.addFilter( new IDListFilter( fieldType, new File( fileName ) ) );
+        } catch ( IOException e ) {
+          throw new InvalidQueryException( "Failed to open id file: " + fileName, e);
         }
 
-    }
+      }
+      else if ( stableIDURLButton.isSelected() ) {
 
-		private void updateQueryStableIDs(Query query) throws InvalidQueryException {
-			if ( stableIDButton.isSelected() ) {
-
-        String fieldType = (String)stableIDField.getSelectedItem();
-
-        if ( stableIDStringButton.isSelected() ) {
-
-          StringTokenizer tokens = new StringTokenizer( stableIDs.getText() );
-					String[] identifiers = new String[ tokens.countTokens() ];
-          int i = 0;
-					while( tokens.hasMoreTokens() )
-            identifiers[ i++ ] = tokens.nextToken();
-					query.addFilter( new IDListFilter( fieldType, identifiers) );
-        }
-
-        else if ( stableIDFileButton.isSelected() ) {
-
-          String fileName = (String)stableIDFile.getSelectedItem();
-          try {
-						query.addFilter( new IDListFilter( fieldType, new File( fileName ) ) );
-          } catch ( IOException e ) {
-						throw new InvalidQueryException( "Failed to open id file: " + fileName, e);
-          }
-
-        }
-        else if ( stableIDURLButton.isSelected() ) {
-
-          String url = (String)stableIDURL.getSelectedItem();
-          try {
-						query.addFilter( new IDListFilter( fieldType, new URL( url ) ) );
-          } catch( Exception e ) {
-						throw new InvalidQueryException( "Failed to open url: " + url, e);
-          }
+        String url = (String)stableIDURL.getSelectedItem();
+        try {
+          query.addFilter( new IDListFilter( fieldType, new URL( url ) ) );
+        } catch( Exception e ) {
+          throw new InvalidQueryException( "Failed to open url: " + url, e);
         }
       }
     }
+  }
 
-    public void updateQuery(Query query) throws InvalidQueryException {
-			updateQueryRegion( query );
-      updateQueryStableIDs( query );
-    }
+  public void updateQuery(Query query) throws InvalidQueryException {
+    updateQueryRegion( query );
+    updateQueryStableIDs( query );
+  }
 
-    public void updatePage(Query query) {
-        boolean regionSet = false;
-        Iterator iter = query.getAttributes().iterator();
-        while (iter.hasNext()) {
-            Object o = iter.next();
-            if (o instanceof BasicFilter) {
-                BasicFilter bf = (BasicFilter)o;
-                if ("chromosome_id".equals(bf.getField()) && "=".equals(bf.getCondition())) {
-                    chromosome.setSelectedItem(bf.getValue());
-                    chromosomeButton.setSelected(true);
-                }
-            }
-            if (!regionSet) entireGenomeButton.setSelected(true);
+  public void updatePage(Query query) {
+
+    // default behaviour, overriden by settings below
+    entireGenomeButton.setSelected(true);
+
+    Iterator iter = query.getFilters().iterator();
+    while (iter.hasNext()) {
+
+      Object o = iter.next();
+      
+      logger.debug("loading data from filter : " + o);
+
+      if (o instanceof BasicFilter) {
+        BasicFilter bf = (BasicFilter)o;
+        if ("chromosome_id".equals(bf.getField()) && "=".equals(bf.getCondition())) {
+          chromosome.setSelectedItem(bf.getValue());
+          chromosomeButton.setSelected(true);
         }
-    }
+      }
 
-    private JPanel chromosomePanel = new JPanel();
-    private JRadioButton chromosomeButton = new JRadioButton();
-    private JPanel stableIDPanel = new JPanel();
-    private JRadioButton stableIDButton = new JRadioButton();
-    private JPanel entireGenomePanel = new JPanel();
-    private JRadioButton entireGenomeButton = new JRadioButton();
-    private JComboBox chromosome = new JComboBox();
-    private JComboBox stableIDField = new JComboBox();
-    private ButtonGroup regionGroup = new ButtonGroup();
-    private JPanel jPanel1 = new JPanel();
-    private JPanel jPanel2 = new JPanel();
-    private JLabel jLabel1 = new JLabel();
-    private JComboBox stableIDFile = new JComboBox();
-    private JPanel jPanel3 = new JPanel();
-    private JComboBox stableIDURL = new JComboBox();
-    private JPanel jPanel6 = new JPanel();
-    private JPanel jPanel4 = new JPanel();
-    private JRadioButton stableIDStringButton = new JRadioButton();
-    private JRadioButton stableIDURLButton = new JRadioButton();
-    private JRadioButton stableIDFileButton = new JRadioButton();
-    private ButtonGroup stableIDGroup = new ButtonGroup();
-    private JTextArea stableIDs = new JTextArea();
+      if (o instanceof IDListFilter ) {
+        
+        IDListFilter f = (IDListFilter)o;
+        stableIDField.setSelectedItem( f.getField() );
+        stableIDButton.setSelected( true );
+        switch( f.getMode() ) {
+          
+        case IDListFilter.STRING_MODE:
+          String[] ids = f.getIdentifiers();
+          StringBuffer buf = new StringBuffer();
+          for( int i=0; i< ids.length; ++i )
+            buf.append( ids[i] ).append("\n");
+          stableIDs.setText( buf.toString() );
+          stableIDStringButton.setSelected( true );
+          break;
+          
+        case IDListFilter.FILE_MODE:
+          stableIDFile.setSelectedItem( f.getFile().toString() );
+          stableIDFileButton.setSelected( true );
+          break;
+          
+        case IDListFilter.URL_MODE:
+          stableIDURL.setSelectedItem( f.getUrl().toString() );
+          stableIDURLButton.setSelected( true );
+          break;
+          
+        default:
+          logger.info( "unknown IDListFilter");
+        }
+      }
+      
+    }
+  }
+
+  private JPanel chromosomePanel = new JPanel();
+  private JRadioButton chromosomeButton = new JRadioButton();
+  private JPanel stableIDPanel = new JPanel();
+  private JRadioButton stableIDButton = new JRadioButton();
+  private JPanel entireGenomePanel = new JPanel();
+  private JRadioButton entireGenomeButton = new JRadioButton();
+  private JComboBox chromosome = new JComboBox();
+  private JComboBox stableIDField = new JComboBox();
+  private ButtonGroup regionGroup = new ButtonGroup();
+  private JPanel jPanel1 = new JPanel();
+  private JPanel jPanel2 = new JPanel();
+  private JLabel jLabel1 = new JLabel();
+  private JComboBox stableIDFile = new JComboBox();
+  private JPanel jPanel3 = new JPanel();
+  private JComboBox stableIDURL = new JComboBox();
+  private JPanel jPanel6 = new JPanel();
+  private JPanel jPanel4 = new JPanel();
+  private JRadioButton stableIDStringButton = new JRadioButton();
+  private JRadioButton stableIDURLButton = new JRadioButton();
+  private JRadioButton stableIDFileButton = new JRadioButton();
+  private ButtonGroup stableIDGroup = new ButtonGroup();
+  private JTextArea stableIDs = new JTextArea();
 }

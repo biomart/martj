@@ -8,9 +8,19 @@ import java.util.*;
 
 public class IDListFilter implements Filter {
 
+  public final static int STRING_MODE = 0;
+  public final static int FILE_MODE = 1;
+  public final static int URL_MODE = 2;
+
+
+  public int getMode() {
+    return mode;
+  }
+
     public IDListFilter(String field, String[] identifiers) {
       this.field = field;
-			this.identifiers = identifiers;
+      this.identifiers = identifiers;
+      mode = STRING_MODE;
     }
 
     /**
@@ -18,6 +28,8 @@ public class IDListFilter implements Filter {
      */
     public IDListFilter(String field, File file) throws IOException {
       this( field, file.toURL() );
+      this.file = file;
+      mode = FILE_MODE;
     }
 
     /**
@@ -26,7 +38,8 @@ public class IDListFilter implements Filter {
      */
     public IDListFilter(String field, URL url) throws IOException {
       this.field = field;
-
+      this.url = url;
+      mode = URL_MODE;
       // load entries from file into identifiers array
       BufferedReader in = new BufferedReader( new InputStreamReader( url.openStream() ) );
       List lines = new ArrayList();
@@ -65,6 +78,17 @@ public class IDListFilter implements Filter {
             return field;
         }
 
-    private String[] identifiers;
+    public File getFile(){
+            return file;
+        }
+
+    public URL getUrl(){
+            return url;
+        }
+
     private String field;
+    private String[] identifiers;
+  private File file;
+  private URL url;
+  private int mode;
 }
