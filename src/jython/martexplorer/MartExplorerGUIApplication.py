@@ -1573,7 +1573,7 @@ class MartGUIApplication(JFrame):
         self.databasePage.database.setText( DEFAULT_DATABASE )
         self.databasePage.port.setText( DEFAULT_PORT )
 
-        self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, ",") )
+        self.editor.formatPage.setFormatSpec( FormatSpec(FormatSpec.TABULATED, "\t") )
 
         q = Query()
         q.starBases = DATASETS[0].starNames
