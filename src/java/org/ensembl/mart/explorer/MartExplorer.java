@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +44,9 @@ import javax.swing.JTabbedPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.ensembl.mart.lib.DatabaseUtil;
+import org.ensembl.mart.lib.FormatException;
+import org.ensembl.mart.lib.InvalidQueryException;
+import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDSViewAdaptor;
@@ -98,9 +102,8 @@ public class MartExplorer extends JFrame {
 		me.setVisible(true);
 
 		// test mode preloads datasets and sets up a query ready to use.
-		if ( //true 
-      false
-      ) {
+		if (//true 
+		false) {
 
 			DatasetView[] dsViews = QueryEditor.testDSViews();
 			me.resolveAndAddDatasetVies(dsViews);
@@ -262,7 +265,6 @@ public class MartExplorer extends JFrame {
 		query.add(removeQuery);
 
 		JMenuItem execute = new JMenuItem("Execute");
-		execute.setEnabled(false);
 		execute.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				doExecuteQuery();
@@ -335,8 +337,8 @@ public class MartExplorer extends JFrame {
 	 * 
 	 */
 	protected void doAddDatabase() {
-		
-    if (databaseDialog.showDialog(this)) {
+
+		if (databaseDialog.showDialog(this)) {
 
 			try {
 
@@ -353,18 +355,17 @@ public class MartExplorer extends JFrame {
 
 				DatabaseDSViewAdaptor adaptor =
 					new DatabaseDSViewAdaptor(ds, databaseDialog.getUser());
-			
-      	databaseDSViewAdaptors.add(adaptor);
-        
-        DatasetView[] views = adaptor.getDatasetViews();
-        if ( views.length==0 ) {
-          warn("No Views found in database: " + adaptor.toString() );
-        }
-        else {
-          resolveAndAddDatasetVies( views );
-        } 
-			
-      } catch (ConfigurationException e) {
+
+				databaseDSViewAdaptors.add(adaptor);
+
+				DatasetView[] views = adaptor.getDatasetViews();
+				if (views.length == 0) {
+					warn("No Views found in database: " + adaptor.toString());
+				} else {
+					resolveAndAddDatasetVies(views);
+				}
+
+			} catch (ConfigurationException e) {
 				e.printStackTrace();
 				warn("Failed to connect to database: " + e.getMessage());
 			}
@@ -384,8 +385,41 @@ public class MartExplorer extends JFrame {
 	}
 
 	public void doExecuteQuery() {
-		// TODO Auto-generated method stub
 
+		if (queryEditorTabbedPane.getTabCount() < 1) {
+
+			warn("You must add or import a query to execute it.");
+
+		} else {
+
+			QueryEditor qe = (QueryEditor) queryEditorTabbedPane.getSelectedComponent();
+			if ( qe==null ) {
+
+				warn("Can not execute query because none selected. Select one of the queries. ");
+        
+      } else {
+        
+        try {
+					
+          qe.execute();
+          
+				} catch (SequenceException e) {
+					e.printStackTrace();
+          warn(e.getMessage());
+				} catch (FormatException e) {
+					e.printStackTrace();
+          warn(e.getMessage());
+				} catch (InvalidQueryException e) {
+					e.printStackTrace();
+          warn(e.getMessage());
+				} catch (SQLException e) {
+					e.printStackTrace();
+          warn(e.getMessage());
+				}
+        
+      }
+      
+		}
 	}
 
 	/**
@@ -423,9 +457,9 @@ public class MartExplorer extends JFrame {
 
 	private void initDatabaseSettings() {
 		databaseDialog = new DatabaseSettingsDialog();
-    databaseDialog.addDatabaseType("mysql");
-    databaseDialog.addDriver("com.mysql.jdbc.Driver");
-    //  TODO load additional drivers from a config file if available
+		databaseDialog.addDatabaseType("mysql");
+		databaseDialog.addDriver("com.mysql.jdbc.Driver");
+		//  TODO load additional drivers from a config file if available
 		databaseDialog.setPrefs(prefs);
 	}
 
@@ -483,14 +517,14 @@ public class MartExplorer extends JFrame {
 		 */
 	public void doNewQuery() {
 
-    DatasetView[] views = getDatasetViews();
-		if ( views.length == 0) {
+		DatasetView[] views = getDatasetViews();
+		if (views.length == 0) {
 			warn(
 				"No datasets available. You need load one or more "
 					+ "datasets before you can create a query.");
 		} else {
 			QueryEditor qe = new QueryEditor();
-			qe.setDatasetViews( views );
+			qe.setDatasetViews(views);
 			addQueryEditor(qe);
 		}
 

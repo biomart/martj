@@ -254,6 +254,19 @@ public class DatasetWidget
 
     query.removePropertyChangeListener(this);
     query.setDatasetInternalName(datasetName);
+    
+    if ( datasetName==null ) {
+      query.setStarBases( null );
+      query.setPrimaryKeys( null );
+      query.setDataSource( null );
+      
+    } else {
+    
+      DatasetView view = (DatasetView) datasetNameToDatasetView.get( datasetName );
+      query.setStarBases( view.getStarBases() );
+      query.setPrimaryKeys( view.getPrimaryKeys() );
+      query.setDataSource( view.getDatasource() );
+    }
     query.addPropertyChangeListener(this);
   }
 

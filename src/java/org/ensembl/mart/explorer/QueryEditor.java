@@ -25,7 +25,9 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayOutputStream;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +47,12 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import org.ensembl.mart.lib.Engine;
+import org.ensembl.mart.lib.FormatException;
+import org.ensembl.mart.lib.FormatSpec;
+import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.CompositeDSViewAdaptor;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSViewAdaptor;
@@ -92,6 +99,8 @@ public class QueryEditor
 
   /** The query part of the model. */
   private Query query;
+  
+  private Engine engine = new Engine();
 
   private DefaultTreeModel treeModel;
   private DefaultMutableTreeNode rootNode;
@@ -494,6 +503,27 @@ public class QueryEditor
   public void setDatasetViews(DatasetView[] views) {
     datasetViews = views;
     datasetPage.setDatasetViews(datasetViews);
+  }
+
+	/**
+	 * @return
+	 */
+	public Query getQuery() {
+		return query;
+	}
+
+
+  public void execute() throws SequenceException, FormatException, InvalidQueryException, SQLException {
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    FormatSpec formatSpec = FormatSpec.TABSEPARATEDFORMAT;
+    engine.execute( query, formatSpec, os );
+    byte[] b = os.toByteArray();
+    for (int i = 0, n = b.length; i < n && i < 50; i++) {
+			int c = b[i];
+      System.out.print(c);	
+		} 
+
+    System.out.println();
   }
 
 }
