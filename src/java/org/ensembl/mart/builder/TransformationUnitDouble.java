@@ -26,14 +26,32 @@ public class TransformationUnitDouble extends TransformationUnit {
 	public String toSQL (){
 		
 		String sql = null;
-		if (cardinality.equals("n1")){
-			sql = leftJoin(temp_start, ref_table, temp_end.getName());
-		} else {
-			sql = simpleJoin(temp_start, ref_table, temp_end.getName());	
+		
+		if (cardinality.equals("n1") || cardinality.equals("n1r")){
+		
+			sql = leftJoin(temp_end.getName());
+		
+		}
+		
+		/**
+		else if (cardinality.equals ("n1r")){
+			
+			Table new_ref=copyTable(ref_table);
+			Table new_start =copyTable(temp_start);
+			
+			temp_start=new_ref;
+			ref_table=new_start;
+			
+			sql = leftJoin(temp_end.getName());
+		}
+		*/
+		
+		else {
+			
+			sql = simpleJoin(temp_end.getName());	
 		}
 		
 		return sql;
-		
 	}
 	
 	
@@ -128,7 +146,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 	}
 	
 	
-	private String simpleJoin(Table temp_start, Table ref_table, String temp){
+	private String simpleJoin(String temp){
 		
 		StringBuffer temp_start_col = getStartColumns(temp_start);
 		StringBuffer ref_table_col = getRefColumns(ref_table);
@@ -139,12 +157,35 @@ public class TransformationUnitDouble extends TransformationUnit {
 	}
 	
 	
-	private String leftJoin(Table temp_start, Table ref_table, String temp){
+	private String leftJoin(String temp){
 		
 		StringBuffer temp_start_col = getStartColumns(temp_start);
 		StringBuffer ref_table_col = getRefColumns(ref_table);
 		
-		String sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
+		
+		String sql = null;
+		
+		if (cardinality.equals("n1")){
+		
+		sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
+		
+		} else {
+			
+			
+			Table new_ref=copyTable(ref_table);
+			Table new_start =copyTable(temp_start);
+			
+			temp_start=new_ref;
+			ref_table=new_start;
+			
+			
+			
+			sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
+			
+		}
+		
+		
+		
 		return sql;
 		
 	}

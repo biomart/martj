@@ -315,7 +315,7 @@ public class MartBuilder {
 			e1.printStackTrace();
 		}
 		
-		String card_string=" cardinality [11] [n1] [0n] [1n] [SKIP S]: ";
+		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [SKIP S]: ";
 		
 		for (int i=0;i<referenced_tables.length; i++){
 			
@@ -324,7 +324,7 @@ public class MartBuilder {
 			
 			while (!(cardinality.equals("11") || cardinality.equals("n1")
 					|| cardinality.equals("0n") || cardinality.equals("1n")
-					|| cardinality.equals("S")))
+					|| cardinality.equals("n1r") || cardinality.equals("S")))
 				
 			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
