@@ -1,13 +1,60 @@
 UNIT TEST FRAMEWORK
 --------------------------------------------------------------------------------
 
-Unit tests for this system have been developed using the Junit framework.
+Unit tests for this system have been developed using the Junit framework
+(http://www.junit.org).
+
+$MARTDISTRIBUTIONDIR is the path where you cvs updated, 
+or unpacked (unzip or tar) the distribution file into
+the 'mart-explorer' distribution directory 
+(eg, something like /homes/yourusername/src/mart-explorer) 
+
+- Test the entire distribution
+
+You can build and test the entire distribution with 
+ant (http://jakarta.apache.org).  This requires a recent installation
+of ant, and the correct JAVA_HOME and ANT_HOME environment variable
+settings.
+
+>cd $MARTDISTRIBUTIONDIR
+>ant test
+
 Running ant test will give immediate indication of success or failure, and 
-produce a 'reports' directory in the mart-explorer directory.
+produce a $MARTDISTRIBUTIONDIR/reports directory.
 Within this directory can be found html, text, and xml based output
-detailing the results of the individual tests.  The quickest way to 
-view the results is to open the reports/tests/html/index.html page in your
-browser.
+detailing the results of the individual tests of all components of the
+current system.  The quickest way to view the results is to open
+file:///$MARTDISTRIBUTIONDIR/reports/tests/html/index.html in your
+favorite browser.
+
+- Run an individual Test
+
+To run an individual test, you must set your CLASSPATH environment variable
+correctly.  It must have . (cwd) as the first item. It must also contain
+the $MARTDISTIBUTIONDIR/build/classes dir (this is created when you
+run ant build).  Finally, it must include all of the jars in 
+$MARTDISTRIBUTIONDIR/lib.  Then, you can run a test just as you would a normal 
+java class.  Running an individual test will output informaton to STDOUT.  
+
+(note, the following uses csh, you will need to modify this to work in other shells)
+>cd $MARTDISTRIBUTIONDIR
+>setenv CLASSPATH ".:$MARTDISTRIBUTIONDIR/build/classes"
+>set LIB="$MARTDISTRIBUTIONDIR/lib"
+>foreach jar (`ls ${LIB}/*JAR`)
+foreach? setenv CLASSPATH $CLASSPATH":"$jar
+foreach? end
+
+now you can run any of the test classes in the 
+$MARTDISTRIBUTIONDIR/build/classes/org/ensembl/mart/explorer/test directory via:
+
+>java org.ensembl.mart.explorer.test.CompiledSQLQueryTest
+
+If you have a log4j configuration file, you can use it to taylor the information
+that is output during the test.  This is done via javas -D option to setup a Property
+named 'log4j.configuration'
+
+>java -Dlog4j.configuration=file:/pathto/loggingconf.file org.ensembl.mart.explorer.test.CompiledSQLQueryTest
+
 
 
 DEPENDENCIES
@@ -32,11 +79,3 @@ data/gene_stable_id.test - contains a list of ensembl gene names.  This is desig
     will most likely be coordinated with an older mart running on kaka.sanger.ac.uk.
     If you are testing against a local installation, you may need to update the names 
     in this file with a list of genes that you know is present.
-
-
-TESTS
---------------------------------------------------------------------------------
-
-CompiledSQLQueryTest - tests all of the functionality of backend library to mart explorer.
-    These are the classes associated with the collection of attributes and filters from the
-    client, the generation and execution of the SQL, and the formatting of the output.
