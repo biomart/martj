@@ -1225,24 +1225,4 @@
       </AttributeGroup>
     </AttributePage>
   </Dataset>
-  <Dataset displayName="Mus musculus (NCBIM 30) -- EST Genes" internalName="mus_musculus_est_genes">
-    <StarBase>mmusculus_estgene</StarBase>
-    <StarBase>mmusculus_esttranscript</StarBase>
-    <PrimaryKey>gene_id</PrimaryKey>
-    <PrimaryKey>transcript_id</PrimaryKey>
-    <FilterPage internalName="dummy">
-      <FilterGroup internalName="dummy">
-        <FilterCollection internalName="dummy" type="list">
-          <UIFilterDescription fieldName="dummy" internalName="dummy" type="list"/>
-        </FilterCollection>
-      </FilterGroup>
-    </FilterPage>
-    <AttributePage internalName="dummy">
-      <AttributeGroup internalName="dummy">
-        <AttributeCollection internalName="dummy">
-          <UIAttributeDescription fieldName="dummy" internalName="dummy"/>
-        </AttributeCollection>
-      </AttributeGroup>
-    </AttributePage>
-  </Dataset>
 </MartConfiguration>
