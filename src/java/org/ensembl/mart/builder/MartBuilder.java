@@ -117,8 +117,8 @@ public class MartBuilder {
 			Transformation [] tran = target_schema.getTransformationsByFinalTableType("DM");
 			
 			for (int i=0;i<tran.length;i++){
-				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] ");
-				if (input.equals("Y")){
+				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] [Y default] ");
+				if (!(input.equals("N") || input.equals("n"))){
 					tran[i].central=true;		
 					
 					//String extension = getUserInput(tran[i].final_table_name+" EXTENSION: ");
