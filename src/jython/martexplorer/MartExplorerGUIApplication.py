@@ -25,6 +25,7 @@ from jarray import array
 from java.lang import System, String
 from java.io import File
 from java.net import URL
+from java.util import Arrays, Vector
 from java.awt import CardLayout, Dimension, BorderLayout
 from java.awt.event import ActionListener
 from javax.swing import JPanel, JButton, JFrame, JLabel, JComboBox, Box, BoxLayout
@@ -429,6 +430,12 @@ class AttributeManagerPage(InputPage):
         
         """ Selecting an attribute means removing it from available
         and adding it to the tree."""
+        
+        # need to prevent the method running more than once in case it
+        # is called as a result of multiple events (this happens on
+        # Macs)
+        if value in self.selected:
+            return
 
         self.selected.append( value )
         self.available.remove( value )
@@ -457,7 +464,9 @@ class AttributeManagerPage(InputPage):
 
     def refreshView(self):
         self.cardContainer.show( self.node.targetCardName )
-        self.availableWidget.listData = self.available
+        # must convert to vector explicitly to work on macs
+        list = Vector( Arrays.asList(self.available) )
+        self.availableWidget.listData = list
         self.tree.expandPath( self.path )
 
 
