@@ -182,6 +182,9 @@ public class LabelledComboBox extends Box implements ActionListener {
 		combo.removeAllItems();
 	}
 
+
+
+
 	/**
 	 * Resets the list according to the contents of the string.
 	 * @see #toPreferenceString(int)
@@ -258,4 +261,13 @@ public class LabelledComboBox extends Box implements ActionListener {
 	
 		parsePreferenceString( preferences.get( preferenceKey, "" ));		
 	}
+	/**
+   * Determines whether combo box is editable by User. If not it behaves like a 
+   * drop down list.
+	 * @param editabale whether the user can enter text in the combo box.
+	 */
+	public void setEditable(boolean editable) {
+		combo.setEditable( editable );
+	}
+
 }

@@ -101,7 +101,17 @@ public class MartExplorer extends JPanel {
 
 
 	private void initDatabaseSettings() {
-		databaseSettings = new DatabaseSettingsDialog(prefs);
+    databaseSettings = new DatabaseSettingsDialog();
+    
+    // load supported database types into preferences. We do this rather than just 
+    // loading them directly because if there are more than one wee don't want to 
+    // override the last selected one.
+    String key = databaseSettings.getDatabaseType().getPreferenceKey();
+    String current = prefs.get(key, null);
+    if ( current==null || current.length()==0 ) {
+      prefs.put(key, "mysql" );   
+    }
+		databaseSettings.setPrefs( prefs );
 	}
 
 	public void warn(String message) {
