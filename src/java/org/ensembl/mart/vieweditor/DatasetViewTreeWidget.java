@@ -19,9 +19,9 @@
 package org.ensembl.mart.vieweditor;
 
 import java.net.URL;
+import java.io.File;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.ensembl.mart.explorer.QueryEditor;
 import org.ensembl.mart.lib.config.ConfigurationException;
@@ -46,12 +46,12 @@ import org.ensembl.mart.lib.config.URLDSViewAdaptor;
  * </ul>
  * 
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
- * @see org.ensembl.mart.config.DatasetView
+ * //@see org.ensembl.mart.config.DatasetView
  */
 public class DatasetViewTreeWidget extends JPanel {
   
   // NOTE see org.ensembl.mart.explorer.QueryEditor for examples of using JTree
-  
+
   // TODO load tree when datasetView set
   // TODO check that resizing the widget works (manually resize via dragging "corners")
   // TODO remove tree when setDatasetView(null), need to make sure we can add and remove at will
@@ -75,20 +75,32 @@ public class DatasetViewTreeWidget extends JPanel {
 	 */
 	public static void main(String[] args) throws ConfigurationException {
 
-		String file = "data/XML/homo_sapiens__ensembl_genes.xml";
-		URL url = QueryEditor.class.getClassLoader().getResource(file);
+	    String file = "data/XML/homo_sapiens__ensembl_genes.xml";
+       // if (new File(file).exists())
+            System.out.println("hello");
+          try{
+		URL url = DatasetViewTreeWidget.class.getClassLoader().getResource(file);
+        //URL url = new URL("file:////C:/katerina/EnsMart/ensmart/martj/data/XML/homo_sapiens__vega_genes.xml");
+         System.out.println(url);
 		DSViewAdaptor adaptor = new URLDSViewAdaptor(url, true);
+
 		// only view one in the file so get that one
 		DatasetView view = adaptor.getDatasetViews()[0];
 
-		DatasetViewTreeWidget w = new DatasetViewTreeWidget();
-		w.setDatasetView(view);
+		//DatasetViewTreeWidget w = new DatasetViewTreeWidget();
+		//w.setDatasetView(view);
 
 		JFrame f = new JFrame("DatasetView Tree Widget");
-		f.getContentPane().add( w );
+        f.getContentPane().add(new JScrollPane(new DatasetViewTree2(view)));
+       // f.getContentPane().add(new DatasetViewTree2());
+		//f.getContentPane().add( w );
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.setSize(950, 750);
+		//f.setSize(950, 750);
+         f.setSize(500, 400);
 		f.setVisible(true);
+               }catch(Exception e) {
+              e.printStackTrace();
+          }
 	}
 
 	/**
