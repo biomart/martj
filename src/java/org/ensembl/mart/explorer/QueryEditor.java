@@ -20,17 +20,20 @@ package org.ensembl.mart.explorer;
 
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -48,7 +51,9 @@ import org.ensembl.mart.lib.config.MartConfigurationFactory;
  * MartConfiguration object it is initialised with.
  * </p>
  */
-public class QueryEditor extends JPanel {
+public class QueryEditor extends JPanel implements PropertyChangeListener {
+
+  private static final Logger logger = Logger.getLogger( QueryEditor.class.getName() );
 
   /** total height of the componment */
   private int HEIGHT = 768;
@@ -57,13 +62,13 @@ public class QueryEditor extends JPanel {
   private int WIDTH = 1024;
   
   /** default percentage of total width allocated to the tree constituent component. */
-  private double TREE_WIDTH = 0.3d; 
+  private double TREE_WIDTH = 0.4d; 
   
   /** default percentage of total height allocated to the tree constituent component. */
   private double TREE_HEIGHT = 0.7d; 
 
   /** Configuration defining the "query space" this editor encompasses. */
-  private MartConfiguration config;
+  private MartConfiguration martConfiguration;
 
   /** The query part of the model. */
   private Query query;
@@ -77,8 +82,10 @@ public class QueryEditor extends JPanel {
 
 
   public QueryEditor(MartConfiguration config) {
-    this.config = config;
+    this.martConfiguration = config;
     this.query = new Query();
+
+    query.addPropertyChangeListener( this );
 
     initTree();
     initInputPanel();
@@ -94,7 +101,7 @@ public class QueryEditor extends JPanel {
    */
   private void addDatasetSelectionPage() {
     
-    DatasetSelectionPage page = new DatasetSelectionPage(query, config );
+    DatasetSelectionPage page = new DatasetSelectionPage(query, this );
     
     // Add dataset selection page to input panel.
     inputPanel.add( page.getName(), page );
@@ -130,10 +137,10 @@ public class QueryEditor extends JPanel {
     outputPanel.setPreferredSize(new Dimension(WIDTH, outputHeight));
 
     JSplitPane top =
-      new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeView, inputPanel);
+      new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(treeView), new JScrollPane(inputPanel) );
     top.setOneTouchExpandable(true);
     JSplitPane topAndBottom =
-      new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, outputPanel);
+      new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, new JScrollPane(outputPanel) );
     topAndBottom.setOneTouchExpandable(true);
     add(topAndBottom);
   }
@@ -166,7 +173,7 @@ public class QueryEditor extends JPanel {
   }
 
   public static void main(String[] args) throws ConfigurationException {
-    String confFile = "data/xmltest/test_file.xml";
+    String confFile = "data/XML/MartConfiguration.xml";
     URL confURL = ClassLoader.getSystemResource(confFile);
     MartConfiguration config =
       new MartConfigurationFactory().getInstance(confURL);
@@ -178,4 +185,30 @@ public class QueryEditor extends JPanel {
     f.pack();
     f.setVisible(true);
   }
+
+	/**
+   * Redraws the tree if there are any property changes in the Query.
+	 * @see java.beans.PropertyChangeListener#propertyChange(java.beans.PropertyChangeEvent)
+	 */
+	public void propertyChange(PropertyChangeEvent evt) {
+		
+    if ( evt.getSource()==query ) {
+      logger.info("Redraw");
+		}
+    
+	}
+	/**
+	 * @param node
+	 */
+	public void nodeChanged(TreeNode node) {
+		treeModel.nodeChanged(node);
+	}
+
+	/**
+	 * @return
+	 */
+	public MartConfiguration getMartConfiguration() {
+		return martConfiguration;
+	}
+
 }

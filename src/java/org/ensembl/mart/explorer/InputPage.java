@@ -15,25 +15,46 @@ import org.ensembl.mart.lib.Query;
 /**
  * Base class for user input pages.
  */
-public class InputPage extends JPanel {
+public abstract class InputPage extends JPanel {
 
-  private Query query;
+  protected Query query;
+  
+  private String nodeLabel;  
   private MutableTreeNode node;
   private String defaultNodeLabel;
+  
 
   public InputPage(String name, Query query) {
     setName(name);
     this.query = query;
+    setNodeLabel(name, null );
     node = new DefaultMutableTreeNode(this);
-    defaultNodeLabel = "<html><b>"+name+"</b></html>";
+        
   }
 
   public MutableTreeNode getNode() {
     return node;
   }
 
+  /**
+   * Derived classes should change _label_ to
+   * whatever html string they want to appear in the tree view.
+   * @return label.
+   */
   public String toString() {
-    return defaultNodeLabel;
+    return nodeLabel;
   }
+
+  public void setNodeLabel(String title, String description) {
+    if ( description==null ) description = "?";
+    nodeLabel = "<html><b>" + title + ":</b> " + description + "</html>";
+  }
+
+	/**
+	 * @return
+	 */
+	public String getNodeLabel() {
+		return nodeLabel;
+	}
 
 }
