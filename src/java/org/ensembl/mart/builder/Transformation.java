@@ -20,19 +20,18 @@ public class Transformation {
 	ArrayList unwanted = new ArrayList();
 	String dataset;
 	String final_table_name;
+	String final_table_type;
+	String type;
 	private LinkedTables linked;
-	private Table main_table;
+	Table main_table;
 	
 	public Transformation (){		
 	}
 	
-	public Transformation (LinkedTables linked){
-		this.unwanted = createUnits(linked);
-		this.final_table_name=linked.final_table_name;
-		this.main_table = linked.getMainTable();
+	public Transformation (Table [] referenced_tables){
 		
-		//String [] b = new String [unwanted.size()];
-		//this.unwanted = (String []) unwanted.toArray(b);
+		createUnits(referenced_tables);
+		
 	}
 	
 	
@@ -48,33 +47,21 @@ public class Transformation {
 		addUnit(unit);
 	}
 	
-	private TransformationUnit getFinalUnit(){
+	public TransformationUnit getFinalUnit(){
 		
-		System.out.println("units size "+ units.size());
 		TransformationUnit unit = (TransformationUnit) units.get(units.size()-1);
 		return unit;
 		
 	}
 	
-	private ArrayList createUnits (LinkedTables linked) {
+	private void createUnits (Table [] tables) {
 		
 		Table temp_end = new Table();
-		ArrayList unwanted = new ArrayList();
-		
-		for (int i=0; i<linked.getReferencedTables().length; i++){
+		for (int i=0; i<tables.length; i++){
 			
-			Table ref_table = linked.getReferencedTables()[i];
-			
-			if (ref_table.cardinality.equals("1n") || 
-					ref_table.cardinality.equals("0n")){
-				unwanted.add(ref_table.getName());
-			}
-			
-			TransformationUnit unit = new TransformationUnit(ref_table);
+			TransformationUnit unit = new TransformationUnit(tables[i]);
 			units.add(unit);
 		}
-		
-		return unwanted;
 	}
 	
 	
@@ -131,6 +118,10 @@ public class Transformation {
 	private void addUnit (TransformationUnit unit){	
 		this.units.add(unit);
 	}
+	
+	
+	
+	
 	
 	public TransformationUnit [] getUnits() {
 		TransformationUnit [] b = new TransformationUnit[units.size()];

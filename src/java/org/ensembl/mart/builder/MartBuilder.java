@@ -41,10 +41,10 @@ public class MartBuilder {
 			LinkedTables linked_tables=getLinked(table_name);
 			StringBuffer final_table = new StringBuffer(dataset + "__"+table_name+"__");
 			if (output.equals("M")){
-				linked_tables.type ="MAIN";
+				linked_tables.final_table_type ="MAIN";
 				linked_tables.final_table_name= final_table.append("MAIN").toString();
 			} else { 
-				linked_tables.type = "DM";
+				linked_tables.final_table_type = "DM";
 				linked_tables.final_table_name= final_table.append("DM").toString();
 			}
 			linked_tables.dataset=dataset;
@@ -57,7 +57,7 @@ public class MartBuilder {
 		
 		
 		
-		// Transform	
+		// Create Target schema and transformations	
 		TargetSchema target_schema = new TargetSchema(source_schema);
 		Transformation [] transformations = target_schema.getTransformations();
 		

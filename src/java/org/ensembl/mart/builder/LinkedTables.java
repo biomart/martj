@@ -20,7 +20,7 @@ public class LinkedTables {
 	Table main_table;
 	ArrayList referenced_tables = new ArrayList();
 	String next_main;
-	String type;
+	String final_table_type;
 	String dataset;
 	String final_table_name;
 	
