@@ -124,6 +124,7 @@ public class Engine {
     try {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(sql);
+      System.out.println("prepared sql "+sql);
 
       int p = 1;
       for (int i = 0, n = query.getFilters().length; i < n; ++i) {

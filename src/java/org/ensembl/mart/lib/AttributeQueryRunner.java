@@ -139,11 +139,9 @@ public final class AttributeQueryRunner implements QueryRunner {
     if (ds == null)
       throw new RuntimeException("curQuery.DataSource is null");
 
-    if (ds.getDatabaseType().equals("mysql")) {
-      //mySQL solution
-      executeQueryMysql(ds, curQuery, hardLimit);
+    if (ds.getDatabaseType().equals("mysql") || ds.getDatabaseType().equals("postgresql")) {
+      executeQueryPostgresMysql(ds, curQuery, hardLimit);
     } else {
-      //generic solution
       executeQueryGeneric(ds, curQuery, hardLimit);
     }
   }
@@ -238,7 +236,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     }
   }
   
-  protected void executeQueryMysql(DetailedDataSource ds, Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
+  protected void executeQueryPostgresMysql(DetailedDataSource ds, Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
     boolean moreRows = true;
@@ -261,7 +259,11 @@ public final class AttributeQueryRunner implements QueryRunner {
         else
           maxRows = batchLimit;
 
-        sql += " LIMIT " + totalRowsThisExecute + "," + maxRows; //;(maxRows - lastIDRowsProcessed);    	
+        if (ds.getDatabaseType().equals("mysql")) {sql += " LIMIT " + totalRowsThisExecute + "," + maxRows;} //;(maxRows - lastIDRowsProcessed); 
+        if (ds.getDatabaseType().equals("postgresql")) {
+        	int pslimit=maxRows-totalRowsThisExecute;
+        	sql += " LIMIT " + pslimit + " OFFSET " + totalRowsThisExecute;}
+        
 
         if (logger.isLoggable(Level.FINE))
           logger.fine("SQL : " + sql);

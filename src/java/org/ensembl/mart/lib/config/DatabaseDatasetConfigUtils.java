@@ -62,19 +62,7 @@ import org.jdom.output.XMLOutputter;
 public class DatabaseDatasetConfigUtils {
 
   private final String BASEMETATABLE = "meta_configuration"; // append user if necessary
-
-  /*
-   * meta_configuration<_username>
-   * -----------------------
-   * internalName   varchar(100)
-   * displayName    varchar(100)
-   * dataset        varchar(100)
-   * description    varchar(200)
-   * xml            longblob
-   * compressed_xml longblob
-   * MessageDigest  blob
-   */
-
+ 
   private HashMap configInfo = new HashMap();
   
   private final String VISIBLESQL = " where visible = 1";
@@ -98,9 +86,11 @@ public class DatabaseDatasetConfigUtils {
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
   private final String ORACLE_CREATETABLESQL = "create table meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
+  private final String POSTGRESQL_CREATETABLESQL="create table meta_configuration (internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
+  private final String POSTGRESDBNAME=null;
 
   private final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
 
@@ -1179,7 +1169,8 @@ public class DatabaseDatasetConfigUtils {
 			  conn = dsource.getConnection();
 			  String CREATE_SQL = new String();
 			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_CREATETABLESQL;}
-			  else {CREATE_SQL = CREATEMETATABLESQL;}
+			  if(dsource.getDatabaseType().equals("postgresql")) {CREATE_SQL=POSTGRESQL_CREATETABLESQL;}
+			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = CREATEMETATABLESQL;}
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
 			  System.out.println ("create statement: "+CREATE_SQL);
@@ -1995,6 +1986,8 @@ public class DatabaseDatasetConfigUtils {
   public String[] getNaiveDatasetNamesFor(String databaseName) throws SQLException {
     String[] potentials = getNaiveMainTablesFor(databaseName, null);
 
+    System.out.println("HERe size "+potentials.length);
+    
     //now weed them to a subset, attempting to unionize conformed dimension names
     //List retList = new ArrayList();
     Set retSet = new HashSet();
@@ -2027,14 +2020,6 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = dsource.getConnection();
 
     DatabaseMetaData dmd = conn.getMetaData();
-
-    //Note: currently this isnt cross platform,
-    //as some RDBMS capitalize all names of tables
-    //Either need to find a capitalization scheme general
-    //to all RDBMS, or search for both MAIN and main
-    //and force intermart consistency of capitalization for
-    //those RDBMS which allow users freedom to capitalize as
-    //they see fit. Currently does the latter.
     
     String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
 	//String tablePattern = (datasetName != null) ? datasetName + "__%": "%";
@@ -2045,13 +2030,6 @@ public class DatabaseDatasetConfigUtils {
     //get all main tables
 
     if (dsource.getDatabaseType().equals("oracle")) {
-    //System.out.println("databaseType() "+dsource.getDatabaseType());
-
-
-      //System.out.println("database type: " + dsource.getDatabaseType());
-
-      //ResultSet rsSch = 
-      //while (rsSch.next()) {
         String databaseName2 = getSchema();
 
         //first search for tablePattern    
@@ -2074,17 +2052,17 @@ public class DatabaseDatasetConfigUtils {
             potentials.add(tableName);
         }
         rsTab.close();
-      //}
-      //rsSch.close();
-    } else {
+      
+    } if (dsource.getDatabaseType().equals("mysql")) {
 
 
 	   
       //====
       //first search for tablePattern    
       ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
-
+      
       while (rsTab.next()) {
+      	
         String tableName = rsTab.getString(3);
 		String tableDataset = tableName.split("__")[0];
 		if (datasetName == null || tableDataset.equals(datasetName)){
@@ -2107,12 +2085,42 @@ public class DatabaseDatasetConfigUtils {
       }
       rsTab.close();
 
+    } if (dsource.getDatabaseType().equals("postgresql")) {
+        databaseName=POSTGRESDBNAME;
+
+        //System.out.println("Schema "+databaseName2);
+        
+        //first search for tablePattern    
+        ResultSet rsTab = dmd.getTables(null, databaseName, tablePattern, null);
+
+        while (rsTab.next()) {
+          String tableName = rsTab.getString(3);
+          potentials.add(tableName);
+        }
+        rsTab.close();
+
+        //now try capitals, should NOT get mixed results
+        rsTab = dmd.getTables(null, databaseName, capTablePattern, null);
+        while (rsTab.next()) {
+          String tableName = rsTab.getString(3);
+          //NN
+          //System.out.println(tableName);
+
+          if (!potentials.contains(tableName))
+            potentials.add(tableName);
+        }
+        rsTab.close();
+      
     }
+       
     conn.close();
 
     String[] retList = new String[potentials.size()];
     potentials.toArray(retList);
     //Arrays.sort(retList);
+    
+    System.out.println("size "+retList.length);
+    
     return retList;
   }
 
@@ -2321,6 +2329,8 @@ public class DatabaseDatasetConfigUtils {
 
     List columns = new ArrayList();
     ResultSet rset = dmd.getColumns(null, databaseName, tableName, null);
+    System.out.println("columns db name"+databaseName+" table name "+tableName);
+    
     while (rset.next()) {
       if (rset.getString(3).toLowerCase().equals(tableName.toLowerCase())) {
         String cname = rset.getString(4);
@@ -2387,6 +2397,7 @@ public class DatabaseDatasetConfigUtils {
     //need to sort starbases in order of the number of keys they contain
     //primaryKeys should be in this same order
 
+       
     List starbases = new ArrayList();
     List finalStarbases = new ArrayList(); 
     starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
@@ -2398,8 +2409,11 @@ public class DatabaseDatasetConfigUtils {
 	  finalStarbases.add(starbases.get(i));
       
       TableDescription table = getTableDescriptionFor(databaseName, tableName);
+      //System.out.println("table descriptin for "+ databaseName+ " table "+tableName);
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
-        ColumnDescription column = table.columnDescriptions[j];
+      	//System.out.println("getting columns name "+tableName);
+      	
+      	ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
         //NN added uppercase   
         //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
@@ -2579,6 +2593,7 @@ public class DatabaseDatasetConfigUtils {
   	if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();
   //System.out.println("databaseType() "+dsource.getDatabaseType());	
   	
+  	if (dsource.getDatabaseType().equals("postgresql")) databaseName=POSTGRESDBNAME;
   	
     String datasetName = dsv.getDataset();
 

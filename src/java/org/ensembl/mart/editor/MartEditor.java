@@ -717,13 +717,19 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       disableCursor();
       // for oracle. arrayexpress: needs user, not instance
       String dbtype = databaseDialog.getDatabaseType();
-      String qdb;
+      String qdb= null;
 
       if (dbtype.startsWith("oracle"))
         qdb = user.toUpperCase(); // not sure why needs uppercase
-      else
-        qdb = database;
-
+      if (dbtype.equals("mysql")) qdb = database;
+      
+      // There is some confusion wrt to schema/db names across platforms.
+      // For postgres we set it to an unrestricted search ei null.
+      //  DatasetConfigTreeWidget relies on some db null, user null etc logic
+      // the type is temporarily set to pgsql until sorted.
+      
+      if (dbtype.equals("postgresql")) qdb = "pgsql";
+      
       DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, null, null, dataset, null, qdb);
 
       frame.setVisible(true);

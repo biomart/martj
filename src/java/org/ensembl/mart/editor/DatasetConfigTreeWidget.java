@@ -91,6 +91,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	  }
             	  
             	  else{
+            	  	// hack to bypass the 'null logic' above.
+            	  	if(database.equals("pgsql")) database =null;
             	  	config = MartEditor.getDatabaseDatasetConfigUtils().getNaiveDatasetConfigFor(database,dataset);
             	  }
             	}

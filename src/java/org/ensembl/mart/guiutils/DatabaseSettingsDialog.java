@@ -210,16 +210,23 @@ public class DatabaseSettingsDialog extends Box {
     String t1 ="oracle";
    if ( !databaseType.hasItem(t1) )
       databaseType.addItem(t1);
-     
+   String t2 ="postgresql";
+   if ( !databaseType.hasItem(t2) )
+      databaseType.addItem(t2);
  
     driver.load(preferences);
     // ensure drivers are available
     String d = "com.mysql.jdbc.Driver";
     if ( !driver.hasItem(d) )
       driver.addItem(d);
- String d1 = "oracle.jdbc.driver.OracleDriver";
+    String d1 = "oracle.jdbc.driver.OracleDriver";
     if ( !driver.hasItem(d1) )
       driver.addItem(d1);
+    String d2 = "org.postgresql.Driver";
+    if ( !driver.hasItem(d2) )
+      driver.addItem(d2);
+    
+    
 
 		host.load(preferences);
 		port.load(preferences);
