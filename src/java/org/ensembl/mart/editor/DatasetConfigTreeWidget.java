@@ -227,7 +227,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
            tree.save_as();
        }
 
-	public void export(){
+	public void export() throws ConfigurationException{
 	    tree.export();
 	}
 

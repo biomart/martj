@@ -637,6 +637,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       } catch (java.beans.PropertyVetoException e) {
       }
     } catch (ConfigurationException e) {
+      JOptionPane.showMessageDialog(this, "Could not import requested Dataset", "ERROR", 0);
     } finally {
       enableCursor();
     }
@@ -649,7 +650,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     }
 
     try {
-    } finally {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
       String dset = dsConfig.getDataset();
@@ -683,6 +683,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       dsConfig.setDataset(dataset);
 
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
+    } catch (ConfigurationException e) {
+      JOptionPane.showMessageDialog(this, "Could not export requested Dataset, make sure you have write permission.", "ERROR", 0);
+    } finally {
       enableCursor();
     }
   }
@@ -730,126 +733,126 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     } finally {
       enableCursor();
     }
-}
-
-public void updateDatasetConfig() {
-  try {
-    if (ds == null) {
-      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-      return;
-    }
-
-    try {
-      disableCursor();
-      // check whether existing filters and atts are still in database
-      Object selectedFrame = desktop.getSelectedFrame();
-
-      if (selectedFrame == null) {
-        JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
-        return;
-      }
-
-      DatasetConfig odsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
-
-      if (odsv == null) {
-        JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
-        return;
-      }
-
-      DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
-      // check for new tables and cols
-      dsv = dbutils.getNewFiltsAtts(database, dsv);
-
-      DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
-      frame.setVisible(true);
-      desktop.add(frame);
-      try {
-        frame.setSelected(true);
-      } catch (java.beans.PropertyVetoException e) {
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  } finally {
-    enableCursor();
   }
-}
 
-public void deleteDatasetConfig() {
+  public void updateDatasetConfig() {
+    try {
+      if (ds == null) {
+        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+        return;
+      }
 
-  try {
-    if (ds == null) {
-      JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
-      return;
+      try {
+        disableCursor();
+        // check whether existing filters and atts are still in database
+        Object selectedFrame = desktop.getSelectedFrame();
+
+        if (selectedFrame == null) {
+          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+          return;
+        }
+
+        DatasetConfig odsv = ((DatasetConfigTreeWidget) selectedFrame).getDatasetConfig();
+
+        if (odsv == null) {
+          JOptionPane.showMessageDialog(this, "Nothing to Update, please Import a DatasetConfig", "ERROR", 0);
+          return;
+        }
+
+        DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+        // check for new tables and cols
+        dsv = dbutils.getNewFiltsAtts(database, dsv);
+
+        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+        frame.setVisible(true);
+        desktop.add(frame);
+        try {
+          frame.setSelected(true);
+        } catch (java.beans.PropertyVetoException e) {
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    } finally {
+      enableCursor();
     }
+  }
+
+  public void deleteDatasetConfig() {
 
     try {
-      disableCursor();
-      String[] datasets = dbutils.getAllDatasetNames(user);
-      String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "Dataset Config",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          datasets,
-          datasets[0]);
-      if (dataset == null)
+      if (ds == null) {
+        JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
         return;
-      String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
-      String intName;
-      if (internalNames.length == 1)
-        intName = internalNames[0];
-      else {
-        intName =
+      }
+
+      try {
+        disableCursor();
+        String[] datasets = dbutils.getAllDatasetNames(user);
+        String dataset =
           (String) JOptionPane.showInputDialog(
             null,
             "Choose one",
-            "Internal name",
+            "Dataset Config",
             JOptionPane.INFORMATION_MESSAGE,
             null,
-            internalNames,
-            internalNames[0]);
+            datasets,
+            datasets[0]);
+        if (dataset == null)
+          return;
+        String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+        String intName;
+        if (internalNames.length == 1)
+          intName = internalNames[0];
+        else {
+          intName =
+            (String) JOptionPane.showInputDialog(
+              null,
+              "Choose one",
+              "Internal name",
+              JOptionPane.INFORMATION_MESSAGE,
+              null,
+              internalNames,
+              internalNames[0]);
+        }
+        if (intName == null)
+          return;
+        dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
+
+      } catch (ConfigurationException e) {
       }
-      if (intName == null)
-        return;
-      dbutils.deleteDatasetConfigsForDatasetIntName(dataset, intName);
-
-    } catch (ConfigurationException e) {
+    } finally {
+      enableCursor();
     }
-  } finally {
-    enableCursor();
   }
-}
 
-public void save() {
-  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();
-}
+  public void save() {
+    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save();
+  }
 
-public void save_as() {
-  ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save_as();
-}
+  public void save_as() {
+    ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).save_as();
+  }
 
-public void exit() {
-  System.exit(0);
-}
+  public void exit() {
+    System.exit(0);
+  }
 
-public void undo() {
+  public void undo() {
 
-}
+  }
 
-public void redo() {
+  public void redo() {
 
-}
+  }
 
-private void enableCursor() {
-  setCursor(Cursor.getDefaultCursor());
-  getGlassPane().setVisible(false);
-}
+  private void enableCursor() {
+    setCursor(Cursor.getDefaultCursor());
+    getGlassPane().setVisible(false);
+  }
 
-private void disableCursor() {
-  getGlassPane().setVisible(true);
-  setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-}
+  private void disableCursor() {
+    getGlassPane().setVisible(true);
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+  }
 }
