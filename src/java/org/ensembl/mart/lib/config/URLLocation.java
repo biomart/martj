@@ -41,13 +41,13 @@ public class URLLocation extends MartLocationBase {
     type = MartLocationBase.URL;
   }
  
-  public URLLocation(String url, String name) throws ConfigurationException {
-    super(name, MartLocationBase.URL);
+  public URLLocation(String url, String name, String visibleString) throws ConfigurationException {
+    super(name, visibleString, MartLocationBase.URL);
     setURL(url);
   }
   
-	public URLLocation(URL url, String name) {
-    super(name, MartLocationBase.URL);
+	public URLLocation(URL url, String name, String visibleString) {
+    super(name, visibleString, MartLocationBase.URL);
     setURL(url);
 	}
 

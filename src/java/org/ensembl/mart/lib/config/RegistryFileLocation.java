@@ -38,13 +38,13 @@ public class RegistryFileLocation extends MartLocationBase {
     type = MartLocationBase.REGISTRYFILE;
   }
   
-  public RegistryFileLocation(String url, String name) throws ConfigurationException {
-    super(name, MartLocationBase.REGISTRYFILE);
+  public RegistryFileLocation(String url, String name, String visibleString) throws ConfigurationException {
+    super(name, visibleString, MartLocationBase.REGISTRYFILE);
     setURL(url);
   }
   
-  public RegistryFileLocation(URL url, String name) {
-    super(name, MartLocationBase.REGISTRYFILE);
+  public RegistryFileLocation(URL url, String name, String visibleString) {
+    super(name, visibleString, MartLocationBase.REGISTRYFILE);
     setURL(url);
   }
 

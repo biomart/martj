@@ -158,7 +158,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getMartLocations()
    */
   public MartLocation[] getMartLocations() throws ConfigurationException {
-    return new MartLocation[] { new URLLocation(dsvurl, adaptorName)};
+    return new MartLocation[] { new URLLocation(dsvurl, adaptorName, "true")};
   }
 
   /**

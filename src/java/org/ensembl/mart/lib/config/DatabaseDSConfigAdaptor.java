@@ -311,6 +311,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    */
   public MartLocation[] getMartLocations() throws ConfigurationException {
     checkUpdateException();
+    
     MartLocation dbloc =
       new DatabaseLocation(
         dataSource.getHost(),
@@ -319,7 +320,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
         dataSource.getDatabaseName(),
         user,
         dbpassword,
-        adaptorName);
+        adaptorName, "true");
     return new MartLocation[] { dbloc };
   }
 

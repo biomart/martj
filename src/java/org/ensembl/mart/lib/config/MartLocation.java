@@ -42,4 +42,16 @@ public interface MartLocation {
    * set the name of the Location
    */
   public void setName(String name);
+  
+  /**
+   * Determine if this is a visible Mart
+   * @return boolean
+   */
+  public boolean isVisible();
+  
+  /**
+   * Set whether this Mart is visible
+   * @param visible boolean
+   */
+  public void setVisible(boolean visible);
 }

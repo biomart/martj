@@ -53,9 +53,10 @@ public class RegistryDBLocation extends MartLocationBase {
 		String instanceName,
 		String user,
 		String password,
-		String name)
+		String name,
+        String visibleString)
 		throws ConfigurationException {
-		super(name, MartLocationBase.DATABASE);
+		super(name, visibleString, MartLocationBase.DATABASE);
 
 		if (host == null || instanceName == null || user == null)
 			throw new ConfigurationException("RegistryDBLocation Objects must contain a host, user and instanceName\n");

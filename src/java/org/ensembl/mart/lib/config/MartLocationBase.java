@@ -31,15 +31,18 @@ public class MartLocationBase extends BaseConfigurationObject implements MartLoc
   public static final String REGISTRYDB = "registryDB";
   
   protected final String NAME_KEY = "name";
+  protected final String VISIBLE_KEY = "visible";
+  
   protected String type;
   
   public MartLocationBase() {
     super();
   }
   
-  public MartLocationBase(String name, String type) {
+  public MartLocationBase(String name, String visible, String type) {
     super();
     setAttribute(NAME_KEY, name);
+    setAttribute(VISIBLE_KEY, visible);
     this.type = type;
   }
   
@@ -62,6 +65,31 @@ public class MartLocationBase extends BaseConfigurationObject implements MartLoc
    */  
   public void setName(String name) {
     setAttribute(NAME_KEY, name);
+  }
+  
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MartLocation#isVisible()
+   */
+  public boolean isVisible() {
+    boolean ret = false;
+    String visString = getAttribute(VISIBLE_KEY);
+    ret = (visString != null 
+            && visString.length() > 0 
+            && !(visString.equalsIgnoreCase("false")) 
+            && !(visString.equalsIgnoreCase("0")));
+  
+    return ret;
+  }
+
+  /* (non-Javadoc)
+   * @see org.ensembl.mart.lib.config.MartLocation#setVisible(boolean)
+   */
+  public void setVisible(boolean visible) {
+    if (visible) {
+      setAttribute(VISIBLE_KEY, "true");
+    } else {
+      setAttribute(VISIBLE_KEY, "");
+    }
   }
   
   /* (non-Javadoc)

@@ -15,7 +15,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  */
- 
+
 package org.ensembl.mart.lib.config;
 
 import org.ensembl.mart.lib.DetailedDataSource;
@@ -32,32 +32,41 @@ import org.ensembl.mart.lib.DetailedDataSource;
  */
 public class DatabaseLocation extends MartLocationBase {
 
-  private final String HOST_KEY = "host";
-  private final String PORT_KEY = "port";
-  private final String DATABASE_TYPE_KEY = "databaseType";
-  private final String INSTANCE_NAME_KEY = "instanceName";
-  private final String USER_KEY = "user";
-  private final String PASSWORD_KEY = "password";
+	private final String HOST_KEY = "host";
+	private final String PORT_KEY = "port";
+	private final String DATABASE_TYPE_KEY = "databaseType";
+	private final String INSTANCE_NAME_KEY = "instanceName";
+	private final String USER_KEY = "user";
+	private final String PASSWORD_KEY = "password";
 
-  public DatabaseLocation() {
-    super();
-    type = MartLocationBase.DATABASE;
-  }
-  
-  public DatabaseLocation(String host, String port, String databaseType, String instanceName, String user, String password, String name) throws ConfigurationException {
-    super(name, MartLocationBase.DATABASE);
-    
-    if (host == null || instanceName == null || user == null)
-      throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
-      
-      setAttribute(HOST_KEY, host);
-      setAttribute(INSTANCE_NAME_KEY, instanceName);
-      setAttribute(USER_KEY, user);
-      setAttribute(DATABASE_TYPE_KEY, databaseType);
-      setAttribute(PORT_KEY, port);
-      setAttribute(PASSWORD_KEY, password);
-  }
-	
+	public DatabaseLocation() {
+		super();
+		type = MartLocationBase.DATABASE;
+	}
+
+	public DatabaseLocation(
+		String host,
+		String port,
+		String databaseType,
+		String instanceName,
+		String user,
+		String password,
+		String name,
+		String visibleString)
+		throws ConfigurationException {
+		super(name, visibleString, MartLocationBase.DATABASE);
+
+		if (host == null || instanceName == null || user == null)
+			throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
+
+		setAttribute(HOST_KEY, host);
+		setAttribute(INSTANCE_NAME_KEY, instanceName);
+		setAttribute(USER_KEY, user);
+		setAttribute(DATABASE_TYPE_KEY, databaseType);
+		setAttribute(PORT_KEY, port);
+		setAttribute(PASSWORD_KEY, password);
+	}
+
 	/**
 	 * Returns the type of RDBMS serving this location.  This may be null.
 	 * @return String databaseType
@@ -66,10 +75,10 @@ public class DatabaseLocation extends MartLocationBase {
 		return getAttribute(DATABASE_TYPE_KEY);
 	}
 
-  public void setDatabaseType(String databaseType) {
-    setAttribute(DATABASE_TYPE_KEY, databaseType);
-  }
-  
+	public void setDatabaseType(String databaseType) {
+		setAttribute(DATABASE_TYPE_KEY, databaseType);
+	}
+
 	/**
 	 * Returns the host for the RDBMS serving this location.
 	 * @return String host
@@ -78,10 +87,10 @@ public class DatabaseLocation extends MartLocationBase {
 		return getAttribute(HOST_KEY);
 	}
 
-  public void setHost(String host) {
-    setAttribute(HOST_KEY, host);
-  }
-  
+	public void setHost(String host) {
+		setAttribute(HOST_KEY, host);
+	}
+
 	/**
 	 * Returns the name of the Mart instance.
 	 * @return String instanceName
@@ -90,10 +99,10 @@ public class DatabaseLocation extends MartLocationBase {
 		return getAttribute(INSTANCE_NAME_KEY);
 	}
 
-  public void setInstanceName(String instanceName) {
-    setAttribute(INSTANCE_NAME_KEY, instanceName);
-  }
-  
+	public void setInstanceName(String instanceName) {
+		setAttribute(INSTANCE_NAME_KEY, instanceName);
+	}
+
 	/**
 	 * Returns the password for the RDBMS serving this location.  This may be null.
 	 * @return String password
@@ -102,10 +111,10 @@ public class DatabaseLocation extends MartLocationBase {
 		return getAttribute(PASSWORD_KEY);
 	}
 
-  public void setPassword(String password) {
-    setAttribute(PASSWORD_KEY, password);
-  }
-  
+	public void setPassword(String password) {
+		setAttribute(PASSWORD_KEY, password);
+	}
+
 	/**
 	 * Returns the port for the RDBMS serving this location.  This may be null.
 	 * @return String port
@@ -114,10 +123,10 @@ public class DatabaseLocation extends MartLocationBase {
 		return getAttribute(PORT_KEY);
 	}
 
-  public void setPort(String port) {
-    setAttribute(PORT_KEY, port);
-  }
-  
+	public void setPort(String port) {
+		setAttribute(PORT_KEY, port);
+	}
+
 	/**
 	 * Returns the user for the RDBMS serving this location.
 	 * @return String user
@@ -125,44 +134,43 @@ public class DatabaseLocation extends MartLocationBase {
 	public String getUser() {
 		return getAttribute(USER_KEY);
 	}
-	
-  public void setUser(String user) {
-    setAttribute(USER_KEY, user);
-  }
-  
+
+	public void setUser(String user) {
+		setAttribute(USER_KEY, user);
+	}
+
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 
 		buf.append("[");
-    buf.append(super.toString());
+		buf.append(super.toString());
 		buf.append("]");
 
 		return buf.toString();
 	}
-	
+
 	/**
 	 * Allows Equality Comparisons manipulation of DatabaseLocation objects
 	 */
 	public boolean equals(Object o) {
 		return o instanceof DatabaseLocation && hashCode() == o.hashCode();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
-    return super.hashCode();
+		return super.hashCode();
 	}
-  
-  
-  
+
 	/**
-   * @return "name" if set, otherwise uses DetailedDataSource.simpleRepresentation( getHost(), getPort(), getInstanceName() )
+	 * @return "name" if set, otherwise uses DetailedDataSource.simpleRepresentation( getHost(), getPort(), getInstanceName() )
 	 * @see org.ensembl.mart.lib.config.MartLocation#getName()
 	 */
 	public String getName() {
 		String name = super.getName();
-    if ( name==null || "".equals(name) ) name = DetailedDataSource.defaultName( getHost(), getPort(), getInstanceName(), getUser() );
-    return name;
+		if (name == null || "".equals(name))
+			name = DetailedDataSource.defaultName(getHost(), getPort(), getInstanceName(), getUser());
+		return name;
 	}
 }
