@@ -27,6 +27,14 @@ import org.ewin.javax.sql.PoolingAlgorithmDataSource;
  * Utility class for working with JDBC databases.
  */
 public class DatabaseUtil {
+  /**
+   * Default settings for DataSource creation parameters
+   */
+  public static int DEFAULTPOOLSIZE = 10;
+  public static String DEFAULTDATABASETYPE = "mysql";
+  public static String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
+  public static String DEFAULTPORT = "3306";
+
 
 	public static final Connection getConnection(
 		String databaseType,
@@ -112,14 +120,17 @@ public class DatabaseUtil {
 	/**
 	 * Convenience method which constructs a connection URL and calls createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName).
 	 * @see #createDataSource(String user, String password, int maxPoolSize, String jdbcDriverClassName)
-	 * @param dbType database type e.g. mysql
+	 * @param dbType database type.
 	 * @param host host name e.g. ensembldb.ensembl.org
-	 * @param port port number, can be null. e.g. 3036
+	 * @param port port number. e.g. 3306.  NO DEFAULT IS SET, so that underlying JDBC driver can manage a null port
 	 * @param database name of database on database server  
 	 * @param user username
 	 * @param password password, can be null
-	 * @param maxPoolSize maximum poolsize
+	 * @param maxPoolSize maximum poolsize.
 	 * @param jdbcDriverClassName name of jdbc driver to back the datasource.
+   * 
+   * If both dbType and jdbcDriverClassName are null, these default to DEFAULTDATABASETYPE and DEFAULTDRIVER, respectively.
+   * 
 	 * @return connection pool capable datasource
 	 * @throws ConfigurationException thrown if a problem occurs creating the datasource
 	 */
@@ -134,6 +145,11 @@ public class DatabaseUtil {
 		String jdbcDriverClassName)
 		throws ConfigurationException {
 
+    if (dbType == null && jdbcDriverClassName == null) {
+      dbType = DEFAULTDATABASETYPE;
+      jdbcDriverClassName = DEFAULTDRIVER;
+    }    
+      
 		StringBuffer connString = new StringBuffer();
 		connString.append("jdbc:").append(dbType).append("://");
 		connString.append(host);
