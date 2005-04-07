@@ -85,6 +85,7 @@ public class DetailedDataSource implements DataSource {
   private static final String ORACLEAT = "@";
   public static final String ORACLE = "oracle";
   public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
+  public static final String POSTGRESDRIVER = "org.postgresql.Driver";
   private static final String SYBASE = "sybase:Tds";
 
   private String databaseType;
@@ -136,7 +137,7 @@ public class DetailedDataSource implements DataSource {
       || connectionString.indexOf(databaseName)
         != -1 : "database is null or is not in connection string";
     
-    //assert schema != null : "schema is null";
+    assert schema != null : "schema is null";
     
     assert user != null : "user is null";
     assert maxPoolSize >= 0;
@@ -184,6 +185,7 @@ public class DetailedDataSource implements DataSource {
     int maxPoolSize,
     String jdbcDriverClassName) {
   	this(dbType, host,port, databaseName, schema,connectionString, user, password, maxPoolSize, jdbcDriverClassName, null);
+  
   }
   
 
@@ -213,7 +215,8 @@ public class DetailedDataSource implements DataSource {
       password,
       DEFAULTPOOLSIZE,
       DEFAULTDRIVER,
-      null);
+      null); 
+    
   }
 
   /**
@@ -239,8 +242,10 @@ public class DetailedDataSource implements DataSource {
     String password,
     int maxPoolSize,
     String jdbcDriverClassName) {
+  	
       this(databaseType, host, port, database, schema,user, password, maxPoolSize, jdbcDriverClassName, defaultName(host, port, database, schema,user));
-    }
+      
+  }
     
   /**
    * Datasource constructed by specific parameters. The connection is automatically
@@ -337,6 +342,8 @@ public class DetailedDataSource implements DataSource {
       return DEFAULTDRIVER;
     else if (databaseType.equals(ORACLE))
       return ORACLEDRIVER;
+    else if (databaseType.equals("postgresql"))
+    	return POSTGRESDRIVER;
     else
       return null; //add new ones as needed
   }
