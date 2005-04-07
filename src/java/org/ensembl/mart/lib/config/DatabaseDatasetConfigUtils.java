@@ -160,7 +160,7 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       String catalog = conn.getCatalog();
 
-      ResultSet vr = conn.getMetaData().getTables(catalog, null, table, null);
+      ResultSet vr = conn.getMetaData().getTables(catalog, getSchema(), table, null);
 
       //expect at most one result, if no results, tcheck will remain null
       if (vr.next())
@@ -1172,6 +1172,8 @@ public class DatabaseDatasetConfigUtils {
       metatable += "_" + user;
     else {
       //if BASEMETATABLE doesnt exist, throw an exception
+    	
+    	
       if (!baseDSConfigTableExists()){
 		Connection conn = null;
 			try {
