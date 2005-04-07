@@ -354,6 +354,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
         dataSource.getPort(),
         dataSource.getDatabaseType(),
         dataSource.getDatabaseName(),
+		dataSource.getSchema(),
         user,
         dbpassword,
         adaptorName, "true");

@@ -36,12 +36,13 @@ public class DatabaseLocation extends MartLocationBase {
 	private final String PORT_KEY = "port";
 	private final String DATABASE_TYPE_KEY = "databaseType";
 	private final String INSTANCE_NAME_KEY = "instanceName";
-	private final String SCHEMA_KEY = "schemaKey";
+	private final String SCHEMA_KEY = "schema";
 	private final String USER_KEY = "user";
 	private final String PASSWORD_KEY = "password";
 
 	public DatabaseLocation() {
 		super();
+		
 		type = MartLocationBase.DATABASE;
 	}
 
@@ -50,22 +51,25 @@ public class DatabaseLocation extends MartLocationBase {
 		String port,
 		String databaseType,
 		String instanceName,
+		String schema,
 		String user,
 		String password,
 		String name,
 		String visibleString)
 		throws ConfigurationException {
-		super(name, visibleString, MartLocationBase.DATABASE);
+		super(name, visibleString,MartLocationBase.DATABASE);
 
-		if (host == null || instanceName == null || user == null)
-			throw new ConfigurationException("DatabaseLocation Objects must contain a host, user and instanceName\n");
-
+		if (host == null || instanceName == null || user == null || schema == null)
+			throw new ConfigurationException("DatabaseLocation Objects must contain a host, user, schema  and instanceName\n");
+		
 		setAttribute(HOST_KEY, host);
 		setAttribute(INSTANCE_NAME_KEY, instanceName);
+		setAttribute(SCHEMA_KEY, schema);
 		setAttribute(USER_KEY, user);
 		setAttribute(DATABASE_TYPE_KEY, databaseType);
 		setAttribute(PORT_KEY, port);
 		setAttribute(PASSWORD_KEY, password);
+	
 	}
 
 	/**

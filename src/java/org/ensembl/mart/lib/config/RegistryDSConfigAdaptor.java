@@ -344,6 +344,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 					String host = dbloc.getHost();
 					String user = dbloc.getUser();
 					String instanceName = dbloc.getInstanceName();
+					String schema = dbloc.getSchema();
 					String port = dbloc.getPort();
 					String password = dbloc.getPassword();
 					String databaseType = dbloc.getDatabaseType();
@@ -368,6 +369,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 							host,
 							port,
 							instanceName,
+							schema,
 							connectionString,
 							user,
 							password,

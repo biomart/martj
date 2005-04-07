@@ -85,13 +85,11 @@ public class DatabaseDatasetConfigUtils {
   private final String INSERTCOMPRESSEDXMLA = "insert into "; //append table after user test
   private final String INSERTCOMPRESSEDXMLB =
     " (internalName, displayName, dataset, description, compressed_xml, MessageDigest, type, visible, version) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  private final String CREATEMETATABLESQL = "create table meta_configuration (internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
-  private final String ORACLE_CREATETABLESQL = "create table meta_configuration (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
-  private final String POSTGRESQL_CREATETABLESQL="create table meta_configuration (internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
+  
   private final String MAINTABLESUFFIX = "main";
   private final String DIMENSIONTABLESUFFIX = "dm";
   private final String LOOKUPTABLESUFFIX = "look";
-  private final String POSTGRESDBNAME=null;
+  //private final String POSTGRESDBNAME=null;
 
   private final String DOESNTEXISTSUFFIX = "**DOES_NOT_EXIST**";
 
@@ -422,7 +420,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String insertSQL = INSERTCOMPRESSEDXMLA + metatable + INSERTCOMPRESSEDXMLB;
+      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()+"."+metatable + INSERTCOMPRESSEDXMLB;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL + "\n");
@@ -587,7 +585,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String sql = GETALLNAMESQL + metatable;
+      String sql = GETALLNAMESQL + getSchema()+"."+metatable;
       
       if (!dscutils.includeHiddenMembers) {
         sql += VISIBLESQL;
@@ -733,7 +731,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYINAMESELECT + metatable + GETDOCBYINAMEWHERE;
+      String sql = GETDOCBYINAMESELECT + getSchema()+"."+metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
@@ -1016,7 +1014,10 @@ public class DatabaseDatasetConfigUtils {
 
   private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName, String displayName)
     throws ConfigurationException {
-    String existSQL = EXISTSELECT + metatable + EXISTWHERE;
+  	
+  	// fully qualify for 'non-public' postgres schemas
+    String existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
+    System.out.println("SQLxxx: "+existSQL);
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
 
@@ -1042,7 +1043,7 @@ public class DatabaseDatasetConfigUtils {
           + displayName
           + " from "
           + metatable
-          + "\n");
+          + "\n"+e);
     } finally {
       DetailedDataSource.close(conn);
     }
@@ -1062,7 +1063,7 @@ public class DatabaseDatasetConfigUtils {
   public void deleteOldDSConfigEntriesFor(String metatable, String dataset, String internalName, String displayName)
     throws ConfigurationException {
 
-    String deleteSQL = DELETEOLDXML + metatable + DELETEOLDXMLWHERE;
+    String deleteSQL = DELETEOLDXML + getSchema()+"."+metatable + DELETEOLDXMLWHERE;
 
     int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
     if (logger.isLoggable(Level.FINE))
@@ -1159,6 +1160,13 @@ public class DatabaseDatasetConfigUtils {
    */
   public String getDSConfigTableFor(String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
+    
+    String CREATETABLE= "create table " +getSchema()+".meta_configuration";
+    String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
+    String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
+    String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
+    
+    
     //override if user not null
     if (datasetConfigUserTableExists(user))
       metatable += "_" + user;
@@ -1169,9 +1177,9 @@ public class DatabaseDatasetConfigUtils {
 			try {
 			  conn = dsource.getConnection();
 			  String CREATE_SQL = new String();
-			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_CREATETABLESQL;}
-			  if(dsource.getDatabaseType().equals("postgresql")) {CREATE_SQL=POSTGRESQL_CREATETABLESQL;}
-			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = CREATEMETATABLESQL;}
+			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META;}
+			  if(dsource.getDatabaseType().equals("postgresql")) {CREATE_SQL=POSTGRES_META;}
+			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;}
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
 			  System.out.println ("create statement: "+CREATE_SQL);
@@ -2037,7 +2045,7 @@ public class DatabaseDatasetConfigUtils {
         ResultSet rsTab = dmd.getTables(null, schema, tablePattern, null);
 
         while (rsTab.next()) {
-          String tableName = rsTab.getString(3);
+          String tableName = schema+rsTab.getString(3);
           potentials.add(tableName);
         }
         rsTab.close();
@@ -3282,7 +3290,8 @@ public class DatabaseDatasetConfigUtils {
     try {
       conn = dsource.getConnection();
        
-      StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + tableName + " WHERE " + cname + " IS NOT NULL");
+      // added getSchema() to fully qualify this to work with 'non-public' postgres schemas
+      StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + getSchema()+"."+tableName + " WHERE " + cname + " IS NOT NULL");
       
       if (dsource.getDatabaseType().equals("oracle")){
      //System.out.println("databaseType() "+dsource.getDatabaseType());
