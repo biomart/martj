@@ -104,6 +104,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   static private String user;
   private String database;
   private String schema;
+  private static String connection;
+  
+
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
   private DatabaseSettingsDialog databaseDialog = new DatabaseSettingsDialog(prefs);
@@ -111,7 +114,55 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   protected Clipboard clipboardEditor;
 
   public MartEditor() {
-    super("MartEditor");
+	
+//	autoconnect on startup
+	super("MartEditor");
+	
+		 String defaultSourceName = databaseDialog.getConnectionName();
+
+				 if (defaultSourceName == null || defaultSourceName.length() < 1)
+				   defaultSourceName =
+					 defaultSourceName =
+					   DetailedDataSource.defaultName(
+						 databaseDialog.getHost(),
+						 databaseDialog.getPort(),
+						 databaseDialog.getDatabase(),
+						 databaseDialog.getSchema(),
+						 databaseDialog.getUser());
+
+				 ds =
+				   new DetailedDataSource(
+					 databaseDialog.getDatabaseType(),
+					 databaseDialog.getHost(),
+					 databaseDialog.getPort(),
+					 databaseDialog.getDatabase(),
+					 databaseDialog.getSchema(),
+					 databaseDialog.getUser(),
+					 databaseDialog.getPassword(),
+					 10,
+					 databaseDialog.getDriver(),
+					 defaultSourceName);
+			
+				 user = databaseDialog.getUser();
+				 database = databaseDialog.getDatabase();
+			
+				 Connection conn = null;
+				 try {
+				   conn = ds.getConnection();
+				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
+					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + ")";
+				   //valid = true;
+				 } catch (SQLException e) {
+				 	ds = null;
+					connection = "MartEditor (NO DATABASE CONNECTION)";	
+				   //System.out.println(e.toString()); 	
+				   //warning dialog then retry
+				   //Feedback f = new Feedback(this);
+				   //f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
+				   //valid = false;
+				 } finally {
+				   DetailedDataSource.close(conn);
+				 }
     JFrame.setDefaultLookAndFeelDecorated(true);
     fc = new JFileChooser();
 
@@ -130,57 +181,16 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     this.getContentPane().add(toolBar, BorderLayout.NORTH);
 
     desktop = new JDesktopPane();
+    
     this.getContentPane().add(desktop, BorderLayout.CENTER);
     setJMenuBar(createMenuBar());
-
+	
     //Make dragging a little faster but perhaps uglier.
     desktop.setDragMode(JDesktopPane.OUTLINE_DRAG_MODE);
 
     clipboardEditor = new Clipboard("editor_clipboard");
 
-	// autoconnect on startup
-	String defaultSourceName = databaseDialog.getConnectionName();
-
-			if (defaultSourceName == null || defaultSourceName.length() < 1)
-			  defaultSourceName =
-				defaultSourceName =
-				  DetailedDataSource.defaultName(
-					databaseDialog.getHost(),
-					databaseDialog.getPort(),
-					databaseDialog.getDatabase(),
-					databaseDialog.getSchema(),
-					databaseDialog.getUser());
-
-			ds =
-			  new DetailedDataSource(
-				databaseDialog.getDatabaseType(),
-				databaseDialog.getHost(),
-				databaseDialog.getPort(),
-		        databaseDialog.getDatabase(),
-	            databaseDialog.getSchema(),
-				databaseDialog.getUser(),
-				databaseDialog.getPassword(),
-				10,
-				databaseDialog.getDriver(),
-				defaultSourceName);
-			
-		    user = databaseDialog.getUser();
-			database = databaseDialog.getDatabase();
-			
-			Connection conn = null;
-			try {
-			  conn = ds.getConnection();
-			  dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
-			  //valid = true;
-			} catch (SQLException e) {
-			  System.out.println(e.toString()); 	
-			  //warning dialog then retry
-			  //Feedback f = new Feedback(this);
-			  //f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
-			  //valid = false;
-			} finally {
-			  DetailedDataSource.close(conn);
-			}
+	
 
 
   }
@@ -449,6 +459,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
     //Create and set up the window.
     MartEditor frame = new MartEditor();
+          
+    frame.setTitle(connection);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     //ImageIcon icon = createImageIcon(IMAGE_DIR+"MartConfig_cube.gif");
     //frame.setIconImage(icon.getImage());
@@ -626,7 +638,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
           conn = ds.getConnection();
           dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
           valid = true;
+          connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + ")";
         } catch (SQLException e) {
+          ds = null;	
+          connection = "MartEditor (NO DATABASE CONNECTION)";	
           //warning dialog then retry
           Feedback f = new Feedback(this);
           f.warning("Could not connect to Database\nwith the given Connection Settings.\nPlease try again!");
@@ -636,6 +651,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         }
       }
     } finally {
+      setTitle(connection);
       enableCursor();
     }
   }
@@ -722,6 +738,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     try {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
+      
+      if (!dsConfig.getAdaptor().getDataSource().getDatabaseName().equals(database)){
+      	// NM the widget still has its adaptor - could switch connection
+		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new database: " + database +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
+      	if (choice == 0){databaseConnection();}
+      }
       String dset = dsConfig.getDataset();
       String intName = dsConfig.getInternalName();
 
@@ -811,7 +833,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					  
 					  // do options as well
 					  Option[] ops = testAD.getOptions();
-					  if (ops.length > 0 && ops[0].getType()!= null ){
+					  if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
+					  	System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
 						for (int j = 0; j < ops.length; j++){
 							Option op = ops[j];
 							if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
