@@ -301,7 +301,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     try {
       conn = ds.getConnection();
 
-      QueryCompiler csql = new QueryCompiler(curQuery);
+      QueryCompiler csql = new QueryCompiler(curQuery,ds);
       String sqlbase = csql.toSQL();
 
       while (moreRows) {
@@ -379,7 +379,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     try {
       conn = curQuery.getDataSource().getConnection();
 
-      QueryCompiler csql = new QueryCompiler(curQuery);
+      QueryCompiler csql = new QueryCompiler(curQuery,ds);
       String sqlbase = csql.toSQL();
 
       while (moreRows) {

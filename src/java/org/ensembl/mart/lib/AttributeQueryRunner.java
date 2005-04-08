@@ -154,8 +154,10 @@ public final class AttributeQueryRunner implements QueryRunner {
 
     Connection conn = null;
     String sql = null;
+    
+    
     try {
-      csql = new QueryCompiler(curQuery);
+      csql = new QueryCompiler(curQuery,ds);
       String sqlbase = csql.toSQLWithKey();
       String primaryKey = csql.getQualifiedLowestLevelKey();
       //queryID = csql.getPrimaryKey();
@@ -186,10 +188,10 @@ public final class AttributeQueryRunner implements QueryRunner {
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setMaxRows(maxRows);
 
-        if (logger.isLoggable(Level.FINE)) {
-          logger.fine("QUERY : " + curQuery);
-          logger.fine("SQL : " + sql);
+        if (logger.isLoggable(Level.INFO)) {
+          logger.info("SQL : " + sql);
         }
+         
 
         //System.out.println("MAX ROWS\t" + maxRows); 
         int p = 1;
@@ -244,8 +246,10 @@ public final class AttributeQueryRunner implements QueryRunner {
 
     Connection conn = null;
     String sql = null;
+    
+    
     try {
-      csql = new QueryCompiler(curQuery);
+      csql = new QueryCompiler(curQuery,ds);
       String sqlbase = csql.toSQL();
 
       conn = ds.getConnection();

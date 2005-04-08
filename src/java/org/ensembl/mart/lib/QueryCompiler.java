@@ -36,9 +36,13 @@ import java.util.logging.Logger;
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:damian@ebi.ac.uk">Damian Smedley</a>
  */
+
+
+
 public class QueryCompiler {
 
-  /**
+  private DetailedDataSource ds;
+/**
    * Constructs a CompiledSQLQuery object with a specified mySQL
    * database Connection, and a Query object
    * 
@@ -47,8 +51,10 @@ public class QueryCompiler {
    * @throws SQLException
    * @see Query
    */
-  public QueryCompiler(Query query) throws SQLException {
+  public QueryCompiler(Query query, DetailedDataSource dsource) throws SQLException {
+  	
     this.query = query;
+    this.ds=dsource;
   }
 
   /**
@@ -232,6 +238,10 @@ public class QueryCompiler {
     for (int i = 0; i < nAttributes; ++i) {
 
       Attribute a = query.getAttributes()[i];
+      
+      // do not append for aliases, postgres does not like mixing schema and aliases
+      // safe in oracle and mysql
+      if (! a.getTableConstraint().equals("main")) buf.append(ds.getSchema()).append(".");
       buf.append(a.getTableConstraint()).append(".").append(a.getField());
 
       if (i + 1 < nAttributes)
@@ -252,7 +262,7 @@ public class QueryCompiler {
 
     HashSet relevantTables = new HashSet();
     joinTables = new HashMap();
-    String[] starNames = query.getMainTables();
+    String[] mainTableNames = query.getMainTables();
     String[] primaryKeys = query.getPrimaryKeys();
     // reverse cycle through primaryKeys
     for (int k = primaryKeys.length - 1; k > -1 && (lowestLevelKey == null); k--) {
@@ -262,7 +272,9 @@ public class QueryCompiler {
         Attribute attribute = query.getAttributes()[i];
         if (attribute.getKey().equals(primaryKeys[k])) {
           lowestLevelKey = primaryKeys[k];
-          mainTable = starNames[k];
+          mainTable = mainTableNames[k];
+          
+          
           StringBuffer qualBuf = new StringBuffer("main");
           qualBuf.append(".").append(lowestLevelKey);
           qualifiedLowestLevelKey = qualBuf.toString();
@@ -272,7 +284,9 @@ public class QueryCompiler {
         Filter filter = query.getFilters()[i];
         if (filter.getKey().equals(primaryKeys[k])) {
           lowestLevelKey = primaryKeys[k];
-          mainTable = starNames[k];
+          mainTable = mainTableNames[k];
+          
+          
           StringBuffer qualBuf = new StringBuffer("main");
           qualBuf.append(".").append(lowestLevelKey);
           qualifiedLowestLevelKey = qualBuf.toString();
@@ -287,7 +301,14 @@ public class QueryCompiler {
     for (int i = 0; i < query.getAttributes().length; ++i) {
       Attribute attribute = query.getAttributes()[i];
       if (!attribute.getTableConstraint().equals("main")) {
-        relevantTables.add(attribute.getTableConstraint());
+        
+      	//buf.append(ds.getSchema()).append(".");
+      	
+      	StringBuffer bfa = new StringBuffer(ds.getSchema()).append(".");
+      	relevantTables.add(bfa.append(attribute.getTableConstraint()).toString());
+      	
+      	
+      	//relevantTables.add(attribute.getTableConstraint());
         joinTables.put(attribute.getTableConstraint(), attribute.getKey());
       }
     }
@@ -295,7 +316,14 @@ public class QueryCompiler {
     for (int i = 0; i < query.getFilters().length; ++i) {
       Filter filter = query.getFilters()[i];
       if (!filter.getTableConstraint().equals("main")) {
-        relevantTables.add(filter.getTableConstraint());
+      	
+      	
+      	StringBuffer bff = new StringBuffer(ds.getSchema()).append(".");
+      	relevantTables.add(bff.append(filter.getTableConstraint()).toString());
+      	
+      	
+      	
+        //relevantTables.add(bf.append(filter.getTableConstraint()));
         joinTables.put(filter.getTableConstraint(), filter.getKey());
       }
     }
@@ -314,7 +342,7 @@ public class QueryCompiler {
     }
     if (from)
       buf.append(" ,");
-    buf.append(mainTable).append(" main");
+    buf.append(ds.getSchema()).append(".").append(mainTable).append(" main");
     return true;
   }
 
@@ -340,9 +368,15 @@ public class QueryCompiler {
 
         if (and)
           buf.append(" AND ");
+        
+        // postgres does not like mixing schemas and aliases
+        if (! f.getTableConstraint().equals("main")) buf.append(ds.getSchema()).append(".");
         buf.append(f.getTableConstraint()).append(".").append(f.getField()).append(" ").append(
           f.getRightHandClause()).append(
           " ");
+        
+        //System.out.println("RIGHT HAND CLAUSE "+f.getRightHandClause());
+        
         and = true;
       }
     }
@@ -356,7 +390,10 @@ public class QueryCompiler {
       if (and)
         buf.append(" AND ");
       and = true;
-      buf.append("main.").append(mapentry.getValue()).append("=").append(mapentry.getKey()).append(".").append(
+      
+      //do not mix schema and aliases, postgres does not like it
+      
+      buf.append("main.").append(mapentry.getValue()).append("=").append(ds.getSchema()).append(".").append(mapentry.getKey()).append(".").append(
         mapentry.getValue());
     }
 

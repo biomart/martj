@@ -109,8 +109,9 @@ public class Engine {
       UnprocessedFilterHandler idhandler = UnprocessedFilterHandlerFactory.getInstance(handler);
       query = idhandler.ModifyQuery(this, unprocessedFilters, query);
     }
-
-    QueryCompiler csql = new QueryCompiler(query);
+    
+    DetailedDataSource dsource = query.getDataSource();
+    QueryCompiler csql = new QueryCompiler(query,dsource);
     String fcountSQL = csql.toFocusCountSQL();
     writeSQLResults(pstream, query, fcountSQL);
   }
