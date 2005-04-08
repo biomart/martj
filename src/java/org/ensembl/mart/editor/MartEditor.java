@@ -150,7 +150,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				 try {
 				   conn = ds.getConnection();
 				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
-					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + ")";
+					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
 				   //valid = true;
 				 } catch (SQLException e) {
 				 	ds = null;
@@ -638,7 +638,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
           conn = ds.getConnection();
           dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
           valid = true;
-          connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + ")";
+          connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
         } catch (SQLException e) {
           ds = null;	
           connection = "MartEditor (NO DATABASE CONNECTION)";	
