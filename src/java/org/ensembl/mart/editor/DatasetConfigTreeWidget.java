@@ -122,7 +122,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
           	config = new DatasetConfig(dsv, true, false);
           }
             //this.setTitle(config.getInternalName());
-			this.setTitle(config.getDataset());
+			this.setTitle(config.getAdaptor().getDataSource().getDatabaseName() + "." + config.getDataset());
             JFrame.setDefaultLookAndFeelDecorated(true);
 
             DatasetConfigAttributesTable attrTable = new DatasetConfigAttributesTable(
