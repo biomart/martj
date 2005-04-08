@@ -45,6 +45,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String homepageURLKey = "homepageURL";
   private final String linkoutURLKey = "linkoutURL";
   private final String maxLengthKey = "maxLength";
+  private final String defaultKey = "default";
   
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
@@ -75,6 +76,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(sourceKey, null);
     setAttribute(homepageURLKey, null);
     setAttribute(linkoutURLKey, null);
+	setAttribute(defaultKey, null);
     //setAttribute(hiddenKey,null);
   }
 
@@ -87,7 +89,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(String internalName, String field)
     throws ConfigurationException {
-    this(internalName, field, "", "0", "", "", "", "", "", "", "");
+    this(internalName, field, "", "0", "", "", "", "", "", "", "", "");
   }
   /**
    * Constructor for an AttributeDescription.
@@ -102,6 +104,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    * @param source String source for the data for this UIAttribute.
    * @param homePageURL String Web Homepage for the source.
    * @param linkoutURL String Base for a link to a specific entry in a source website.
+   * @param default attribute for a dataset if set to true.
    * @throws ConfigurationException when required parameters are null or empty
    */
   public AttributeDescription(
@@ -115,7 +118,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     String source,
     String homePageURL,
     String linkoutURL,
-    String datasetLink)
+    String datasetLink,
+    String defaultString)
     throws ConfigurationException {
 
     super(internalName, displayName, description);
@@ -131,6 +135,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(homepageURLKey, homePageURL);
     setAttribute(linkoutURLKey, linkoutURL);
     setAttribute(datasetLinkKey, datasetLink);
+	setAttribute(defaultKey, defaultString);
   }
 
   /**
@@ -191,9 +196,25 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
 	 * 
 	 * @return key.
 	 */
-	public String getKey() {
-	  return getAttribute(keyKey);
+	public String getDefault() {
+	  return getAttribute(defaultKey);
 	}
+	
+	/**
+	 * @param key - join field key for the field
+	 */
+	public void setDefault(String defaultString) {
+	   setAttribute(keyKey, defaultString);
+	}
+
+	  /**
+	   * Returns the join field key.
+	   * 
+	   * @return key.
+	   */
+	  public String getKey() {
+		return getAttribute(keyKey);
+	  }
 
   /**
    * @param field - field in mart table
