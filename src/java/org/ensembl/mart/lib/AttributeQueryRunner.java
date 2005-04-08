@@ -274,7 +274,12 @@ public final class AttributeQueryRunner implements QueryRunner {
         for (int i = 0, n = filters.length; i < n; ++i) {
           Filter f = curQuery.getFilters()[i];
           String value = f.getValue();
-        }
+          if (value != null) {
+            logger.fine("SQL (prepared statement value) : " + p + " = " + value);
+            ps.setString(p++, value);
+          }
+
+  }
 
         ResultSet rs = ps.executeQuery();
 
