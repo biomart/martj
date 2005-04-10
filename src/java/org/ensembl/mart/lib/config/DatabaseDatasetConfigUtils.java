@@ -2028,11 +2028,14 @@ public class DatabaseDatasetConfigUtils {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
 
+    
     Connection conn = dsource.getConnection();
 
     DatabaseMetaData dmd = conn.getMetaData();
     
-    String tablePattern = (datasetName != null) ? datasetName + "%" : "%";
+    // This is crap DMD seems to be ignoring "__" in the search pattern
+    // and it is imposible to have two datasets with overlapping names
+    String tablePattern = (datasetName != null) ? datasetName +"%" : "%";
 	//String tablePattern = (datasetName != null) ? datasetName + "__%": "%";
     
     tablePattern += MAINTABLESUFFIX;
@@ -2066,7 +2069,7 @@ public class DatabaseDatasetConfigUtils {
       
     } if (dsource.getDatabaseType().equals("mysql")) {
 
-
+    	//System.out.println("schema "+schema+" tablePattern "+tablePattern);
 	   
       //====
       //first search for tablePattern    
@@ -2099,6 +2102,8 @@ public class DatabaseDatasetConfigUtils {
     } if (dsource.getDatabaseType().equals("postgresql")) {
         //databaseName=POSTGRESDBNAME;
 
+    	//System.out.println("PG schema "+schema+" tablePattern "+tablePattern);
+    	
         //System.out.println("Schema "+databaseName2);
         
         //first search for tablePattern    
@@ -2106,6 +2111,9 @@ public class DatabaseDatasetConfigUtils {
 
         while (rsTab.next()) {
           String tableName = rsTab.getString(3);
+          
+          //System.out.println("tableName "+tableName);
+          
           potentials.add(tableName);
         }
         rsTab.close();
@@ -2262,6 +2270,10 @@ public class DatabaseDatasetConfigUtils {
    * @return String[] of potential lookup table names
    * @throws SQLException
    */
+  
+  
+  /**
+  
   public String[] getNaiveLookupTablesFor(String databaseName, String datasetName) throws SQLException {
     //want sorted entries, dont need to worry about duplicates
     Set potentials = new TreeSet();
@@ -2326,21 +2338,24 @@ public class DatabaseDatasetConfigUtils {
     return retList;
   }
 
+*/
+
+
   /**
    * Returns a TableDescription object describing a particular table in a given database,
    * hosted on a given RDBMS.
-   * @param databaseName -- name of the RDBMS instance housing the requested table
+   * @param schema -- name of the RDBMS instance housing the requested table
    * @param tableName -- name of the desired table, as might be returned by a call to getXXXTablesFor
    * @return TableDescription object describing the table
    * @throws SQLException
    */
-  public TableDescription getTableDescriptionFor(String databaseName, String tableName) throws SQLException {
+  public TableDescription getTableDescriptionFor(String schema, String tableName) throws SQLException {
     Connection conn = dsource.getConnection();
     DatabaseMetaData dmd = conn.getMetaData();
 
     List columns = new ArrayList();
-    ResultSet rset = dmd.getColumns(null, databaseName, tableName, null);
-    System.out.println("columns db name"+databaseName+" table name "+tableName);
+    ResultSet rset = dmd.getColumns(null, schema, tableName, null);
+    System.out.println("columns schema"+schema+" table name "+tableName);
     
     while (rset.next()) {
       if (rset.getString(3).toLowerCase().equals(tableName.toLowerCase())) {
@@ -2367,13 +2382,13 @@ public class DatabaseDatasetConfigUtils {
   /**
    * Returns a Naive DatasetConfig for a given dataset within a given Mart Compliant database, hosted on a given
    * RDBMS.  
-   * @param databaseName -- name of the RDBMS instance to search for potential tables
+   * @param schema -- name of the RDBMS instance to search for potential tables
    * @param datasetName -- name of the dataset to constrain the search (can be a result of getNaiveDatasetNamesFor, or null)
    * @return DatasetConfig nievely generated
    * @throws ConfigurationException
    * @throws SQLException
    */
-  public DatasetConfig getNaiveDatasetConfigFor(String databaseName, String datasetName)
+  public DatasetConfig getNaiveDatasetConfigFor(String schema, String datasetName)
     throws ConfigurationException, SQLException {
     DatasetConfig dsv = new DatasetConfig();
 
@@ -2383,7 +2398,7 @@ public class DatabaseDatasetConfigUtils {
     
     //dsv.setInternalName(datasetName);
     dsv.setInternalName("default");
-    dsv.setDisplayName(datasetName + " ( " + databaseName + " )");
+    dsv.setDisplayName(datasetName + " ( " + schema + " )");
     dsv.setDataset(datasetName);
     dsv.setType("TableSet");
     dsv.setVisible("1");
@@ -2412,21 +2427,21 @@ public class DatabaseDatasetConfigUtils {
 	Hashtable filtMap = new Hashtable();
 	int duplicated = 0;
        
-    List starbases = new ArrayList();
-    List finalStarbases = new ArrayList(); 
+    List mainTables = new ArrayList();
+    List finalMains = new ArrayList(); 
     
-    System.out.println("databasName from Utils "+databaseName);
-    starbases.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(databaseName, datasetName), databaseName)));
+    //System.out.println("databasName from Utils "+databaseName+ "datasetName "+datasetName);
+    mainTables.addAll(Arrays.asList(sortNaiveMainTables(getNaiveMainTablesFor(schema, datasetName), schema)));
     
     
     List primaryKeys = new ArrayList();
-    for (int i = 0, n = starbases.size(); i < n; i++) {
-      String tableName = (String) starbases.get(i);
+    for (int i = 0, n = mainTables.size(); i < n; i++) {
+      String tableName = (String) mainTables.get(i);
       //System.out.println("getting table name "+tableName);
       // can have single main tables with no keys so add here now
-	  finalStarbases.add(starbases.get(i));
+	  finalMains.add(mainTables.get(i));
       
-      TableDescription table = getTableDescriptionFor(databaseName, tableName);
+      TableDescription table = getTableDescriptionFor(schema, tableName);
       //System.out.println("table descriptin for "+ databaseName+ " table "+tableName);
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
       	//System.out.println("getting columns name "+tableName);
@@ -2443,8 +2458,8 @@ public class DatabaseDatasetConfigUtils {
       }
     }
 
-    String[] sbases = new String[finalStarbases.size()];
-    finalStarbases.toArray(sbases);
+    String[] sbases = new String[finalMains.size()];
+    finalMains.toArray(sbases);
     dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
@@ -2453,12 +2468,20 @@ public class DatabaseDatasetConfigUtils {
     	dsv.addPrimaryKeys(pkeys);
     }
     
+    //System.out.println("before dimensions");
+    
     List allTables = new ArrayList();
-    allTables.addAll(starbases);
-    allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(databaseName, datasetName)));
-    allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(databaseName, datasetName)));
+    allTables.addAll(mainTables);
+    allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(schema, datasetName)));
+    
+    //this is no longer required
+    //allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(databaseName, datasetName)));
     List allCols = new ArrayList();
 
+    
+    
+    
+    
     // ID LIST FC and FDs
     FilterCollection fcList = new FilterCollection();
     fcList.setInternalName("id_list");
@@ -2494,8 +2517,10 @@ public class DatabaseDatasetConfigUtils {
         fc.setDisplayName(content.replaceAll("_", " "));
       }
 
-      TableDescription table = getTableDescriptionFor(databaseName, tableName);
+      TableDescription table = getTableDescriptionFor(schema, tableName);
 
+     
+      
       // need to find the lowest joinKey for table first;
       String joinKey = null;
       outer : for (int k = pkeys.length - 1; k > -1; k--) {
@@ -2538,6 +2563,8 @@ public class DatabaseDatasetConfigUtils {
           if (isAllNull(cname, fullTableName))
             continue;
 
+          //System.out.println ("tableName after AllNULL "+tableName);
+          
           if (isMainTable(tableName)) {
             tableName = "main";
              //System.out.println("Resetting table name to: "+ tableName);
@@ -2692,7 +2719,9 @@ public class DatabaseDatasetConfigUtils {
     List allTables = new ArrayList();
     allTables.addAll(starbases);
     allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(schema, datasetName)));
-    allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(schema, datasetName)));
+    
+    //no longer required
+    //allTables.addAll(Arrays.asList(getNaiveLookupTablesFor(schema, datasetName)));
     List allCols = new ArrayList();
 
     // ID LIST FC and FDs
@@ -3304,9 +3333,12 @@ public class DatabaseDatasetConfigUtils {
 
       sql.append (" and rownum <=1");
       } 
-      if (dsource.getDatabaseType().equals("mysql")) {
+      else if (dsource.getDatabaseType().equals("mysql")) {
       sql.append (" limit 1");
       }
+      else if (dsource.getDatabaseType().equals("postgresql")){
+      	sql.append(" limit 1");
+      } else { throw new ConfigurationException ("unsupported RDBMS type:"+dsource.getDatabaseType());}
 
       PreparedStatement ps = conn.prepareStatement(sql.toString());
       ResultSet rs = ps.executeQuery();
