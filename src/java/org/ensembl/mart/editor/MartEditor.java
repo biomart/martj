@@ -732,7 +732,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       } catch (java.beans.PropertyVetoException e) {
       }
     } catch (ConfigurationException e) {
-      JOptionPane.showMessageDialog(this, "Could not import requested Dataset", "ERROR", 0);
+      JOptionPane.showMessageDialog(this, "No datasets available for import - is this a BioMart compatible schema? Absent or empty meta_configuration table?", "ERROR", 0);
     } finally {
       enableCursor();
     }
@@ -748,11 +748,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
       
-      if (!dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
+      //if (!dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
-		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
-      	if (choice == 0){databaseConnection();}
-      }
+	//	int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
+      //	if (choice == 0){databaseConnection();}
+     // }
       String dset = dsConfig.getDataset();
       String intName = dsConfig.getInternalName();
 
@@ -893,6 +893,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     try {
       disableCursor();
       String[] datasets = dbutils.getNaiveDatasetNamesFor(schema);
+      if(datasets.length==0){
+        JOptionPane.showMessageDialog(this, "No datasets available - Is this a BioMart comptatible schema?", "ERROR", 0);
+        return;
+      }
+      
       String dataset =
         (String) JOptionPane.showInputDialog(
           null,
