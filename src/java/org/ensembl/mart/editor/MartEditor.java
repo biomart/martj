@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Hashtable;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -308,6 +310,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	menuItem = new JMenuItem("Save All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
+	menuItem = new JMenuItem("Move All");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);		
 	menu.addSeparator();
     
     menuItem = new JMenuItem("New", icon);
@@ -535,6 +540,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         naiveDatasetConfig();
 	  else if (e.getActionCommand().startsWith("Update All"))
 		updateAll();
+	  else if (e.getActionCommand().startsWith("Move All"))
+		  moveAll();		
 	  else if (e.getActionCommand().startsWith("Save All"))
 		  saveAll();		
       else if (e.getActionCommand().startsWith("Update"))
@@ -984,6 +991,60 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  }
 
   }
+
+
+  public void moveAll() {  	
+	try {
+			if (ds == null) {
+			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+			  return;
+			}
+			try {
+			  disableCursor();
+			  
+			  DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+			  DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+						   
+			  
+			 		  
+			  
+			  Set retSet = new HashSet();
+			  //int k = 0;
+			  while (configs.hasNext()){
+					DatasetConfig lconfig = (DatasetConfig) configs.next();
+					retSet.add(lconfig);
+		      }
+			  DatasetConfig[] dsConfigs = new DatasetConfig[retSet.size()];
+			  retSet.toArray(dsConfigs);
+		      
+		      
+			  // connect to database to export to
+	    	  databaseConnection();
+							
+			  DatasetConfig dsv = null;
+			  for (int k = 0; k < dsConfigs.length;k++){
+					dsv = dsConfigs[k];
+					// export it to new database	
+					dbutils.storeDatasetConfiguration(
+										MartEditor.getUser(),
+										dsv.getInternalName(),
+										dsv.getDisplayName(),
+										dsv.getDataset(),
+										dsv.getDescription(),
+										MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+										true,
+										dsv.getType(),
+										dsv.getVisible(),
+										dsv.getVersion());						   		
+			  }	
+			} 
+			catch (Exception e) {
+			  e.printStackTrace();
+			}
+     } finally {
+			enableCursor();
+     }
+}
 
   public void updateAll() {
 	  try {
