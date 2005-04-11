@@ -42,6 +42,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
 import javax.swing.JFileChooser;
+
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -65,6 +66,7 @@ import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
+import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
 
 
 
@@ -303,6 +305,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	menuItem = new JMenuItem("Update All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
+	menuItem = new JMenuItem("Save All");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);	
 	menu.addSeparator();
     
     menuItem = new JMenuItem("New", icon);
@@ -530,6 +535,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         naiveDatasetConfig();
 	  else if (e.getActionCommand().startsWith("Update All"))
 		updateAll();
+	  else if (e.getActionCommand().startsWith("Save All"))
+		  saveAll();		
       else if (e.getActionCommand().startsWith("Update"))
         updateDatasetConfig();
       else if (e.getActionCommand().startsWith("Delete"))
@@ -655,6 +662,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       enableCursor();
     }
   }
+
+
 
   public void openDatasetConfig() {
 
@@ -911,6 +920,64 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     } finally {
       enableCursor();
     }
+  }
+
+  public void saveAll() {
+  	
+  	
+	try {
+			if (ds == null) {
+			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+			  return;
+			}
+
+			try {
+			  disableCursor();
+		  	  // choose folder
+			  JFileChooser fc = new JFileChooser(getFileChooserPath());
+			  
+			  fc.setSelectedFile(getFileChooserPath());
+			  fc.setDialogTitle("Choose folder to save all XMLs");
+			  fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			  fc.showSaveDialog(getContentPane());
+		  
+			  // cycle through all datasets for the database
+			  String[] datasets = dbutils.getAllDatasetNames(user);
+			  for (int i = 0; i < datasets.length; i++){
+				String dataset = datasets[i];
+				String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+				for (int j = 0; j < internalNames.length; j++){
+					String internalName = internalNames[j];
+				
+					DatasetConfig odsv = null;
+					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+					while (configs.hasNext()){
+						DatasetConfig lconfig = (DatasetConfig) configs.next();
+						if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+								odsv = lconfig;
+								break;
+						}
+					}
+				
+					// save osdv each one to a separate file <internalname>.xml
+					try {
+						File newFile = new File(fc.getSelectedFile().getPath() + "/" + odsv.getDataset() + ".xml");
+						URLDSConfigAdaptor.StoreDatasetConfig(odsv, newFile);
+							setFileChooserPath(fc.getSelectedFile());
+					} catch (Exception e) {
+							e.printStackTrace();
+					}
+				  				
+				}	
+			  } 
+			} catch (Exception e) {
+			  e.printStackTrace();
+			}
+		  } finally {
+			enableCursor();
+		  }
+
   }
 
   public void updateAll() {
