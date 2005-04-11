@@ -28,8 +28,11 @@ public class SourceSchema {
 		
 		if (adaptor.rdbms.equals("mysql")){
 		resolver = new MetaDataResolverMySQL(adaptor);
-		} if (adaptor.rdbms.equals("oracle")){
+		} else if (adaptor.rdbms.equals("oracle")){
 		resolver = new MetaDataResolverOracle(adaptor);
+		}
+		else if (adaptor.rdbms.equals("postgresql")){
+			resolver = new MetaDataResolverOracle(adaptor);
 		}
 		this.adaptor=adaptor;
 		this.resolver=resolver;

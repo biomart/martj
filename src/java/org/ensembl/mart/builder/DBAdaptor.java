@@ -83,6 +83,9 @@ public class DBAdaptor {
 			url = "jdbc:oracle:thin:@" + host + ":" + port + ":" + instance;
 			else if (rdbms.equals("mysql")) 
 			url = "jdbc:mysql://" + host + ":" + port + "/" + instance;
+			else if (rdbms.equals("postgresql")) 
+				url = "jdbc:postgresql://" + host + ":" + port + "/" + instance;
+			
 			else System.err.println("not supported rdbms type: "+ rdbms);
 			Connection con = DriverManager.getConnection (url, username,password);
 			setCon(con);
