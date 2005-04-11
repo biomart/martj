@@ -84,9 +84,13 @@ public class DetailedDataSource implements DataSource {
 
   private static final String ORACLEAT = "@";
   public static final String ORACLE = "oracle";
+  public static final String POSTGRES = "postgresql";
   public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
   public static final String POSTGRESDRIVER = "org.postgresql.Driver";
   private static final String SYBASE = "sybase:Tds";
+  private static final String SQLSERVER = "sqlserver";
+  private static final String SQLSERVERDRIVER = "net.sourceforge.jtds.jdbc.Driver";
+  
 
   private String databaseType;
   private String host;
@@ -290,13 +294,14 @@ public class DetailedDataSource implements DataSource {
 
   /**
    * Returns a connection URL for jdbc.  This could differ from RDBMS to RDBMS.
-   * Currently supports oracle:thin, sybase:Tbs, db2, mySql, and postGreSql, and any other
+   * Currently supports oracle, mysql, postgres and any other
    * database whose connnection URL syntax matches one of these. The dbType will produce
    * different connection strings:
    * <ul>
    * <li>oracle:thin --> jdbc:oracle:thin:@host:port:dbname
    * <li>sybase:Tds --> jdbc:sybase:Tds:host:port/dbname
    * <li>postgresSQL/mySQL --> jdbc:x://host:port/dbname
+   * <li>MS SQL Server --> jdbc:jtds:sqlserver://host:port/dbname
    * </ul>
    * 
    * @param databaseType database type e.g. mysql.
@@ -323,14 +328,18 @@ public class DetailedDataSource implements DataSource {
 
     StringBuffer dbURL = new StringBuffer();
     //defaults to oracle:thin, the driver settings needs to be done nicer
-    if (dbType.equals("oracle"))dbType="oracle:thin";
+    if (dbType.equals(ORACLE))
+    	dbType="oracle:thin";
+    else if (dbType.equals(SQLSERVER))
+    	dbType="jtds:sqlserver";
+
     dbURL.append("jdbc:").append(dbType).append(":");
     dbURL.append(host);
     if (port != null && !"".equals(port))
       dbURL.append(":").append(port);
 
     if (databaseName != null && !databaseName.equals(""))
-      {dbURL.append(databaseName);}
+      dbURL.append(databaseName);
     System.out.println("CONNECTING: "+dbURL.toString());
     return dbURL.toString();
   }
@@ -342,8 +351,10 @@ public class DetailedDataSource implements DataSource {
       return DEFAULTDRIVER;
     else if (databaseType.equals(ORACLE))
       return ORACLEDRIVER;
-    else if (databaseType.equals("postgresql"))
+    else if (databaseType.equals(POSTGRES))
     	return POSTGRESDRIVER;
+    else if (databaseType.equals(SQLSERVER))
+    	return SQLSERVERDRIVER;
     else
       return null; //add new ones as needed
   }
