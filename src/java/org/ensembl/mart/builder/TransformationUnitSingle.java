@@ -25,7 +25,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public String toSQL (){
 		
-		String sql = "CREATE TABLE "+ temp_end.getName()+" SELECT DISTINCT "+ temp_start.key+
+		String sql = "CREATE TABLE "+ temp_end.getName()+" AS SELECT DISTINCT "+ temp_start.key+
 		" FROM "+ ref_table.getName()+" WHERE "+ ref_table.key+ " IS NOT NULL;";
 
 		return sql;

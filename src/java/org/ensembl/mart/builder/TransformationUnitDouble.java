@@ -229,7 +229,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE ");
 		
-		tempsql.append(temp+ "  SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
+		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
 				temp_start.getName()+ ONE +ref_table.getName()+ TWO +ref_table.getName()+"."+
 				key+" = "+ temp_start.getName()+"."+key);
 		
