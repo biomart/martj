@@ -3290,9 +3290,9 @@ public class DatabaseDatasetConfigUtils {
         + tableName
         + " WHERE "
         + whereName
-        + "=\""
+        + "=\'"
         + whereValue
-        + "\" AND "
+        + "\' AND "
         + columnName
         + " IS NOT NULL "
         + orderSQL;
