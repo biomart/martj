@@ -164,7 +164,7 @@ public class MetaDataResolverMySQL extends MetaDataResolver {
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getTables(getAdaptor().catalog,getAdaptor().username,"%",null);
+			ResultSet keys = dmd.getTables(getAdaptor().catalog,getAdaptor().schema,"%",null);
 			while (keys.next()){
 				
 				String table = keys.getString(3);
