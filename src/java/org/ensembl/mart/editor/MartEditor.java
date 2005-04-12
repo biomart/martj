@@ -754,12 +754,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     try {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
-      
-      //if (!dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
+	  
+      if (dsConfig.getAdaptor() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
-	//	int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
-      //	if (choice == 0){databaseConnection();}
-     // }
+		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
+      	if (choice == 0){databaseConnection();}
+      }
       String dset = dsConfig.getDataset();
       String intName = dsConfig.getInternalName();
 
