@@ -3145,9 +3145,9 @@ public class DatabaseDatasetConfigUtils {
     List options = new ArrayList();
     Connection conn = dsource.getConnection();
     if (orderSQL.equals(""))
-      orderSQL = "\" ORDER BY " + columnName;
+      orderSQL = "ORDER BY " + columnName;
     else
-      orderSQL = "\" ORDER BY " + orderSQL;
+      orderSQL = " ORDER BY " + orderSQL;
         
     String sql =
       "SELECT DISTINCT "
@@ -3156,11 +3156,17 @@ public class DatabaseDatasetConfigUtils {
         + tableName
         + " WHERE "
         + whereName
-        + "=\""
+        + "=\'"
         + whereValue
+	+ "\' AND "
+	+ columnName
+        + " IS NOT NULL "
         + orderSQL;
         
         
+
+
+
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
     String value;
