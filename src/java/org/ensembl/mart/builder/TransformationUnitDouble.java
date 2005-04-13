@@ -227,18 +227,25 @@ public class TransformationUnitDouble extends TransformationUnit {
 	
 	private String getSQL (String ONE, String TWO, String temp,StringBuffer temp_start_col, StringBuffer ref_table_col){
 		
-		StringBuffer tempsql = new StringBuffer ("CREATE TABLE ");
+		String start=temp_start.getName();
+		String ref =ref_table.getName();
+	    if (temp_start.getName().matches(".*TEMP.*") ) start=targetSchema+"."+temp_start.getName();
+	    if (ref_table.getName().matches(".*TEMP.*")) ref=targetSchema+"."+ref_table.getName();
+	    
+		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+".");
 		
+		
+	
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
-				temp_start.getName()+ ONE +ref_table.getName()+ TWO +ref_table.getName()+"."+
-				key+" = "+ temp_start.getName()+"."+key);
+				start+ ONE +ref+ TWO +ref+"."+
+				key+" = "+ start+"."+key);
 		
 		
 		if (ref_table.hasExtension()){
-			tempsql.append(" AND "+ref_table.getName()+"."+ref_table.getExtension());	
+			tempsql.append(" AND "+ref+"."+ref_table.getExtension());	
 		} 
 		if (temp_start.hasExtension()){
-			tempsql.append(" AND "+temp_start.getName()+"."+temp_start.getExtension());	
+			tempsql.append(" AND "+start+"."+temp_start.getExtension());	
 		} 
 		tempsql.append(";");
 		

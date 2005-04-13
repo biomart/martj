@@ -24,6 +24,7 @@ public class SourceSchema {
 	public SourceSchema (String config){
 		
 		DBAdaptor adaptor = new DBAdaptor(config);
+		
 		MetaDataResolver resolver = null;
 		
 		if (adaptor.rdbms.equals("mysql")){

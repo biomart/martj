@@ -23,12 +23,22 @@ public class MartBuilder {
 	private static ArrayList schemas = new ArrayList();
 	private static TargetSchema target_schema = null;
 	private static final String data_dir="data/builder/";
+	private  static String targetSchemaName;
 	
 	
 	public static void main(String[] args) {
 	
 		String config_info= "";
 		String file=null;
+		
+		
+		String tSchemaName=null; 
+		
+		while (tSchemaName == null || tSchemaName.equals("")){
+			tSchemaName = getUserInput("TARGET SCHEMA: ");	
+		} 
+		targetSchemaName=tSchemaName;
+		
 		
 		while (! (config_info.equals("C") || config_info.equals("R"))){
 			config_info=getUserInput("Configuration Create [C] Read [R]: ");
@@ -132,16 +142,18 @@ public class MartBuilder {
 			
 			Transformation [] final_transformations = target_schema.getTransformations();
 			
-			
+			int ind=0;
 			// Dump to SQL
 			for (int i=0;i<final_transformations.length;i++){
+				
+				ind =10*i;
 				
 				TransformationUnit [] units = final_transformations[i].getUnits();
 				
 				System.out.println("");
 				for (int j=0;j<units.length;j++){
 					System.out.println(units[j].toSQL());
-					System.out.println(units[j].addIndex());
+					System.out.println(units[j].addIndex(ind+j));
 				}
 				for (int j=0;j<units.length;j++){
 					System.out.println(units[j].dropTempTable());	    	
@@ -221,7 +233,8 @@ public class MartBuilder {
 					
 					if(dataset_counter !=0){
 						
-						target_schema = new TargetSchema(source_schema);
+						target_schema = new TargetSchema(source_schema,targetSchemaName);
+				
 						schemas.add(target_schema);	
 						source_schema = new SourceSchema(config);
 						
@@ -257,7 +270,9 @@ public class MartBuilder {
 			
 			in.close();
 			createLinkedTables(source_schema,list,last_type,last_table);
-			target_schema = new TargetSchema(source_schema);
+			target_schema = new TargetSchema(source_schema,targetSchemaName);
+			
+			
 			schemas.add(target_schema);
 			
 			

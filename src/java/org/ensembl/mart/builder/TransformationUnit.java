@@ -23,6 +23,8 @@ public abstract class TransformationUnit {
 	String cardinality;
 	String final_table_name;
 	String key;
+	String targetSchema;
+	DBAdaptor adaptor;
 	boolean is_extension=false;
 	boolean has_extension=false;
 	boolean useFK=false;
@@ -43,16 +45,23 @@ public abstract class TransformationUnit {
 		
 		String sql="";
 		if (!temp_end.final_table == true)
-			sql = "drop table "+ temp_end.getName()+";";
+			sql = "drop table "+ targetSchema+"."+temp_end.getName()+";";
 		return sql;	
 	}
 		
 	
 	
-	public String addIndex(){
+	public String addIndex(int i){
 		
 		String sql = "";
-		sql = "ALTER TABLE "+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		
+		if (adaptor.rdbms.equals("postgresql"))
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+temp_start.key+");";
+		else if 	(adaptor.rdbms.equals("mysql"))
+		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		else if (adaptor.rdbms.equals("oracle"))
+			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+		
 		return sql;
 		
 	}

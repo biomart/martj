@@ -18,12 +18,13 @@ import java.util.*;
 public class TargetSchema {
 	
 	ArrayList transformations = new ArrayList();
-	SourceSchema source_schema;
+	SourceSchema sourceSchema;
+	String name;
 	
-	public TargetSchema (SourceSchema source_schema){
+	public TargetSchema (SourceSchema source_schema, String name){
 		
-		this.source_schema=source_schema;
-	
+		this.sourceSchema=source_schema;
+		this.name=name;
 		createTransformationsForLinked();
 		createTransformationsForMains();
 		//createTransformationsForCentralFilters();
@@ -34,12 +35,14 @@ public class TargetSchema {
 	
 	private void createTransformationsForLinked(){
 		
-		for (int j=0;j<source_schema.getLinkedTables().length;j++){
+		for (int j=0;j<sourceSchema.getLinkedTables().length;j++){
 			
-			LinkedTables linked = source_schema.getLinkedTables()[j];
+			LinkedTables linked = sourceSchema.getLinkedTables()[j];
 		    Table [] referenced_tables = linked.getReferencedTables();
 			
 		    Transformation transformation = new Transformation();
+		    transformation.adaptor=sourceSchema.adaptor;
+		    transformation.targetName=name;
 			transformation.final_table_type=linked.final_table_type;
 			transformation.final_table_name=linked.final_table_name;
 			transformation.start_table=linked.getMainTable();
@@ -48,6 +51,7 @@ public class TargetSchema {
 			
 			transformation.column_operations="addall";
 			transformation.create(referenced_tables);
+			
 			transformation.transform();
 			addTransformation(transformation);
 		    
@@ -78,6 +82,8 @@ public class TargetSchema {
             
             
             Transformation transformation = new Transformation();
+            transformation.adaptor=sourceSchema.adaptor;
+            transformation.targetName=name;
             transformation.final_table_name =ref.getName();
             
             ref.setName(ref.temp_name);
@@ -87,6 +93,7 @@ public class TargetSchema {
 		    
 		    transformation.column_operations="append";
             transformation.create(tables);
+            
             transformation.transform();
             addTransformation(transformation);
 		
@@ -110,6 +117,9 @@ public class TargetSchema {
 		for (int i=0; i<mains.length;i++){
 			Transformation transformation = new Transformation();
 			
+			transformation.adaptor=sourceSchema.adaptor;
+			 transformation.targetName=name;
+			 
 			Table main_table=mains[i].getFinalUnit().getTemp_end();
 			transformation.final_table_name=main_table.getName(); 
 			main_table.setName(main_table.temp_name);
@@ -130,7 +140,7 @@ public class TargetSchema {
 									  String new_table_key, String new_table_extension, String new_table_cardinality){
 		
 		Transformation trans = getTransformationByFinalName(final_table_name);
-		Column [] columns = source_schema.getTableColumns(new_table_name);
+		Column [] columns = sourceSchema.getTableColumns(new_table_name);
 		
 		Table reftable = new Table();
 		reftable.setName(new_table_name);

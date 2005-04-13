@@ -23,6 +23,8 @@ public class Transformation {
 	String final_table_type;
 	String type;
 	String column_operations;
+	String targetName;
+	DBAdaptor adaptor;
 	private LinkedTables linked;
 	Table start_table;
 	boolean central = false;
@@ -34,12 +36,15 @@ public class Transformation {
 		//TransformationUnit unit;
 		
 		Table temp_end = new Table();
+		
 		for (int i=0; i<ref_tables.length; i++){
 			
 			if (ref_tables[i].skip) continue;
 			if (type.equals("central")){
 				TransformationUnitSingle sunit =  new TransformationUnitSingle(ref_tables[i]);
 				sunit.single=true;
+				sunit.adaptor=adaptor;
+				sunit.targetSchema=targetName;
 				units.add(sunit);	
 			} 
 			
@@ -47,6 +52,8 @@ public class Transformation {
 			dunit.cardinality=ref_tables[i].cardinality;
 			dunit.column_operations=column_operations; 
 			dunit.final_table_name=final_table_name;
+			dunit.adaptor=adaptor;
+			dunit.targetSchema=targetName;
 			units.add(dunit);
 		}
 	}
@@ -62,6 +69,8 @@ public class Transformation {
 		unit.central_extension=final_table_extension;
 		unit.is_extension=true;
 		unit.has_extension=true;
+		unit.adaptor=adaptor;
+		unit.targetSchema=targetName;
 		addUnit(unit);
 	}
 	
