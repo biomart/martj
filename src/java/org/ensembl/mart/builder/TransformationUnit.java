@@ -66,7 +66,38 @@ public abstract class TransformationUnit {
 		
 	}
 	
+	public String addFinalIndex(int i, String key){
+		
+		String sql = "";
+		
+		if (adaptor.rdbms.equals("postgresql"))
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+key+");";
+		else if 	(adaptor.rdbms.equals("mysql"))
+		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		else if (adaptor.rdbms.equals("oracle"))
+			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+		
+		return sql;
+		
+	}
 	
+	
+	
+	
+	public String renameKeyColumn(String key){
+		
+		String sql = "";
+		
+		if (adaptor.rdbms.equals("postgresql"))
+			sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" RENAME "+key+ " TO "+ key+"_key;";
+		else if 	(adaptor.rdbms.equals("mysql"))
+		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		else if (adaptor.rdbms.equals("oracle"))
+			sql = "CREATE INDEX index "+key+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+		
+		return sql;
+		
+	}
 	
 	
 	

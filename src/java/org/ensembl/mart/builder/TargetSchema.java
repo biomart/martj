@@ -20,6 +20,7 @@ public class TargetSchema {
 	ArrayList transformations = new ArrayList();
 	SourceSchema sourceSchema;
 	String name;
+	String transformationKey;
 	
 	public TargetSchema (SourceSchema source_schema, String name){
 		
@@ -66,6 +67,9 @@ public class TargetSchema {
 		for (int i=0;i<trans.length;i++){
 			if (trans[i].final_table_type.equals("MAIN")){
 				Table main = trans[i].getFinalUnit().getTemp_end();
+				
+				transformationKey=trans[i].getFinalUnit().getTemp_end().key;
+				
 				mains.add(main);
 			}
 		}

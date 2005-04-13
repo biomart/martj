@@ -156,9 +156,31 @@ public class MartBuilder {
 					System.out.println(units[j].addIndex(ind+j));
 				}
 				for (int j=0;j<units.length;j++){
-					System.out.println(units[j].dropTempTable());	    	
+					System.out.println(units[j].dropTempTable());	 
 				}
+				
+			
 			}
+			
+			
+			
+			// now renaming to _key and final indexes
+			for (int i=0;i<final_transformations.length;i++){
+				
+				ind =10*ind;
+				
+				TransformationUnit [] units = final_transformations[i].getUnits();
+				
+				for (int j=0;j<units.length;j++){
+						if (!(units[j].temp_end.getName().matches(".*TEMP.*") )){
+							System.out.println(units[j].renameKeyColumn(target_schema.transformationKey));
+						System.out.println(units[j].addFinalIndex(ind+j,target_schema.transformationKey+"_key"));
+						}
+					}				
+			}
+			
+			
+			
 		}
 		
 	}		

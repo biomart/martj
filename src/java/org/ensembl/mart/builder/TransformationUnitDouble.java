@@ -229,6 +229,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		String start=temp_start.getName();
 		String ref =ref_table.getName();
+		
+		// temps are always in the target schema
 	    if (temp_start.getName().matches(".*TEMP.*") ) start=targetSchema+"."+temp_start.getName();
 	    if (ref_table.getName().matches(".*TEMP.*")) ref=targetSchema+"."+ref_table.getName();
 	    
@@ -237,8 +239,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 	
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
-				start+ ONE +ref+ TWO +ref+"."+
-				key+" = "+ start+"."+key);
+				start+ ONE +ref+ TWO +ref+"."+key+" = "+ start+"."+key);
 		
 		
 		if (ref_table.hasExtension()){
