@@ -267,6 +267,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					save_as();
 				else if (e.getActionCommand().equals("hide toggle"))
 					makeHidden();
+				else if (e.getActionCommand().equals("hideDisplay toggle"))
+					makeDisplay();	
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -506,23 +508,24 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"paste",
 					"delete",
 					"hide toggle",
+					"hideDisplay toggle",
 					"insert filter page",
 					"insert attribute page",
 					"insert importable",
 					"insert exportable",
 					};
 		else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter group" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", "insert filter group" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributePage"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert attribute group", };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle", "insert attribute group", };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterGroup"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter collection" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert filter collection" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeGroup"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert attribute collection" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute collection" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterCollection"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert filter description" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert filter description" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeCollection"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert attribute description" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert attribute description" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.FilterDescription"))
 			menuItems =
 				new String[] {
@@ -531,17 +534,18 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"paste",
 					"delete",
 					"hide toggle",
+					"hideDisplay toggle",
 					"insert option",
 					"make drop down",
 					"automate push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.PushAction"))
 			menuItems =
-				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert push action", "automate push action" };
+				new String[] { "copy", "cut", "paste", "delete", "hide toggle",  "hideDisplay toggle","insert push action", "automate push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Option"))
 			menuItems =
 				new String[] { "copy", "cut", "paste", "delete", "hide toggle", "insert option", "insert push action" };
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.AttributeDescription"))
-			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle" };
+			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", };
 
 		else if (clickedNodeClass.equals("org.ensembl.mart.lib.config.Importable"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete" };
@@ -665,6 +669,30 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				childNode = (DatasetConfigTreeNode) children.nextElement();
 				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject) childNode.getUserObject();
 				ch.setHidden("false");
+			}
+		}
+
+	}
+	
+	public void makeDisplay() {
+		BaseNamedConfigurationObject bc = (BaseNamedConfigurationObject) editingNode.getUserObject();
+		if (bc.getDisplay() == null || !bc.getDisplay().equals("true")) {
+			bc.setDisplay("true");
+			Enumeration children = editingNode.breadthFirstEnumeration();
+			DatasetConfigTreeNode childNode = null;
+			while (children.hasMoreElements()) {
+				childNode = (DatasetConfigTreeNode) children.nextElement();
+				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject) childNode.getUserObject();
+				ch.setDisplay("true");
+			}
+		} else {
+			bc.setDisplay("false");
+			Enumeration children = editingNode.breadthFirstEnumeration();
+			DatasetConfigTreeNode childNode = null;
+			while (children.hasMoreElements()) {
+				childNode = (DatasetConfigTreeNode) children.nextElement();
+				BaseNamedConfigurationObject ch = (BaseNamedConfigurationObject) childNode.getUserObject();
+				ch.setDisplay("false");
 			}
 		}
 

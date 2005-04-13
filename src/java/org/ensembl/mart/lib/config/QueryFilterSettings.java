@@ -35,6 +35,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String typeKey = "type";
 	protected final String qualifierKey = "qualifier";
 	protected final String legalQualifiersKey = "legal_qualifiers";
+	protected final String buttonURLKey = "buttonURL";
     //protected final String hiddenKey = "hidden";
     
   private final String[] titles = new String[] { fieldKey, 
@@ -44,7 +45,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  typeKey,
                                                  qualifierKey,
                                                  legalQualifiersKey,
-                                                 otherFiltersKey
+                                                 otherFiltersKey,
+                                                 buttonURLKey
   };
 
 	/**
@@ -82,20 +84,21 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters, String buttonURL) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
-    setAttribute(fieldKey, field);
-    setAttribute(valueKey, value);
+    	setAttribute(fieldKey, field);
+    	setAttribute(valueKey, value);
 		setAttribute(tableConstraintKey, tableConstraint);
 	    setAttribute(keyKey, key);
 		setAttribute(typeKey, type);
 		setAttribute(qualifierKey, qualifier);
 		setAttribute(legalQualifiersKey, legalQualifiers);
-	setAttribute(otherFiltersKey, otherFilters);
+		setAttribute(otherFiltersKey, otherFilters);
+		setAttribute(buttonURLKey, buttonURL);
   }
   
 	public void setField(String field) {
