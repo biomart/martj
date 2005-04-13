@@ -30,13 +30,15 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.ensembl.mart.editor.LabelledComboBox;
 
 /**
  * Stateful dialog for entering and editing database settings.
  */
-public class DatabaseSettingsDialog extends Box {
+public class DatabaseSettingsDialog extends Box implements ChangeListener {
 
 	
 	
@@ -62,49 +64,52 @@ public class DatabaseSettingsDialog extends Box {
 	}
 
 	public DatabaseSettingsDialog(Preferences preferences) {
-		
-		super( BoxLayout.Y_AXIS );
-		
-    databaseType = new LabelledComboBox("Database type");
-    databaseType.setPreferenceKey("database_type");
-    //databaseType.setEditable( false );
-    add( databaseType );
-
-    driver = new LabelledComboBox("Database Driver");
-    driver.setPreferenceKey("driver_type");
-    //driver.setEditable( false );
-    add( driver );
-    	
-		host = new LabelledComboBox("Host");
-		host.setPreferenceKey("host");
-		add( host );
-		
-		port = new LabelledComboBox("Port");
-		port.setPreferenceKey( "port" );
-		add( port );
-		
-		database = new LabelledComboBox("Database");
-		database.setPreferenceKey("database");
-		add( database );
-		
-		schema = new LabelledComboBox("Schema");
-		schema.setPreferenceKey("schema");
-		add( schema );
-		
-		
-		user = new LabelledComboBox("User");
-		user.setPreferenceKey("user");
-		add( user );	
-		
-		
-    add( createPasswordPanel() );
-    
-    connectionName = new LabelledComboBox("Connection Name");
-    connectionName.setPreferenceKey("connection_name");
-    add( connectionName );
-    		
-		if ( preferences!=null ) setPrefs(preferences);
-		
+	    
+	    super( BoxLayout.Y_AXIS );
+	 
+	    connectionName = new LabelledComboBox("Connection Name",
+	                                           this
+	    );
+	    connectionName.setPreferenceKey("connection_name");
+	    	    	    
+	    add( connectionName );
+	    
+	    databaseType = new LabelledComboBox("Database type");
+	    databaseType.setPreferenceKey("database_type");
+	    //databaseType.setEditable( false );
+	    add( databaseType );
+	    
+	    driver = new LabelledComboBox("Database Driver");
+	    driver.setPreferenceKey("driver_type");
+	    //driver.setEditable( false );
+	    add( driver );
+	    
+	    host = new LabelledComboBox("Host");
+	    host.setPreferenceKey("host");
+	    add( host );
+	    
+	    port = new LabelledComboBox("Port");
+	    port.setPreferenceKey( "port" );
+	    add( port );
+	    
+	    database = new LabelledComboBox("Database");
+	    database.setPreferenceKey("database");
+	    add( database );
+	    
+	    schema = new LabelledComboBox("Schema");
+	    schema.setPreferenceKey("schema");
+	    add( schema );
+	    
+	    
+	    user = new LabelledComboBox("User");
+	    user.setPreferenceKey("user");
+	    add( user );	
+	    
+	    
+	    add( createPasswordPanel() );
+	    
+	    if ( preferences!=null ) setPrefs(preferences);
+	    
 	}
 
 	/**
@@ -178,76 +183,91 @@ public class DatabaseSettingsDialog extends Box {
 	 */
 	private void storePreferences( Preferences preferences) {
 
-		//  persist state for next time program runs
-		databaseType.store(preferences, 10);
-    driver.store(preferences, 10);
-		host.store(preferences, 10);
-		port.store(preferences, 10);
-		database.store(preferences, 10);
-		schema.store(preferences, 10);
-		user.store(preferences, 10);
-    connectionName.store(preferences, 10);
-    
-    preferences.putBoolean( rememberPasswordKey, rememberPassword.isSelected() );
-
-		if (rememberPassword.isSelected())
-			preferences.put(passwordPreferenceKey, getPassword());
-		else
-			preferences.remove(passwordPreferenceKey);
-
-		try {
-
-			// write preferences to persistent storage
-			preferences.flush();
-
-		} catch (BackingStoreException e) {
-			e.printStackTrace();
-		}
-
+		//  persist state for next time program runs	    
+	    String cname = connectionName.getText();
+	    
+	    if (cname != null)
+          saveStoredPreferencesFor(cname);
 	}
 
 
 	private void loadPreferences(Preferences preferences) {
-
-    databaseType.load(preferences);
-    // ensure mysql is available
-    String t = "mysql";
-    if ( !databaseType.hasItem(t) ) 
-      databaseType.addItem(t);
-    String t1 ="oracle";
-   if ( !databaseType.hasItem(t1) )
-      databaseType.addItem(t1);
-   String t2 ="postgresql";
-   if ( !databaseType.hasItem(t2) )
-      databaseType.addItem(t2);
- 
-    driver.load(preferences);
-    // ensure drivers are available
-    String d = "com.mysql.jdbc.Driver";
-    if ( !driver.hasItem(d) )
-      driver.addItem(d);
-    String d1 = "oracle.jdbc.driver.OracleDriver";
-    if ( !driver.hasItem(d1) )
-      driver.addItem(d1);
-    String d2 = "org.postgresql.Driver";
-    if ( !driver.hasItem(d2) )
-      driver.addItem(d2);
-    
-    
-
-		host.load(preferences);
-		port.load(preferences);
-		database.load(preferences);
-		user.load(preferences);
-		schema.load(preferences);
-    
-    rememberPassword.setSelected( preferences.getBoolean( rememberPasswordKey, false) );
-		password.setText(preferences.get(passwordPreferenceKey, ""));
-    
-    connectionName.load(preferences);
+	    connectionName.load(preferences);
+	    
+	    String cname = connectionName.getText();
+	    
+	    if (cname != null)
+          loadStoredPreferencesFor(cname);
+	    
+	    loadDBSettings();
 	}
 
+	private void loadStoredPreferencesFor(String cname) {
+	      Preferences newPrefs = preferences.node(cname);
+          databaseType.load(newPrefs); 
+          driver.load(newPrefs);
+          host.load(newPrefs);
+          port.load(newPrefs);
+          database.load(newPrefs);
+          user.load(newPrefs);
+          schema.load(newPrefs);
+    
+          rememberPassword.setSelected( newPrefs.getBoolean( rememberPasswordKey, false) );
+		  password.setText(newPrefs.get(passwordPreferenceKey, ""));
+	}
 
+	public void saveStoredPreferencesFor(String cname) {
+	      connectionName.store(preferences, 10);
+	      Preferences newPrefs = preferences.node(cname);
+		  databaseType.store(newPrefs, 10);
+		  driver.store(newPrefs, 10);
+		  host.store(newPrefs, 10);
+		  port.store(newPrefs, 10);
+		  database.store(newPrefs, 10);
+		  schema.store(newPrefs, 10);
+	      user.store(newPrefs, 10);
+		    
+		  newPrefs.putBoolean( rememberPasswordKey, rememberPassword.isSelected() );
+
+		  if (rememberPassword.isSelected())
+		    newPrefs.put(passwordPreferenceKey, getPassword());
+		  else
+	        newPrefs.remove(passwordPreferenceKey);
+
+	      try {
+
+			// write preferences to persistent storage
+			preferences.flush();
+
+		  } catch (BackingStoreException e) {
+			e.printStackTrace();
+		  }
+	}
+
+	private void loadDBSettings() {
+        // ensure mysql is available
+        String t = "mysql";
+        if ( !databaseType.hasItem(t) ) 
+          databaseType.addItem(t);
+        String t1 ="oracle";
+        if ( !databaseType.hasItem(t1) )
+          databaseType.addItem(t1);
+        String t2 ="postgresql";
+        if ( !databaseType.hasItem(t2) )
+          databaseType.addItem(t2);
+ 
+        // ensure drivers are available
+        String d = "com.mysql.jdbc.Driver";
+        if ( !driver.hasItem(d) )
+          driver.addItem(d);
+        String d1 = "oracle.jdbc.driver.OracleDriver";
+        if ( !driver.hasItem(d1) )
+          driver.addItem(d1);
+        String d2 = "org.postgresql.Driver";
+        if ( !driver.hasItem(d2) )
+          driver.addItem(d2);
+	}
+	
 	public static void main(String[] args) {
 		
 		DatabaseSettingsDialog d = new DatabaseSettingsDialog( );
@@ -326,4 +346,15 @@ public class DatabaseSettingsDialog extends Box {
     driver.addItem( driverName );
   }
 
+  /* (non-Javadoc)
+   * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
+   */
+  public void stateChanged(ChangeEvent e) {
+      //thrown when connectonName box status is changed
+      String cname = connectionName.getText();
+      if (cname != null) {
+          loadStoredPreferencesFor(cname);
+      }
+      loadDBSettings();
+  }
 }
