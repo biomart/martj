@@ -264,6 +264,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "someTableConstraint",
         "someKey",
         "someDescription",
+        "",
         "");
     fd.addOption(
       new Option(
@@ -279,6 +280,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "type1",
         "qualifier1",
         "legalQualifiers1",
+        "",
         ""));
     fd.addOption(
       new Option(
@@ -294,6 +296,7 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
         "type2",
         "qualifier2",
         "legalQualifiers2",
+        "",
         ""));
     // TODO handle "simple" Options. 
     // Either throw an exception in the following case OR

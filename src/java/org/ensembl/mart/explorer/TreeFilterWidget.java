@@ -78,6 +78,7 @@ public class TreeFilterWidget extends FilterWidget {
         "someTableConstraint",
         "someKey",
         "someDescription",
+        "",
         "");
 
     TreeFilterWidget tfw = new TreeFilterWidget(fgw, q, fd, null);

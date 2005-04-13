@@ -291,6 +291,7 @@ public class BooleanFilterWidget
         "someTableConstraint",
         "someKey",
         "someDescription",
+        "",
         "");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
@@ -305,6 +306,7 @@ public class BooleanFilterWidget
         "someTableConstraint",
         "someKey",
         "someDescription",
+        "",
         "");
     BooleanFilterWidget bfw2 = new BooleanFilterWidget(fgw, q, fd2, null);
 
@@ -319,6 +321,7 @@ public class BooleanFilterWidget
         "someTableConstraint Onfd3",
         "someKey Onfd3",
         "someDescription",
+        "",
         "");
     Option o = new Option("fred_id", "true");
     o.setParent(fd3);
