@@ -272,10 +272,10 @@ public class MartBuilder {
 					
 					Table ref_table = referenced_tables[i];
 					
-					if(ref_table.getName().equals(fileEntries[3])){
-						if (!fileEntries[4].toUpperCase().equals("S")){
-							ref_table.setCardinality(fileEntries[4]);
-							if (fileEntries[4].equals("1n")){
+					if(ref_table.getName().equals(fileEntries[4])){
+						if (!fileEntries[5].toUpperCase().equals("S")){
+							ref_table.setCardinality(fileEntries[5]);
+							if (fileEntries[5].equals("1n")){
 								ref_table.skip= true;
 							}
 							list.add(ref_table);
@@ -387,7 +387,7 @@ public class MartBuilder {
 			{cardinality = getUserInput(table_name+": "+type+" "+ref_tab.getName() + card_string);}
 			
 			try {
-				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
