@@ -191,7 +191,9 @@ public class QueryCompiler {
     StringBuffer buf = new StringBuffer();
     
     if (query.getFilters().length < 1) {
-      buf.append(SELECT).append(" count(").append(query.getPrimaryKeys()[0]).append(")").append(FROM).append(" ").append(query.getMainTables()[0]);
+      buf.append(SELECT).append(" count(").append("main").append(".").append(query.getPrimaryKeys()[0]).append(")").
+	  append(FROM).append(" ").append(ds.getSchema()).
+	  append(".").append(query.getMainTables()[0]).append(" main");
       fcountSQL = buf.toString();
     } else {
       boolean success = false;
@@ -201,9 +203,6 @@ public class QueryCompiler {
       success = fromClause(buf);
 
       if (success) {
-        if (logger.isLoggable(Level.FINE))
-          logger.fine("from clause:" + buf.toString());
-
         success = whereClause(buf);
       }
 
@@ -218,8 +217,8 @@ public class QueryCompiler {
       fcountSQL = sbuf.toString();
     }
 
-    if (logger.isLoggable(Level.FINE))
-      logger.fine("fcountSQL: " + fcountSQL + "\n");
+    if (logger.isLoggable(Level.INFO))
+      logger.info("fcountSQL: " + fcountSQL + "\n");
   }
 
   /**
