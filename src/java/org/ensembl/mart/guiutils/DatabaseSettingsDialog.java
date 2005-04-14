@@ -171,6 +171,11 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		return box;
 	}
 
+	private final String[] dialogOptions = new String[] { "Ok",
+	                                                      "Cancel",
+	                                                      "Delete"
+	};
+	
 	public boolean showDialog(Component parent) {
 
 		int option =
@@ -178,13 +183,40 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 				parent,
 				this,
 				"Database Connection Settings",
-				JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.DEFAULT_OPTION,
 				JOptionPane.INFORMATION_MESSAGE,
 				null,
-				null,
+				dialogOptions,
 				null);
 
-		if (option != JOptionPane.OK_OPTION)
+		if (option == 2) {
+		    //remove connection and its associated parameters from the persistence store
+		    String cname = connectionName.getText();
+		    
+		    String[] oldConnectionList = preferences.get(connectionName.getPreferenceKey(), "").split(",");
+
+		    StringBuffer newList = new StringBuffer();
+		    
+		    for (int i = 0, n = oldConnectionList.length; i < n; i++) {
+                if (oldConnectionList[i].equals(cname))  continue;
+                
+                if (i > 0)
+                  newList.append(",");
+                newList.append(oldConnectionList[i]);
+            }
+
+            preferences.put(connectionName.getPreferenceKey(), newList.toString());
+		    try {
+                preferences.node(cname).clear();
+                preferences.flush();
+            } catch (BackingStoreException e) {
+                e.printStackTrace();
+            }
+		    
+		    loadPreferences(preferences);
+		}
+		
+		if (option != 0)
 			return false;
 
         storePreferences( preferences );
