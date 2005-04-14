@@ -177,7 +177,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	};
 	
 	public boolean showDialog(Component parent) {
-
+	    
 		int option =
 			JOptionPane.showOptionDialog(
 				parent,
@@ -192,34 +192,41 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		if (option == 2) {
 		    //remove connection and its associated parameters from the persistence store
 		    String cname = connectionName.getText();
-		    
+
 		    String[] oldConnectionList = preferences.get(connectionName.getPreferenceKey(), "").split(",");
 
 		    StringBuffer newList = new StringBuffer();
+		    String comma = null;
 		    
 		    for (int i = 0, n = oldConnectionList.length; i < n; i++) {
-                if (oldConnectionList[i].equals(cname))  continue;
+                if (oldConnectionList[i].length() < 1 || oldConnectionList[i].equals(cname))  continue;
                 
-                if (i > 0)
-                  newList.append(",");
+                if (comma != null)
+                  newList.append(comma);
+                
                 newList.append(oldConnectionList[i]);
+                comma = ",";
             }
 
-            preferences.put(connectionName.getPreferenceKey(), newList.toString());
+		    if (newList.length() > 1) {
+              preferences.put(connectionName.getPreferenceKey(), newList.toString());
+		    }
+		    
 		    try {
                 preferences.node(cname).clear();
                 preferences.flush();
             } catch (BackingStoreException e) {
                 e.printStackTrace();
             }
-		    
-		    loadPreferences(preferences);
 		}
 		
-		if (option != 0)
+		if (option != 0) {
+		    loadPreferences(preferences);
 			return false;
+		}
 
-        storePreferences( preferences );
+        storePreferences( preferences );        
+        loadPreferences(preferences);
 		return true;
 
 	}
@@ -390,8 +397,6 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
       if (e.getSource().equals(connectionName)) {
         //thrown when connectonName box status is changed
         String cname = connectionName.getText();
-      
-        connectionName.parsePreferenceString(cname+","+preferences.get(connectionName.getPreferenceKey(), ""));
       
         if (cname != null) {
           loadStoredPreferencesFor(cname);
