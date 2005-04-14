@@ -310,6 +310,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	menuItem = new JMenuItem("Save All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
+	menuItem = new JMenuItem("Upload All");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);	
 	menuItem = new JMenuItem("Move All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);		
@@ -543,7 +546,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	  else if (e.getActionCommand().startsWith("Move All"))
 		  moveAll();		
 	  else if (e.getActionCommand().startsWith("Save All"))
-		  saveAll();		
+		  saveAll();	
+	  else if (e.getActionCommand().startsWith("Upload All"))
+			uploadAll();			  	
       else if (e.getActionCommand().startsWith("Update"))
         updateDatasetConfig();
       else if (e.getActionCommand().startsWith("Delete"))
@@ -990,6 +995,66 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 			enableCursor();
 		  }
 
+  }
+
+
+  public void uploadAll() {
+  	
+  	
+	try {
+			if (ds == null) {
+			  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+			  return;
+			}
+
+			try {
+			  disableCursor();
+			  // choose folder
+			  JFileChooser fc = new JFileChooser(getFileChooserPath());
+			  fc.setSelectedFile(getFileChooserPath());
+			  fc.setDialogTitle("Choose file(s) to upload to database: WARNING - THIS WILL OVERWRITE EXISTING XMLS IN THE DATABASE");
+		  	  fc.setMultiSelectionEnabled(true);			  
+			  XMLFileFilter filter = new XMLFileFilter();
+			  fc.addChoosableFileFilter(filter);
+			  int returnVal = fc.showOpenDialog(getContentPane());
+			  if (returnVal == JFileChooser.APPROVE_OPTION) {
+			     
+				 //file = fc.getSelectedFile();// works
+				 	
+			     // cycle through all dataset files	
+			     File[] files = fc.getSelectedFiles();
+			  
+			     for (int i = 0; i < files.length; i++){
+				  file = files[i];
+				  			  
+				  URL url = file.toURL();
+				  DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false, true);
+				  DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
+				  
+				  // export osdv
+				  try {
+						dbutils.storeDatasetConfiguration(
+									MartEditor.getUser(),
+									odsv.getInternalName(),
+									odsv.getDisplayName(),
+									odsv.getDataset(),
+									odsv.getDescription(),
+									MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(odsv),
+									true,
+									odsv.getType(),
+									odsv.getVisible(),
+									odsv.getVersion());
+				   } catch (Exception e) {
+							e.printStackTrace();
+				   }
+			     } 				
+			  } 
+			} catch (Exception e) {
+			  e.printStackTrace();
+			}
+		  } finally {
+			enableCursor();
+		  }
   }
 
 
