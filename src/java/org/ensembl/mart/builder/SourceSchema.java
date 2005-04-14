@@ -56,11 +56,30 @@ public class SourceSchema {
 		return resolver.getReferencedColumns(name);
 	}
 
+	
+	
 	public Table[] getReferencedTables(String table_name) {
 
 		return resolver.getReferencedTables(table_name);
 	}
 
+	
+	
+	
+	
+	public Table[] getExportedKeyTables(String table_name) {
+
+		return resolver.getExportedKeyTables(table_name);
+	}
+
+	public Table[] getImportedKeyTables(String table_name) {
+
+		return resolver.getImportedKeyTables(table_name);
+	}
+
+		
+	
+	
 	public Table getMainTable(String table_name) {
 
 		return resolver.getMainTable(table_name);

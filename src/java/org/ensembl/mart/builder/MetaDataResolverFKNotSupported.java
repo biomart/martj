@@ -29,7 +29,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	
 	
 	
-	protected Table [] getExportedKeyTables (String maintable){
+	public Table [] getExportedKeyTables (String maintable){
 		
 		ArrayList exported_tabs= new ArrayList();
 		
@@ -65,7 +65,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	}
 	
 	
-	protected Table [] getImportedKeyTables (String maintable){
+	public Table [] getImportedKeyTables (String maintable){
 		
 		ArrayList imported_tabs= new ArrayList();
 		

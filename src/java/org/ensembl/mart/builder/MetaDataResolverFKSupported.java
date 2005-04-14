@@ -46,7 +46,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 	
 	
 	
-	protected Table [] getExportedKeyTables (String maintable){
+	public Table [] getExportedKeyTables (String maintable){
 		
 		ArrayList exported_tabs= new ArrayList();
 		
@@ -61,7 +61,6 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				// may cause some problems when the key is chosen.
 				
 				if (currentTable.equals(keys.getString(7))) continue;
-				
 				
 				Table table = new Table();
 				table.setName(keys.getString(7));
@@ -84,7 +83,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 	}
 	
 	
-	protected Table [] getImportedKeyTables (String maintable){
+	public Table [] getImportedKeyTables (String maintable){
 		
 		ArrayList exported_tabs= new ArrayList();
 		

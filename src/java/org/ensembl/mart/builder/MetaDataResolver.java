@@ -56,8 +56,10 @@ public abstract class MetaDataResolver {
 	}
 	
 	
-	protected abstract Table [] getExportedKeyTables (String table_name);
-	protected abstract Table [] getImportedKeyTables (String table_name);
+	
+	
+	public abstract Table [] getExportedKeyTables (String table_name);
+	public abstract Table [] getImportedKeyTables (String table_name);
 	protected abstract String getPrimaryKeys(String table_name);
 	
 	

@@ -228,14 +228,14 @@ public class MartBuilder {
 			
 			while((line = in.readLine()) != null){
 				
-				String [] items = line.split("\t");
+				String [] fileEntries = line.split("\t");
 				
-				if (lines ==0) source_schema.dataset=items[0];
+				if (lines ==0) source_schema.dataset=fileEntries[0];
 				
 				
-				if (!items[2].equals(last_table) || !items[0].equals(last_dataset)){
+				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(last_dataset)){
 					
-					referenced_tables = source_schema.getReferencedTables(items[2]);
+					referenced_tables = source_schema.getReferencedTables(fileEntries[2]);
 					
 					if (lines !=0){
 						createLinkedTables(source_schema,list,last_type,last_table);
@@ -245,7 +245,7 @@ public class MartBuilder {
 				
 				
 				
-				if (!items[0].equals(last_dataset)){
+				if (!fileEntries[0].equals(last_dataset)){
 					
 					lines=0;
 					
@@ -260,7 +260,7 @@ public class MartBuilder {
 						schemas.add(target_schema);	
 						source_schema = new SourceSchema(config);
 						
-						source_schema.dataset=items[0];
+						source_schema.dataset=fileEntries[0];
 						
 					}
 					
@@ -272,10 +272,10 @@ public class MartBuilder {
 					
 					Table ref_table = referenced_tables[i];
 					
-					if(ref_table.getName().equals(items[3])){
-						if (!items[4].toUpperCase().equals("S")){
-							ref_table.setCardinality(items[4]);
-							if (items[4].equals("1n")){
+					if(ref_table.getName().equals(fileEntries[3])){
+						if (!fileEntries[4].toUpperCase().equals("S")){
+							ref_table.setCardinality(fileEntries[4]);
+							if (fileEntries[4].equals("1n")){
 								ref_table.skip= true;
 							}
 							list.add(ref_table);
@@ -283,9 +283,9 @@ public class MartBuilder {
 					}
 				}	
 				
-				last_table=items[2];
-				last_type=items[1];
-				last_dataset=items[0];
+				last_table=fileEntries[2];
+				last_type=fileEntries[1];
+				last_dataset=fileEntries[0];
 				lines++;
 			}	
 			
@@ -330,8 +330,7 @@ public class MartBuilder {
 	
 	private static void writeConfigFile (String output_file,String dataset,String table_name, String table_type){
 		
-		SourceSchema source_schema = new SourceSchema(config);
-		Table [] referenced_tables = source_schema.getReferencedTables(table_name);
+		
 		
 		BufferedWriter out =null;
 		try {
@@ -340,25 +339,13 @@ public class MartBuilder {
 			e1.printStackTrace();
 		}
 		
-		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
+		SourceSchema source_schema = new SourceSchema(config);
 		
-		for (int i=0;i<referenced_tables.length; i++){
-			
-			String cardinality = "";
-			Table ref_tab=referenced_tables[i];
-			
-			while (!(cardinality.equals("11") || cardinality.equals("n1")
-					|| cardinality.equals("0n") || cardinality.equals("1n")
-					|| cardinality.equals("n1r") || cardinality.equals("s")))
-				
-			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
-			
-			try {
-				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}	
-		}
+		Table [] exp_tables = source_schema.getExportedKeyTables(table_name);
+		write (out,exp_tables,table_name, table_type,dataset,"exported");
+		
+		Table [] imp_tables = source_schema.getImportedKeyTables(table_name);
+		write (out,imp_tables,table_name, table_type,dataset,"imported");
 		
 		try {
 			out.close();
@@ -382,6 +369,34 @@ public class MartBuilder {
 		return cardinality;
 		
 	}
+	
+	
+	private static void write (BufferedWriter out,Table [] referenced_tables, String table_name, String table_type,String dataset, String type){
+		
+		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
+		
+		for (int i=0;i<referenced_tables.length; i++){
+			
+			String cardinality = "";
+			Table ref_tab=referenced_tables[i];
+			
+			while (!(cardinality.equals("11") || cardinality.equals("n1")
+					|| cardinality.equals("0n") || cardinality.equals("1n")
+					|| cardinality.equals("n1r") || cardinality.equals("s")))
+				
+			{cardinality = getUserInput(table_name+": "+type+" "+ref_tab.getName() + card_string);}
+			
+			try {
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+ref_tab.getName() +"\t"+ cardinality+"\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	
+		}
+		
+	//retrun void;	
+	}
+	
+	
 	
 	
 	
