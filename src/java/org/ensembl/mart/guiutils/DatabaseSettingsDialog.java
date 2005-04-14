@@ -59,6 +59,21 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
   private JCheckBox rememberPassword;
   private String rememberPasswordKey;
   
+  private final String[] defaultDBTypes = new String[] { "mysql",
+          "oracle",
+          "postgresql"
+  };
+  
+  /* 
+   * the order of the default drivers must coincide with the order of their corresponding
+   * default types above for the auto completion to work
+   */
+  private final String[] defaultDBDrivers = new String[] { "com.mysql.jdbc.Driver",
+          "oracle.jdbc.driver.OracleDriver",
+          "org.postgresql.Driver"
+          
+  };
+  
 	public DatabaseSettingsDialog() {
 		this(null);
 	}
@@ -67,9 +82,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    
 	    super( BoxLayout.Y_AXIS );
 	 
-	    connectionName = new LabelledComboBox("Connection Name",
-	                                           this
-	    );
+	    connectionName = new LabelledComboBox("Connection Name");
 	    connectionName.setPreferenceKey("connection_name");
 	    	    	    
 	    add( connectionName );
@@ -110,6 +123,9 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 	    
 	    if ( preferences!=null ) setPrefs(preferences);
 	    
+	    //setup changeListeners after initialization
+	    connectionName.addChangeListener( this );
+	    databaseType.addChangeListener( this );	    
 	}
 
 	/**
@@ -186,6 +202,8 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		//  persist state for next time program runs	    
 	    String cname = connectionName.getText();
 	    
+	    connectionName.store(preferences, 10);
+	    
 	    if (cname != null)
           saveStoredPreferencesFor(cname);
 	}
@@ -216,8 +234,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 		  password.setText(newPrefs.get(passwordPreferenceKey, ""));
 	}
 
-	public void saveStoredPreferencesFor(String cname) {
-	      connectionName.store(preferences, 10);
+	public void saveStoredPreferencesFor(String cname) {	      
 	      Preferences newPrefs = preferences.node(cname);
 		  databaseType.store(newPrefs, 10);
 		  driver.store(newPrefs, 10);
@@ -243,29 +260,17 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 			e.printStackTrace();
 		  }
 	}
-
+	
 	private void loadDBSettings() {
-        // ensure mysql is available
-        String t = "mysql";
-        if ( !databaseType.hasItem(t) ) 
-          databaseType.addItem(t);
-        String t1 ="oracle";
-        if ( !databaseType.hasItem(t1) )
-          databaseType.addItem(t1);
-        String t2 ="postgresql";
-        if ( !databaseType.hasItem(t2) )
-          databaseType.addItem(t2);
- 
-        // ensure drivers are available
-        String d = "com.mysql.jdbc.Driver";
-        if ( !driver.hasItem(d) )
-          driver.addItem(d);
-        String d1 = "oracle.jdbc.driver.OracleDriver";
-        if ( !driver.hasItem(d1) )
-          driver.addItem(d1);
-        String d2 = "org.postgresql.Driver";
-        if ( !driver.hasItem(d2) )
-          driver.addItem(d2);
+	    for (int i = 0, n = defaultDBTypes.length; i < n; i++) {
+            if (!databaseType.hasItem( defaultDBTypes[i]))
+              databaseType.addItem( defaultDBTypes[i] );
+        }
+	    
+	    for (int i = 0, n = defaultDBDrivers.length; i < n; i++) {
+          if (!driver.hasItem( defaultDBDrivers[i] ))
+              driver.addItem( defaultDBDrivers[i] );
+        }
 	}
 	
 	public static void main(String[] args) {
@@ -350,11 +355,25 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
    * @see javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent)
    */
   public void stateChanged(ChangeEvent e) {
-      //thrown when connectonName box status is changed
-      String cname = connectionName.getText();
-      if (cname != null) {
+      if (e.getSource().equals(connectionName)) {
+        //thrown when connectonName box status is changed
+        String cname = connectionName.getText();
+      
+        connectionName.parsePreferenceString(cname+","+preferences.get(connectionName.getPreferenceKey(), ""));
+      
+        if (cname != null) {
           loadStoredPreferencesFor(cname);
+        }
+        loadDBSettings();
+      } else if (e.getSource().equals(databaseType)){
+          //thrown when databaseType box status is changed
+          String dbtype = databaseType.getText();
+          for (int i = 0, n = defaultDBTypes.length; i < n; i++) {
+            if (dbtype.equals(defaultDBTypes[i])) {
+                driver.setSelectedItem( defaultDBDrivers[i] );
+                break;
+            }
+        }
       }
-      loadDBSettings();
   }
 }
