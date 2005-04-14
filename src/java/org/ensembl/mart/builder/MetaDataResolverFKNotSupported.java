@@ -17,11 +17,11 @@ package org.ensembl.mart.builder;
 import java.sql.*;
 import java.util.*;
 
-public class MetaDataResolverMySQL extends MetaDataResolver {
+public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	
 	
 	
-	public MetaDataResolverMySQL(DBAdaptor adaptor){
+	public MetaDataResolverFKNotSupported(DBAdaptor adaptor){
 		
 		super(adaptor);
 		

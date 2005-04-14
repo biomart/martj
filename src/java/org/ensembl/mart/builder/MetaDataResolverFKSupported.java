@@ -17,11 +17,11 @@ package org.ensembl.mart.builder;
 import java.sql.*;
 import java.util.*;
 
-public class MetaDataResolverOracle extends MetaDataResolver {
+public class MetaDataResolverFKSupported extends MetaDataResolver {
 
 	
 	
-	public MetaDataResolverOracle(DBAdaptor adaptor){
+	public MetaDataResolverFKSupported(DBAdaptor adaptor){
 			
 		super(adaptor);
 		
@@ -50,10 +50,18 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 		
 		ArrayList exported_tabs= new ArrayList();
 		
+		String currentTable = "";
+		
 		try {
 			int i = 0;
 			ResultSet keys = dmd.getExportedKeys(getAdaptor().catalog,getAdaptor().schema,maintable);
 			while (keys.next()){
+			
+				//to avoid multiple table when the same table is referenced by multiple keys
+				// may cause some problems when the key is chosen.
+				
+				if (currentTable.equals(keys.getString(7))) continue;
+				
 				
 				Table table = new Table();
 				table.setName(keys.getString(7));
@@ -61,6 +69,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 				table.status="exported";
 				table.setColumns(getReferencedColumns(table.getName()));
 				exported_tabs.add(table);
+				currentTable=keys.getString(7);
 				i++;
 			}
 		} catch (SQLException e) {
@@ -79,10 +88,16 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 		
 		ArrayList exported_tabs= new ArrayList();
 		
+		String currentTable = "";
+		
 		try {
 			int i = 0;
 			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().schema,maintable);
 			while (keys.next()){
+				
+				// to avoid multiple table when the same table is referenced by multiple keys
+				// may cause some problems when the key is chosen.
+				if (currentTable.equals(keys.getString(3))) continue;
 				
 				Table table = new Table();
 				table.setName(keys.getString(3));
@@ -90,6 +105,7 @@ public class MetaDataResolverOracle extends MetaDataResolver {
 				table.status="imported";
 				table.setColumns(getReferencedColumns(table.getName()));
 				exported_tabs.add(table);
+				currentTable=keys.getString(3);
 				i++;
 			}
 		} catch (SQLException e) {

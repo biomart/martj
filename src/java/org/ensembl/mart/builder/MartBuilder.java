@@ -40,7 +40,7 @@ public class MartBuilder {
 		targetSchemaName=tSchemaName;
 		
 		
-		while (! (config_info.equals("C") || config_info.equals("R"))){
+		while (! (config_info.toUpperCase().equals("C") || config_info.toUpperCase().equals("R"))){
 			config_info=getUserInput("Configuration Create [C] Read [R]: ");
 		}
 		

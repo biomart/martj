@@ -28,12 +28,12 @@ public class SourceSchema {
 		MetaDataResolver resolver = null;
 		
 		if (adaptor.rdbms.equals("mysql")){
-		resolver = new MetaDataResolverMySQL(adaptor);
+		resolver = new MetaDataResolverFKNotSupported(adaptor);
 		} else if (adaptor.rdbms.equals("oracle")){
-		resolver = new MetaDataResolverOracle(adaptor);
+		resolver = new MetaDataResolverFKSupported(adaptor);
 		}
 		else if (adaptor.rdbms.equals("postgresql")){
-			resolver = new MetaDataResolverOracle(adaptor);
+			resolver = new MetaDataResolverFKSupported(adaptor);
 		}
 		this.adaptor=adaptor;
 		this.resolver=resolver;
