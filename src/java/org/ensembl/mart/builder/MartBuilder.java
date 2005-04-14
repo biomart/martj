@@ -44,7 +44,7 @@ public class MartBuilder {
 			config_info=getUserInput("Configuration Create [C] Read [R]: ");
 		}
 		
-		if (config_info.equals("C")){
+		if (config_info.toUpperCase().equals("C")){
 			file=getUserInput("OUTPUT CONFIG FILE: ");
 			file = data_dir+file;
 			
@@ -199,9 +199,9 @@ public class MartBuilder {
 		
 		do
 			table_type=getUserInput(prompt);
-		while (!(table_type.equals("M") || table_type.equals("D") || table_type.equals("E")));
+		while (!(table_type.toUpperCase().equals("M") || table_type.toUpperCase().equals("D") || table_type.toUpperCase().equals("E")));
 		
-		while (table_type.equals("M") || table_type.equals("D")){
+		while (table_type.toUpperCase().equals("M") || table_type.toUpperCase().equals("D")){
 			String table_name = getUserInput("TABLE NAME: ");
 			
 			writeConfigFile(output_file,user_dataset,table_name,table_type);
@@ -273,7 +273,7 @@ public class MartBuilder {
 					Table ref_table = referenced_tables[i];
 					
 					if(ref_table.getName().equals(items[3])){
-						if (!items[4].equals("S")){
+						if (!items[4].toUpperCase().equals("S")){
 							ref_table.setCardinality(items[4]);
 							if (items[4].equals("1n")){
 								ref_table.skip= true;
@@ -313,7 +313,7 @@ public class MartBuilder {
 		LinkedTables linked_tables= source_schema.createLinkedTables(last_table,(Table []) list.toArray(b));
 		
 		StringBuffer final_table = new StringBuffer(source_schema.dataset + "__"+last_table+"__");
-		if (last_type.equals("M")){
+		if (last_type.toUpperCase().equals("M")){
 			linked_tables.final_table_type ="MAIN";
 			linked_tables.final_table_name= final_table.append("main").toString();
 		} else { 
@@ -340,7 +340,7 @@ public class MartBuilder {
 			e1.printStackTrace();
 		}
 		
-		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [SKIP S]: ";
+		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
 		
 		for (int i=0;i<referenced_tables.length; i++){
 			
@@ -349,7 +349,7 @@ public class MartBuilder {
 			
 			while (!(cardinality.equals("11") || cardinality.equals("n1")
 					|| cardinality.equals("0n") || cardinality.equals("1n")
-					|| cardinality.equals("n1r") || cardinality.equals("S")))
+					|| cardinality.equals("n1r") || cardinality.equals("s")))
 				
 			{cardinality = getUserInput(table_name+": "+ref_tab.getName() + card_string);}
 			
