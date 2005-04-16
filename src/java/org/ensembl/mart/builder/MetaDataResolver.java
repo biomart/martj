@@ -112,7 +112,7 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getMainTable (String main_name){
+	public Table getCentralTable (String main_name){
 		
 		Table table = new Table();
 		table.setName(main_name);

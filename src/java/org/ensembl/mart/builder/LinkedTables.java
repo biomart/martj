@@ -17,11 +17,11 @@ import java.util.*;
 
 public class LinkedTables {
 	
-	Table main_table;
+	Table centralTable;
 	ArrayList referenced_tables = new ArrayList();
 	String next_main;
 	String final_table_type;
-	String dataset;
+	String datasetName;
 	String final_table_name;
 	
 	
@@ -32,14 +32,14 @@ public class LinkedTables {
 	/**
 	 * @return Returns the main_table.
 	 */
-	public Table getMainTable() {
-		return main_table;
+	public Table getCentralTable() {
+		return centralTable;
 	}
 	/**
-	 * @param main_table The main_table to set.
+	 * @param centralTable The main_table to set.
 	 */
-	public void setMainTable(Table main_table) {
-		this.main_table = main_table;
+	public void setCentralTable(Table centralTable) {
+		this.centralTable = centralTable;
 	}
 	/**
 	 * @return Returns the referenced_tables.

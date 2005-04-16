@@ -106,6 +106,7 @@ public class Transformation {
 			else  {
 				Table new_temp_end= unit.copyTable(temp_end);
 				temp_start=new_temp_end;
+				temp_start.setExtension("");
 			}
 			
 			

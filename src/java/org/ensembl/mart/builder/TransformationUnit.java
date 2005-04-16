@@ -29,6 +29,7 @@ public abstract class TransformationUnit {
 	boolean has_extension=false;
 	boolean useFK=false;
 	boolean single =false;
+	boolean isFirst;
 	
 	
 	public TransformationUnit(Table ref_table){

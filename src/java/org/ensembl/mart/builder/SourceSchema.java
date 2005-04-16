@@ -21,7 +21,7 @@ public class SourceSchema {
 
 	MetaDataResolver resolver;
 
-	String dataset;
+	String datasetName;
 
 	public SourceSchema(String config) {
 
@@ -43,9 +43,10 @@ public class SourceSchema {
 
 	public LinkedTables createLinkedTables(String main_name, Table[] tables) {
 
-		Table main = resolver.getMainTable(main_name);
+		Table central = resolver.getCentralTable(main_name);
+		
 		LinkedTables linked = new LinkedTables();
-		linked.setMainTable(main);
+		linked.setCentralTable(central);
 		linked.setReferencedTables(tables);
 		return linked;
 
@@ -82,7 +83,7 @@ public class SourceSchema {
 	
 	public Table getMainTable(String table_name) {
 
-		return resolver.getMainTable(table_name);
+		return resolver.getCentralTable(table_name);
 
 	}
 

@@ -46,7 +46,7 @@ public class TargetSchema {
 		    transformation.targetName=name;
 			transformation.final_table_type=linked.final_table_type;
 			transformation.final_table_name=linked.final_table_name;
-			transformation.start_table=linked.getMainTable();
+			transformation.start_table=linked.getCentralTable();
 			transformation.type="linked";
 			transformation.final_table_type=linked.final_table_type;
 			
