@@ -238,6 +238,10 @@ public class FilterGroup extends BaseNamedConfigurationObject {
 			  contains = true;
 			else if ( (internalName.indexOf(".") > 0) &&  !(internalName.endsWith(".")) && lastFilt.getInternalName().equals( internalName.split("\\.")[1] ) )
 			  contains = true;
+			else if (lastFilt.getInternalName().matches("\\w+\\." + internalName)){
+					contains = true;
+					internalName = lastFilt.getInternalName();  
+				  }  
 			else {
 				lastFilt = null;
 				contains = containsFilterDescription(internalName);
