@@ -19,8 +19,8 @@
                     port         = "3306"
                     instanceName = "test"
                     schema       = "test"
-                    user         = ""
-                    password     = ""
+                    user         = "user"
+                    password     = "pass"
                     visible      ="1"                  
 />
 
