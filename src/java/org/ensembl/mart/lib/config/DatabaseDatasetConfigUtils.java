@@ -1017,7 +1017,7 @@ public class DatabaseDatasetConfigUtils {
   	
   	// fully qualify for 'non-public' postgres schemas
     String existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
-    System.out.println("SQLxxx: "+existSQL);
+    
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
 
@@ -1184,7 +1184,7 @@ public class DatabaseDatasetConfigUtils {
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;}
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
-			  System.out.println ("create statement: "+CREATE_SQL);
+			  
 			  ps.executeUpdate();	
 			  conn.close();
 			} catch (SQLException e) {
@@ -1308,7 +1308,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap brokenFPages = new HashMap();
     FilterPage[] allPages = dsv.getFilterPages();
     for (int i = 0, n = allPages.length; i < n; i++) {
-      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset);
+      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig);
 
       if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
@@ -1322,7 +1322,6 @@ public class DatabaseDatasetConfigUtils {
       for (Iterator iter = brokenFPages.keySet().iterator(); iter.hasNext();) {
         Integer position = (Integer) iter.next();
         FilterPage brokenPage = (FilterPage) brokenFPages.get(position);
-
         validatedDatasetConfig.removeFilterPage(allPages[position.intValue()]);
         validatedDatasetConfig.insertFilterPage(position.intValue(), brokenPage);
       }
@@ -1399,13 +1398,13 @@ public class DatabaseDatasetConfigUtils {
     return validatedPrimaryKey;
   }
 
-  private FilterPage getValidatedFilterPage(FilterPage page, String dset) throws SQLException {
+  private FilterPage getValidatedFilterPage(FilterPage page, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
     FilterPage validatedPage = new FilterPage(page);
 
     boolean hasBrokenGroups = false;
     HashMap brokenGroups = new HashMap();
 
-    List allGroups = page.getFilterGroups();
+    List allGroups = validatedPage.getFilterGroups();
     for (int i = 0, n = allGroups.size(); i < n; i++) {
       Object group = allGroups.get(i);
 
@@ -1413,7 +1412,7 @@ public class DatabaseDatasetConfigUtils {
         //FilterGroup gr = (FilterGroup) group;
         //if ((gr.getInternalName().equals("expression")))
         //	continue;// hack for expression - breaks current code - needs fixing
-        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset);
+        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset, dsv);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -1442,16 +1441,16 @@ public class DatabaseDatasetConfigUtils {
     return validatedPage;
   }
 
-  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset) throws SQLException {
+  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
     FilterGroup validatedGroup = new FilterGroup(group);
 
-    FilterCollection[] collections = group.getFilterCollections();
+    FilterCollection[] collections = validatedGroup.getFilterCollections();
 
     boolean hasBrokenCollections = false;
     HashMap brokenCollections = new HashMap();
 
     for (int i = 0, n = collections.length; i < n; i++) {
-      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset);
+      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset, dsv);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -1475,7 +1474,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedGroup;
   }
 
-  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset) throws SQLException {
+  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
     
     String catalog="";
     String schema = getSchema();
@@ -1484,7 +1483,7 @@ public class DatabaseDatasetConfigUtils {
     
     FilterCollection validatedFilterCollection = new FilterCollection(collection);
 
-    List allFilts = collection.getFilterDescriptions();
+    List allFilts = validatedFilterCollection.getFilterDescriptions();
 
     boolean filtersValid = true;
     HashMap brokenFilts = new HashMap();
@@ -1494,7 +1493,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (element instanceof FilterDescription) {
         FilterDescription validatedFilter =
-          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset);
+          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset, dsv);
         if (validatedFilter.isBroken()) {
 
           filtersValid = false;
@@ -1523,29 +1522,41 @@ public class DatabaseDatasetConfigUtils {
     return validatedFilterCollection;
   }
 
-  private FilterDescription getValidatedFilterDescription(
+  private FilterDescription getValidatedFilterDescription (
     String schema,
     String catalog,
     FilterDescription filter,
-    String dset)
-    throws SQLException {
+    String dset,
+	DatasetConfig dsv)
+    throws SQLException, ConfigurationException {
     FilterDescription validatedFilter = new FilterDescription(filter);
-    //System.out.println("CHecking FILTER\t" + validatedFilter);
-    if (filter.getField() != null) {
-      //test
+    
+    DatasetConfig otherDataset = null;
+    // if a placeholder get the real filter
+    if (validatedFilter.getInternalName().matches("\\w+\\.\\w+")){
+    	return validatedFilter;
+    	
+    	// do not update filters from other datasets probably
+    	
+    	//String dataset = validatedFilter.getInternalName().split("\\.")[0];
+    	//String otherFilter =  validatedFilter.getInternalName().split("\\.")[1];
+		//otherDataset = getDatasetConfigByDatasetInternalName(null,dataset,"default");  
+		//dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,dataset,"default"));		
+		//validatedFilter= otherDataset.getFilterDescriptionByInternalName(otherFilter);	
+    }
+        
+    if (validatedFilter.getField() != null) {
       boolean fieldValid = false;
       boolean tableValid = false;
 
-      String field = filter.getField();
-      String tableConstraint = filter.getTableConstraint();
+      String field = validatedFilter.getField();
+      String tableConstraint = validatedFilter.getTableConstraint();
 
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
       
 	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
-          //System.out.println("databaseType() "+dsource.getDatabaseType());          
- 
-      //String table = (tableConstraint != null) ? "%" + tableConstraint + "%" : "%" + MAINTABLESUFFIX;
+      
       Connection conn = dsource.getConnection();
       
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
@@ -1575,20 +1586,231 @@ public class DatabaseDatasetConfigUtils {
         validatedFilter.setFieldBroken();
         validatedFilter.setTableConstraintBroken();
       }
-    } else {
+    }
+    
+    //else {
       //check Options/PushAction Options
+	  
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
 
-      Option[] options = filter.getOptions();
-      for (int j = 0, m = options.length; j < m; j++) {
-        Option validatedOption = getValidatedOption(schema, catalog, options[j], dset);
-        if (validatedOption.isBroken()) {
-          optionsValid = false;
-          brokenOptions.put(new Integer(j), validatedOption);
-        }
-      }
+	
 
+
+      Option[] options = validatedFilter.getOptions();      
+      if (options.length > 0 && options[0].getValue() != null){
+      	    // regenerate options and push actions
+      		
+      		// store the option/push action structure so can recreate
+      		
+   			PushAction[] pas = options[0].getPushActions();
+   			String[] pushActions = new String[pas.length];
+   			String[] orderBy = new String[pas.length];
+   	        for (int n = 0; n < pas.length; n++){
+   	        	pushActions[n] = pas[n].getRef();
+   	        	orderBy[n] = pas[n].getOrderBy();
+   	        }
+   
+   
+      		// remove all options
+      		String[] oldOptionOrder = new String[options.length];
+		    for (int j = 0; j < options.length; j++) {
+		    	oldOptionOrder[j] = options[j].getInternalName();
+				validatedFilter.removeOption(options[j]);
+		    }  
+		    
+			String field = validatedFilter.getField();
+			String tableName = validatedFilter.getTableConstraint();
+			String joinKey = validatedFilter.getKey();
+			validatedFilter.setType("list");
+			validatedFilter.setQualifier("=");
+			validatedFilter.setLegalQualifiers("=");
+		
+			Option[] ops;
+			if (otherDataset != null){
+				ops = getOptions(field, tableName, joinKey, otherDataset);
+			}
+			else{
+				ops = getOptions(field, tableName, joinKey, dsv);
+			}
+			
+
+			HashMap valMap = new HashMap();// use to keep options in existing order if possible	
+			for (int k = 0; k < ops.length; k++) {
+				valMap.put(ops[k].getInternalName(),ops[k]);
+			}		    
+			int j;
+			int k = 0;
+			for (j = 0; j < oldOptionOrder.length; j++) {
+				if (valMap.containsKey(oldOptionOrder[j])) {
+					validatedFilter.insertOption(k, (Option) valMap.get(oldOptionOrder[j]));
+					k++;
+					valMap.remove(oldOptionOrder[j]);			
+				}
+			}
+			for (Iterator iter = valMap.keySet().iterator(); iter.hasNext();) {
+				  String position = (String) iter.next();
+				  validatedFilter.insertOption(k, (Option) valMap.get(position));
+				  k++;
+			}	
+			
+			// PushActions
+			for (int n = 0; n < pushActions.length; n++){
+				
+				String filter2 = pushActions[n];
+			    //String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");
+				String orderSQL = orderBy[n];
+				if (orderSQL == null) orderSQL = "";
+						
+				//dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
+				
+				if (validatedFilter.getOtherFilters() != null){// refers to a placeholder
+					//String otherDatasetName = null;
+					String otherDatasetFilter1 = null;
+					otherDataset = null;
+					FilterDescription fd2 = null;
+					String[] otherFilters = validatedFilter.getOtherFilters().split(";");
+					for (int p = 0; p < otherFilters.length; p++){
+						otherDataset = getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
+						dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
+						if (otherDataset.containsFilterDescription(filter2))
+							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
+						if (fd2 != null){
+							otherDatasetFilter1 = otherFilters[p].split("\\.")[1];
+							break;
+						}
+					}
+					
+					fd2.setType("drop_down_basic_filter");
+					String pushField = fd2.getField();
+					String pushInternalName = fd2.getInternalName();
+					String pushTableName = fd2.getTableConstraint();
+
+					if (pushTableName.equals("main")) {
+							String[] mains = otherDataset.getStarBases();
+							pushTableName = mains[0];
+					}
+					//String pafield;
+					Option[] options2;
+					//pafield = validatedFilter.getField();// SHOULD GET FIELD FROM OTHER FILTER INSTEAD	
+					String pafield = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
+												
+					options2 = validatedFilter.getOptions();
+
+					for (int i = 0; i < options2.length; i++) {
+						Option op = options2[i];
+						String opName = op.getDisplayName();
+						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
+
+						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL));
+
+						if (pa.getOptions().length > 0) {
+							options2[i].addPushAction(pa); 
+						}
+
+					}										 
+				}
+				else{
+				 FilterDescription fd2 = dsv.getFilterDescriptionByInternalName(filter2);//doesn't work for placeholder  
+				 fd2.setType("drop_down_basic_filter");
+				 String pushField = fd2.getField();
+				 String pushInternalName = fd2.getInternalName();
+				 String pushTableName = fd2.getTableConstraint();
+
+				 if (pushTableName.equals("main")) {
+					String[] mains = dsv.getStarBases();
+					pushTableName = mains[0];
+				 }
+				 String pafield;
+				 Option[] options2;
+				 pafield = validatedFilter.getField();			
+				 options2 = validatedFilter.getOptions();
+
+				 for (int i = 0; i < options2.length; i++) {
+					Option op = options2[i];
+					String opName = op.getDisplayName();
+					PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
+
+					pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
+
+					if (pa.getOptions().length > 0) {
+						options2[i].addPushAction(pa); 
+					}
+
+				}
+			   }
+			  }
+
+		    validatedFilter.setOptionsBroken();	
+		    return validatedFilter;      	
+      	}
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+	  Connection conn = dsource.getConnection();
+      for (int j = 0; j < options.length; j++) {
+      	
+//		if (options[j].getValue() != null){
+
+
+
+
+
+
+			// should test this value is still in database
+			
+//			String table = validatedFilter.getTableConstraint();
+//			if (table.equals("main")){
+//				String[] pkeys = dsv.getPrimaryKeys();
+//				String[] mainTables = dsv.getStarBases();
+//				for (int k = 0; k < pkeys.length; k++){
+//					if (pkeys[k].equals(validatedFilter.getKey())){
+//						table = mainTables[k];
+//						break;
+//					}
+//				}
+//			}
+//			String sql = "SELECT COUNT(" + validatedFilter.getField() + ") FROM " + 
+//				table + " where " + validatedFilter.getField() + " ='" + options[j]. getValue() + "'";
+//      	System.out.println(sql);
+//			PreparedStatement ps = conn.prepareStatement(sql);
+//			ResultSet rs = ps.executeQuery();
+//			rs.next();
+//			int count = rs.getInt(1);
+//			rs.close();
+//			ps.close();
+//			
+//				
+//			if (!(count > 0)){ 
+//				System.out.println("OPTION " + options[j].getInternalName() + " IS NOT VLAID ANYMORE");
+//				optionsValid = false;
+//				options[j].setHidden("true");
+//				brokenOptions.put(new Integer(j), options[j]);
+//			}
+//		}
+//	  	else{
+        	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset);
+        	if (validatedOption.isBroken()) {
+          	optionsValid = false;
+          	brokenOptions.put(new Integer(j), validatedOption);
+        	}
+//	  	}
+      }
+	  conn.close();
       if (!optionsValid) {
         validatedFilter.setOptionsBroken();
 
@@ -1602,7 +1824,7 @@ public class DatabaseDatasetConfigUtils {
           validatedFilter.insertOption(position.intValue(), brokenOption);
         }
       }
-    }
+    //}
 
     return validatedFilter;
   }
@@ -1610,9 +1832,10 @@ public class DatabaseDatasetConfigUtils {
   private Option getValidatedOption(String schema, String catalog, Option option, String dset) throws SQLException {
     Option validatedOption = new Option(option);
     // hack to ignore the expression drop down menu
-    if (option.getType().equals("tree"))
+    if (validatedOption.getType().equals("tree"))
       return validatedOption;
-    if (option.getField() != null) {
+      
+    if (validatedOption.getField() != null) {
       //test
       boolean fieldValid = false;
       boolean tableValid = false;
@@ -1658,11 +1881,13 @@ public class DatabaseDatasetConfigUtils {
         //eg. if table is valid, Option.hasBrokenTableConstraint will return false
       }
     } else {
-      //check Options/PushAction Options
+    	
+	  //check Options/PushAction Options
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
+	
 
-      Option[] options = option.getOptions();
+      Option[] options = validatedOption.getOptions();
       for (int j = 0, m = options.length; j < m; j++) {
         Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset);
         if (validatedSubOption.isBroken()) {
@@ -1688,7 +1913,7 @@ public class DatabaseDatasetConfigUtils {
 
       boolean pushActionsValid = true;
       HashMap brokenPushActions = new HashMap();
-      PushAction[] pas = option.getPushActions();
+      PushAction[] pas = validatedOption.getPushActions();
       for (int j = 0, m = pas.length; j < m; j++) {
         PushAction validatedAction = getValidatedPushAction(schema, catalog, pas[j], dset);
         if (validatedAction.isBroken()) {
@@ -1720,16 +1945,22 @@ public class DatabaseDatasetConfigUtils {
 
     boolean optionsValid = true;
     HashMap brokenOptions = new HashMap();
-
-    Option[] options = action.getOptions();
+	
+    Option[] options = validatedPushAction.getOptions();
+    
+    
+    
+    
+    
+    
     for (int j = 0, m = options.length; j < m; j++) {
-      Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset);
-      if (validatedSubOption.isBroken()) {
-        optionsValid = false;
+    	Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset);
+      	if (validatedSubOption.isBroken()) {
+        	optionsValid = false;
         brokenOptions.put(new Integer(j), validatedSubOption);
-      }
+      	}
     }
-
+	
     if (!optionsValid) {
       validatedPushAction.setOptionsBroken(); //if optionsValid is false, option.hasBrokenOptions would be true
 
@@ -2136,9 +2367,6 @@ public class DatabaseDatasetConfigUtils {
 
     String[] retList = new String[potentials.size()];
     potentials.toArray(retList);
-    //Arrays.sort(retList);
-    
-    System.out.println("size "+retList.length);
     
     return retList;
   }
@@ -2355,7 +2583,7 @@ public class DatabaseDatasetConfigUtils {
 
     List columns = new ArrayList();
     ResultSet rset = dmd.getColumns(null, schema, tableName, null);
-    System.out.println("columns schema"+schema+" table name "+tableName);
+    //System.out.println("columns schema"+schema+" table name "+tableName);
     
     while (rset.next()) {
       if (rset.getString(3).toLowerCase().equals(tableName.toLowerCase())) {
@@ -3014,7 +3242,7 @@ public class DatabaseDatasetConfigUtils {
       FilterDescription fd2 = dsConfig.getFilterDescriptionByInternalName(ref);
       
       if (fd2 != null){// because of martp placeholders
-		updatePushAction(dsConfig, fd1, fd2);
+		updatePushAction(dsConfig, fd1, fd2,"");
       }
       
     }
@@ -3033,13 +3261,13 @@ public class DatabaseDatasetConfigUtils {
         for (int m = 0; m < pas2.length; m++) {
           String ref2 = pas2[m].getRef();
           FilterDescription fd3 = dsConfig.getFilterDescriptionByInternalName(ref2);
-          updatePushAction(dsConfig, newPa, fd3);
+          updatePushAction(dsConfig, newPa, fd3,"");
         }
       }
     }
   }
 
-  private void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2)
+  private void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2, String orderBy)
     throws ConfigurationException, SQLException {
     fd2.setType("drop_down_basic_filter");
 
@@ -3081,7 +3309,7 @@ public class DatabaseDatasetConfigUtils {
     for (int i = 0; i < options.length; i++) {
       Option op = options[i];
       String opName = op.getInternalName();
-      PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName);
+      PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderBy);
 
       pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
 
@@ -3240,7 +3468,8 @@ public class DatabaseDatasetConfigUtils {
         + " IS NOT NULL ORDER BY "
         + columnName;
         
-        
+    
+    //System.out.println(sql);    
     PreparedStatement ps = conn.prepareStatement(sql);
     ResultSet rs = ps.executeQuery();
     String value;

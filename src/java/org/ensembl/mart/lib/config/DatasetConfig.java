@@ -636,6 +636,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public void removeFilterPage(FilterPage f) {
     lazyLoad();
     filterPageNameMap.remove(f.getInternalName());
+    for (int i = 0; i < filterPages.size(); i++){
+    	FilterPage fp = (FilterPage) filterPages.get(i);
+    }
     filterPages.remove(f);
   }
 
@@ -968,7 +971,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public boolean containsFilterDescription(String internalName) {
     lazyLoad();
     boolean contains = false;
-
     if (lastFilt == null) {
       if ((internalName.indexOf(".") > 0) && !(internalName.endsWith("."))) {
         String[] refs = internalName.split("\\.");
@@ -997,6 +999,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
           && !(internalName.endsWith("."))
           && lastFilt.getInternalName().equals(internalName.split("\\.")[1]))
         contains = true;
+      else if (lastFilt.getInternalName().matches("\\w+\\." + internalName)){
+	  	contains = true;
+	  	internalName = lastFilt.getInternalName();  
+      }
       else {
         lastFilt = null;
         contains = containsFilterDescription(internalName);

@@ -787,7 +787,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		String pushInternalName = fd2.getInternalName();
 		String pushTableName = fd2.getTableConstraint();
 
-		if (pushTableName.equals("main")) {
+		if (pushTableName != null && pushTableName.equals("main")) {
 			String[] mains = dsConfig.getStarBases();
 			pushTableName = mains[0];
 		}
@@ -802,6 +802,35 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			//if (!fd1.getTableConstraint().equals(pushTableName))
 			//	field = "olook_" + field;
 			options = fd1.getOptions();
+		
+			//if (fd1.getOtherFilters() != null){// refers to a placeholder
+			if (filter2.matches("\\w+\\.\\w+")){//placeholder)								
+				String otherDatasetFilter1 = null;
+				DatasetConfig otherDataset = null;
+				String[] otherFilters = fd1.getOtherFilters().split(";");
+				fd2 = null;
+				for (int p = 0; p < otherFilters.length; p++){
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
+					if (otherDataset.containsFilterDescription(filter2))
+							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
+					if (fd2 != null){
+							otherDatasetFilter1 = otherFilters[p].split("\\.")[1];
+							break;
+					}
+				}
+				fd2.setType("drop_down_basic_filter");
+				pushField = fd2.getField();
+				pushInternalName = fd2.getInternalName();
+				pushTableName = fd2.getTableConstraint();
+
+				if (pushTableName.equals("main")) {
+					String[] mains = otherDataset.getStarBases();
+					pushTableName = mains[0];
+				}
+				field = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
+																					 
+			}		
 		} else {
 			PushAction pa1 = (PushAction) node.getUserObject();
 			String intName = pa1.getInternalName();
@@ -814,11 +843,12 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 
-		for (int i = 0; i < options.length; i++) {
+		for (int i = 0; i < options.length; i++) {			
+			
 			Option op = options[i];
 			//String opName = op.getInternalName();
 			String opName = op.getDisplayName();
-			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName);
+			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 
 			pa.addOptions(
 				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
