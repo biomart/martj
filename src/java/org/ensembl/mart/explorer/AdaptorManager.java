@@ -65,8 +65,8 @@ public class AdaptorManager extends Box {
   private static final String REGISTRY_FILE_KEY = "REGISTRY_FILE_KEY";
   private static final String OPTIONAL_ENABLED_KEY = "OPTIONAL_ENABLED";
   private String none = "None";
-  private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor(false, false, false);
-  //dont ignore cache, dont validate, and dont include hidden members (these are only for MartEditor)
+  private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor(false, false);
+  //dont ignore cache, and dont include hidden members (these are only for MartEditor)
   private Map optionToConfig = new HashMap();
   /** Persistent preferences object used to hold user history. */
   private Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -330,7 +330,7 @@ public class AdaptorManager extends Box {
       prefs.put(DS_CONFIG_FILE_KEY, f.toString());
       try {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(f.toURL(), false, false, false);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(f.toURL(), false, false);
         // see notes for rootAdaptor for boolean settings
         // TODO resolve any name clashes, i.e. existing dsv with same name
         //				this.adaptor.add(adaptor);
@@ -433,7 +433,7 @@ public class AdaptorManager extends Box {
    * advancedOptionsEnabled=false;
    */
   public void reset() {
-    rootAdaptor = new RegistryDSConfigAdaptor(false, false, false);
+    rootAdaptor = new RegistryDSConfigAdaptor(false, false);
     try {
       updateWidget(rootAdaptor.getLeafAdaptors());
       storePrefs();

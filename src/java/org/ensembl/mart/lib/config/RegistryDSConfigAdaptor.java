@@ -39,7 +39,6 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	private URL url;
 	private DetailedDataSource dsource;
 	private Set martRegs = new TreeSet(); // keep a list of MartRegistry Objects pulled from RegistryLocation elements
-	private boolean validate = false;
 	private boolean ignoreCache = false;
 	private boolean includeHiddenMembers = false;
 	private boolean loadFully = false;
@@ -47,16 +46,14 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	/**
 	 * Constructs an empty RegistryDSConfigAdaptor.  A URL for
 	 * an existing MartRegistry document can be set later, using setExistingRegistryURL.
-	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
 	 * will be validated.
 	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
 	 * objects in the given MartRegistry
 	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
 	 * hidden members.
 	 */
-	public RegistryDSConfigAdaptor(boolean validate, boolean ignoreCache, boolean includeHiddenMembers) {
+	public RegistryDSConfigAdaptor(boolean ignoreCache, boolean includeHiddenMembers) {
 		super();
-		this.validate = validate;
 		this.ignoreCache = ignoreCache;
 		this.includeHiddenMembers = includeHiddenMembers;
 	}
@@ -64,37 +61,15 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	/**
 	 * Constructs a RegistryDSConfigAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
 	 * @param url -- URL pointing to MartRegistry.dtd compliant XML Document
-	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
-	 * will be validated.
 	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
 	 * objects in the given MartRegistry
 	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
 	 * hidden members.
 	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
 	 */
-	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean includeHiddenMembers)
-	  throws ConfigurationException {
-	    this(url, validate, ignoreCache, false, includeHiddenMembers);
-	}
-	
-	/**
-	 * Constructs a RegistryDSConfigAdaptor with a url containing a MartRegistry.dtd compliant XML Document.
-	 * @param url -- URL pointing to MartRegistry.dtd compliant XML Document
-	 * @param validate - if set to true, all XML loaded by adaptors created from MartRegistryLocation objects
-	 * will be validated.
-	 * @param ignoreCache - if set to true, no caching will occur in any child adaptors specified by Location
-	 * objects in the given MartRegistry
-	 * @param loadFully - if set to true, all XML objects will be fully loaded into memory, and no lazy loading
-	 *                    will occur.  This sets ignoreCache to true by default. Recommended only for servers
-	 *                    with adequate memory.
-	 * @param includeHiddenMembers - if set to true, DatasetConfig objects loaded by child adaptors will include
-	 * hidden members.
-	 * @throws ConfigurationException if url is null, and for all underlying URL/XML parsing Exceptions
-	 */
-	public RegistryDSConfigAdaptor(URL url, boolean validate, boolean ignoreCache, boolean loadFully, boolean includeHiddenMembers)
+	public RegistryDSConfigAdaptor(URL url, boolean ignoreCache, boolean loadFully, boolean includeHiddenMembers)
 		throws ConfigurationException {
 		super();
-		this.validate = validate;
 		this.ignoreCache = ignoreCache;
 		this.includeHiddenMembers = includeHiddenMembers;
         this.loadFully = loadFully;
@@ -108,13 +83,11 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 
 	public RegistryDSConfigAdaptor(
 		DetailedDataSource dsource,
-		boolean validate,
 		boolean ignoreCache,
 		boolean includeHiddenMembers)
 		throws ConfigurationException {
 		super();
 		setRegistryDatasource(dsource);
-		this.validate = validate;
 		this.ignoreCache = ignoreCache;
 		this.includeHiddenMembers = includeHiddenMembers;
 		adaptorName = dsource.getName();
@@ -334,7 +307,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 				} else if (location.getType().equals(MartLocationBase.URL)) {
 
 					URLDSConfigAdaptor adaptor =
-						new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, validate, includeHiddenMembers);
+						new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
 					adaptor.setName(location.getName());
 					add(adaptor);
 
@@ -378,7 +351,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 							name);
 
 					DatabaseDSConfigAdaptor adaptor =
-						new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, validate, includeHiddenMembers);
+						new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, includeHiddenMembers);
 					adaptor.setName(location.getName());
 					add(adaptor);
 

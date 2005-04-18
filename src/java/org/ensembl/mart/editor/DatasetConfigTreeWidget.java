@@ -97,7 +97,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	  }
             	}
             	else{//Importing config
-//              ignore cache, do not validate, include hidden members
+//              ignore cache, do not loadFully, include hidden members
 					DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
 					DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 					while (configs.hasNext()){
@@ -111,8 +111,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
             	}
             } else {
                 URL url = file.toURL();
-//            ignore cache, do not validate, include hidden members
-                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false, true);
+//            ignore cache, include hidden members
+                DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 
                 // only config one in the file so get that one
                 config = (DatasetConfig) adaptor.getDatasetConfigs().next();

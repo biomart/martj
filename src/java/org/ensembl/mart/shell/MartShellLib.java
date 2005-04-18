@@ -143,7 +143,8 @@ public class MartShellLib {
    * to be managed with add/remove/update commands.
    */
   public MartShellLib() {
-      adaptorManager = new RegistryDSConfigAdaptor(false, false, false);
+      //dont ignoreCache, dont includeHiddenMembers
+      adaptorManager = new RegistryDSConfigAdaptor(false, false);
   }
   
   /**
@@ -173,7 +174,8 @@ public class MartShellLib {
     if (confURL == null)
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
-    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, false, loadFully, false);
+    //dont ignoreCache, dont includeHiddenMembers
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, loadFully, false);
     //see notes to adaptorManager for boolean settings
     harvestAdaptorsFrom(adaptor);
   }
@@ -1024,8 +1026,9 @@ public class MartShellLib {
 
       try {
         URL dsvURL = InputSourceUtil.getURLForString(source);
-        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false, false);
+        URLDSConfigAdaptor adaptor = new URLDSConfigAdaptor(dsvURL, false, false);
         // see notes for adaptorManager for boolean settings
+        //dont ignoreCache, dont includeHiddenMembers
 
         if (userName == null) {
           CompositeDSConfigAdaptor fileAdaptor = null;

@@ -53,11 +53,10 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    * with optional JDOM validation.
    * @param url -- url containing a DatasetConfig.dtd compliant XML document
    * @param ignoreCache -- if true, never caches and always parses the source URL for its DatasetConfig objects
-   * @param validate -- if true, JDOM validates the Document against the DatasetConfig.dtd contained in the CLASSPATH
    * @param includeHiddenMembers -- if true, hidden members will be included in DatasetConfig objects, if false they will be skipped
    * @throws ConfigurationException for all underlying Exceptions.
    */
-  public URLDSConfigAdaptor(URL url, boolean ignoreCache, boolean validate, boolean includeHiddenMembers) throws ConfigurationException {
+  public URLDSConfigAdaptor(URL url, boolean ignoreCache, boolean includeHiddenMembers) throws ConfigurationException {
     if (url == null)
       throw new ConfigurationException("DSConfigURLAdaptors must be instantiated with a URL\n");
     dsvurl = url;
@@ -65,7 +64,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
       
     setName(dsvurl.toString());
     
-    dscutils = new DatasetConfigXMLUtils(validate, includeHiddenMembers);
+    dscutils = new DatasetConfigXMLUtils(includeHiddenMembers);
 
     hashcode = dsvurl.hashCode();
     update();
@@ -168,7 +167,7 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
    * @throws ConfigurationException for underlying Exceptions
    */
   public static void StoreDatasetConfig(DatasetConfig dsv, File file) throws ConfigurationException {
-    DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, false); //validation and hidden members are only applicable to incoming XML streams
+    DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false); //hidden members are only applicable to incoming XML streams
     dscutils.writeDatasetConfigToFile(dsv, file);
   }
 

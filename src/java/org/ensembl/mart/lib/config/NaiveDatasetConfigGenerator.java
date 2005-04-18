@@ -262,7 +262,7 @@ public class NaiveDatasetConfigGenerator {
 
       LoggingUtils.setVerbose(verbose);
 
-      dscutils = new DatasetConfigXMLUtils(false, true);
+      dscutils = new DatasetConfigXMLUtils(true);
       
       long start = System.currentTimeMillis();
 
@@ -311,7 +311,7 @@ public class NaiveDatasetConfigGenerator {
           if (dsvFileName != null) {
             if (regFileName != null) {
               OutputStream regOut = new FileOutputStream(regFileName);
-              URLDSConfigAdaptor dsvadaptor = new URLDSConfigAdaptor(dsvFile.toURL(), true, false, true);
+              URLDSConfigAdaptor dsvadaptor = new URLDSConfigAdaptor(dsvFile.toURL(), false, true);
               RegistryDSConfigAdaptor regadaptor = new RegistryDSConfigAdaptor(dsvadaptor);
               MartRegistryXMLUtils.MartRegistryToOutputStream(regadaptor.getMartRegistry(), regOut);
               regOut.close();

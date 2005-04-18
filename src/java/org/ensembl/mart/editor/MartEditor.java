@@ -101,7 +101,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   private File file = null;
 
   static private DetailedDataSource ds;
-  private static DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(false, true);
+  private static DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(true);
   //may want to turn validation on?
   private static DatabaseDatasetConfigUtils dbutils;
 
@@ -1028,7 +1028,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				  file = files[i];
 				  			  
 				  URL url = file.toURL();
-				  DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, false, true);
+				  //ignoreCache, includeHiddenMembers
+				  DSConfigAdaptor adaptor = new URLDSConfigAdaptor(url,true, true);
 				  DatasetConfig odsv  = (DatasetConfig) adaptor.getDatasetConfigs().next();
 				  
 				  // export osdv

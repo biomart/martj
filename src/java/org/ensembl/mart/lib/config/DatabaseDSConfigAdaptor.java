@@ -70,29 +70,9 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
    * @param ds -- DataSource for Mart RDBMS
    * @param user -- user for RDBMS connection, AND meta_DatasetConfig_user table
    * @param ignoreCache -- if true, cached XML is completely ignored, and all XML is pulled from the Database
-   * @param validate -- if true, all XML is validated as it is parsed
-   * @param includeHiddenMembers -- if true, hidden members are included in DatasetConfig objects, otherwise they are not included
-   * @throws ConfigurationException if DataSource or user is null
-   */
-  public DatabaseDSConfigAdaptor(
-    DetailedDataSource ds,
-    String user,
-    boolean ignoreCache,
-    boolean validate,
-    boolean includeHiddenMembers)
-    throws ConfigurationException {
-      this(ds, user, ignoreCache, false, validate, includeHiddenMembers);
-  }
-  
-  /**
-   * Constructor for a DatabaseDSConfigAdaptor
-   * @param ds -- DataSource for Mart RDBMS
-   * @param user -- user for RDBMS connection, AND meta_DatasetConfig_user table
-   * @param ignoreCache -- if true, cached XML is completely ignored, and all XML is pulled from the Database
    * @param loadFully -- if true, all DatasetConfiguration Objects are fully loaded into memory,
    *                      no lazy loading occurs (this should only be used by big servers with reasonable memory).
    *                      Note, setting this true also be default sets ignoreCache to true.
-   * @param validate -- if true, all XML is validated as it is parsed
    * @param includeHiddenMembers -- if true, hidden members are included in DatasetConfig objects, otherwise they are not included
    * @throws ConfigurationException if DataSource or user is null
    */
@@ -101,7 +81,6 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     String user,
     boolean ignoreCache,
     boolean loadFully,
-    boolean validate,
     boolean includeHiddenMembers)
     throws ConfigurationException {
     if (ds == null || user == null)
@@ -112,7 +91,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     this.ignoreCache = ignoreCache;
     this.loadFully = loadFully;
     
-    dscutils = new DatasetConfigXMLUtils(validate, includeHiddenMembers);
+    dscutils = new DatasetConfigXMLUtils(includeHiddenMembers);
     
     if (loadFully) {
         dscutils.setFullyLoadMode(loadFully);
