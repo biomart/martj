@@ -307,6 +307,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	menuItem = new JMenuItem("Update All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);
+	menuItem = new JMenuItem("Validate All");
+	menuItem.addActionListener(menuActionListener);
+	menu.add(menuItem);	
 	menuItem = new JMenuItem("Save All");
 	menuItem.addActionListener(menuActionListener);
 	menu.add(menuItem);	
@@ -543,6 +546,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         naiveDatasetConfig();
 	  else if (e.getActionCommand().startsWith("Update All"))
 		updateAll();
+	  else if (e.getActionCommand().startsWith("Validate All"))
+		  validateAll();		
 	  else if (e.getActionCommand().startsWith("Move All"))
 		  moveAll();		
 	  else if (e.getActionCommand().startsWith("Save All"))
@@ -760,7 +765,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       disableCursor();
       DatasetConfig dsConfig = ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).getDatasetConfig();
 	  
-      if (dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
+      if (dsConfig.getAdaptor() != null && dsConfig.getAdaptor().getDataSource() != null && !dsConfig.getAdaptor().getDataSource().getSchema().equals(databaseDialog.getSchema())){
       	// NM the widget still has its adaptor - could switch connection
 		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
       	if (choice == 0){databaseConnection();}
@@ -1178,6 +1183,142 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		enableCursor();
 	  }
   }
+  
+  public void validateAll() {
+	  try {
+		if (ds == null) {
+		  JOptionPane.showMessageDialog(this, "Connect to database first", "ERROR", 0);
+		  return;
+		}
+
+		try {
+		  disableCursor();
+		  String duplicationString = "";
+		  // cycle through all datasets for the database
+		  String[] datasets = dbutils.getAllDatasetNames(user);
+		  for (int i = 0; i < datasets.length; i++){
+			String dataset = datasets[i];
+			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
+			for (int j = 0; j < internalNames.length; j++){
+				String internalName = internalNames[j];
+				
+				DatasetConfig odsv = null;
+				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
+				while (configs.hasNext()){
+					DatasetConfig lconfig = (DatasetConfig) configs.next();
+					if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
+							odsv = lconfig;
+							break;
+					}
+				}
+				
+				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
+				// update it
+				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+				dsv = dbutils.getNewFiltsAtts(database, dsv);
+				
+				
+
+				// check uniqueness of internal names per page	  
+				AttributePage[] apages = dsv.getAttributePages();
+				AttributePage apage;
+				String testInternalName;
+	  
+				for (int k = 0; k < apages.length; k++){
+					  apage = apages[k];
+					  Hashtable descriptionsMap = new Hashtable();
+					  if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+						  continue;
+					  }
+		    
+					  List testAtts = new ArrayList();
+					  testAtts = apage.getAllAttributeDescriptions();
+					  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+						  Object testAtt = iter.next();
+						  AttributeDescription testAD = (AttributeDescription) testAtt;
+						  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+							  continue;
+						  }
+				
+						  if (descriptionsMap.containsKey(testAD.getInternalName())){
+							  duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+						  }
+						  descriptionsMap.put(testAD.getInternalName(),"1");
+					  }
+				}
+				// repeat for filter pages
+				FilterPage[] fpages = dsv.getFilterPages();
+				FilterPage fpage;
+				for (int k = 0; k < fpages.length; k++){
+							fpage = fpages[k];
+							Hashtable descriptionsMap = new Hashtable();
+							if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
+								continue;
+							}
+		    
+							List testAtts = new ArrayList();
+							testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
+				  
+							for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+								Object testAtt = iter.next();
+								FilterDescription testAD = (FilterDescription) testAtt;
+								if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+									  continue;
+								}
+								if (descriptionsMap.containsKey(testAD.getInternalName())){
+									duplicationString = duplicationString + testAD.getInternalName() + " in dataste " + dsv.getDataset() + "\n";
+						  
+									continue;//to stop options also being assessed
+								}
+								descriptionsMap.put(testAD.getInternalName(),"1");
+					  
+								// do options as well
+								Option[] ops = testAD.getOptions();
+								if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
+								  for (int l = 0; l < ops.length; l++){
+									  Option op = ops[l];
+									  if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
+											  continue;
+									  }
+									  if (descriptionsMap.containsKey(op.getInternalName())){
+										  duplicationString = duplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+								
+									  }
+									  descriptionsMap.put(op.getInternalName(),"1");
+								  }
+								}
+							}
+				}
+	  
+				
+					
+				// display it if new atts or filts for further editing	
+				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||
+					(dsv.getFilterPageByName("new_filters") != null)){
+					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+					frame.setVisible(true);
+					desktop.add(frame);
+					try {
+						frame.setSelected(true);
+					} catch (java.beans.PropertyVetoException e) {
+					}
+				}			
+			}
+			if (duplicationString != ""){
+			  JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
+								  + duplicationString, "ERROR", 0);
+				  
+			}					
+		  } 
+		} catch (Exception e) {
+		  e.printStackTrace();
+		}
+	  } finally {
+		enableCursor();
+	  }
+  }  
+  
   
   public void updateDatasetConfig() {
     try {

@@ -3280,9 +3280,7 @@ public class DatabaseDatasetConfigUtils {
 		pushTableName = mains[0];
 	}
 
-	String orderSQL = JOptionPane.showInputDialog("Optional column name to order " + pushInternalName + " :");		
-	
-
+	//String orderSQL = JOptionPane.showInputDialog("Optional column name to order " + pushInternalName + " :");		
     // can add push actions to existing push actions so need to know the class of the node
     String className = bo.getClass().getName();
     String field;
@@ -3311,7 +3309,7 @@ public class DatabaseDatasetConfigUtils {
       String opName = op.getInternalName();
       PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderBy);
 
-      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
+      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderBy));
 
       if (pa.getOptions().length > 0) {
         //System.out.println("ADDING PA\t" + op.getInternalName());
