@@ -57,7 +57,6 @@ public class DatasetConfigXMLUtils {
   public static String DEFAULTDIGESTALGORITHM = "MD5";
 
   // element names
-  private final String DATASETCONFIGDOCTYPEURL = "classpath:data/XML/DatasetConfig.dtd";
   private final String DATASETCONFIG = "DatasetConfig";
   private final String STARBASE = "MainTable";
   private final String PRIMARYKEY = "Key";
@@ -82,12 +81,10 @@ public class DatasetConfigXMLUtils {
   private final String OPTPARAM = "optional_parameters";
   private final String HIDDEN = "hidden";
 
-  private boolean validate = false;
   private boolean loadFully = false;
   protected boolean includeHiddenMembers = false;
 
-  public DatasetConfigXMLUtils(boolean validate, boolean includeHiddenMembers) {
-    this.validate = validate;
+  public DatasetConfigXMLUtils(boolean includeHiddenMembers) {
     this.includeHiddenMembers = includeHiddenMembers;
   }
 
@@ -108,7 +105,7 @@ public class DatasetConfigXMLUtils {
 
   /**
    * Returns a DatasetConfig from an XML stored as a byte[], allowing the system to specify whether to
-   * load all Elements, or defer this to the lazyLoad system, and whether to validate. Also allows system
+   * load all Elements, or defer this to the lazyLoad system. Also allows system
    * to supply a md5sum digest byte[] array to store into the resulting DatasetConfig.
    *  
    * @param b - byte[] holding XML
@@ -151,7 +148,7 @@ public class DatasetConfigXMLUtils {
       SAXBuilder builder = new SAXBuilder();
       // set the EntityResolver to a mart DB aware version, allowing it to get the DTD from the Classpath.
       builder.setEntityResolver(new ClasspathDTDEntityResolver());
-      builder.setValidation(validate);
+      builder.setValidation(false);
 
       InputSource is = new InputSource(xmlinput);
 
@@ -572,7 +569,7 @@ public class DatasetConfigXMLUtils {
       root.addContent(getAttributePageElement(apages[i]));
 
     Document thisDoc = new Document(root);
-    thisDoc.setDocType(new DocType(DATASETCONFIG, DATASETCONFIGDOCTYPEURL));
+    thisDoc.setDocType(new DocType(DATASETCONFIG));
 
     return thisDoc;
   }
