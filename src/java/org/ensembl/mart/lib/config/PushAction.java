@@ -31,7 +31,8 @@ import java.util.List;
  */
 public class PushAction extends BaseNamedConfigurationObject {
 
-  private final String refKey = "ref";
+    private final String refKey = "ref";
+	private final String orderByKey = "orderBy";
 	private List options = new ArrayList();
 	private Option lastOption = null; // cache one Option for call to containsOption/getOptionByInternalName
 	private Option lastSupportingOption = null; // cache one Option for call to supports/getOptionByFieldNameTableConstraint
@@ -54,6 +55,7 @@ public class PushAction extends BaseNamedConfigurationObject {
     super();
     
     setAttribute(refKey, null);
+	setAttribute(orderByKey, null);
   }
   
 	/**
@@ -63,7 +65,7 @@ public class PushAction extends BaseNamedConfigurationObject {
 	 * @param ref - String ref to FilterDescription to 'push' to.
 	 * @throws ConfigurationException when internalName and ref null or empty
 	 */
-	public PushAction(String internalName, String displayName, String description, String ref) throws ConfigurationException {
+	public PushAction(String internalName, String displayName, String description, String ref, String orderBy) throws ConfigurationException {
 
 		super(internalName, displayName, description);
 
@@ -71,6 +73,7 @@ public class PushAction extends BaseNamedConfigurationObject {
 			throw new ConfigurationException("Configuration Object must contain a ref\n");
 
 		setAttribute(refKey, ref);
+		setAttribute(orderByKey, orderBy);
 	}
 
   /**
@@ -87,6 +90,21 @@ public class PushAction extends BaseNamedConfigurationObject {
 	public String getRef() {
 		return getAttribute(refKey);
 	}
+	
+	/**
+	 * Set the internalName of the FilterDescription to push options when this PushAction is activated
+	 * @param ref -- internalName of FilterDescription to push options when this PushAction is activated
+	 */
+	public void setOrderBy(String orderBy) {
+		  setAttribute(orderByKey, orderBy);
+	}
+  
+	  /**
+	   * @return name of filter the options should be set on.
+	   */
+	  public String getOrderBy() {
+		  return getAttribute(orderByKey);
+	  }
 
 	/**
 	 * @param option an option that should be set on the target filter.
