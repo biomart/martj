@@ -1194,6 +1194,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		try {
 		  disableCursor();
 		  String duplicationString = "";
+		  String brokenString = "";
 		  // cycle through all datasets for the database
 		  String[] datasets = dbutils.getAllDatasetNames(user);
 		  for (int i = 0; i < datasets.length; i++){
@@ -1215,9 +1216,13 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				
 				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
 				// update it
-				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
-				dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
+				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+				// keep a string of all the broken filts and atts set to hidden
+				brokenString = brokenString + dbutils.getBrokenElements(odsv);
+		
+				
+				dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
 
 				// check uniqueness of internal names per page	  
@@ -1267,7 +1272,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									  continue;
 								}
 								if (descriptionsMap.containsKey(testAD.getInternalName())){
-									duplicationString = duplicationString + testAD.getInternalName() + " in dataste " + dsv.getDataset() + "\n";
+									duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 						  
 									continue;//to stop options also being assessed
 								}
@@ -1305,12 +1310,17 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					}
 				}			
 			}
+		  }
 			if (duplicationString != ""){
 			  JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
 								  + duplicationString, "ERROR", 0);
 				  
-			}					
-		  } 
+			}
+			if (brokenString != ""){
+					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
+											  + brokenString, "ERROR", 0);
+				  
+			} 
 		} catch (Exception e) {
 		  e.printStackTrace();
 		}

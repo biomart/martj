@@ -1330,7 +1330,44 @@ public class DatabaseDatasetConfigUtils {
   }
 
   
+  
+  public String getBrokenElements(DatasetConfig dsv) throws SQLException, ConfigurationException {
+    
+    String brokenElements = "";
+	String catalog="";
+	String schema = getSchema();
+	DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
+	//want to copy existing Elements to the new Object as is
+	
+	//boolean hasBrokenAttributePages = false;
+	List ads = dsv.getAllAttributeDescriptions();
+	for (int i = 0, n = ads.size(); i < n; i++) {
+	  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, (AttributeDescription) ads.get(i), validatedDatasetConfig.getDataset());
+	  if (validatedAD.getHidden() != null && validatedAD.getHidden().equals("true"))
+			  continue;	
+	  if (validatedAD.isBroken()) {
+	  	brokenElements = brokenElements + "Attribute " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+	  }
+	}
 
+	//boolean hasBrokenFilterPages = false;
+	ads = dsv.getAllFilterDescriptions();
+	for (int i = 0, n = ads.size(); i < n; i++) {
+	  FilterDescription testAD = (FilterDescription) ads.get(i);	
+	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
+		continue;	
+	  
+	  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, validatedDatasetConfig.getDataset(), validatedDatasetConfig);
+	  if (validatedAD.isBroken()) {
+		brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+	  }
+	}
+
+	return brokenElements;
+  }  
+     
+     
+     
   private String getValidatedStarBase(String schema, String catalog, String starbase) throws SQLException {
     String validatedStarBase = new String(starbase);
 
@@ -3045,9 +3082,9 @@ public class DatabaseDatasetConfigUtils {
 //System.out.println("Going to null ");
               }
               else { // update options if has any
-
-              if (currFilt.hasOptions())
-                  updateDropDown(dsv, currFilt); 
+                System.out.println(currFilt.getInternalName());
+              	if (currFilt.hasOptions())
+                  	updateDropDown(dsv, currFilt); 
               }
 
             } else { // is a main table bool filter
@@ -3269,6 +3306,7 @@ public class DatabaseDatasetConfigUtils {
 
   private void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2, String orderBy)
     throws ConfigurationException, SQLException {
+    System.out.println(fd2);	
     fd2.setType("drop_down_basic_filter");
 
     String pushField = fd2.getField();
