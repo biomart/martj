@@ -25,11 +25,13 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
 import java.net.URL;
-
+import javax.swing.JOptionPane;
 import javax.swing.ImageIcon;
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
+import javax.swing.event.InternalFrameListener;
+import javax.swing.event.InternalFrameEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
@@ -56,7 +58,7 @@ import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
  * @author <a href="mailto:katerina@ebi.ac.uk">Katerina Tzouvara</a>
  * //@see org.ensembl.mart.config.DatasetConfig
  */
-public class DatasetConfigTreeWidget extends JInternalFrame {
+public class DatasetConfigTreeWidget extends JInternalFrame{
 
     private DatasetConfig datasetConfig = null;
     private static int openFrameCount = 0;
@@ -76,6 +78,8 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
                 true, //maximizable
                 true);//iconifiable
         this.editor = editor;
+        this.setDefaultCloseOperation(JInternalFrame.DO_NOTHING_ON_CLOSE);
+        this.addInternalFrameListener(new CloseListener());
         try {
 		  DatasetConfig config = null;	
           if (dsv == null){	
@@ -282,6 +286,27 @@ public class DatasetConfigTreeWidget extends JInternalFrame {
         }
     }
 
+}
+
+class CloseListener implements InternalFrameListener {
+	public void internalFrameClosed(InternalFrameEvent e) {
+	}
+	public void internalFrameOpened(InternalFrameEvent e) {
+	}
+	public void internalFrameIconified(InternalFrameEvent e) {
+	}
+	public void internalFrameDeiconified(InternalFrameEvent e) {
+	}
+	public void internalFrameActivated(InternalFrameEvent e) {
+	}
+	public void internalFrameDeactivated(InternalFrameEvent e) {
+	}
+	public void internalFrameClosing(InternalFrameEvent e) {
+		int returnType = JOptionPane.showConfirmDialog(null,"Close XML?","Have you saved?",JOptionPane.OK_CANCEL_OPTION);
+		if (returnType == 0){
+			e.getInternalFrame().dispose();
+		}
+	}
 }
 
 class MyRenderer extends DefaultTreeCellRenderer {
