@@ -46,6 +46,8 @@ public class AttributePage extends BaseNamedConfigurationObject {
 
   //cache one AttributeCollection for call to getCollectionForAttribute
   private AttributeCollection lastColl = null;
+  private final String outFormatsKey = "outFormats";
+  
   
   /**
    * Copy constructor. Constructs an exact copy of an existing AttributePage.
@@ -67,6 +69,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
  */
 	public AttributePage() {
 		super();
+		setAttribute(outFormatsKey, null);
 	}
 
 	/**
@@ -76,7 +79,7 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
 	public AttributePage(String internalName) throws ConfigurationException {
-		this(internalName, "", "");
+		this(internalName, "", "", "");
 	}
 
 	/**
@@ -88,9 +91,9 @@ public class AttributePage extends BaseNamedConfigurationObject {
 	 * @param description String description of the AttributePage
 	 * @throws ConfigurationException when the internalName is null or empty
 	 */
-	public AttributePage(String internalName, String displayName, String description) throws ConfigurationException {
+	public AttributePage(String internalName, String displayName, String description, String outFormats) throws ConfigurationException {
 		super(internalName, displayName, description);
-
+		setAttribute(outFormatsKey, outFormats);
 	}
 
 	/**
@@ -427,4 +430,21 @@ public class AttributePage extends BaseNamedConfigurationObject {
   public boolean isBroken() {
   	return hasBrokenGroups;
   }
+  
+  /**
+   * Returns the outFormats for this att page.
+   * 
+   * @return key.
+   */
+  public String getOutFormats() {
+	return getAttribute(outFormatsKey);
+  }
+	
+  /**
+   * @param key - outFormats for this att page
+   */
+  public void setOutFormats(String outFormats) {
+	 setAttribute(outFormatsKey, outFormats);
+  }  
+  
 }

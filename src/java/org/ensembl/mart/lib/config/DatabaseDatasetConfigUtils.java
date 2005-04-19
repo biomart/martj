@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import javax.swing.JOptionPane;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -2635,6 +2634,7 @@ public class DatabaseDatasetConfigUtils {
     AttributePage ap = new AttributePage();
     ap.setInternalName("feature_page");
     ap.setDisplayName("ATTRIBUTES");
+    ap.setOutFormats("html,txt,csv,tsv,xls");
 
     FilterPage fp = new FilterPage();
     fp.setInternalName("filters");
