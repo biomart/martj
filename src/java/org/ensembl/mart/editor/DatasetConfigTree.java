@@ -707,22 +707,21 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		try {
 			DatasetConfigTreeNode selnode =
 				(DatasetConfigTreeNode) t.getTransferData(
-					new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));
+					new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));				
+					
 			//DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 			DatasetConfigTreeNode dropnode = setEditingNode();
 			if (dropnode == null)
 				return;
-
+			
 			String result = new String();
 			int insertIndex = -1;
-
 			if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
 				insertIndex = dropnode.getParent().getIndex(dropnode) + 1;
 				dropnode = (DatasetConfigTreeNode) dropnode.getParent();
 			} else {
 				insertIndex = DatasetConfigTreeNode.getHeterogenousOffset(dropnode.getUserObject(), selnode.getUserObject());
 			}
-
 			//    make sure internalName is unique within its parent group
 			DatasetConfigTreeNode childNode = null;
 			Enumeration children = dropnode.children();
@@ -734,6 +733,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				if (sel.getInternalName().equals(ch.getInternalName())) {
 					sel.setInternalName(sel.getInternalName() + "_copy");
 					selnode.setName(selnode.name + "_copy");
+					// need to make sure refers to a different object for multiple pastes
+					selnode = new DatasetConfigTreeNode(selnode.name + "_copy",selnode.getUserObject());
 					break;
 				}
 			}
