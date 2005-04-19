@@ -57,6 +57,8 @@ import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.Exportable;
+import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.Option;
@@ -800,88 +802,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       dsConfig.setInternalName(internalName);
       dsConfig.setDataset(dataset);
 
-	  // check uniqueness of internal names per page	  
-	  AttributePage[] apages = dsConfig.getAttributePages();
-	  AttributePage apage;
-	  String testInternalName;
-	  String duplicationString = "";
-	  
-	  for (int i = 0; i < apages.length; i++){
-	  		apage = apages[i];
-			Hashtable descriptionsMap = new Hashtable();
-			if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
-				continue;
-			}
-		    
-		    List testAtts = new ArrayList();
-	  		testAtts = apage.getAllAttributeDescriptions();
-		    for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
-				Object testAtt = iter.next();
-				AttributeDescription testAD = (AttributeDescription) testAtt;
-				if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
-					continue;
-				}
-				
-				if (descriptionsMap.containsKey(testAD.getInternalName())){
-					//System.out.println("DUPLICATION " + testAD.getInternalName());	
-					duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
-					
-				}
-				descriptionsMap.put(testAD.getInternalName(),"1");
-		    }
-	  }
-	  // repeat for filter pages
-	  FilterPage[] fpages = dsConfig.getFilterPages();
-	  FilterPage fpage;
-	  for (int i = 0; i < fpages.length; i++){
-				  fpage = fpages[i];
-				  Hashtable descriptionsMap = new Hashtable();
-				  if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
-					  continue;
-				  }
-		    
-				  List testAtts = new ArrayList();
-				  testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
-				  
-				  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
-					  Object testAtt = iter.next();
-					  FilterDescription testAD = (FilterDescription) testAtt;
-					  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
-							continue;
-					  }
-					  if (descriptionsMap.containsKey(testAD.getInternalName())){
-						  //System.out.println("DUPLICATION " + testAD.getInternalName());
-						  duplicationString = duplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
-						  
-						  continue;//to stop options also being assessed
-					  }
-					  descriptionsMap.put(testAD.getInternalName(),"1");
-					  
-					  // do options as well
-					  Option[] ops = testAD.getOptions();
-					  if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
-					  	System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
-						for (int j = 0; j < ops.length; j++){
-							Option op = ops[j];
-							if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
-									continue;
-							}
-							if (descriptionsMap.containsKey(op.getInternalName())){
-								//System.out.println("DUPLICATION " + op.getInternalName());
-								duplicationString = duplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
-								
-							}
-						    descriptionsMap.put(op.getInternalName(),"1");
-						}
-					  }
-				  }
-	  }
-	  
-	  if (duplicationString != ""){
-		JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
-							+ duplicationString, "ERROR", 0);
-	  	return;//no export performed
-	  }
 
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
@@ -1049,7 +969,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									true,
 									odsv.getType(),
 									odsv.getVisible(),
-									odsv.getVersion());
+									odsv.getVersion(),
+									odsv);
 				   } catch (Exception e) {
 							e.printStackTrace();
 				   }
@@ -1106,7 +1027,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 										true,
 										dsv.getType(),
 										dsv.getVisible(),
-										dsv.getVersion());						   		
+										dsv.getVersion(),
+										dsv);						   		
 			  }	
 			} 
 			catch (Exception e) {
@@ -1161,7 +1083,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							true,
 							dsv.getType(),
 							dsv.getVisible(),
-							dsv.getVersion());
+							dsv.getVersion(),
+							dsv);
 					
 				// display it if new atts or filts for further editing	
 				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||

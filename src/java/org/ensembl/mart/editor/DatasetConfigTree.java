@@ -945,7 +945,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 	public void export() throws ConfigurationException {
 		dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
-
+		
 		MartEditor.getDatabaseDatasetConfigUtils().storeDatasetConfiguration(
 			MartEditor.getUser(),
 			dsConfig.getInternalName(),
@@ -956,7 +956,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			true,
 			dsConfig.getType(),
 			dsConfig.getVisible(),
-			dsConfig.getVersion());
+			dsConfig.getVersion(),
+			dsConfig);
 	}
 
 	//public void lostOwnership(Clipboard c, Transferable t) {

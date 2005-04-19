@@ -45,6 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import javax.swing.JOptionPane;
 
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
@@ -237,8 +238,123 @@ public class DatabaseDatasetConfigUtils {
     boolean compress,
     String type,
     String visible,
-    String version)
+    String version,
+    DatasetConfig dsConfig)
     throws ConfigurationException {
+
+		// check uniqueness of internal names per page	  
+		AttributePage[] apages = dsConfig.getAttributePages();
+		AttributePage apage;
+		String testInternalName;
+		String duplicationString = "";
+		String linkErrors = "";
+	  
+		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
+		for (int i = 0; i < apages.length; i++){
+			  apage = apages[i];
+			
+			  if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+				  continue;
+			  }
+		    
+			  List testAtts = new ArrayList();
+			  testAtts = apage.getAllAttributeDescriptions();
+			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				  Object testAtt = iter.next();
+				  AttributeDescription testAD = (AttributeDescription) testAtt;
+				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					  continue;
+				  }
+				
+				  if (descriptionsMap.containsKey(testAD.getInternalName())){
+					  //System.out.println("DUPLICATION " + testAD.getInternalName());	
+					  duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
+					
+				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+			  }
+		}
+	  
+		Exportable[] exps = dsConfig.getExportables();
+		for (int i = 0; i < exps.length; i++){
+			  String attributes = exps[i].getAttributes();
+			  String[] atts = attributes.split(",");
+			  for (int j = 0; j < atts.length; j++){
+				  if (!descriptionsMap.containsKey(atts[j])){
+					  linkErrors = linkErrors + atts[j] + " in exportable " + exps[i].getInternalName() + "\n";						  			
+				  }
+			  }
+		}
+
+	  	  
+		// repeat for filter pages
+		descriptionsMap.clear();
+		FilterPage[] fpages = dsConfig.getFilterPages();
+		FilterPage fpage;
+		for (int i = 0; i < fpages.length; i++){
+					fpage = fpages[i];
+				  
+					if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
+						continue;
+					}
+		    
+					List testAtts = new ArrayList();
+					testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
+				  
+					for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+						Object testAtt = iter.next();
+						FilterDescription testAD = (FilterDescription) testAtt;
+						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+							  continue;
+						}
+						if (descriptionsMap.containsKey(testAD.getInternalName())){
+							//System.out.println("DUPLICATION " + testAD.getInternalName());
+							duplicationString = duplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+						  
+							continue;//to stop options also being assessed
+						}
+						descriptionsMap.put(testAD.getInternalName(),"1");
+					  
+						// do options as well
+						Option[] ops = testAD.getOptions();
+						if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
+						  System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
+						  for (int j = 0; j < ops.length; j++){
+							  Option op = ops[j];
+							  if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
+									  continue;
+							  }
+							  if (descriptionsMap.containsKey(op.getInternalName())){
+								  //System.out.println("DUPLICATION " + op.getInternalName());
+								  duplicationString = duplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+								
+							  }
+							  descriptionsMap.put(op.getInternalName(),"1");
+						  }
+						}
+					}
+		}
+		Importable[] imps = dsConfig.getImportables();
+		for (int i = 0; i < imps.length; i++){
+			  String filters = imps[i].getFilters();
+			  String[] filts = filters.split(",");
+			  for (int j = 0; j < filts.length; j++){
+				  if (!descriptionsMap.containsKey(filts[j])){
+					  linkErrors = linkErrors + filts[j] + " in exportable " + imps[i].getInternalName() + "\n";						  			
+				  }
+			  }
+		}
+		if (linkErrors != ""){
+		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
+									+ linkErrors, "ERROR", 0);
+		  return;//no export performed
+		}
+	  	  
+		if (duplicationString != ""){
+		  JOptionPane.showMessageDialog(null, "The following internal names are duplicated and will cause client problems:\n"
+							  + duplicationString, "ERROR", 0);
+		  return;//no export performed
+		}
 
     int rowsupdated = 0;
 
