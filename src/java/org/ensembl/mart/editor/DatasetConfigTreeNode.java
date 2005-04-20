@@ -9,7 +9,7 @@
 	This library is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	Lesser General Public License for more details.
+	Lesser General Public License for more details.d
 
 	You should have received a copy of the GNU Lesser General Public
 	License along with this library; if not, write to the Free Software
@@ -21,6 +21,9 @@ package org.ensembl.mart.editor;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Hashtable;
 
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
@@ -38,6 +41,8 @@ import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
+
+import com.sun.rsasign.o;
 //import org.ensembl.mart.lib.config.SeqModule;
  
 
@@ -128,6 +133,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 	}
 
 	public void setUserObject(Object obj) {
+		//System.out.println("ADDING TEST " + obj);
 		super.setUserObject(obj);
 
 		String nodeObjectClass = obj.getClass().getName();
@@ -476,6 +482,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				this.add(desNode);
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
+			//System.out.println("FILT\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
 			//setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
@@ -515,13 +522,17 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				//end of new code
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
+			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
+			//checkUniqueness((BaseNamedConfigurationObject)obj);
 			setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Exportable")) {
+			//System.out.println("EXP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Exportable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Importable")) {
+			//System.out.println("IMP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Importable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Enable")) {
-			setName("Enable");
+			//setName("Enable");
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Disable")) {
 			setName("Disable");
 		}
@@ -531,6 +542,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 		//}
 
 		else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Option")) {
+			//System.out.println("OP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Option: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			Option op = (Option) obj;
 
@@ -575,3 +587,5 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 		}
 	}
 }
+
+

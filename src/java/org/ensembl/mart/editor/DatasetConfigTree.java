@@ -286,7 +286,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		if (attrTable != null)
 			if (attrTable.getEditorComponent() != null) {
 				TableCellEditor attrTableEditor = attrTable.getCellEditor();
-				attrTableEditor.stopCellEditing();
+				//attrTableEditor.stopCellEditing();// this was making setValueAt be called twice and breaking the duplication testing
 			}
 		lastSelectedNode = (DatasetConfigTreeNode) this.getLastSelectedPathComponent();
 		if (lastSelectedNode == null)

@@ -20,6 +20,11 @@ package org.ensembl.mart.editor;
 
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
 
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -121,9 +126,12 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 	}
 
 	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		
 		//Sets the value in the cell at columnIndex and rowIndex to aValue.
 		Object child = node.getUserObject();
-
+		DatasetConfigTreeNode rootNode = (DatasetConfigTreeNode) node.getRoot();
+		DatasetConfig dsConfig = (DatasetConfig) rootNode.getUserObject();		
+		
 		if (columnIndex == 1) {
 			//child may be a DatasetConfig, in which case dont try to remove/add the child to a null parent
 			if (child instanceof org.ensembl.mart.lib.config.DatasetConfig) {
@@ -153,12 +161,30 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						fg.removeFilterCollection((FilterCollection) node.getUserObject());
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
 					FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.lib.config.FilterDescription)
-						fc.removeFilterDescription((FilterDescription) node.getUserObject());
+					if (child instanceof org.ensembl.mart.lib.config.FilterDescription){
+						if (checkFilterUniqueness((String) aValue, dsConfig)){				
+								fc.removeFilterDescription((FilterDescription) node.getUserObject());
+						}
+						else{
+							String newName = JOptionPane.showInputDialog("This internal name is duplicated. Choose another");
+							fc.removeFilterDescription((FilterDescription) node.getUserObject());
+							setValueAt(newName,rowIndex,columnIndex);
+							return;
+						}
+					}
 				} else if (parent instanceof FilterDescription) {
 					FilterDescription fdesc = (FilterDescription) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof Option)
-						fdesc.removeOption((Option) node.getUserObject());
+					if (child instanceof Option){
+						//if (checkOptionUniqueness((String) aValue, dsConfig)){	
+							fdesc.removeOption((Option) node.getUserObject());			
+						//}
+						//else{
+						//	String newName = JOptionPane.showInputDialog("This internal name is duplicated. Choose another");
+						//	fdesc.removeOption((Option) node.getUserObject());
+						//	setValueAt(newName,rowIndex,columnIndex);
+						//	return;
+						//}	
+					}
 				} else if (parent instanceof Option) {
 					Option op = (Option) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof Option)
@@ -179,8 +205,19 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						ag.removeAttributeCollection((AttributeCollection) node.getUserObject());
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription)
-						ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
+					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){
+						
+						if (checkUniqueness((String) aValue, dsConfig)){				
+							ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
+						}
+						else{
+							//new Exception().printStackTrace();// good debugging tool
+							String newName = JOptionPane.showInputDialog("This internal name is duplicated. Choose another");
+							ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
+							setValueAt(newName,rowIndex,columnIndex);
+							return;
+						}
+					}
 				}
 
 				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
@@ -231,11 +268,12 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 						ag.insertAttributeCollection(index, (AttributeCollection) obj);
 				} else if (parent instanceof org.ensembl.mart.lib.config.AttributeCollection) {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
-					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription)
+					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){		
 						ac.insertAttributeDescription(index, (AttributeDescription) obj);
+					}
 				}
 			}
-
+			
 			DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(obj.getAttribute("internalName"), obj);
 
 			if (parent != null) {
@@ -245,10 +283,70 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				node = newNode;
 			}
 			TableModelEvent tme = new TableModelEvent(this, rowIndex);
-
 			fireEvent(tme);
 		}
 	}
+
+	private boolean checkUniqueness(String testName, DatasetConfig dsConfig){
+		
+		AttributePage[] apages = dsConfig.getAttributePages();
+		AttributePage apage;
+	  
+		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
+		for (int i = 0; i < apages.length; i++){
+			  apage = apages[i];
+			
+			  if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+				  continue;
+			  }
+		    
+			  List testAtts = new ArrayList();
+			  testAtts = apage.getAllAttributeDescriptions();
+			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				  Object testAtt = iter.next();
+				  AttributeDescription testAD = (AttributeDescription) testAtt;
+				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					  continue;
+				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+			  }
+		}
+		if (descriptionsMap.containsKey(testName)){
+			return false;
+		}
+		return true;
+	}
+	
+	private boolean checkFilterUniqueness(String testName, DatasetConfig dsConfig){
+		
+		FilterPage[] apages = dsConfig.getFilterPages();
+		FilterPage apage;
+	  
+		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
+		for (int i = 0; i < apages.length; i++){
+			  apage = apages[i];
+			
+			  if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+				  continue;
+			  }
+		    
+			  List testAtts = new ArrayList();
+			  testAtts = apage.getAllFilterDescriptions();
+			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				  Object testAtt = iter.next();
+				  FilterDescription testAD = (FilterDescription) testAtt;
+				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+					  continue;
+				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+			  }
+		}
+		if (descriptionsMap.containsKey(testName)){
+			return false;
+		}
+		return true;
+	}
+	
 
 	public void setObject(BaseConfigurationObject obj) {
 		this.obj = obj;

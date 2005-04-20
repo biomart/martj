@@ -241,6 +241,10 @@ public class DatabaseDatasetConfigUtils {
     String version,
     DatasetConfig dsConfig)
     throws ConfigurationException {
+	
+	    // Before storing check attribute and filter names are unique per dataset (attribute and filter names
+	    // are allowed to be the same
+	    // Also check the importable and exportable filters and attributes are defined
 
 		// check uniqueness of internal names per page	  
 		AttributePage[] apages = dsConfig.getAttributePages();
