@@ -224,7 +224,8 @@ public class MartBuilder {
 			ArrayList list = new ArrayList();
 			int lines =0;
 			int dataset_counter =0;
-			String extension = null;
+			String centralExtension = null;
+			//String extension =null;
 			
 			SourceSchema source_schema = new SourceSchema(config);
 			
@@ -243,12 +244,12 @@ public class MartBuilder {
 				    		    
 					// create new linked tables (central plus referenced) 
 					if (lines !=0){
-						createLinkedTables(source_schema,list,last_type,last_table,extension);
+						createLinkedTables(source_schema,list,last_type,last_table,centralExtension);
 						list.clear();
 					}
 				}
 				
-				extension=null;
+				centralExtension=null;
 				
 				// if new dataset
 				if (!fileEntries[0].equals(last_dataset)){
@@ -278,9 +279,10 @@ public class MartBuilder {
 					
 					Table ref_table = referenced_tables[i];
 					
-					if(ref_table.getName().equals(fileEntries[4])){
+					if(ref_table.getName().toUpperCase().equals(fileEntries[4])){
 						if (!fileEntries[5].toUpperCase().equals("S")){
 							ref_table.setCardinality(fileEntries[5]);
+							if (!fileEntries[7].equals("null")) ref_table.extension = fileEntries[7];
 							if (fileEntries[5].equals("1n")){
 								ref_table.skip= true;
 							}
@@ -292,14 +294,14 @@ public class MartBuilder {
 				last_table=fileEntries[2];
 				last_type=fileEntries[1];
 				last_dataset=fileEntries[0];
-				if (!fileEntries[6].equals("null")) extension = fileEntries[6];
+				if (!fileEntries[6].equals("null")) centralExtension = fileEntries[6];
 				lines++;
 			}	
 			
 			
 			in.close();
 			// get last linked tables
-			createLinkedTables(source_schema,list,last_type,last_table,extension);
+			createLinkedTables(source_schema,list,last_type,last_table,centralExtension);
 			target_schema = new TargetSchema(source_schema,targetSchemaName);
 			
 			
@@ -381,24 +383,32 @@ public class MartBuilder {
 	}
 	
 	
-	private static void write (BufferedWriter out,Table [] referenced_tables, String table_name, String table_type,String dataset, String extension,String type){
+	private static void write (BufferedWriter out,Table [] referenced_tables, String table_name, String table_type,String dataset, String centralExtension,String type){
 		
 		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
+		String extension = null;
 		
 		for (int i=0;i<referenced_tables.length; i++){
 			
 			String cardinality = "";
 			Table ref_tab=referenced_tables[i];
-			if (extension == null || extension.equals("")) extension="null";
+			if (centralExtension == null || centralExtension.equals("")) centralExtension="null";
 			
 			while (!(cardinality.equals("11") || cardinality.equals("n1")
 					|| cardinality.equals("0n") || cardinality.equals("1n")
 					|| cardinality.equals("n1r") || cardinality.equals("s")))
 				
-			{cardinality = getUserInput(table_name+": "+type+" "+ref_tab.getName() + card_string);}
+			{
+				
+				cardinality = getUserInput(table_name+": "+type+" "+ref_tab.getName() + card_string);
+				extension="null";
+				if (!cardinality.equals("s")) extension = getUserInput("Extension: ");
+				if (extension == null || extension.equals("")) extension="null";
+			
+			}
 			
 			try {
-				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.getName() +"\t"+ cardinality+"\t"+extension+"\n");
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
