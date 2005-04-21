@@ -840,6 +840,40 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			//	field = field.replaceFirst("glook_", "");
 			//}
 			options = pa1.getOptions();
+			if (filter2.matches("\\w+\\.\\w+")){//placeholder)								
+					String otherDatasetFilter1 = null;
+					DatasetConfig otherDataset = null;
+					FilterDescription referredFilter = dsConfig.getFilterDescriptionByInternalName(pa1.getRef());
+					if (referredFilter.getOtherFilters() == null){
+						JOptionPane.showMessageDialog(null, pa1.getRef() + " filter needs otherFilters set first"
+													, "ERROR", 0);
+						return;	
+					}
+					
+					String[] otherFilters = referredFilter.getOtherFilters().split(";");
+					fd2 = null;
+					for (int p = 0; p < otherFilters.length; p++){
+						otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
+						MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
+						if (otherDataset.containsFilterDescription(filter2))
+								fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
+						if (fd2 != null){
+								otherDatasetFilter1 = otherFilters[p].split("\\.")[1];
+								break;
+						}
+					}
+					fd2.setType("drop_down_basic_filter");
+					pushField = fd2.getField();
+					pushInternalName = fd2.getInternalName();
+					pushTableName = fd2.getTableConstraint();
+
+					if (pushTableName.equals("main")) {
+					String[] mains = otherDataset.getStarBases();
+						pushTableName = mains[0];
+					}
+					field = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 																			 
+			}		
+			
 		}
 
 		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();

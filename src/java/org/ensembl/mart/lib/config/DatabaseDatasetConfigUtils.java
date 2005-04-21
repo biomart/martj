@@ -1691,14 +1691,6 @@ public class DatabaseDatasetConfigUtils {
     // if a placeholder get the real filter
     if (validatedFilter.getInternalName().matches("\\w+\\.\\w+")){
     	return validatedFilter;
-    	
-    	// do not update filters from other datasets probably
-    	
-    	//String dataset = validatedFilter.getInternalName().split("\\.")[0];
-    	//String otherFilter =  validatedFilter.getInternalName().split("\\.")[1];
-		//otherDataset = getDatasetConfigByDatasetInternalName(null,dataset,"default");  
-		//dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,dataset,"default"));		
-		//validatedFilter= otherDataset.getFilterDescriptionByInternalName(otherFilter);	
     }
         
     if (validatedFilter.getField() != null) {
@@ -1743,28 +1735,31 @@ public class DatabaseDatasetConfigUtils {
         validatedFilter.setTableConstraintBroken();
       }
     }
-    
-    //else {
-      //check Options/PushAction Options
 	  
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
 
-	
-
-
       Option[] options = validatedFilter.getOptions();      
-      if (options.length > 0 && options[0].getValue() != null){
+      if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
-      		
-      		// store the option/push action structure so can recreate
-      		
+     
+      		// store the option/push action structure so can recreate      		
    			PushAction[] pas = options[0].getPushActions();
    			String[] pushActions = new String[pas.length];
    			String[] orderBy = new String[pas.length];
+   			
+   			PushAction[] secondaryPAs = pas[0].getOptions()[0].getPushActions();
+			String[] secondaryPushActions = new String[secondaryPAs.length];
+			String[] secondaryOrderBy = new String[secondaryPAs.length];
+   			
    	        for (int n = 0; n < pas.length; n++){
    	        	pushActions[n] = pas[n].getRef();
    	        	orderBy[n] = pas[n].getOrderBy();
+				for (int p = 0; p < secondaryPAs.length; p++){
+					secondaryPushActions[p] = secondaryPAs[p].getRef();
+					secondaryOrderBy[p] = secondaryPAs[p].getOrderBy();
+   	        	
+				}
    	        }
    
    
@@ -1790,7 +1785,7 @@ public class DatabaseDatasetConfigUtils {
 				ops = getOptions(field, tableName, joinKey, dsv);
 			}
 			
-
+			// add back any options
 			HashMap valMap = new HashMap();// use to keep options in existing order if possible	
 			for (int k = 0; k < ops.length; k++) {
 				valMap.put(ops[k].getInternalName(),ops[k]);
@@ -1810,18 +1805,13 @@ public class DatabaseDatasetConfigUtils {
 				  k++;
 			}	
 			
-			// PushActions
+			// add back any PushActions
 			for (int n = 0; n < pushActions.length; n++){
 				
 				String filter2 = pushActions[n];
-			    //String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");
 				String orderSQL = orderBy[n];
-				if (orderSQL == null) orderSQL = "";
-						
-				//dsConfig = (DatasetConfig) ((DatasetConfigTreeNode) this.getModel().getRoot()).getUserObject();
 				
-				if (validatedFilter.getOtherFilters() != null){// refers to a placeholder
-					//String otherDatasetName = null;
+				if (validatedFilter.getOtherFilters() != null){// push action refers to a placeholder filter
 					String otherDatasetFilter1 = null;
 					otherDataset = null;
 					FilterDescription fd2 = null;
@@ -1846,9 +1836,7 @@ public class DatabaseDatasetConfigUtils {
 							String[] mains = otherDataset.getStarBases();
 							pushTableName = mains[0];
 					}
-					//String pafield;
 					Option[] options2;
-					//pafield = validatedFilter.getField();// SHOULD GET FIELD FROM OTHER FILTER INSTEAD	
 					String pafield = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
 												
 					options2 = validatedFilter.getOptions();
@@ -1857,114 +1845,141 @@ public class DatabaseDatasetConfigUtils {
 						Option op = options2[i];
 						String opName = op.getDisplayName();
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
-
+						//System.out.println("1A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
 						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL));
+						
+						// ADD ANY SECONDARY PUSH ACTIONS
+						for (int p = 0; p < secondaryPushActions.length; p++){
+							String secFilter2 = secondaryPushActions[p];
+							String secOrderSQL = secondaryOrderBy[p];		
+							FilterDescription referredFilter = dsv.getFilterDescriptionByInternalName(pushActions[n]);
+							if (referredFilter.getOtherFilters() != null){
+								String secOtherDatasetFilter1 = null;
+								DatasetConfig secOtherDataset = null;
+								FilterDescription fd3 = null;
+								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
+								for (int q = 0; q < secOtherFilters.length; q++){
+									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default");  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default"));
+									if (secOtherDataset.containsFilterDescription(secFilter2))
+										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
+									if (fd3 != null){
+										secOtherDatasetFilter1 = secOtherFilters[p].split("\\.")[1];
+										break;
+									}
+								}
+								fd3.setType("drop_down_basic_filter");
+								String secPushField = fd3.getField();
+								String secPushInternalName = fd3.getInternalName();
+								String secPushTableName = fd3.getTableConstraint();
+								if (secPushTableName.equals("main")) {
+										String[] mains = secOtherDataset.getStarBases();
+										secPushTableName = mains[0];
+								}
+								String secPafield = secOtherDataset.getFilterDescriptionByInternalName(secOtherDatasetFilter1).getField(); 			
+								Option[] options3 = pa.getOptions();
+								for (int r = 0; r < options3.length; r++) {
+									Option op3 = options3[r];
+									String secOpName = op3.getDisplayName();
+									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
+									//System.out.println("1B"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL));
+									options3[r].addPushAction(secondaryPA); 
+								}
+							}
+						}
 
+																			
+						if (pa.getOptions().length > 0) {
+							options2[i].addPushAction(pa); 
+						}
+					}									 
+				}
+				else{// push action refers to a filter in this dataset
+					 FilterDescription fd2 = dsv.getFilterDescriptionByInternalName(filter2);//doesn't work for placeholder  
+				 	fd2.setType("drop_down_basic_filter");
+				 	String pushField = fd2.getField();
+					 String pushInternalName = fd2.getInternalName();
+				 	String pushTableName = fd2.getTableConstraint();
+
+					 if (pushTableName.equals("main")) {
+						String[] mains = dsv.getStarBases();
+						pushTableName = mains[0];
+					 }
+					 String pafield;
+					 Option[] options2;
+					 pafield = validatedFilter.getField();			
+					 options2 = validatedFilter.getOptions();
+
+					 for (int i = 0; i < options2.length; i++) {
+						Option op = options2[i];
+						String opName = op.getDisplayName();
+						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
+						
+						//System.out.println("2A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
+						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
+						// ADD ANY SECONDARY PUSH ACTION
+						for (int p = 0; p < secondaryPushActions.length; p++){
+							String secFilter2 = secondaryPushActions[p];
+							String secOrderSQL = secondaryOrderBy[p];		
+							FilterDescription referredFilter = dsv.getFilterDescriptionByInternalName(pushActions[n]);
+							if (referredFilter.getOtherFilters() != null){
+								String secOtherDatasetFilter1 = null;
+								DatasetConfig secOtherDataset = null;
+								FilterDescription fd3 = null;
+								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
+								for (int q = 0; q < secOtherFilters.length; q++){
+									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default");  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default"));
+									if (secOtherDataset.containsFilterDescription(secFilter2))
+										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
+									if (fd3 != null){
+										secOtherDatasetFilter1 = secOtherFilters[p].split("\\.")[1];
+										break;
+									}
+								}
+								fd3.setType("drop_down_basic_filter");
+								String secPushField = fd3.getField();
+								String secPushInternalName = fd3.getInternalName();
+								String secPushTableName = fd3.getTableConstraint();
+								if (secPushTableName.equals("main")) {
+										String[] mains = secOtherDataset.getStarBases();
+										secPushTableName = mains[0];
+								}
+								String secPafield = secOtherDataset.getFilterDescriptionByInternalName(secOtherDatasetFilter1).getField(); 			
+								Option[] options3 = pa.getOptions();
+								for (int r = 0; r < options3.length; r++) {
+									Option op3 = options3[r];
+									String secOpName = op3.getDisplayName();
+									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
+									//System.out.println("2B"+secPushField+"\t"+secPushTableName+"\t"+secPafield+"\t"+secOpName+"\t"+secOrderSQL);
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL));
+									options3[r].addPushAction(secondaryPA); 
+								}
+							}
+						}					
+					
+					
 						if (pa.getOptions().length > 0) {
 							options2[i].addPushAction(pa); 
 						}
 
-					}										 
-				}
-				else{
-				 FilterDescription fd2 = dsv.getFilterDescriptionByInternalName(filter2);//doesn't work for placeholder  
-				 fd2.setType("drop_down_basic_filter");
-				 String pushField = fd2.getField();
-				 String pushInternalName = fd2.getInternalName();
-				 String pushTableName = fd2.getTableConstraint();
-
-				 if (pushTableName.equals("main")) {
-					String[] mains = dsv.getStarBases();
-					pushTableName = mains[0];
-				 }
-				 String pafield;
-				 Option[] options2;
-				 pafield = validatedFilter.getField();			
-				 options2 = validatedFilter.getOptions();
-
-				 for (int i = 0; i < options2.length; i++) {
-					Option op = options2[i];
-					String opName = op.getDisplayName();
-					PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
-
-					pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
-
-					if (pa.getOptions().length > 0) {
-						options2[i].addPushAction(pa); 
 					}
-
 				}
-			   }
-			  }
+			}// end of add push actions code
 
 		    validatedFilter.setOptionsBroken();	
 		    return validatedFilter;      	
-      	}
+      }// END OF ADD VALUE OPTIONS
       
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
+      // VALIDATE "FILTER-TYPE" OPTIONS      
 	  Connection conn = dsource.getConnection();
       for (int j = 0; j < options.length; j++) {
-      	
-//		if (options[j].getValue() != null){
-
-
-
-
-
-
-			// should test this value is still in database
-			
-//			String table = validatedFilter.getTableConstraint();
-//			if (table.equals("main")){
-//				String[] pkeys = dsv.getPrimaryKeys();
-//				String[] mainTables = dsv.getStarBases();
-//				for (int k = 0; k < pkeys.length; k++){
-//					if (pkeys[k].equals(validatedFilter.getKey())){
-//						table = mainTables[k];
-//						break;
-//					}
-//				}
-//			}
-//			String sql = "SELECT COUNT(" + validatedFilter.getField() + ") FROM " + 
-//				table + " where " + validatedFilter.getField() + " ='" + options[j]. getValue() + "'";
-//      	System.out.println(sql);
-//			PreparedStatement ps = conn.prepareStatement(sql);
-//			ResultSet rs = ps.executeQuery();
-//			rs.next();
-//			int count = rs.getInt(1);
-//			rs.close();
-//			ps.close();
-//			
-//				
-//			if (!(count > 0)){ 
-//				System.out.println("OPTION " + options[j].getInternalName() + " IS NOT VLAID ANYMORE");
-//				optionsValid = false;
-//				options[j].setHidden("true");
-//				brokenOptions.put(new Integer(j), options[j]);
-//			}
-//		}
-//	  	else{
         	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset);
         	if (validatedOption.isBroken()) {
           	optionsValid = false;
           	brokenOptions.put(new Integer(j), validatedOption);
         	}
-//	  	}
       }
 	  conn.close();
       if (!optionsValid) {
@@ -1973,17 +1988,12 @@ public class DatabaseDatasetConfigUtils {
         for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {
           Integer position = (Integer) iter.next();
           Option brokenOption = (Option) brokenOptions.get(position);
-
-          //remove the old version of the broken option
           validatedFilter.removeOption(options[position.intValue()]);
-          //insert the validated version of the broken option in its place
           validatedFilter.insertOption(position.intValue(), brokenOption);
         }
       }
-    //}
-
-    return validatedFilter;
-  }
+      return validatedFilter;
+  }	
 
   private Option getValidatedOption(String schema, String catalog, Option option, String dset) throws SQLException {
     Option validatedOption = new Option(option);
@@ -3203,8 +3213,8 @@ public class DatabaseDatasetConfigUtils {
               }
               else { // update options if has any
                 System.out.println(currFilt.getInternalName());
-              	if (currFilt.hasOptions())
-                  	updateDropDown(dsv, currFilt); 
+              	//if (currFilt.hasOptions())
+                  	//updateDropDown(dsv, currFilt);// these are created from scratch during validation now 
               }
 
             } else { // is a main table bool filter
@@ -3315,8 +3325,8 @@ public class DatabaseDatasetConfigUtils {
               fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
             }
             else { // update options if has any
-              if (currFilt.hasOptions())
-                updateDropDown(dsv, currFilt);
+              //if (currFilt.hasOptions())
+                //updateDropDown(dsv, currFilt);// these are created from scratch during validation now
             }
 
           }
@@ -3418,6 +3428,11 @@ public class DatabaseDatasetConfigUtils {
         for (int m = 0; m < pas2.length; m++) {
           String ref2 = pas2[m].getRef();
           FilterDescription fd3 = dsConfig.getFilterDescriptionByInternalName(ref2);
+          System.out.println("LOOKING FOR " + ref2 + " IN " + dsConfig.getDataset());
+          if (fd3 == null){
+          	System.out.println("NOT FOUND");
+          	continue;
+          }
           updatePushAction(dsConfig, newPa, fd3,"");
         }
       }
@@ -3663,7 +3678,7 @@ public class DatabaseDatasetConfigUtils {
 
     List options = new ArrayList();
     Connection conn = dsource.getConnection();
-    if (orderSQL.equals(""))
+    if (orderSQL == null || orderSQL.equals(""))
       orderSQL = "ORDER BY " + columnName;
     else
       orderSQL = " ORDER BY " + orderSQL;
