@@ -1729,7 +1729,7 @@ public class DatabaseDatasetConfigUtils {
 
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-      
+	  System.out.println(field + "\t" + tableConstraint + "\t" + table); 	      
 	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
       
       Connection conn = dsource.getConnection();
@@ -1749,6 +1749,7 @@ public class DatabaseDatasetConfigUtils {
       }
       conn.close();
       if (!(fieldValid) || !(tableValid)) {
+      	System.out.println("HIDING IT " + fieldValid + "\t" + tableValid);
         validatedFilter.setHidden("true");
 
       } else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")) {
@@ -1850,6 +1851,11 @@ public class DatabaseDatasetConfigUtils {
 					String[] otherFilters = validatedFilter.getOtherFilters().split(";");
 					for (int p = 0; p < otherFilters.length; p++){
 						otherDataset = getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
+	
+						if (otherDataset == null){
+							System.out.println(otherFilters[p].split("\\.")[0] + "does not exist !!!");
+							continue;
+						}
 						dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
 						if (otherDataset.containsFilterDescription(filter2))
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
@@ -1869,6 +1875,9 @@ public class DatabaseDatasetConfigUtils {
 							pushTableName = mains[0];
 					}
 					Option[] options2;
+					System.out.println(otherDataset.getDataset());
+					System.out.println(otherDatasetFilter1);
+					
 					String pafield = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
 												
 					options2 = validatedFilter.getOptions();
