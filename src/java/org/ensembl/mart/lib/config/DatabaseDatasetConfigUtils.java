@@ -269,6 +269,9 @@ public class DatabaseDatasetConfigUtils {
 				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					  continue;
 				  }
+				  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+				  	  continue;//placeholder atts can be duplicated	
+				  }
 				
 				  if (descriptionsMap.containsKey(testAD.getInternalName())){
 					  //System.out.println("DUPLICATION " + testAD.getInternalName());	
