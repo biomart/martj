@@ -1118,10 +1118,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  disableCursor();
 		  String duplicationString = "";
 		  String brokenString = "";
+		  String spaceErrors = "";
 		  // cycle through all datasets for the database
 		  String[] datasets = dbutils.getAllDatasetNames(user);
 		  for (int i = 0; i < datasets.length; i++){
 			String dataset = datasets[i];
+			System.out.println("VALIDATING " + dataset);
 			String[] internalNames = dbutils.getAllInternalNamesForDataset(user, dataset);
 			for (int j = 0; j < internalNames.length; j++){
 				String internalName = internalNames[j];
@@ -1142,7 +1144,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				
 				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
 				// keep a string of all the broken filts and atts set to hidden
-				brokenString = brokenString + dbutils.getBrokenElements(odsv);
+				if (brokenString != "") 
+					brokenString = brokenString + dbutils.getBrokenElements(odsv);
 		
 				
 				dsv = dbutils.getNewFiltsAtts(database, dsv);
@@ -1152,6 +1155,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				AttributePage[] apages = dsv.getAttributePages();
 				AttributePage apage;
 				String testInternalName;
+				
 	  
 				for (int k = 0; k < apages.length; k++){
 					  apage = apages[k];
@@ -1168,7 +1172,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							  continue;
 						  }
-				
+						  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+							  continue;//placeholder atts can be duplicated	
+						  }
+						  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+							 spaceErrors = spaceErrors + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+						  }					
 						  if (descriptionsMap.containsKey(testAD.getInternalName())){
 							  duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 						  }
@@ -1184,7 +1193,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
 								continue;
 							}
-		    
+					       
 							List testAtts = new ArrayList();
 							testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
 				  
@@ -1194,6 +1203,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									  continue;
 								}
+								if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+									 spaceErrors = spaceErrors + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+								}	
 								if (descriptionsMap.containsKey(testAD.getInternalName())){
 									duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 						  
@@ -1234,6 +1246,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				}			
 			}
 		  }
+		  
+		    if (spaceErrors != ""){
+			 	JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
+									  + spaceErrors, "ERROR", 0);
+				return;//no export performed
+		  	}
 			if (duplicationString != ""){
 			  JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
 								  + duplicationString, "ERROR", 0);

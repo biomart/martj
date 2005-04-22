@@ -72,9 +72,11 @@ public class DatabaseDatasetConfigUtils {
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
   private final String EXISTSELECT = "select count(*) from "; //append table after user test
-  private final String EXISTWHERE = " where internalName = ? and displayName = ? and dataset = ?";
+  private final String EXISTWHERE = " where internalName = ? and dataset = ? and displayName = ?";
+  private final String ALTEXISTWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEOLDXML = "delete from "; //append table after user test
-  private final String DELETEOLDXMLWHERE = " where internalName = ? and displayName = ? and dataset = ?";
+  private final String DELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName = ?";
+  private final String ALTDELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEDATASETCONFIG = " where dataset = ?";
   private final String DELETEINTERNALNAME = " and internalName = ?";
   private final String INSERTXMLSQLA = "insert into "; //append table after user test
@@ -251,6 +253,7 @@ public class DatabaseDatasetConfigUtils {
 		AttributePage apage;
 		String testInternalName;
 		String duplicationString = "";
+		String spaceErrors = "";
 		String linkErrors = "";
 	  
 		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
@@ -272,7 +275,9 @@ public class DatabaseDatasetConfigUtils {
 				  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
 				  	  continue;//placeholder atts can be duplicated	
 				  }
-				
+				  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+					  spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
+				  }	
 				  if (descriptionsMap.containsKey(testAD.getInternalName())){
 					  //System.out.println("DUPLICATION " + testAD.getInternalName());	
 					  duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
@@ -314,6 +319,9 @@ public class DatabaseDatasetConfigUtils {
 						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							  continue;
 						}
+						if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
+							spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+						}	
 						if (descriptionsMap.containsKey(testAD.getInternalName())){
 							//System.out.println("DUPLICATION " + testAD.getInternalName());
 							duplicationString = duplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
@@ -347,9 +355,14 @@ public class DatabaseDatasetConfigUtils {
 			  String[] filts = filters.split(",");
 			  for (int j = 0; j < filts.length; j++){
 				  if (!descriptionsMap.containsKey(filts[j])){
-					  linkErrors = linkErrors + filts[j] + " in exportable " + imps[i].getInternalName() + "\n";						  			
+					  linkErrors = linkErrors + filts[j] + " in importable " + imps[i].getInternalName() + "\n";						  			
 				  }
 			  }
+		}
+		if (spaceErrors != ""){
+		  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
+									+ spaceErrors, "ERROR", 0);
+		  return;//no export performed
 		}
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
@@ -1138,20 +1151,26 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException {
   	
   	// fully qualify for 'non-public' postgres schemas
-    String existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
-    
+    System.out.println("DISPLAY NAME" + displayName);
+    String existSQL;
+    if (displayName != null)
+    	existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
+    else
+		existSQL = EXISTSELECT + getSchema()+"."+metatable + ALTEXISTWHERE;
+	
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
 
     int ret = 0;
-
+	System.out.println(existSQL);
     Connection conn = null;
     try {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(existSQL);
       ps.setString(1, internalName);
-      ps.setString(2, displayName);
-      ps.setString(3, dataset);
+      if (displayName != null)
+      	ps.setString(3, displayName);
+      ps.setString(2, dataset);
 
       ResultSet rs = ps.executeQuery();
       rs.next();
@@ -1185,8 +1204,12 @@ public class DatabaseDatasetConfigUtils {
   public void deleteOldDSConfigEntriesFor(String metatable, String dataset, String internalName, String displayName)
     throws ConfigurationException {
 
-    String deleteSQL = DELETEOLDXML + getSchema()+"."+metatable + DELETEOLDXMLWHERE;
-
+    String deleteSQL;
+    if (displayName != null) 
+    	deleteSQL= DELETEOLDXML + getSchema()+"."+metatable + DELETEOLDXMLWHERE;
+	else
+	    deleteSQL= DELETEOLDXML + getSchema()+"."+metatable + ALTDELETEOLDXMLWHERE;	
+	    
     int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
     if (logger.isLoggable(Level.FINE))
       logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL + "\n");
@@ -1198,8 +1221,9 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       PreparedStatement ds = conn.prepareStatement(deleteSQL);
       ds.setString(1, internalName);
-      ds.setString(2, displayName);
-      ds.setString(3, dataset);
+	  if (displayName != null) 
+	  	ds.setString(3, displayName);
+      ds.setString(2, dataset);
 
       rowsdeleted = ds.executeUpdate();
       ds.close();
@@ -1750,11 +1774,16 @@ public class DatabaseDatasetConfigUtils {
    			PushAction[] pas = options[0].getPushActions();
    			String[] pushActions = new String[pas.length];
    			String[] orderBy = new String[pas.length];
-   			
-   			PushAction[] secondaryPAs = pas[0].getOptions()[0].getPushActions();
-			String[] secondaryPushActions = new String[secondaryPAs.length];
-			String[] secondaryOrderBy = new String[secondaryPAs.length];
-   			
+   			//System.out.println("PA" + pas[0].getInternalName());
+			//System.out.println("PA" + pas[0].getOptions()[0]);
+			PushAction[] secondaryPAs = null;
+			String[] secondaryPushActions = null;
+			String[] secondaryOrderBy = null;
+			if 	(pas.length > 0){
+   				secondaryPAs = pas[0].getOptions()[0].getPushActions();
+				secondaryPushActions = new String[secondaryPAs.length];
+				secondaryOrderBy = new String[secondaryPAs.length];
+			}
    	        for (int n = 0; n < pas.length; n++){
    	        	pushActions[n] = pas[n].getRef();
    	        	orderBy[n] = pas[n].getOrderBy();
@@ -1971,7 +2000,7 @@ public class DatabaseDatasetConfigUtils {
 				}
 			}// end of add push actions code
 
-		    validatedFilter.setOptionsBroken();	
+		    //validatedFilter.setOptionsBroken();// redone from scratch so not broken	
 		    return validatedFilter;      	
       }// END OF ADD VALUE OPTIONS
       
