@@ -141,7 +141,9 @@ public class Transformation {
 				
 				if (unit.ref_table.status.equals("exported")) {
 					
-					unit.TSKey = temp_start.PK;
+					// The keys are always set by DBM on referenced tables
+					//unit.TSKey = temp_start.PK;
+					unit.TSKey = unit.ref_table.PK;
 					unit.RFKey = unit.ref_table.FK;
 				} else if (unit.ref_table.status.equals("imported")){
 					
