@@ -78,6 +78,9 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 			e.printStackTrace();
 		} 
 		
+		// for weired recursive joins
+		exportedTabs.add(getCentralTable(centralTableName));
+		
 		Table [] b = new Table[exportedTabs.size()];
 		Table [] array_exp = (Table []) exportedTabs.toArray(b);
 		
@@ -86,16 +89,16 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 	}
 	
 	
-	public Table [] getImportedKeyTables (String maintable){
+	public Table [] getImportedKeyTables (String centralTableName){
 		
-		ArrayList exported_tabs= new ArrayList();
+		ArrayList importedTabs= new ArrayList();
 		
 		String currentTable = "";
 		String currentKey="";
 		
 		try {
 			int i = 0;
-			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().schema,maintable);
+			ResultSet keys = dmd.getImportedKeys(getAdaptor().catalog,getAdaptor().schema,centralTableName);
 			while (keys.next()){
 				
 				// to avoid multiple table when the same table is referenced by multiple keys
@@ -110,7 +113,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				table.setKey(keys.getString(4));
 				table.status="imported";
 				table.setColumns(getReferencedColumns(table.getName()));
-				exported_tabs.add(table);
+				importedTabs.add(table);
 				currentTable=keys.getString(3);
 				currentKey=keys.getString(4);
 				i++;
@@ -119,8 +122,11 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 			e.printStackTrace();
 		} 
 		
-		Table [] b = new Table[exported_tabs.size()];
-		Table [] array_exp = (Table []) exported_tabs.toArray(b);
+//		 for weired recursive joins
+		importedTabs.add(getCentralTable(centralTableName));
+		
+		Table [] b = new Table[importedTabs.size()];
+		Table [] array_exp = (Table []) importedTabs.toArray(b);
 		
 	return array_exp;
 	}

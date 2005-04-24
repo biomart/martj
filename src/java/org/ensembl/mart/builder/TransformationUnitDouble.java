@@ -245,8 +245,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 		if (ref_table.hasExtension()){
 			tempsql.append(" AND "+ref+"."+ref_table.getExtension());
 		} 
-		if (temp_start.hasExtension()){
-			tempsql.append(" AND "+start+"."+temp_start.getExtension());
+		if (ref_table.hasCentralExtension()){
+			tempsql.append(" AND "+start+"."+ref_table.getCentralExtension());
 		} 
 		tempsql.append(";");
 		

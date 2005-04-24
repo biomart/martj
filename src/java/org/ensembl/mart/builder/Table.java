@@ -120,6 +120,13 @@ public class Table implements Cloneable {
 	public String getExtension() {
 		return extension;
 	}
+	
+	
+	public String getCentralExtension() {
+		return central_extension;
+	}
+	
+	
 
 	/**
 	 * @param extension
@@ -134,16 +141,32 @@ public class Table implements Cloneable {
 		if (getExtension() != null) {
 			if (!getExtension().equals("")) {
 				return true;
-			}
-	
-			return false;
+			}	
+	return false;
 		} 
 		
 		else {
-		
 			return false;
 		}
-
 	}	
 
+	
+	public boolean hasCentralExtension() {
+
+		if (getCentralExtension() != null) {
+			if (!getCentralExtension().equals("")) {
+				return true;
+			}	
+	return false;
+		} 
+		
+		else {
+			return false;
+		}
+	}
+	
+	
+	
+	
+	
 }

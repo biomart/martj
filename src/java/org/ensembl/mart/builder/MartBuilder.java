@@ -266,7 +266,7 @@ public class MartBuilder {
 				if (lines == 0) datasetName=fileEntries[0];
 				
 				
-				// if new central table or new dataset stop
+				// if new central table or new dataset 
 				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(last_dataset)){
 					
 					// get referenced tables for a central table	
@@ -312,10 +312,14 @@ public class MartBuilder {
 					
 					Table ref_table = referenced_tables[i];
 					
+					// this should match key and a table
+					
+					
 					if(ref_table.getName().toUpperCase().equals(fileEntries[5]) & ref_table.key.equals(fileEntries[4])){
 						if (!fileEntries[6].toUpperCase().equals("S")){
 							ref_table.setCardinality(fileEntries[6]);
 							if (!fileEntries[8].equals("null")) ref_table.extension = fileEntries[8];
+							if (!fileEntries[7].equals("null")) ref_table.central_extension = fileEntries[7];
 							if (fileEntries[6].equals("1n")){
 								ref_table.skip= true;
 							}
@@ -327,7 +331,7 @@ public class MartBuilder {
 				last_table=fileEntries[2];
 				last_type=fileEntries[1];
 				last_dataset=fileEntries[0];
-				if (!fileEntries[7].equals("null")) centralExtension = fileEntries[7];
+				//if (!fileEntries[7].equals("null")) centralExtension = fileEntries[7];
 				lines++;
 			}	
 			
