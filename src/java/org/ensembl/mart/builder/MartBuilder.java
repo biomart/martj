@@ -20,10 +20,13 @@ public class MartBuilder {
 	
 	
 	private static String config ="data/builder/connection.properties";
-	private static ArrayList schemas = new ArrayList();
-	private static TargetSchema target_schema = null;
+	private static ArrayList mart = new ArrayList();
+	private static Dataset dataset = null;
 	private static final String data_dir="data/builder/";
 	private  static String targetSchemaName;
+	private static MetaDataResolver resolver;
+	private static DBAdaptor adaptor;
+	
 	
 	
 	public static void main(String[] args) {
@@ -33,6 +36,25 @@ public class MartBuilder {
 		
 		
 		String tSchemaName=null; 
+		
+		// Connections
+		DBAdaptor Adaptor = new DBAdaptor(config);
+
+		MetaDataResolver Resolver = null;
+
+		if (Adaptor.rdbms.equals("mysql")) {
+			Resolver = new MetaDataResolverFKNotSupported(Adaptor);
+		} else if (Adaptor.rdbms.equals("oracle")) {
+			Resolver = new MetaDataResolverFKSupported(Adaptor);
+		} else if (Adaptor.rdbms.equals("postgresql")) {
+			Resolver = new MetaDataResolverFKSupported(Adaptor);
+		} 
+		
+		resolver = Resolver;
+		adaptor= Adaptor;
+		
+		
+		// user input
 		
 		while (tSchemaName == null || tSchemaName.equals("")){
 			tSchemaName = getUserInput("TARGET SCHEMA: ");	
@@ -64,8 +86,8 @@ public class MartBuilder {
 	   readConfiguration(file);
 		
 		
-		for (int m=0;m<schemas.size();m++){	
-			target_schema = (TargetSchema) schemas.get(m);
+		for (int m=0;m<mart.size();m++){	
+			dataset = (Dataset) mart.get(m);
 			
 			/**	
 			
@@ -112,7 +134,7 @@ public class MartBuilder {
 			
 			// Reset final table names if you want to
 			
-			Transformation [] transformations = target_schema.getTransformations();
+			Transformation [] transformations = dataset.getTransformations();
 			
 			for (int i=0;i<transformations.length;i++){
 				
@@ -124,7 +146,7 @@ public class MartBuilder {
 			
 			
 			// Add central filters
-			Transformation [] tran = target_schema.getTransformationsByFinalTableType("DM");
+			Transformation [] tran = dataset.getTransformationsByFinalTableType("DM");
 			
 			for (int i=0;i<tran.length;i++){
 				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] [Y default] ");
@@ -137,10 +159,10 @@ public class MartBuilder {
 				
 			}
 			
-			target_schema.createTransformationsForCentralFilters();
+			dataset.createTransformationsForCentralFilters();
 			
 			
-			Transformation [] final_transformations = target_schema.getTransformations();
+			Transformation [] final_transformations = dataset.getTransformations();
 			
 			int ind=0;
 			// Dump to SQL
@@ -173,8 +195,8 @@ public class MartBuilder {
 				
 				for (int j=0;j<units.length;j++){
 						if (!(units[j].temp_end.getName().matches(".*TEMP.*") )){
-							System.out.println(units[j].renameKeyColumn(target_schema.transformationKey));
-						System.out.println(units[j].addFinalIndex(ind+j,target_schema.transformationKey+"_key"));
+							System.out.println(units[j].renameKeyColumn(dataset.transformationKey));
+						System.out.println(units[j].addFinalIndex(ind+j,dataset.transformationKey+"_key"));
 						}
 					}				
 			}
@@ -221,31 +243,40 @@ public class MartBuilder {
 			String last_type = null;
 			String last_dataset = null;
 			Table [] referenced_tables = null;
-			ArrayList list = new ArrayList();
+			ArrayList referencedList = new ArrayList();
 			int lines =0;
 			int dataset_counter =0;
 			String centralExtension = null;
+			LinkedTables [] linkedTables=null;
+			
 			//String extension =null;
 			
-			SourceSchema source_schema = new SourceSchema(config);
+			//SourceSchema source_schema = new SourceSchema(config);
+			
+			
+			
+			String datasetName=null;
+			
+			ArrayList linkedList = new ArrayList();
 			
 			while((line = in.readLine()) != null){
 				
 				String [] fileEntries = line.split("\t");
 				
-				if (lines == 0) source_schema.datasetName=fileEntries[0];
+				if (lines == 0) datasetName=fileEntries[0];
 				
 				
 				// if new central table or new dataset stop
 				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(last_dataset)){
 					
 					// get referenced tables for a central table	
-				    referenced_tables = source_schema.getReferencedTables(fileEntries[2]);
+				    referenced_tables = resolver.getReferencedTables(fileEntries[2]);
 				    		    
 					// create new linked tables (central plus referenced) 
 					if (lines !=0){
-						createLinkedTables(source_schema,list,last_type,last_table,centralExtension);
-						list.clear();
+						LinkedTables lt = createLinkedTables(datasetName,referencedList,last_type,last_table,centralExtension);
+						linkedList.add(lt);
+						referencedList.clear();
 					}
 				}
 				
@@ -260,14 +291,16 @@ public class MartBuilder {
 					last_table = null;
 					last_type = null;
 					
-					if(dataset_counter !=0){
+				if(dataset_counter !=0){
+					
+					
+						dataset = new Dataset(linkedList,targetSchemaName,adaptor);
+				         dataset.name=fileEntries[0];
+						mart.add(dataset);	
 						
-						target_schema = new TargetSchema(source_schema,targetSchemaName);
-				
-						schemas.add(target_schema);	
-						source_schema = new SourceSchema(config);
 						
-						source_schema.datasetName=fileEntries[0];
+						//source_schema = new SourceSchema(config);
+						//source_schema.datasetName=fileEntries[0];
 						
 					}
 					
@@ -279,14 +312,14 @@ public class MartBuilder {
 					
 					Table ref_table = referenced_tables[i];
 					
-					if(ref_table.getName().toUpperCase().equals(fileEntries[4])){
-						if (!fileEntries[5].toUpperCase().equals("S")){
-							ref_table.setCardinality(fileEntries[5]);
-							if (!fileEntries[7].equals("null")) ref_table.extension = fileEntries[7];
-							if (fileEntries[5].equals("1n")){
+					if(ref_table.getName().toUpperCase().equals(fileEntries[5]) & ref_table.key.equals(fileEntries[4])){
+						if (!fileEntries[6].toUpperCase().equals("S")){
+							ref_table.setCardinality(fileEntries[6]);
+							if (!fileEntries[8].equals("null")) ref_table.extension = fileEntries[8];
+							if (fileEntries[6].equals("1n")){
 								ref_table.skip= true;
 							}
-							list.add(ref_table);
+							referencedList.add(ref_table);
 						}
 					}
 				}	
@@ -294,18 +327,21 @@ public class MartBuilder {
 				last_table=fileEntries[2];
 				last_type=fileEntries[1];
 				last_dataset=fileEntries[0];
-				if (!fileEntries[6].equals("null")) centralExtension = fileEntries[6];
+				if (!fileEntries[7].equals("null")) centralExtension = fileEntries[7];
 				lines++;
 			}	
 			
 			
 			in.close();
 			// get last linked tables
-			createLinkedTables(source_schema,list,last_type,last_table,centralExtension);
-			target_schema = new TargetSchema(source_schema,targetSchemaName);
 			
 			
-			schemas.add(target_schema);
+			LinkedTables lt= createLinkedTables(datasetName,referencedList,last_type,last_table,centralExtension);
+			linkedList.add(lt);
+			dataset = new Dataset(linkedList,targetSchemaName, adaptor);
+			
+			
+			mart.add(dataset);
 			
 			
 		} catch (FileNotFoundException e) {
@@ -317,12 +353,27 @@ public class MartBuilder {
 	
 	
 	
-	private static void createLinkedTables(SourceSchema source_schema,ArrayList list,String last_type, String last_table,String extension){
+	private static LinkedTables createLinkedTables(String datasetName,ArrayList referencedList,String last_type, String last_table,String extension){
 		
-		Table [] b = new Table [list.size()];	
-		LinkedTables linked_tables= source_schema.createLinkedTables(last_table,(Table []) list.toArray(b));
+		Table [] b = new Table [referencedList.size()];	
 		
-		StringBuffer final_table = new StringBuffer(source_schema.datasetName + "__"+last_table+"__");
+		//ArrayList linkedList = new ArrayList();
+		
+		//LinkedTables linked_tables= createLinkedTables(last_table,(Table []) list.toArray(b));
+		
+		
+		
+		Table central = resolver.getCentralTable(last_table);
+		
+		LinkedTables linked_tables = new LinkedTables();
+		linked_tables.setCentralTable(central);
+		linked_tables.setReferencedTables((Table []) referencedList.toArray(b));
+		
+		
+		
+		
+		
+		StringBuffer final_table = new StringBuffer(datasetName + "__"+last_table+"__");
 		if (last_type.toUpperCase().equals("M")){
 			
 			linked_tables.final_table_type ="MAIN";
@@ -331,9 +382,16 @@ public class MartBuilder {
 			linked_tables.final_table_type = "DM";
 			linked_tables.final_table_name= final_table.append("dm").toString();
 		}
-		linked_tables.datasetName=source_schema.datasetName;
+		linked_tables.datasetName=datasetName;
 		linked_tables.centralTable.extension=extension;
-		source_schema.addLinkedTables(linked_tables);
+		
+		//linkedList.add(linked_tables);
+		//LinkedTables[] c = new LinkedTables[linkedList.size()];
+		//return (LinkedTables[]) linkedList.toArray(c);
+		
+		return linked_tables;
+		
+		//addLinkedTables(linked_tables);
 	}
 	
 	
@@ -351,12 +409,12 @@ public class MartBuilder {
 			e1.printStackTrace();
 		}
 		
-		SourceSchema source_schema = new SourceSchema(config);
+		//SourceSchema source_schema = new SourceSchema(config);
 		
-		Table [] exp_tables = source_schema.getExportedKeyTables(table_name);
+		Table [] exp_tables = resolver.getExportedKeyTables(table_name);
 		write (out,exp_tables,table_name, table_type,dataset,extension,"exported");
 		
-		Table [] imp_tables = source_schema.getImportedKeyTables(table_name);
+		Table [] imp_tables = resolver.getImportedKeyTables(table_name);
 		write (out,imp_tables,table_name, table_type,dataset,extension,"imported");
 		
 		try {
@@ -400,7 +458,7 @@ public class MartBuilder {
 				
 			{
 				
-				cardinality = getUserInput(table_name+": "+type+" "+ref_tab.getName() + card_string);
+				cardinality = getUserInput(table_name+": "+type+" "+ref_tab.key+" "+ref_tab.getName().toUpperCase() + card_string);
 				extension="null";
 				if (!cardinality.equals("s")) extension = getUserInput("Extension: ");
 				if (extension == null || extension.equals("")) extension="null";
@@ -408,16 +466,13 @@ public class MartBuilder {
 			}
 			
 			try {
-				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.key+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	
 		}
 			
 	}
-	
-	
-	
 	
 	
 }

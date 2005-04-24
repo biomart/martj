@@ -15,17 +15,22 @@ import java.util.*;
  */
 
 
-public class TargetSchema {
+public class Dataset {
 	
 	ArrayList transformations = new ArrayList();
-	SourceSchema sourceSchema;
 	String name;
 	String transformationKey;
+	private LinkedTables [] linkedTables;
+	private DBAdaptor adaptor;
 	
-	public TargetSchema (SourceSchema source_schema, String name){
+	public Dataset (ArrayList linkedList, String name, DBAdaptor adaptor){
 		
-		this.sourceSchema=source_schema;
+		LinkedTables[] c = new LinkedTables[linkedList.size()];
+		LinkedTables [] linkies= (LinkedTables[]) linkedList.toArray(c);
+		
+		this.linkedTables=linkies;
 		this.name=name;
+		this.adaptor=adaptor;
 		createTransformationsForLinked();
 		createTransformationsForMains();
 		//createTransformationsForCentralFilters();
@@ -36,13 +41,13 @@ public class TargetSchema {
 	
 	private void createTransformationsForLinked(){
 		
-		for (int j=0;j<sourceSchema.getLinkedTables().length;j++){
+		for (int j=0;j<linkedTables.length;j++){
 			
-			LinkedTables linked = sourceSchema.getLinkedTables()[j];
+			LinkedTables linked = linkedTables[j];
 		    Table [] referenced_tables = linked.getReferencedTables();
 			
 		    Transformation transformation = new Transformation();
-		    transformation.adaptor=sourceSchema.adaptor;
+		    transformation.adaptor=adaptor;
 		    transformation.targetName=name;
 			transformation.final_table_type=linked.final_table_type;
 			transformation.final_table_name=linked.final_table_name;
@@ -86,7 +91,7 @@ public class TargetSchema {
             
             
             Transformation transformation = new Transformation();
-            transformation.adaptor=sourceSchema.adaptor;
+            transformation.adaptor=adaptor;
             transformation.targetName=name;
             transformation.final_table_name =ref.getName();
             
@@ -114,6 +119,7 @@ public class TargetSchema {
 		
 		for (int j=0;j<central.length;j++){
 			central_tables[j]=central[j].getFinalUnit().getTemp_end();
+			
 		}
 		
 		Transformation [] mains =   getMainTranformationForCentral();
@@ -121,12 +127,14 @@ public class TargetSchema {
 		for (int i=0; i<mains.length;i++){
 			Transformation transformation = new Transformation();
 			
-			transformation.adaptor=sourceSchema.adaptor;
+			transformation.adaptor=adaptor;
 			 transformation.targetName=name;
 			 
 			Table main_table=mains[i].getFinalUnit().getTemp_end();
+			
 			transformation.final_table_name=main_table.getName(); 
 			main_table.setName(main_table.temp_name);
+			
 			transformation.start_table=main_table;
 			transformation.type="central";
 			
@@ -139,7 +147,7 @@ public class TargetSchema {
 	}
 	
 	
-	
+	/**
 	public void addTransformationUnit(String final_table_name,String new_table_name,String final_table_key,String final_table_extension,
 									  String new_table_key, String new_table_extension, String new_table_cardinality){
 		
@@ -160,7 +168,7 @@ public class TargetSchema {
 		
 	}
 	
-	
+	*/
 	
 	
 	

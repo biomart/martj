@@ -239,7 +239,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 	
 		tempsql.append(temp+ "  AS SELECT "+temp_start_col.toString()+ref_table_col.toString()+" FROM "+ 
-				start+ ONE +ref+ TWO +ref+"."+key+" = "+ start+"."+key);
+				start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);
 		
 		
 		if (ref_table.hasExtension()){

@@ -28,9 +28,10 @@ public class Table implements Cloneable {
 
 	public String central_extension;
 
-	//public String type;
 	public String FK;
-
+    public String PK;
+	
+	
 	public boolean skip = false;
 
 	public boolean final_table;

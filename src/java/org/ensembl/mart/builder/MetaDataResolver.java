@@ -119,6 +119,7 @@ public abstract class MetaDataResolver {
 		table.setColumns(getReferencedColumns(table.getName()));
 		
 		table.setKey(getPrimaryKeys(main_name));
+		table.PK=getPrimaryKeys(main_name);
 	
 	/**	
 		try {

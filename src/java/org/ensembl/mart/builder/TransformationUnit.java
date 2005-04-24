@@ -23,6 +23,8 @@ public abstract class TransformationUnit {
 	String cardinality;
 	String final_table_name;
 	String key;
+	String TSKey;
+	String RFKey;
 	String targetSchema;
 	DBAdaptor adaptor;
 	boolean is_extension=false;
@@ -56,12 +58,15 @@ public abstract class TransformationUnit {
 		
 		String sql = "";
 		
+		// this does not work for the dm final key - it needs a global key refering
+		// to the main table not a local transformation key
+		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+temp_start.key+");";
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+TSKey+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+TSKey+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+TSKey+");";	
 		
 		return sql;
 		
