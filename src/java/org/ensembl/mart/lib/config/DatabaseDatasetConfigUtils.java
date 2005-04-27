@@ -68,6 +68,8 @@ public class DatabaseDatasetConfigUtils {
   
   private final String VISIBLESQL = " where visible = 1";
   private final String GETALLNAMESQL = "select internalname, displayName, dataset, description, MessageDigest, type, visible, version from ";
+  private final String GETDATASETVERSION = "select version from meta_release where dataset = ?";
+  private final String GETLINKVERSION = "select link_version from meta_release where dataset = ?";   
   private final String GETANYNAMESWHERINAME = " where internalName = ? and dataset = ?";
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
@@ -106,6 +108,7 @@ public class DatabaseDatasetConfigUtils {
 
   private DatasetConfigXMLUtils dscutils = null;
   private DetailedDataSource dsource = null;
+  //private Connection connection = null;
 
   /**
    * Constructor for a DatabaseDatasetConfigUtils object to obtain DatasetConfig related information
@@ -113,9 +116,10 @@ public class DatabaseDatasetConfigUtils {
    * @param dscutils - DatasetConfigXMLUtils object for parsing XML
    * @param dsource - DetailedDataSource object with connection to a Mart Database host.
    */
-  public DatabaseDatasetConfigUtils(DatasetConfigXMLUtils dscutils, DetailedDataSource dsource) {
+  public DatabaseDatasetConfigUtils(DatasetConfigXMLUtils dscutils, DetailedDataSource dsource){
     this.dscutils = dscutils;
     this.dsource = dsource;
+    //this.connection = dsource.getConnection();
     
   }
 
@@ -187,6 +191,76 @@ public class DatabaseDatasetConfigUtils {
     }
 
     return ret;
+  }
+  
+  public String getNewVersion(String dataset) throws SQLException{
+	Connection conn = null;
+	String version = null;
+	try {
+	  conn = dsource.getConnection();
+	  PreparedStatement ps = conn.prepareStatement(GETDATASETVERSION);
+	  ps.setString(1, dataset);
+	  ResultSet rs = ps.executeQuery();
+	  rs.next();
+	  version = rs.getString(1);
+	  rs.close();
+	} catch (SQLException e) {
+	  
+		System.out.println("Include a meta_release table entry for dataset " +
+		dataset + " if you want auto version updating");
+	} 	   
+	finally {
+	  //this throws any SQLException, but always closes the connection
+	  DetailedDataSource.close(conn);
+	}
+
+	return version;
+  }
+  
+  public boolean updateLinkVersions(DatasetConfig dsv) throws SQLException{
+	Connection conn = null;
+	boolean updated = false;
+	String linkVersion = null;
+	try {
+	  conn = dsource.getConnection();
+	  PreparedStatement ps = conn.prepareStatement(GETLINKVERSION);
+	  ps.setString(1, dsv.getDataset());
+	  ResultSet rs = ps.executeQuery();
+	  rs.next();
+	  linkVersion = rs.getString(1);
+	  rs.close();
+	  Importable[] imps = dsv.getImportables();
+	  for (int i = 0; i < imps.length; i++){
+	  		String currentLinkVersion = imps[i].getLinkVersion();
+	  		if (currentLinkVersion != null &&
+	  			currentLinkVersion != "" &&
+	  			!currentLinkVersion.equals(linkVersion)){
+	  				imps[i].setLinkVersion(linkVersion);
+	  				updated = true;
+	  			}
+	  	
+	  }
+	  Exportable[] exps = dsv.getExportables();
+	  for (int i = 0; i < exps.length; i++){
+			String currentLinkVersion = exps[i].getLinkVersion();
+			if (currentLinkVersion != null &&
+				currentLinkVersion != "" &&
+				!currentLinkVersion.equals(linkVersion)){
+					exps[i].setLinkVersion(linkVersion);
+					updated = true;
+				}
+	  	
+	  }	  
+	} catch (SQLException e) {
+			  System.out.println("Include a meta_release table entry for dataset" +
+			  dsv.getDataset() + "if you want auto link version updating");
+	} 	   
+	finally {
+	  //this throws any SQLException, but always closes the connection
+	  DetailedDataSource.close(conn);
+	}
+
+	return updated;
   }
 
   /**
@@ -333,7 +407,7 @@ public class DatabaseDatasetConfigUtils {
 						// do options as well
 						Option[] ops = testAD.getOptions();
 						if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
-						  System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
+						  //System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
 						  for (int j = 0; j < ops.length; j++){
 							  Option op = ops[j];
 							  if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
@@ -1151,7 +1225,7 @@ public class DatabaseDatasetConfigUtils {
     throws ConfigurationException {
   	
   	// fully qualify for 'non-public' postgres schemas
-    System.out.println("DISPLAY NAME" + displayName);
+    //System.out.println("DISPLAY NAME" + displayName);
     String existSQL;
     if (displayName != null)
     	existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
@@ -1352,6 +1426,10 @@ public class DatabaseDatasetConfigUtils {
   	
 
     DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
+    Connection conn = dsource.getConnection();
+    // create the connection object
+    //connection = dsource.getConnection();
+    
     //want to copy existing Elements to the new Object as is
     String dset = validatedDatasetConfig.getDataset();
     boolean hasBrokenStars = false;
@@ -1360,7 +1438,7 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = starbases.length; i < n; i++) {
       String starbase = starbases[i];
-      String validatedStar = getValidatedStarBase(schema, catalog, starbase);
+      String validatedStar = getValidatedStarBase(schema, catalog, starbase, conn);
 
       if (!validatedStar.equals(starbase)) {
         hasBrokenStars = true;
@@ -1381,7 +1459,7 @@ public class DatabaseDatasetConfigUtils {
 
     for (int i = 0, n = pkeys.length; i < n; i++) {
       String pkey = pkeys[i];
-      String validatedKey = getValidatedPrimaryKey(schema, catalog, pkey);
+      String validatedKey = getValidatedPrimaryKey(schema, catalog, pkey, conn);
 
       if (!validatedKey.equals(pkey)) {
         hasBrokenPKeys = true;
@@ -1405,7 +1483,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap brokenOptions = new HashMap();
 
     for (int i = 0, n = options.length; i < n; i++) {
-      Option validatedOption = getValidatedOption(schema, catalog, options[i], dset);
+      Option validatedOption = getValidatedOption(schema, catalog, options[i], dset, conn);
 
       if (validatedOption.isBroken()) {
         hasBrokenOptions = true;
@@ -1430,7 +1508,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap brokenAPages = new HashMap();
 
     for (int i = 0, n = apages.length; i < n; i++) {
-      AttributePage validatedPage = getValidatedAttributePage(apages[i], dset);
+      AttributePage validatedPage = getValidatedAttributePage(apages[i], dset, conn);
 
       if (validatedPage.isBroken()) {
         hasBrokenAttributePages = true;
@@ -1454,7 +1532,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap brokenFPages = new HashMap();
     FilterPage[] allPages = dsv.getFilterPages();
     for (int i = 0, n = allPages.length; i < n; i++) {
-      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig);
+      FilterPage validatedPage = getValidatedFilterPage(allPages[i], dset,validatedDatasetConfig, conn);
 
       if (validatedPage.isBroken()) {
         hasBrokenFilterPages = true;
@@ -1472,7 +1550,7 @@ public class DatabaseDatasetConfigUtils {
         validatedDatasetConfig.insertFilterPage(position.intValue(), brokenPage);
       }
     }
-
+	DetailedDataSource.close(conn);
     return validatedDatasetConfig;
   }
 
@@ -1483,15 +1561,17 @@ public class DatabaseDatasetConfigUtils {
     String brokenElements = "";
 	String catalog="";
 	String schema = getSchema();
-	DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
+	Connection conn = dsource.getConnection();
+	//DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
 	//want to copy existing Elements to the new Object as is
 	
 	//boolean hasBrokenAttributePages = false;
 	List ads = dsv.getAllAttributeDescriptions();
 	for (int i = 0, n = ads.size(); i < n; i++) {
-	  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, (AttributeDescription) ads.get(i), validatedDatasetConfig.getDataset());
-	  if (validatedAD.getHidden() != null && validatedAD.getHidden().equals("true"))
-			  continue;	
+	  AttributeDescription testAD = (AttributeDescription) ads.get(i);	
+	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
+		  continue;		
+	  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn);
 	  if (validatedAD.isBroken()) {
 	  	brokenElements = brokenElements + "Attribute " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 	  }
@@ -1504,28 +1584,29 @@ public class DatabaseDatasetConfigUtils {
 	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
 		continue;	
 	  
-	  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, validatedDatasetConfig.getDataset(), validatedDatasetConfig);
+	  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv, conn);
 	  if (validatedAD.isBroken()) {
 		brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 	  }
 	}
-
+	//System.out.println("BROKEN ELEMENTS " + brokenElements);
+	DetailedDataSource.close(conn);
 	return brokenElements;
   }  
      
      
      
-  private String getValidatedStarBase(String schema, String catalog, String starbase) throws SQLException {
+  private String getValidatedStarBase(String schema, String catalog, String starbase, Connection conn) throws SQLException {
     String validatedStarBase = new String(starbase);
 
     //String table = starbase + "%" + MAINTABLESUFFIX;
     String table = starbase;
     boolean isBroken = true;
 
-    Connection conn = null;
+    //Connection conn = null;
 
     try {
-      conn = dsource.getConnection();
+      //conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getTables(catalog, schema, table, null);
       while (rs.next()) {
         String thisTable = rs.getString(3);
@@ -1538,7 +1619,7 @@ public class DatabaseDatasetConfigUtils {
         }
       }
     } finally {
-      DetailedDataSource.close(conn);
+      //DetailedDataSource.close(conn);
     }
 
     if (isBroken) {
@@ -1547,7 +1628,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedStarBase;
   }
 
-  private String getValidatedPrimaryKey(String schema, String catalog, String primaryKey) throws SQLException {
+  private String getValidatedPrimaryKey(String schema, String catalog, String primaryKey, Connection conn) throws SQLException {
     String validatedPrimaryKey = new String(primaryKey);
 
     String tablePattern = "%" + MAINTABLESUFFIX;
@@ -1557,10 +1638,10 @@ public class DatabaseDatasetConfigUtils {
  
     boolean isBroken = true;
 
-    Connection conn = null;
+    //Connection conn = null;
 
     try {
-      conn = dsource.getConnection();
+      //conn = dsource.getConnection();
       ResultSet columns = conn.getMetaData().getColumns(catalog, schema, tablePattern, primaryKey);
       while (columns.next()) {
         String thisColumn = columns.getString(4);
@@ -1573,7 +1654,7 @@ public class DatabaseDatasetConfigUtils {
         }
       }
     } finally {
-      DetailedDataSource.close(conn);
+      //DetailedDataSource.close(conn);
     }
     if (isBroken)
       validatedPrimaryKey += DOESNTEXISTSUFFIX;
@@ -1581,7 +1662,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedPrimaryKey;
   }
 
-  private FilterPage getValidatedFilterPage(FilterPage page, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
+  private FilterPage getValidatedFilterPage(FilterPage page, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
     FilterPage validatedPage = new FilterPage(page);
 
     boolean hasBrokenGroups = false;
@@ -1595,7 +1676,7 @@ public class DatabaseDatasetConfigUtils {
         //FilterGroup gr = (FilterGroup) group;
         //if ((gr.getInternalName().equals("expression")))
         //	continue;// hack for expression - breaks current code - needs fixing
-        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset, dsv);
+        FilterGroup validatedGroup = getValidatedFilterGroup((FilterGroup) group, dset, dsv, conn);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -1624,7 +1705,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedPage;
   }
 
-  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
+  private FilterGroup getValidatedFilterGroup(FilterGroup group, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
     FilterGroup validatedGroup = new FilterGroup(group);
 
     FilterCollection[] collections = validatedGroup.getFilterCollections();
@@ -1633,7 +1714,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap brokenCollections = new HashMap();
 
     for (int i = 0, n = collections.length; i < n; i++) {
-      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset, dsv);
+      FilterCollection validatedCollection = getValidatedFilterCollection(collections[i], dset, dsv, conn);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -1657,7 +1738,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedGroup;
   }
 
-  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv) throws SQLException, ConfigurationException {
+  private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
     
     String catalog="";
     String schema = getSchema();
@@ -1676,7 +1757,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (element instanceof FilterDescription) {
         FilterDescription validatedFilter =
-          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset, dsv);
+          getValidatedFilterDescription(schema, catalog, (FilterDescription) element, dset, dsv, conn);
         if (validatedFilter.isBroken()) {
 
           filtersValid = false;
@@ -1710,7 +1791,8 @@ public class DatabaseDatasetConfigUtils {
     String catalog,
     FilterDescription filter,
     String dset,
-	DatasetConfig dsv)
+	DatasetConfig dsv,
+	Connection conn)
     throws SQLException, ConfigurationException {
     FilterDescription validatedFilter = new FilterDescription(filter);
     
@@ -1729,11 +1811,12 @@ public class DatabaseDatasetConfigUtils {
 
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
-	  System.out.println(field + "\t" + tableConstraint + "\t" + table); 	      
+	  //System.out.println("!!!" + field + "\t" + tableConstraint + "\t" + table); 
+	  	      
 	  if(dsource.getDatabaseType().equals("oracle")) table=table.toUpperCase();
-      
-      Connection conn = dsource.getConnection();
-      
+      //System.out.println("WAITING FOR CONNECTION");
+      //Connection conn = dsource.getConnection();
+	  //System.out.println("GOT CONNECTION");
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
@@ -1747,10 +1830,10 @@ public class DatabaseDatasetConfigUtils {
           break;
         }
       }
-      conn.close();
+      //conn.close();
+	  //DetailedDataSource.close(conn);
       if (!(fieldValid) || !(tableValid)) {
-      	System.out.println("HIDING IT " + fieldValid + "\t" + tableValid);
-        validatedFilter.setHidden("true");
+      	validatedFilter.setHidden("true");
 
       } else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")) {
 
@@ -1766,7 +1849,6 @@ public class DatabaseDatasetConfigUtils {
 	  
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
-
       Option[] options = validatedFilter.getOptions();      
       if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
@@ -1853,7 +1935,6 @@ public class DatabaseDatasetConfigUtils {
 						otherDataset = getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
 	
 						if (otherDataset == null){
-							System.out.println(otherFilters[p].split("\\.")[0] + "does not exist !!!");
 							continue;
 						}
 						dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
@@ -1875,8 +1956,6 @@ public class DatabaseDatasetConfigUtils {
 							pushTableName = mains[0];
 					}
 					Option[] options2;
-					System.out.println(otherDataset.getDataset());
-					System.out.println(otherDatasetFilter1);
 					
 					String pafield = otherDataset.getFilterDescriptionByInternalName(otherDatasetFilter1).getField(); 
 												
@@ -2008,25 +2087,25 @@ public class DatabaseDatasetConfigUtils {
 					}
 				}
 			}// end of add push actions code
-
 		    //validatedFilter.setOptionsBroken();// redone from scratch so not broken	
 		    return validatedFilter;      	
       }// END OF ADD VALUE OPTIONS
       
-      // VALIDATE "FILTER-TYPE" OPTIONS      
-	  Connection conn = dsource.getConnection();
+      // VALIDATE "FILTER-TYPE" OPTIONS       
+	  //Connection conn = dsource.getConnection();
       for (int j = 0; j < options.length; j++) {
-        	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset);
+        	Option validatedOption = getValidatedOption(schema, catalog, options[j], dset, conn);
         	if (validatedOption.isBroken()) {
           	optionsValid = false;
           	brokenOptions.put(new Integer(j), validatedOption);
         	}
       }
-	  conn.close();
+	  //conn.close();
+	  //DetailedDataSource.close(conn);
       if (!optionsValid) {
         validatedFilter.setOptionsBroken();
 
-        for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {
+        for (Iterator iter = brokenOptions.keySet().iterator(); iter.hasNext();) {	
           Integer position = (Integer) iter.next();
           Option brokenOption = (Option) brokenOptions.get(position);
           validatedFilter.removeOption(options[position.intValue()]);
@@ -2036,7 +2115,7 @@ public class DatabaseDatasetConfigUtils {
       return validatedFilter;
   }	
 
-  private Option getValidatedOption(String schema, String catalog, Option option, String dset) throws SQLException {
+  private Option getValidatedOption(String schema, String catalog, Option option, String dset, Connection conn) throws SQLException {
     Option validatedOption = new Option(option);
     // hack to ignore the expression drop down menu
     if (validatedOption.getType().equals("tree"))
@@ -2058,7 +2137,7 @@ public class DatabaseDatasetConfigUtils {
           //System.out.println("databaseType() "+dsource.getDatabaseType());          
 
      
-      Connection conn = dsource.getConnection();
+      //Connection conn = dsource.getConnection();
       ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
@@ -2071,8 +2150,8 @@ public class DatabaseDatasetConfigUtils {
         if (valid[0] && valid[1])
           break;
       }
-      conn.close();
-
+      //conn.close();
+	  //DetailedDataSource.close(conn);
       if (!(fieldValid) || !(tableValid)) {
         //System.out.println("CHNAGING OPTION\t" + validatedOption);
         validatedOption.setHidden("true");
@@ -2096,7 +2175,7 @@ public class DatabaseDatasetConfigUtils {
 
       Option[] options = validatedOption.getOptions();
       for (int j = 0, m = options.length; j < m; j++) {
-        Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset);
+        Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn);
         if (validatedSubOption.isBroken()) {
           optionsValid = false;
           brokenOptions.put(new Integer(j), validatedSubOption);
@@ -2122,7 +2201,7 @@ public class DatabaseDatasetConfigUtils {
       HashMap brokenPushActions = new HashMap();
       PushAction[] pas = validatedOption.getPushActions();
       for (int j = 0, m = pas.length; j < m; j++) {
-        PushAction validatedAction = getValidatedPushAction(schema, catalog, pas[j], dset);
+        PushAction validatedAction = getValidatedPushAction(schema, catalog, pas[j], dset, conn);
         if (validatedAction.isBroken()) {
           pushActionsValid = false;
           brokenPushActions.put(new Integer(j), validatedAction);
@@ -2146,7 +2225,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedOption;
   }
 
-  private PushAction getValidatedPushAction(String schema, String catalog, PushAction action, String dset)
+  private PushAction getValidatedPushAction(String schema, String catalog, PushAction action, String dset, Connection conn)
     throws SQLException {
     PushAction validatedPushAction = new PushAction(action);
 
@@ -2161,7 +2240,7 @@ public class DatabaseDatasetConfigUtils {
     
     
     for (int j = 0, m = options.length; j < m; j++) {
-    	Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset);
+    	Option validatedSubOption = getValidatedOption(schema, catalog, options[j], dset, conn);
       	if (validatedSubOption.isBroken()) {
         	optionsValid = false;
         brokenOptions.put(new Integer(j), validatedSubOption);
@@ -2183,7 +2262,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedPushAction;
   }
 
-  private AttributePage getValidatedAttributePage(AttributePage page, String dset) throws SQLException {
+  private AttributePage getValidatedAttributePage(AttributePage page, String dset, Connection conn) throws SQLException {
     AttributePage validatedPage = new AttributePage(page);
 
     boolean hasBrokenGroups = false;
@@ -2194,7 +2273,7 @@ public class DatabaseDatasetConfigUtils {
       Object group = allGroups.get(i);
 
       if (group instanceof AttributeGroup) {
-        AttributeGroup validatedGroup = getValidatedAttributeGroup((AttributeGroup) group, dset);
+        AttributeGroup validatedGroup = getValidatedAttributeGroup((AttributeGroup) group, dset, conn);
 
         if (validatedGroup.isBroken()) {
           hasBrokenGroups = true;
@@ -2225,7 +2304,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedPage;
   }
 
-  private AttributeGroup getValidatedAttributeGroup(AttributeGroup group, String dset) throws SQLException {
+  private AttributeGroup getValidatedAttributeGroup(AttributeGroup group, String dset, Connection conn) throws SQLException {
     AttributeGroup validatedGroup = new AttributeGroup(group);
 
     boolean hasBrokenCollections = false;
@@ -2233,7 +2312,7 @@ public class DatabaseDatasetConfigUtils {
 
     AttributeCollection[] collections = group.getAttributeCollections();
     for (int i = 0, n = collections.length; i < n; i++) {
-      AttributeCollection validatedCollection = getValidatedAttributeCollection(collections[i], dset);
+      AttributeCollection validatedCollection = getValidatedAttributeCollection(collections[i], dset, conn);
 
       if (validatedCollection.isBroken()) {
         hasBrokenCollections = true;
@@ -2256,7 +2335,7 @@ public class DatabaseDatasetConfigUtils {
     return validatedGroup;
   }
 
-  private AttributeCollection getValidatedAttributeCollection(AttributeCollection collection, String dset)
+  private AttributeCollection getValidatedAttributeCollection(AttributeCollection collection, String dset, Connection conn)
     throws SQLException {
     
     String catalog = "";
@@ -2273,7 +2352,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (attribute instanceof AttributeDescription) {
         AttributeDescription validatedAttributeDescription =
-          getValidatedAttributeDescription(schema, catalog, (AttributeDescription) attribute, dset);
+          getValidatedAttributeDescription(schema, catalog, (AttributeDescription) attribute, dset, conn);
 
         if (validatedAttributeDescription.isBroken()) {
           hasBrokenAttributes = true;
@@ -2307,7 +2386,8 @@ public class DatabaseDatasetConfigUtils {
     String schema,
     String catalog,
     AttributeDescription description,
-    String dset)
+    String dset,
+    Connection conn)
     throws SQLException {
     AttributeDescription validatedAttribute = new AttributeDescription(description);
 
@@ -2339,7 +2419,7 @@ public class DatabaseDatasetConfigUtils {
 
 
  
-    Connection conn = dsource.getConnection();
+    //Connection conn = dsource.getConnection();
     catalog=null;
     //schema=null;
     //System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
@@ -2362,7 +2442,8 @@ public class DatabaseDatasetConfigUtils {
       }
     }
 
-    conn.close();
+    //DetailedDataSource.close(conn);
+    
     if (!(fieldValid) || !(tableValid)) {
       validatedAttribute.setHidden("true");
 
@@ -2804,8 +2885,8 @@ public class DatabaseDatasetConfigUtils {
       }
     }
     rset.close();
-    conn.close();
-
+    DetailedDataSource.close(conn);
+	
     ColumnDescription[] cols = new ColumnDescription[columns.size()];
     columns.toArray(cols);
 
@@ -3253,7 +3334,7 @@ public class DatabaseDatasetConfigUtils {
 //System.out.println("Going to null ");
               }
               else { // update options if has any
-                System.out.println(currFilt.getInternalName());
+                //System.out.println(currFilt.getInternalName());
               	//if (currFilt.hasOptions())
                   	//updateDropDown(dsv, currFilt);// these are created from scratch during validation now 
               }
@@ -3469,9 +3550,9 @@ public class DatabaseDatasetConfigUtils {
         for (int m = 0; m < pas2.length; m++) {
           String ref2 = pas2[m].getRef();
           FilterDescription fd3 = dsConfig.getFilterDescriptionByInternalName(ref2);
-          System.out.println("LOOKING FOR " + ref2 + " IN " + dsConfig.getDataset());
+          //System.out.println("LOOKING FOR " + ref2 + " IN " + dsConfig.getDataset());
           if (fd3 == null){
-          	System.out.println("NOT FOUND");
+          	//System.out.println("NOT FOUND");
           	continue;
           }
           updatePushAction(dsConfig, newPa, fd3,"");
@@ -3482,7 +3563,7 @@ public class DatabaseDatasetConfigUtils {
 
   private void updatePushAction(DatasetConfig dsConfig, BaseConfigurationObject bo, FilterDescription fd2, String orderBy)
     throws ConfigurationException, SQLException {
-    System.out.println(fd2);	
+    //System.out.println(fd2);	
     fd2.setType("drop_down_basic_filter");
 
     String pushField = fd2.getField();
@@ -3562,7 +3643,9 @@ public class DatabaseDatasetConfigUtils {
 		att.setInternalName(columnName.toLowerCase());	
 	}
     
-    att.setDisplayName(columnName.replaceAll("_", " "));
+	String displayName = columnName.replaceAll("_", " ");
+	att.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
+    //att.setDisplayName(columnName.replaceAll("_", " "));
     att.setKey(joinKey);
     att.setTableConstraint(tableName);
     
@@ -3645,8 +3728,8 @@ public class DatabaseDatasetConfigUtils {
         filt.setQualifier(DEFAULTQUALIFIER);
         filt.setLegalQualifiers(DEFAULTLEGALQUALIFIERS);
       }
-      
-      filt.setDisplayName(descriptiveName.replaceAll("_", " "));
+      String displayName = descriptiveName.replaceAll("_", " ");
+      filt.setDisplayName(displayName.substring(0,1).toUpperCase() + displayName.substring(1));
       filt.setTableConstraint(tableName);
       filt.setKey(joinKey);
 
@@ -3711,6 +3794,7 @@ public class DatabaseDatasetConfigUtils {
 
     Option[] retOptions = new Option[options.size()];
     options.toArray(retOptions);
+    DetailedDataSource.close(conn);
     return retOptions;
   }
 
@@ -3754,7 +3838,8 @@ public class DatabaseDatasetConfigUtils {
       op.setSelectable("true");
       options.add(op);
     }
-    conn.close();
+    //conn.close();
+	DetailedDataSource.close(conn);
     Option[] retOptions = new Option[options.size()];
     options.toArray(retOptions);
     return retOptions;

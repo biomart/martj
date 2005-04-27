@@ -57,8 +57,8 @@ import org.ensembl.mart.explorer.Feedback;
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.lib.config.AttributePage;
-import org.ensembl.mart.lib.config.Exportable;
-import org.ensembl.mart.lib.config.Importable;
+//import org.ensembl.mart.lib.config.Exportable;
+//import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.Option;
@@ -71,6 +71,7 @@ import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfigIterator;
 import org.ensembl.mart.lib.config.DatasetConfigXMLUtils;
 import org.ensembl.mart.lib.config.URLDSConfigAdaptor;
+//import org.jdom.Document;
 
 
 
@@ -1071,6 +1072,16 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
 				// update it
 				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+				
+				// test if version need updating and newVersion++ if so
+				String datasetVersion = dsv.getVersion();
+				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
+				if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
+					dsv.setVersion(newDatasetVersion);
+				}
+				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
+				dbutils.updateLinkVersions(dsv);					
+				
 				dsv = dbutils.getNewFiltsAtts(database, dsv);
 				// export it	
 				dbutils.storeDatasetConfiguration(
@@ -1119,8 +1130,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  String duplicationString = "";
 		  String brokenString = "";
 		  String spaceErrors = "";
+		  int newVersion;
 		  // cycle through all datasets for the database
 		  String[] datasets = dbutils.getAllDatasetNames(user);
+		  DSConfigAdaptor adaptor;
+		  DatasetConfig dsv, odsv, adsv;
 		  for (int i = 0; i < datasets.length; i++){
 			String dataset = datasets[i];
 			System.out.println("VALIDATING " + dataset);
@@ -1128,29 +1142,45 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 			for (int j = 0; j < internalNames.length; j++){
 				String internalName = internalNames[j];
 				
-				DatasetConfig odsv = null;
-				DSConfigAdaptor adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				dsv = null;
+				adaptor = new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
 				DatasetConfigIterator configs = adaptor.getDatasetConfigs();
 				while (configs.hasNext()){
 					DatasetConfig lconfig = (DatasetConfig) configs.next();
 					if (lconfig.getDataset().equals(dataset) && lconfig.getInternalName().equals(internalName)){
-							odsv = lconfig;
+							dsv = lconfig;
 							break;
 					}
 				}
 				
-				//DatasetConfig odsv = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, internalName);
+				// alternative to above
+				//Document document = dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, internalName);
+				//dsv = dscutils.getDatasetConfigForDocument( document );
+				//dscutils.loadDatasetConfigWithDocument(dsv, document);
+				 
 				// update it
 				
-				DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
+				dsv = dbutils.getValidatedDatasetConfig(dsv);
 				// keep a string of all the broken filts and atts set to hidden
-				if (brokenString != "") 
-					brokenString = brokenString + dbutils.getBrokenElements(odsv);
-		
 				
+				newVersion = 0;
+				// test if version need updating and newVersion++ if so
+				String datasetVersion = dsv.getVersion();
+				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
+				if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
+					dsv.setVersion(newDatasetVersion);
+					newVersion++;
+				}
+				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
+				if (dbutils.updateLinkVersions(dsv))					
+					newVersion++;
+				
+				//BELOW MAKES NO SENSE
+				//if (brokenString != "") 
+					brokenString = brokenString + dbutils.getBrokenElements(dsv);
+		
 				dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
-
 				// check uniqueness of internal names per page	  
 				AttributePage[] apages = dsv.getAttributePages();
 				AttributePage apage;
@@ -1232,10 +1262,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				}
 	  
 				
-					
 				// display it if new atts or filts for further editing	
-				if ((dsv.getAttributePageByInternalName("new_attributes") != null) ||
-					(dsv.getFilterPageByName("new_filters") != null)){
+				if (newVersion != 0 || (dsv.getAttributePageByInternalName("new_attributes") != null && (dsv.getAttributePageByInternalName("new_attributes").getHidden() == null || dsv.getAttributePageByInternalName("new_attributes").getHidden().equals("false"))) ||
+					(dsv.getFilterPageByName("new_filters") != null && (dsv.getFilterPageByName("new_filters").getHidden() == null || dsv.getFilterPageByName("new_filters").getHidden().equals("false")))){
+				
 					DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
 					frame.setVisible(true);
 					desktop.add(frame);
@@ -1243,7 +1273,13 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						frame.setSelected(true);
 					} catch (java.beans.PropertyVetoException e) {
 					}
-				}			
+				}
+				//else{
+					// make sure dsv memory freed
+				//	DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+				//	frame.dispose();
+				//}
+					
 			}
 		  }
 		  
@@ -1257,7 +1293,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								  + duplicationString, "ERROR", 0);
 				  
 			}
-			if (brokenString != ""){
+			//System.out.println("BROKENSTRING"+brokenString);
+			if (brokenString.matches("\\w+")){
 					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
 											  + brokenString, "ERROR", 0);
 				  
@@ -1298,7 +1335,15 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
         // check for new tables and cols
         dsv = dbutils.getNewFiltsAtts(database, dsv);
-
+		// test if version need updating
+		String datasetVersion = dsv.getVersion();
+		String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
+		if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion))
+			dsv.setVersion(newDatasetVersion);
+							
+		dbutils.updateLinkVersions(dsv);
+		
+		
         DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
         frame.setVisible(true);
         desktop.add(frame);

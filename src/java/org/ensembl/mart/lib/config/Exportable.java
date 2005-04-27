@@ -97,6 +97,14 @@ public class Exportable extends BaseNamedConfigurationObject {
 	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
 	 * @return String internalName of the referring FilterDescription.
 	 */
+	public String getLinkVersion() {
+		return getAttribute(linkVersionKey);
+	}
+
+	/**
+	 * Get the Reference for this Importable.  Refers to the internalName of a FilterDescription to Importable.
+	 * @return String internalName of the referring FilterDescription.
+	 */
 	public String getDefault() {
 		return getAttribute(defaultKey);
 	}
@@ -136,7 +144,15 @@ public class Exportable extends BaseNamedConfigurationObject {
   public void setName(String valueCondition) {
 		setAttribute(nameKey, valueCondition);
   }
-	
+
+
+  /**
+   * Set the internalName of the Filter to Importable when this Filter is used
+   * @param ref -- internalName of the filter to Importable
+   */
+  public void setLinkVersion(String ref) {
+		setAttribute(linkVersionKey, ref);
+  }  	
   /**
 	* Set a value at which the referenced Filter should be Importabled.
 	* @param valueCondition -- value at which the referenced Filter should be Importabled.

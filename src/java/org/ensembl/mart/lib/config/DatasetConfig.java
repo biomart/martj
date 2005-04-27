@@ -317,6 +317,13 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public String getVersion() {
 	return attributes.getProperty(versionKey);
   }
+  
+  /**
+   * @return the prefix for the mart database tables in this Dataset
+   */
+  public void setVersion(String version) {
+	setAttribute(versionKey, version);
+  }
 
   public void setOptionalParameter(String optParam) {
     setAttribute(optParameterKey, optParam);
