@@ -20,7 +20,7 @@ public class Transformation {
 
 	ArrayList unwanted = new ArrayList();
 
-	String dataset;
+	//String dataset;
 
 	String final_table_name;
 
@@ -30,7 +30,8 @@ public class Transformation {
 
 	String column_operations;
 
-	String targetName;
+	String datasetName;
+	String targetSchemaName;
 
 	DBAdaptor adaptor;
 
@@ -55,7 +56,7 @@ public class Transformation {
 						ref_tables[i]);
 				sunit.single = true;
 				sunit.adaptor = adaptor;
-				sunit.targetSchema = targetName;
+				sunit.targetSchema = targetSchemaName;
 				units.add(sunit);
 			}
 
@@ -65,7 +66,7 @@ public class Transformation {
 			dunit.column_operations = column_operations;
 			dunit.final_table_name = final_table_name;
 			dunit.adaptor = adaptor;
-			dunit.targetSchema = targetName;
+			dunit.targetSchema = targetSchemaName;
 			units.add(dunit);
 		}
 	}

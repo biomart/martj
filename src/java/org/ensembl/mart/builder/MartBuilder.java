@@ -81,32 +81,24 @@ public class MartBuilder {
 		} else {
 			file=getUserInput("INPUT CONFIG FILE: ");
 			file = data_dir+file;
-		}	
-	   System.out.println("Transforming your schema ... please wait ....");	
+		}
+		
+		
+		
+		
+		
+       System.out.println("Transforming your schema ... please wait ....");	
 	   readConfiguration(file);
 		
-		
+	   
+	   int ind=0;
+	   
 		for (int m=0;m<mart.size();m++){	
 			dataset = (Dataset) mart.get(m);
 			
-			/**	
-			
-			// final key
-			String key = getUserInput("Final KEY: ");
-			
-			for (int i=0;i<transformations.length; i++){
-				
-				Column [] columns = transformations[i].getFinalUnit().getTemp_end().getColumns();
-				
-				for (int j=0;j<columns.length;j++){
-					if(columns[j].name.equals(key)){
-						columns[j].setAlias(columns[j].name +"_key");
-						System.out.println("resetting "+ columns[j].name);
-						
-					}	
-				}
-			}
-			
+			ind++;
+		
+			/**
 			// Include extensions
 			LinkedTables [] extlinked = s_schema.getLinkedTables();
 			
@@ -135,6 +127,9 @@ public class MartBuilder {
 			// Reset final table names if you want to
 			
 			Transformation [] transformations = dataset.getTransformations();
+		
+			
+			System.out.println("\n\n");
 			
 			for (int i=0;i<transformations.length;i++){
 				
@@ -159,16 +154,18 @@ public class MartBuilder {
 				
 			}
 			
+			//System.out.println("ds name from MBuilder 2 "+dataset.name);
+			
 			dataset.createTransformationsForCentralFilters();
 			
 			
 			Transformation [] final_transformations = dataset.getTransformations();
 			
-			int ind=0;
+			//int ind=0;
 			// Dump to SQL
 			for (int i=0;i<final_transformations.length;i++){
 				
-				ind =10*i;
+				ind =10+ind;
 				
 				TransformationUnit [] units = final_transformations[i].getUnits();
 				
@@ -189,7 +186,7 @@ public class MartBuilder {
 			// now renaming to _key and final indexes
 			for (int i=0;i<final_transformations.length;i++){
 				
-				ind =10*ind;
+				ind =10+ind;
 				
 				TransformationUnit [] units = final_transformations[i].getUnits();
 				
@@ -241,7 +238,7 @@ public class MartBuilder {
 			String line;
 			String last_table = null;
 			String last_type = null;
-			String last_dataset = null;
+			String lastDatasetName = null;
 			Table [] referenced_tables = null;
 			ArrayList referencedList = new ArrayList();
 			int lines =0;
@@ -261,13 +258,14 @@ public class MartBuilder {
 			
 			while((line = in.readLine()) != null){
 				
+				if(line.startsWith("#")) continue;
 				String [] fileEntries = line.split("\t");
-				
-				if (lines == 0) datasetName=fileEntries[0];
 				
 				
 				// if new central table or new dataset 
-				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(last_dataset)){
+				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(lastDatasetName)){
+					
+					datasetName=lastDatasetName;
 					
 					// get referenced tables for a central table	
 				    referenced_tables = resolver.getReferencedTables(fileEntries[2]);
@@ -283,7 +281,7 @@ public class MartBuilder {
 				centralExtension=null;
 				
 				// if new dataset
-				if (!fileEntries[0].equals(last_dataset)){
+				if (!fileEntries[0].equals(lastDatasetName)){
 					
 					lines=0;
 					
@@ -294,16 +292,17 @@ public class MartBuilder {
 				if(dataset_counter !=0){
 					
 					
-						dataset = new Dataset(linkedList,targetSchemaName,adaptor);
-				         dataset.name=fileEntries[0];
+						dataset = new Dataset(linkedList,lastDatasetName,targetSchemaName,adaptor);
+				         //dataset.name=lastDatasetName;
 						mart.add(dataset);	
-						
+					
+						//System.out.println("adding dataset1 "+dataset.name);
 						
 						//source_schema = new SourceSchema(config);
 						//source_schema.datasetName=fileEntries[0];
 						
 					}
-					
+					linkedList.clear();
 					dataset_counter++;
 				}
 				
@@ -330,7 +329,7 @@ public class MartBuilder {
 				
 				last_table=fileEntries[2];
 				last_type=fileEntries[1];
-				last_dataset=fileEntries[0];
+				lastDatasetName=fileEntries[0];
 				//if (!fileEntries[7].equals("null")) centralExtension = fileEntries[7];
 				lines++;
 			}	
@@ -340,10 +339,12 @@ public class MartBuilder {
 			// get last linked tables
 			
 			
-			LinkedTables lt= createLinkedTables(datasetName,referencedList,last_type,last_table,centralExtension);
+			LinkedTables lt= createLinkedTables(lastDatasetName,referencedList,last_type,last_table,centralExtension);
 			linkedList.add(lt);
-			dataset = new Dataset(linkedList,targetSchemaName, adaptor);
 			
+			dataset = new Dataset(linkedList,lastDatasetName,targetSchemaName, adaptor);
+			//dataset.name=lastDatasetName;
+			//System.out.println("adding dataset at the bottom "+dataset.name);
 			
 			mart.add(dataset);
 			
@@ -456,6 +457,8 @@ public class MartBuilder {
 			Table ref_tab=referenced_tables[i];
 			if (centralExtension == null || centralExtension.equals("")) centralExtension="null";
 			
+			
+			
 			while (!(cardinality.equals("11") || cardinality.equals("n1")
 					|| cardinality.equals("0n") || cardinality.equals("1n")
 					|| cardinality.equals("n1r") || cardinality.equals("s")))
@@ -464,10 +467,14 @@ public class MartBuilder {
 				
 				cardinality = getUserInput(table_name+": "+type+" "+ref_tab.key+" "+ref_tab.getName().toUpperCase() + card_string);
 				extension="null";
-				if (!cardinality.equals("s")) extension = getUserInput("Extension: ");
+				if (!cardinality.equals("s") & !cardinality.equals("1n")) extension = getUserInput("Extension: ");
+				//if (!cardinality.equals("s") & !cardinality.equals("1n")) centralExtension = getUserInput("Central Extension: ");
 				if (extension == null || extension.equals("")) extension="null";
+				
 			
 			}
+			
+			if (cardinality.equals("s") || cardinality.equals("1n")) continue;
 			
 			try {
 				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.key+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");

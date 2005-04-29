@@ -48,7 +48,7 @@ public abstract class TransformationUnit {
 		
 		String sql="";
 		if (!temp_end.final_table == true)
-			sql = "drop table "+ targetSchema+"."+temp_end.getName()+";";
+			sql = "DROP TABLE "+ targetSchema+"."+temp_end.getName()+";";
 		return sql;	
 	}
 		

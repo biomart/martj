@@ -19,17 +19,19 @@ public class Dataset {
 	
 	ArrayList transformations = new ArrayList();
 	String name;
+	String targetSchemaName;
 	String transformationKey;
 	private LinkedTables [] linkedTables;
 	private DBAdaptor adaptor;
 	
-	public Dataset (ArrayList linkedList, String name, DBAdaptor adaptor){
+	public Dataset (ArrayList linkedList, String name,String targetSchemaName, DBAdaptor adaptor){
 		
 		LinkedTables[] c = new LinkedTables[linkedList.size()];
 		LinkedTables [] linkies= (LinkedTables[]) linkedList.toArray(c);
 		
 		this.linkedTables=linkies;
 		this.name=name;
+		this.targetSchemaName=targetSchemaName;
 		this.adaptor=adaptor;
 		createTransformationsForLinked();
 		createTransformationsForMains();
@@ -48,7 +50,11 @@ public class Dataset {
 			
 		    Transformation transformation = new Transformation();
 		    transformation.adaptor=adaptor;
-		    transformation.targetName=name;
+		    transformation.datasetName=name;
+		    transformation.targetSchemaName=targetSchemaName;
+		    
+		    //System.out.println("adding name for linked "+name);
+		    
 			transformation.final_table_type=linked.final_table_type;
 			transformation.final_table_name=linked.final_table_name;
 			transformation.start_table=linked.getCentralTable();
@@ -92,7 +98,8 @@ public class Dataset {
             
             Transformation transformation = new Transformation();
             transformation.adaptor=adaptor;
-            transformation.targetName=name;
+            transformation.datasetName=name;
+            transformation.targetSchemaName=targetSchemaName;
             transformation.final_table_name =ref.getName();
             
             ref.setName(ref.temp_name);
@@ -128,7 +135,9 @@ public class Dataset {
 			Transformation transformation = new Transformation();
 			
 			transformation.adaptor=adaptor;
-			 transformation.targetName=name;
+			 transformation.datasetName=name;
+			 transformation.targetSchemaName=targetSchemaName;
+			 //System.out.println("adding name for central "+name);
 			 
 			Table main_table=mains[i].getFinalUnit().getTemp_end();
 			
