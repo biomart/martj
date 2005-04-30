@@ -1,4 +1,4 @@
-/*
+ /*
  * Created on Jun 14, 2004
  *
  * TODO To change the template for this generated file go to
@@ -180,7 +180,7 @@ public class Dataset {
 	*/
 	
 	
-	
+	/**
 	private void transform(){
 		
 		Transformation [] trans = getTransformations();
@@ -189,7 +189,7 @@ public class Dataset {
 			trans[i].transform();
 		}
 	}
-	
+	*/
 	
 		
 	public Transformation [] getTransformations() {
