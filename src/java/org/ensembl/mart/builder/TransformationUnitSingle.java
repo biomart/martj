@@ -38,7 +38,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 		
 		Table new_ref=convertTable(ref_table);
 		Table temp_end = copyTable(new_ref);
-		temp_end.final_table=false;
+		temp_end.isFinalTable=false;
 		this.setTemp_end(temp_end);
 		this.setTemp_start(temp_start);
 		

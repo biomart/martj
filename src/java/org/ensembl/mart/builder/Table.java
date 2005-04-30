@@ -34,7 +34,7 @@ public class Table implements Cloneable {
 	
 	public boolean skip = false;
 
-	public boolean final_table;
+	public boolean isFinalTable;
 
 	private String Name = null;
 

@@ -119,11 +119,6 @@ public class Transformation {
 				temp_start = new_temp_end;
 				//temp_start.setExtension("");
 			}
-
-			
-			
-			
-			
 			
 			boolean final_table = false;
 
@@ -162,32 +157,7 @@ public class Transformation {
 				// These settings maybe problematic but work for the moment
 				// They set keys for the left join boolean join
 				unit.TSKey = temp_start.PK;
-				
 				unit.RFKey = temp_start.PK;
-				
-				
-				//System.out.println("start table "+unit.getTemp_start().getName()+" ref table "+unit.ref_table.getName());
-
-				
-				/**
-				if (unit.ref_table.status.equals("exported")) {
-					unit.TSKey = temp_start.PK;
-					unit.RFKey = unit.ref_table.FK;
-				} else if (unit.ref_table.status.equals("imported")){
-					unit.TSKey = temp_start.FK;
-					unit.RFKey = unit.ref_table.PK;
-
-				} else // for central transformations
-				
-				{
-					unit.TSKey = temp_start.PK;
-					unit.RFKey = unit.ref_table.FK;
-				
-				
-				
-				}
-
-*/
 			}
 
 				
@@ -216,14 +186,17 @@ public class Transformation {
 				unit.temp_end.setName(temp_end_name);
 			}
 
+			/**
 			if (unit.is_extension) {
 				unit.temp_start.key = unit.extension_key;
 			}
 			if (unit.has_extension) {
 				unit.temp_start.extension = unit.central_extension;
 			}
-
-			unit.temp_end.final_table = final_table;
+*/
+			
+			
+			unit.temp_end.isFinalTable = final_table;
 			unit.temp_end.temp_name = temp_end_name;
 
 			if (unit.single) {

@@ -239,6 +239,7 @@ public class MartBuilder {
 			String last_table = null;
 			String last_type = null;
 			String lastDatasetName = null;
+			String lastTrans=null;
 			Table [] referenced_tables = null;
 			ArrayList referencedList = new ArrayList();
 			int lines =0;
@@ -263,7 +264,10 @@ public class MartBuilder {
 				
 				
 				// if new central table or new dataset 
-				if (!fileEntries[2].equals(last_table) || !fileEntries[0].equals(lastDatasetName)){
+				
+				//System.out.println(" "+fileEntries[2]);
+				if (!fileEntries[9].equals(lastTrans) || !fileEntries[0].equals(lastDatasetName)){
+					//if (!fileEntries[9].equals(lastTrans)){
 					
 					datasetName=lastDatasetName;
 					
@@ -288,6 +292,7 @@ public class MartBuilder {
 					
 					last_table = null;
 					last_type = null;
+					lastTrans = null;
 					
 				if(dataset_counter !=0){
 					
@@ -330,6 +335,7 @@ public class MartBuilder {
 				last_table=fileEntries[2];
 				last_type=fileEntries[1];
 				lastDatasetName=fileEntries[0];
+				lastTrans=fileEntries[9];
 				//if (!fileEntries[7].equals("null")) centralExtension = fileEntries[7];
 				lines++;
 			}	

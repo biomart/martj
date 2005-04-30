@@ -17,8 +17,8 @@ public abstract class TransformationUnit {
 	Table temp_end;
 	Table ref_table;
 	String temp_end_name;
-	String central_extension;
-	String extension_key;
+	//String central_extension;
+	//String extension_key;
 	String column_operations;
 	String cardinality;
 	String final_table_name;
@@ -27,11 +27,11 @@ public abstract class TransformationUnit {
 	String RFKey;
 	String targetSchema;
 	DBAdaptor adaptor;
-	boolean is_extension=false;
-	boolean has_extension=false;
-	boolean useFK=false;
+	//boolean is_extension=false;
+	//boolean has_extension=false;
+	//boolean useFK=false;
 	boolean single =false;
-	boolean isFirst;
+	//boolean isFirst;
 	
 	
 	public TransformationUnit(Table ref_table){
@@ -47,7 +47,7 @@ public abstract class TransformationUnit {
 	public String dropTempTable (){
 		
 		String sql="";
-		if (!temp_end.final_table == true)
+		if (!temp_end.isFinalTable == true)
 			sql = "DROP TABLE "+ targetSchema+"."+temp_end.getName()+";";
 		return sql;	
 	}
