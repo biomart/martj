@@ -18,15 +18,15 @@ public class TransformationUnitSingle extends TransformationUnit {
 	public TransformationUnitSingle(Table ref_table){
 		
 		super(ref_table);
-		this.ref_table=ref_table;
+		this.refTable=ref_table;
 	}
 	
 	
 	
 	public String toSQL (){
 		
-		String sql = "CREATE TABLE "+ targetSchema+"."+temp_end.getName()+" AS SELECT DISTINCT "+ temp_start.key+
-		" FROM "+ targetSchema+"."+ref_table.getName()+" WHERE "+ ref_table.key+ " IS NOT NULL;";
+		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.key+
+		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.key+ " IS NOT NULL;";
 
 		return sql;
 		
@@ -36,7 +36,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 	
 	public void transform (Table temp_start, String temp_end_name){
 		
-		Table new_ref=convertTable(ref_table);
+		Table new_ref=convertTable(refTable);
 		Table temp_end = copyTable(new_ref);
 		temp_end.isFinalTable=false;
 		this.setTemp_end(temp_end);
@@ -51,11 +51,19 @@ public class TransformationUnitSingle extends TransformationUnit {
 		Column [] columns = ref_table.getColumns();
 		Column [] newcol = new Column [1];
 		
+		//System.out.println("temp start name "+tempStart.getName());
+		//System.out.println(" temp end name "+ tempEnd.getName());
+		//System.out.println(" ref name "+refTable.getName());
+		
+		String [] tableNameParts=refTable.getName().split("__");
+		
+		//System.out.println("name parts 1 "+tableNameParts[1]);
+		
 		for (int i=0;i<columns.length;i++){
 			if (columns[i].getName().equals(key)){
 				
 				newcol[0]=columns[i];
-				newcol[0].setAlias(newcol[0].original_table+"_bool");
+				newcol[0].setAlias(tableNameParts[1]+"_bool");
 				newcol[0].bool=true;
 				break;
 			}	

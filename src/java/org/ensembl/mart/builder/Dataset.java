@@ -55,11 +55,11 @@ public class Dataset {
 		    
 		    //System.out.println("adding name for linked "+name);
 		    
-			transformation.final_table_type=linked.final_table_type;
-			transformation.final_table_name=linked.final_table_name;
-			transformation.start_table=linked.getCentralTable();
+			transformation.finalTableType=linked.final_table_type;
+			transformation.finalTableName=linked.final_table_name;
+			transformation.startTable=linked.getCentralTable();
 			transformation.type="linked";
-			transformation.final_table_type=linked.final_table_type;
+			transformation.finalTableType=linked.final_table_type;
 			
 			transformation.column_operations="addall";
 			transformation.create(referenced_tables);
@@ -76,7 +76,7 @@ public class Dataset {
 		ArrayList mains = new ArrayList();
 		
 		for (int i=0;i<trans.length;i++){
-			if (trans[i].final_table_type.equals("MAIN")){
+			if (trans[i].finalTableType.equals("MAIN")){
 				Table main = trans[i].getFinalUnit().getTemp_end();
 				
 				transformationKey=trans[i].getFinalUnit().getTemp_end().key;
@@ -100,12 +100,12 @@ public class Dataset {
             transformation.adaptor=adaptor;
             transformation.datasetName=name;
             transformation.targetSchemaName=targetSchemaName;
-            transformation.final_table_name =ref.getName();
+            transformation.finalTableName =ref.getName();
             
             ref.setName(ref.temp_name);
-            transformation.start_table=main;
+            transformation.startTable=main;
 		    transformation.type="main";
-		    transformation.final_table_type = "MAIN";
+		    transformation.finalTableType = "MAIN";
 		    
 		    transformation.column_operations="append";
             transformation.create(tables);
@@ -141,10 +141,10 @@ public class Dataset {
 			 
 			Table main_table=mains[i].getFinalUnit().getTemp_end();
 			
-			transformation.final_table_name=main_table.getName(); 
+			transformation.finalTableName=main_table.getName(); 
 			main_table.setName(main_table.temp_name);
 			
-			transformation.start_table=main_table;
+			transformation.startTable=main_table;
 			transformation.type="central";
 			
 			transformation.column_operations="addone";
@@ -211,7 +211,7 @@ public class Dataset {
 		
 		for (int i=0;i<transformations.size();i++){
 			trans = (Transformation) transformations.get(i);
-			if (trans.final_table_name.equals(name)){
+			if (trans.finalTableName.equals(name)){
 			break;
 			}
 		}
@@ -227,7 +227,7 @@ public class Dataset {
 		Transformation [] trans = getTransformations();
 		
 		for (int i=0;i<trans.length;i++){
-			if (trans[i].final_table_type.equals(type)){
+			if (trans[i].finalTableType.equals(type)){
 				trans_list.add(trans[i]);
 			}
 		}
@@ -263,10 +263,10 @@ public class Dataset {
 		
 		for (int i=0;i<mains.length;i++){
 			
-			if(name.equals(mains[i].final_table_name)){
+			if(name.equals(mains[i].finalTableName)){
 				list.set(i-1,mains[i]);		
 			} else {
-				name = mains[i].final_table_name;
+				name = mains[i].finalTableName;
 				list.add(mains[i]);
 			}
 		}

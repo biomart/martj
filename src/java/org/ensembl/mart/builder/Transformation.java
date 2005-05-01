@@ -16,30 +16,28 @@ import java.util.*;
 
 public class Transformation {
 
-	ArrayList units = new ArrayList();
+	
 
-	ArrayList unwanted = new ArrayList();
+	//ArrayList unwanted = new ArrayList();
 
 	//String dataset;
 
-	String final_table_name;
-
-	String final_table_type;
-
-	String type;
-
+	
+	ArrayList units = new ArrayList();
+	
+	String finalTableName;
+	String finalTableType; // DM MAIN
+	String type; // central, linked
 	String column_operations;
-
 	String datasetName;
 	String targetSchemaName;
-
+	Table startTable;
 	DBAdaptor adaptor;
 
 	private LinkedTables linked;
-
-	Table start_table;
-
 	boolean central = false;
+	
+	
 
 	public void create(Table[] ref_tables) {
 
@@ -64,7 +62,7 @@ public class Transformation {
 					ref_tables[i]);
 			dunit.cardinality = ref_tables[i].cardinality;
 			dunit.column_operations = column_operations;
-			dunit.final_table_name = final_table_name;
+			dunit.final_table_name = finalTableName;
 			dunit.adaptor = adaptor;
 			dunit.targetSchema = targetSchemaName;
 			units.add(dunit);
@@ -113,7 +111,7 @@ public class Transformation {
 			Table temp_start = new Table();
 
 			if (i == 0) {
-				temp_start = start_table;
+				temp_start = startTable;
 			} else {
 				Table new_temp_end = unit.copyTable(temp_end);
 				temp_start = new_temp_end;
@@ -125,7 +123,7 @@ public class Transformation {
 			if (type.equals("central")) {
 				temp_end_name = "C" + temp_end_name;
 			}
-			if (type.equals("linked") && final_table_type.equals("DM")) {
+			if (type.equals("linked") && finalTableType.equals("DM")) {
 				temp_end_name = "D" + temp_end_name;
 			}
 			temp_end_name = temp_end_name + i;
@@ -135,16 +133,16 @@ public class Transformation {
 			{
 				//unit.key = unit.ref_table.key;
 				
-				if (unit.ref_table.status.equals("exported")) {
+				if (unit.refTable.status.equals("exported")) {
 					
 					// The keys are always set by DBM on referenced tables
 					//unit.TSKey = temp_start.PK;
-					unit.TSKey = unit.ref_table.PK;
-					unit.RFKey = unit.ref_table.FK;
-				} else if (unit.ref_table.status.equals("imported")){
+					unit.TSKey = unit.refTable.PK;
+					unit.RFKey = unit.refTable.FK;
+				} else if (unit.refTable.status.equals("imported")){
 					
-					unit.TSKey = unit.ref_table.FK;
-					unit.RFKey = unit.ref_table.PK;
+					unit.TSKey = unit.refTable.FK;
+					unit.RFKey = unit.refTable.PK;
 				} 
 				
 				
@@ -164,7 +162,7 @@ public class Transformation {
 				
 				
 			if (single) {
-				unit.ref_table = converted_ref;
+				unit.refTable = converted_ref;
 				unit.cardinality = "n1";
 				single = false;
 			}
@@ -173,17 +171,17 @@ public class Transformation {
 
 			if (unit.single) {
 				single = true;
-				converted_ref = unit.temp_end;
+				converted_ref = unit.tempEnd;
 
 			}
 
 			if (i == getUnits().length - 1) {
-				unit.temp_end.setName(final_table_name);
+				unit.tempEnd.setName(finalTableName);
 				final_table = true;
 			}
 
 			else {
-				unit.temp_end.setName(temp_end_name);
+				unit.tempEnd.setName(temp_end_name);
 			}
 
 			/**
@@ -196,13 +194,13 @@ public class Transformation {
 */
 			
 			
-			unit.temp_end.isFinalTable = final_table;
-			unit.temp_end.temp_name = temp_end_name;
+			unit.tempEnd.isFinalTable = final_table;
+			unit.tempEnd.temp_name = temp_end_name;
 
 			if (unit.single) {
-				temp_end = unit.temp_start;
+				temp_end = unit.tempStart;
 			} else {
-				temp_end = unit.temp_end;
+				temp_end = unit.tempEnd;
 			}
 		}
 	}

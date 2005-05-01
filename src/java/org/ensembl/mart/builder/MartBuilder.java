@@ -133,7 +133,7 @@ public class MartBuilder {
 			
 			for (int i=0;i<transformations.length;i++){
 				
-				String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].final_table_name+" TO: " );
+				String newname = getUserInput("CHANGE FINAL TABLE NAME: "+transformations[i].finalTableName+" TO: " );
 				if (newname != null && ! newname.equals("\n") && !newname.equals(""))
 					transformations[i].setFinalName(newname);
 			}
@@ -144,7 +144,7 @@ public class MartBuilder {
 			Transformation [] tran = dataset.getTransformationsByFinalTableType("DM");
 			
 			for (int i=0;i<tran.length;i++){
-				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].final_table_name+" [Y|N] [Y default] ");
+				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "+tran[i].finalTableName+" [Y|N] [Y default] ");
 				if (!(input.equals("N") || input.equals("n"))){
 					tran[i].central=true;		
 					
@@ -191,7 +191,7 @@ public class MartBuilder {
 				TransformationUnit [] units = final_transformations[i].getUnits();
 				
 				for (int j=0;j<units.length;j++){
-						if (!(units[j].temp_end.getName().matches(".*TEMP.*") )){
+						if (!(units[j].tempEnd.getName().matches(".*TEMP.*") )){
 							System.out.println(units[j].renameKeyColumn(dataset.transformationKey));
 						System.out.println(units[j].addFinalIndex(ind+j,dataset.transformationKey+"_key"));
 						}

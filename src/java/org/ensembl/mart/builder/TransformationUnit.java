@@ -13,9 +13,9 @@ package org.ensembl.mart.builder;
  */
 public abstract class TransformationUnit {
 	
-	Table temp_start;
-	Table temp_end;
-	Table ref_table;
+	Table tempStart;
+	Table tempEnd;
+	Table refTable;
 	String temp_end_name;
 	//String central_extension;
 	//String extension_key;
@@ -36,7 +36,7 @@ public abstract class TransformationUnit {
 	
 	public TransformationUnit(Table ref_table){
 		
-		this.ref_table=ref_table;
+		this.refTable=ref_table;
 		
 	}
 	
@@ -47,8 +47,8 @@ public abstract class TransformationUnit {
 	public String dropTempTable (){
 		
 		String sql="";
-		if (!temp_end.isFinalTable == true)
-			sql = "DROP TABLE "+ targetSchema+"."+temp_end.getName()+";";
+		if (!tempEnd.isFinalTable == true)
+			sql = "DROP TABLE "+ targetSchema+"."+tempEnd.getName()+";";
 		return sql;	
 	}
 		
@@ -62,11 +62,11 @@ public abstract class TransformationUnit {
 		// to the main table not a local transformation key
 		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+TSKey+");";
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+TSKey+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+TSKey+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+TSKey+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+TSKey+");";	
+			sql = "CREATE INDEX index "+i+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+TSKey+");";	
 		
 		return sql;
 		
@@ -77,11 +77,11 @@ public abstract class TransformationUnit {
 		String sql = "";
 		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+temp_end.getName()+" ("+key+");";
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+key+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+i+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+			sql = "CREATE INDEX index "+i+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";	
 		
 		return sql;
 		
@@ -95,11 +95,11 @@ public abstract class TransformationUnit {
 		String sql = "";
 		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" RENAME "+key+ " TO "+ key+"_key;";
+			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+key+ " TO "+ key+"_key;";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+key+targetSchema+"."+temp_end.getName()+" ADD INDEX ("+temp_start.key+");";	
+			sql = "CREATE INDEX index "+key+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";	
 		
 		return sql;
 		
@@ -126,37 +126,37 @@ public abstract class TransformationUnit {
 	 * @return Returns the ref.
 	 */
 	public Table getRef_table() {
-		return ref_table;
+		return refTable;
 	}
 	/**
 	 * @param ref The ref to set.
 	 */
 	public void setRef_table(Table ref) {
-		this.ref_table = ref;
+		this.refTable = ref;
 	}
 	/**
 	 * @return Returns the temp_end.
 	 */
 	public Table getTemp_end() {
-		return temp_end;
+		return tempEnd;
 	}
 	/**
 	 * @param temp_end The temp_end to set.
 	 */
 	public void setTemp_end(Table temp_end) {
-		this.temp_end = temp_end;
+		this.tempEnd = temp_end;
 	}
 	/**
 	 * @return Returns the temp_start.
 	 */
 	public Table getTemp_start() {
-		return temp_start;
+		return tempStart;
 	}
 	/**
 	 * @param temp_start The temp_start to set.
 	 */
 	public void setTemp_start(Table temp_start) {
-		this.temp_start = temp_start;
+		this.tempStart = temp_start;
 	}
 	
 	

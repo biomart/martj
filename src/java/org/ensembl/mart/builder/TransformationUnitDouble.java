@@ -17,7 +17,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 	public TransformationUnitDouble(Table ref_table){
 		
 		super(ref_table);
-		this.ref_table=ref_table;
+		this.refTable=ref_table;
 		
 	}
 	
@@ -27,9 +27,11 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		String sql = null;
 		
-		if (cardinality.equals("n1") || cardinality.equals("n1r")){
+		//if (cardinality.equals("n1") || cardinality.equals("n1r")){
+			
+			if (cardinality.equals("n1r")){
 		
-			sql = leftJoin(temp_end.getName());
+			sql = leftJoin(tempEnd.getName());
 		
 		}
 		
@@ -48,7 +50,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		else {
 			
-			sql = simpleJoin(temp_end.getName());	
+			sql = simpleJoin(tempEnd.getName());	
 		}
 		
 		return sql;
@@ -91,10 +93,10 @@ public class TransformationUnitDouble extends TransformationUnit {
 	
 	public void transform (Table temp_start, String temp_end_name){
 		
-		Table new_ref=copyTable(ref_table);
+		Table new_ref=copyTable(refTable);
 		
 		assignAliases(temp_start, new_ref, temp_end_name);
-		assignAliases(temp_start, ref_table, temp_end_name);
+		assignAliases(temp_start, refTable, temp_end_name);
 		
 		Table temp_end = copyTable(temp_start);
 		
@@ -114,7 +116,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		this.setTemp_start(temp_start);
 		this.setTemp_end(temp_end);
-		this.setRef_table(ref_table);
+		this.setRef_table(refTable);
 		
 	}
 	
@@ -148,8 +150,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 	
 	private String simpleJoin(String temp){
 		
-		StringBuffer temp_start_col = getStartColumns(temp_start);
-		StringBuffer ref_table_col = getRefColumns(ref_table);
+		StringBuffer temp_start_col = getStartColumns(tempStart);
+		StringBuffer ref_table_col = getRefColumns(refTable);
 		
 		String sql = getSQL(" , ", " WHERE ", temp, temp_start_col, ref_table_col);
 		return sql;				
@@ -159,8 +161,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 	
 	private String leftJoin(String temp){
 		
-		StringBuffer temp_start_col = getStartColumns(temp_start);
-		StringBuffer ref_table_col = getRefColumns(ref_table);
+		StringBuffer temp_start_col = getStartColumns(tempStart);
+		StringBuffer ref_table_col = getRefColumns(refTable);
 		
 		
 		String sql = null;
@@ -172,11 +174,11 @@ public class TransformationUnitDouble extends TransformationUnit {
 		} else {
 			
 			
-			Table new_ref=copyTable(ref_table);
-			Table new_start =copyTable(temp_start);
+			Table new_ref=copyTable(refTable);
+			Table new_start =copyTable(tempStart);
 			
-			temp_start=new_ref;
-			ref_table=new_start;
+			tempStart=new_ref;
+			refTable=new_start;
 			
 			
 			
@@ -227,12 +229,12 @@ public class TransformationUnitDouble extends TransformationUnit {
 	
 	private String getSQL (String ONE, String TWO, String temp,StringBuffer temp_start_col, StringBuffer ref_table_col){
 		
-		String start=temp_start.getName();
-		String ref =ref_table.getName();
+		String start=tempStart.getName();
+		String ref =refTable.getName();
 		
 		// temps are always in the target schema
-	    if (temp_start.getName().matches(".*TEMP.*") ) start=targetSchema+"."+temp_start.getName();
-	    if (ref_table.getName().matches(".*TEMP.*")) ref=targetSchema+"."+ref_table.getName();
+	    if (tempStart.getName().matches(".*TEMP.*") ) start=targetSchema+"."+tempStart.getName();
+	    if (refTable.getName().matches(".*TEMP.*")) ref=targetSchema+"."+refTable.getName();
 	    
 		StringBuffer tempsql = new StringBuffer ("CREATE TABLE "+targetSchema+".");
 		
@@ -242,11 +244,11 @@ public class TransformationUnitDouble extends TransformationUnit {
 				start+ ONE +ref+ TWO +ref+"."+RFKey+" = "+ start+"."+TSKey);
 		
 		
-		if (ref_table.hasExtension()){
-			tempsql.append(" AND "+ref+"."+ref_table.getExtension());
+		if (refTable.hasExtension()){
+			tempsql.append(" AND "+ref+"."+refTable.getExtension());
 		} 
-		if (ref_table.hasCentralExtension()){
-			tempsql.append(" AND "+start+"."+ref_table.getCentralExtension());
+		if (refTable.hasCentralExtension()){
+			tempsql.append(" AND "+start+"."+refTable.getCentralExtension());
 		} 
 		tempsql.append(";");
 		
