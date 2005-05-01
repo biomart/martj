@@ -27,9 +27,10 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		String sql = null;
 		
-		//if (cardinality.equals("n1") || cardinality.equals("n1r")){
+		// needed for left join with central filters (boolean)
+		if (cardinality.equals("n1standard") || cardinality.equals("n1r")){
 			
-			if (cardinality.equals("n1r")){
+			//if (cardinality.equals("n1r")){
 		
 			sql = leftJoin(tempEnd.getName());
 		
@@ -167,7 +168,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		String sql = null;
 		
-		if (cardinality.equals("n1")){
+		// needed for left join with central fiters (boolean)
+		if (cardinality.equals("n1standard")){
 		
 		sql = getSQL(" LEFT JOIN ", " ON ", temp, temp_start_col, ref_table_col);
 		

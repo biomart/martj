@@ -163,7 +163,7 @@ public class Transformation {
 				
 			if (single) {
 				unit.refTable = converted_ref;
-				unit.cardinality = "n1";
+				unit.cardinality = "n1standard"; // needed for left join with central table (boolean filters)
 				single = false;
 			}
 
