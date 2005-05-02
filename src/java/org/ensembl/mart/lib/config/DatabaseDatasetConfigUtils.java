@@ -3757,6 +3757,8 @@ public class DatabaseDatasetConfigUtils {
       "SELECT DISTINCT "
         + columnName
         + " FROM "
+	    + getSchema()
+		+"."
         + tableName
         + " WHERE "
         + columnName
