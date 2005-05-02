@@ -34,22 +34,23 @@ public class Transformation {
 	Table startTable;
 	DBAdaptor adaptor;
 
-	private LinkedTables linked;
+	//private LinkedTables linked;
 	boolean central = false;
 	
 	
 
-	public void create(Table[] ref_tables) {
+	public void createUnits(Table[] ref_tables) {
 
 		//TransformationUnit unit;
 
 		Table temp_end = new Table();
 
 		for (int i = 0; i < ref_tables.length; i++) {
-
+			
 			if (ref_tables[i].skip)
 				continue;
 			if (type.equals("central")) {
+				
 				TransformationUnitSingle sunit = new TransformationUnitSingle(
 						ref_tables[i]);
 				sunit.single = true;
@@ -58,6 +59,7 @@ public class Transformation {
 				units.add(sunit);
 			}
 
+			
 			TransformationUnitDouble dunit = new TransformationUnitDouble(
 					ref_tables[i]);
 			dunit.cardinality = ref_tables[i].cardinality;
@@ -66,6 +68,9 @@ public class Transformation {
 			dunit.adaptor = adaptor;
 			dunit.targetSchema = targetSchemaName;
 			units.add(dunit);
+			
+			
+			
 		}
 	}
 
@@ -170,7 +175,7 @@ public class Transformation {
 				unit.cardinality = "n1standard"; // needed for left join with central table (boolean filters)
 				single = false;
 			}
-
+			
 			unit.transform(temp_start, temp_end_name);
 
 			if (unit.single) {
@@ -209,7 +214,7 @@ public class Transformation {
 		}
 	}
 
-	private void addUnit(TransformationUnit unit) {
+	public void addUnit(TransformationUnit unit) {
 		this.units.add(unit);
 	}
 

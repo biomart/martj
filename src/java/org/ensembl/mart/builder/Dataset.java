@@ -21,25 +21,28 @@ public class Dataset {
 	String name;
 	String targetSchemaName;
 	String transformationKey;
-	private LinkedTables [] linkedTables;
-	private DBAdaptor adaptor;
+	//private LinkedTables [] linkedTables;
+	DBAdaptor adaptor;
 	
-	public Dataset (ArrayList linkedList, String name,String targetSchemaName, DBAdaptor adaptor){
+	//public Dataset (ArrayList linkedList, String name,String targetSchemaName, DBAdaptor adaptor){
 		
-		LinkedTables[] c = new LinkedTables[linkedList.size()];
-		LinkedTables [] linkies= (LinkedTables[]) linkedList.toArray(c);
+		public Dataset(){
 		
-		this.linkedTables=linkies;
-		this.name=name;
-		this.targetSchemaName=targetSchemaName;
-		this.adaptor=adaptor;
-		createTransformationsForLinked();
-		createTransformationsForMains();
+		
+		//LinkedTables[] c = new LinkedTables[linkedList.size()];
+		//LinkedTables [] linkies= (LinkedTables[]) linkedList.toArray(c);
+		
+		//this.linkedTables=linkies;
+		//this.name=name;
+		//this.targetSchemaName=targetSchemaName;
+		//this.adaptor=adaptor;
+		//createTransformationsForLinked();
+		//createTransformationsForMains();
 		//createTransformationsForCentralFilters();
 		
 	}
 	
-	
+	/**
 	
 	private void createTransformationsForLinked(){
 		
@@ -62,7 +65,7 @@ public class Dataset {
 			transformation.finalTableType=linked.final_table_type;
 			
 			transformation.column_operations="addall";
-			transformation.create(referenced_tables);
+			transformation.createUnits(referenced_tables);
 			
 			transformation.transform();
 			addTransformation(transformation);
@@ -70,7 +73,11 @@ public class Dataset {
 			}
 	}
 	
-	private void createTransformationsForMains(){
+	*/
+	
+	
+	
+	public void createTransformationsForMains(){
 		
 		Transformation [] trans = getTransformations();
 		ArrayList mains = new ArrayList();
@@ -80,6 +87,7 @@ public class Dataset {
 				Table main = trans[i].getFinalUnit().getTemp_end();
 				
 				//transformationKey=trans[i].getFinalUnit().getTemp_end().key;
+				System.out.println(trans[i].getFinalUnit().getTemp_end());
 				transformationKey=trans[i].getFinalUnit().getTemp_end().PK;
 				
 				
@@ -110,7 +118,7 @@ public class Dataset {
 		    transformation.finalTableType = "MAIN";
 		    
 		    transformation.column_operations="append";
-            transformation.create(tables);
+            transformation.createUnits(tables);
             
             transformation.transform();
             addTransformation(transformation);
@@ -127,6 +135,7 @@ public class Dataset {
 		Table [] central_tables = new Table [central.length];
 		
 		for (int j=0;j<central.length;j++){
+			
 			central_tables[j]=central[j].getFinalUnit().getTemp_end();
 			
 		}
@@ -134,6 +143,7 @@ public class Dataset {
 		Transformation [] mains =   getMainTranformationForCentral();
 		
 		for (int i=0; i<mains.length;i++){
+			
 			Transformation transformation = new Transformation();
 			
 			transformation.adaptor=adaptor;
@@ -150,7 +160,7 @@ public class Dataset {
 			transformation.type="central";
 			
 			transformation.column_operations="addone";
-			transformation.create(central_tables);
+			transformation.createUnits(central_tables);
 			transformation.transform();
 			addTransformation(transformation);
 		}

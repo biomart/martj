@@ -62,7 +62,7 @@ public abstract class TransformationUnit {
 		// to the main table not a local transformation key
 		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+TSKey+");";
+			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
 		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+TSKey+");";
 		else if (adaptor.rdbms.equals("oracle"))

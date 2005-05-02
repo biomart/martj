@@ -144,6 +144,26 @@ public abstract class MetaDataResolver {
 	}
 	
 	
+	
+	public Table getTable (String tableName) {
+		
+		Table table = new Table();
+		table.setName(tableName);
+		table.setColumns(getReferencedColumns(tableName));
+		
+		return table;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	 * @return Returns the tabs.
 	 */
