@@ -14,7 +14,7 @@ package org.ensembl.mart.builder;
 
 public class Table implements Cloneable {
 
-	public String key = null;
+	//public String key = null;
 
 	public String cardinality = "";
 
@@ -46,6 +46,7 @@ public class Table implements Cloneable {
 
 		Column[] new_ref_col = new Column[columns.length];
 		for (int n = 0; n < this.getColumns().length; n++) {
+			
 			try {
 				Column col = (Column) this.getColumns()[n].clone();
 				new_ref_col[n] = col;
@@ -102,17 +103,28 @@ public class Table implements Cloneable {
 	/**
 	 * @return Returns the key.
 	 */
+
+	/**
+	
 	public String getKey() {
 		return key;
 	}
+
+*/
 
 	/**
 	 * @param key
 	 *            The key to set.
 	 */
+	
+	
+	/**
 	public void setKey(String key) {
 		this.key = key;
 	}
+
+*/
+
 
 	/**
 	 * @return Returns the extension.

@@ -22,7 +22,7 @@ public abstract class TransformationUnit {
 	String column_operations;
 	String cardinality;
 	String final_table_name;
-	String key;
+	//String key;
 	String TSKey;
 	String RFKey;
 	String targetSchema;
@@ -79,9 +79,9 @@ public abstract class TransformationUnit {
 		if (adaptor.rdbms.equals("postgresql"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempEnd.getName()+" ("+key+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+i+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";	
+			sql = "CREATE INDEX index "+i+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";	
 		
 		return sql;
 		
@@ -97,9 +97,9 @@ public abstract class TransformationUnit {
 		if (adaptor.rdbms.equals("postgresql"))
 			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+key+ " TO "+ key+"_key;";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";
 		else if (adaptor.rdbms.equals("oracle"))
-			sql = "CREATE INDEX index "+key+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+tempStart.key+");";	
+			sql = "CREATE INDEX index "+key+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";	
 		
 		return sql;
 		

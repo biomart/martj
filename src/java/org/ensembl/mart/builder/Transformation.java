@@ -150,7 +150,11 @@ public class Transformation {
 
 			{
 			    // needs this, clone function breaks?	
-				unit.key = temp_start.key;
+				
+			
+				//unit.key = temp_start.key;
+				//unit.key = temp_start.PK;
+				
 				
 				// These settings maybe problematic but work for the moment
 				// They set keys for the left join boolean join

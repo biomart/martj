@@ -67,7 +67,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				table.PK=keys.getString(4);
 				table.FK=keys.getString(8);
 				
-				table.setKey(keys.getString(8));
+				//table.setKey(keys.getString(8));
 				table.status="exported";
 				table.setColumns(getReferencedColumns(table.getName()));
 				exportedTabs.add(table);
@@ -110,7 +110,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				table.PK=keys.getString(4);
 				table.FK=keys.getString(8);
 				
-				table.setKey(keys.getString(4));
+				//table.setKey(keys.getString(4));
 				table.status="imported";
 				table.setColumns(getReferencedColumns(table.getName()));
 				importedTabs.add(table);

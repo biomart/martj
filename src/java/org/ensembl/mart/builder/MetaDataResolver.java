@@ -118,7 +118,8 @@ public abstract class MetaDataResolver {
 		table.setName(main_name);
 		table.setColumns(getReferencedColumns(table.getName()));
 		
-		table.setKey(getPrimaryKeys(main_name));
+	//	table.setKey(getPrimaryKeys(main_name));
+		table.PK =getPrimaryKeys(main_name);
 		
 		// this table needs to behave like a ref table for recursive joins
 		table.PK=getPrimaryKeys(main_name);

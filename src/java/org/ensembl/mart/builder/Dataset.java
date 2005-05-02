@@ -79,7 +79,9 @@ public class Dataset {
 			if (trans[i].finalTableType.equals("MAIN")){
 				Table main = trans[i].getFinalUnit().getTemp_end();
 				
-				transformationKey=trans[i].getFinalUnit().getTemp_end().key;
+				//transformationKey=trans[i].getFinalUnit().getTemp_end().key;
+				transformationKey=trans[i].getFinalUnit().getTemp_end().PK;
+				
 				
 				mains.add(main);
 			}

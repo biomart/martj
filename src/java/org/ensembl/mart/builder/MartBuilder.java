@@ -215,6 +215,7 @@ public class MartBuilder {
 		
 		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
 		String table_type;
+		int transformationCount=0;
 		
 		do
 			table_type=getUserInput(prompt);
@@ -224,7 +225,8 @@ public class MartBuilder {
 			String table_name = getUserInput("TABLE NAME: ");
 			String extension = getUserInput("Extension: ");
 			//if (extension == null)
-			writeConfigFile(output_file,user_dataset,table_name,table_type, extension);
+			transformationCount++;
+			writeConfigFile(output_file,user_dataset,table_name,table_type, extension,transformationCount);
 			table_type=getUserInput(prompt);
 		}	
 	}
@@ -319,7 +321,9 @@ public class MartBuilder {
 					// this should match key and a table
 					
 					
-					if(ref_table.getName().toUpperCase().equals(fileEntries[5]) & ref_table.key.equals(fileEntries[4])){
+					//if(ref_table.getName().toUpperCase().equals(fileEntries[5]) & ref_table.key.equals(fileEntries[4])){
+					if(ref_table.getName().toUpperCase().equals(fileEntries[5]) & ref_table.PK.equals(fileEntries[4]) & ref_table.FK.equals(fileEntries[10])){
+						
 						if (!fileEntries[6].toUpperCase().equals("S")){
 							ref_table.setCardinality(fileEntries[6]);
 							if (!fileEntries[8].equals("null")) ref_table.extension = fileEntries[8];
@@ -409,7 +413,7 @@ public class MartBuilder {
 	
 	
 	
-	private static void writeConfigFile (String output_file,String dataset,String table_name, String table_type, String extension){
+	private static void writeConfigFile (String output_file,String dataset,String table_name, String table_type, String extension, int transformationCount){
 		
 		
 		
@@ -423,10 +427,10 @@ public class MartBuilder {
 		//SourceSchema source_schema = new SourceSchema(config);
 		
 		Table [] exp_tables = resolver.getExportedKeyTables(table_name);
-		write (out,exp_tables,table_name, table_type,dataset,extension,"exported");
+		write (out,exp_tables,table_name, table_type,dataset,extension,transformationCount);
 		
 		Table [] imp_tables = resolver.getImportedKeyTables(table_name);
-		write (out,imp_tables,table_name, table_type,dataset,extension,"imported");
+		write (out,imp_tables,table_name, table_type,dataset,extension,transformationCount);
 		
 		try {
 			out.close();
@@ -452,7 +456,7 @@ public class MartBuilder {
 	}
 	
 	
-	private static void write (BufferedWriter out,Table [] referenced_tables, String table_name, String table_type,String dataset, String centralExtension,String type){
+	private static void write (BufferedWriter out,Table [] referenced_tables, String table_name, String table_type,String dataset, String centralExtension,int transfromationCount){
 		
 		String card_string=" cardinality [11] [n1] [n1r] [0n] [1n] [skip s]: ";
 		String extension = null;
@@ -471,7 +475,7 @@ public class MartBuilder {
 				
 			{
 				
-				cardinality = getUserInput(table_name+": "+type+" "+ref_tab.key+" "+ref_tab.getName().toUpperCase() + card_string);
+				cardinality = getUserInput(table_name+": "+ref_tab.status+" "+ref_tab.PK+" "+ref_tab.FK+" "+ref_tab.getName().toUpperCase() + card_string);
 				extension="null";
 				if (!cardinality.equals("s") & !cardinality.equals("1n")) extension = getUserInput("Extension: ");
 				//if (!cardinality.equals("s") & !cardinality.equals("1n")) centralExtension = getUserInput("Central Extension: ");
@@ -483,7 +487,9 @@ public class MartBuilder {
 			if (cardinality.equals("s") || cardinality.equals("1n")) continue;
 			
 			try {
-				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.key+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");
+//				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+type+"\t"+ref_tab.key+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\n");
+				out.write(dataset+"\t"+ table_type+"\t"+table_name+"\t"+ref_tab.status+"\t"+ref_tab.PK+"\t"+ref_tab.getName().toUpperCase() +"\t"+ cardinality+"\t"+centralExtension+"\t"+extension+"\t"+transfromationCount+"\t"+ref_tab.FK+"\n");
+			
 			} catch (IOException e) {
 				e.printStackTrace();
 			}	

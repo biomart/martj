@@ -47,7 +47,10 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 					Table table = new Table();
 					exported_tabs.add(table);
 					table.setName(tables[i]);
-					table.setKey(pkey);
+					
+					// needs FK and PK instead
+					//table.setKey(pkey);
+					
 					table.status="exported";
 					table.setColumns(getReferencedColumns(tables[i]));
 					break;
@@ -88,7 +91,9 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 						Table table = new Table();
 						imported_tabs.add(table);
 						table.setName(tables[i]);
-						table.setKey(fkeys[k]);
+						//table.setKey(fkeys[k]);
+						// needs PK and FK here
+						
 						table.status="imported";
 						table.setColumns(getReferencedColumns(tables[i]));
 						
