@@ -22,6 +22,7 @@ public abstract class MetaDataResolver {
 	protected Table [] tabs;
 	protected Connection connection;
 	protected Column [] columns;
+	//protected ArrayList columns;
 	protected DBAdaptor adaptor;
 	protected DatabaseMetaData dmd;
 	
@@ -45,8 +46,11 @@ public abstract class MetaDataResolver {
 		Table [] exp_key_tables;
 		Table [] imp_key_tables;
 		
-		exp_key_tables = getExportedKeyTables(table_name);
-		imp_key_tables = getImportedKeyTables(table_name);
+		String [] columnNames=null;
+		columnNames[0]="%";
+		
+		exp_key_tables = getExportedKeyTables(table_name, columnNames);
+		imp_key_tables = getImportedKeyTables(table_name, columnNames);
 		
 		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
 		System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
@@ -58,18 +62,19 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public abstract Table [] getExportedKeyTables (String table_name);
-	public abstract Table [] getImportedKeyTables (String table_name);
+	public abstract Table [] getExportedKeyTables (String table_name, String [] columnNames);
+	public abstract Table [] getImportedKeyTables (String table_name, String [] columnNames);
 	protected abstract String getPrimaryKeys(String table_name);
 	
 	
-	public Column [] getReferencedColumns (String name){
+	public Column [] getReferencedColumns (String name, String [] columnNames){
 		
 		Column [] col;
 		ArrayList cols = new ArrayList();
 		
+		for (int i=0;i<columnNames.length;i++){
 		try {
-			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,"%");
+			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
 			int z=0;
 			while (columns.next()){	
 				
@@ -82,6 +87,7 @@ public abstract class MetaDataResolver {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+		}
 		}
 		Column [] b = new Column[cols.size()];
 		return (Column []) cols.toArray(b);
@@ -116,7 +122,9 @@ public abstract class MetaDataResolver {
 		
 		Table table = new Table();
 		table.setName(main_name);
-		table.setColumns(getReferencedColumns(table.getName()));
+		String [] columnNames = {"%"};
+		//columnNames[0]="%";
+		table.setColumns(getReferencedColumns(table.getName(),columnNames));
 		
 	//	table.setKey(getPrimaryKeys(main_name));
 		table.PK =getPrimaryKeys(main_name);
@@ -145,11 +153,11 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTable (String tableName) {
+	public Table getTable (String tableName, String [] columnNames) {
 		
 		Table table = new Table();
 		table.setName(tableName);
-		table.setColumns(getReferencedColumns(tableName));
+		table.setColumns(getReferencedColumns(tableName, columnNames));
 		
 		return table;
 	}

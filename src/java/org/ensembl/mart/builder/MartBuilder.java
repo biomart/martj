@@ -368,8 +368,11 @@ public class MartBuilder {
 				//for (int i=0; i<referenced_tables.length;i++){
 				//	Table ref_table = referenced_tables[i];
 				
-				
-				Table ref_table = resolver.getTable(fileEntries[5].toLowerCase());
+				String [] columnNames = {"%"};
+				//System.out.println(line);
+				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
+				//else columnNames[0]="%";
+			    Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(),columnNames);
 				ref_table.status = fileEntries[3];
 				ref_table.PK = fileEntries[4];
 				ref_table.FK = fileEntries[10];
@@ -517,11 +520,14 @@ public class MartBuilder {
 
 		//SourceSchema source_schema = new SourceSchema(config);
 
-		Table[] exp_tables = resolver.getExportedKeyTables(table_name);
+		String [] columnNames = null;
+		columnNames[0]="%";
+		
+		Table[] exp_tables = resolver.getExportedKeyTables(table_name, columnNames);
 		write(out, exp_tables, table_name, table_type, dataset, extension,
 				transformationCount);
 
-		Table[] imp_tables = resolver.getImportedKeyTables(table_name);
+		Table[] imp_tables = resolver.getImportedKeyTables(table_name, columnNames);
 		write(out, imp_tables, table_name, table_type, dataset, extension,
 				transformationCount);
 

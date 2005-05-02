@@ -33,8 +33,12 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 		
 		Table [] exp_key_tables;
 		Table [] imp_key_tables;
-		exp_key_tables = getExportedKeyTables(table_name);
-		imp_key_tables = getImportedKeyTables(table_name);
+		
+		String [] columnNames=null;
+		columnNames[0]="%";
+		
+		exp_key_tables = getExportedKeyTables(table_name, columnNames);
+		imp_key_tables = getImportedKeyTables(table_name, columnNames);
 		
 		Table [] join_tables = new Table [exp_key_tables.length+imp_key_tables.length]; 
 		System.arraycopy(exp_key_tables,0,join_tables,0,exp_key_tables.length);
@@ -46,7 +50,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 	
 	
 	
-	public Table [] getExportedKeyTables (String centralTableName){
+	public Table [] getExportedKeyTables (String centralTableName, String [] columnNames){
 		
 		ArrayList exportedTabs= new ArrayList();
 		
@@ -69,7 +73,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				
 				//table.setKey(keys.getString(8));
 				table.status="exported";
-				table.setColumns(getReferencedColumns(table.getName()));
+				table.setColumns(getReferencedColumns(table.getName(), columnNames));
 				exportedTabs.add(table);
 				currentTable=keys.getString(7);
 				i++;
@@ -89,7 +93,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 	}
 	
 	
-	public Table [] getImportedKeyTables (String centralTableName){
+	public Table [] getImportedKeyTables (String centralTableName, String [] columnNames){
 		
 		ArrayList importedTabs= new ArrayList();
 		
@@ -112,7 +116,7 @@ public class MetaDataResolverFKSupported extends MetaDataResolver {
 				
 				//table.setKey(keys.getString(4));
 				table.status="imported";
-				table.setColumns(getReferencedColumns(table.getName()));
+				table.setColumns(getReferencedColumns(table.getName(), columnNames));
 				importedTabs.add(table);
 				currentTable=keys.getString(3);
 				currentKey=keys.getString(4);

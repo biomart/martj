@@ -29,7 +29,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	
 	
 	
-	public Table [] getExportedKeyTables (String maintable){
+	public Table [] getExportedKeyTables (String maintable, String [] columnNames){
 		
 		ArrayList exported_tabs= new ArrayList();
 		
@@ -52,7 +52,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 					//table.setKey(pkey);
 					
 					table.status="exported";
-					table.setColumns(getReferencedColumns(tables[i]));
+					table.setColumns(getReferencedColumns(tables[i],columnNames));
 					break;
 					
 				}	
@@ -68,7 +68,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 	}
 	
 	
-	public Table [] getImportedKeyTables (String maintable){
+	public Table [] getImportedKeyTables (String maintable, String [] columnNames){
 		
 		ArrayList imported_tabs= new ArrayList();
 		
@@ -95,7 +95,7 @@ public class MetaDataResolverFKNotSupported extends MetaDataResolver {
 						// needs PK and FK here
 						
 						table.status="imported";
-						table.setColumns(getReferencedColumns(tables[i]));
+						table.setColumns(getReferencedColumns(tables[i], columnNames));
 						
 						break;
 					}	
