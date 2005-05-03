@@ -114,7 +114,8 @@ public class Dataset {
 			 
 			Table main_table=mains[i].getFinalUnit().getTemp_end();
 			
-			transformation.finalTableName=main_table.getName(); 
+			transformation.finalTableName=main_table.getName();
+			transformation.finalTableType="MAIN";
 			main_table.setName(main_table.temp_name);
 			
 			transformation.startTable=main_table;
@@ -200,6 +201,7 @@ public class Dataset {
 		Transformation [] trans = getTransformations();
 		
 		for (int i=0;i<trans.length;i++){
+			
 			if (trans[i].finalTableType.equals(type)){
 				trans_list.add(trans[i]);
 			}

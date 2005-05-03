@@ -147,6 +147,9 @@ public class MartBuilder {
 
 			}
 
+			//String key=dataset.getTransformationsByFinalTableType("MAIN")[0].getFinalUnit().TSKey;
+			
+			
 			// now renaming to _key and final indexes
 			for (int i = 0; i < final_transformations.length; i++) {
 
@@ -164,7 +167,7 @@ public class MartBuilder {
 			}
 		}
 
-		System.out.println("\ndone ");
+		//System.out.println("\ndone ");
 		
 	}
 
@@ -173,8 +176,7 @@ public class MartBuilder {
 	
 	
 	
-	private static void createConfiguration(String user_dataset,
-			String output_file) {
+	private static void createConfiguration(String user_dataset, String output_file) {
 
 		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
 		String table_type;
@@ -208,6 +210,7 @@ public class MartBuilder {
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(input_file));
 
+			//String datasetKey=null;
 			String line;
 			String lastDatasetName = null;
 			String lastTrans = null;
@@ -230,23 +233,22 @@ public class MartBuilder {
                  // new dataset
 				if (!fileEntries[0].equals(lastDatasetName)) {
 					
-					if (lines>0) {		
+					if (lines>0) {
+						//dataset.datasetKey=datasetKey;
 						mart.add(dataset);
 					}
-					
+					//datasetKey=null;
 					dataset = new Dataset();					
 					datasetName = fileEntries[0];
 					dataset.name=datasetName;
 					dataset.adaptor=adaptor;
 					dataset.targetSchemaName=targetSchemaName;
-					// needs something better
-					if (fileEntries[3].equals("exported")) dataset.datasetKey=fileEntries[4];
-					
 					lastDatasetName = datasetName;
-				
-	
+					dataset.datasetKey=resolver.getPrimaryKeys(fileEntries[2]);
 				}
 
+				
+				//if (fileEntries[3].equals("exported") & fileEntries[1].equals("m")) datasetKey=fileEntries[4];
 				
 				
 				// new transformation
@@ -284,6 +286,7 @@ public class MartBuilder {
 				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
 
 			    Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(),columnNames);
+			   
 				ref_table.status = fileEntries[3];
 				ref_table.PK = fileEntries[4];
 				ref_table.FK = fileEntries[10];
@@ -310,6 +313,7 @@ public class MartBuilder {
 			in.close();
 
 			transformation.transform();
+			//dataset.datasetKey=
 			mart.add(dataset);
 			
 			

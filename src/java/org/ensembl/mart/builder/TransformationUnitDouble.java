@@ -214,6 +214,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 		StringBuffer ref_table_col = new StringBuffer("");
 		
 		for (int j=0; j<ref_table.getColumns().length;j++){
+				
 			if (ref_table.getColumns()[j].hasAlias()){		
 				ref_table_col.append(ref_table.getName()+"."+ref_table.getColumns()[j].getName()+
 						" AS "+ ref_table.getColumns()[j].getAlias()+",");
