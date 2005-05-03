@@ -134,7 +134,9 @@ public class MartBuilder {
 
 				TransformationUnit[] units = final_transformations[i].getUnits();
 
-				System.out.println("");
+				System.out.println("\n--\n--       TRANSFORMATION NO "+final_transformations[i].number+
+						"      TARGET TABLE: "+final_transformations[i].finalTableName.toUpperCase()+"\n--\n");
+				
 				for (int j = 0; j < units.length; j++) {
 					
 					if(j>0) System.out.println(units[j].addIndex(ind + j));
@@ -155,8 +157,7 @@ public class MartBuilder {
 
 				ind = 10 + ind;
 
-				TransformationUnit[] units = final_transformations[i]
-						.getUnits();
+				TransformationUnit[] units = final_transformations[i].getUnits();
 
 				for (int j = 0; j < units.length; j++) {
 					if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
@@ -288,22 +289,30 @@ public class MartBuilder {
 			    Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(),columnNames);
 			   
 				ref_table.status = fileEntries[3];
-				ref_table.PK = fileEntries[4];
-				ref_table.FK = fileEntries[10];
+				//ref_table.PK = fileEntries[4];
+				//ref_table.FK = fileEntries[10];
 				ref_table.cardinality = fileEntries[6];
 				if (!fileEntries[8].equals("null"))
 					ref_table.extension = fileEntries[8];
 				if (!fileEntries[7].equals("null")) ref_table.central_extension = fileEntries[7];
 
 
-				TransformationUnit dunit = new TransformationUnitDouble(
-						ref_table);
+				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
 
+				
+				
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";
 				//dunit.final_table_name = finalTableName;
 				dunit.adaptor = adaptor;
 				dunit.targetSchema = targetSchemaName;
+				
+				if(fileEntries[3].equals("exported")) dunit.TSKey=fileEntries[4];
+				else dunit.TSKey=fileEntries[10];
+				if(fileEntries[3].equals("exported")) dunit.RFKey=fileEntries[10];
+				else dunit.RFKey=fileEntries[4];
+				
+				
 				transformation.addUnit(dunit);
 
 				lastTrans = fileEntries[9];

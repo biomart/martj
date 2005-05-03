@@ -92,18 +92,19 @@ public class Dataset {
 	
 	public void createTransformationsForCentralFilters(){
 		
-		Transformation [] central = getDMTranformationsForCentral();	
-		Table [] central_tables = new Table [central.length];
+		Transformation [] dmTransformations = getDMTranformationsForCentral();	
+		//Table [] central_tables = new Table [central.length];
 		
-		for (int j=0;j<central.length;j++){
+		// get each final dm table
+		//for (int j=0;j<central.length;j++){
 			
-			central_tables[j]=central[j].getFinalUnit().getTemp_end();
+		//	central_tables[j]=central[j].getFinalUnit().getTemp_end();
 			
-		}
+		//}
 		
-		Transformation [] mains =   getMainTranformationForCentral();
+		Transformation [] mainTransformations =   getMainTranformationForCentral();
 		
-		for (int i=0; i<mains.length;i++){
+		for (int i=0; i<mainTransformations.length;i++){
 			
 			Transformation transformation = new Transformation();
 			
@@ -112,17 +113,61 @@ public class Dataset {
 			 transformation.targetSchemaName=targetSchemaName;
 			 //System.out.println("adding name for central "+name);
 			 
-			Table main_table=mains[i].getFinalUnit().getTemp_end();
+			 // get final temp for each main tablev
+			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
 			
 			transformation.finalTableName=main_table.getName();
 			transformation.finalTableType="MAIN";
+			
+			// resetting the name to temp name
 			main_table.setName(main_table.temp_name);
 			
 			transformation.startTable=main_table;
 			transformation.type="central";
 			
-			transformation.column_operations="addone";
-			transformation.createUnits(central_tables);
+			//transformation.column_operations="addone";
+			
+			for (int m = 0; m < dmTransformations.length; m++) {
+				
+				//if(central[m].getFinalUnit().getTemp_end().skip) continue;
+				
+				//System.out.println("table name "+dmTransformations[m].getFinalUnit().getTemp_end().getName());
+				
+				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTemp_end();
+				
+			TransformationUnitSingle sunit = 
+				new TransformationUnitSingle(dmFinalTable);
+			
+			sunit.single = true;
+			sunit.adaptor = adaptor;
+			sunit.targetSchema = targetSchemaName;
+			sunit.TSKey=dmTransformations[m].getFinalUnit().TSKey;
+			sunit.RFKey=dmTransformations[m].getFinalUnit().RFKey;
+			
+			transformation.addUnit(sunit);
+			
+			
+
+			TransformationUnitDouble dunit = new TransformationUnitDouble(dmFinalTable);
+			dunit.cardinality = dmFinalTable.cardinality;
+			dunit.column_operations = "addone";
+			dunit.final_table_name = "MAIN";
+			dunit.adaptor = adaptor;
+			dunit.TSKey=dmTransformations[m].getFinalUnit().RFKey;
+			dunit.RFKey=dmTransformations[m].getFinalUnit().TSKey;
+			
+			
+			dunit.targetSchema = targetSchemaName;
+			transformation.addUnit(dunit);
+			
+			
+			
+		}
+			
+			
+			
+			
+			//transformation.createUnits(central_tables);
 			transformation.transform();
 			addTransformation(transformation);
 		}

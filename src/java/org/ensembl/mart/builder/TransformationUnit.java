@@ -95,7 +95,7 @@ public abstract class TransformationUnit {
 		String sql = "";
 		
 		if (adaptor.rdbms.equals("postgresql"))
-			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+key+ " TO "+ key+"_key;";
+			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+TSKey+ " TO "+ key+"_key;";
 		else if 	(adaptor.rdbms.equals("mysql"))
 		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";
 		else if (adaptor.rdbms.equals("oracle"))

@@ -39,36 +39,37 @@ public class Transformation {
 	boolean central = false;
 	
 	
-
+/**
 	public void createUnits(Table[] ref_tables) {
 
 		//TransformationUnit unit;
 
-		Table temp_end = new Table();
+		//Table temp_end = new Table();
 
 		for (int i = 0; i < ref_tables.length; i++) {
 			
-			if (ref_tables[i].skip)
-				continue;
-			if (type.equals("central")) {
+			//if (ref_tables[i].skip)
+			//	continue;
+			
+			//if (type.equals("central")) {
 				
-				TransformationUnitSingle sunit = new TransformationUnitSingle(
-						ref_tables[i]);
-				sunit.single = true;
-				sunit.adaptor = adaptor;
-				sunit.targetSchema = targetSchemaName;
-				units.add(sunit);
-			}
+			//	TransformationUnitSingle sunit = new TransformationUnitSingle(
+			//			ref_tables[i]);
+			//	sunit.single = true;
+			//	sunit.adaptor = adaptor;
+			//	sunit.targetSchema = targetSchemaName;
+			//	units.add(sunit);
+			//}
 
 			
-			TransformationUnitDouble dunit = new TransformationUnitDouble(
-					ref_tables[i]);
-			dunit.cardinality = ref_tables[i].cardinality;
-			dunit.column_operations = column_operations;
-			dunit.final_table_name = finalTableName;
-			dunit.adaptor = adaptor;
-			dunit.targetSchema = targetSchemaName;
-			units.add(dunit);
+			//TransformationUnitDouble dunit = new TransformationUnitDouble(
+			//		ref_tables[i]);
+			//dunit.cardinality = ref_tables[i].cardinality;
+			//dunit.column_operations = column_operations;
+			//dunit.final_table_name = finalTableName;
+			//dunit.adaptor = adaptor;
+			//dunit.targetSchema = targetSchemaName;
+			//units.add(dunit);
 			
 			
 			
@@ -134,27 +135,29 @@ public class Transformation {
 			}
 			temp_end_name = temp_end_name + i;
 
-			if (!(single || unit.single)) // for normal main and dm transformations
+			//if (!(single || unit.single)) // for normal main and dm transformations
 			
-			{
+			//{
 				//unit.key = unit.ref_table.key;
-				
+			/**	
 				if (unit.refTable.status.equals("exported")) {
 					
 					// The keys are always set by DBM on referenced tables
 					//unit.TSKey = temp_start.PK;
 					unit.TSKey = unit.refTable.PK;
 					unit.RFKey = unit.refTable.FK;
-				} else if (unit.refTable.status.equals("imported")){
+				} else 
+				*/
+				//if (unit.refTable.status.equals("imported")){
 					
-					unit.TSKey = unit.refTable.FK;
-					unit.RFKey = unit.refTable.PK;
-				} 
+				//	unit.TSKey = unit.refTable.FK;
+				//	unit.RFKey = unit.refTable.PK;
+				//} 
 				
 				
-			} else // central filter transformation
+			//} else // central filter transformation
 
-			{
+			//{
 			    // needs this, clone function breaks?	
 				
 			
@@ -164,9 +167,16 @@ public class Transformation {
 				
 				// These settings maybe problematic but work for the moment
 				// They set keys for the left join boolean join
-				unit.TSKey = temp_start.PK;
-				unit.RFKey = temp_start.PK;
-			}
+			
+			//if (single || unit.single){ // for central
+			  //  unit.TSKey = temp_start.PK;
+			//	unit.RFKey = temp_start.FK;
+				
+				//System.out.println("ref table PK "+)
+			//}
+				
+				
+				//}
 
 				
 				

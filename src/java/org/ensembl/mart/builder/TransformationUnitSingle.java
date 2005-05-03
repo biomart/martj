@@ -28,8 +28,12 @@ public class TransformationUnitSingle extends TransformationUnit {
 		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.key+
 		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.key+ " IS NOT NULL;";
 
-		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.PK+
-		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.PK+ " IS NOT NULL;";
+		//String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ tempStart.PK+
+		//" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ refTable.PK+ " IS NOT NULL;";
+		
+		String sql = "CREATE TABLE "+ targetSchema+"."+tempEnd.getName()+" AS SELECT DISTINCT "+ TSKey+
+		" FROM "+ targetSchema+"."+refTable.getName()+" WHERE "+ RFKey+ " IS NOT NULL;";
+		
 		
 		return sql;
 		
@@ -58,10 +62,10 @@ public class TransformationUnitSingle extends TransformationUnit {
 		
 		//System.out.println("temp start name "+tempStart.getName());
 		//System.out.println(" temp end name "+ tempEnd.getName());
-		//System.out.println(" ref name "+refTable.getName());
+		//System.out.println(" ref name "+refTable.getName()+" start "+temp_start.getName());
 		
 		String [] tableNameParts=refTable.getName().split("__");
-		
+			
 		//System.out.println("name parts 1 "+tableNameParts[1]);
 		
 		for (int i=0;i<columns.length;i++){
@@ -71,7 +75,9 @@ public class TransformationUnitSingle extends TransformationUnit {
 			// it requires therefore a central transformation key comparison rather
 			// than tempStart.PK or refTable.PK as this will vary
 			
-			if (columns[i].getName().equals(temp_start.PK)){
+			if (columns[i].getName().equals(TSKey)){
+				
+				//System.out.println ("PK "+temp_start.PK+" TSKey "+TSKey+" RFKey "+RFKey);
 				
 				newcol[0]=columns[i];
 				newcol[0].setAlias(tableNameParts[1]+"_bool");
