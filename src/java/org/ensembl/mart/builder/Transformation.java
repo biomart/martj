@@ -31,6 +31,7 @@ public class Transformation {
 	String column_operations;
 	String datasetName;
 	String targetSchemaName;
+	String number;
 	Table startTable;
 	DBAdaptor adaptor;
 

@@ -20,62 +20,21 @@ public class Dataset {
 	ArrayList transformations = new ArrayList();
 	String name;
 	String targetSchemaName;
-	String transformationKey;
-	//private LinkedTables [] linkedTables;
+	String datasetKey;
 	DBAdaptor adaptor;
 	
-	//public Dataset (ArrayList linkedList, String name,String targetSchemaName, DBAdaptor adaptor){
+	
 		
 		public Dataset(){
 		
-		
-		//LinkedTables[] c = new LinkedTables[linkedList.size()];
-		//LinkedTables [] linkies= (LinkedTables[]) linkedList.toArray(c);
-		
-		//this.linkedTables=linkies;
-		//this.name=name;
-		//this.targetSchemaName=targetSchemaName;
-		//this.adaptor=adaptor;
-		//createTransformationsForLinked();
-		//createTransformationsForMains();
-		//createTransformationsForCentralFilters();
-		
 	}
 	
+		
+		// the below is needed to make sure that 
+		// every main table has the same columns
+		// needs more thinking for independent mains
+				
 	/**
-	
-	private void createTransformationsForLinked(){
-		
-		for (int j=0;j<linkedTables.length;j++){
-			
-			LinkedTables linked = linkedTables[j];
-		    Table [] referenced_tables = linked.getReferencedTables();
-			
-		    Transformation transformation = new Transformation();
-		    transformation.adaptor=adaptor;
-		    transformation.datasetName=name;
-		    transformation.targetSchemaName=targetSchemaName;
-		    
-		    //System.out.println("adding name for linked "+name);
-		    
-			transformation.finalTableType=linked.final_table_type;
-			transformation.finalTableName=linked.final_table_name;
-			transformation.startTable=linked.getCentralTable();
-			transformation.type="linked";
-			transformation.finalTableType=linked.final_table_type;
-			
-			transformation.column_operations="addall";
-			transformation.createUnits(referenced_tables);
-			
-			transformation.transform();
-			addTransformation(transformation);
-		    
-			}
-	}
-	
-	*/
-	
-	
 	
 	public void createTransformationsForMains(){
 		
@@ -86,9 +45,11 @@ public class Dataset {
 			if (trans[i].finalTableType.equals("MAIN")){
 				Table main = trans[i].getFinalUnit().getTemp_end();
 				
+				System.out.println ("transformation number frm dataset "+trans[i].number);
+				
 				//transformationKey=trans[i].getFinalUnit().getTemp_end().key;
-				System.out.println(trans[i].getFinalUnit().getTemp_end());
-				transformationKey=trans[i].getFinalUnit().getTemp_end().PK;
+				//System.out.println(trans[i].getFinalUnit().getTemp_end());
+				datasetKey=trans[i].getFinalUnit().getTemp_end().PK;
 				
 				
 				mains.add(main);
@@ -99,7 +60,7 @@ public class Dataset {
 		ArrayList ref_tables = new ArrayList();
 		for (int i=1;i<mains.size();i++){
 			
-            Table main = (Table) mains.get(0);
+            Table main = (Table) mains.get(i);
             Table ref = (Table) mains.get(i);
             ref_tables.add(ref);
             Table [] b = new Table [ref_tables.size()];
@@ -127,7 +88,7 @@ public class Dataset {
 	}
 	
 	
-	
+	*/
 	
 	public void createTransformationsForCentralFilters(){
 		
