@@ -225,8 +225,13 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
 			return false;
 		}
 
+		String pass = getPassword();
         storePreferences( preferences );        
         loadPreferences(preferences);
+        
+        //this is required to preserve password for this session only
+        if (!rememberPassword.isSelected())
+          password.setText(pass);
 		return true;
 
 	}
