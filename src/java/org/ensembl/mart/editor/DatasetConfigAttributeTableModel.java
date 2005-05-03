@@ -125,8 +125,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		while (tableModelListenerList.remove((Object) l));
 	}
 
-	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-		
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {		
 		//Sets the value in the cell at columnIndex and rowIndex to aValue.
 		Object child = node.getUserObject();
 		DatasetConfigTreeNode rootNode = (DatasetConfigTreeNode) node.getRoot();
@@ -162,7 +161,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 				} else if (parent instanceof org.ensembl.mart.lib.config.FilterCollection) {
 					FilterCollection fc = (FilterCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.FilterDescription){
-						if (checkFilterUniqueness((String) aValue, dsConfig)){				
+						if (checkFilterUniqueness((String) aValue, rowIndex, dsConfig)){				
 								fc.removeFilterDescription((FilterDescription) node.getUserObject());
 						}
 						else{
@@ -207,7 +206,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 					AttributeCollection ac = (AttributeCollection) ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 					if (child instanceof org.ensembl.mart.lib.config.AttributeDescription){
 						
-						if (checkUniqueness((String) aValue, dsConfig)){				
+						if (checkUniqueness((String) aValue, rowIndex, dsConfig)){				
 							ac.removeAttributeDescription((AttributeDescription) node.getUserObject());
 						}
 						else{
@@ -287,8 +286,12 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		}
 	}
 
-	private boolean checkUniqueness(String testName, DatasetConfig dsConfig){
+	private boolean checkUniqueness(String testName, int rowIndex, DatasetConfig dsConfig){
 		
+	    //only check the internalName, eg. row 0
+	    if (rowIndex != 0)
+	      return true;
+	    
 		AttributePage[] apages = dsConfig.getAttributePages();
 		AttributePage apage;
 	  
@@ -317,8 +320,12 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		return true;
 	}
 	
-	private boolean checkFilterUniqueness(String testName, DatasetConfig dsConfig){
+	private boolean checkFilterUniqueness(String testName, int rowIndex, DatasetConfig dsConfig){
 		
+	    //only check the internal id, eg row 0
+	    if (rowIndex != 0)
+	        return true;
+	    
 		FilterPage[] apages = dsConfig.getFilterPages();
 		FilterPage apage;
 	  
