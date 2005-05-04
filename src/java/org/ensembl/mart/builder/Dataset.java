@@ -120,7 +120,7 @@ public class Dataset {
 			transformation.finalTableType="MAIN";
 			
 			// resetting the name to temp name
-			main_table.setName(main_table.temp_name);
+			main_table.setName(main_table.temp_name+"_main_interim");
 			
 			transformation.startTable=main_table;
 			transformation.type="central";
