@@ -17,21 +17,14 @@ public abstract class TransformationUnit {
 	Table tempEnd;
 	Table refTable;
 	String temp_end_name;
-	//String central_extension;
-	//String extension_key;
 	String column_operations;
 	String cardinality;
 	String final_table_name;
-	//String key;
 	String TSKey;
 	String RFKey;
 	String targetSchema;
 	DBAdaptor adaptor;
-	//boolean is_extension=false;
-	//boolean has_extension=false;
-	//boolean useFK=false;
 	boolean single =false;
-	//boolean isFirst;
 	
 	
 	public TransformationUnit(Table ref_table){
@@ -57,9 +50,6 @@ public abstract class TransformationUnit {
 	public String addIndex(int i){
 		
 		String sql = "";
-		
-		// this does not work for the dm final key - it needs a global key refering
-		// to the main table not a local transformation key
 		
 		if (adaptor.rdbms.equals("postgresql"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
