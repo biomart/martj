@@ -139,7 +139,8 @@ public class MartBuilder {
 				
 				for (int j = 0; j < units.length; j++) {
 					
-					if(j>0) System.out.println(units[j].addIndex(ind + j));
+					// don't want indexes before 'select distinct'
+					if(!units[j].single & j>0) System.out.println(units[j].addIndex(ind + j));
 					System.out.println(units[j].toSQL());
 					
 				}
