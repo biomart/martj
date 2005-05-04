@@ -37,6 +37,8 @@ public class Transformation {
 
 	//private LinkedTables linked;
 	boolean central = false;
+
+	public String userTableName;
 	
 	
 /**
@@ -223,18 +225,21 @@ public class Transformation {
 				temp_end = unit.tempEnd;
 			}
 		}
+	
+		//getFinalUnit().getTemp_end().setName(myName);
+	
 	}
 
 	public void addUnit(TransformationUnit unit) {
 		this.units.add(unit);
 	}
-
+/**
 	public void setFinalName(String name) {
 
 		getFinalUnit().getTemp_end().setName(name);
 
 	}
-
+*/
 	public TransformationUnit[] getUnits() {
 		TransformationUnit[] b = new TransformationUnit[units.size()];
 		return (TransformationUnit[]) units.toArray(b);

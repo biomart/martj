@@ -214,9 +214,34 @@ public class Dataset {
 	public Transformation [] getTransformations() {
 		
 		Transformation [] b = new Transformation[transformations.size()];
+	
+		//setFinalNames();
+		//return transforms;
 		return (Transformation []) transformations.toArray(b);	
 		
 	}
+	
+	
+	public void setUserTableNames(){
+		
+		Transformation [] b = new Transformation[transformations.size()];
+        Transformation [] transforms = (Transformation []) transformations.toArray(b);
+		
+		for (int i = 0; i < transforms.length; i++) {	
+
+			//String newname = getUserInput("CHANGE FINAL TABLE NAME: "
+			//		+transforms[i].number+" "+ transforms[i].finalTableName + " TO: ");
+			//if (newname != null && !newname.equals("\n")
+			//		&& !newname.equals(""))
+			
+			
+			transforms[i].getFinalUnit().getTemp_end().setName(transforms[i].userTableName);
+		}
+		
+	}
+	
+	
+	
 	
 	public void addTransformation(Transformation transformation){
 		this.transformations.add(transformation);

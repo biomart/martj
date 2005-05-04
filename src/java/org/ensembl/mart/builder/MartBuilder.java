@@ -93,10 +93,14 @@ public class MartBuilder {
 
 
 			// Reset final table names if you want to
+			
+			dataset.setUserTableNames();
 			Transformation[] transformations = dataset.getTransformations();
+			
 
 			System.out.println("\n\n");
 
+			/**
 			for (int i = 0; i < transformations.length; i++) {	
 
 				String newname = getUserInput("CHANGE FINAL TABLE NAME: "
@@ -106,13 +110,16 @@ public class MartBuilder {
 					transformations[i].setFinalName(newname);
 			}
 
+*/
+
+
 			// Add central filters
 			Transformation[] tran = dataset
 					.getTransformationsByFinalTableType("DM");
 
 			for (int i = 0; i < tran.length; i++) {
 				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "
-						+ tran[i].finalTableName + " [Y|N] [Y default] ");
+						+ tran[i].userTableName + " [Y|N] [Y default] ");
 				if (!(input.equals("N") || input.equals("n"))) {
 					tran[i].central = true;
 
@@ -263,6 +270,8 @@ public class MartBuilder {
 					transformation.datasetName = datasetName;
 					transformation.targetSchemaName = targetSchemaName;
 					transformation.number=fileEntries[9];
+					transformation.finalTableName=fileEntries[12];
+					transformation.userTableName=fileEntries[12];
 
 					StringBuffer final_table = new StringBuffer(datasetName+ "__" +fileEntries[2] + "__");
 					if (fileEntries[1].toUpperCase().equals("M")) {
@@ -323,6 +332,7 @@ public class MartBuilder {
 			in.close();
 
 			transformation.transform();
+			
 			//dataset.datasetKey=
 			mart.add(dataset);
 			
