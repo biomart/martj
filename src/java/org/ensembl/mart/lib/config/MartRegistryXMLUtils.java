@@ -66,7 +66,6 @@ public class MartRegistryXMLUtils {
 	private static final String DATABASELOCATION = "DatabaseLocation";
 	private static final String REGISTRYLOCATION = "RegistryLocation";
 	private static final String REGISTRYDBLOCATION = "RegistryDBLocation";
-	private static final String REGISTRYDOCTYPEURL = "classpath:data/XML/MartRegistry.dtd";
 
 	/*
 	 * meta_registry
@@ -571,7 +570,7 @@ public class MartRegistryXMLUtils {
 		}
 
 		Document thisDoc = new Document(root);
-		thisDoc.setDocType(new DocType(MARTREGISTRY, REGISTRYDOCTYPEURL));
+		thisDoc.setDocType(new DocType(MARTREGISTRY));
 		return thisDoc;
 	}
 
