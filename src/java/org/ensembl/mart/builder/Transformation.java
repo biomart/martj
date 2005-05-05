@@ -15,13 +15,6 @@ package org.ensembl.mart.builder;
 import java.util.*;
 
 public class Transformation {
-
-	
-
-	//ArrayList unwanted = new ArrayList();
-
-	//String dataset;
-
 	
 	ArrayList units = new ArrayList();
 	
@@ -34,87 +27,44 @@ public class Transformation {
 	String number;
 	Table startTable;
 	DBAdaptor adaptor;
-
-	//private LinkedTables linked;
 	boolean central = false;
 
 	public String userTableName;
 	
-	
-/**
-	public void createUnits(Table[] ref_tables) {
-
-		//TransformationUnit unit;
-
-		//Table temp_end = new Table();
-
-		for (int i = 0; i < ref_tables.length; i++) {
-			
-			//if (ref_tables[i].skip)
-			//	continue;
-			
-			//if (type.equals("central")) {
-				
-			//	TransformationUnitSingle sunit = new TransformationUnitSingle(
-			//			ref_tables[i]);
-			//	sunit.single = true;
-			//	sunit.adaptor = adaptor;
-			//	sunit.targetSchema = targetSchemaName;
-			//	units.add(sunit);
-			//}
-
-			
-			//TransformationUnitDouble dunit = new TransformationUnitDouble(
-			//		ref_tables[i]);
-			//dunit.cardinality = ref_tables[i].cardinality;
-			//dunit.column_operations = column_operations;
-			//dunit.final_table_name = finalTableName;
-			//dunit.adaptor = adaptor;
-			//dunit.targetSchema = targetSchemaName;
-			//units.add(dunit);
-			
-			
-			
-		}
-	}
-
-	/**
-	public void addAdditionalUnit(Table ref_table, String final_table_key,
-			String final_table_extension) {
-
-		TransformationUnitDouble unit = new TransformationUnitDouble(ref_table);
-		unit.extension_key = final_table_key;
-		unit.central_extension = final_table_extension;
-		unit.is_extension = true;
-		unit.has_extension = true;
-		unit.adaptor = adaptor;
-		unit.targetSchema = targetName;
-		addUnit(unit);
-	}
-
-*/
-
 
 
 	public TransformationUnit getFinalUnit() {
-
-		TransformationUnit unit = (TransformationUnit) units
-				.get(units.size() - 1);
+		TransformationUnit unit = (TransformationUnit) units.get(units.size() - 1);
 		return unit;
-
 	}
+	
+	
+	public void addUnit(TransformationUnit unit) {
+		this.units.add(unit);
+	}
+
+	public TransformationUnit[] getUnits() {
+		TransformationUnit[] b = new TransformationUnit[units.size()];
+		return (TransformationUnit[]) units.toArray(b);
+	}
+	
+	
 
 	public void transform() {
 
 		Table temp_end = new Table();
 		Table converted_ref = null;
 		boolean single = false;
-		String temp_end_name = "TEMP";
-
+		String temp_end_name =null;
+		
+		
+		String prefix="M";
+		if (type.equals("central")) prefix = "C";
+		if (type.equals("linked") && finalTableType.equals("DM")) prefix = "D";
+		
+		
+        // transform
 		for (int i = 0; i < getUnits().length; i++) {
-
-			
-				
 			
 			TransformationUnit unit = getUnits()[i];
 			Table temp_start = new Table();
@@ -124,64 +74,11 @@ public class Transformation {
 			} else {
 				Table new_temp_end = unit.copyTable(temp_end);
 				temp_start = new_temp_end;
-				//temp_start.setExtension("");
 			}
 			
 			boolean final_table = false;
+			temp_end_name = prefix+"TEMP"+i;
 
-			if (type.equals("central")) {
-				temp_end_name = "C" + temp_end_name;
-			}
-			if (type.equals("linked") && finalTableType.equals("DM")) {
-				temp_end_name = "D" + temp_end_name;
-			}
-			temp_end_name = temp_end_name + i;
-
-			//if (!(single || unit.single)) // for normal main and dm transformations
-			
-			//{
-				//unit.key = unit.ref_table.key;
-			/**	
-				if (unit.refTable.status.equals("exported")) {
-					
-					// The keys are always set by DBM on referenced tables
-					//unit.TSKey = temp_start.PK;
-					unit.TSKey = unit.refTable.PK;
-					unit.RFKey = unit.refTable.FK;
-				} else 
-				*/
-				//if (unit.refTable.status.equals("imported")){
-					
-				//	unit.TSKey = unit.refTable.FK;
-				//	unit.RFKey = unit.refTable.PK;
-				//} 
-				
-				
-			//} else // central filter transformation
-
-			//{
-			    // needs this, clone function breaks?	
-				
-			
-				//unit.key = temp_start.key;
-				//unit.key = temp_start.PK;
-				
-				
-				// These settings maybe problematic but work for the moment
-				// They set keys for the left join boolean join
-			
-			//if (single || unit.single){ // for central
-			  //  unit.TSKey = temp_start.PK;
-			//	unit.RFKey = temp_start.FK;
-				
-				//System.out.println("ref table PK "+)
-			//}
-				
-				
-				//}
-
-				
-				
 				
 			if (single) {
 				unit.refTable = converted_ref;
@@ -206,16 +103,6 @@ public class Transformation {
 				unit.tempEnd.setName(temp_end_name);
 			}
 
-			/**
-			if (unit.is_extension) {
-				unit.temp_start.key = unit.extension_key;
-			}
-			if (unit.has_extension) {
-				unit.temp_start.extension = unit.central_extension;
-			}
-*/
-			
-			
 			unit.tempEnd.isFinalTable = final_table;
 			unit.tempEnd.temp_name = temp_end_name;
 
@@ -230,19 +117,6 @@ public class Transformation {
 	
 	}
 
-	public void addUnit(TransformationUnit unit) {
-		this.units.add(unit);
-	}
-/**
-	public void setFinalName(String name) {
-
-		getFinalUnit().getTemp_end().setName(name);
-
-	}
-*/
-	public TransformationUnit[] getUnits() {
-		TransformationUnit[] b = new TransformationUnit[units.size()];
-		return (TransformationUnit[]) units.toArray(b);
-	}
-
+	
+	
 }
