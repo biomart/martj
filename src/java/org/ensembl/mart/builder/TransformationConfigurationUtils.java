@@ -92,7 +92,7 @@ public static void main(String[] args) throws IOException {
 		String [] first =  {"fly","m","feature","imported","cvterm_id","CVTERM","n1","null","cvterm_id=219",""+transformations,"type_id","null",tabledm,"N"};
 		String [] second = {"fly","m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","null"};
 		String [] third =  {"fly","m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename"};
-		String [] fourth = {"fly","m","feature","imported","organsism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null"};
+		String [] fourth = {"fly","m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null"};
 		
 		String [] [] one = {first,second,third,fourth};
 		
