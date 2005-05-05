@@ -109,12 +109,15 @@ public class Dataset {
 			Transformation transformation = new Transformation();
 			
 			transformation.adaptor=adaptor;
-			 transformation.datasetName=name;
-			 transformation.targetSchemaName=targetSchemaName;
+			transformation.datasetName=name;
+			transformation.targetSchemaName=targetSchemaName;
+			transformation.userTableName=mainTransformations[i].userTableName;
+			
 			 //System.out.println("adding name for central "+name);
 			 
 			 // get final temp for each main tablev
 			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
+			//String userTable=
 			
 			transformation.finalTableName=main_table.getName();
 			transformation.finalTableType="MAIN";
