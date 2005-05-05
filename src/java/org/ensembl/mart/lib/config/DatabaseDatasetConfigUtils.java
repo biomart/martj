@@ -894,7 +894,7 @@ public class DatabaseDatasetConfigUtils {
         String visible = rs.getString(7);
 		String version = rs.getString(8);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version,"");
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version,"","");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);

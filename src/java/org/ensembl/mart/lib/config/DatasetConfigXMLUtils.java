@@ -79,6 +79,7 @@ public class DatasetConfigXMLUtils {
   // attribute names needed by code
   private final String INTERNALNAME = "internalName";
   private final String OPTPARAM = "optional_parameters";
+  private final String DEFAULTDATASET = "defaultDataset";
   private final String HIDDEN = "hidden";
 
   private boolean loadFully = false;
@@ -218,9 +219,13 @@ public class DatasetConfigXMLUtils {
     Element thisElement = doc.getRootElement();
     String intName = thisElement.getAttributeValue(INTERNALNAME, "");
     String optParam = thisElement.getAttributeValue(OPTPARAM, "");
+	String defParam = thisElement.getAttributeValue(DEFAULTDATASET, "");
     
     if (optParam.length() > 0)
       dsv.setOptionalParameter(optParam);
+      
+	if (defParam.length() > 0)
+	  dsv.setDefaultDataset(defParam);      
 
     // a DatasetConfig object must have been constructed with an internalName
     // test that the internalNames match , throw an exception if they are not

@@ -126,12 +126,15 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(DatasetConfig ds, boolean propogateExistingElements, boolean preLazyLoad) throws ConfigurationException {
     super(ds);
-
+	System.out.println("1");
     if (propogateExistingElements && preLazyLoad)
       throw new ConfigurationException("You can not copy an existing DatasetConfig using both propogateExistingElements and lazyLoad\n");
       
     setDataset(ds.getDataset());
     setOptionalParameter(ds.getOptionalParameter());
+	setDefaultDataset(ds.getDefaultDataset());
+    
+    System.out.println(ds.getDataset() + "\t" + ds.getOptionalParameter() + "\t" + ds.getDefaultDataset());
     
     byte[] digest = ds.getMessageDigest();
     if (digest != null)
@@ -183,7 +186,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig() {
     super();
-
+	System.out.println("2");
     setAttribute(datasetKey, null);
     setAttribute(typeKey,null);
     setAttribute(visibleKey,null);
@@ -203,6 +206,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset) throws ConfigurationException {
     this(internalName, displayName, dataset, "");
+    
   }
 
   /**
@@ -218,7 +222,10 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   public DatasetConfig(String internalName, String displayName, String dataset, String description)
     throws ConfigurationException {
     //super(internalName, displayName, description);
-	this(internalName, displayName, dataset, description, "", "0", "", "");
+    
+    
+	this(internalName, displayName, dataset, description, "", "0", "", "", "");
+
     //if (dataset == null)
     //  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
     //setAttribute(datasetKey, dataset);
@@ -236,10 +243,11 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    * @param pub String flag showing whether DatasetConfig is public or not.
    * @throws ConfigurationException if required values are null.
    */
-  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String defaultDataset)
+  public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String optParam)
   throws ConfigurationException {
-    this(internalName, displayName, dataset, description, type, pub, version, "", "");
+    this(internalName, displayName, dataset, description, type, pub, version, null, null);
   }
+  
   
   /**
    * Constructs a DatasetConfig named by internalName and displayName, with a description of
@@ -257,8 +265,9 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(String internalName, String displayName, String dataset, String description, String type, String pub, String version, String optParameters, String defaultDataset)
 	throws ConfigurationException {
+		
 	super(internalName, displayName, description);
-
+	System.out.println("6 " + optParameters + defaultDataset);
 	if (dataset == null)
 	  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
 	setAttribute(datasetKey, dataset);
@@ -338,6 +347,18 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public String getOptionalParameter() {
     return attributes.getProperty(optParameterKey);
+  }
+  
+  public void setDefaultDataset(String optParam) {
+	setAttribute(defaultKey, optParam);
+  }
+  
+  /**
+   * Return any optional parameters set on the DatasetConfig.
+   * @return String optional parameters string
+   */
+  public String getDefaultDataset() {
+	return attributes.getProperty(defaultKey);
   }
   
   /**
