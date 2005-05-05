@@ -1018,7 +1018,7 @@ public class DatabaseDatasetConfigUtils {
     try {
       String metatable = getDSConfigTableFor(user);
       String sql = GETDOCBYINAMESELECT + schema +"."+metatable + GETDOCBYINAMEWHERE;
-
+		
       if (logger.isLoggable(Level.FINE))
         logger.fine(
           "Using " + sql + " to get DatasetConfig for internalName " + internalName + "and dataset " + dataset + "\n");
@@ -3984,7 +3984,7 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
-private String[] getSchema(){
+public String[] getSchema(){
 	
 	/* String schema = null;
 	if(dsource.getDatabaseType().equals("oracle")) schema = dsource.getSchema().toUpperCase();

@@ -258,10 +258,10 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
     if (logger.isLoggable(Level.FINE))
       logger.fine("Dataset " + dataset + " internalName " + iname + " Not in cache, loading from database\n");
 
-    DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname,"");
+    DatasetConfig newDSV = dbutils.getDatasetConfigByDatasetInternalName(user, dataset, iname,dbutils.getSchema()[0]);
     
     if (loadFully)
-        dscutils.loadDatasetConfigWithDocument(newDSV, dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, iname,""));
+        dscutils.loadDatasetConfigWithDocument(newDSV, dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, iname,dbutils.getSchema()[0]));
     
     addDatasetConfig(newDSV);
   }
@@ -281,7 +281,7 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
 
     dscutils.loadDatasetConfigWithDocument(
       dsv,
-      dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dsv.getDataset(), dsv.getInternalName(),""));
+      dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dsv.getDataset(), dsv.getInternalName(),dbutils.getSchema()[0]));
 
     if (!ignoreCache) {
       //cache this DatasetConfig, as, for some reason, it is needing to be cached
