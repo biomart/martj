@@ -1178,18 +1178,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							break;
 					}
 				}
-				
-				// alternative to above
-				//Document document = dbutils.getDatasetConfigDocumentByDatasetInternalName(user, dataset, internalName);
-				//dsv = dscutils.getDatasetConfigForDocument( document );
-				//dscutils.loadDatasetConfigWithDocument(dsv, document);
-				 
-				// update it
-				
-				//dsv = dbutils.getValidatedDatasetConfig(dsv); ? IF WANT TO DO AFTER GETBROKENELEMENTS AT LEAST
-				
-				// keep a string of all the broken filts and atts set to hidden
-				
+			
 				newVersion = 0;
 				// test if version need updating and newVersion++ if so
 				String datasetVersion = dsv.getVersion();

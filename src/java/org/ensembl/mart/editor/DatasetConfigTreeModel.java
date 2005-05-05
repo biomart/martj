@@ -139,7 +139,7 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 
 	}
 
-	public String insertNodeInto(DatasetConfigTreeNode editingNode, DatasetConfigTreeNode parentNode, int index) {
+	public String insertNodeInto(DatasetConfigTreeNode editingNode, DatasetConfigTreeNode parentNode, int index){
 		int start, finish;
 		Object child = editingNode.getUserObject();
 		Object parent = parentNode.getUserObject();
@@ -194,6 +194,30 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 			} else if (child instanceof org.ensembl.mart.lib.config.Option) {
 				FilterCollection fc = (FilterCollection) parentNode.getUserObject();
 				FilterDescription fdConvert = new FilterDescription((Option) editingNode.getUserObject());
+				fc.insertFilterDescription(objIndex, fdConvert);
+				editingNode.setUserObject(fdConvert);
+			} else if (child instanceof org.ensembl.mart.lib.config.AttributeDescription) {
+				FilterCollection fc = (FilterCollection) parentNode.getUserObject();
+				//FilterDescription fdConvert = new FilterDescription((AttributeDescription) editingNode.getUserObject());
+				AttributeDescription ad = (AttributeDescription) editingNode.getUserObject();
+				
+				FilterDescription fdConvert = null;
+				try{
+					fdConvert = new FilterDescription(ad.getInternalName(),
+																	ad.getField(),
+																	"text",
+																	"=",
+																	"=",
+																	ad.getDisplayName(),
+																	ad.getTableConstraint(),
+																	ad.getKey(),
+																	ad.getDescription(),
+																	"",
+																	"");
+				}
+				catch (ConfigurationException e){
+					// guaranteed internal name for atts
+				}
 				fc.insertFilterDescription(objIndex, fdConvert);
 				editingNode.setUserObject(fdConvert);
 			} else {

@@ -330,7 +330,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	}
 
 	// Inner class that handles Tree Expansion Events
-	protected class DatasetConfigTreeDnDListener implements DropTargetListener, DragSourceListener, DragGestureListener {
+	protected class DatasetConfigTreeDnDListener implements DropTargetListener, DragSourceListener, DragGestureListener{
 		protected DropTarget dropTarget = null;
 		protected DragSource dragSource = null;
 		protected DatasetConfigTreeNode selnode = null;
@@ -390,7 +390,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			}
 		}
 
-		public void dragDropEnd(DragSourceDropEvent event) {
+		public void dragDropEnd(DragSourceDropEvent event){
 			if (event.getDropSuccess()) {
 				try {
 					if (dropnode.equals(selnode)) {
@@ -441,6 +441,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				} catch (IllegalArgumentException iae) {
 					iae.printStackTrace();
 				}
+				
 
 			}
 		}
@@ -753,7 +754,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 	}
 
-	public void insert(BaseConfigurationObject obj, String name) {
+	public void insert(BaseConfigurationObject obj, String name) throws ConfigurationException{
 
 		DatasetConfigTreeNode parentNode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		DatasetConfigTreeNode newNode = new DatasetConfigTreeNode(name + "newNode", obj);
