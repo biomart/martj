@@ -811,8 +811,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				String[] otherFilters = fd1.getOtherFilters().split(";");
 				fd2 = null;
 				for (int p = 0; p < otherFilters.length; p++){
-					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
-					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
+					otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default","");  
+					MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",""));
 					if (otherDataset.containsFilterDescription(filter2))
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
 					if (fd2 != null){
@@ -853,8 +853,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					String[] otherFilters = referredFilter.getOtherFilters().split(";");
 					fd2 = null;
 					for (int p = 0; p < otherFilters.length; p++){
-						otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
-						MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
+						otherDataset = MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default","");  
+						MartEditor.getDatasetConfigXMLUtils().loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtils().getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",""));
 						if (otherDataset.containsFilterDescription(filter2))
 								fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
 						if (fd2 != null){
@@ -886,7 +886,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 
 			pa.addOptions(
-				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
+				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL,""));
 
 			if (pa.getOptions().length > 0) {
 				Enumeration children = parentNode.children();

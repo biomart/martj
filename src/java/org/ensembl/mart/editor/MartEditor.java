@@ -107,6 +107,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
   private static DatasetConfigXMLUtils dscutils = new DatasetConfigXMLUtils(true);
   //may want to turn validation on?
   private static DatabaseDatasetConfigUtils dbutils;
+  private static Hashtable dbutilsHash = new Hashtable();
+  
 
   static private String user;
   private String database;
@@ -159,6 +161,26 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				   dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
 					connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";
 				   //valid = true;
+				   String[] schemas = databaseDialog.getSchema().split(";");
+				   for (int i = 0; i < schemas.length; i++){
+				   		DetailedDataSource ds1 = 
+										new DetailedDataSource(
+										 databaseDialog.getDatabaseType(),
+										 databaseDialog.getHost(),
+										 databaseDialog.getPort(),
+										 schemas[i],
+										 databaseDialog.getSchema(),
+										 databaseDialog.getUser(),
+										 databaseDialog.getPassword(),
+										 10,
+										 databaseDialog.getDriver(),
+										 defaultSourceName);
+					    DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1);
+				   		dbutilsHash.put(schemas[i],dbutils1);
+				   }
+				   
+				   
+				   
 				 } catch (SQLException e) {
 				 	ds = null;
 					connection = "MartEditor (NO DATABASE CONNECTION)";	
@@ -621,6 +643,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
   public static DatabaseDatasetConfigUtils getDatabaseDatasetConfigUtils() {
     return dbutils;
+  }
+  
+  public static DatabaseDatasetConfigUtils getDatabaseDatasetConfigUtilsBySchema(String schema) {
+	return (DatabaseDatasetConfigUtils) dbutilsHash.get(schema);
   }
 
   public void databaseConnection() {
@@ -1167,14 +1193,17 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				// test if version need updating and newVersion++ if so
 				String datasetVersion = dsv.getVersion();
 				String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
-				if (datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
+				if (newDatasetVersion != null && datasetVersion != null && datasetVersion != "" && !datasetVersion.equals(newDatasetVersion)){
 					dsv.setVersion(newDatasetVersion);
 					newVersion++;
 				}
+				//System.out.println(newVersion + "\t" + newDatasetVersion);
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				if (dbutils.updateLinkVersions(dsv))					
 					newVersion++;
 				
+				
+				//System.out.println(newVersion + "\t" + newDatasetVersion);
 				//BELOW MAKES NO SENSE
 				//if (brokenString != "") 
 					brokenString = brokenString + dbutils.getBrokenElements(dsv);

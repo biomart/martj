@@ -50,11 +50,14 @@ import javax.swing.JOptionPane;
 import oracle.sql.BLOB;
 import oracle.sql.CLOB;
 
+import org.ensembl.mart.editor.MartEditor;
 import org.ensembl.mart.lib.DetailedDataSource;
 import org.ensembl.mart.util.ColumnDescription;
 import org.ensembl.mart.util.TableDescription;
 import org.jdom.Document;
 import org.jdom.output.XMLOutputter;
+
+
 
 /**
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
@@ -166,7 +169,7 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       String catalog = conn.getCatalog();
 
-      ResultSet vr = conn.getMetaData().getTables(catalog, getSchema(), table, null);
+      ResultSet vr = conn.getMetaData().getTables(catalog, getSchema()[0], table, null);
 
       //expect at most one result, if no results, tcheck will remain null
       if (vr.next())
@@ -252,8 +255,8 @@ public class DatabaseDatasetConfigUtils {
 	  	
 	  }	  
 	} catch (SQLException e) {
-			  System.out.println("Include a meta_release table entry for dataset" +
-			  dsv.getDataset() + "if you want auto link version updating");
+			  System.out.println("Include a meta_release table entry for dataset " +
+			  dsv.getDataset() + " if you want auto link version updating");
 	} 	   
 	finally {
 	  //this throws any SQLException, but always closes the connection
@@ -327,6 +330,8 @@ public class DatabaseDatasetConfigUtils {
 		AttributePage apage;
 		String testInternalName;
 		String duplicationString = "";
+		//String optionDuplicationString = "";
+		String filterDuplicationString = "";
 		String spaceErrors = "";
 		String linkErrors = "";
 	  
@@ -398,7 +403,7 @@ public class DatabaseDatasetConfigUtils {
 						}	
 						if (descriptionsMap.containsKey(testAD.getInternalName())){
 							//System.out.println("DUPLICATION " + testAD.getInternalName());
-							duplicationString = duplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+							filterDuplicationString = filterDuplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
 						  
 							continue;//to stop options also being assessed
 						}
@@ -415,7 +420,7 @@ public class DatabaseDatasetConfigUtils {
 							  }
 							  if (descriptionsMap.containsKey(op.getInternalName())){
 								  //System.out.println("DUPLICATION " + op.getInternalName());
-								  duplicationString = duplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+								  filterDuplicationString = filterDuplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
 								
 							  }
 							  descriptionsMap.put(op.getInternalName(),"1");
@@ -444,10 +449,81 @@ public class DatabaseDatasetConfigUtils {
 		  return;//no export performed
 		}
 	  	  
-		if (duplicationString != ""){
-		  JOptionPane.showMessageDialog(null, "The following internal names are duplicated and will cause client problems:\n"
-							  + duplicationString, "ERROR", 0);
-		  return;//no export performed
+		if (filterDuplicationString != "" || duplicationString != ""){
+			
+		  int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
+				  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
++ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
+							  
+		  // make unique code
+		  if (choice == 0){
+		  	 	//System.out.println("MAKING UNIQUE");	
+		  	 	String testName;
+		  	 	int i;
+		  	 	
+		  	 	String[] attributeLines = duplicationString.split("\n");
+		  	 	OUTER:for (i = 0; i < attributeLines.length; i++){
+		  	 		testName = attributeLines[i].split("\\s+")[0];
+		  	 		System.out.println(testName);
+		 			boolean first = true;
+					for (int j = 0; j < apages.length; j++){
+						apage = apages[j];
+			
+						if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+							continue;
+						}
+		    
+						List testAtts = new ArrayList();
+						testAtts = apage.getAllAttributeDescriptions();
+						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+							Object testAtt = iter.next();
+							AttributeDescription testAD = (AttributeDescription) testAtt;
+						
+						//AttributeGroup[] agroups = apage.getAttributeGroups();
+						//for (int k = 0; k < agroups.length; k++){
+					     //AttributeCollection[] acolls = agroups[k].getAttributeCollections();
+						 //for (int l = 0; l < acolls.length; l++){
+						  //List testAtts = new ArrayList();
+						  //testAtts = acolls[l].getAttributeDescriptions();
+						  //for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+							//Object testAtt = iter.next();
+							//AttributeDescription testAD = (AttributeDescription) testAtt;	
+							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+									continue;
+							}
+							if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+								 continue;//placeholder atts can be duplicated	
+							}
+									  
+							if (testAD.getInternalName().equals(testName)){
+								if (first)
+									first = false;
+								else{
+									//apage.removeAttributeDescription(testAD);
+									testAD.setInternalName(testName + "_2");
+									
+									//Integer position = (Integer) iter.next() - 1;
+									//apage.insertAttributeDescription(position,testAD);
+									System.out.println("FIXED " + testName + " WITH FIELD = " + testAD.getField() + " " + testAD.getInternalName());
+									continue OUTER;	  
+								}
+							
+						  
+						 
+										  
+							}
+							
+						}
+					}		 
+		  	 	}
+		  	 	
+		  	 	//return;//REMOVE ONCE WORKING
+		  }
+		  else{
+			JOptionPane.showMessageDialog(null, "No Export performed",
+										  "ERROR", 0);					  
+		  	return;//no export performed
+		  }
 		}
 
     int rowsupdated = 0;
@@ -457,7 +533,8 @@ public class DatabaseDatasetConfigUtils {
     else
       rowsupdated = storeUncompressedXML(user, internalName, displayName, dataset, description, doc);
 
-    updateMartConfigForUser(user);
+	
+    updateMartConfigForUser(user,getSchema()[0]);
     if (rowsupdated < 1)
       if (logger.isLoggable(Level.WARNING))
         logger.warning("Warning, xml for " + internalName + ", " + displayName + " not stored"); //throw an exception?	
@@ -629,7 +706,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()+"."+metatable + INSERTCOMPRESSEDXMLB;
+      String insertSQL = INSERTCOMPRESSEDXMLA + getSchema()[0]+"."+metatable + INSERTCOMPRESSEDXMLB;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine("\ninserting with SQL " + insertSQL + "\n");
@@ -780,12 +857,12 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
-  private void updateMartConfigForUser(String user) throws ConfigurationException {
+  private void updateMartConfigForUser(String user, String schema) throws ConfigurationException {
 	configInfo = new HashMap();
-	initMartConfigForUser(user);
+	initMartConfigForUser(user,schema);
   }
   
-  private void initMartConfigForUser(String user) throws ConfigurationException {
+  private void initMartConfigForUser(String user,String schema) throws ConfigurationException {
     if (!configInfo.containsKey(user)) {
       HashMap userMap = new HashMap();
       configInfo.put(user, userMap);
@@ -794,7 +871,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String sql = GETALLNAMESQL + getSchema()+"."+metatable;
+      String sql = GETALLNAMESQL + schema +"."+metatable;
       
       if (!dscutils.includeHiddenMembers) {
         sql += VISIBLESQL;
@@ -847,7 +924,7 @@ public class DatabaseDatasetConfigUtils {
    */
   public String[] getAllDatasetNames(String user) throws ConfigurationException {
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,getSchema()[0]);
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
@@ -869,12 +946,12 @@ public class DatabaseDatasetConfigUtils {
    */
   public String[] getAllInternalNamesForDataset(String user, String dataset) throws ConfigurationException {
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,getSchema()[0]);
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
     if (!userMap.containsKey(dataset))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,getSchema()[0]);
     
     if (!userMap.containsKey(dataset))
       return new String[0];
@@ -898,16 +975,16 @@ public class DatabaseDatasetConfigUtils {
    * @return DatasetConfig defined by given internalName
    * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
-  public DatasetConfig getDatasetConfigByDatasetInternalName(String user, String dataset, String internalName)
+  public DatasetConfig getDatasetConfigByDatasetInternalName(String user, String dataset, String internalName, String schema)
     throws ConfigurationException {
 
     if (!configInfo.containsKey(user))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,schema);
     
     HashMap userMap = (HashMap) configInfo.get(user);
     
     if (!userMap.containsKey(dataset))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,schema);
     
     if (!userMap.containsKey(dataset))
       return null;
@@ -915,7 +992,7 @@ public class DatabaseDatasetConfigUtils {
     HashMap dsetMap = (HashMap) userMap.get(dataset);
     
     if (!dsetMap.containsKey(internalName))
-      initMartConfigForUser(user);
+      initMartConfigForUser(user,schema);
     if (!dsetMap.containsKey(internalName))
       return null;
     
@@ -932,7 +1009,7 @@ public class DatabaseDatasetConfigUtils {
    * @return DatasetConfig JDOM Document defined by given displayName and dataset
    * @throws ConfigurationException when valid meta_configuration tables are absent, and for all underlying Exceptions
    */
-  public Document getDatasetConfigDocumentByDatasetInternalName(String user, String dataset, String internalName)
+  public Document getDatasetConfigDocumentByDatasetInternalName(String user, String dataset, String internalName, String schema)
     throws ConfigurationException {
     if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
       return getDatasetConfigDocumentByDatasetInternalNameOracle(user, dataset, internalName);
@@ -940,7 +1017,7 @@ public class DatabaseDatasetConfigUtils {
     Connection conn = null;
     try {
       String metatable = getDSConfigTableFor(user);
-      String sql = GETDOCBYINAMESELECT + getSchema()+"."+metatable + GETDOCBYINAMEWHERE;
+      String sql = GETDOCBYINAMESELECT + schema +"."+metatable + GETDOCBYINAMEWHERE;
 
       if (logger.isLoggable(Level.FINE))
         logger.fine(
@@ -1214,7 +1291,7 @@ public class DatabaseDatasetConfigUtils {
   public byte[] getDSConfigMessageDigestByDatasetInternalName(String user, String dataset, String internalName)
     throws ConfigurationException {
       
-      DatasetConfig dsv = getDatasetConfigByDatasetInternalName(user, dataset, internalName);
+      DatasetConfig dsv = getDatasetConfigByDatasetInternalName(user, dataset, internalName, getSchema()[0]);
       if (dsv == null)
         return null;
       
@@ -1228,9 +1305,9 @@ public class DatabaseDatasetConfigUtils {
     //System.out.println("DISPLAY NAME" + displayName);
     String existSQL;
     if (displayName != null)
-    	existSQL = EXISTSELECT + getSchema()+"."+metatable + EXISTWHERE;
+    	existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + EXISTWHERE;
     else
-		existSQL = EXISTSELECT + getSchema()+"."+metatable + ALTEXISTWHERE;
+		existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + ALTEXISTWHERE;
 	
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
@@ -1280,9 +1357,9 @@ public class DatabaseDatasetConfigUtils {
 
     String deleteSQL;
     if (displayName != null) 
-    	deleteSQL= DELETEOLDXML + getSchema()+"."+metatable + DELETEOLDXMLWHERE;
+    	deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + DELETEOLDXMLWHERE;
 	else
-	    deleteSQL= DELETEOLDXML + getSchema()+"."+metatable + ALTDELETEOLDXMLWHERE;	
+	    deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + ALTDELETEOLDXMLWHERE;	
 	    
     int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
     if (logger.isLoggable(Level.FINE))
@@ -1361,7 +1438,7 @@ public class DatabaseDatasetConfigUtils {
 	  ds.executeUpdate();
 	  ds.close();
 
-      updateMartConfigForUser(user);
+      updateMartConfigForUser(user, getSchema()[0]);
 	  
 	} catch (SQLException e) {
 	  throw new ConfigurationException("Caught SQLException during delete\n");
@@ -1381,7 +1458,7 @@ public class DatabaseDatasetConfigUtils {
   public String getDSConfigTableFor(String user) throws ConfigurationException {
     String metatable = BASEMETATABLE;
     
-    String CREATETABLE= "create table " +getSchema()+".meta_configuration";
+    String CREATETABLE= "create table " +getSchema()[0]+".meta_configuration";
     String MYSQL_META    = CREATETABLE+"(internalName varchar(100), displayName varchar(100), dataset varchar(100), description varchar(200), xml longblob, compressed_xml longblob, MessageDigest blob, type varchar(20), visible int(1) unsigned, version varchar(25))";
     String ORACLE_META   = CREATETABLE+" (internalname varchar2(100), displayname varchar2(100), dataset varchar2(100), description varchar2(200), xml clob, compressed_xml blob, messagedigest blob, type varchar2(100), visible number(1), version varchar2(25))";
     String POSTGRES_META = CREATETABLE+"(internalname varchar(100), displayname varchar(100), dataset varchar(100), description varchar(200), xml text, compressed_xml bytea, MessageDigest bytea, type varchar(20), visible integer, version varchar(25))";
@@ -1421,7 +1498,7 @@ public class DatabaseDatasetConfigUtils {
     
   	
   	String catalog="";
-    String schema = getSchema();
+    String schema = getSchema()[0];
   	
   	
 
@@ -1560,7 +1637,7 @@ public class DatabaseDatasetConfigUtils {
     
     String brokenElements = "";
 	String catalog="";
-	String schema = getSchema();
+	String schema = getSchema()[0];
 	Connection conn = dsource.getConnection();
 	//DatasetConfig validatedDatasetConfig = new DatasetConfig(dsv, true, false);
 	//want to copy existing Elements to the new Object as is
@@ -1741,7 +1818,7 @@ public class DatabaseDatasetConfigUtils {
   private FilterCollection getValidatedFilterCollection(FilterCollection collection, String dset, DatasetConfig dsv, Connection conn) throws SQLException, ConfigurationException {
     
     String catalog="";
-    String schema = getSchema();
+    String schema = getSchema()[0];
     
     
     
@@ -1931,19 +2008,26 @@ public class DatabaseDatasetConfigUtils {
 					otherDataset = null;
 					FilterDescription fd2 = null;
 					String[] otherFilters = validatedFilter.getOtherFilters().split(";");
-					for (int p = 0; p < otherFilters.length; p++){
-						otherDataset = getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default");  
+					OUTER:for (int p = 0; p < otherFilters.length; p++){
+					  String[] schemas = getSchema();
+					  for (int q = 0; q < schemas.length; q++){
+					  	DatabaseDatasetConfigUtils newUtils = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]);
+						//System.out.println("NEW ONE HAS DSOURCE " + newUtils.getAllDatasetNames(null)[0]);
+						otherDataset = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]);  
 	
 						if (otherDataset == null){
 							continue;
 						}
-						dscutils.loadDatasetConfigWithDocument(otherDataset, getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default"));
-						if (otherDataset.containsFilterDescription(filter2))
+						dscutils.loadDatasetConfigWithDocument(otherDataset, MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigDocumentByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]));
+						if (otherDataset.containsFilterDescription(filter2)){
 							fd2 = otherDataset.getFilterDescriptionByInternalName(filter2);
-						if (fd2 != null){
-							otherDatasetFilter1 = otherFilters[p].split("\\.")[1];
-							break;
 						}
+						if (fd2 != null){
+							schema = schemas[q];
+							otherDatasetFilter1 = otherFilters[p].split("\\.")[1];
+							break OUTER;
+						}
+					  }
 					}
 					
 					fd2.setType("drop_down_basic_filter");
@@ -1966,7 +2050,7 @@ public class DatabaseDatasetConfigUtils {
 						String opName = op.getDisplayName();
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 						//System.out.println("1A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL));
+						pa.addOptions(getLookupOptions(pushField, pushTableName, pafield, opName, orderSQL,schema));
 						
 						// ADD ANY SECONDARY PUSH ACTIONS
 						for (int p = 0; p < secondaryPushActions.length; p++){
@@ -1979,8 +2063,8 @@ public class DatabaseDatasetConfigUtils {
 								FilterDescription fd3 = null;
 								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
 								for (int q = 0; q < secOtherFilters.length; q++){
-									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default");  
-									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default"));
+									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default",getSchema()[0]);  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default",getSchema()[0]));
 									if (secOtherDataset.containsFilterDescription(secFilter2))
 										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
 									if (fd3 != null){
@@ -2003,7 +2087,7 @@ public class DatabaseDatasetConfigUtils {
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("1B"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -2037,7 +2121,7 @@ public class DatabaseDatasetConfigUtils {
 						PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
 						
 						//System.out.println("2A"+pushField+"\t"+pushTableName+"\t"+field+"\t"+opName+"\t"+orderSQL);
-						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL));
+						pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderSQL,schema));
 						// ADD ANY SECONDARY PUSH ACTION
 						for (int p = 0; p < secondaryPushActions.length; p++){
 							String secFilter2 = secondaryPushActions[p];
@@ -2049,8 +2133,8 @@ public class DatabaseDatasetConfigUtils {
 								FilterDescription fd3 = null;
 								String[] secOtherFilters = referredFilter.getOtherFilters().split(";");
 								for (int q = 0; q < secOtherFilters.length; q++){
-									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default");  
-									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default"));
+									secOtherDataset = getDatasetConfigByDatasetInternalName(null,secOtherFilters[q].split("\\.")[0],"default",getSchema()[0]);  
+									dscutils.loadDatasetConfigWithDocument(secOtherDataset, getDatasetConfigDocumentByDatasetInternalName(null,secOtherFilters[p].split("\\.")[0],"default",getSchema()[0]));
 									if (secOtherDataset.containsFilterDescription(secFilter2))
 										fd3 = secOtherDataset.getFilterDescriptionByInternalName(secFilter2);
 									if (fd3 != null){
@@ -2073,7 +2157,7 @@ public class DatabaseDatasetConfigUtils {
 									String secOpName = op3.getDisplayName();
 									PushAction secondaryPA = new PushAction(secPushInternalName + "_push_" + secOpName, null, null, secPushInternalName, secOrderSQL);
 									//System.out.println("2B"+secPushField+"\t"+secPushTableName+"\t"+secPafield+"\t"+secOpName+"\t"+secOrderSQL);
-									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL));
+									secondaryPA.addOptions(getLookupOptions(secPushField, secPushTableName, secPafield, secOpName, secOrderSQL,schema));
 									options3[r].addPushAction(secondaryPA); 
 								}
 							}
@@ -2339,7 +2423,7 @@ public class DatabaseDatasetConfigUtils {
     throws SQLException {
     
     String catalog = "";
-    String schema=getSchema();
+    String schema=getSchema()[0];
     
    
     AttributeCollection validatedAttributeCollection = new AttributeCollection(collection);
@@ -2393,6 +2477,11 @@ public class DatabaseDatasetConfigUtils {
 
     boolean fieldValid = false;
     boolean tableValid = false;
+
+	if (validatedAttribute.getInternalName().matches("\\w+\\.\\w+")){
+		return validatedAttribute;
+	}
+
 
     String field = description.getField();
     // oracle case sensitive
@@ -3604,7 +3693,7 @@ public class DatabaseDatasetConfigUtils {
       String opName = op.getInternalName();
       PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderBy);
 
-      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderBy));
+      pa.addOptions(getLookupOptions(pushField, pushTableName, field, opName, orderBy,getSchema()[0]));
 
       if (pa.getOptions().length > 0) {
         //System.out.println("ADDING PA\t" + op.getInternalName());
@@ -3757,7 +3846,7 @@ public class DatabaseDatasetConfigUtils {
       "SELECT DISTINCT "
         + columnName
         + " FROM "
-	    + getSchema()
+	    + getSchema()[0]
 		+"."
         + tableName
         + " WHERE "
@@ -3800,7 +3889,7 @@ public class DatabaseDatasetConfigUtils {
     return retOptions;
   }
 
-  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL)
+  public Option[] getLookupOptions(String columnName, String tableName, String whereName, String whereValue, String orderSQL, String schema)
     throws SQLException, ConfigurationException {
 
     List options = new ArrayList();
@@ -3814,7 +3903,7 @@ public class DatabaseDatasetConfigUtils {
       "SELECT DISTINCT "
         + columnName
         + " FROM "
-        + tableName
+        + schema + "." + tableName
         + " WHERE "
         + whereName
         + "=\'"
@@ -3854,7 +3943,7 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
        
       // added getSchema() to fully qualify this to work with 'non-public' postgres schemas
-      StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + getSchema()+"."+tableName + " WHERE " + cname + " IS NOT NULL");
+      StringBuffer sql = new StringBuffer("SELECT " + cname+ " FROM " + getSchema()[0]+"."+tableName + " WHERE " + cname + " IS NOT NULL");
       
       if (dsource.getDatabaseType().equals("oracle")){
      //System.out.println("databaseType() "+dsource.getDatabaseType());
@@ -3890,34 +3979,16 @@ public class DatabaseDatasetConfigUtils {
     }
   }
 
-private String getSchema(){
+private String[] getSchema(){
 	
-	String schema = null;
+	/* String schema = null;
 	if(dsource.getDatabaseType().equals("oracle")) schema = dsource.getSchema().toUpperCase();
     else schema = dsource.getSchema();
-	
-	 //= dsource.getSchema().toUpperCase();
-	
-	
-	//System.out.println ("schema "+schema);
-
-	
-	
-	
-    /*try {
-		Connection conn = dsource.getConnection();
-		ResultSet schemas = conn.getMetaData().getSchemas();
-		  // for oracle, mysql does not care
-		// schema, catalog, user, db and instance handling between oracle and mysql needs to be reorganised
-		  schema=dsource.getUser().toUpperCase();
-		conn.close();
-	} catch (SQLException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}	
-*/
-    return schema;
-    
+    */
+    String[] schema = null;
+	if(dsource.getDatabaseType().equals("oracle")) schema = dsource.getSchema().toUpperCase().split(";");
+	else schema = dsource.getSchema().split(";");
+	return schema;
 }
 
 
