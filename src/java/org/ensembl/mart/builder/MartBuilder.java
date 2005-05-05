@@ -99,6 +99,10 @@ public class MartBuilder {
 			
 
 			System.out.println("\n\n");
+			
+			
+			// the below need to become a part of interactive GUI
+			// switched off for now
 
 			/**
 			for (int i = 0; i < transformations.length; i++) {	
@@ -112,10 +116,9 @@ public class MartBuilder {
 
 */
 
-
+/**
 			// Add central filters
-			Transformation[] tran = dataset
-					.getTransformationsByFinalTableType("DM");
+			Transformation[] tran = dataset.getTransformationsByFinalTableType("DM");
 
 			for (int i = 0; i < tran.length; i++) {
 				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "
@@ -127,7 +130,7 @@ public class MartBuilder {
 
 			}
 
-			
+	*/		
 
 			dataset.createTransformationsForCentralFilters();
 
@@ -272,6 +275,7 @@ public class MartBuilder {
 					transformation.number=fileEntries[9];
 					transformation.finalTableName=fileEntries[12];
 					transformation.userTableName=fileEntries[12];
+					if(fileEntries[13].equals("Y")) transformation.central=true;
 
 					StringBuffer final_table = new StringBuffer(datasetName+ "__" +fileEntries[2] + "__");
 					if (fileEntries[1].toUpperCase().equals("M")) {
