@@ -1519,6 +1519,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (!validatedStar.equals(starbase)) {
         hasBrokenStars = true;
+        System.out.println("MAIN TABLE IS BROKEN AND NEEDS REMOVING AND RE-ADDING " + starbase);
         validatedDatasetConfig.removeMainTable(starbase);
       }
 
@@ -1540,6 +1541,7 @@ public class DatabaseDatasetConfigUtils {
 
       if (!validatedKey.equals(pkey)) {
         hasBrokenPKeys = true;
+		System.out.println("KEY IS BROKEN AND NEEDS REMOVING AND RE-ADDING " + pkey);
         validatedDatasetConfig.removePrimaryKey(pkey);
       }
 
@@ -3316,11 +3318,11 @@ public class DatabaseDatasetConfigUtils {
 
     String[] sbases = new String[starbases.size()];
     starbases.toArray(sbases);
-    dsv.addMainTables(sbases);
+    //dsv.addMainTables(sbases);
 
     String[] pkeys = new String[primaryKeys.size()];
     primaryKeys.toArray(pkeys);
-    dsv.addPrimaryKeys(pkeys);
+    //dsv.addPrimaryKeys(pkeys);
 
     List allTables = new ArrayList();
     allTables.addAll(starbases);

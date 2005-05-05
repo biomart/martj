@@ -1186,7 +1186,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				 
 				// update it
 				
-				dsv = dbutils.getValidatedDatasetConfig(dsv);
+				//dsv = dbutils.getValidatedDatasetConfig(dsv); ? IF WANT TO DO AFTER GETBROKENELEMENTS AT LEAST
+				
 				// keep a string of all the broken filts and atts set to hidden
 				
 				newVersion = 0;
