@@ -28,12 +28,11 @@ public class MartBuilder {
 	
 	
 	
-	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 
 		String config_info = "";
 		String file = null;
-		String sqlFile=null;
+		String sqlFile = null;
 
 		String tSchemaName = null;
 
@@ -82,168 +81,123 @@ public class MartBuilder {
 			file = data_dir + file;
 		}
 
-		System.out.println("Transforming your schema ... please wait ....");
+		System.out.print("Transforming your schema ... please wait ....");
 		readConfiguration(file);
-
+        System.out.println ("............................ done");
+		
 		int ind = 0;
 
 		for (int m = 0; m < mart.size(); m++) {
 			dataset = (Dataset) mart.get(m);
-			
+
 			ind++;
 
-
 			// Reset final table names if you want to
-			
+
 			dataset.setUserTableNames();
 			Transformation[] transformations = dataset.getTransformations();
-			
 
-			System.out.println("\n\n");
-			
-			
-			// the below need to become a part of interactive GUI
+
+			// the below need to become a part of an interactive GUI
 			// switched off for now
 
 			/**
-			for (int i = 0; i < transformations.length; i++) {	
+			 * for (int i = 0; i < transformations.length; i++) {
+			 * 
+			 * String newname = getUserInput("CHANGE FINAL TABLE NAME: "
+			 * +transformations[i].number+" "+ transformations[i].finalTableName + "
+			 * TO: "); if (newname != null && !newname.equals("\n") &&
+			 * !newname.equals("")) transformations[i].setFinalName(newname); }
+			 *  
+			 */
 
-				String newname = getUserInput("CHANGE FINAL TABLE NAME: "
-						+transformations[i].number+" "+ transformations[i].finalTableName + " TO: ");
-				if (newname != null && !newname.equals("\n")
-						&& !newname.equals(""))
-					transformations[i].setFinalName(newname);
-			}
-
-*/
-
-/**
-			// Add central filters
-			Transformation[] tran = dataset.getTransformationsByFinalTableType("DM");
-
-			for (int i = 0; i < tran.length; i++) {
-				String input = getUserInput("INCLUDE CENTRAL FILTER FOR: "
-						+ tran[i].userTableName + " [Y|N] [Y default] ");
-				if (!(input.equals("N") || input.equals("n"))) {
-					tran[i].central = true;
-
-				}
-
-			}
-
-	*/		
+			/**
+			 * // Add central filters Transformation[] tran =
+			 * dataset.getTransformationsByFinalTableType("DM");
+			 * 
+			 * for (int i = 0; i < tran.length; i++) { String input =
+			 * getUserInput("INCLUDE CENTRAL FILTER FOR: " +
+			 * tran[i].userTableName + " [Y|N] [Y default] "); if
+			 * (!(input.equals("N") || input.equals("n"))) { tran[i].central =
+			 * true;
+			 *  }
+			 *  }
+			 *  
+			 */
 
 			dataset.createTransformationsForCentralFilters();
+			Transformation[] final_transformations = dataset
+					.getTransformations();
 
-			Transformation[] final_transformations = dataset.getTransformations();
-
-			
 			sqlFile = getUserInput("OUTPUT SQL FILE: ");
-			//sqlFile = data_dir + sqlFile;
+			writeDDL(final_transformations, sqlFile, ind);
+		}
 
-			File f = new File(sqlFile);
-			f.delete();
-			
-			BufferedWriter sqlout = null;
-			try {
-				sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
-			} catch (IOException e1) {
-				e1.printStackTrace();
+		System.out.println("WRITTEN TO: "+sqlFile );
+
+	}
+
+	/**
+	 * @param final_transformations
+	 * @param sqlFile
+	 * @param ind
+	 */
+	private static void writeDDL(Transformation[] final_transformations,
+			String sqlFile, int ind) throws IOException {
+
+		File f = new File(sqlFile);
+		f.delete();
+
+		BufferedWriter sqlout = null;
+		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
+
+		// Dump to SQL
+		for (int i = 0; i < final_transformations.length; i++) {
+
+			ind = 10 + ind;
+
+			TransformationUnit[] units = final_transformations[i].getUnits();
+
+			sqlout.write("\n--\n--       TRANSFORMATION NO "
+					+ final_transformations[i].number + "      TARGET TABLE: "
+					+ final_transformations[i].userTableName.toUpperCase()
+					+ "\n--\n");
+
+			for (int j = 0; j < units.length; j++) {
+
+				// don't want indexes before 'select distinct'
+				if (!units[j].single & j > 0)
+					sqlout.write(units[j].addIndex(ind + j) + "\n");
+				sqlout.write(units[j].toSQL() + "\n");
 			}
-			
-			
-			
-			
-			
-			
-			
-			
-			// Dump to SQL
-			for (int i = 0; i < final_transformations.length; i++) {
-
-				ind = 10 + ind;
-
-				TransformationUnit[] units = final_transformations[i].getUnits();
-
-				
-					try {
-						sqlout.write("\n--\n--       TRANSFORMATION NO "+final_transformations[i].number+
-								"      TARGET TABLE: "+final_transformations[i].userTableName.toUpperCase()+"\n--\n");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				
-				
-				
-				for (int j = 0; j < units.length; j++) {
-					
-					// don't want indexes before 'select distinct'
-					if(!units[j].single & j>0)
-						try {
-							sqlout.write(units[j].addIndex(ind + j));
-						} catch (IOException e3) {
-							// TODO Auto-generated catch block
-							e3.printStackTrace();
-						}
-					try {
-						sqlout.write(units[j].toSQL());
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-					
-				}
-				for (int j = 0; j < units.length; j++) {
-					try {
-						sqlout.write(units[j].dropTempTable());
-					} catch (IOException e2) {
-						// TODO Auto-generated catch block
-						e2.printStackTrace();
-					}
-				}
-
+			for (int j = 0; j < units.length; j++) {
+				sqlout.write(units[j].dropTempTable() + "\n");
 			}
+		}
 
-			//String key=dataset.getTransformationsByFinalTableType("MAIN")[0].getFinalUnit().TSKey;
-			
-			
-			// now renaming to _key and final indexes
-			for (int i = 0; i < final_transformations.length; i++) {
+		// now renaming to _key and final indexes
+		for (int i = 0; i < final_transformations.length; i++) {
 
-				ind = 10 + ind;
+			ind = 10 + ind;
 
-				TransformationUnit[] units = final_transformations[i].getUnits();
+			TransformationUnit[] units = final_transformations[i].getUnits();
 
-				for (int j = 0; j < units.length; j++) {
-					if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
-						try {
-							sqlout.write(units[j].renameKeyColumn(dataset.datasetKey));
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						try {
-							sqlout.write(units[j].addFinalIndex(ind + j,dataset.datasetKey + "_key"));
-						} catch (IOException e2) {
-							// TODO Auto-generated catch block
-							e2.printStackTrace();
-						}
-					}
+			for (int j = 0; j < units.length; j++) {
+				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
+
+					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
+					sqlout.write(units[j].addFinalIndex(ind + j,
+							dataset.datasetKey + "_key")+ "\n");
+
 				}
 			}
 		}
 
-		//System.out.println("\ndone ");
-		
+		sqlout.close();
 	}
 
-	
-	
-	
-	
-	
-	private static void createConfiguration(String user_dataset, String output_file) {
+	private static void createConfiguration(String user_dataset,
+			String output_file) {
 
 		String prompt = "TYPE MAIN [M] DIMENSION [D] EXIT [E]: ";
 		String table_type;
@@ -259,7 +213,7 @@ public class MartBuilder {
 				|| table_type.toUpperCase().equals("D")) {
 			String table_name = getUserInput("TABLE NAME: ");
 			String extension = getUserInput("Extension: ");
-			
+
 			transformationCount++;
 			writeConfigFile(output_file, user_dataset, table_name, table_type,
 					extension, transformationCount);
@@ -267,11 +221,6 @@ public class MartBuilder {
 		}
 	}
 
-	
-	
-	
-	
-	
 	private static void readConfiguration(String input_file) {
 
 		try {
@@ -283,119 +232,121 @@ public class MartBuilder {
 			String lastTrans = null;
 			int lines = 0;
 			int dataset_counter = 0;
-			Transformation transformation=null;
+			Transformation transformation = null;
 			String datasetName = null;
 			ArrayList linkedList = new ArrayList();
 
-			
-			
-			
 			while ((line = in.readLine()) != null) {
 
 				if (line.startsWith("#"))
 					continue;
 				String[] fileEntries = line.split("\t");
 
-				
-                 // new dataset
+				// new dataset
 				if (!fileEntries[0].equals(lastDatasetName)) {
-					
-					if (lines>0) {
+
+					if (lines > 0) {
 						//dataset.datasetKey=datasetKey;
 						mart.add(dataset);
 					}
 					//datasetKey=null;
-					dataset = new Dataset();					
+					dataset = new Dataset();
 					datasetName = fileEntries[0];
-					dataset.name=datasetName;
-					dataset.adaptor=adaptor;
-					dataset.targetSchemaName=targetSchemaName;
+					dataset.name = datasetName;
+					dataset.adaptor = adaptor;
+					dataset.targetSchemaName = targetSchemaName;
 					lastDatasetName = datasetName;
-					dataset.datasetKey=resolver.getPrimaryKeys(fileEntries[2]);
+					dataset.datasetKey = resolver
+							.getPrimaryKeys(fileEntries[2]);
 				}
 
-				
-				//if (fileEntries[3].equals("exported") & fileEntries[1].equals("m")) datasetKey=fileEntries[4];
-				
-				
+				//if (fileEntries[3].equals("exported") &
+				// fileEntries[1].equals("m")) datasetKey=fileEntries[4];
+
 				// new transformation
 				if (!fileEntries[9].equals(lastTrans)) {
-					if (lines>0) transformation.transform(); 
-					
-					
+					if (lines > 0)
+						transformation.transform();
+
 					transformation = new Transformation();
 					transformation.adaptor = adaptor;
 					transformation.datasetName = datasetName;
 					transformation.targetSchemaName = targetSchemaName;
-					transformation.number=fileEntries[9];
-					transformation.finalTableName=fileEntries[12];
-					transformation.userTableName=fileEntries[12];
-					if(fileEntries[13].equals("Y")) transformation.central=true;
+					transformation.number = fileEntries[9];
+					transformation.finalTableName = fileEntries[12];
+					transformation.userTableName = fileEntries[12];
+					if (fileEntries[13].equals("Y"))
+						transformation.central = true;
 
-					StringBuffer final_table = new StringBuffer(datasetName+ "__" +fileEntries[2] + "__");
+					StringBuffer final_table = new StringBuffer(datasetName
+							+ "__" + fileEntries[2] + "__");
 					if (fileEntries[1].toUpperCase().equals("M")) {
 
 						transformation.finalTableType = "MAIN";
-						transformation.finalTableName = final_table.append("main").toString();
+						transformation.finalTableName = final_table.append(
+								"main").toString();
 					} else {
 						transformation.finalTableType = "DM";
-						transformation.finalTableName = final_table.append("dm").toString();
+						transformation.finalTableName = final_table
+								.append("dm").toString();
 					}
 
-					transformation.startTable = resolver.getCentralTable(fileEntries[2]);
+					transformation.startTable = resolver
+							.getCentralTable(fileEntries[2]);
 					transformation.type = "linked";
 					transformation.column_operations = "addall";
-					
+
 					dataset.addTransformation(transformation);
 
 				}
 
-				
-				
-				String [] columnNames = {"%"};
-				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
+				String[] columnNames = { "%" };
+				if (!fileEntries[11].equals("null"))
+					columnNames = fileEntries[11].split(",");
 
-			    Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(),columnNames);
-			   
+				Table ref_table = resolver.getTable(fileEntries[5]
+						.toLowerCase(), columnNames);
+
 				ref_table.status = fileEntries[3];
 				//ref_table.PK = fileEntries[4];
 				//ref_table.FK = fileEntries[10];
 				ref_table.cardinality = fileEntries[6];
 				if (!fileEntries[8].equals("null"))
 					ref_table.extension = fileEntries[8];
-				if (!fileEntries[7].equals("null")) ref_table.central_extension = fileEntries[7];
+				if (!fileEntries[7].equals("null"))
+					ref_table.central_extension = fileEntries[7];
 
+				TransformationUnit dunit = new TransformationUnitDouble(
+						ref_table);
 
-				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
-
-				
-				
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";
 				//dunit.final_table_name = finalTableName;
 				dunit.adaptor = adaptor;
 				dunit.targetSchema = targetSchemaName;
-				
-				if(fileEntries[3].equals("exported")) dunit.TSKey=fileEntries[4];
-				else dunit.TSKey=fileEntries[10];
-				if(fileEntries[3].equals("exported")) dunit.RFKey=fileEntries[10];
-				else dunit.RFKey=fileEntries[4];
-				
-				
+
+				if (fileEntries[3].equals("exported"))
+					dunit.TSKey = fileEntries[4];
+				else
+					dunit.TSKey = fileEntries[10];
+				if (fileEntries[3].equals("exported"))
+					dunit.RFKey = fileEntries[10];
+				else
+					dunit.RFKey = fileEntries[4];
+
 				transformation.addUnit(dunit);
 
 				lastTrans = fileEntries[9];
 				lines++;
-			} 
+			}
 
 			in.close();
 
 			transformation.transform();
-			
+
 			//dataset.datasetKey=
 			mart.add(dataset);
-			
-			
+
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -403,10 +354,6 @@ public class MartBuilder {
 		}
 	}
 
-	
-	
-		
-	
 	private static void writeConfigFile(String output_file, String dataset,
 			String table_name, String table_type, String extension,
 			int transformationCount) {
@@ -418,15 +365,16 @@ public class MartBuilder {
 			e1.printStackTrace();
 		}
 
+		String[] columnNames = null;
+		columnNames[0] = "%";
 
-		String [] columnNames = null;
-		columnNames[0]="%";
-		
-		Table[] exp_tables = resolver.getExportedKeyTables(table_name, columnNames);
+		Table[] exp_tables = resolver.getExportedKeyTables(table_name,
+				columnNames);
 		write(out, exp_tables, table_name, table_type, dataset, extension,
 				transformationCount);
 
-		Table[] imp_tables = resolver.getImportedKeyTables(table_name, columnNames);
+		Table[] imp_tables = resolver.getImportedKeyTables(table_name,
+				columnNames);
 		write(out, imp_tables, table_name, table_type, dataset, extension,
 				transformationCount);
 
@@ -482,7 +430,7 @@ public class MartBuilder {
 				extension = "null";
 				if (!cardinality.equals("s") & !cardinality.equals("1n"))
 					extension = getUserInput("Extension: ");
-				
+
 				if (extension == null || extension.equals(""))
 					extension = "null";
 
