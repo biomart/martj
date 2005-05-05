@@ -33,6 +33,7 @@ public class MartBuilder {
 
 		String config_info = "";
 		String file = null;
+		String sqlFile=null;
 
 		String tSchemaName = null;
 
@@ -137,6 +138,26 @@ public class MartBuilder {
 			Transformation[] final_transformations = dataset.getTransformations();
 
 			
+			sqlFile = getUserInput("OUTPUT SQL FILE: ");
+			//sqlFile = data_dir + sqlFile;
+
+			File f = new File(sqlFile);
+			f.delete();
+			
+			BufferedWriter sqlout = null;
+			try {
+				sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+			
+			
+			
+			
+			
+			
+			
 			// Dump to SQL
 			for (int i = 0; i < final_transformations.length; i++) {
 
@@ -144,18 +165,42 @@ public class MartBuilder {
 
 				TransformationUnit[] units = final_transformations[i].getUnits();
 
-				System.out.println("\n--\n--       TRANSFORMATION NO "+final_transformations[i].number+
-						"      TARGET TABLE: "+final_transformations[i].finalTableName.toUpperCase()+"\n--\n");
+				
+					try {
+						sqlout.write("\n--\n--       TRANSFORMATION NO "+final_transformations[i].number+
+								"      TARGET TABLE: "+final_transformations[i].userTableName.toUpperCase()+"\n--\n");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				
+				
 				
 				for (int j = 0; j < units.length; j++) {
 					
 					// don't want indexes before 'select distinct'
-					if(!units[j].single & j>0) System.out.println(units[j].addIndex(ind + j));
-					System.out.println(units[j].toSQL());
+					if(!units[j].single & j>0)
+						try {
+							sqlout.write(units[j].addIndex(ind + j));
+						} catch (IOException e3) {
+							// TODO Auto-generated catch block
+							e3.printStackTrace();
+						}
+					try {
+						sqlout.write(units[j].toSQL());
+					} catch (IOException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 					
 				}
 				for (int j = 0; j < units.length; j++) {
-					System.out.println(units[j].dropTempTable());
+					try {
+						sqlout.write(units[j].dropTempTable());
+					} catch (IOException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					}
 				}
 
 			}
@@ -172,8 +217,18 @@ public class MartBuilder {
 
 				for (int j = 0; j < units.length; j++) {
 					if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
-						System.out.println(units[j].renameKeyColumn(dataset.datasetKey));
-						System.out.println(units[j].addFinalIndex(ind + j,dataset.datasetKey + "_key"));
+						try {
+							sqlout.write(units[j].renameKeyColumn(dataset.datasetKey));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						try {
+							sqlout.write(units[j].addFinalIndex(ind + j,dataset.datasetKey + "_key"));
+						} catch (IOException e2) {
+							// TODO Auto-generated catch block
+							e2.printStackTrace();
+						}
 					}
 				}
 			}
