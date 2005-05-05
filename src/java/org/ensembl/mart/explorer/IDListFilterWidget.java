@@ -374,7 +374,7 @@ public class IDListFilterWidget
         "someKey",
         "someDescription",
         "",
-        "");
+        "","","");
 
     Option o = new Option("fred_id", "true");
     o.setParent(fd);

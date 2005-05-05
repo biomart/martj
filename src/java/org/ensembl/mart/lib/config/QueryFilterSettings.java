@@ -36,6 +36,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String qualifierKey = "qualifier";
 	protected final String legalQualifiersKey = "legal_qualifiers";
 	protected final String buttonURLKey = "buttonURL";
+	protected final String regexpKey = "regexp";
+	protected final String defaultValueKey = "defaultValue";
     //protected final String hiddenKey = "hidden";
     
   private final String[] titles = new String[] { fieldKey, 
@@ -46,7 +48,9 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
                                                  qualifierKey,
                                                  legalQualifiersKey,
                                                  otherFiltersKey,
-                                                 buttonURLKey
+                                                 buttonURLKey,
+                                                 regexpKey,
+                                                 defaultValueKey,
   };
 
 	/**
@@ -84,10 +88,10 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(String internalName, String displayName, String description)
 		throws ConfigurationException {
-			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "");
+			this(internalName, displayName, description, "", "", null, "", "", "", "", "", "", "", "");
 	}
 
-  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters, String buttonURL) throws ConfigurationException {
+  public QueryFilterSettings(String internalName, String displayName, String description, String field, String value, String tableConstraint, String key, String type, String qualifier, String legalQualifiers, String otherFilters, String buttonURL, String regexp, String defaultValue) throws ConfigurationException {
 		super(internalName, displayName, description);
 		
     	setAttribute(fieldKey, field);
@@ -99,6 +103,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(legalQualifiersKey, legalQualifiers);
 		setAttribute(otherFiltersKey, otherFilters);
 		setAttribute(buttonURLKey, buttonURL);
+		setAttribute(regexpKey, regexp);
+		setAttribute(defaultValueKey, defaultValue);
   }
   
 	public void setField(String field) {
@@ -108,6 +114,22 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	public String getField() {
 		return getAttribute(fieldKey);
 	}
+	
+	public void setRegExp(String field) {
+		setAttribute(regexpKey, field);
+	}
+	
+	public String getRegExp() {
+		return getAttribute(regexpKey);
+	}	
+	
+	public void setDefaultValue(String field) {
+		setAttribute(defaultValueKey, field);
+	}
+	
+	public String getDefaultValue() {
+		return getAttribute(defaultValueKey);
+	}		
 
 	public void setOtherFilters(String otherFilters) {
 		setAttribute(otherFiltersKey, otherFilters);

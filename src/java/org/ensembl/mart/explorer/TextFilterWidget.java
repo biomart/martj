@@ -74,7 +74,7 @@ public class TextFilterWidget extends FilterWidget implements ActionListener {
         "someKey",
         "someDescription",
         "",
-        "");
+        "","","");
 
     TextFilterWidget tfw = new TextFilterWidget(fgw, q, fd, null);
 

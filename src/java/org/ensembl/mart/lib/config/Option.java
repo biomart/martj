@@ -98,7 +98,7 @@ public class Option extends QueryFilterSettings {
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {
-		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", null, "");
+		this(internalName, isSelectable, "", "", "", "", "", "", "", "", "", "", null, "", "", "");
 	}
 
 	public Option(
@@ -115,10 +115,12 @@ public class Option extends QueryFilterSettings {
 		String qualifier,
 		String legalQualifiers,
 		String otherFilters,
-		String buttonURL)
+		String buttonURL,
+		String regexp,
+		String defaultValue)
 		throws ConfigurationException {
 
-		super(internalName, displayName, description, field, value, tableConstraint, key, type, qualifier, legalQualifiers, otherFilters, buttonURL);
+		super(internalName, displayName, description, field, value, tableConstraint, key, type, qualifier, legalQualifiers, otherFilters, buttonURL, regexp, defaultValue);
 
     setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);

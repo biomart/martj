@@ -213,6 +213,8 @@ public class DatasetConfigTreeModel extends DefaultTreeModel {
 																	ad.getKey(),
 																	ad.getDescription(),
 																	"",
+																	"",
+																	"",
 																	"");
 				}
 				catch (ConfigurationException e){

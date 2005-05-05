@@ -894,7 +894,7 @@ public class DatabaseDatasetConfigUtils {
         String visible = rs.getString(7);
 		String version = rs.getString(8);
         byte[] digest = rs.getBytes(5);
-        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version);
+        DatasetConfig dsv = new DatasetConfig(iname, dname, dset, description, type, visible,version,"");
         dsv.setMessageDigest(digest);
         
         HashMap userMap = (HashMap) configInfo.get(user);
@@ -1427,7 +1427,7 @@ public class DatabaseDatasetConfigUtils {
 	*/
 
   public void deleteDatasetConfigsForDatasetIntName(String dataset, String internalName, String user) throws ConfigurationException {
-	String deleteSQL = "delete from " + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
+	String deleteSQL = "delete from " + getSchema()[0] + "." + BASEMETATABLE + DELETEDATASETCONFIG + DELETEINTERNALNAME;
 
 	Connection conn = null;
 	try {
