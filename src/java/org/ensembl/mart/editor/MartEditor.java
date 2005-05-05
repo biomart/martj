@@ -1206,8 +1206,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				
 				//System.out.println(newVersion + "\t" + newDatasetVersion);
 				//BELOW MAKES NO SENSE
-				//if (brokenString != "") 
+				if (dbutils.getBrokenElements(dsv) != "") 
 					brokenString = brokenString + dbutils.getBrokenElements(dsv);
+		
 		
 				dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
@@ -1323,8 +1324,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								  + duplicationString, "ERROR", 0);
 				  
 			}
-			//System.out.println("BROKENSTRING"+brokenString);
-			if (brokenString.matches("\\w+")){
+			//if (brokenString.matches("\\w+")){
+			if (brokenString != ""){
 					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
 											  + brokenString, "ERROR", 0);
 				  

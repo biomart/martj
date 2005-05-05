@@ -1911,11 +1911,12 @@ public class DatabaseDatasetConfigUtils {
       }
       //conn.close();
 	  //DetailedDataSource.close(conn);
+	  
+	  
       if (!(fieldValid) || !(tableValid)) {
       	validatedFilter.setHidden("true");
-
-      } else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")) {
-
+      }
+      else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")) {
         validatedFilter.setHidden("false");
         validatedFilter.setFieldBroken(); //so gets changed in the update
       }
@@ -1924,12 +1925,14 @@ public class DatabaseDatasetConfigUtils {
         validatedFilter.setFieldBroken();
         validatedFilter.setTableConstraintBroken();
       }
+       
+      
     }
 	  
       boolean optionsValid = true;
       HashMap brokenOptions = new HashMap();
       Option[] options = validatedFilter.getOptions();      
-      if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
+     if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
      
       		// store the option/push action structure so can recreate      		
