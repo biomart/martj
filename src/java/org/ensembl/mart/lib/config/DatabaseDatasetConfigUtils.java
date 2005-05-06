@@ -77,11 +77,11 @@ public class DatabaseDatasetConfigUtils {
   private final String GETDOCBYINAMESELECT = "select xml, compressed_xml from "; //append table after user test
   private final String GETDOCBYINAMEWHERE = " where internalName = ? and dataset = ?";
   private final String EXISTSELECT = "select count(*) from "; //append table after user test
-  private final String EXISTWHERE = " where internalName = ? and dataset = ? and displayName = ?";
-  private final String ALTEXISTWHERE = " where internalName = ? and dataset = ? and displayName is null";
+  private final String EXISTWHERE = " where internalName = ? and dataset = ?";// and displayName = ?";
+  //private final String ALTEXISTWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEOLDXML = "delete from "; //append table after user test
-  private final String DELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName = ?";
-  private final String ALTDELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName is null";
+  private final String DELETEOLDXMLWHERE = " where internalName = ? and dataset = ?";// and displayName = ?";
+  //private final String ALTDELETEOLDXMLWHERE = " where internalName = ? and dataset = ? and displayName is null";
   private final String DELETEDATASETCONFIG = " where dataset = ?";
   private final String DELETEINTERNALNAME = " and internalName = ?";
   private final String INSERTXMLSQLA = "insert into "; //append table after user test
@@ -343,8 +343,25 @@ public class DatabaseDatasetConfigUtils {
 				  continue;
 			  }
 		    
-			  List testAtts = new ArrayList();
-			  testAtts = apage.getAllAttributeDescriptions();
+		    
+			List testGroups = new ArrayList();				
+			testGroups = apage.getAttributeGroups();
+			for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+			  AttributeGroup testGroup = (AttributeGroup) groupIter.next();
+			  //List testColls = new ArrayList();				
+			  AttributeCollection[] testColls = testGroup.getAttributeCollections();
+			  for (int col = 0; col < testColls.length; col++) {
+				AttributeCollection testColl = testColls[col];
+				     
+				if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+				  spaceErrors = spaceErrors + "AttributeCollection " + testColl.getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";
+				}					  			
+				List testAtts = new ArrayList();
+				testAtts = testColl.getAttributeDescriptions();		    
+
+		    
+			  //List testAtts = new ArrayList();
+			  //testAtts = apage.getAllAttributeDescriptions();
 			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 				  Object testAtt = iter.next();
 				  AttributeDescription testAD = (AttributeDescription) testAtt;
@@ -359,11 +376,14 @@ public class DatabaseDatasetConfigUtils {
 				  }	
 				  if (descriptionsMap.containsKey(testAD.getInternalName())){
 					  //System.out.println("DUPLICATION " + testAD.getInternalName());	
-					  duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
-					
+					  //duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
+					duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
+												  " and page " + apage.getInternalName() + "\n";
 				  }
 				  descriptionsMap.put(testAD.getInternalName(),"1");
 			  }
+			 }
+		 }
 		}
 	  
 		Exportable[] exps = dsConfig.getExportables();
@@ -389,8 +409,27 @@ public class DatabaseDatasetConfigUtils {
 						continue;
 					}
 		    
+		    
+			List testGroups = new ArrayList();				
+			testGroups = fpage.getFilterGroups();
+			for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+			  FilterGroup testGroup = (FilterGroup) groupIter.next();
+			  //List testColls = new ArrayList();				
+			  FilterCollection[] testColls = testGroup.getFilterCollections();
+			  for (int col = 0; col < testColls.length; col++) {
+				FilterCollection testColl = testColls[col];
+				     
+				if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+				  spaceErrors = spaceErrors + "FilterCollection " + testColl.getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";
+				}					 
 					List testAtts = new ArrayList();
-					testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
+					testAtts = testColl.getFilterDescriptions();// ? OPTIONS
+		    
+		    
+		    
+		    
+					//List testAtts = new ArrayList();
+					//testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
 				  
 					for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 						Object testAtt = iter.next();
@@ -420,13 +459,16 @@ public class DatabaseDatasetConfigUtils {
 							  }
 							  if (descriptionsMap.containsKey(op.getInternalName())){
 								  //System.out.println("DUPLICATION " + op.getInternalName());
-								  filterDuplicationString = filterDuplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
-								
+								  //filterDuplicationString = filterDuplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
+								filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
+															  " and page " + fpage.getInternalName() + "\n";
 							  }
 							  descriptionsMap.put(op.getInternalName(),"1");
 						  }
 						}
 					}
+			  }
+			}
 		}
 		Importable[] imps = dsConfig.getImportables();
 		for (int i = 0; i < imps.length; i++){
@@ -573,10 +615,10 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName, displayName);
+        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
@@ -639,10 +681,10 @@ public class DatabaseDatasetConfigUtils {
       bout.close();
       dout.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName, displayName);
+        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
@@ -729,10 +771,10 @@ public class DatabaseDatasetConfigUtils {
       gout.close();
       out.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName, displayName);
+        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       ps.setString(1, internalName);
@@ -804,10 +846,10 @@ public class DatabaseDatasetConfigUtils {
       gout.close();
       out.close();
 
-      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
+      int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
 
       if (rowstodelete > 0)
-        deleteOldDSConfigEntriesFor(metatable, dataset, internalName, displayName);
+        deleteOldDSConfigEntriesFor(metatable, dataset, internalName);
 
       PreparedStatement ps = conn.prepareStatement(insertSQL);
       PreparedStatement ohack = conn.prepareStatement(oraclehackSQL);
@@ -1298,16 +1340,16 @@ public class DatabaseDatasetConfigUtils {
       return dsv.getMessageDigest();
   }
 
-  private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName, String displayName)
+  private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName)
     throws ConfigurationException {
   	
   	// fully qualify for 'non-public' postgres schemas
     //System.out.println("DISPLAY NAME" + displayName);
     String existSQL;
-    if (displayName != null)
+    //if (displayName != null)
     	existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + EXISTWHERE;
-    else
-		existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + ALTEXISTWHERE;
+    //else
+	//	existSQL = EXISTSELECT + getSchema()[0]+"."+metatable + ALTEXISTWHERE;
 	
     if (logger.isLoggable(Level.FINE))
       logger.fine("Getting DSConfigEntryCount with SQL " + existSQL + "\n");
@@ -1319,8 +1361,8 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       PreparedStatement ps = conn.prepareStatement(existSQL);
       ps.setString(1, internalName);
-      if (displayName != null)
-      	ps.setString(3, displayName);
+      //if (displayName != null)
+      	//ps.setString(3, displayName);
       ps.setString(2, dataset);
 
       ResultSet rs = ps.executeQuery();
@@ -1331,8 +1373,6 @@ public class DatabaseDatasetConfigUtils {
       throw new ConfigurationException(
         "Caught SQL exception attempting to determing count of rows for "
           + internalName
-          + ", "
-          + displayName
           + " from "
           + metatable
           + "\n"+e);
@@ -1352,16 +1392,16 @@ public class DatabaseDatasetConfigUtils {
    * @param displayName - displayName of DatasetConfig entries to delete from metatable
    * @throws ConfigurationException if number of rows to delete doesnt match number returned by getDSConfigEntryCountFor()
    */
-  public void deleteOldDSConfigEntriesFor(String metatable, String dataset, String internalName, String displayName)
+  public void deleteOldDSConfigEntriesFor(String metatable, String dataset, String internalName)
     throws ConfigurationException {
 
     String deleteSQL;
-    if (displayName != null) 
+    //if (displayName != null) 
     	deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + DELETEOLDXMLWHERE;
-	else
-	    deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + ALTDELETEOLDXMLWHERE;	
+	//else
+	 //   deleteSQL= DELETEOLDXML + getSchema()[0]+"."+metatable + ALTDELETEOLDXMLWHERE;	
 	    
-    int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName, displayName);
+    int rowstodelete = getDSConfigEntryCountFor(metatable, dataset, internalName);
     if (logger.isLoggable(Level.FINE))
       logger.fine("Deleting old DSConfigEntries with SQL " + deleteSQL + "\n");
 
@@ -1372,8 +1412,8 @@ public class DatabaseDatasetConfigUtils {
       conn = dsource.getConnection();
       PreparedStatement ds = conn.prepareStatement(deleteSQL);
       ds.setString(1, internalName);
-	  if (displayName != null) 
-	  	ds.setString(3, displayName);
+	  //if (displayName != null) 
+	  	//ds.setString(3, displayName);
       ds.setString(2, dataset);
 
       rowsdeleted = ds.executeUpdate();
@@ -1382,8 +1422,6 @@ public class DatabaseDatasetConfigUtils {
       throw new ConfigurationException(
         "Caught SQLException during delete of old Entries for "
           + internalName
-          + ", "
-          + displayName
           + " in table "
           + metatable
           + "\n");
@@ -1393,7 +1431,7 @@ public class DatabaseDatasetConfigUtils {
 
     if (!(rowsdeleted == rowstodelete))
       throw new ConfigurationException(
-        "Did not delete old XML data rows for " + internalName + ", " + displayName + "\n");
+        "Did not delete old XML data rows for " + internalName + ", " + dataset + "\n");
   }
 
   /**

@@ -61,8 +61,12 @@ import org.ensembl.mart.lib.config.AttributePage;
 //import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.FilterPage;
 import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.FilterDescription;
+import org.ensembl.mart.lib.config.FilterCollection;
+import org.ensembl.mart.lib.config.FilterGroup;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DatabaseDatasetConfigUtils;
 import org.ensembl.mart.lib.config.DatasetConfig;
@@ -1208,15 +1212,29 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				
 	  
 				for (int k = 0; k < apages.length; k++){
-					  apage = apages[k];
-					  Hashtable descriptionsMap = new Hashtable();
-					  if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
-						  continue;
-					  }
+				 apage = apages[k];
+				 Hashtable descriptionsMap = new Hashtable();
+				 if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
+					continue;
+				 }
 		    
-					  List testAtts = new ArrayList();
-					  testAtts = apage.getAllAttributeDescriptions();
-					  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				
+                 List testGroups = new ArrayList();				
+				 testGroups = apage.getAttributeGroups();
+				 for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+				   AttributeGroup testGroup = (AttributeGroup) groupIter.next();
+				   //List testColls = new ArrayList();				
+				   AttributeCollection[] testColls = testGroup.getAttributeCollections();
+				   for (int col = 0; col < testColls.length; col++) {
+				     AttributeCollection testColl = testColls[col];
+				     
+					 if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+					   spaceErrors = spaceErrors + "AttributeCollection " + testColl.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+					 }					  			
+				 	 List testAtts = new ArrayList();
+					 testAtts = testColl.getAttributeDescriptions();
+					  
+				 	 for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 						  Object testAtt = iter.next();
 						  AttributeDescription testAD = (AttributeDescription) testAtt;
 						  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
@@ -1225,14 +1243,18 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
 							  continue;//placeholder atts can be duplicated	
 						  }
+						  
 						  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
-							 spaceErrors = spaceErrors + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+							 spaceErrors = spaceErrors + "AttributeDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 						  }					
 						  if (descriptionsMap.containsKey(testAD.getInternalName())){
-							  duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+							  duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+							  " and page " + apage.getInternalName() + "\n";
 						  }
 						  descriptionsMap.put(testAD.getInternalName(),"1");
-					  }
+					 }
+				   }
+				 }
 				}
 				// repeat for filter pages
 				FilterPage[] fpages = dsv.getFilterPages();
@@ -1244,8 +1266,21 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								continue;
 							}
 					       
+					       
+					List testGroups = new ArrayList();				
+					testGroups = fpage.getFilterGroups();
+					for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
+					  FilterGroup testGroup = (FilterGroup) groupIter.next();
+					  //List testColls = new ArrayList();				
+					  FilterCollection[] testColls = testGroup.getFilterCollections();
+					  for (int col = 0; col < testColls.length; col++) {
+						FilterCollection testColl = testColls[col];
+				     
+						if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
+						  spaceErrors = spaceErrors + "FilterCollection " + testColl.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+						}					 
 							List testAtts = new ArrayList();
-							testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
+							testAtts = testColl.getFilterDescriptions();// ? OPTIONS
 				  
 							for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 								Object testAtt = iter.next();
@@ -1254,11 +1289,12 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									  continue;
 								}
 								if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
-									 spaceErrors = spaceErrors + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+									 spaceErrors = spaceErrors + "FilterDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 								}	
 								if (descriptionsMap.containsKey(testAD.getInternalName())){
-									duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-						  
+									//duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+									duplicationString = duplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+																  " and page " + fpage.getInternalName() + "\n";
 									continue;//to stop options also being assessed
 								}
 								descriptionsMap.put(testAD.getInternalName(),"1");
@@ -1279,6 +1315,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								  }
 								}
 							}
+					  }
+					}
 				}
 	  
 				

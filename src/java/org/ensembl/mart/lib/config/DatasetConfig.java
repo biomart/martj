@@ -126,15 +126,12 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig(DatasetConfig ds, boolean propogateExistingElements, boolean preLazyLoad) throws ConfigurationException {
     super(ds);
-	System.out.println("1");
     if (propogateExistingElements && preLazyLoad)
       throw new ConfigurationException("You can not copy an existing DatasetConfig using both propogateExistingElements and lazyLoad\n");
       
     setDataset(ds.getDataset());
     setOptionalParameter(ds.getOptionalParameter());
 	setDefaultDataset(ds.getDefaultDataset());
-    
-    System.out.println(ds.getDataset() + "\t" + ds.getOptionalParameter() + "\t" + ds.getDefaultDataset());
     
     byte[] digest = ds.getMessageDigest();
     if (digest != null)
@@ -186,7 +183,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
    */
   public DatasetConfig() {
     super();
-	System.out.println("2");
     setAttribute(datasetKey, null);
     setAttribute(typeKey,null);
     setAttribute(visibleKey,null);
@@ -267,7 +263,6 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	throws ConfigurationException {
 		
 	super(internalName, displayName, description);
-	System.out.println("6 " + optParameters + defaultDataset);
 	if (dataset == null)
 	  throw new ConfigurationException("DatasetConfig objects must contain a dataset\n");
 	setAttribute(datasetKey, dataset);
