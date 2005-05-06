@@ -111,7 +111,7 @@ public static void main(String[] args) throws IOException {
 			transformations++;
 			String tabledm = "fly__"+types[i]+"__dm";
 			
-			String [] fifth =   {"fly","d","feature","imported","cvterm_id","CVTERM","n1","null","name="+types[i],""+transformations,"type_id","null",tabledm,"Y"};
+			String [] fifth =   {"fly","d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","null",tabledm,"Y"};
 			String [] sixth =   {"fly","d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","null"};
 			String [] seventh=  {"fly","d","feature","exported","object_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
 			
@@ -133,7 +133,7 @@ public static void main(String[] args) throws IOException {
 			
 				transformations++;
 				String tabledm = "fly__"+dbs[i]+"__dm";
-				String [] fifth =  {"fly","d","dbxref","exported","db_id","DB",	"11","null",	"name="+dbs[i],""+transformations,"db_id",	"null",	tabledm,"Y"};
+				String [] fifth =  {"fly","d","dbxref","exported","db_id","DB",	"11","null",	"name=\'"+dbs[i]+"\'",""+transformations,"db_id",	"null",	tabledm,"Y"};
 				String [] sixth =  {"fly","d","dbxref","exported",	"dbxref_id",	"FEATURE_DBXREF","11","null","null",""+transformations,	"dbxref_id",	"null"};
 				String [] seventh= {"fly","d","dbxref","exported",	"feature_id","FEATURE_RELATIONSHIP","11","null","null",	""+transformations,	"subject_id","null"};
 				String [] eight=   {"fly","d","dbxref","exported",	"object_id",	"FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
@@ -158,7 +158,7 @@ public static void main(String[] args) throws IOException {
 			
 				transformations++;
 				String tabledm = "fly__"+gos[i]+"__dm";
-				String [] fifth =   {"fly","d","cvterm","imported","cv_id","CV","n1","null",	"name="+gos[i],""+transformations,"cv_id",	"null",	tabledm,"Y"};
+				String [] fifth =   {"fly","d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"null",	tabledm,"Y"};
 				String [] sixth =   {"fly","d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"null"};
 				String [] seventh=  {"fly","d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"null"};
 				String [] eight=    {"fly","d","cvterm","imported","feature_id","FEATURE","11","null","null",	""+transformations,"feature_id","feature_id"};
@@ -187,7 +187,7 @@ private static void printConfig(String [][] lines,String table, BufferedWriter o
 		for (int j = 0; j < lines[i].length; j++) {
 			out.write(lines[i][j].concat("\t"));
 		}
-		out.write("#"+"\n");
+		out.write("\n");
 	}
 }
 
