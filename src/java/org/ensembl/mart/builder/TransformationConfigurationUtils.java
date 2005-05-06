@@ -46,10 +46,10 @@ public static void main(String[] args) throws IOException {
 		};
 		
 		String [] dbs = {
-				"Gadfly",
+				"Gaddataset",
 				 "SO",
 				 "GO",
-				 "FlyBase",
+				 "datasetBase",
 				 "InterPro",
 				 "PUBMED",	
 		};
@@ -60,6 +60,8 @@ public static void main(String[] args) throws IOException {
 				"cellular_component",
 				 "molecular_function",
 				 "biological_process",
+				 "Biological Process (Gene Ontology)"
+				 
 		};
 		
 		
@@ -72,14 +74,14 @@ public static void main(String[] args) throws IOException {
 		BufferedWriter out = null;
 		out = new BufferedWriter(new FileWriter(configFile, true));
 		
-		
+		String dataset = "yeast";
 		
 		
 		/**	
-		fly	m	feature	imported	cvterm_id	CVTERM	n1	null	cvterm_id=219	1	type_id	null	$table\tN        
-		fly	m	feature	exported	feature_id	FEATURELOC	11	null	null	1	feature_id	null	
-		fly	m	feature	exported	srcfeature_id	FEATURE	11	null	null	1	feature_id	name,uniquename	
-		fly	m	feature	imported	organism_id	ORGANISM	n1	null	null	1	organism_id	null#";
+		dataset	m	feature	imported	cvterm_id	CVTERM	n1	null	cvterm_id=219	1	type_id	null	$table\tN        
+		dataset	m	feature	exported	feature_id	FEATURELOC	11	null	null	1	feature_id	null	
+		dataset	m	feature	exported	srcfeature_id	FEATURE	11	null	null	1	feature_id	name,uniquename	
+		dataset	m	feature	imported	organism_id	ORGANISM	n1	null	null	1	organism_id	null#";
 		*/
 		
 		int transformations=0;
@@ -87,12 +89,12 @@ public static void main(String[] args) throws IOException {
 		for (int i=0;i<1;i++){
 		transformations++;
 		
-		String tabledm="fly__gene__main";
+		String tabledm=dataset+"__gene__main";
 		
-		String [] first =  {"fly","m","feature","imported","cvterm_id","CVTERM","n1","null","cvterm_id=219",""+transformations,"type_id","null",tabledm,"N"};
-		String [] second = {"fly","m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","null"};
-		String [] third =  {"fly","m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename"};
-		String [] fourth = {"fly","m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null"};
+		String [] first =  {"dataset","m","feature","imported","cvterm_id","CVTERM","n1","null","name=\'gene\'",""+transformations,"type_id","null",tabledm,"N"};
+		String [] second = {"dataset","m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","null"};
+		String [] third =  {"dataset","m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename"};
+		String [] fourth = {"dataset","m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null"};
 		
 		String [] [] one = {first,second,third,fourth};
 		
@@ -101,19 +103,19 @@ public static void main(String[] args) throws IOException {
 		
 		
 		/**
-		fly	d	feature	imported	cvterm_id	CVTERM	n1	null	name='$type'	$transformations	type_id	null	$table\tY
-		fly	d	feature	exported	feature_id	FEATURE_RELATIONSHIP	11	null	null	$transformations	subject_id	null
-		fly	d	feature	exported	object_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
+		dataset	d	feature	imported	cvterm_id	CVTERM	n1	null	name='$type'	$transformations	type_id	null	$table\tY
+		dataset	d	feature	exported	feature_id	FEATURE_RELATIONSHIP	11	null	null	$transformations	subject_id	null
+		dataset	d	feature	exported	object_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
 		*/
 		
 		for (int i=0;i<types.length;i++){
 		
 			transformations++;
-			String tabledm = "fly__"+types[i]+"__dm";
+			String tabledm = dataset+"__"+types[i]+"__dm";
 			
-			String [] fifth =   {"fly","d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","null",tabledm,"Y"};
-			String [] sixth =   {"fly","d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","null"};
-			String [] seventh=  {"fly","d","feature","exported","object_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
+			String [] fifth =   {"dataset","d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","null",tabledm,"Y"};
+			String [] sixth =   {"dataset","d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","null"};
+			String [] seventh=  {"dataset","d","feature","exported","object_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
 			
 			String [] [] two ={fifth,sixth,seventh};			
 		   
@@ -122,21 +124,21 @@ public static void main(String[] args) throws IOException {
 		
 		
 		/**		
-		fly	d	dbxref	exported	db_id	DB	11	null	name='$db'	$transformations	db_id	null	$table\tY
-		fly	d	dbxref	exported	dbxref_id	FEATURE_DBXREF	11	null	null	$transformations	dbxref_id	null
-		fly	d	dbxref	exported	feature_id	FEATURE_RELATIONSHIP	11	null	null	$transformations	subject_id	null
-		fly	d	dbxref	exported	object_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
+		dataset	d	dbxref	exported	db_id	DB	11	null	name='$db'	$transformations	db_id	null	$table\tY
+		dataset	d	dbxref	exported	dbxref_id	FEATURE_DBXREF	11	null	null	$transformations	dbxref_id	null
+		dataset	d	dbxref	exported	feature_id	FEATURE_RELATIONSHIP	11	null	null	$transformations	subject_id	null
+		dataset	d	dbxref	exported	object_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
 
 		*/	
 		
 		for (int i=0;i<dbs.length;i++){
 			
 				transformations++;
-				String tabledm = "fly__"+dbs[i]+"__dm";
-				String [] fifth =  {"fly","d","dbxref","exported","db_id","DB",	"11","null",	"name=\'"+dbs[i]+"\'",""+transformations,"db_id",	"null",	tabledm,"Y"};
-				String [] sixth =  {"fly","d","dbxref","exported",	"dbxref_id",	"FEATURE_DBXREF","11","null","null",""+transformations,	"dbxref_id",	"null"};
-				String [] seventh= {"fly","d","dbxref","exported",	"feature_id","FEATURE_RELATIONSHIP","11","null","null",	""+transformations,	"subject_id","null"};
-				String [] eight=   {"fly","d","dbxref","exported",	"object_id",	"FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
+				String tabledm = dataset+"__"+dbs[i]+"__dm";
+				String [] fifth =  {"dataset","d","dbxref","exported","db_id","DB",	"11","null",	"name=\'"+dbs[i]+"\'",""+transformations,"db_id",	"null",	tabledm,"Y"};
+				String [] sixth =  {"dataset","d","dbxref","exported",	"dbxref_id",	"FEATURE_DBXREF","11","null","null",""+transformations,	"dbxref_id",	"null"};
+				String [] seventh= {"dataset","d","dbxref","exported",	"feature_id","FEATURE_RELATIONSHIP","11","null","null",	""+transformations,	"subject_id","null"};
+				String [] eight=   {"dataset","d","dbxref","exported",	"object_id",	"FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id"};
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 			 
@@ -147,21 +149,21 @@ public static void main(String[] args) throws IOException {
 		
 
 		/**
-		  fly	d	cvterm	imported	cv_id	CV	n1	null	name='$go'	$transformations	cv_id	null	$table\tY
-		  fly	d	cvterm	imported	dbxref_id	DBXREF	11	null	null	$transformations	dbxref_id	null
-		  fly	d	cvterm	exported	cvterm_id	FEATURE_CVTERM	11	null	null	$transformations	cvterm_id	null
-		  fly	d	cvterm	imported	feature_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
+		  dataset	d	cvterm	imported	cv_id	CV	n1	null	name='$go'	$transformations	cv_id	null	$table\tY
+		  dataset	d	cvterm	imported	dbxref_id	DBXREF	11	null	null	$transformations	dbxref_id	null
+		  dataset	d	cvterm	exported	cvterm_id	FEATURE_CVTERM	11	null	null	$transformations	cvterm_id	null
+		  dataset	d	cvterm	imported	feature_id	FEATURE	11	null	null	$transformations	feature_id	feature_id\n#";
 		  
 		 */
 		
 		for (int i=0;i<gos.length;i++){
 			
 				transformations++;
-				String tabledm = "fly__"+gos[i]+"__dm";
-				String [] fifth =   {"fly","d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"null",	tabledm,"Y"};
-				String [] sixth =   {"fly","d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"null"};
-				String [] seventh=  {"fly","d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"null"};
-				String [] eight=    {"fly","d","cvterm","imported","feature_id","FEATURE","11","null","null",	""+transformations,"feature_id","feature_id"};
+				String tabledm = dataset+"__"+gos[i]+"__dm";
+				String [] fifth =   {"dataset","d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"null",	tabledm,"Y"};
+				String [] sixth =   {"dataset","d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"null"};
+				String [] seventh=  {"dataset","d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"null"};
+				String [] eight=    {"dataset","d","cvterm","imported","feature_id","FEATURE","11","null","null",	""+transformations,"feature_id","feature_id"};
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 				
