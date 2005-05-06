@@ -84,7 +84,7 @@ public static void main(String[] args) throws IOException {
 		
 		int transformations=0;
 		
-		for (int i=0;i<2;i++){
+		for (int i=0;i<1;i++){
 		transformations++;
 		
 		String tabledm="fly__gene__main";
