@@ -10,6 +10,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author arek
@@ -54,7 +56,7 @@ public static void main(String[] args) throws IOException {
 				 "PUBMED",	
 		};
 		
-		
+		/**
 		String [] gos ={
 				
 				"cellular_component",
@@ -63,6 +65,18 @@ public static void main(String[] args) throws IOException {
 				 "Biological Process (Gene Ontology)"
 				 
 		};
+		*/
+		
+		String [] gos ={
+				
+				"Cellular Component (Gene Ontology)",
+				"Molecular Function (Gene Ontology)",
+				 "Biological Process (Gene Ontology)"
+		};
+		
+		
+		
+		
 		
 		
 		String configFile="/Applications/eclipse/workspace/martj-head/data/builder/new.config";
@@ -135,6 +149,7 @@ public static void main(String[] args) throws IOException {
 			
 				transformations++;
 				String tabledm = dataset+"__"+dbs[i]+"__dm";
+				
 				String [] fifth =  {"dataset","d","dbxref","exported","db_id","DB",	"11","null",	"name=\'"+dbs[i]+"\'",""+transformations,"db_id",	"null",	tabledm,"Y"};
 				String [] sixth =  {"dataset","d","dbxref","exported",	"dbxref_id",	"FEATURE_DBXREF","11","null","null",""+transformations,	"dbxref_id",	"null"};
 				String [] seventh= {"dataset","d","dbxref","exported",	"feature_id","FEATURE_RELATIONSHIP","11","null","null",	""+transformations,	"subject_id","null"};
@@ -159,7 +174,15 @@ public static void main(String[] args) throws IOException {
 		for (int i=0;i<gos.length;i++){
 			
 				transformations++;
-				String tabledm = dataset+"__"+gos[i]+"__dm";
+				String tb1 = dataset+"__"+gos[i]+"__dm";
+			
+				//char bracket ='Process';
+				String tb2 = tb1.replace(' ','_');
+				String tb3 = tb2.replace('(','1');
+				String tabledm = tb3.replace(')','1');
+				
+				//System.out.println ("table "+tabledm);
+				
 				String [] fifth =   {"dataset","d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"null",	tabledm,"Y"};
 				String [] sixth =   {"dataset","d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"null"};
 				String [] seventh=  {"dataset","d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"null"};
