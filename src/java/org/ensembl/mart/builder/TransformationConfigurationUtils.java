@@ -10,8 +10,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author arek
@@ -88,7 +86,7 @@ public static void main(String[] args) throws IOException {
 		BufferedWriter out = null;
 		out = new BufferedWriter(new FileWriter(configFile, true));
 		
-		String dataset = "yeast";
+		String dataset = "fly";
 		
 		
 		/**	
@@ -112,7 +110,7 @@ public static void main(String[] args) throws IOException {
 		
 		String [] [] one = {first,second,third,fourth};
 		
-		printConfig(one,tabledm,out);
+		//printConfig(one,tabledm,out);
 		}
 		
 		
@@ -133,7 +131,7 @@ public static void main(String[] args) throws IOException {
 			
 			String [] [] two ={fifth,sixth,seventh};			
 		   
-			printConfig(two,tabledm,out);
+			//printConfig(two,tabledm,out);
 		}
 		
 		
@@ -157,7 +155,7 @@ public static void main(String[] args) throws IOException {
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 			 
-				printConfig(two,tabledm,out);
+			//	printConfig(two,tabledm,out);
 			
 			}
 		
@@ -190,9 +188,40 @@ public static void main(String[] args) throws IOException {
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 				
-				printConfig(two,tabledm,out);
+				//printConfig(two,tabledm,out);
 			
 			}	
+		
+		
+		
+		
+		for (int i=0;i<1;i++){
+			transformations++;
+			
+			String tabledm=dataset+"__gene_structure_dm";
+			
+             String type="mRNA";
+             
+			String [] first =   {"dataset","d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+type+"\'",""+transformations,"type_id","null",tabledm,"Y"};
+			String [] second =  {"dataset","d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"object_id","subject_id"};
+			String [] third =   {"dataset","d","feature","exported","subject_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id,uniquename,type_id"};
+			String [] fourth =  {"dataset","d","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand"};
+			String [] fith =    {"dataset","m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename"};
+			
+			String [] [] one = {first,second,third,fourth};
+			
+			
+			
+			
+			printConfig(one,tabledm,out);
+			}
+			
+		
+		
+		
+		
+		
+		
 
 		out.close();
 		System.out.println("WRITTEN TO: "+f);
