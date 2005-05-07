@@ -246,10 +246,9 @@ public class MartBuilder {
 				if (!fileEntries[0].equals(lastDatasetName)) {
 
 					if (lines > 0) {
-						//dataset.datasetKey=datasetKey;
 						mart.add(dataset);
 					}
-					//datasetKey=null;
+		
 					dataset = new Dataset();
 					datasetName = fileEntries[0];
 					dataset.name = datasetName;
@@ -260,9 +259,7 @@ public class MartBuilder {
 							.getPrimaryKeys(fileEntries[2]);
 				}
 
-				//if (fileEntries[3].equals("exported") &
-				// fileEntries[1].equals("m")) datasetKey=fileEntries[4];
-
+				
 				// new transformation
 				if (!fileEntries[9].equals(lastTrans)) {
 					if (lines > 0)
@@ -273,9 +270,9 @@ public class MartBuilder {
 					transformation.datasetName = datasetName;
 					transformation.targetSchemaName = targetSchemaName;
 					transformation.number = fileEntries[9];
-					transformation.finalTableName = fileEntries[12];
-					transformation.userTableName = fileEntries[12];
-					if (fileEntries[13].equals("Y"))
+					transformation.finalTableName = fileEntries[13];
+					transformation.userTableName = fileEntries[13];
+					if (fileEntries[14].equals("Y"))
 						transformation.central = true;
 
 					StringBuffer final_table = new StringBuffer(datasetName
@@ -300,16 +297,15 @@ public class MartBuilder {
 
 				}
 
-				String[] columnNames = { "%" };
-				if (!fileEntries[11].equals("null"))
-					columnNames = fileEntries[11].split(",");
-
-				Table ref_table = resolver.getTable(fileEntries[5]
-						.toLowerCase(), columnNames);
+				String [] columnNames = { "%" };
+				String [] columnAliases=null;
+				
+				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
+				if (!fileEntries[12].equals("null")) columnAliases = fileEntries[12].split(",");
+				
+				Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(), columnNames, columnAliases);
 
 				ref_table.status = fileEntries[3];
-				//ref_table.PK = fileEntries[4];
-				//ref_table.FK = fileEntries[10];
 				ref_table.cardinality = fileEntries[6];
 				if (!fileEntries[8].equals("null"))
 					ref_table.extension = fileEntries[8];
@@ -321,7 +317,6 @@ public class MartBuilder {
 
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";
-				//dunit.final_table_name = finalTableName;
 				dunit.adaptor = adaptor;
 				dunit.targetSchema = targetSchemaName;
 

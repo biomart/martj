@@ -127,7 +127,9 @@ public class TransformationUnitDouble extends TransformationUnit {
 			for (int m=0; m<new_ref.getColumns().length;m++){
 				
 				if (temp_start.getColumns()[j].getName().equals(new_ref.getColumns()[m].getName())
-				&& !  new_ref.getColumns()[m].bool ){
+				&& !  new_ref.getColumns()[m].bool  // not sure what that is for 
+				&& ! new_ref.getColumns()[m].userAlias // user overrides
+				){
 					new_ref.getColumns()[m].setAlias(new_ref.getColumns()[m].getName()+"_"+temp);
 				}
 			}

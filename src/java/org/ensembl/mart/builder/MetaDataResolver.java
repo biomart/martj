@@ -96,6 +96,45 @@ public abstract class MetaDataResolver {
 	}
 	
 	
+	public Column [] getReferencedColumns (String name, String [] columnNames, String [] columnAliases){
+		
+		Column [] col;
+		ArrayList cols = new ArrayList();
+		
+		for (int i=0;i<columnNames.length;i++){
+			
+			try {
+			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
+			//int z=0;
+			while (columns.next()){	
+			
+				Column column = new Column();
+				column.setName(columns.getString(4));
+				column.original_name=columns.getString(4);
+				column.original_table=name;
+				if (columnAliases != null){
+				if (!columnAliases[i].equals("null")) {
+					column.setAlias(columnAliases[i]);
+				    column.userAlias=true;
+				}
+				
+				}
+				cols.add(column);
+				//z++;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		}
+		Column [] b = new Column[cols.size()];
+		assert cols.size() != 0 : "no columns !!! for your table, please check the table/column name " +
+				" for "+name.toUpperCase()+" in your config file";
+		return (Column []) cols.toArray(b);
+	}
+	
+	
+	
+	
 	public String [] getColumnNames (String name){
 		
 		Column [] col;
@@ -155,11 +194,11 @@ public abstract class MetaDataResolver {
 	
 	
 	
-	public Table getTable (String tableName, String [] columnNames) {
+	public Table getTable (String tableName, String [] columnNames, String [] columnAliases) {
 		
 		Table table = new Table();
 		table.setName(tableName);
-		table.setColumns(getReferencedColumns(tableName, columnNames));
+		table.setColumns(getReferencedColumns(tableName, columnNames, columnAliases));
 		
 		return table;
 	}
