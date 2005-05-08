@@ -95,7 +95,7 @@ public class TransformationUnitDouble extends TransformationUnit {
 	public void transform (Table temp_start, String temp_end_name){
 		
 		Table new_ref=copyTable(refTable);
-		
+		//assignAliasesForTempStart(temp_start);
 		assignAliases(temp_start, new_ref, temp_end_name);
 		assignAliases(temp_start, refTable, temp_end_name);
 		
@@ -121,6 +121,8 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 	}
 	
+
+
 	private static void assignAliases(Table temp_start, Table new_ref, String temp){
 		
 		for (int j=0; j<temp_start.getColumns().length;j++){
@@ -203,10 +205,17 @@ public class TransformationUnitDouble extends TransformationUnit {
 		
 		StringBuffer temp_start_col = new StringBuffer("");
 		
-		for (int j=0; j<temp_start.getColumns().length;j++){			
+		for (int j=0; j<temp_start.getColumns().length;j++){	
+			
+			// user defined alias for the central table
+			if (temp_start.getColumns()[j].hasAlias()){		
+				temp_start_col.append(temp_start.getName()+"."+temp_start.getColumns()[j].getName()+
+						" AS "+ temp_start.getColumns()[j].getAlias()+",");
+			} else {
+			
 			temp_start_col.append(temp_start.getName()+"."+temp_start.getColumns()[j].getName()+",");
 		}
-		
+		}
 		return temp_start_col;
 			
 	}

@@ -83,8 +83,8 @@ public class MartBuilder {
 
 		System.out.print("Transforming your schema ... please wait ....");
 		readConfiguration(file);
-        System.out.println ("............................ done");
-		
+        
+        
 		int ind = 0;
 
 		for (int m = 0; m < mart.size(); m++) {
@@ -126,14 +126,17 @@ public class MartBuilder {
 			 */
 
 			dataset.createTransformationsForCentralFilters();
-			Transformation[] final_transformations = dataset
-					.getTransformations();
-
-			sqlFile = getUserInput("OUTPUT SQL FILE: ");
+			Transformation[] final_transformations = dataset.getTransformations();
+			System.out.println ("............................ done");
+		
+			sqlFile = getUserInput("OUTPUT DDL FILE: ");
+			System.out.print("Writing DDLs ............... please wait ....");
 			writeDDL(final_transformations, sqlFile, ind);
+			System.out.println ("............................ done");
+			
 		}
 
-		System.out.println("WRITTEN TO: "+sqlFile );
+		//System.out.println("WRITTEN TO: "+sqlFile );
 
 	}
 
@@ -270,9 +273,9 @@ public class MartBuilder {
 					transformation.datasetName = datasetName;
 					transformation.targetSchemaName = targetSchemaName;
 					transformation.number = fileEntries[9];
-					transformation.finalTableName = fileEntries[13];
-					transformation.userTableName = fileEntries[13];
-					if (fileEntries[14].equals("Y"))
+					transformation.finalTableName = fileEntries[15];
+					transformation.userTableName = fileEntries[15];
+					if (fileEntries[16].equals("Y"))
 						transformation.central = true;
 
 					StringBuffer final_table = new StringBuffer(datasetName
@@ -288,8 +291,14 @@ public class MartBuilder {
 								.append("dm").toString();
 					}
 
-					transformation.startTable = resolver
-							.getCentralTable(fileEntries[2]);
+					String [] centralColumnNames = { "%" };
+					String [] centralColumnAliases=null;
+					
+					if (!fileEntries[13].equals("null")) centralColumnNames = fileEntries[13].split(",");
+					if (!fileEntries[14].equals("null")) centralColumnAliases = fileEntries[14].split(",");
+					
+					
+					transformation.startTable = resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
 					transformation.type = "linked";
 					transformation.column_operations = "addall";
 
@@ -312,8 +321,7 @@ public class MartBuilder {
 				if (!fileEntries[7].equals("null"))
 					ref_table.central_extension = fileEntries[7];
 
-				TransformationUnit dunit = new TransformationUnitDouble(
-						ref_table);
+				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
 
 				dunit.cardinality = fileEntries[6];
 				dunit.column_operations = "addall";

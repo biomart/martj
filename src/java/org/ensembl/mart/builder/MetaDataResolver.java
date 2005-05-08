@@ -105,7 +105,10 @@ public abstract class MetaDataResolver {
 			
 			try {
 			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
-			//int z=0;
+		    
+			assert columns.next() : "no such column: "+columnNames[i].toUpperCase()+ " in table "+name; 
+			columns.beforeFirst();
+			
 			while (columns.next()){	
 			
 				Column column = new Column();
@@ -116,11 +119,13 @@ public abstract class MetaDataResolver {
 				if (!columnAliases[i].equals("null")) {
 					column.setAlias(columnAliases[i]);
 				    column.userAlias=true;
-				}
 				
+				//System.out.println("setting alias "+column.original_table+" colmn name "+column.name+" alias "+column.alias);
 				}
+			}
+			
 				cols.add(column);
-				//z++;
+				
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -164,10 +169,8 @@ public abstract class MetaDataResolver {
 		Table table = new Table();
 		table.setName(main_name);
 		String [] columnNames = {"%"};
-		//columnNames[0]="%";
-		table.setColumns(getReferencedColumns(table.getName(),columnNames));
 		
-	//	table.setKey(getPrimaryKeys(main_name));
+		table.setColumns(getReferencedColumns(table.getName(),columnNames));
 		table.PK =getPrimaryKeys(main_name);
 		
 		// this table needs to behave like a ref table for recursive joins
@@ -175,22 +178,30 @@ public abstract class MetaDataResolver {
 		table.FK=getPrimaryKeys(main_name);
 		// for weired recursive joins
 		table.status="exported";
-	
-	/**	
-		try {
-			DatabaseMetaData dmd = getConnection().getMetaData();
-			ResultSet keys = dmd.getPrimaryKeys(adaptor.catalog,adaptor.username,main_name);
-			while (keys.next()){
-			table.setKey(keys.getString(4));
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		*/
 		
 		return table;
 	}
+	
+	
+	public Table getCentralTable (String centralTableName,String [] columnNames, String [] columnAliases){
+		
+		Table table = new Table();
+		table.setName(centralTableName);
+		//String [] columnNames = {"%"};
+		
+		table.setColumns(getReferencedColumns(table.getName(),columnNames,columnAliases));
+		table.PK =getPrimaryKeys(centralTableName);
+		
+		// this table needs to behave like a ref table for recursive joins
+		table.PK=getPrimaryKeys(centralTableName);
+		table.FK=getPrimaryKeys(centralTableName);
+		// for weired recursive joins
+		table.status="exported";
+		
+		return table;
+	}
+	
+	
 	
 	
 	
