@@ -93,15 +93,6 @@ public class Dataset {
 	public void createTransformationsForCentralFilters(){
 		
 		Transformation [] dmTransformations = getDMTranformationsForCentral();	
-		//Table [] central_tables = new Table [central.length];
-		
-		// get each final dm table
-		//for (int j=0;j<central.length;j++){
-			
-		//	central_tables[j]=central[j].getFinalUnit().getTemp_end();
-			
-		//}
-		
 		Transformation [] mainTransformations =   getMainTranformationForCentral();
 		
 		for (int i=0; i<mainTransformations.length;i++){
@@ -112,31 +103,26 @@ public class Dataset {
 			transformation.datasetName=name;
 			transformation.targetSchemaName=targetSchemaName;
 			transformation.userTableName=mainTransformations[i].userTableName;
-			
-			 //System.out.println("adding name for central "+name);
 			 
 			 // get final temp for each main tablev
 			Table main_table=mainTransformations[i].getFinalUnit().getTemp_end();
-			//String userTable=
 			
 			transformation.finalTableName=main_table.getName();
 			transformation.finalTableType="MAIN";
 			
-			// resetting the name to temp name
-			main_table.setName(main_table.temp_name+"_main_interim");
 			
 			transformation.startTable=main_table;
 			transformation.type="central";
 			
-			//transformation.column_operations="addone";
-			
+			boolean containsCentral=false;
 			for (int m = 0; m < dmTransformations.length; m++) {
 				
-				//if(central[m].getFinalUnit().getTemp_end().skip) continue;
-				
-				//System.out.println("table name "+dmTransformations[m].getFinalUnit().getTemp_end().getName());
+				if(dmTransformations[m].central) containsCentral=true;
 				
 				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTemp_end();
+				
+				//System.out.println(" temp end name from central transf "+dmFinalTable.getName());
+				
 				
 			TransformationUnitSingle sunit = 
 				new TransformationUnitSingle(dmFinalTable);
@@ -162,15 +148,12 @@ public class Dataset {
 			
 			dunit.targetSchema = targetSchemaName;
 			transformation.addUnit(dunit);
-			
-			
-			
+				
 		}
-			
-			
-			
-			
-			//transformation.createUnits(central_tables);
+
+			// resetting the name to temp name
+			if (containsCentral) main_table.setName(main_table.temp_name+"_main_interim");
+		
 			transformation.transform();
 			addTransformation(transformation);
 		}
@@ -230,15 +213,11 @@ public class Dataset {
 		Transformation [] b = new Transformation[transformations.size()];
         Transformation [] transforms = (Transformation []) transformations.toArray(b);
 		
-		for (int i = 0; i < transforms.length; i++) {	
-
-			//String newname = getUserInput("CHANGE FINAL TABLE NAME: "
-			//		+transforms[i].number+" "+ transforms[i].finalTableName + " TO: ");
-			//if (newname != null && !newname.equals("\n")
-			//		&& !newname.equals(""))
-			
-			
+		for (int i = 0; i < transforms.length; i++) { 
 			transforms[i].getFinalUnit().getTemp_end().setName(transforms[i].userTableName);
+		
+		//System.out.println(" setting name "+transforms[i].number+ " to "+transforms[i].userTableName);
+		
 		}
 		
 	}

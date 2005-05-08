@@ -33,9 +33,9 @@ public class MartBuilder {
 		String config_info = "";
 		String file = null;
 		String sqlFile = null;
-
 		String tSchemaName = null;
 
+		
 		// Connections
 		DBAdaptor Adaptor = new DBAdaptor(config);
 
@@ -52,7 +52,7 @@ public class MartBuilder {
 		resolver = Resolver;
 		adaptor = Adaptor;
 
-		// user input
+	
 
 		while (tSchemaName == null || tSchemaName.equals("")) {
 			tSchemaName = getUserInput("TARGET SCHEMA: ");
@@ -81,83 +81,42 @@ public class MartBuilder {
 			file = data_dir + file;
 		}
 
+		sqlFile = getUserInput("OUTPUT DDL» FILE: ");
+		
+		File sFile = new File(sqlFile);
+		sFile.delete();
+		
 		System.out.print("Transforming your schema ... please wait ....");
 		readConfiguration(file);
-        
-        
-		int ind = 0;
-
-		for (int m = 0; m < mart.size(); m++) {
-			dataset = (Dataset) mart.get(m);
-
-			ind++;
-
-			// Reset final table names if you want to
-
-			dataset.setUserTableNames();
-			Transformation[] transformations = dataset.getTransformations();
-
-
-			// the below need to become a part of an interactive GUI
-			// switched off for now
-
-			/**
-			 * for (int i = 0; i < transformations.length; i++) {
-			 * 
-			 * String newname = getUserInput("CHANGE FINAL TABLE NAME: "
-			 * +transformations[i].number+" "+ transformations[i].finalTableName + "
-			 * TO: "); if (newname != null && !newname.equals("\n") &&
-			 * !newname.equals("")) transformations[i].setFinalName(newname); }
-			 *  
-			 */
-
-			/**
-			 * // Add central filters Transformation[] tran =
-			 * dataset.getTransformationsByFinalTableType("DM");
-			 * 
-			 * for (int i = 0; i < tran.length; i++) { String input =
-			 * getUserInput("INCLUDE CENTRAL FILTER FOR: " +
-			 * tran[i].userTableName + " [Y|N] [Y default] "); if
-			 * (!(input.equals("N") || input.equals("n"))) { tran[i].central =
-			 * true;
-			 *  }
-			 *  }
-			 *  
-			 */
-
-			dataset.createTransformationsForCentralFilters();
-			Transformation[] final_transformations = dataset.getTransformations();
-			System.out.println ("............................ done");
+		System.out.println ("............................ done");
 		
-			sqlFile = getUserInput("OUTPUT DDL FILE: ");
-			System.out.print("Writing DDLs ............... please wait ....");
-			writeDDL(final_transformations, sqlFile, ind);
-			System.out.println ("............................ done");
-			
-		}
-
-		//System.out.println("WRITTEN TO: "+sqlFile );
-
+		
+		
+		System.out.print("Writing DDLs ............... please wait ....");
+		writeDDL(sqlFile);
+		System.out.println ("............................ done");
 	}
 
-	/**
-	 * @param final_transformations
-	 * @param sqlFile
-	 * @param ind
-	 */
-	private static void writeDDL(Transformation[] final_transformations,
-			String sqlFile, int ind) throws IOException {
 
-		File f = new File(sqlFile);
-		f.delete();
+	
+	private static void writeDDL(
+			String sqlFile) throws IOException {
 
 		BufferedWriter sqlout = null;
 		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
+		
+		//f.delete();
 
+		int indexNo = 0;
+		for (int m = 0; m < mart.size(); m++) {
+			dataset = (Dataset) mart.get(m);	
+		    indexNo++;
+			Transformation[] final_transformations = dataset.getTransformations();		
+		
 		// Dump to SQL
 		for (int i = 0; i < final_transformations.length; i++) {
 
-			ind = 10 + ind;
+			indexNo = 10 + indexNo;
 
 			TransformationUnit[] units = final_transformations[i].getUnits();
 
@@ -170,7 +129,7 @@ public class MartBuilder {
 
 				// don't want indexes before 'select distinct'
 				if (!units[j].single & j > 0)
-					sqlout.write(units[j].addIndex(ind + j) + "\n");
+					sqlout.write(units[j].addIndex(indexNo + j) + "\n");
 				sqlout.write(units[j].toSQL() + "\n");
 			}
 			for (int j = 0; j < units.length; j++) {
@@ -181,7 +140,7 @@ public class MartBuilder {
 		// now renaming to _key and final indexes
 		for (int i = 0; i < final_transformations.length; i++) {
 
-			ind = 10 + ind;
+			indexNo = 10 + indexNo;
 
 			TransformationUnit[] units = final_transformations[i].getUnits();
 
@@ -189,13 +148,13 @@ public class MartBuilder {
 				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
 
 					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
-					sqlout.write(units[j].addFinalIndex(ind + j,
-							dataset.datasetKey + "_key")+ "\n");
+					sqlout.write(units[j].addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
 
 				}
 			}
 		}
 
+	}
 		sqlout.close();
 	}
 
@@ -249,7 +208,22 @@ public class MartBuilder {
 				if (!fileEntries[0].equals(lastDatasetName)) {
 
 					if (lines > 0) {
+						
+						transformation.transform();
+						dataset.setUserTableNames();
+						dataset.createTransformationsForCentralFilters();	
 						mart.add(dataset);
+					
+						Transformation[] final_transformations = dataset.getTransformations();
+						
+							for (int i=0;i<final_transformations.length;i++){
+						Table dmFinalTable=final_transformations[i].getFinalUnit().getTemp_end();
+							
+						//System.out.println(" ADDED dataset "+dmFinalTable.getName());			
+							}
+					
+					
+					
 					}
 		
 					dataset = new Dataset();
@@ -257,17 +231,17 @@ public class MartBuilder {
 					dataset.name = datasetName;
 					dataset.adaptor = adaptor;
 					dataset.targetSchemaName = targetSchemaName;
-					lastDatasetName = datasetName;
-					dataset.datasetKey = resolver
-							.getPrimaryKeys(fileEntries[2]);
+					dataset.datasetKey = resolver.getPrimaryKeys(fileEntries[2]);
+					
+					//System.out.println("dataset "+dataset.name+" dateaset key "+dataset.datasetKey);
 				}
-
 				
 				// new transformation
 				if (!fileEntries[9].equals(lastTrans)) {
-					if (lines > 0)
-						transformation.transform();
-
+					
+					
+					if (lines > 0 && fileEntries[0].equals(lastDatasetName)) transformation.transform();
+				
 					transformation = new Transformation();
 					transformation.adaptor = adaptor;
 					transformation.datasetName = datasetName;
@@ -275,20 +249,19 @@ public class MartBuilder {
 					transformation.number = fileEntries[9];
 					transformation.finalTableName = fileEntries[15];
 					transformation.userTableName = fileEntries[15];
-					if (fileEntries[16].equals("Y"))
-						transformation.central = true;
+					if (fileEntries[16].equals("Y")) transformation.central = true;
 
+					//System.out.println ("transformation no "+transformation.number+" user table "+transformation.userTableName);
+					
 					StringBuffer final_table = new StringBuffer(datasetName
 							+ "__" + fileEntries[2] + "__");
 					if (fileEntries[1].toUpperCase().equals("M")) {
 
 						transformation.finalTableType = "MAIN";
-						transformation.finalTableName = final_table.append(
-								"main").toString();
+						transformation.finalTableName = final_table.append("main").toString();
 					} else {
 						transformation.finalTableType = "DM";
-						transformation.finalTableName = final_table
-								.append("dm").toString();
+						transformation.finalTableName = final_table.append("dm").toString();
 					}
 
 					String [] centralColumnNames = { "%" };
@@ -340,14 +313,16 @@ public class MartBuilder {
 				transformation.addUnit(dunit);
 
 				lastTrans = fileEntries[9];
+				lastDatasetName = datasetName;
 				lines++;
 			}
 
 			in.close();
-
 			transformation.transform();
-
-			//dataset.datasetKey=
+			
+			//dataset.setUserTableNames();
+			//dataset.createTransformationsForCentralFilters();	
+			
 			mart.add(dataset);
 
 		} catch (FileNotFoundException e) {
@@ -355,6 +330,8 @@ public class MartBuilder {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	
+		
 	}
 
 	private static void writeConfigFile(String output_file, String dataset,
@@ -457,4 +434,36 @@ public class MartBuilder {
 	}
 
 }
+
+
+
+//the below need to become a part of an interactive GUI
+// switched off for now
+
+/**
+ * for (int i = 0; i < transformations.length; i++) {
+ * 
+ * String newname = getUserInput("CHANGE FINAL TABLE NAME: "
+ * +transformations[i].number+" "+ transformations[i].finalTableName + "
+ * TO: "); if (newname != null && !newname.equals("\n") &&
+ * !newname.equals("")) transformations[i].setFinalName(newname); }
+ *  
+ */
+
+/**
+ * // Add central filters Transformation[] tran =
+ * dataset.getTransformationsByFinalTableType("DM");
+ * 
+ * for (int i = 0; i < tran.length; i++) { String input =
+ * getUserInput("INCLUDE CENTRAL FILTER FOR: " +
+ * tran[i].userTableName + " [Y|N] [Y default] "); if
+ * (!(input.equals("N") || input.equals("n"))) { tran[i].central =
+ * true;
+ *  }
+ *  }
+ *  
+ */
+
+
+
 
