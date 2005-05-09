@@ -3369,6 +3369,7 @@ public class DatabaseDatasetConfigUtils {
 
     List allTables = new ArrayList();
     allTables.addAll(starbases);
+    
     allTables.addAll(Arrays.asList(getNaiveDimensionTablesFor(schema, datasetName)));
     
     //no longer required
@@ -3429,6 +3430,9 @@ public class DatabaseDatasetConfigUtils {
 
         //String cname = column.name;
 		String cname = column.name.toLowerCase();
+		
+		System.out.println("TESTING COL " + cname);
+		
         // ignore the key columns as atts and filters
         if (cname.endsWith("_key"))
           continue;
@@ -3458,12 +3462,13 @@ public class DatabaseDatasetConfigUtils {
 
               	//System.out.println("cname "+ cname+ " tableName " + tableName);
               	currFilt = dsv.getFilterDescriptionByFieldNameTableConstraint(cname, tableName,null);
-
+				//System.out.println(currFilt);
               if (currFilt == null) {
 				if (filtMap.containsKey(cname)){
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
+				System.out.println("ADD FILTER " + cname);
                 fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
 //System.out.println("Going to null ");
               }
