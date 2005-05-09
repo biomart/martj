@@ -1953,6 +1953,8 @@ public class DatabaseDatasetConfigUtils {
 	  
       if (!(fieldValid) || !(tableValid)) {
       	validatedFilter.setHidden("true");
+		validatedFilter.setFieldBroken(); //so gets changed in the update
+      	return validatedFilter;// do not want to do anymore validation
       }
       else if (validatedFilter.getHidden() != null && validatedFilter.getHidden().equals("true")) {
         validatedFilter.setHidden("false");
