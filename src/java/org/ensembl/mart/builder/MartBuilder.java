@@ -320,7 +320,7 @@ public class MartBuilder {
 			in.close();
 			transformation.transform();
 			
-			//dataset.setUserTableNames();
+			dataset.setUserTableNames();
 			//dataset.createTransformationsForCentralFilters();	
 			
 			mart.add(dataset);
