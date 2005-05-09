@@ -1162,8 +1162,13 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		try {
 		  disableCursor();
 		  String duplicationString = "";
+		  String filterDuplicationString = "";
 		  String brokenString = "";
 		  String spaceErrors = "";
+		  
+		  Set brokenDatasets = new HashSet();
+		  
+		  
 		  int newVersion;
 		  // cycle through all datasets for the database
 		  String[] datasets = dbutils.getAllDatasetNames(user);
@@ -1257,6 +1262,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						  if (descriptionsMap.containsKey(testAD.getInternalName())){
 							  duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
 							  " and page " + apage.getInternalName() + "\n";
+							    
+							  brokenDatasets.add(dsv.getDataset());
+							  
 						  }
 						  descriptionsMap.put(testAD.getInternalName(),"1");
 					 }
@@ -1300,8 +1308,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								}	
 								if (descriptionsMap.containsKey(testAD.getInternalName())){
 									//duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-									duplicationString = duplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+									filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
 																  " and page " + fpage.getInternalName() + "\n";
+									brokenDatasets.add(dsv.getDataset());							  
 									continue;//to stop options also being assessed
 								}
 								descriptionsMap.put(testAD.getInternalName(),"1");
@@ -1315,8 +1324,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 											  continue;
 									  }
 									  if (descriptionsMap.containsKey(op.getInternalName())){
-										  duplicationString = duplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-								
+										  filterDuplicationString = filterDuplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+										brokenDatasets.add(dsv.getDataset());	
 									  }
 									  descriptionsMap.put(op.getInternalName(),"1");
 								  }
@@ -1353,11 +1362,58 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									  + spaceErrors, "ERROR", 0);
 				return;//no export performed
 		  	}
-			if (duplicationString != ""){
-			  JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
-								  + duplicationString, "ERROR", 0);
+			
+			
+			
+			
+			
+			
+			//if (duplicationString != ""){
+			  //JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
+				//				  + duplicationString, "ERROR", 0);
 				  
-			}
+			//}
+			
+			
+			if (filterDuplicationString != "" || duplicationString != ""){
+			
+			  int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
+					  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
+	+ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
+			  
+			  // make unique code
+			  if (choice == 0){
+				System.out.println("MAKING UNIQUE");	
+				String testName, datasetName;
+				int i;
+				adaptor= new DatabaseDSConfigAdaptor(MartEditor.getDetailedDataSource(),user, true, false, true);
+				
+				String[] dsList = new String[brokenDatasets.size()];
+				brokenDatasets.toArray(dsList);
+										
+				for (i = 0; i < dsList.length; i++){
+						dsv = adaptor.getDatasetConfigByDatasetInternalName(dsList[i],"default");
+						dbutils.storeDatasetConfiguration(
+															user,
+															dsv.getInternalName(),
+															dsv.getDisplayName(),
+															dsv.getDataset(),
+															dsv.getDescription(),
+															MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsv),
+															true,
+															dsv.getType(),
+															dsv.getVisible(),
+															dsv.getVersion(),
+															dsv);	
+			    }
+			  }
+			  else{
+				JOptionPane.showMessageDialog(null, "No Export performed",
+											  "ERROR", 0);					  
+				return;//no export performed
+			  }
+			}			
+			
 			//if (brokenString.matches("\\w+")){
 			if (brokenString != ""){
 					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"

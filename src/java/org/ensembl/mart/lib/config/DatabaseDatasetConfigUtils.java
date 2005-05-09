@@ -499,18 +499,17 @@ public class DatabaseDatasetConfigUtils {
 							  
 		  // make unique code
 		  if (choice == 0){
-		  	 	//System.out.println("MAKING UNIQUE");	
+		  	 	System.out.println("MAKING UNIQUE");	
 		  	 	String testName;
 		  	 	int i;
 		  	 	
 		  	 	String[] attributeLines = duplicationString.split("\n");
 		  	 	OUTER:for (i = 0; i < attributeLines.length; i++){
-		  	 		testName = attributeLines[i].split("\\s+")[0];
+		  	 		testName = attributeLines[i].split("\\s+")[1];
 		  	 		System.out.println(testName);
-		 			boolean first = true;
+		 			int first = 0;
 					for (int j = 0; j < apages.length; j++){
 						apage = apages[j];
-			
 						if ((apage.getHidden() != null) && (apage.getHidden().equals("true"))){
 							continue;
 						}
@@ -520,16 +519,6 @@ public class DatabaseDatasetConfigUtils {
 						for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 							Object testAtt = iter.next();
 							AttributeDescription testAD = (AttributeDescription) testAtt;
-						
-						//AttributeGroup[] agroups = apage.getAttributeGroups();
-						//for (int k = 0; k < agroups.length; k++){
-					     //AttributeCollection[] acolls = agroups[k].getAttributeCollections();
-						 //for (int l = 0; l < acolls.length; l++){
-						  //List testAtts = new ArrayList();
-						  //testAtts = acolls[l].getAttributeDescriptions();
-						  //for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
-							//Object testAtt = iter.next();
-							//AttributeDescription testAD = (AttributeDescription) testAtt;	
 							if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									continue;
 							}
@@ -538,28 +527,51 @@ public class DatabaseDatasetConfigUtils {
 							}
 									  
 							if (testAD.getInternalName().equals(testName)){
-								if (first)
-									first = false;
-								else{
-									//apage.removeAttributeDescription(testAD);
-									testAD.setInternalName(testName + "_2");
-									
-									//Integer position = (Integer) iter.next() - 1;
-									//apage.insertAttributeDescription(position,testAD);
-									System.out.println("FIXED " + testName + " WITH FIELD = " + testAD.getField() + " " + testAD.getInternalName());
+								if (first != 0){
+									testAD.setInternalName(testName + "_" + first);
+									doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
 									continue OUTER;	  
 								}
-							
-						  
-						 
-										  
+								first++;		  
 							}
-							
+					    }	
+		  	 	    }		 
+		         }
+		  	 	 // repeat for filts + validateAll	
+			String[] filterLines = filterDuplicationString.split("\n");
+			OUTER:for (i = 0; i < filterLines.length; i++){
+				testName = filterLines[i].split("\\s+")[0];
+				System.out.println(testName);
+				int first = 0;
+				for (int j = 0; j < fpages.length; j++){
+					fpage = fpages[j];
+					if ((fpage.getHidden() != null) && (fpage.getHidden().equals("true"))){
+						continue;
+					}
+		    
+					List testAtts = new ArrayList();
+					testAtts = fpage.getAllFilterDescriptions();
+					for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+						Object testAtt = iter.next();
+						FilterDescription testAD = (FilterDescription) testAtt;
+						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
+								continue;
 						}
-					}		 
-		  	 	}
-		  	 	
-		  	 	//return;//REMOVE ONCE WORKING
+						if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+							 continue;//placeholder atts can be duplicated	
+						}
+									  
+						if (testAD.getInternalName().equals(testName)){
+							if (first != 0){
+								testAD.setInternalName(testName + "_" + first);
+								doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
+								continue OUTER;	  
+							}
+							first++;		  
+						}
+					}	
+				}		 
+			 }		  	 	
 		  }
 		  else{
 			JOptionPane.showMessageDialog(null, "No Export performed",
