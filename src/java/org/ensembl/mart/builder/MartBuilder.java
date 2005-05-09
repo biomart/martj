@@ -32,7 +32,7 @@ public class MartBuilder {
 
 		String config_info = "";
 		String file = null;
-		String sqlFile = null;
+		String ddlFile = null;
 		String tSchemaName = null;
 
 		
@@ -81,20 +81,16 @@ public class MartBuilder {
 			file = data_dir + file;
 		}
 
-		sqlFile = getUserInput("OUTPUT DDL» FILE: ");
+		ddlFile = getUserInput("OUTPUT DDL» FILE: ");
 		
-		File sFile = new File(sqlFile);
+		File sFile = new File(ddlFile);
 		sFile.delete();
 		
-		System.out.print("Transforming your schema ... please wait ....");
+		System.out.println();
 		readConfiguration(file);
-		System.out.println ("............................ done");
 		
-		
-		
-		System.out.print("Writing DDLs ............... please wait ....");
-		writeDDL(sqlFile);
-		System.out.println ("............................ done");
+		writeDDL(ddlFile);
+		System.out.println ("\nWritten DDLs to: "+ddlFile);
 	}
 
 
@@ -251,7 +247,7 @@ public class MartBuilder {
 					transformation.userTableName = fileEntries[15];
 					if (fileEntries[16].equals("Y")) transformation.central = true;
 
-					//System.out.println ("transformation no "+transformation.number+" user table "+transformation.userTableName);
+					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
 					
 					StringBuffer final_table = new StringBuffer(datasetName
 							+ "__" + fileEntries[2] + "__");
