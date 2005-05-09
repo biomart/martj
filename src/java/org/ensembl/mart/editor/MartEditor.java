@@ -158,7 +158,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 			
 				 user = databaseDialog.getUser();
 				 database = databaseDialog.getDatabase();
-			
+				 //schema = databaseDialog.getSchema();	
 				 Connection conn = null;
 				 try {
 				   conn = ds.getConnection();
@@ -1112,7 +1112,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				dbutils.updateLinkVersions(dsv);					
 				
-				dsv = dbutils.getNewFiltsAtts(database, dsv);
+				
+				String schema = null;
+				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+				else schema = databaseDialog.getSchema();
+				dsv = dbutils.getNewFiltsAtts(schema, dsv);
 				// export it	
 				dbutils.storeDatasetConfiguration(
 							MartEditor.getUser(),
@@ -1202,8 +1206,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				if (dbutils.getBrokenElements(dsv) != "") 
 					brokenString = brokenString + dbutils.getBrokenElements(dsv);
 		
-		
-				dsv = dbutils.getNewFiltsAtts(database, dsv);
+				String schema = null;
+				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+				else schema = databaseDialog.getSchema();
+				dsv = dbutils.getNewFiltsAtts(schema, dsv);		
+				//dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
 				// check uniqueness of internal names per page	  
 				AttributePage[] apages = dsv.getAttributePages();
@@ -1392,7 +1399,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
         DatasetConfig dsv = dbutils.getValidatedDatasetConfig(odsv);
         // check for new tables and cols
-        dsv = dbutils.getNewFiltsAtts(database, dsv);
+		String schema = null;
+		if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
+		else schema = databaseDialog.getSchema();
+		dsv = dbutils.getNewFiltsAtts(schema, dsv);        
+        //dsv = dbutils.getNewFiltsAtts(database, dsv);
 		// test if version need updating
 		String datasetVersion = dsv.getVersion();
 		String newDatasetVersion = dbutils.getNewVersion(dsv.getDataset());
