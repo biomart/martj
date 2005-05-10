@@ -134,7 +134,17 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		if (columnIndex == 1) {
 			//child may be a DatasetConfig, in which case dont try to remove/add the child to a null parent
 			if (child instanceof org.ensembl.mart.lib.config.DatasetConfig) {
-				obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
+				
+				if (rowIndex == 0){
+					//System.out.println("SHOULD NOT EDIT INTERNAL NAME");
+					JOptionPane.showMessageDialog(null,"SHOULD NOT EDIT INTERNAL NAME");
+				}
+				else if (rowIndex == 3){
+					JOptionPane.showMessageDialog(null,"SHOULD NOT EDIT DATASET");
+				}		  
+				else {
+					obj.setAttribute(firstColumnData[rowIndex], (String) aValue);
+				}
 			} else {
 				Object parent = ((DatasetConfigTreeNode) node.getParent()).getUserObject();
 				int index = node.getParent().getIndex(node) - DatasetConfigTreeNode.getHeterogenousOffset(parent, child);
