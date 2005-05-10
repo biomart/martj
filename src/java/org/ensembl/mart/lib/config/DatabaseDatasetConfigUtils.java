@@ -1986,7 +1986,7 @@ public class DatabaseDatasetConfigUtils {
       Option[] options = validatedFilter.getOptions();      
      if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
-     
+     		System.out.println("UPDATING OPTIONS");
       		// store the option/push action structure so can recreate      		
    			PushAction[] pas = options[0].getPushActions();
    			String[] pushActions = new String[pas.length];
@@ -2016,6 +2016,7 @@ public class DatabaseDatasetConfigUtils {
       		String[] oldOptionOrder = new String[options.length];
 		    for (int j = 0; j < options.length; j++) {
 		    	oldOptionOrder[j] = options[j].getInternalName();
+		    	//System.out.println("REMOVING OPTIONS");
 				validatedFilter.removeOption(options[j]);
 		    }  
 		    
@@ -2043,6 +2044,7 @@ public class DatabaseDatasetConfigUtils {
 			int k = 0;
 			for (j = 0; j < oldOptionOrder.length; j++) {
 				if (valMap.containsKey(oldOptionOrder[j])) {
+					//System.out.println("ADDING OPTIONS BACK 1 ");
 					validatedFilter.insertOption(k, (Option) valMap.get(oldOptionOrder[j]));
 					k++;
 					valMap.remove(oldOptionOrder[j]);			
@@ -2050,6 +2052,7 @@ public class DatabaseDatasetConfigUtils {
 			}
 			for (Iterator iter = valMap.keySet().iterator(); iter.hasNext();) {
 				  String position = (String) iter.next();
+				  //System.out.println("ADDING OPTIONS BACK 2");
 				  validatedFilter.insertOption(k, (Option) valMap.get(position));
 				  k++;
 			}	
@@ -2228,7 +2231,7 @@ public class DatabaseDatasetConfigUtils {
 					}
 				}
 			}// end of add push actions code
-		    //validatedFilter.setOptionsBroken();// redone from scratch so not broken	
+		    validatedFilter.setOptionsBroken();// need to set broken so getValidatedCollection knows to change it
 		    return validatedFilter;      	
       }// END OF ADD VALUE OPTIONS
       
