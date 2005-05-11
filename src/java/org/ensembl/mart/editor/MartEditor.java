@@ -1493,7 +1493,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		dbutils.updateLinkVersions(dsv);
 		
 		
-        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
+        DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, schema);
         frame.setVisible(true);
         desktop.add(frame);
         try {
