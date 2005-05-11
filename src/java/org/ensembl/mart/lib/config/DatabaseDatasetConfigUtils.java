@@ -334,6 +334,7 @@ public class DatabaseDatasetConfigUtils {
 		String filterDuplicationString = "";
 		String spaceErrors = "";
 		String linkErrors = "";
+		String brokenString = "";
 	  
 		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
 		for (int i = 0; i < apages.length; i++){
@@ -368,7 +369,7 @@ public class DatabaseDatasetConfigUtils {
 				  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 					  continue;
 				  }
-				  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+				  if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
 				  	  continue;//placeholder atts can be duplicated	
 				  }
 				  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
@@ -380,6 +381,16 @@ public class DatabaseDatasetConfigUtils {
 					duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
 												  " and page " + apage.getInternalName() + "\n";
 				  }
+				  // test has all its fields defined - if not add a message to brokenString
+				  if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+					  testAD.getField() == null || testAD.getField().equals("") ||
+					  testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+					  testAD.getKey() == null || testAD.getKey().equals("")				  
+				  	  ){
+						brokenString = brokenString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
+																		  " and page " + apage.getInternalName() + "\n";	
+				  }
+				  
 				  descriptionsMap.put(testAD.getInternalName(),"1");
 			  }
 			 }
@@ -395,6 +406,14 @@ public class DatabaseDatasetConfigUtils {
 					  linkErrors = linkErrors + atts[j] + " in exportable " + exps[i].getInternalName() + "\n";						  			
 				  }
 			  }
+			// test has all its fields defined - if not add a message to brokenString
+			if (exps[i].getInternalName() == null || exps[i].getInternalName().equals("") ||
+				exps[i].getLinkName() == null || exps[i].getLinkName().equals("") ||
+				exps[i].getName() == null || exps[i].getName().equals("") ||
+				exps[i].getAttributes() == null || exps[i].getAttributes().equals("")				  
+				){
+				  brokenString = brokenString + "Exportable " + exps[i].getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";	
+			}			  
 		}
 
 	  	  
@@ -437,6 +456,9 @@ public class DatabaseDatasetConfigUtils {
 						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							  continue;
 						}
+						if (testAD.getInternalName().matches("\\w+\\.\\w+") || testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+							continue;//placeholder filts can be duplicated	
+						}
 						if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
 							spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
 						}	
@@ -446,6 +468,19 @@ public class DatabaseDatasetConfigUtils {
 						  
 							continue;//to stop options also being assessed
 						}
+						
+						// test has all its fields defined - if not add a message to brokenString
+						if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+							testAD.getField() == null || testAD.getField().equals("") ||
+							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+							testAD.getKey() == null || testAD.getKey().equals("") ||	 
+						    testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
+							)){
+							  brokenString = brokenString + "Filter " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
+																				" and page " + fpage.getInternalName() + "\n";	
+						}						
+						
+						
 						descriptionsMap.put(testAD.getInternalName(),"1");
 					  
 						// do options as well
@@ -479,12 +514,25 @@ public class DatabaseDatasetConfigUtils {
 					  linkErrors = linkErrors + filts[j] + " in importable " + imps[i].getInternalName() + "\n";						  			
 				  }
 			  }
+			// test has all its fields defined - if not add a message to brokenString
+			if (imps[i].getInternalName() == null || imps[i].getInternalName().equals("") ||
+				imps[i].getLinkName() == null || imps[i].getLinkName().equals("") ||
+				imps[i].getName() == null || imps[i].getName().equals("") ||
+				imps[i].getFilters() == null || imps[i].getFilters().equals("")				  
+				){
+				  brokenString = brokenString + "Importable " + exps[i].getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";	
+			}			  
 		}
 		if (spaceErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 									+ spaceErrors, "ERROR", 0);
 		  return;//no export performed
 		}
+		if (brokenString != ""){
+		  JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
+									+ brokenString, "ERROR", 0);
+		  return;//no export performed
+		}		
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
 									+ linkErrors, "ERROR", 0);

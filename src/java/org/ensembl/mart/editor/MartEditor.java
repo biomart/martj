@@ -1165,6 +1165,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  String filterDuplicationString = "";
 		  String brokenString = "";
 		  String spaceErrors = "";
+		  String brokenFields = "";
 		  
 		  Set brokenDatasets = new HashSet();
 		  
@@ -1266,6 +1267,15 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							  brokenDatasets.add(dsv.getDataset());
 							  
 						  }
+						// test has all its fields defined - if not add a message to brokenString
+						if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+									testAD.getField() == null || testAD.getField().equals("") ||
+									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+									testAD.getKey() == null || testAD.getKey().equals("")				  
+									){
+									  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+																						" and page " + apage.getInternalName() + "\n";	
+						}
 						  descriptionsMap.put(testAD.getInternalName(),"1");
 					 }
 				   }
@@ -1313,6 +1323,16 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									brokenDatasets.add(dsv.getDataset());							  
 									continue;//to stop options also being assessed
 								}
+								// test has all its fields defined - if not add a message to brokenString
+								if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+									testAD.getField() == null || testAD.getField().equals("") ||
+									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
+									testAD.getKey() == null || testAD.getKey().equals("") ||	 
+									testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
+									)){
+									  brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+																						" and page " + fpage.getInternalName() + "\n";	
+								}	
 								descriptionsMap.put(testAD.getInternalName(),"1");
 					  
 								// do options as well
@@ -1364,7 +1384,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  	}
 			
 			
-			
+			if (brokenFields != ""){
+				  JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
+											+ brokenString, "ERROR", 0);
+				  return;//no export performed
+				}
 			
 			
 			

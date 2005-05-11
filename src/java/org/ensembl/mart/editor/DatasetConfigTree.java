@@ -718,8 +718,16 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			String result = new String();
 			int insertIndex = -1;
 			if (selnode.getUserObject().getClass().equals(dropnode.getUserObject().getClass())) {
-				insertIndex = dropnode.getParent().getIndex(dropnode) + 1;
-				dropnode = (DatasetConfigTreeNode) dropnode.getParent();
+				System.out.println(selnode.getUserObject().getClass());
+				if (selnode.getUserObject().getClass().getName().equals("org.ensembl.mart.lib.config.FilterDescription")){         
+					Option op = new Option((FilterDescription) selnode.getUserObject()); 
+					selnode.setUserObject(op);
+					insertIndex = DatasetConfigTreeNode.getHeterogenousOffset(dropnode.getUserObject(), selnode.getUserObject());
+				}
+				else {
+					insertIndex = dropnode.getParent().getIndex(dropnode) + 1;
+					dropnode = (DatasetConfigTreeNode) dropnode.getParent();
+				}
 			} else {
 				insertIndex = DatasetConfigTreeNode.getHeterogenousOffset(dropnode.getUserObject(), selnode.getUserObject());
 			}
