@@ -2,6 +2,7 @@
 <!DOCTYPE MartRegistry>
 <MartRegistry>
 
+<!--
 <RegistryDBLocation 
 		    name         = "pointer"
                     databaseType = "mysql"
@@ -12,4 +13,48 @@
                     password     = ""
 />
 
+-->
+
+<DatabaseLocation
+                    name         = "workshop"
+                    databaseType = "mysql"
+                    host         = "localhost"
+                    port         = "3306"
+                    instanceName = "workshop"
+                    schema       = "workshop"
+                    user         = "root"
+                    password     = ""
+                    visible      ="1"
+/>
+
+<DatabaseLocation
+                    name         = "Ensembl 30"
+                    databaseType = "mysql"
+                    host         = "localhost"
+                    port         = "3306"
+                    instanceName = "ensembl_mart_30"
+                    schema       = "ensembl_mart_30"
+                    user         = "root"
+                    password     = ""
+                    visible      ="1"
+/>
+
+<DatabaseLocation
+                    name         = "MSD 3"
+                    databaseType = "mysql"
+                    host         = "localhost"
+                    port         = "3306"
+                    instanceName = "msd_mart_3"
+                    schema       = "msd_mart_3"
+                    user         = "root"
+                    password     = ""
+                    visible      ="1"
+/>
+
+
 </MartRegistry>
+
+
+
+
+
