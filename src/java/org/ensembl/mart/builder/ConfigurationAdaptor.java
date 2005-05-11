@@ -17,7 +17,7 @@ import java.io.IOException;
  * TODO To change the template for this generated type comment go to Window -
  * Preferences - Java - Code Style - Code Templates
  */
-public class TransformationConfigurationUtils {
+public class ConfigurationAdaptor {
 
 public static void main(String[] args) throws IOException {
 		
@@ -85,8 +85,8 @@ public static void main(String[] args) throws IOException {
 		BufferedWriter out = null;
 		out = new BufferedWriter(new FileWriter(configFile, true));
 		
-		String dataset1 = "fly";
-		
+		String dataset1 = "yeast";
+		String dataset2="sc_gene_structure";
 		
 		int transformations=0;
 		
@@ -102,8 +102,29 @@ public static void main(String[] args) throws IOException {
 		
 		String [] [] one = {first,second,third,fourth};
 		
+		//printConfig(one,tabledm,out);
+		}
+		
+		
+		
+		
+		for (int i=0;i<1;i++){
+		transformations++;
+		
+		String tabledm=dataset1+"__chromosomal_feature__main";
+		
+		String [] first =  {dataset1,"m","feature","imported","cvterm_id","CVTERM","n1","null","null",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null,null,feature_name,feature_uniquename,null,null",tabledm,"N"};
+		String [] second = {dataset1,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","feature_start,feature_end,null,null,null"};
+		String [] third =  {dataset1,"m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename","chromosome_acc,chromosome"};
+		String [] fourth = {dataset1,"m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null","null"};
+		
+		String [] [] one = {first,second,third,fourth};
+		
 		printConfig(one,tabledm,out);
 		}
+		
+		
+		
 		
 		
 		
@@ -119,7 +140,7 @@ public static void main(String[] args) throws IOException {
 			
 			String [] [] two ={fifth,sixth,seventh};			
 		   
-			printConfig(two,tabledm,out);
+			//printConfig(two,tabledm,out);
 		}
 		
 		
@@ -136,7 +157,7 @@ public static void main(String[] args) throws IOException {
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 			 
-				printConfig(two,tabledm,out);
+				//printConfig(two,tabledm,out);
 			
 			}
 		
@@ -164,7 +185,7 @@ public static void main(String[] args) throws IOException {
 			}	
 		
 		
-		String dataset2="fly_structure";
+		
 		
 		for (int i=0;i<1;i++){
 			transformations++;

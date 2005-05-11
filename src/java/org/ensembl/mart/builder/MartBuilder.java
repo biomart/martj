@@ -95,6 +95,15 @@ public class MartBuilder {
 
 
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	private static void writeDDL(
 			String sqlFile) throws IOException {
 
@@ -247,7 +256,7 @@ public class MartBuilder {
 					transformation.userTableName = fileEntries[15];
 					if (fileEntries[16].equals("Y")) transformation.central = true;
 
-					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
+					System.out.println ("transfroming ... "+transformation.number+" user table "+transformation.userTableName);
 					
 					StringBuffer final_table = new StringBuffer(datasetName
 							+ "__" + fileEntries[2] + "__");
