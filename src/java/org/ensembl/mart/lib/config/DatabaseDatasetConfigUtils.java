@@ -529,9 +529,14 @@ public class DatabaseDatasetConfigUtils {
 		  return;//no export performed
 		}
 		if (brokenString != ""){
-		  JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
-									+ brokenString, "ERROR", 0);
-		  return;//no export performed
+		  //JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
+		  //							+ brokenString, "ERROR", 0);
+			
+		  int choice = JOptionPane.showConfirmDialog(null,"The following do not contain the required fields:\n"
+		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
+		  if (choice != 0)									
+				return;//no export performed
+		
 		}		
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"

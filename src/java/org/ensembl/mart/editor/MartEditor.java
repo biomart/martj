@@ -200,8 +200,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     fc = new JFileChooser();
 
     //Create the toolbar.
-    JToolBar toolBar = new JToolBar("Still draggable");
-    addButtons(toolBar);
+    //JToolBar toolBar = new JToolBar("Still draggable");
+    //addButtons(toolBar);// buttons don't work at the moment
 
     //Make the big window be indented 50 pixels from each edge
     //of the screen.
@@ -211,7 +211,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
     //Set up the GUI.
     this.getContentPane().setLayout(new BorderLayout());
-    this.getContentPane().add(toolBar, BorderLayout.NORTH);
+    //this.getContentPane().add(toolBar, BorderLayout.NORTH);
 
     desktop = new JDesktopPane();
     
@@ -292,7 +292,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
     //Build the first menu.
     menu = new JMenu("File");
-    menu.setMnemonic(KeyEvent.VK_F);
+    //menu.setMnemonic(KeyEvent.VK_F);
     menu.getAccessibleContext().setAccessibleDescription("the file related menu");
     menuBar.add(menu);
 
@@ -302,34 +302,34 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     menuItem = new JMenuItem("Database Connection ");
     MartEditor.MenuActionListener menuActionListener = new MartEditor.MenuActionListener();
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_D);
+    //menuItem.setMnemonic(KeyEvent.VK_D);
     menu.add(menuItem);
 
     menu.addSeparator();
 
     menuItem = new JMenuItem("Import ");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_I);
+    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Export ");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_I);
+    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Delete ");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_I);
+    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Naive ");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_M);
+    //menuItem.setMnemonic(KeyEvent.VK_M);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Update ");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_I);
+    //menuItem.setMnemonic(KeyEvent.VK_I);
     menu.add(menuItem);
 
     menu.addSeparator();
@@ -350,63 +350,63 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 	menu.add(menuItem);		
 	menu.addSeparator();
     
-    menuItem = new JMenuItem("New", icon);
+    //menuItem = new JMenuItem("New", icon);
 
-    menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    //menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     // menuItem.setAccelerator(KeyStroke.getKeyStroke(
     // KeyEvent.VK_1, ActionEvent.ALT_MASK));
-    menuItem.getAccessibleContext().setAccessibleDescription("Creates a new file");
-    menu.add(menuItem);
+    //menuItem.getAccessibleContext().setAccessibleDescription("Creates a new file");
+    //menu.add(menuItem);
 
     icon = createImageIcon(IMAGE_DIR + "open.gif");
     menuItem = new JMenuItem("Open", icon);
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_O);
+    //menuItem.setMnemonic(KeyEvent.VK_O);
     menu.add(menuItem);
 
     icon = createImageIcon(IMAGE_DIR + "save.gif");
     menuItem = new JMenuItem("Save", icon);
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_S);
+    //menuItem.setMnemonic(KeyEvent.VK_S);
     menu.add(menuItem);
 
     menuItem = new JMenuItem("Save as");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_A);
+    //menuItem.setMnemonic(KeyEvent.VK_A);
     menu.add(menuItem);
 
     //a group of radio button menu items
-    menu.addSeparator();
-    menuItem = new JMenuItem("Print");
-    menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_P);
-    menu.add(menuItem);
+    //menu.addSeparator();
+    //menuItem = new JMenuItem("Print");
+    //menuItem.addActionListener(menuActionListener);
+    //menuItem.setMnemonic(KeyEvent.VK_P);
+    //menu.add(menuItem);
 
     //a group of check box menu items
     menu.addSeparator();
     menuItem = new JMenuItem("Exit");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_X);
+    //menuItem.setMnemonic(KeyEvent.VK_X);
     menu.add(menuItem);
 
     //Build edit menu in the menu bar.
     menu = new JMenu("Edit");
-    menu.setMnemonic(KeyEvent.VK_E);
+    //menu.setMnemonic(KeyEvent.VK_E);
     menu.getAccessibleContext().setAccessibleDescription("this is the edit menu");
     menuBar.add(menu);
     icon = createImageIcon(IMAGE_DIR + "undo.gif");
     menuItem = new JMenuItem("Undo", icon);
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_U); //used constructor instead
+    //menuItem.setMnemonic(KeyEvent.VK_U); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("undo");
-    menu.add(menuItem);
+    //menu.add(menuItem);
     icon = createImageIcon(IMAGE_DIR + "redo.gif");
     menuItem = new JMenuItem("Redo", icon);
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("redo");
-    menu.add(menuItem);
+    //menu.add(menuItem);
     menu.addSeparator();
     icon = createImageIcon(IMAGE_DIR + "cut.gif");
     menuItem = new JMenuItem("Cut", icon);
@@ -458,17 +458,17 @@ public class MartEditor extends JFrame implements ClipboardOwner {
     //Build help menu in the menu bar.
     icon = createImageIcon(IMAGE_DIR + "help.gif");
     menu = new JMenu("Help");
-    menu.setMnemonic(KeyEvent.VK_H);
+    //menu.setMnemonic(KeyEvent.VK_H);
     menu.getAccessibleContext().setAccessibleDescription("this is the help menu");
     menuBar.add(menu);
     menuItem = new JMenuItem("Documentation", icon);
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_M); //used constructor instead
+    //menuItem.setMnemonic(KeyEvent.VK_M); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("documentation");
     menu.add(menuItem);
     menuItem = new JMenuItem("About...");
     menuItem.addActionListener(menuActionListener);
-    menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
+    //menuItem.setMnemonic(KeyEvent.VK_N); //used constructor instead
     menuItem.getAccessibleContext().setAccessibleDescription("inserts");
     menu.add(menuItem);
 
@@ -803,7 +803,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		int choice = JOptionPane.showConfirmDialog(this,"You are exporting this XML to a new schema: " + databaseDialog.getSchema() +"\nChange connection?", "", JOptionPane.YES_NO_OPTION);
       	if (choice == 0){databaseConnection();}
       }
-      String dset = dsConfig.getDataset();
+	
+      /*String dset = dsConfig.getDataset();
       String intName = dsConfig.getInternalName();
 
       String dataset =
@@ -831,8 +832,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
         return;
 
       dsConfig.setInternalName(internalName);
-      dsConfig.setDataset(dataset);
-
+      dsConfig.setDataset(dataset);*/
 
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
