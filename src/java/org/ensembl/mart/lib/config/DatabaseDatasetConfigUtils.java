@@ -555,9 +555,10 @@ public class DatabaseDatasetConfigUtils {
 		  	 	System.out.println("MAKING UNIQUE");	
 		  	 	String testName;
 		  	 	int i;
-		  	 	
 		  	 	String[] attributeLines = duplicationString.split("\n");
 		  	 	OUTER:for (i = 0; i < attributeLines.length; i++){
+		  	 		if (!attributeLines[i].matches("\\w+.+"))
+		  	 			continue;//getting blank line when duplicationString is empty?
 		  	 		testName = attributeLines[i].split("\\s+")[1];
 		  	 		System.out.println(testName);
 		 			int first = 0;
@@ -592,6 +593,7 @@ public class DatabaseDatasetConfigUtils {
 		         }
 		  	 	 // repeat for filts + validateAll	
 			String[] filterLines = filterDuplicationString.split("\n");
+			System.out.println(filterLines.length);
 			OUTER:for (i = 0; i < filterLines.length; i++){
 				testName = filterLines[i].split("\\s+")[0];
 				System.out.println(testName);
