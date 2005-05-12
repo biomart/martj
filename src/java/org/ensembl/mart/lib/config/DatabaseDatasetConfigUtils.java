@@ -1417,7 +1417,7 @@ public class DatabaseDatasetConfigUtils {
    * @return true if equal, false otherwise
    * @throws ConfigurationException for all underlying exceptions
    */
-  public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException {
+  public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException{
       byte[] thisDigest = dscutils.getMessageDigestForDatasetConfig(dsc);
       byte[] dbDigest = getDSConfigMessageDigestByDatasetInternalName(user, dsc.getDataset(), dsc.getInternalName());
       

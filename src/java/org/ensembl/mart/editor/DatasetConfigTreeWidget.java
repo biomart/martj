@@ -70,7 +70,7 @@ public class DatasetConfigTreeWidget extends JInternalFrame{
     private MartEditor editor;
 
 	
-    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String internalName, String schema) {
+    public DatasetConfigTreeWidget(File file, MartEditor editor, DatasetConfig dsv, String user, String dataset, String internalName, String schema){
 
         super("Dataset Tree " + (++openFrameCount),
                 true, //resizable
@@ -301,10 +301,21 @@ class CloseListener implements InternalFrameListener {
 	}
 	public void internalFrameDeactivated(InternalFrameEvent e) {
 	}
-	public void internalFrameClosing(InternalFrameEvent e) {
-		int returnType = JOptionPane.showConfirmDialog(null,"Close XML?","Have you saved?",JOptionPane.OK_CANCEL_OPTION);
-		if (returnType == 0){
-			e.getInternalFrame().dispose();
+	public void internalFrameClosing(InternalFrameEvent e){
+		try{
+			DatasetConfigTreeWidget dw = (DatasetConfigTreeWidget) e.getInternalFrame();
+			if (!MartEditor.getDatabaseDatasetConfigUtils().isDatasetConfigChanged(null,dw.getDatasetConfig())){// current and db out of synch
+				int returnType = JOptionPane.showConfirmDialog(null,"Close?","Changes not exported",JOptionPane.OK_CANCEL_OPTION);
+				if (returnType == 0){
+					e.getInternalFrame().dispose();
+				}
+			}
+			else{
+				e.getInternalFrame().dispose();
+			}
+		}
+		catch(Exception exc){
+			
 		}
 	}
 }
