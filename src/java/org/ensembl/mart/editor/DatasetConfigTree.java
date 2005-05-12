@@ -709,6 +709,11 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			DatasetConfigTreeNode selnode =
 				(DatasetConfigTreeNode) t.getTransferData(
 					new DataFlavor(Class.forName("org.ensembl.mart.editor.DatasetConfigTreeNode"), "treeNode"));				
+			
+			
+			BaseNamedConfigurationObject test = (BaseNamedConfigurationObject) selnode.getUserObject();
+			System.out.println("PASTING " + test.getInternalName());
+			
 					
 			//DatasetConfigTreeNode dropnode = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 			DatasetConfigTreeNode dropnode = setEditingNode();
@@ -740,10 +745,45 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 				BaseNamedConfigurationObject sel = (BaseNamedConfigurationObject) selnode.getUserObject();
 				if (sel.getInternalName().equals(ch.getInternalName())) {
-					sel.setInternalName(sel.getInternalName() + "_copy");
-					selnode.setName(selnode.name + "_copy");
+					
+					//sel.setInternalName(sel.getInternalName() + "_copy");
+					
+					String selnodeName = selnode.getUserObject().getClass().getName();
+					
+					BaseNamedConfigurationObject newSel = null;// no copy constructor for abstract class
+					if (selnodeName.equals("org.ensembl.mart.lib.config.FilterPage"))
+						newSel = new FilterPage((FilterPage)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.FilterGroup"))
+						newSel = new FilterGroup((FilterGroup)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.FilterCollection"))
+						newSel = new FilterCollection((FilterCollection)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.FilterDescription"))
+						newSel = new FilterDescription((FilterDescription)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.Importable"))
+						newSel = new Importable((Importable)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.Exportable"))
+						newSel = new Exportable((Exportable)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.Option"))
+						newSel = new Option((Option)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.PushAction"))
+						newSel = new PushAction((PushAction)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributePage"))
+						newSel = new AttributePage((AttributePage)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeGroup"))
+						newSel = new AttributeGroup((AttributeGroup)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeCollection"))
+						newSel = new AttributeCollection((AttributeCollection)sel);
+					else if (selnodeName.equals("org.ensembl.mart.lib.config.AttributeDescription"))
+						newSel = new AttributeDescription((AttributeDescription)sel);						
+																	
+					
+					newSel.setInternalName(sel.getInternalName() + "_copy");
 					// need to make sure refers to a different object for multiple pastes
-					selnode = new DatasetConfigTreeNode(selnode.name + "_copy",selnode.getUserObject());
+					selnode = new DatasetConfigTreeNode(selnode.name + "_copy",newSel);
+					DatasetConfigTreeNodeSelection ss = new DatasetConfigTreeNodeSelection(selnode);
+					frame.getEditor().clipboardEditor.setContents(ss, (ClipboardOwner) frame.getEditor());
+					
+					
 					break;
 				}
 			}
