@@ -595,6 +595,8 @@ public class DatabaseDatasetConfigUtils {
 			String[] filterLines = filterDuplicationString.split("\n");
 			System.out.println(filterLines.length);
 			OUTER:for (i = 0; i < filterLines.length; i++){
+				if (!filterLines[i].matches("\\w+.+"))
+					continue;//getting blank line when duplicationString is empty?
 				testName = filterLines[i].split("\\s+")[0];
 				System.out.println(testName);
 				int first = 0;
