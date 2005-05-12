@@ -1405,6 +1405,21 @@ public class DatabaseDatasetConfigUtils {
       return dsv.getMessageDigest();
   }
 
+  /**
+   * Determine if a DatasetConfig in memory is different from the one in the database by
+   * comparing the MD5SUMs
+   * @param user - user in database
+   * @param dsc - DatasetConfig
+   * @return true if equal, false otherwise
+   * @throws ConfigurationException for all underlying exceptions
+   */
+  public boolean isDatasetConfigChanged(String user, DatasetConfig dsc) throws ConfigurationException {
+      byte[] thisDigest = dscutils.getMessageDigestForDatasetConfig(dsc);
+      byte[] dbDigest = getDSConfigMessageDigestByDatasetInternalName(user, dsc.getDataset(), dsc.getInternalName());
+      
+      return MessageDigest.isEqual(thisDigest, dbDigest);
+  }
+  
   private int getDSConfigEntryCountFor(String metatable, String dataset, String internalName)
     throws ConfigurationException {
   	
