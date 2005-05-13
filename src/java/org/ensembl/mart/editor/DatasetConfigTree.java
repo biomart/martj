@@ -820,6 +820,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	}
 
 	public void addPushAction() throws ConfigurationException, SQLException {
+	  try{	
 		String filter2 = JOptionPane.showInputDialog("Filter Description to set (internal name):");
 		String orderSQL = JOptionPane.showInputDialog("Optional column name to order menu by:");
 		//String filter2 = JOptionPane.showInputDialog("Filter Description to set (TableName:ColName):");	
@@ -885,9 +886,6 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			PushAction pa1 = (PushAction) node.getUserObject();
 			String intName = pa1.getInternalName();
 			field = intName.split("_push")[0];
-			//if (field.startsWith("glook_")) {
-			//	field = field.replaceFirst("glook_", "");
-			//}
 			options = pa1.getOptions();
 			if (filter2.matches("\\w+\\.\\w+")){//placeholder)								
 					String otherDatasetFilter1 = null;
@@ -933,9 +931,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			//String opName = op.getInternalName();
 			String opName = op.getDisplayName();
 			PushAction pa = new PushAction(pushInternalName + "_push_" + opName, null, null, pushInternalName, orderSQL);
-
 			pa.addOptions(
-				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL,""));
+				MartEditor.getDatabaseDatasetConfigUtils().getLookupOptions(pushField, pushTableName, field, opName, orderSQL,MartEditor.getDatabaseDatasetConfigUtils().getSchema()[0]));
 
 			if (pa.getOptions().length > 0) {
 				Enumeration children = parentNode.children();
@@ -958,11 +955,14 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 			}
 		}
-
+	  }
+	  catch (Exception e){
+	  	System.out.println("PROBLEM ADDING PUSH ACTION");	
+	  }	
 	}
 
 	public void makeDropDown() throws ConfigurationException, SQLException {
-
+     try{
 		DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		FilterDescription fd1 = (FilterDescription) node.getUserObject();
 
@@ -981,6 +981,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 
 			insert(options[k], "Option");
 		}
+	  }	
+	  catch (Exception e){
+		 System.out.println("PROBLEM MAKING DROP DOWN");	
+      }
 	}
 
 	public void delete() {

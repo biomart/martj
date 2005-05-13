@@ -33,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.HashSet;
@@ -330,13 +331,14 @@ public class DatabaseDatasetConfigUtils {
 		AttributePage apage;
 		String testInternalName;
 		String duplicationString = "";
-		//String optionDuplicationString = "";
-		String filterDuplicationString = "";
 		String spaceErrors = "";
 		String linkErrors = "";
 		String brokenString = "";
 	  
 		Hashtable descriptionsMap = new Hashtable();// atts should have a unique internal name
+		Hashtable attributeDuplicationMap = new Hashtable();
+		Hashtable filterDuplicationMap = new Hashtable();
+		
 		for (int i = 0; i < apages.length; i++){
 			  apage = apages[i];
 			
@@ -348,8 +350,7 @@ public class DatabaseDatasetConfigUtils {
 			List testGroups = new ArrayList();				
 			testGroups = apage.getAttributeGroups();
 			for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
-			  AttributeGroup testGroup = (AttributeGroup) groupIter.next();
-			  //List testColls = new ArrayList();				
+			  AttributeGroup testGroup = (AttributeGroup) groupIter.next();			
 			  AttributeCollection[] testColls = testGroup.getAttributeCollections();
 			  for (int col = 0; col < testColls.length; col++) {
 				AttributeCollection testColl = testColls[col];
@@ -360,9 +361,6 @@ public class DatabaseDatasetConfigUtils {
 				List testAtts = new ArrayList();
 				testAtts = testColl.getAttributeDescriptions();		    
 
-		    
-			  //List testAtts = new ArrayList();
-			  //testAtts = apage.getAllAttributeDescriptions();
 			  for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 				  Object testAtt = iter.next();
 				  AttributeDescription testAD = (AttributeDescription) testAtt;
@@ -374,12 +372,9 @@ public class DatabaseDatasetConfigUtils {
 				  }
 				  if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
 					  spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
-				  }	
+				  }
 				  if (descriptionsMap.containsKey(testAD.getInternalName())){
-					  //System.out.println("DUPLICATION " + testAD.getInternalName());	
-					  //duplicationString = duplicationString + testAD.getInternalName() + " in page " + apage.getInternalName() + "\n";
-					duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
-												  " and page " + apage.getInternalName() + "\n";
+					 attributeDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
 				  }
 				  // test has all its fields defined - if not add a message to brokenString
 				  if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
@@ -432,8 +427,7 @@ public class DatabaseDatasetConfigUtils {
 			List testGroups = new ArrayList();				
 			testGroups = fpage.getFilterGroups();
 			for (Iterator groupIter = testGroups.iterator(); groupIter.hasNext();) {
-			  FilterGroup testGroup = (FilterGroup) groupIter.next();
-			  //List testColls = new ArrayList();				
+			  FilterGroup testGroup = (FilterGroup) groupIter.next();				
 			  FilterCollection[] testColls = testGroup.getFilterCollections();
 			  for (int col = 0; col < testColls.length; col++) {
 				FilterCollection testColl = testColls[col];
@@ -441,16 +435,9 @@ public class DatabaseDatasetConfigUtils {
 				if (testColl.getInternalName().matches("\\w+\\s+\\w+")){
 				  spaceErrors = spaceErrors + "FilterCollection " + testColl.getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";
 				}					 
-					List testAtts = new ArrayList();
-					testAtts = testColl.getFilterDescriptions();// ? OPTIONS
-		    
-		    
-		    
-		    
-					//List testAtts = new ArrayList();
-					//testAtts = fpage.getAllFilterDescriptions();// ? OPTIONS
-				  
-					for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
+				List testAtts = new ArrayList();
+				testAtts = testColl.getFilterDescriptions();// ? OPTIONS	  
+				for (Iterator iter = testAtts.iterator(); iter.hasNext();) {
 						Object testAtt = iter.next();
 						FilterDescription testAD = (FilterDescription) testAtt;
 						if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
@@ -463,12 +450,9 @@ public class DatabaseDatasetConfigUtils {
 							spaceErrors = spaceErrors + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
 						}	
 						if (descriptionsMap.containsKey(testAD.getInternalName())){
-							//System.out.println("DUPLICATION " + testAD.getInternalName());
-							filterDuplicationString = filterDuplicationString + testAD.getInternalName() + " in page " + fpage.getInternalName() + "\n";
-						  
+							filterDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset());
 							continue;//to stop options also being assessed
 						}
-						
 						// test has all its fields defined - if not add a message to brokenString
 						if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 							testAD.getField() == null || testAD.getField().equals("") ||
@@ -478,25 +462,19 @@ public class DatabaseDatasetConfigUtils {
 							)){
 							  brokenString = brokenString + "Filter " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
 																				" and page " + fpage.getInternalName() + "\n";	
-						}						
-						
-						
+						}
 						descriptionsMap.put(testAD.getInternalName(),"1");
 					  
 						// do options as well
 						Option[] ops = testAD.getOptions();
 						if (ops.length > 0 && ops[0].getType()!= null && !ops[0].getType().equals("")){
-						  //System.out.println(ops[0].getInternalName() + "\t" + ops[0].getType());
 						  for (int j = 0; j < ops.length; j++){
 							  Option op = ops[j];
 							  if ((op.getHidden() != null) && (op.getHidden().equals("true"))){
 									  continue;
 							  }
 							  if (descriptionsMap.containsKey(op.getInternalName())){
-								  //System.out.println("DUPLICATION " + op.getInternalName());
-								  //filterDuplicationString = filterDuplicationString + op.getInternalName() + " in page " + fpage.getInternalName() + "\n";
-								filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
-															  " and page " + fpage.getInternalName() + "\n";
+								filterDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset());
 							  }
 							  descriptionsMap.put(op.getInternalName(),"1");
 						  }
@@ -529,14 +507,10 @@ public class DatabaseDatasetConfigUtils {
 		  return;//no export performed
 		}
 		if (brokenString != ""){
-		  //JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
-		  //							+ brokenString, "ERROR", 0);
-			
-		  int choice = JOptionPane.showConfirmDialog(null,"The following do not contain the required fields:\n"
+			int choice = JOptionPane.showConfirmDialog(null,"The following do not contain the required fields:\n"
 		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
-		  if (choice != 0)									
+		  	if (choice != 0)									
 				return;//no export performed
-		
 		}		
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
@@ -544,23 +518,35 @@ public class DatabaseDatasetConfigUtils {
 		  return;//no export performed
 		}
 	  	  
-		if (filterDuplicationString != "" || duplicationString != ""){
-			
-		  int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
-				  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
-+ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
-							  
+		if (attributeDuplicationMap.size() > 0){
+			duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
+			Enumeration enum = attributeDuplicationMap.keys();
+			while (enum.hasMoreElements()){
+				String intName = (String) enum.nextElement();
+				duplicationString = duplicationString+"Attribute "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
+			}
+		}
+		else if (filterDuplicationMap.size() > 0){
+			duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
+			Enumeration enum = filterDuplicationMap.keys();
+			while (enum.hasMoreElements()){
+				String intName = (String) enum.nextElement();
+				duplicationString = duplicationString+"Filter "+intName+" in dataset "+dsConfig.getDataset()+"\n";	
+			}
+		} 	
+
+		if (duplicationString != ""){	
+		  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
 		  // make unique code
 		  if (choice == 0){
 		  	 	System.out.println("MAKING UNIQUE");	
 		  	 	String testName;
 		  	 	int i;
-		  	 	String[] attributeLines = duplicationString.split("\n");
-		  	 	OUTER:for (i = 0; i < attributeLines.length; i++){
-		  	 		if (!attributeLines[i].matches("\\w+.+"))
-		  	 			continue;//getting blank line when duplicationString is empty?
-		  	 		testName = attributeLines[i].split("\\s+")[1];
-		  	 		System.out.println(testName);
+		 		
+				Enumeration enum = attributeDuplicationMap.keys();
+				while (enum.hasMoreElements()){
+					testName = (String) enum.nextElement();
+									
 		 			int first = 0;
 					for (int j = 0; j < apages.length; j++){
 						apage = apages[j];
@@ -584,21 +570,19 @@ public class DatabaseDatasetConfigUtils {
 								if (first != 0){
 									testAD.setInternalName(testName + "_" + first);
 									doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
-									continue OUTER;	  
+									
+									//continue OUTER;	  
 								}
-								first++;		  
+								first++;
+										  
 							}
 					    }	
 		  	 	    }		 
 		         }
-		  	 	 // repeat for filts + validateAll	
-			String[] filterLines = filterDuplicationString.split("\n");
-			System.out.println(filterLines.length);
-			OUTER:for (i = 0; i < filterLines.length; i++){
-				if (!filterLines[i].matches("\\w+.+"))
-					continue;//getting blank line when duplicationString is empty?
-				testName = filterLines[i].split("\\s+")[0];
-				System.out.println(testName);
+				
+				enum = filterDuplicationMap.keys();
+				while (enum.hasMoreElements()){
+					testName = (String) enum.nextElement();				
 				int first = 0;
 				for (int j = 0; j < fpages.length; j++){
 					fpage = fpages[j];
@@ -622,7 +606,7 @@ public class DatabaseDatasetConfigUtils {
 							if (first != 0){
 								testAD.setInternalName(testName + "_" + first);
 								doc = MartEditor.getDatasetConfigXMLUtils().getDocumentForDatasetConfig(dsConfig);
-								continue OUTER;	  
+								//continue OUTER;	  
 							}
 							first++;		  
 						}
@@ -1773,7 +1757,8 @@ public class DatabaseDatasetConfigUtils {
 	  if (testAD.getHidden() != null && testAD.getHidden().equals("true"))
 		  continue;		
 	  AttributeDescription validatedAD = getValidatedAttributeDescription(schema, catalog, testAD, dsv.getDataset(), conn);
-	  if (validatedAD.isBroken()) {
+	  //if (validatedAD.isBroken()) {
+	  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {
 	  	brokenElements = brokenElements + "Attribute " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 	  }
 	}
@@ -1786,7 +1771,7 @@ public class DatabaseDatasetConfigUtils {
 		continue;	
 	  
 	  FilterDescription validatedAD = getValidatedFilterDescription(schema, catalog, testAD, dsv.getDataset(), dsv, conn);
-	  if (validatedAD.isBroken()) {
+	  if (validatedAD.hasBrokenField() || validatedAD.hasBrokenTableConstraint()) {	// don't use isBroken() as options always set to broken
 		brokenElements = brokenElements + "Filter " + validatedAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 	  }
 	}
@@ -1997,6 +1982,7 @@ public class DatabaseDatasetConfigUtils {
     throws SQLException, ConfigurationException {
     FilterDescription validatedFilter = new FilterDescription(filter);
     
+    
     DatasetConfig otherDataset = null;
     // if a placeholder get the real filter
     if (validatedFilter.getInternalName().matches("\\w+\\.\\w+")){
@@ -2145,6 +2131,7 @@ public class DatabaseDatasetConfigUtils {
 					  for (int q = 0; q < schemas.length; q++){
 					  	DatabaseDatasetConfigUtils newUtils = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]);
 						//System.out.println("NEW ONE HAS DSOURCE " + newUtils.getAllDatasetNames(null)[0]);
+						System.out.println(schemas[q] + " TEST " + otherFilters[p]);
 						otherDataset = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]);  
 	
 						if (otherDataset == null){
@@ -4060,6 +4047,7 @@ public class DatabaseDatasetConfigUtils {
     while (rs.next()) {
       value = rs.getString(1);
       op = new Option();
+      System.out.println(value);
       op.setDisplayName(value);
       op.setInternalName(value);
       op.setValue(value);

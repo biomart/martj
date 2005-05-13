@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.HashSet;
-
+import java.util.Enumeration;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDesktopPane;
@@ -742,7 +742,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       disableCursor();
 
       String[] datasets = dbutils.getAllDatasetNames(user);
-      String dataset =
+      if (datasets.length == 0){
+		JOptionPane.showMessageDialog(this, "No datasets in this database", "ERROR", 0);
+				return;
+      }
+         String dataset =
         (String) JOptionPane.showInputDialog(
           null,
           "Choose one",
@@ -1168,7 +1172,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 		  String brokenFields = "";
 		  
 		  Set brokenDatasets = new HashSet();
-		  
+		  Hashtable attributeDuplicationMap = new Hashtable();
+		  Hashtable filterDuplicationMap = new Hashtable();
 		  
 		  int newVersion;
 		  // cycle through all datasets for the database
@@ -1201,14 +1206,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					dsv.setVersion(newDatasetVersion);
 					newVersion++;
 				}
-				//System.out.println(newVersion + "\t" + newDatasetVersion);
 				// repeat logic for linkVersions updating any not null or '' or equal to newLinkVersion
 				if (dbutils.updateLinkVersions(dsv))					
 					newVersion++;
 				
-				
-				//System.out.println(newVersion + "\t" + newDatasetVersion);
-				//BELOW MAKES NO SENSE
 				if (dbutils.getBrokenElements(dsv) != "") 
 					brokenString = brokenString + dbutils.getBrokenElements(dsv);
 		
@@ -1216,7 +1217,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				if(databaseDialog.getDatabaseType().equals("oracle")) schema = databaseDialog.getSchema().toUpperCase();
 				else schema = databaseDialog.getSchema();
 				dsv = dbutils.getNewFiltsAtts(schema, dsv);		
-				//dsv = dbutils.getNewFiltsAtts(database, dsv);
 				
 				// check uniqueness of internal names per page	  
 				AttributePage[] apages = dsv.getAttributePages();
@@ -1261,11 +1261,10 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							 spaceErrors = spaceErrors + "AttributeDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 						  }					
 						  if (descriptionsMap.containsKey(testAD.getInternalName())){
-							  duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
-							  " and page " + apage.getInternalName() + "\n";
-							    
-							  brokenDatasets.add(dsv.getDataset());
-							  
+							  //duplicationString = duplicationString + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+							  //" and page " + apage.getInternalName() + "\n";
+							  attributeDuplicationMap.put(testAD.getInternalName(),dsv.getDataset());   
+							  brokenDatasets.add(dsv.getDataset());							  
 						  }
 						// test has all its fields defined - if not add a message to brokenString
 						if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
@@ -1318,8 +1317,9 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								}	
 								if (descriptionsMap.containsKey(testAD.getInternalName())){
 									//duplicationString = duplicationString + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
-									filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
-																  " and page " + fpage.getInternalName() + "\n";
+									//filterDuplicationString = filterDuplicationString + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
+									//							  " and page " + fpage.getInternalName() + "\n";
+									filterDuplicationMap.put(testAD.getInternalName(),dsv.getDataset()); 
 									brokenDatasets.add(dsv.getDataset());							  
 									continue;//to stop options also being assessed
 								}
@@ -1344,7 +1344,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 											  continue;
 									  }
 									  if (descriptionsMap.containsKey(op.getInternalName())){
-										  filterDuplicationString = filterDuplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+										  //filterDuplicationString = filterDuplicationString + op.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
+										filterDuplicationMap.put(testAD.getInternalName(),dsv.getDataset()); 
 										brokenDatasets.add(dsv.getDataset());	
 									  }
 									  descriptionsMap.put(op.getInternalName(),"1");
@@ -1368,12 +1369,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					} catch (java.beans.PropertyVetoException e) {
 					}
 				}
-				//else{
-					// make sure dsv memory freed
-				//	DatasetConfigTreeWidget frame = new DatasetConfigTreeWidget(null, this, dsv, null, null, null, database);
-				//	frame.dispose();
-				//}
-					
 			}
 		  }
 		  
@@ -1386,24 +1381,35 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 			
 			if (brokenFields != ""){
 				  JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
-											+ brokenString, "ERROR", 0);
+											+ brokenFields, "ERROR", 0);
 				  return;//no export performed
 				}
+
+			if (attributeDuplicationMap.size() > 0){
+				duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
+				Enumeration enum = attributeDuplicationMap.keys();
+				while (enum.hasMoreElements()){
+					String intName = (String) enum.nextElement();
+					duplicationString = duplicationString+"Attribute "+intName+" in dataset "+attributeDuplicationMap.get(intName)+"\n";	
+				}
+			}
+			else if (filterDuplicationMap.size() > 0){
+				duplicationString = duplicationString + "The following filter/option internal names are duplicated and will cause client problems:\n";
+				Enumeration enum = filterDuplicationMap.keys();
+				while (enum.hasMoreElements()){
+					String intName = (String) enum.nextElement();
+					duplicationString = duplicationString+"Filter "+intName+" in dataset "+filterDuplicationMap.get(intName)+"\n";	
+				}
+			} 	
+
+			if (duplicationString != ""){	
+			  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
 			
 			
-			
-			//if (duplicationString != ""){
-			  //JOptionPane.showMessageDialog(this, "The following internal names are duplicated and will cause client problems:\n"
-				//				  + duplicationString, "ERROR", 0);
-				  
-			//}
-			
-			
-			if (filterDuplicationString != "" || duplicationString != ""){
-			
-			  int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
-					  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
-	+ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
+			//if (filterDuplicationString != "" || duplicationString != ""){
+			  //int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
+//					  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
+//	+ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
 			  
 			  // make unique code
 			  if (choice == 0){
