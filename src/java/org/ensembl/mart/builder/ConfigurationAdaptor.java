@@ -46,12 +46,12 @@ public static void main(String[] args) throws IOException {
 		};
 		
 		String [] dbs = {
-				"GadFly",
-				 "SO",
-				 "GO",
+				"Gadfly",
+		//		 "SO",
+		//		 "GO",
 				 "FlyBase",
-				 "InterPro",
-				 "PUBMED",	
+		//		 "InterPro",
+		//		 "PUBMED",	
 		};
 		
 		
@@ -79,14 +79,32 @@ public static void main(String[] args) throws IOException {
 		String configFile="/Applications/eclipse/workspace/martj-head/data/builder/new.config";
 		
 	
+		/**
+		 * 0  dataset
+		 * 9  transformation
+		 * 11 reference column names
+		 * 12 reference column aliases
+		 * 13 central column names
+		 * 14 central column aliases
+		 * 15 user table name
+		 * 16 central filter
+		 * 
+		 */
+		
+		
+		
 		File f = new File(configFile);
 		f.delete();
 
 		BufferedWriter out = null;
 		out = new BufferedWriter(new FileWriter(configFile, true));
 		
-		String dataset1 = "yeast";
-		String dataset2="sc_gene_structure";
+		//String dataset1 = "yeast";
+		//String dataset2="sc_gene_structure";
+		
+		String dataset1="fly";
+		String dataset2="flstructure";
+		
 		
 		int transformations=0;
 		
@@ -96,17 +114,17 @@ public static void main(String[] args) throws IOException {
 		String tabledm=dataset1+"__gene__main";
 		
 		String [] first =  {dataset1,"m","feature","imported","cvterm_id","CVTERM","n1","null","name=\'gene\'",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null,null,gene_name,gene_uniquename,null,null",tabledm,"N"};
-		String [] second = {dataset1,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","transcript_start,transcript_end,null,null,null"};
+		String [] second = {dataset1,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","gene_start,gene_end,null,null,null"};
 		String [] third =  {dataset1,"m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename","chromosome_acc,chromosome"};
 		String [] fourth = {dataset1,"m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null","null"};
 		
 		String [] [] one = {first,second,third,fourth};
 		
-		//printConfig(one,tabledm,out);
+		printConfig(one,tabledm,out);
 		}
 		
 		
-		
+		/**
 		
 		for (int i=0;i<1;i++){
 		transformations++;
@@ -120,10 +138,10 @@ public static void main(String[] args) throws IOException {
 		
 		String [] [] one = {first,second,third,fourth};
 		
-		printConfig(one,tabledm,out);
+		//printConfig(one,tabledm,out);
 		}
 		
-		
+		*/
 		
 		
 		
@@ -134,13 +152,13 @@ public static void main(String[] args) throws IOException {
 			transformations++;
 			String tabledm = dataset1+"__"+types[i]+"__dm";
 			
-			String [] fifth =   {dataset1,"d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null",tabledm,"Y"};
-			String [] sixth =   {dataset1,"d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","null","null"};
+			String [] fifth =   {dataset1,"d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","name","type","feature_id,name,uniquename,seqlen","null",tabledm,"Y"};
+			String [] sixth =   {dataset1,"d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","object_id","null"};
 			String [] seventh=  {dataset1,"d","feature","exported","object_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id","null"};
 			
 			String [] [] two ={fifth,sixth,seventh};			
 		   
-			//printConfig(two,tabledm,out);
+			printConfig(two,tabledm,out);
 		}
 		
 		
@@ -157,7 +175,7 @@ public static void main(String[] args) throws IOException {
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
 			 
-				//printConfig(two,tabledm,out);
+				printConfig(two,tabledm,out);
 			
 			}
 		
@@ -173,9 +191,9 @@ public static void main(String[] args) throws IOException {
 				String tb3 = tb2.replace('(','1');
 				String tabledm = tb3.replace(')','1');
 				
-				String [] fifth =   {dataset1,"d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"null","null","null","null",	tabledm,"Y"};
-				String [] sixth =   {dataset1,"d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"null","null"};
-				String [] seventh=  {dataset1,"d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"null","null"};
+				String [] fifth =   {dataset1,"d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"cv_id","null","name,dbxref_id,cvterm_id","null",	tabledm,"Y"};
+				String [] sixth =   {dataset1,"d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"accession","null"};
+				String [] seventh=  {dataset1,"d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"cvterm_id,feature_id","null"};
 				String [] eight=    {dataset1,"d","cvterm","imported","feature_id","FEATURE","11","null","null",	""+transformations,"feature_id","feature_id","null"};
 				
 				String [] [] two ={fifth,sixth,seventh,eight};			
