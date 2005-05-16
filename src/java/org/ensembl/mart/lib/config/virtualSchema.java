@@ -22,40 +22,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Object encapsulating a MartRegistry.dtd compliant xml document.
+ * Object encapsulating a virtualSchema element within a
+ * MartRegistry.dtd compliant xml document.
  * @author <a href="mailto:dlondon@ebi.ac.uk">Darin London</a>
  * @author <a href="mailto:craig@ebi.ac.uk">Craig Melsopp</a>
  */
-public class MartRegistry implements Comparable {
-  //needs to maintain the order of locations without a virtualSchema, and virtualSchema
-  //defined locations
-  private List elements = new ArrayList();
+public class virtualSchema implements Comparable {
+  private List martLocations = new ArrayList();
+  private String name;
   
-  public void addVirtualSchema(virtualSchema vSchema) {
-      elements.add(vSchema);
+  public virtualSchema(String name) {
+      this.name = name;
+  }
+  
+  public String getName() {
+      return name;
   }
   
   public void addMartLocation(MartLocation dsvl) {
-    elements.add(dsvl);
+    martLocations.add(dsvl);
   }
   
-  public Object[] getElementsInOrder() {
-      return (Object[]) elements.toArray(new Object[elements.size()]);
+  public MartLocation[] getMartLocations() {
+    return (MartLocation[]) martLocations.toArray(new MartLocation[martLocations.size()]);
   }
   
   public String toString() {
-      StringBuffer buf = new StringBuffer();
-      
-      buf.append("[");
-      
-      for (int i = 0, n = elements.size(); i < n; i++) {
+		StringBuffer buf = new StringBuffer();
+
+		buf.append("[").append("name=").append(name).append(" locations [");
+    
+        for (int i = 0, n = martLocations.size(); i < n; i++) {
           if ( i>0 ) buf.append(", ");
-          buf.append( elements.get(i).toString() );
-      }
-      
-      buf.append("]");
-      
-      return buf.toString();
+            buf.append( martLocations.get(i).toString() );
+        }
+    		
+        buf.append("]").append("]");
+
+		return buf.toString();
   }
   
   /**
@@ -72,8 +76,9 @@ public class MartRegistry implements Comparable {
   public int hashCode() {
     int hashcode = 0;
     
-    for (int i = 0, n = elements.size(); i < n; i++) {
-      Object loc = elements.get(i);
+    //do not need to track order of locations
+    for (int i = 0, n = martLocations.size(); i < n; i++) {
+      MartLocation loc = (MartLocation) martLocations.get(i);
       hashcode += loc.hashCode();
     }
     
@@ -84,6 +89,6 @@ public class MartRegistry implements Comparable {
    * Allows Equality Comparisons manipulation of MartRegistry objects
    */
   public boolean equals(Object o) {
-    return o instanceof MartRegistry && hashCode() == o.hashCode();
+    return o instanceof virtualSchema && hashCode() == o.hashCode();
   }
 }

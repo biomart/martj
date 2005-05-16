@@ -292,10 +292,12 @@ public class MartRegistryDBTool {
 		MartRegistry martreg = null;
 		if (load) {
 			try {
-				martreg = MartRegistryXMLUtils.XMLStreamToMartRegistry(InputSourceUtil.getStreamForString(registryPath));
 				MartRegistryXMLUtils.storeMartRegistryDocumentToDataSource(
 					dsource,
-					MartRegistryXMLUtils.MartRegistryToDocument(martreg),
+					MartRegistryXMLUtils.XMLStreamToDocument(
+					        InputSourceUtil.getStreamForString(registryPath),
+					        false
+					),
 					compress);
 			} catch (MalformedURLException e) {
 				System.err.println("Recieved invalid URL " + registryPath + ": " + e.getMessage() + "\n");
@@ -312,8 +314,10 @@ public class MartRegistryDBTool {
 			}
 		} else if (fetch) {
 			try {
-				martreg = MartRegistryXMLUtils.DataSourceToMartRegistry(dsource);
-				MartRegistryXMLUtils.MartRegistryToFile(martreg, new File(registryPath));
+				MartRegistryXMLUtils.DocumentToFile(
+				  MartRegistryXMLUtils.DataSourceToRegistryDocument(dsource),
+				  new File(registryPath)
+				);
 			} catch (ConfigurationException e) {
 				System.err.println("Could not fetch Registry from " + dsource.getName() + ": " + e.getMessage() + "\n");
 				e.printStackTrace();

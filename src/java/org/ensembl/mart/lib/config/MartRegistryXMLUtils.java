@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -61,6 +62,7 @@ public class MartRegistryXMLUtils {
 	private static Logger logger = Logger.getLogger(MartRegistryXMLUtils.class.getName());
 
 	//element names
+	private static final String VSCHEMA = "virtualSchema";
 	private static final String MARTREGISTRY = "MartRegistry";
 	private static final String URLLOCATION = "URLLocation";
 	private static final String DATABASELOCATION = "DatabaseLocation";
@@ -90,7 +92,7 @@ public class MartRegistryXMLUtils {
 		return (DocumentToMartRegistry(DataSourceToRegistryDocument(dsource)));
 	}
 
-	private static Document DataSourceToRegistryDocument(DetailedDataSource dsource) throws ConfigurationException {
+	public static Document DataSourceToRegistryDocument(DetailedDataSource dsource) throws ConfigurationException {
 		if (dsource.getJdbcDriverClassName().indexOf("oracle") >= 0)
 			return DataSourceToRegistryDocumentOracle(dsource);
 
@@ -407,28 +409,58 @@ public class MartRegistryXMLUtils {
 
 		MartRegistry martreg = new MartRegistry();
 
+		for (Iterator iter = thisElement.getChildren().iterator(); iter.hasNext();) {
+            Element element = (Element) iter.next();
+
+            if (element.getName().equals(VSCHEMA)) {
+              String name = element.getAttributeValue("name");
+            
+              virtualSchema vschema = new virtualSchema(name);
+              MartLocation[] martLocs = getLocations(element);
+              for (int i = 0, n = martLocs.length; i < n; i++) {
+                vschema.addMartLocation(martLocs[i]);
+              }
+            } else {
+                if (element.getName().equals(URLLOCATION))
+                  martreg.addMartLocation(getURLLocation(element));
+                else if (element.getName().equals(DATABASELOCATION))
+                  martreg.addMartLocation(getDBLocation(element));
+                else if (element.getName().equals(REGISTRYLOCATION))
+                  martreg.addMartLocation(getRegLocation(element));
+                else if (element.equals(REGISTRYDBLOCATION))
+                  martreg.addMartLocation(getRegDBLocation(element));
+                //else not needed
+            }
+        }
+
+		return martreg;
+	}
+
+	private static MartLocation[] getLocations(Element thisElement) throws ConfigurationException {
+	    List locs = new ArrayList();
 		for (Iterator iter = thisElement.getChildren(URLLOCATION).iterator(); iter.hasNext();) {
 			Element urlloc = (Element) iter.next();
-			martreg.addMartLocation(getURLLocation(urlloc));
+			locs.add(getURLLocation(urlloc));
 		}
 
 		for (Iterator iter = thisElement.getChildren(DATABASELOCATION).iterator(); iter.hasNext();) {
 			Element dbloc = (Element) iter.next();
-			martreg.addMartLocation(getDBLocation(dbloc));
+			locs.add(getDBLocation(dbloc));
 		}
 
 		for (Iterator iter = thisElement.getChildren(REGISTRYLOCATION).iterator(); iter.hasNext();) {
 			Element regloc = (Element) iter.next();
-			martreg.addMartLocation(getRegLocation(regloc));
+			locs.add(getRegLocation(regloc));
 		}
 
 		for (Iterator iter = thisElement.getChildren(REGISTRYDBLOCATION).iterator(); iter.hasNext();) {
 			Element regloc = (Element) iter.next();
-			martreg.addMartLocation(getRegDBLocation(regloc));
+			locs.add(getRegDBLocation(regloc));
 		}
-		return martreg;
+		
+		return (MartLocation[]) locs.toArray(new MartLocation[locs.size()]);
 	}
-
+	
 	public static MartRegistry ByteArrayToMartRegistry(byte[] b) throws ConfigurationException {
 		ByteArrayInputStream bin = new ByteArrayInputStream(b);
 		return XMLStreamToMartRegistry(bin);
@@ -556,24 +588,44 @@ public class MartRegistryXMLUtils {
 	public static Document MartRegistryToDocument(MartRegistry martreg) throws ConfigurationException {
 		Element root = new Element(MARTREGISTRY);
 
-		MartLocation[] martlocs = martreg.getMartLocations();
-		for (int i = 0, n = martlocs.length; i < n; i++) {
-			MartLocation location = martlocs[i];
-
-			if (location.getType().equals(MartLocationBase.URL))
-				root.addContent(getURLLocationElement((URLLocation) location));
-			else if (location.getType().equals(MartLocationBase.DATABASE))
-				root.addContent(getDatabaseLocationElement((DatabaseLocation) location));
-			else if (location.getType().equals(MartLocationBase.REGISTRYFILE))
-				root.addContent(getRegistryLocationElement((RegistryFileLocation) location));
-			//else not needed, but may need to add other else ifs in future
-		}
+		Object[] obs = martreg.getElementsInOrder();
+		for (int i = 0, n = obs.length; i < n; i++) {
+            if (obs[i] instanceof virtualSchema) {
+                virtualSchema vschema = (virtualSchema) obs[i];
+                root.addContent( getVirtualSchemaElement( vschema ) );
+            } else {
+                //MartLocation
+                MartLocation location = (MartLocation) obs[i];
+                putLocation(location, root);
+            }
+        }
 
 		Document thisDoc = new Document(root);
 		thisDoc.setDocType(new DocType(MARTREGISTRY));
 		return thisDoc;
 	}
 
+	private static void putLocation(MartLocation location, Element containerElement) throws ConfigurationException {
+			if (location.getType().equals(MartLocationBase.URL))
+				containerElement.addContent(getURLLocationElement((URLLocation) location));
+			else if (location.getType().equals(MartLocationBase.DATABASE))
+				containerElement.addContent(getDatabaseLocationElement((DatabaseLocation) location));
+			else if (location.getType().equals(MartLocationBase.REGISTRYFILE))
+				containerElement.addContent(getRegistryLocationElement((RegistryFileLocation) location));
+			//else not needed, but may need to add other else ifs in future
+	}
+	
+	private static Element getVirtualSchemaElement( virtualSchema vSchema ) throws ConfigurationException {
+	    Element vSchemaElement = new Element(VSCHEMA);
+	    
+	    vSchemaElement.setAttribute("name", vSchema.getName());
+	    MartLocation[] martlocs = vSchema.getMartLocations();
+	    for (int i = 0, n = martlocs.length; i < n; i++) {
+            putLocation(martlocs[i], vSchemaElement);
+        }
+	    return vSchemaElement;
+	}
+	
 	//private static ObjectToElement methods
 	private static Element getURLLocationElement(URLLocation loc) throws ConfigurationException {
 		Element location = new Element(URLLOCATION);

@@ -265,103 +265,115 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * DatasetConfig specifications for the same Dataset from multiple adaptors which differ in their filters/attributes could be mis - handled.
 	 */
 	private void loadAdaptorsFromRegistry() throws ConfigurationException {
-		MartLocation[] locs = martreg.getMartLocations();
-		for (int i = 0, n = locs.length; i < n; i++) {
-			MartLocation location = locs[i];
+		Object[] elements = martreg.getElementsInOrder();
+		for (int i = 0, n = elements.length; i < n; i++) {
+            if (elements[i] instanceof MartLocation) {
+                addLocation( (MartLocation) elements[i]);
+            } else {
+                //virtualSchema
+                virtualSchema schema = (virtualSchema) elements[i];
+                
+                MartLocation[] locs = schema.getMartLocations();
+                for (int j = 0, m = locs.length; j < m; j++) {
+                    addLocation(locs[j]);
+                }
+            }
+        }
+	}
+	
+	private void addLocation(MartLocation location) throws ConfigurationException {
+		if ( ( location.getType().equals(MartLocationBase.REGISTRYDB) )
+				  || (includeHiddenMembers)
+				  || (location.isVisible())
+				   ) {
+					if (location.getType().equals(MartLocationBase.REGISTRYFILE)) {
+						//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
 
-			if ( ( location.getType().equals(MartLocationBase.REGISTRYDB) )
-			  || (includeHiddenMembers)
-			  || (location.isVisible())
-			   ) {
-				if (location.getType().equals(MartLocationBase.REGISTRYFILE)) {
-					//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
+						MartRegistry subreg = null;
 
-					MartRegistry subreg = null;
+						try {
+							subreg =
+								MartRegistryXMLUtils.XMLStreamToMartRegistry(
+									InputSourceUtil.getStreamForURL(((RegistryFileLocation) location).getUrl()));
+						} catch (ConfigurationException e) {
+							throw e;
+						} catch (IOException e) {
+							throw new ConfigurationException(
+								"Caught IOException working with MartRegistryLocation Element URL: " + e.getMessage(),
+								e);
+						}
 
-					try {
-						subreg =
-							MartRegistryXMLUtils.XMLStreamToMartRegistry(
-								InputSourceUtil.getStreamForURL(((RegistryFileLocation) location).getUrl()));
-					} catch (ConfigurationException e) {
-						throw e;
-					} catch (IOException e) {
+						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url);
+						adaptor.setName(location.getName());
+						add(adaptor);
+						martRegs.add(subreg);
+
+					} else if (location.getType().equals(MartLocationBase.REGISTRYDB)) {
+						//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
+						MartRegistry subreg =
+							MartRegistryXMLUtils.DataSourceToMartRegistry(((RegistryDBLocation) location).getDetailedDataSource());
+
+						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, dsource);
+						adaptor.setName(location.getName());
+						add(adaptor);
+						martRegs.add(subreg);
+					} else if (location.getType().equals(MartLocationBase.URL)) {
+
+						URLDSConfigAdaptor adaptor =
+							new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
+						adaptor.setName(location.getName());
+						add(adaptor);
+
+					} else if (location.getType().equals(MartLocationBase.DATABASE)) {
+						DatabaseLocation dbloc = (DatabaseLocation) location;
+
+						String host = dbloc.getHost();
+						String user = dbloc.getUser();
+						String instanceName = dbloc.getInstanceName();
+						String schema = dbloc.getSchema();
+						String port = dbloc.getPort();
+						String password = dbloc.getPassword();
+						String databaseType = dbloc.getDatabaseType();
+						String jdbcDriverClassName = DetailedDataSource.getJDBCDriverClassNameFor(databaseType);
+						String name = dbloc.getName();
+
+						// apply defaults only if both dbtype and jdbcdriver are null
+						if (databaseType == null && jdbcDriverClassName == null) {
+							databaseType = DetailedDataSource.DEFAULTDATABASETYPE;
+							jdbcDriverClassName = DetailedDataSource.DEFAULTDRIVER;
+						}
+
+						String connectionString = DetailedDataSource.connectionURL(databaseType, host, port, instanceName);
+						// use default name
+						if (name == null || "".equals(name))
+							name = connectionString;
+
+						//use the default poolsize of 10        
+						DetailedDataSource dsource =
+							new DetailedDataSource(
+								databaseType,
+								host,
+								port,
+								instanceName,
+								schema,
+								connectionString,
+								user,
+								password,
+								DetailedDataSource.DEFAULTPOOLSIZE,
+								jdbcDriverClassName,
+								name);
+
+						DatabaseDSConfigAdaptor adaptor =
+							new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, includeHiddenMembers);
+						adaptor.setName(location.getName());
+						add(adaptor);
+
+					} else
 						throw new ConfigurationException(
-							"Caught IOException working with MartRegistryLocation Element URL: " + e.getMessage(),
-							e);
-					}
-
-					RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url);
-					adaptor.setName(location.getName());
-					add(adaptor);
-					martRegs.add(subreg);
-
-				} else if (location.getType().equals(MartLocationBase.REGISTRYDB)) {
-					//create underlying MartRegistry objects with this, check against martreg list before creating an adaptor for it (may point to the same martreg document)
-					MartRegistry subreg =
-						MartRegistryXMLUtils.DataSourceToMartRegistry(((RegistryDBLocation) location).getDetailedDataSource());
-
-					RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, dsource);
-					adaptor.setName(location.getName());
-					add(adaptor);
-					martRegs.add(subreg);
-				} else if (location.getType().equals(MartLocationBase.URL)) {
-
-					URLDSConfigAdaptor adaptor =
-						new URLDSConfigAdaptor(((URLLocation) location).getUrl(), ignoreCache, includeHiddenMembers);
-					adaptor.setName(location.getName());
-					add(adaptor);
-
-				} else if (location.getType().equals(MartLocationBase.DATABASE)) {
-					DatabaseLocation dbloc = (DatabaseLocation) location;
-
-					String host = dbloc.getHost();
-					String user = dbloc.getUser();
-					String instanceName = dbloc.getInstanceName();
-					String schema = dbloc.getSchema();
-					String port = dbloc.getPort();
-					String password = dbloc.getPassword();
-					String databaseType = dbloc.getDatabaseType();
-					String jdbcDriverClassName = DetailedDataSource.getJDBCDriverClassNameFor(databaseType);
-					String name = dbloc.getName();
-
-					// apply defaults only if both dbtype and jdbcdriver are null
-					if (databaseType == null && jdbcDriverClassName == null) {
-						databaseType = DetailedDataSource.DEFAULTDATABASETYPE;
-						jdbcDriverClassName = DetailedDataSource.DEFAULTDRIVER;
-					}
-
-					String connectionString = DetailedDataSource.connectionURL(databaseType, host, port, instanceName);
-					// use default name
-					if (name == null || "".equals(name))
-						name = connectionString;
-
-					//use the default poolsize of 10        
-					DetailedDataSource dsource =
-						new DetailedDataSource(
-							databaseType,
-							host,
-							port,
-							instanceName,
-							schema,
-							connectionString,
-							user,
-							password,
-							DetailedDataSource.DEFAULTPOOLSIZE,
-							jdbcDriverClassName,
-							name);
-
-					DatabaseDSConfigAdaptor adaptor =
-						new DatabaseDSConfigAdaptor(dsource, user, ignoreCache, loadFully, includeHiddenMembers);
-					adaptor.setName(location.getName());
-					add(adaptor);
-
-				} else
-					throw new ConfigurationException(
-						"Recieved unsupported MartLocation element of type : "
-							+ location.getType()
-							+ " in MartRegistry Document\n");
-			}
-		}
+							"Recieved unsupported MartLocation element of type : "
+								+ location.getType()
+								+ " in MartRegistry Document\n");
+				}
 	}
 
 	//	/**
