@@ -224,6 +224,10 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					paste();
 				else if (e.getActionCommand().equals("insert importable"))
 					insert(new Importable("new"), "Importable:");
+				else if (e.getActionCommand().equals("edit main table(s)"))
+					editMains();
+				else if (e.getActionCommand().equals("edit primary key(s)"))
+					editKeys();								
 				else if (e.getActionCommand().equals("insert exportable"))
 					insert(new Exportable("new"), "Exportable:");
 				else if (e.getActionCommand().equals("insert filter page"))
@@ -510,13 +514,14 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"cut",
 					"paste",
 					"delete",
-					"delete options",
 					"hide toggle",
 					"hideDisplay toggle",
 					"insert filter page",
 					"insert attribute page",
 					"insert importable",
 					"insert exportable",
+					"edit main table(s)",
+					"edit primary key(s)"
 					};
 		else if ((clickedNodeClass).equals("org.ensembl.mart.lib.config.FilterPage"))
 			menuItems = new String[] { "copy", "cut", "paste", "delete", "hide toggle", "hideDisplay toggle", "insert filter group" };
@@ -989,6 +994,43 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 	  catch (Exception e){
 		 System.out.println("PROBLEM MAKING DROP DOWN");	
       }
+	}
+
+	public void editMains() {
+		String[] mains = dsConfig.getStarBases();
+		String mainString = "";
+		String comma = "";
+		
+		for (int i = 0;i < mains.length;i++){
+			String main = mains[i];
+			dsConfig.removeMainTable(main);
+			mainString = mainString + comma + main;
+			comma = ",";
+		}
+		
+		String newMain = JOptionPane.showInputDialog("",mainString);
+		
+		String[] newMains = newMain.split(",");
+		if (!newMain.equals(""))
+			dsConfig.addMainTables(newMains);		
+	}
+	
+	public void editKeys() {
+		String[] mains = dsConfig.getPrimaryKeys();
+		String mainString = "";
+		String comma = "";
+		
+		for (int i = 0;i < mains.length;i++){
+			String main = mains[i];
+			dsConfig.removePrimaryKey(main);
+			mainString = mainString + comma + main;
+			comma = ",";
+		}
+		String newMain = JOptionPane.showInputDialog("",mainString);
+		
+		String[] newMains = newMain.split(",");	
+		if (!newMain.equals(""))
+			dsConfig.addPrimaryKeys(newMains);
 	}
 
 	public void delete() {
