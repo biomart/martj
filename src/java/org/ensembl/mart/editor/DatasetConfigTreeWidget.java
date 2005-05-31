@@ -315,7 +315,8 @@ class CloseListener implements InternalFrameListener {
 			}
 		}
 		catch(Exception exc){
-			
+			// connection changed already
+			e.getInternalFrame().dispose();
 		}
 	}
 }
