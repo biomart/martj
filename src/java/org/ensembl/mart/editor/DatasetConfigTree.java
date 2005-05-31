@@ -261,6 +261,8 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					makeDropDown();
 				} else if (e.getActionCommand().equals("delete"))
 					delete();
+			      else if (e.getActionCommand().equals("delete options"))
+									deleteOptions();
 				else if (e.getActionCommand().equals("save"))
 					save();
 				else if (e.getActionCommand().equals("save as"))
@@ -508,6 +510,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"cut",
 					"paste",
 					"delete",
+					"delete options",
 					"hide toggle",
 					"hideDisplay toggle",
 					"insert filter page",
@@ -534,6 +537,7 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					"cut",
 					"paste",
 					"delete",
+					"delete options",
 					"hide toggle",
 					"hideDisplay toggle",
 					"insert option",
@@ -993,6 +997,27 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 			return;
 		//DatasetConfigTreeNode node = (DatasetConfigTreeNode) clickedPath.getLastPathComponent();
 		treemodel.removeNodeFromParent(node);
+	}
+	
+	public void deleteOptions() {
+		DatasetConfigTreeNode node = setEditingNode();
+		if (node == null)
+			return;
+		
+		Enumeration en = node.children();
+		DatasetConfigTreeNode[] childNodes = new DatasetConfigTreeNode[node.getChildCount()];
+		int i = 0;
+		while (en.hasMoreElements()){
+			DatasetConfigTreeNode childNode = (DatasetConfigTreeNode) en.nextElement();
+			childNodes[i] = childNode;
+			i++;
+		}
+		// have to cycle thro again as removeNodeFromParent alters the enumeration
+		for (int j =0; j < childNodes.length; j++){
+			DatasetConfigTreeNode childNode = childNodes[j];	
+			treemodel.removeNodeFromParent(childNode);	
+		}
+		
 	}
 
 	public void save_as() {
