@@ -808,36 +808,6 @@ public class MartEditor extends JFrame implements ClipboardOwner {
       	if (choice == 0){databaseConnection();}
       }
 	
-      /*String dset = dsConfig.getDataset();
-      String intName = dsConfig.getInternalName();
-
-      String dataset =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "Dataset config",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          null,
-          dset);
-      if (dataset == null)
-        return;
-
-      String internalName =
-        (String) JOptionPane.showInputDialog(
-          null,
-          "Choose one",
-          "Internal name",
-          JOptionPane.INFORMATION_MESSAGE,
-          null,
-          null,
-          intName);
-      if (internalName == null)
-        return;
-
-      dsConfig.setInternalName(internalName);
-      dsConfig.setDataset(dataset);*/
-
       ((DatasetConfigTreeWidget) desktop.getSelectedFrame()).export();
     } catch (ConfigurationException e) {
       JOptionPane.showMessageDialog(this, "Problems exporting requested dataset. Check that you have write permission " +

@@ -362,7 +362,12 @@ public class DatasetConfigXMLUtils {
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element suboption = (Element) iter.next();
 
-      if (!(Boolean.valueOf(suboption.getAttributeValue(HIDDEN)).booleanValue())) {
+	  if (includeHiddenMembers){
+		Option o2 = getOption(suboption);
+		o2.setParent(o);
+		o.addOption(o2);
+	  }
+	  else if (!(Boolean.valueOf(suboption.getAttributeValue(HIDDEN)).booleanValue())) {
         Option o2 = getOption(suboption);
         o2.setParent(o);
         o.addOption(o2);
@@ -382,7 +387,10 @@ public class DatasetConfigXMLUtils {
 
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
-      if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue()))
+	  if (includeHiddenMembers){
+		pa.addOption(getOption(option));
+	  }
+      else if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue()))
         pa.addOption(getOption(option));
     }
 
@@ -392,10 +400,15 @@ public class DatasetConfigXMLUtils {
   private FilterDescription getFilterDescription(Element thisElement) throws ConfigurationException {
     FilterDescription f = new FilterDescription();
     loadAttributesFromElement(thisElement, f);
-
+	
     for (Iterator iter = thisElement.getChildren(OPTION).iterator(); iter.hasNext();) {
       Element option = (Element) iter.next();
-      if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue())) {
+      if (includeHiddenMembers){
+		Option o = getOption(option);
+		o.setParent(f);
+		f.addOption(o);
+      }
+	  else if (!(Boolean.valueOf(option.getAttributeValue(HIDDEN)).booleanValue())) {      
         Option o = getOption(option);
         o.setParent(f);
         f.addOption(o);
@@ -733,8 +746,8 @@ public class DatasetConfigXMLUtils {
 
     Option[] subops = filter.getOptions();
     for (int i = 0, n = subops.length; i < n; i++)
-      fdesc.addContent(getOptionElement(subops[i]));
-
+       fdesc.addContent(getOptionElement(subops[i]));
+    
     return fdesc;
   }
 
