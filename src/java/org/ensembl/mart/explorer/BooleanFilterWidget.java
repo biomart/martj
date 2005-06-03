@@ -292,7 +292,7 @@ public class BooleanFilterWidget
         "someKey",
         "someDescription",
         "",
-        "","","");
+        "","","","");
     BooleanFilterWidget bfw = new BooleanFilterWidget(fgw, q, fd, null);
 
     FilterDescription fd2 =
@@ -307,7 +307,7 @@ public class BooleanFilterWidget
         "someKey",
         "someDescription",
         "",
-        "","","");
+        "","","","");
     BooleanFilterWidget bfw2 = new BooleanFilterWidget(fgw, q, fd2, null);
 
     FilterDescription fd3 =
@@ -322,7 +322,7 @@ public class BooleanFilterWidget
         "someKey Onfd3",
         "someDescription",
         "",
-        "","","");
+        "","","","");
     Option o = new Option("fred_id", "true");
     o.setParent(fd3);
     o.setDisplayName("Fred");
