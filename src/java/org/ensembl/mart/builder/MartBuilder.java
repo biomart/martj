@@ -290,7 +290,8 @@ public class MartBuilder {
 				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
 				if (!fileEntries[12].equals("null")) columnAliases = fileEntries[12].split(",");
 				
-				Table ref_table = resolver.getTable(fileEntries[5].toLowerCase(), columnNames, columnAliases);
+				// switched off fileEntries[5].toLowerCase for oracle
+				Table ref_table = resolver.getTable(fileEntries[5], columnNames, columnAliases);
 
 				ref_table.status = fileEntries[3];
 				ref_table.cardinality = fileEntries[6];

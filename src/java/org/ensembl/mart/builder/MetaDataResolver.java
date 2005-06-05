@@ -105,9 +105,13 @@ public abstract class MetaDataResolver {
 			
 			try {
 			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
-		    
-			assert columns.next() : "no such column: "+columnNames[i].toUpperCase()+ " in table "+name; 
-			columns.beforeFirst();
+			
+			
+			System.out.println("cat "+getAdaptor().catalog+" schema "+getAdaptor().schema+" name "+name+" column "+columnNames[i]);
+			
+		     // had to switch this off, 'beforeFirst()' does not work with oracle
+			//assert columns.next() : "no such column: "+columnNames[i]+ " in table "+name; 
+			//columns.beforeFirst();
 			
 			while (columns.next()){	
 			
@@ -132,8 +136,8 @@ public abstract class MetaDataResolver {
 		}
 		}
 		Column [] b = new Column[cols.size()];
-		assert cols.size() != 0 : "no columns !!! for your table, please check the table/column name " +
-				" for "+name.toUpperCase()+" in your config file";
+		assert cols.size() != 0 : "no columns for your table, please check the table/column name " +
+				" for "+name+" in your config file";
 		return (Column []) cols.toArray(b);
 	}
 	
