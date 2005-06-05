@@ -107,7 +107,7 @@ public abstract class MetaDataResolver {
 			ResultSet columns=dmd.getColumns(getAdaptor().catalog,getAdaptor().schema,name,columnNames[i]);
 			
 			
-			System.out.println("cat "+getAdaptor().catalog+" schema "+getAdaptor().schema+" name "+name+" column "+columnNames[i]);
+			//System.out.println("cat "+getAdaptor().catalog+" schema "+getAdaptor().schema+" name "+name+" column "+columnNames[i]);
 			
 		     // had to switch this off, 'beforeFirst()' does not work with oracle
 			//assert columns.next() : "no such column: "+columnNames[i]+ " in table "+name; 

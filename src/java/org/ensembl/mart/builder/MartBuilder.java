@@ -212,25 +212,26 @@ public class MartBuilder {
 				// new dataset
 				if (!fileEntries[0].equals(lastDatasetName)) {
 
+					
+					// finish the old dataset
 					if (lines > 0) {
-						
 						transformation.transform();
 						dataset.setUserTableNames();
 						dataset.createTransformationsForCentralFilters();	
 						mart.add(dataset);
 					
-						Transformation[] final_transformations = dataset.getTransformations();
 						
-							for (int i=0;i<final_transformations.length;i++){
+						/**
+						Transformation[] final_transformations = dataset.getTransformations();
+						for (int i=0;i<final_transformations.length;i++){
 						Table dmFinalTable=final_transformations[i].getFinalUnit().getTemp_end();
 							
-						//System.out.println(" ADDED dataset "+dmFinalTable.getName());			
+						System.out.println(" ADDED dataset "+dmFinalTable.getName());			
 							}
-					
-					
-					
+					*/
 					}
 		
+					// new dataset
 					dataset = new Dataset();
 					datasetName = fileEntries[0];
 					dataset.name = datasetName;
@@ -254,9 +255,9 @@ public class MartBuilder {
 					transformation.number = fileEntries[9];
 					transformation.finalTableName = fileEntries[15];
 					transformation.userTableName = fileEntries[15];
-					if (fileEntries[16].equals("Y")) transformation.central = true;
+					if (fileEntries[16].toUpperCase().equals("Y")) transformation.central = true;
 
-					System.out.println ("transfroming ... "+transformation.number+" user table "+transformation.userTableName);
+					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
 					
 					StringBuffer final_table = new StringBuffer(datasetName
 							+ "__" + fileEntries[2] + "__");
@@ -327,7 +328,7 @@ public class MartBuilder {
 			transformation.transform();
 			
 			dataset.setUserTableNames();
-			//dataset.createTransformationsForCentralFilters();	
+			dataset.createTransformationsForCentralFilters();	
 			
 			mart.add(dataset);
 

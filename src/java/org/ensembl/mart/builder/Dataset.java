@@ -117,7 +117,7 @@ public class Dataset {
 			boolean containsCentral=false;
 			for (int m = 0; m < dmTransformations.length; m++) {
 				
-				if(dmTransformations[m].central) containsCentral=true;
+				if(dmTransformations[m].central) containsCentral=true; 
 				
 				Table dmFinalTable=dmTransformations[m].getFinalUnit().getTemp_end();
 				
@@ -153,7 +153,7 @@ public class Dataset {
 
 			// resetting the name to temp name
 			if (containsCentral) main_table.setName(main_table.temp_name+"_main_interim");
-		
+			
 			transformation.transform();
 			addTransformation(transformation);
 		}
@@ -253,6 +253,8 @@ public class Dataset {
 		Transformation [] trans = getTransformations();
 		
 		for (int i=0;i<trans.length;i++){
+			
+			//System.out.println("gettintg tpe "+type);
 			
 			if (trans[i].finalTableType.equals(type)){
 				trans_list.add(trans[i]);

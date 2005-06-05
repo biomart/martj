@@ -45,7 +45,7 @@ public class TransformationUnitSingle extends TransformationUnit {
 		
 		
 		Table new_ref=convertTable(refTable, temp_start);
-		
+
 		Table temp_end = copyTable(new_ref);
 		temp_end.isFinalTable=false;
 		this.setTemp_end(temp_end);
@@ -58,8 +58,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 		Table new_ref = new Table();
 		new_ref = copyTable(ref_table);
 		Column [] columns = ref_table.getColumns();
-		Column [] newcol = new Column [1];
-		
+		Column [] newcol = new Column[1];
+		boolean foundKey=false;
 		//System.out.println("temp start name "+tempStart.getName());
 		//System.out.println(" temp end name "+ tempEnd.getName());
 		//System.out.println(" ref name "+refTable.getName()+" start "+temp_start.getName());
@@ -82,10 +82,11 @@ public class TransformationUnitSingle extends TransformationUnit {
 				newcol[0]=columns[i];
 				newcol[0].setAlias(tableNameParts[1]+"_bool");
 				newcol[0].bool=true;
+				foundKey=true;
 				break;
 			}	
 		}
-		
+		assert foundKey: "CAN'T FIND MATCHING TRANSROMATION KEY:    "+TSKey;		
 		new_ref.setColumns(newcol);
 		return new_ref;
 	}

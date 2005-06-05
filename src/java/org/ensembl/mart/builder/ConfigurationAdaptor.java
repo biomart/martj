@@ -243,7 +243,7 @@ private static void printConfig(String [][] lines,String table, BufferedWriter o
 	
 	for (int i = 0; i < lines.length; i++) {
 		for (int j = 0; j < lines[i].length; j++) {
-			out.write(lines[i][j].concat("\t"));
+			out.write(lines[i][j].toLowerCase().concat("\t"));
 		}
 		out.write("\n");
 	}
