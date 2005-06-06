@@ -61,7 +61,7 @@ public class DatabaseSettingsDialog extends Box implements ChangeListener {
   
   private final String[] defaultDBTypes = new String[] { "mysql",
           "oracle",
-          "postgresql"
+          "postgres"
   };
   
   /* 

@@ -84,7 +84,7 @@ public class DetailedDataSource implements DataSource {
 
   private static final String ORACLEAT = "@";
   public static final String ORACLE = "oracle";
-  public static final String POSTGRES = "postgresql";
+  public static final String POSTGRES = "postgres";
   public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
   public static final String POSTGRESDRIVER = "org.postgresql.Driver";
   private static final String SYBASE = "sybase:Tds";
@@ -332,7 +332,9 @@ public class DetailedDataSource implements DataSource {
     	dbType="oracle:thin";
     else if (dbType.equals(SQLSERVER))
     	dbType="jtds:sqlserver";
-
+    else if (dbType.equals(POSTGRES))
+    	dbType="postgresql";
+    
     dbURL.append("jdbc:").append(dbType).append(":");
     dbURL.append(host);
     if (port != null && !"".equals(port))

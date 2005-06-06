@@ -139,7 +139,7 @@ public final class AttributeQueryRunner implements QueryRunner {
     if (ds == null)
       throw new RuntimeException("curQuery.DataSource is null");
 
-    if (ds.getDatabaseType().equals("mysql") || ds.getDatabaseType().equals("postgresql")) {
+    if (ds.getDatabaseType().equals("mysql") || ds.getDatabaseType().equals("postgres")) {
       executeQueryPostgresMysql(ds, curQuery, hardLimit);
     } else {
       executeQueryGeneric(ds, curQuery, hardLimit);
@@ -264,7 +264,7 @@ public final class AttributeQueryRunner implements QueryRunner {
           maxRows = batchLimit;
 
         if (ds.getDatabaseType().equals("mysql")) {sql += " LIMIT " + totalRowsThisExecute + "," + maxRows;} //;(maxRows - lastIDRowsProcessed); 
-        if (ds.getDatabaseType().equals("postgresql")) {
+        if (ds.getDatabaseType().equals("postgres")) {
         	//int pslimit=maxRows-totalRowsThisExecute;
         	sql += " LIMIT " + maxRows + " OFFSET " + totalRowsThisExecute;}
         

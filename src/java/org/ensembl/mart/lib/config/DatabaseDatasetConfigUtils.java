@@ -1583,7 +1583,7 @@ public class DatabaseDatasetConfigUtils {
 			  conn = dsource.getConnection();
 			  String CREATE_SQL = new String();
 			  if(dsource.getDatabaseType().equals("oracle")) {CREATE_SQL=ORACLE_META;}
-			  if(dsource.getDatabaseType().equals("postgresql")) {CREATE_SQL=POSTGRES_META;}
+			  if(dsource.getDatabaseType().equals("postgres")) {CREATE_SQL=POSTGRES_META;}
 			  if(dsource.getDatabaseType().equals("mysql")) {CREATE_SQL = MYSQL_META;}
 			  
 			  PreparedStatement ps = conn.prepareStatement(CREATE_SQL);
@@ -2826,7 +2826,7 @@ public class DatabaseDatasetConfigUtils {
       }
       rsTab.close();
 
-    } if (dsource.getDatabaseType().equals("postgresql")) {
+    } if (dsource.getDatabaseType().equals("postgres")) {
         //databaseName=POSTGRESDBNAME;
 
     	//System.out.println("PG schema "+schema+" tablePattern "+tablePattern);
@@ -3388,7 +3388,7 @@ public class DatabaseDatasetConfigUtils {
   	//if (dsource.getDatabaseType().equals("oracle")) databaseName=getSchema();
   //System.out.println("databaseType() "+dsource.getDatabaseType());	
   	
-  	//if (dsource.getDatabaseType().equals("postgresql")) databaseName=POSTGRESDBNAME;
+  	//if (dsource.getDatabaseType().equals("postgres")) databaseName=POSTGRESDBNAME;
   	
     String datasetName = dsv.getDataset();
 
@@ -4078,7 +4078,7 @@ public class DatabaseDatasetConfigUtils {
       else if (dsource.getDatabaseType().equals("mysql")) {
       sql.append (" limit 1");
       }
-      else if (dsource.getDatabaseType().equals("postgresql")){
+      else if (dsource.getDatabaseType().equals("postgres")){
       	sql.append(" limit 1");
       } else { throw new ConfigurationException ("unsupported RDBMS type:"+dsource.getDatabaseType());}
 
