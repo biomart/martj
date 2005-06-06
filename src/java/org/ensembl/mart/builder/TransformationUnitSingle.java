@@ -75,7 +75,8 @@ public class TransformationUnitSingle extends TransformationUnit {
 			// it requires therefore a central transformation key comparison rather
 			// than tempStart.PK or refTable.PK as this will vary
 			
-			if (columns[i].getName().equals(TSKey)){
+			// the below assumes that you can't have different cases for column names in one schema
+			if (columns[i].getName().toUpperCase().equals(TSKey.toUpperCase())){
 				
 				//System.out.println ("PK "+temp_start.PK+" TSKey "+TSKey+" RFKey "+RFKey);
 				

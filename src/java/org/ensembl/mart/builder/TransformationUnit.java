@@ -54,7 +54,7 @@ public abstract class TransformationUnit {
 		if (adaptor.rdbms.equals("postgresql"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+TSKey+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempStart.getName()+" ADD INDEX ("+TSKey+");";
 		else if (adaptor.rdbms.equals("oracle"))
 			sql = "CREATE INDEX index"+i+" ON "+targetSchema+"."+tempStart.getName()+" ("+TSKey+");";
 		
@@ -87,7 +87,7 @@ public abstract class TransformationUnit {
 		if (adaptor.rdbms.equals("postgresql"))
 			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME "+TSKey+ " TO "+ key+"_key;";
 		else if 	(adaptor.rdbms.equals("mysql"))
-		sql = "ALTER TABLE CHANGE *** THIS STATEMENT "+targetSchema+"."+tempEnd.getName()+" ADD INDEX ("+key+");";
+		sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" CHANGE "+TSKey+ " "+ key+"_key INT;";
 		else if (adaptor.rdbms.equals("oracle"))
 			sql = "ALTER TABLE "+targetSchema+"."+tempEnd.getName()+" RENAME COLUMN "+TSKey+ " TO "+ key+"_key;";
 		
