@@ -60,7 +60,7 @@ public class DBAdaptor {
 		    password = p.getProperty("password");
 			host = p.getProperty("host");
 			port = p.getProperty("port");
-		    driver = p.getProperty("driver");
+		    //driver = p.getProperty("driver");
 		    instance = p.getProperty("instance");
 		    schema = p.getProperty("schema");
 		    catalog= p.getProperty("catalog");
@@ -68,6 +68,28 @@ public class DBAdaptor {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+		
+		/**
+		public static final String DEFAULTDRIVER = "com.mysql.jdbc.Driver";
+		  public static final int DEFAULTPOOLSIZE = 10;
+		  public static final String DEFAULTPORT = "3306";
+
+		  private static final String ORACLEAT = "@";
+		  public static final String ORACLE = "oracle";
+		  public static final String POSTGRES = "postgresql";
+		  public static final String ORACLEDRIVER = "oracle.jdbc.driver.OracleDriver";
+		  public static final String POSTGRESDRIVER = "org.postgresql.Driver";
+		  */
+		
+		  if (rdbms.equals("oracle"))
+			driver = "oracle.jdbc.driver.OracleDriver";
+			else if (rdbms.equals("mysql")) 
+			driver = "com.mysql.jdbc.Driver";
+			else if (rdbms.equals("postgresql")) 
+				driver="org.postgresql.Driver";
+			else System.err.println("not supported rdbms type: "+ rdbms);
+		
+		
 		
 		
 		try {
