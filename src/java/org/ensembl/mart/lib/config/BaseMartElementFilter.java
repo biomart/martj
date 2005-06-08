@@ -43,20 +43,20 @@ public abstract class BaseMartElementFilter implements Filter {
   public boolean matches(Object obj) {
     boolean ret = (obj instanceof Element);
 
-    if (ret && !includeHiddenMembers) {
+    if (ret && !includeHiddenMembers) {        
         Element e = (Element) obj;
 
         //if hidden = true, ret should be false
         boolean hidden = Boolean.valueOf(e.getAttributeValue(HIDDEN)).booleanValue();
         ret = !hidden;
         
-        //now skip placeholder attributes and filters
-        if (ret && ( (e.getName().equals("FilterDescription")) 
-         || (e.getName().equals("AttributeDescription")) ) ) {
-           ret = !(e.getAttributeValue("internalName").matches("\\w+\\.\\w+"));
-        }
+//        //now skip placeholder attributes and filters
+//        if (ret && ( (e.getName().equals("FilterDescription")) 
+//         || (e.getName().equals("AttributeDescription")) ) ) {
+//           ret = !(e.getAttributeValue("internalName").matches("\\w+\\.\\w+"));
+//        }
     }
-
+    
     return ret;
   }
 

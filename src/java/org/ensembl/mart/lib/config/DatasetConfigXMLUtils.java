@@ -420,7 +420,7 @@ public class DatasetConfigXMLUtils {
   private AttributePage getAttributePage(Element thisElement) throws ConfigurationException {
     AttributePage ap = new AttributePage();
     loadAttributesFromElement(thisElement, ap);
-
+    
     for (Iterator iter = thisElement.getDescendants(new MartAttributeGroupFilter()); iter.hasNext();) {
       Element element = (Element) iter.next();
       if (element.getName().equals(ATTRIBUTEGROUP))
@@ -434,7 +434,7 @@ public class DatasetConfigXMLUtils {
   private AttributeGroup getAttributeGroup(Element thisElement) throws ConfigurationException {
     AttributeGroup ag = new AttributeGroup();
     loadAttributesFromElement(thisElement, ag);
-
+    
     for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTECOLLECTION));
       iter.hasNext();
       ) {
@@ -450,7 +450,7 @@ public class DatasetConfigXMLUtils {
   private AttributeCollection getAttributeCollection(Element thisElement) throws ConfigurationException {
     AttributeCollection ac = new AttributeCollection();
     loadAttributesFromElement(thisElement, ac);
-
+    
     for (Iterator iter = thisElement.getDescendants(new MartElementFilter(includeHiddenMembers, ATTRIBUTEDESCRIPTION));
       iter.hasNext();
       ) {
@@ -464,6 +464,7 @@ public class DatasetConfigXMLUtils {
   private AttributeDescription getAttributeDescription(Element thisElement) throws ConfigurationException {
     AttributeDescription a = new AttributeDescription();
     loadAttributesFromElement(thisElement, a);
+    
     return a;
   }
 

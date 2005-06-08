@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Widget representing an AttributePage.
@@ -38,12 +40,15 @@ public class AttributePageWidget extends PageWidget {
   /**
    * @param name
    * @param query
+ * @throws ConfigurationException 
    */
   public AttributePageWidget(
     Query query,
     String name,
     AttributePage page,
-    QueryTreeView tree) {
+    QueryTreeView tree,
+    DatasetConfig dsv,
+    AdaptorManager manager) {
 
     super(query, name, tree);
 
@@ -59,37 +64,13 @@ public class AttributePageWidget extends PageWidget {
         String groupName = group.getDisplayName();
 
         AttributeGroupWidget w =
-          new AttributeGroupWidget(query, groupName, group, tree);
+          new AttributeGroupWidget(query, groupName, group, page, tree, dsv, manager);
         tabbedPane.add(groupName, w);
         leafWidgets.addAll(w.getLeafWidgets());
-   
-      } //else if (element instanceof DSAttributeGroup) {
-   
-        // currently hard coded support for sequence attributes
-        //DSAttributeGroup g = (DSAttributeGroup) element;
-   
-        //if (g.getHandler().toLowerCase().equals("sequence")) {
-  
-         // SequenceGroupWidget w = new SequenceGroupWidget(g.getDisplayName(),query,tree,g);
-          //tabbedPane.add(g.getDisplayName(), w);
-          //leafWidgets.addAll(w.getLeafWidgets());
-  
-        //} else {
-
-          // TODO handle other DSAttributeGroups
-          //logger.warning(
-            //"TODO: handle DSAttributeGroup: "
-            //  + element.getClass().getName()
-              //+ element);
-          // create page
-          // add pag as tab
-        //}
-      //}
-      else {
+      } else {
         throw new RuntimeException(
           "Unrecognised type in attribute group list: " + element);
       }
-
     }
   }
 

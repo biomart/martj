@@ -37,6 +37,7 @@ import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
+import org.ensembl.mart.lib.config.AttributePage;
 
 /**
  * @author craig
@@ -49,12 +50,18 @@ public class AttributeDescriptionWidget
 	implements TreeSelectionListener {
 
 	private AttributeCollection attrbuteCollection;
+    private int collectionAtts = 0; //number of atts added per collection
+    
+    private AttributePage page;
+    
 	private final static Logger logger =
 		Logger.getLogger(AttributeDescriptionWidget.class.getName());
 	private AttributeDescription attributeDescription;
 	private Query query;
 	private Attribute attribute;
 	private JCheckBox button;
+    
+    private Feedback feedback = new Feedback(this);
 
 	/**
 	 * BooleanFilter containing an InputPage, this page is used by the QueryEditor
@@ -88,14 +95,17 @@ public class AttributeDescriptionWidget
 		final Query query,
 		AttributeDescription attributeDescription,
 		QueryTreeView tree,
-    AttributeCollection attributeCollection) {
+        AttributeCollection attributeCollection,
+        AttributePage page) {
 
 		super(query, attributeDescription.getDisplayName(), tree);
+        
 		if (tree != null)
 			tree.addTreeSelectionListener(this);
 		this.attributeDescription = attributeDescription;
 		this.query = query;
     this.attrbuteCollection = attributeCollection;
+    this.page = page;
 
 		attribute =
 			new InputPageAwareAttribute(
@@ -125,16 +135,57 @@ public class AttributeDescriptionWidget
 	 * 
 	 */
 	private void doClick() {
-		//TODO use attributeCollection.maxSelect to determine if this can
-		// be set.
-
-		if (button.isSelected())
-			query.addAttribute(attribute);
-		else
+		if (button.isSelected()) {
+            if (attributesValid()) {
+                if (countsValid()) {
+                  query.addAttribute(attribute);
+                  collectionAtts++;
+                } else {
+                    button.setSelected(false);
+                    feedback.warning("Only " + attrbuteCollection.getMaxSelect() + " attributes from this collection can be chosen together.");
+                }
+            } else {
+                button.setSelected(false);
+                feedback.warning("Attributes from different AttributePages cannot be chosen together, please unselect any from other pages.");
+            }
+			
+        } else {
+            collectionAtts--;
 			query.removeAttribute(attribute);
+        }
 	}
 
-	public Attribute getAttribute() {
+	private boolean attributesValid() {
+	    boolean valid = true;
+	    
+	    Attribute[] atts = query.getAttributes();
+	    for (int i = 0, n = atts.length; i < n; i++) {
+	        Attribute attribute = atts[i];
+	        AttributeDescription ad = null;
+	        
+	        if (attribute.getField().indexOf('.') > 0)
+	            ad = page.getAttributeDescriptionByInternalName(attribute.getField());  
+	        else
+	            ad = page.getAttributeDescriptionByFieldNameTableConstraint(attribute.getField(), attribute.getTableConstraint());
+	        
+	        if (ad == null) {
+	            valid = false;
+	            break;
+	        }
+	    }
+	    
+	    return valid;
+	}
+    
+    public boolean countsValid() {
+      int newMax = collectionAtts + 1;
+      if (attrbuteCollection.getMaxSelect() > 0)
+          return attrbuteCollection.getMaxSelect() < newMax;
+      else
+          return true;
+    }
+    
+    public Attribute getAttribute() {
 		return attribute;
 	}
 

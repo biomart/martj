@@ -229,16 +229,18 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */
-  public String[] getDatasetNames() throws ConfigurationException {
+  public String[] getDatasetNames(boolean includeHidden) throws ConfigurationException {
+      if (includeHidden || ( (dsv.getVisible() != null) &&  (Integer.valueOf(dsv.getVisible()).intValue() > 0) ))
+        return new String[0];
     return new String[] { dsv.getDataset()};
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames(java.lang.String)
    */
-  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+  public String[] getDatasetNames(String adaptorName, boolean includeHidden) throws ConfigurationException {
     if (this.adaptorName.equals(adaptorName))
-      return getDatasetNames();
+      return getDatasetNames(includeHidden);
     else
       return new String[0];
   }

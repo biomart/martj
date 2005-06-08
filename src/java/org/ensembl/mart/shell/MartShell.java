@@ -56,7 +56,6 @@ import org.ensembl.mart.lib.InputSourceUtil;
 import org.ensembl.mart.lib.InvalidQueryException;
 import org.ensembl.mart.lib.LoggingUtils;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.SequenceDescription;
 import org.ensembl.mart.lib.SequenceException;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
@@ -585,7 +584,7 @@ public class MartShell {
       mcl.setExecuteBaseCommands(executeRequests);
 
       // add sequences
-      mcl.setDomainSpecificCommands(SequenceDescription.SEQS); // will need to modify this if others are added
+      //mcl.setDomainSpecificCommands(SequenceDescription.SEQS); // will need to modify this if others are added
 
       if (helpLoaded)
         mcl.setHelpCommands(commandHelp.keySet());
@@ -1373,7 +1372,7 @@ public class MartShell {
           //get all datasets relative to envMart
           DSConfigAdaptor adaptor = msl.adaptorManager.getAdaptorByName( msl.envMart.getName() );
 
-          String[] datasets = adaptor.getDatasetNames();
+          String[] datasets = adaptor.getDatasetNames(false);
           for (int i = 0, n = datasets.length; i < n; i++) {
             datasetInames.add(datasets[i]);
           }
@@ -1383,7 +1382,7 @@ public class MartShell {
           for (int i = 0, n = adaptors.length; i < n; i++) {
             String adaptor = adaptors[i];
 
-            String[] datasets = msl.adaptorManager.getAdaptorByName(adaptor).getDatasetNames();
+            String[] datasets = msl.adaptorManager.getAdaptorByName(adaptor).getDatasetNames(false);
             for (int j = 0, m = datasets.length; j < m; j++) {
               String dataset = datasets[j];
               datasetInames.add(msl.canonicalizeMartName( adaptor ) + "." + dataset);

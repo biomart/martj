@@ -364,6 +364,7 @@ public class QueryEditor extends JPanel {
   static DSConfigAdaptor testDSConfigAdaptor(DSConfigAdaptor adaptor)
     throws ConfigurationException {
 
+    //TODO: change to defaultMartRegistry.xml
     //CompositeDSConfigAdaptor adaptor = new CompositeDSConfigAdaptor();
 
     String[] urls = new String[] {

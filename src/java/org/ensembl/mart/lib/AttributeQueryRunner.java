@@ -185,14 +185,13 @@ public final class AttributeQueryRunner implements QueryRunner {
         else
           maxRows = batchLimit;
 
+        if (logger.isLoggable(Level.INFO)) {
+            logger.info("SQL : " + sql);
+          }
+        
         PreparedStatement ps = conn.prepareStatement(sql);
         ps.setMaxRows(maxRows);
-
-        if (logger.isLoggable(Level.INFO)) {
-          logger.info("SQL : " + sql);
-        }
          
-
         //System.out.println("MAX ROWS\t" + maxRows); 
         int p = 1;
         for (int i = 0, n = filters.length; i < n; ++i) {

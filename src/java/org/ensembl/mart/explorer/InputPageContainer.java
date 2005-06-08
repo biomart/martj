@@ -76,7 +76,7 @@ public class InputPageContainer
       new DatasetWidget(query),
       TreeNodeData.DATASET.getLabel());
     add(
-      new AttributesWidget(query, adaptorManager.getRootAdaptor(), tree),
+      new AttributesWidget(query, tree, adaptorManager),
       TreeNodeData.ATTRIBUTES.getLabel());
     add(
       new FiltersWidget(query, adaptorManager.getRootAdaptor(), tree),

@@ -45,7 +45,6 @@ import org.ensembl.util.SequenceUtil;
 public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 	
 	private final String LOCATIONS = "locations";
-	private final String GENELOC = "geneloc";
 	private Logger logger = Logger.getLogger(PeptideSeqQueryRunner.class.getName());
 
 	/**
@@ -76,24 +75,15 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 	}
 
 	protected void updateQuery() {
-		queryID = TRANID;
-		coordStart = "coding_start";
-		coordEnd = "coding_end";
-		displayIDs.add("transcript_stable_id_v");
-		displayIDs.add("gene_stable_id_v");
-		displayIDs.add("translation_stable_id_v");
-
-		query.addAttribute(new FieldAttribute(queryID, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(RANK, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(coordStart, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(coordEnd, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(CHR, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(STRANDCOLUMN, structureTable,"transcript_id_key"));
-
-		for (int i = 0; i < displayIDs.size(); i++) {
-			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), structureTable,"transcript_id_key"));
-		}
+        Attribute[] exportable = query.getSequenceDescription().getExportable();
+        
+        queryID = exportable[0].getField();
+        qualifiedQueryID = exportable[0].getTableConstraint()+"."+queryID;
+        chrField = exportable[1].getField();
+        coordStart = exportable[2].getField();
+        coordEnd = exportable[3].getField();
+        strandField = exportable[4].getField();
+        rankField = exportable[5].getField();
 	}
  
 	protected void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException {
@@ -103,24 +93,20 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 		for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
 			String column = rmeta.getColumnName(i);
 
-			if (column.equals(queryID))
-				queryIDindex = i;
-			else if (column.equals(RANK))
-				rankIndex = i;
-			else if (column.equals(ASSEMBLYCOLUMN))
-				assemblyIndex = i;
-			else if (column.equals(coordStart))
-				startIndex = i;
-			else if (column.equals(coordEnd))
-				endIndex = i;
-			else if (column.equals(CHR))
-				chromIndex = i;
-			else if (column.equals(STRANDCOLUMN))
-				strandIndex = i;
-			else if (displayIDs.contains(column))
-				displayIDindices.add(new Integer(i));
-			else
-				otherIndices.add(new Integer(i));
+            if (column.equals(queryID))
+                queryIDindex = i;
+            else if (column.equals(rankField))
+                rankIndex = i;
+            else if (column.equals(coordStart))
+                startIndex = i;
+            else if (column.equals(coordEnd))
+                endIndex = i;
+            else if (column.equals(chrField))
+                chromIndex = i;
+            else if (column.equals(strandField))
+                strandIndex = i;
+            else
+                otherIndices.add(new Integer(i));
 		}
 
 		while (rs.next()) {
@@ -139,7 +125,6 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 
 				Hashtable atts = new Hashtable();
 				atts.put(LOCATIONS, new TreeMap());
-				atts.put(ASSEMBLY, rs.getString(assemblyIndex));
 				iDs.put(keyID, atts);
 			}
 
@@ -155,40 +140,6 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 
 				//  order the locations by their rank in ascending order
 				 ((TreeMap) atts.get(LOCATIONS)).put(rank, new SequenceLocation(chr, start, end, strand));
-
-				// keep track of the lowest start and highest end for the gene  
-				if (!(atts.containsKey(GENELOC))) {
-					atts.put(GENELOC, new SequenceLocation(chr, start, end, strand));
-				} else {
-					SequenceLocation geneloc = (SequenceLocation) atts.get(GENELOC);
-					if (start < geneloc.getStart()) {
-						atts.put(GENELOC, new SequenceLocation(chr, start, geneloc.getEnd(), strand));
-						// overwrite the previous copy
-						if (end > geneloc.getEnd())
-							atts.put(GENELOC, new SequenceLocation(chr, geneloc.getStart(), end, strand));
-						// overwrite the previous copy
-					}
-				}
-			}
-
-			//  process displayID, if necessary
-			if (!(atts.containsKey(DISPLAYID))) {
-				StringBuffer displayID = new StringBuffer();
-
-				for (int i = 0, n = displayIDindices.size(); i < n; i++) {
-
-					int currindex = ((Integer) displayIDindices.get(i)).intValue();
-					if (rs.getString(currindex) != null) {
-						String thisID = rs.getString(currindex);
-						if (displayID.indexOf(thisID) < 0) {
-							if (i > 0)
-								displayID.append(separator);
-							displayID.append(thisID);
-						}
-					}
-				}
-
-				atts.put(DISPLAYID, displayID.toString());
 			}
 
 			// Rest can be duplicates, or novel values for a given field, collect lists of values for each field
@@ -213,12 +164,8 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 				}
 			}
 
-			// add the description, if necessary
-			if (!(atts.containsKey(DESCRIPTION)))
-				atts.put(DESCRIPTION, seqd.getDescription());
-
 			totalRows++;
-      totalRowsThisExecute++;
+            totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;
@@ -228,43 +175,25 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
 		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
-				DNAAdaptor dna = new DNAAdaptor(conn);
-
 				Hashtable atts = (Hashtable) iDs.get(tranID);
 
-				osr.print((String) atts.get(DISPLAYID));
-
-				SequenceLocation geneloc = (SequenceLocation) atts.get(GENELOC);
-				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				String assemblyout = (String) atts.get(ASSEMBLY);
-				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
-
-				if (osr.checkError())
-					throw new IOException();
-
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.print(separator);
+                    if (j > 0)
+					  osr.print(separator);
 					String field = (String) fields.get(j);
 					if (atts.containsKey(field)) {
 						List values = (ArrayList) atts.get(field);
 
-						if (values.size() > 1)
-							osr.print(field + " in ");
-						else
-							osr.print(field + "=");
-
-						for (int vi = 0; vi < values.size(); vi++) {
+                        for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
 								osr.print(",");
 							osr.print((String) values.get(vi));
 						}
-					} else
-						osr.print(field + "= ");
+					}
 				}
 
-				osr.print(separator + (String) atts.get(DESCRIPTION));
-				osr.print(separator);
-
+                osr.print(separator);
+                
 				if (osr.checkError())
 					throw new IOException();
 
@@ -278,9 +207,9 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
-						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
-						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
+						theseBytes = dna.getSequence(loc.getChr(), loc.getStart(), loc.getEnd());
 
 					locbytes.add(theseBytes);
 					seqLen += theseBytes.length;
@@ -317,43 +246,29 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 	private final SeqWriter fastaWriter = new SeqWriter() {
 		void writeSequences(Integer tranID, Connection conn) throws SequenceException {
 			try {
-				DNAAdaptor dna = new DNAAdaptor(conn);
-
 				Hashtable atts = (Hashtable) iDs.get(tranID);
 
-				// write the header, starting with the displayID
-				String displayIDout = (String) atts.get(DISPLAYID);
-				osr.print(">" + displayIDout);
-
-				SequenceLocation geneloc = (SequenceLocation) atts.get(GENELOC);
-				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				String assemblyout = (String) atts.get(ASSEMBLY);
-				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + assemblyout);
+				osr.print(">");
 
 				if (osr.checkError())
 					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.print(separator);
+                    if (j > 0)
+					  osr.print(separator);
+                    
 					String field = (String) fields.get(j);
 					if (atts.containsKey(field)) {
 						List values = (ArrayList) atts.get(field);
 
-						if (values.size() > 1)
-							osr.print(field + " in ");
-						else
-							osr.print(field + "=");
-
-						for (int vi = 0; vi < values.size(); vi++) {
+                        for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
 								osr.print(",");
 							osr.print((String) values.get(vi));
 						}
-					} else
-						osr.print(field + "= ");
+					}
 				}
 
-				osr.print(separator + (String) atts.get(DESCRIPTION));
 				osr.print("\n");
 
 				if (osr.checkError())
@@ -369,9 +284,9 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 					SequenceLocation loc = (SequenceLocation) locations.get((Integer) lociter.next());
 					byte[] theseBytes = null;
 					if (loc.getStrand() < 0)
-						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd()));
+						theseBytes = SequenceUtil.reverseComplement(dna.getSequence(loc.getChr(), loc.getStart(), loc.getEnd()));
 					else
-						theseBytes = dna.getSequence(species, loc.getChr(), loc.getStart(), loc.getEnd());
+						theseBytes = dna.getSequence(loc.getChr(), loc.getStart(), loc.getEnd());
 
 					locbytes.add(theseBytes);
 					seqLen += theseBytes.length;

@@ -23,7 +23,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,50 +39,45 @@ public class DNAAdaptor {
 	private Logger logger = Logger.getLogger(DNAAdaptor.class.getName());
 	private Connection conn;
 
-	private final String SPECSQL = "select mart_species from meta_release_info";
 	private int chunkSize = 100000; // Size of dna chunks in sgp_chunks table
 
 	//some prepared statements for later use
 	private PreparedStatement specStmt;
-	private Hashtable specSQLFull = new Hashtable();
-	private Hashtable specSQLSub = new Hashtable();
-
+	private PreparedStatement specSQLFull;
+	private PreparedStatement specSQLSub;
+	
 	/**
 	 * DNAAdaptors require a database connection to get sequence from the mart database.
 	 * 
 	 * @param Connection
 	 */
-	public DNAAdaptor(Connection conn) throws SequenceException {
-		this.conn = conn;
-
+	public DNAAdaptor(SequenceDescription seqd) throws SequenceException {	    
+	    String schema, dnaTable, startField, chrField, seqField;	    
+	    schema = seqd.getSeqDataSource().getSchema();
+	    
+		String[] seqInfo = seqd.getSeqInfo().split("\\,");
+		//table,chr,start,sequence,chunkSize
+        dnaTable = schema+"."+seqInfo[0];
+        chrField = seqInfo[1];
+        startField = seqInfo[2];
+        seqField = seqInfo[3];
+        chunkSize = Integer.parseInt( seqInfo[4] );
+        
 		try {
-			specStmt = conn.prepareStatement(SPECSQL);
-			populateSpeciesSQL();
+		    conn = seqd.getSeqDataSource().getConnection();
+		    String sqlFull = "select " + seqField + " from " + dnaTable + " where " + startField + " = ? and " + chrField + " = ?";
+			String sqlSub = "select substring(" + seqField + ", ?, ?) from " + dnaTable + " where " + startField + " = ? and " + chrField + " = ?";
+
+			specSQLFull = conn.prepareStatement(sqlFull);
+			specSQLSub = conn.prepareStatement(sqlSub);
 		} catch (SQLException e) {
 			throw new SequenceException("Could not initialize DNAAdaptor Species Statements: " + e.getMessage(), e);
 		}
 	}
 
-	private void populateSpeciesSQL() throws SQLException {
-		ResultSet rs = specStmt.executeQuery();
-
-		while (rs.next()) {
-			String species = rs.getString(1);
-			String sqlFull = "select sequence from " + species + "__dna_chunks__sup where chr_start = ? and chr_name = ?";
-			String sqlSub = "select substring(sequence, ?, ?) from " + species + "__dna_chunks__sup where chr_start = ? and chr_name = ?";
-
-			specSQLFull.put(species, conn.prepareStatement(sqlFull));
-			specSQLSub.put(species, conn.prepareStatement(sqlSub));
-		}
-		rs.close();
-	}
-
-  private byte[] fetchFullChunk(String species, String chr, int start) throws SequenceException {
-    if (!specSQLFull.containsKey(species))
-      throw new SequenceException("Species " + species + " is not a supported species\n");
-      
+  private byte[] fetchFullChunk(String chr, int start) throws SequenceException {
     try {
-      PreparedStatement ps = (PreparedStatement) specSQLFull.get(species);
+      PreparedStatement ps = specSQLFull;
       ps.setInt(1, start);
       ps.setString(2, chr);
 
@@ -98,14 +92,11 @@ public class DNAAdaptor {
     }          
   }
   
-  private byte[] fetchChunkSubstring(String species, String chr, int start, int chunkStart, int length) throws SequenceException {
-    if (!specSQLSub.containsKey(species))
-      throw new SequenceException("Species " + species + " is not a supported species\n");
-    
+  private byte[] fetchChunkSubstring(String chr, int start, int chunkStart, int length) throws SequenceException {
     try {
       int coord = start - chunkStart + 1;
         
-      PreparedStatement ps = (PreparedStatement) specSQLSub.get(species);
+      PreparedStatement ps = specSQLSub;
       ps.setInt(1, coord);
       ps.setInt(2, length);
       ps.setInt(3, chunkStart);
@@ -122,16 +113,16 @@ public class DNAAdaptor {
     }
   }
   
-  private byte[] fetchSequence(String species, String chr, int start, int length) throws SequenceException {
+  private byte[] fetchSequence(String chr, int start, int length) throws SequenceException {
     int chunkStart = start - ( ( start - 1 ) % chunkSize );
     
     if (start == chunkStart && length == chunkSize)
-      return fetchFullChunk(species, chr, chunkStart);
+      return fetchFullChunk(chr, chunkStart);
     else
-      return fetchChunkSubstring(species, chr, start, chunkStart, length);
+      return fetchChunkSubstring(chr, start, chunkStart, length);
   }
 
-  private byte[] fetchResidualSequence(String species, String chr, int start, int length, byte[] initialSeq) throws SequenceException {
+  private byte[] fetchResidualSequence(String chr, int start, int length, byte[] initialSeq) throws SequenceException {
     List bytes = new ArrayList();
     bytes.add(initialSeq);
     int currentLength = initialSeq.length;
@@ -139,7 +130,7 @@ public class DNAAdaptor {
     
     while (currentLength < length) {
       int residual = length - currentLength;
-      byte[] currentBytes = fetchSequence(species, chr, currentStart, residual);
+      byte[] currentBytes = fetchSequence(chr, currentStart, residual);
       
       if (currentBytes.length < 1)
         break;
@@ -169,18 +160,18 @@ public class DNAAdaptor {
 	 * 
 	 * @return String sequence
 	 */
-	public byte[] getSequence(String species, String chr, int start, int end) throws SequenceException {
+	public byte[] getSequence(String chr, int start, int end) throws SequenceException {
 		int len = (end - start) + 1;
-  	byte[] retBytes = fetchSequence(species, chr, start, len);
+  	byte[] retBytes = fetchSequence(chr, start, len);
     
     if (retBytes.length < 1) {
       if (logger.isLoggable(Level.INFO))
-        logger.info("No Sequence Returned for request: species = " + species + ", chromosome = " + chr + ", start = " + start + " end = " + end + "\n");
+        logger.info("No Sequence Returned for request: chromosome = " + chr + ", start = " + start + " end = " + end + "\n");
       return Npad(len);
     }
     
     if (retBytes.length < len)
-      retBytes = fetchResidualSequence(species, chr, start, len, retBytes);
+      retBytes = fetchResidualSequence(chr, start, len, retBytes);
     
 		//user may ask for more sequence than is available, return as much as possible
 		if (retBytes.length < len && logger.isLoggable(Level.INFO))
@@ -189,6 +180,15 @@ public class DNAAdaptor {
 		return retBytes;
 	}
 
+    public void close() {
+        try {
+            specSQLFull.close();
+            specSQLSub.close();
+        } catch (SQLException e) {
+           //ignore
+        }
+        DetailedDataSource.close(conn);
+    }
 	/**
 	 * returns a byte[] of "N"s of a given length
 	 * @param length

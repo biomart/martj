@@ -98,7 +98,7 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 
 				try {
 
-					String[] datasetNames = adaptor.getDatasetNames();
+					String[] datasetNames = adaptor.getDatasetNames(false);
 					Arrays.sort(datasetNames);
 
 					for (int j = 0; j < datasetNames.length; j++) {

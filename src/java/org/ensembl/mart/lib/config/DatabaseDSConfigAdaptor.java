@@ -21,6 +21,7 @@ package org.ensembl.mart.lib.config;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -479,18 +480,27 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */
-  public String[] getDatasetNames() throws ConfigurationException {
+  public String[] getDatasetNames(boolean includeHidden) throws ConfigurationException {
     checkUpdateException();
-    return (String[]) datasetNameMap.keySet().toArray(new String[datasetNameMap.size()]);
+    ArrayList names = new ArrayList();
+    
+    for (Iterator iter = dsviews.iterator(); iter.hasNext();) {
+        DatasetConfig dsv = (DatasetConfig) iter.next();
+
+        if (includeHidden || ( (dsv.getVisible() != null) &&  (Integer.valueOf(dsv.getVisible()).intValue() > 0) ))
+            names.add(dsv.getDataset());
+    }
+    
+    return (String[]) names.toArray(new String[names.size()]);
   }
 
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames(java.lang.String)
    */
-  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+  public String[] getDatasetNames(String adaptorName, boolean includeHidden) throws ConfigurationException {
     checkUpdateException();
     if (adaptorName.equals(this.adaptorName))
-      return getDatasetNames();
+      return getDatasetNames(includeHidden);
     else
       return new String[0];
   }

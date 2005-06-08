@@ -73,21 +73,14 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 	}
 
 	protected void updateQuery() {
-		queryID = GENEID;	
-		coordStart = "exon_chrom_start";
-		coordEnd = "exon_chrom_end";
-		displayIDs.add("gene_stable_id_v");
-		
-		query.addAttribute(new FieldAttribute(queryID, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(ASSEMBLYCOLUMN, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(coordStart, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(coordEnd, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(CHR, structureTable,"transcript_id_key"));
-		query.addAttribute(new FieldAttribute(STRANDCOLUMN, structureTable,"transcript_id_key"));
-
-		for (int i = 0; i < displayIDs.size(); i++) {
-			query.addAttribute(new FieldAttribute((String) displayIDs.get(i), structureTable,"transcript_id_key"));
-		}
+        Attribute[] exportable = query.getSequenceDescription().getExportable();
+        
+        queryID = exportable[0].getField();
+        qualifiedQueryID = exportable[0].getTableConstraint()+"."+queryID;
+        chrField = exportable[1].getField();
+        coordStart = exportable[2].getField();
+        coordEnd = exportable[3].getField();
+        strandField = exportable[4].getField();
 	}
   
 	protected void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException {
@@ -96,22 +89,18 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 		// process columnNames for required attribute indices
 		for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
 			String column = rmeta.getColumnName(i);
-			if (column.equals(queryID))
-				queryIDindex = i;
-			else if (column.equals(ASSEMBLYCOLUMN))
-				assemblyIndex = i;
-			else if (column.equals(coordStart))
-				startIndex = i;
-			else if (column.equals(coordEnd))
-				endIndex = i;
-			else if (column.equals(CHR))
-				chromIndex = i;
-			else if (column.equals(STRANDCOLUMN))
-				strandIndex = i;
-			else if (displayIDs.contains(column))
-				displayIDindices.add(new Integer(i));
-			else
-				otherIndices.add(new Integer(i));
+            if (column.equals(queryID))
+                queryIDindex = i;
+            else if (column.equals(coordStart))
+                startIndex = i;
+            else if (column.equals(coordEnd))
+                endIndex = i;
+            else if (column.equals(chrField))
+                chromIndex = i;
+            else if (column.equals(strandField))
+                strandIndex = i;
+            else
+                otherIndices.add(new Integer(i));
 		}
 
 		while (rs.next()) {
@@ -128,7 +117,6 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 				lastIDRowsProcessed = 0; // refresh for the new ID
 
 				Hashtable atts = new Hashtable();
-				atts.put(ASSEMBLY, rs.getString(assemblyIndex));
 				iDs.put(keyID, atts);
 			}
 			
@@ -155,26 +143,6 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 				}
 			}
 
-			//	process displayID, if necessary
-			if (!(atts.containsKey(DISPLAYID))) {
-				StringBuffer displayID = new StringBuffer();
-
-				for (int i = 0, n = displayIDindices.size(); i < n; i++) {
-
-					int currindex = ((Integer) displayIDindices.get(i)).intValue();
-					if (rs.getString(currindex) != null) {
-						String thisID = rs.getString(currindex);
-						if (displayID.indexOf(thisID) < 0) {
-							if (i > 0)
-								displayID.append(separator);
-							displayID.append(thisID);
-						}
-					}
-				}
-
-				atts.put(DISPLAYID, displayID.toString());
-			}
-
 			// Rest can be duplicates, or novel values for a given field, collect lists of values for each field
 			// currindex is now the last index of the DisplayIDs.  Increment it, and iterate over the rest of the ResultSet to print the description
 			for (int i = 0, n = otherIndices.size(); i < n; i++) {
@@ -197,12 +165,8 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 				}
 			}
 
-			// add the description, if necessary
-			if (!atts.containsKey(DESCRIPTION))
-				atts.put(DESCRIPTION, seqd.getDescription());
-								
 			totalRows++;
-      totalRowsThisExecute++;
+            totalRowsThisExecute++;
 			resultSetRowsProcessed++;
 			lastID = keyID.intValue();
 			lastIDRowsProcessed++;	
@@ -212,40 +176,25 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 	private final SeqWriter tabulatedWriter = new SeqWriter() {
 		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
-				DNAAdaptor dna = new DNAAdaptor(conn);
-
 				Hashtable geneatts = (Hashtable) iDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(GENELOC);
 
-				osr.print((String) geneatts.get(DISPLAYID));
-				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print(separator + "strand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(ASSEMBLY));
-
-				if (osr.checkError())
-					throw new IOException();
-
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.print(separator);
+                    if (j > 0)
+					  osr.print(separator);
 					String field = (String) fields.get(j);
 					if (geneatts.containsKey(field)) {
 						List values = (ArrayList) geneatts.get(field);
-
-						if (values.size() > 1)
-							osr.print(field + " in ");
-						else
-							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
 								osr.print(",");
 							osr.print((String) values.get(vi));
 						}
-					} else
-						osr.print(field + "= ");
+					}
 				}
 
 				// write the description
-				osr.print(separator + (String) geneatts.get(DESCRIPTION));
 				osr.print(separator);
 
 				if (osr.checkError())
@@ -258,9 +207,9 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 					geneloc = geneloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.write(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.write(SequenceUtil.reverseComplement(dna.getSequence(geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
-					osr.write(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
+					osr.write(dna.getSequence(geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 
 				osr.print("\n");
 
@@ -281,40 +230,30 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 	private final SeqWriter fastaWriter = new SeqWriter() {
 		void writeSequences(Integer geneID, Connection conn) throws SequenceException {
 			try {
-				DNAAdaptor dna = new DNAAdaptor(conn);
-
 				Hashtable geneatts = (Hashtable) iDs.get(geneID);
 				SequenceLocation geneloc = (SequenceLocation) geneatts.get(GENELOC);
 
-				osr.print(">" + (String) geneatts.get(DISPLAYID));
-				String strandout = geneloc.getStrand() > 0 ? "forward" : "revearse";
-				osr.print("\tstrand=" + strandout + separator + "chr=" + geneloc.getChr() + separator + "assembly=" + (String) geneatts.get(ASSEMBLY));
+				osr.print(">");
 
 				if (osr.checkError())
 					throw new IOException();
 
 				for (int j = 0, n = fields.size(); j < n; j++) {
-					osr.print(separator);
+                    if (j > 0)
+					  osr.print(separator);
+                    
 					String field = (String) fields.get(j);
 					if (geneatts.containsKey(field)) {
 						List values = (ArrayList) geneatts.get(field);
-
-						if (values.size() > 1)
-							osr.print(field + " in ");
-						else
-							osr.print(field + "=");
 
 						for (int vi = 0; vi < values.size(); vi++) {
 							if (vi > 0)
 								osr.print(",");
 							osr.print((String) values.get(vi));
 						}
-					} else
-						osr.print(field + "= ");
+					}
 				}
 
-				// write the description
-				osr.print(separator + (String) geneatts.get(DESCRIPTION));
 				osr.print("\n");
 
 				if (osr.checkError())
@@ -327,9 +266,9 @@ public final class GeneEISeqQueryRunner extends BaseSeqQueryRunner {
 					geneloc = geneloc.extendRightFlank(query.getSequenceDescription().getRightFlank());
 
 				if (geneloc.getStrand() < 0)
-					osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
+					osr.writeSequence(SequenceUtil.reverseComplement(dna.getSequence(geneloc.getChr(), geneloc.getStart(), geneloc.getEnd())));
 				else
-					osr.writeSequence(dna.getSequence(species, geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
+					osr.writeSequence(dna.getSequence(geneloc.getChr(), geneloc.getStart(), geneloc.getEnd()));
 				osr.print("\n");
 				osr.resetColumnCount();
 

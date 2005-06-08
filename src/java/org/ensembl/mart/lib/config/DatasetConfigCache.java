@@ -45,6 +45,9 @@ public class DatasetConfigCache {
   private final String XMLENDING = ".xml";
   private final String DNAMEKEY = "displayName";
   private final String DESCKEY = "description";
+  private final String TYPEKEY = "type";
+  private final String VISIBLEKEY = "visible";
+  private final String VERSIONKEY = "version";
   private final String DIGESTKEY = "MD5";
   private final String XMLKEY = "XML";
 
@@ -155,6 +158,9 @@ public class DatasetConfigCache {
     String dataset = dsc.getDataset();
     String desc = dsc.getDescription();
     byte[] digest = dsc.getMessageDigest();
+    String type = dsc.getType();
+    String visible = dsc.getVisible();
+    String version = dsc.getVersion();
 
     deleteFile(dataset, iname);
 
@@ -166,7 +172,16 @@ public class DatasetConfigCache {
     
     if (desc != null)
       xmlPrefs.node(dataset).node(iname).put(DESCKEY, desc);
-      
+    
+    if (type != null)
+        xmlPrefs.node(dataset).node(iname).put(TYPEKEY, type);
+    
+    if (visible != null)
+        xmlPrefs.node(dataset).node(iname).put(VISIBLEKEY, visible);
+    
+    if (version != null)
+        xmlPrefs.node(dataset).node(iname).put(VERSIONKEY, version);
+    
     xmlPrefs.node(dataset).node(iname).put(XMLKEY, xmlFile.getAbsolutePath());
     xmlPrefs.node(dataset).node(iname).putByteArray(DIGESTKEY, digest);
   }
@@ -230,8 +245,12 @@ public class DatasetConfigCache {
           } else {
             String displayName = xmlPrefs.node(dataset).node(iname).get(DNAMEKEY, null);
             String description = xmlPrefs.node(dataset).node(iname).get(DESCKEY, null);
+            String type = xmlPrefs.node(dataset).node(iname).get(TYPEKEY, null);
+            String visible = xmlPrefs.node(dataset).node(iname).get(VISIBLEKEY, null);
+            String version = xmlPrefs.node(dataset).node(iname).get(VERSIONKEY, null);
 
-            dsv = new DatasetConfig(iname, displayName, dataset, description);
+            dsv = new DatasetConfig(iname, displayName, dataset, description, type, visible,version,"","");
+            
             dsv.setDSConfigAdaptor(adaptor);
           }
 

@@ -32,6 +32,7 @@ import org.ensembl.mart.lib.config.DatasetConfig;
 public class AttributesWidget extends InputPage {
 
   private JTabbedPane tabbedPane = new JTabbedPane();
+  private AdaptorManager manager;
   private JLabel unavailableLabel =
     new JLabel("Unavailable. Choose DatasetConfig first.");
   
@@ -41,10 +42,10 @@ public class AttributesWidget extends InputPage {
    * If none are available if displays a message to that effect. 
    * @param query
    */
-  public AttributesWidget(Query query, DSConfigAdaptor datasetConfigAdaptor, QueryTreeView tree) {
+  public AttributesWidget(Query query, QueryTreeView tree, AdaptorManager manager) {
     super(query, null, tree);
-    clearAttributes();
-    
+    this.manager = manager;
+    clearAttributes();    
   }
 
   private void clearAttributes() {
@@ -72,13 +73,34 @@ public class AttributesWidget extends InputPage {
       for (int i = 0; i < aps.length; i++)
       { 
       	// hack for skipping link pages
-      	if (aps[i].getInternalName().equals("link_attributes") || aps[i].getInternalName().equals("sequences")) continue;
+      	if (skipPage(aps[i])) continue;
         tabbedPane.add(
-          new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree));
+          new AttributePageWidget(query, aps[i].getDisplayName(), aps[i], tree, newDatasetConfig, manager));
       add(tabbedPane);
       validate();
     }
     }
+  }
+  
+  private boolean skipPage(AttributePage page) {
+      boolean skip = false;
+      
+      //skip the structure page for now
+      if (page.getInternalName().equals("structure"))
+          skip = true;
+      
+      if (!skip 
+       && page.getHidden() != null 
+       && page.getHidden().equals("true"))
+          skip = true;
+      
+      if (!skip 
+       && page.getAttribute("hideDisplay") != null
+       && page.getAttribute("hideDisplay").equals("true")          
+       )
+          skip = true;
+      
+      return skip;
   }
 
 }

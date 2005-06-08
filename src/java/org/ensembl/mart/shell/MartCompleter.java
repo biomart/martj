@@ -32,6 +32,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.ensembl.mart.lib.InvalidQueryException;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.FilterDescription;
@@ -80,7 +82,6 @@ public class MartCompleter implements ReadlineCompleter {
   private MartShellLib msl = null;
 
   private SortedSet commandSet = new TreeSet(); // will hold basic shell commands
-  private SortedSet domainSpecificSet = new TreeSet(); // will hold sequences
   private SortedSet helpSet = new TreeSet(); // will hold help keys available
 
   private SortedSet addBaseSet = new TreeSet(); // will hold add completions
@@ -147,8 +148,8 @@ public class MartCompleter implements ReadlineCompleter {
   public void setController(MartShellLib msl) throws ConfigurationException {
     this.msl = msl;
     RegistryDSConfigAdaptor adaptorManager = msl.adaptorManager;
-    if (adaptorManager.getDatasetNames().length > 0) {
-      String[] dsets = adaptorManager.getDatasetNames();
+    if (adaptorManager.getDatasetNames(false).length > 0) {
+      String[] dsets = adaptorManager.getDatasetNames(false);
 
       for (int i = 0, n = dsets.length; i < n; i++) {
         String dataset = dsets[i];
@@ -639,7 +640,7 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     try {
       if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) ) )
-        currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames()));
+        currentSet.addAll(Arrays.asList(msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames(false)));
     } catch (ConfigurationException e) {
       currentSet = new TreeSet();
       setErrorMode("Couldng set describe dataset mode, caught Configuration Exception: " + e.getMessage() + "\n");
@@ -650,7 +651,7 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     try {
       if (msl.adaptorManager.supportsAdaptor( msl.deCanonicalizeMartName( martName ) )) {
-        String[] dsets = msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames();
+        String[] dsets = msl.adaptorManager.getAdaptorByName( msl.deCanonicalizeMartName( martName ) ).getDatasetNames(false);
         for (int i = 0, n = dsets.length; i < n; i++) {
           String dset = dsets[i];
           currentSet.add(martName+"."+dset); //martName.dataset
@@ -809,7 +810,30 @@ public class MartCompleter implements ReadlineCompleter {
   private void setDomainSpecificMode() {
     attributeMode = false;
     currentSet = new TreeSet();
-    currentSet.addAll(domainSpecificSet);
+    
+    //find all sequence attributes
+    AttributePage seqPage = msl.envDataset.getAttributePageByInternalName("sequences");
+    
+    if (seqPage == null) {
+      setErrorMode("No sequences loaded in dataset " + msl.envDataset.getDisplayName() + "\n");
+      return;
+    }
+    
+    AttributeGroup seqGroup = (AttributeGroup) seqPage.getAttributeGroupByName("sequence");
+    
+    if (seqGroup == null) {
+        setErrorMode("No sequences loaded in dataset " + msl.envDataset.getDisplayName() + "\n");
+        return;
+    }
+    
+    AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("seq_scope_type");
+    
+    if (seqCol == null) {
+        setErrorMode("No sequences loaded in dataset " + msl.envDataset.getDisplayName() + "\n");
+        return;
+    }
+    
+    currentSet.addAll(seqCol.getHiddenCompleterNames());
   }
 
   private void setAllAdaptorLocationMode() {
@@ -1049,15 +1073,6 @@ public class MartCompleter implements ReadlineCompleter {
   public void setBaseCommands(Collection names) {
     commandSet = new TreeSet();
     commandSet.addAll(names);
-  }
-
-  /**
-   * Set domain Specific Commands
-   * @param names -- domain specific commands
-   */
-  public void setDomainSpecificCommands(Collection names) {
-    domainSpecificSet = new TreeSet();
-    domainSpecificSet.addAll(names);
   }
 
   /**

@@ -271,7 +271,23 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   	
   	for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
 			AttributeDescription element = (AttributeDescription) iter.next();
-			names.add(element.getInternalName());
+			
+			//skip placeholders
+			if ( !(element.getInternalName().indexOf('.') > 0) )
+			  names.add(element.getInternalName());
+		}
+  	return names;
+  }
+
+  /**
+   * Returns a List of possible internalNames to add to the MartCompleter command completion system.
+   * @return List of possible completions.
+   */
+  public List getHiddenCompleterNames() {
+  	List names = new ArrayList();  	
+  	for (Iterator iter = AttributeDescriptions.iterator(); iter.hasNext();) {
+			AttributeDescription element = (AttributeDescription) iter.next();			
+  		    names.add(element.getInternalName());
 		}
   	return names;
   }

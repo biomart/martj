@@ -43,6 +43,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.ensembl.mart.guiutils.DatabaseSettingsDialog;
 import org.ensembl.mart.lib.DetailedDataSource;
+import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.ConfigurationException;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatabaseDSConfigAdaptor;
@@ -65,7 +66,7 @@ public class AdaptorManager extends Box {
   private static final String REGISTRY_FILE_KEY = "REGISTRY_FILE_KEY";
   private static final String OPTIONAL_ENABLED_KEY = "OPTIONAL_ENABLED";
   private String none = "None";
-  private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor(false, false);
+  private RegistryDSConfigAdaptor rootAdaptor = new RegistryDSConfigAdaptor(false, true);
   //dont ignore cache, and dont include hidden members (these are only for MartEditor)
   private Map optionToConfig = new HashMap();
   /** Persistent preferences object used to hold user history. */
@@ -170,10 +171,9 @@ public class AdaptorManager extends Box {
   public void importRegistry(URL url) {
     try {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      RegistryDSConfigAdaptor ra = new RegistryDSConfigAdaptor(url, false, false, false); //see notes for rootAdaptor
+      RegistryDSConfigAdaptor ra = new RegistryDSConfigAdaptor(url, false, false, true); //see notes for rootAdaptor
       DSConfigAdaptor[] as = ra.getLeafAdaptors();
       for (int i = 0; i < as.length; i++) {
-        // TODO only add "leaf" node adaptors
         add(as[i]);
       }
     } catch (ConfigurationException e) {
@@ -446,4 +446,29 @@ public class AdaptorManager extends Box {
   public void clearCache() {
     rootAdaptor.clearCache();
   }
+
+public AttributeDescription getPointerAttribute(String internalName) {
+    String[] info = internalName.split("\\.");
+    String dname = info[0];
+    String aname = info[1];
+    
+    DatasetConfig d = null;
+    try {
+        d = getRootAdaptor().getDatasetConfigByDatasetInternalName(dname, "default");
+    } catch (ConfigurationException e) {
+       throw new RuntimeException("Could not get pointer dataset for " + internalName + "\n");
+    }
+    
+    if (d == null)
+        throw new RuntimeException("Could not get pointer dataset for " + internalName + "\n");
+    
+    AttributeDescription ret = null;
+    
+    ret = d.getAttributeDescriptionByInternalName(aname);
+    
+    if ( ret == null )
+        throw new RuntimeException("Could not get pointer attribute for " + internalName + "\n");
+    
+    return ret;
+}
 }

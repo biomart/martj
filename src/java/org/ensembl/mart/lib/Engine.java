@@ -233,6 +233,13 @@ public class Engine {
   public void execute(Query query, FormatSpec formatspec, OutputStream os, int limit, boolean isSubQuery)
     throws SequenceException, FormatException, InvalidQueryException, SQLException {
 
+    //must initialize query for sequence queries specially
+    if (query.getType() == Query.SEQUENCE) {
+      //make a copy to prevent changes being filtered back to the client
+      query = new Query(query);
+      query.initializeForSequence();
+    }
+    
     //process any unprocessed filters
     Hashtable needsHandler = new Hashtable();
 
@@ -263,6 +270,7 @@ public class Engine {
     }
 
     logger.fine(query.toString());
+    
     QueryRunner qr = QueryRunnerFactory.getInstance(query, formatspec, os);
     qr.execute(limit, isSubQuery);
   }

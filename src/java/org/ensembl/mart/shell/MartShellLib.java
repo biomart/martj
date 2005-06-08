@@ -175,7 +175,7 @@ public class MartShellLib {
       throw new ConfigurationException("Could not parse " + confFile + " into a URL\n");
 
     //dont ignoreCache, dont includeHiddenMembers
-    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, loadFully, false);
+    RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(confURL, false, loadFully, true);
     //see notes to adaptorManager for boolean settings
     harvestAdaptorsFrom(adaptor);
   }
@@ -283,7 +283,7 @@ public class MartShellLib {
     mqlbuf.append("sequence ");
 
     SequenceDescription seqd = query.getSequenceDescription();
-    String seqtype = seqd.getTypeAsString();
+    String seqtype = seqd.getSeqType();
 
     int lflank = seqd.getLeftFlank();
     if (lflank > 0)
@@ -463,7 +463,7 @@ public class MartShellLib {
   }
 
   public String[] listDatasets(String[] toks) throws ConfigurationException {
-    if (adaptorManager.getDatasetNames().length == 0)
+    if (adaptorManager.getDatasetNames(false).length == 0)
       return new String[] { "No Datasets Loaded\n" };
 
     List retList = new ArrayList();
@@ -481,7 +481,7 @@ public class MartShellLib {
 
           DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(source);
 
-          String[] datasets = adaptor.getDatasetNames();
+          String[] datasets = adaptor.getDatasetNames(false);
           for (int j = 0, m = datasets.length; j < m; j++) {
             retList.add( canonicalizeMartName( source ) + "." + datasets[j] + "\n");
           }
@@ -491,7 +491,7 @@ public class MartShellLib {
         if (!adaptorManager.supportsAdaptor( deCanonicalizeMartName( reqName ) ))
           throw new ConfigurationException(reqName + " is not a valid Mart Source to list Datasets\n");
 
-        String[] datasets = adaptorManager.getAdaptorByName( deCanonicalizeMartName( reqName ) ).getDatasetNames();
+        String[] datasets = adaptorManager.getAdaptorByName( deCanonicalizeMartName( reqName ) ).getDatasetNames(false);
         for (int i = 0, n = datasets.length; i < n; i++) {
           retList.add(reqName + "." + datasets[i] + "\n");
         }
@@ -502,7 +502,7 @@ public class MartShellLib {
         throw new ConfigurationException("Must set environmental Mart to list Datasets relative to it\n");
 
       String reqName = envMart.getName();
-      String[] datasets = adaptorManager.getAdaptorByName(reqName).getDatasetNames();
+      String[] datasets = adaptorManager.getAdaptorByName(reqName).getDatasetNames(false);
       for (int i = 0, n = datasets.length; i < n; i++) {
         retList.add(datasets[i] + "\n");
       }
@@ -533,7 +533,7 @@ public class MartShellLib {
           String source = sources[i];
           DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName(source);
 
-          String[] datasets = adaptor.getDatasetNames();
+          String[] datasets = adaptor.getDatasetNames(false);
           for (int j = 0, m = datasets.length; j < m; j++) {
             String dataset = datasets[j];
             String[] configs = adaptor.getDatasetConfigInternalNamesByDataset(dataset);
@@ -551,7 +551,7 @@ public class MartShellLib {
 
         DSConfigAdaptor adaptor = adaptorManager.getAdaptorByName( deCanonicalizeMartName( reqName ) );
 
-        String[] datasets = adaptor.getDatasetNames();
+        String[] datasets = adaptor.getDatasetNames(false);
         for (int j = 0, m = datasets.length; j < m; j++) {
           String[] configs = adaptor.getDatasetConfigInternalNamesByDataset(datasets[j]);
 
@@ -2061,7 +2061,7 @@ public class MartShellLib {
   private boolean domainSpecificHandlerAvailable(String keyword) throws InvalidQueryException {
     //modify this to add other domainSpecific keywords, or just replace it with a module
     if (keyword.equalsIgnoreCase(QSEQUENCE))
-      throw new InvalidQueryException("Sequences are not currently supported\n");
+      return true;
     return false;
   }
 
@@ -2158,7 +2158,7 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
 
-    int typecode = 0;
+    String seqDescription = null;
     int left = 0;
     int right = 0;
 
@@ -2169,7 +2169,7 @@ public class MartShellLib {
         // left+type+right
         left = Integer.parseInt(tokens.nextToken());
         tokens.nextToken(); // skip plus
-        typecode = SequenceDescription.SEQS.indexOf(tokens.nextToken());
+        seqDescription = tokens.nextToken();
         tokens.nextToken();
         right = Integer.parseInt(tokens.nextToken());
         break;
@@ -2179,22 +2179,22 @@ public class MartShellLib {
         tokens.nextToken();
         String tmpr = tokens.nextToken();
 
-        if (SequenceDescription.SEQS.contains(tmpl)) {
-          typecode = SequenceDescription.SEQS.indexOf(tmpl);
+        if (dset.containsAttributeDescription(tmpl)) {
+          seqDescription = tmpl;
           right = Integer.parseInt(tmpr);
-        } else if (SequenceDescription.SEQS.contains(tmpr)) {
+        } else if (dset.containsAttributeDescription(tmpr)) {
           left = Integer.parseInt(tmpl);
-          typecode = SequenceDescription.SEQS.indexOf(tmpr);
+          seqDescription = tmpr;
         } else {
           throw new InvalidQueryException("Invalid sequence request recieved: " + seqrequest + "\n");
         }
         break;
       case 1 :
         // type
-        typecode = SequenceDescription.SEQS.indexOf(seqrequest);
+        seqDescription = seqrequest;
         break;
     }
-    newQuery.setSequenceDescription(new SequenceDescription(typecode, left, right));
+    newQuery.setSequenceDescription(new SequenceDescription(seqDescription, adaptorManager, left, right));
     return newQuery;
   }
 
@@ -2203,7 +2203,13 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
     AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
-    Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
+    Attribute attr = null;
+    if (attdesc.getInternalName().indexOf('.') > 0)
+        //placeholder sequence attribute
+        attr = new FieldAttribute(attdesc.getInternalName(), attdesc.getTableConstraint(), attdesc.getKey());
+    else
+      attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
+    
     newQuery.addAttribute(attr);
 
     return newQuery;
@@ -2214,7 +2220,9 @@ public class MartShellLib {
 
     Query newQuery = new Query(inquery);
     AttributeDescription attdesc = (AttributeDescription) dset.getAttributeDescriptionByInternalName(attname);
-    Attribute attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
+    Attribute attr = null;
+    attr = new FieldAttribute(attdesc.getField(), attdesc.getTableConstraint(), attdesc.getKey());
+    
     newQuery.addSortByAttribute(attr);
 
     return newQuery;

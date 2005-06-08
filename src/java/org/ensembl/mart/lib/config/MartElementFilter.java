@@ -41,7 +41,8 @@ public class MartElementFilter extends BaseMartElementFilter {
 	 * @see org.jdom.filter.Filter#matches(java.lang.Object)
 	 */
 	public boolean matches(Object obj) {
-    boolean ret = super.matches(obj);
+        boolean ret = super.matches(obj);
+    
 		if (ret) {
 			Element e = (Element) obj;
 			

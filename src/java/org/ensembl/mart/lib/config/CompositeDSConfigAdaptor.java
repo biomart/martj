@@ -302,11 +302,11 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames()
    */
-  public String[] getDatasetNames() throws ConfigurationException {
+  public String[] getDatasetNames(boolean includeHidden) throws ConfigurationException {
     List l = new ArrayList();
     for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
       DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
-      l.addAll(Arrays.asList( adaptor.getDatasetNames() ));
+      l.addAll(Arrays.asList( adaptor.getDatasetNames(includeHidden) ));
     }
 
     return (String[]) l.toArray(new String[l.size()]);
@@ -343,7 +343,7 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getDatasetNames(java.lang.String)
    */
-  public String[] getDatasetNames(String adaptorName) throws ConfigurationException {
+  public String[] getDatasetNames(String adaptorName, boolean includeHidden) throws ConfigurationException {
     List l = new ArrayList();
 
     if (adaptorNameMap.contains(adaptorName)) {
@@ -351,10 +351,10 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
         DSConfigAdaptor element = (DSConfigAdaptor) iter.next();
 
         if (element.getName().equals(adaptorName)) {
-          l.addAll(Arrays.asList(element.getDatasetNames()));
+          l.addAll(Arrays.asList(element.getDatasetNames(includeHidden)));
           break;
         } else if (element.supportsAdaptor(adaptorName)) {
-          l.addAll(Arrays.asList(element.getDatasetNames(adaptorName)));
+          l.addAll(Arrays.asList(element.getDatasetNames(adaptorName, includeHidden)));
           break;
         }
       }

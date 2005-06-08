@@ -32,6 +32,9 @@ import org.ensembl.mart.lib.Query;
 import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
 import org.ensembl.mart.lib.config.AttributeGroup;
+import org.ensembl.mart.lib.config.AttributePage;
+import org.ensembl.mart.lib.config.ConfigurationException;
+import org.ensembl.mart.lib.config.DatasetConfig;
 
 /**
  * Widget representing an AttibuteGroup. 
@@ -44,19 +47,21 @@ public class AttributeGroupWidget extends GroupWidget {
   private int lastWidth;
 
   private AttributeGroup group;
+  private AttributePage page;
 
   /**
    * @param query
    * @param name
    */
-  public AttributeGroupWidget(Query query, String name, AttributeGroup group, QueryTreeView tree) {
+  public AttributeGroupWidget(Query query, String name, AttributeGroup group, AttributePage page, QueryTreeView tree, DatasetConfig dsv, AdaptorManager manager) {
 
     super(name, query, tree);
 
     this.group = group;
-
+    this.page = page;
+    
     Box panel = Box.createVerticalBox();
-    leafWidgets = addCollections(panel, group.getAttributeCollections());
+    leafWidgets = addCollections(panel, group.getAttributeCollections(), dsv, manager);
     panel.add(Box.createVerticalGlue());
     
     add(new JScrollPane(panel));
@@ -68,19 +73,28 @@ public class AttributeGroupWidget extends GroupWidget {
    */
   private List addCollections(
     Container container,
-    AttributeCollection[] collections) {
+    AttributeCollection[] collections,
+    DatasetConfig dsv, AdaptorManager manager) {
 
     List widgets = new ArrayList();
 
     for (int i = 0; i < collections.length; i++) {
 
-      AttributeCollection collection = collections[i];
-      InputPage[] attributes = getAttributeWidgets(collection);
-      widgets.addAll(Arrays.asList(attributes));
-      GridPanel p =
-        new GridPanel(attributes, 2, 200, 35, collection.getDisplayName());
-      container.add( p );
-
+        if (group.getInternalName().equals("sequence")) {
+          if (collections[i].getInternalName().equals("seq_scope_type")) {
+            SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), query, tree, dsv, manager);
+            container.add( w );
+            widgets.addAll(w.getLeafWidgets());
+          } else
+              continue;
+        } else {
+            AttributeCollection collection = collections[i];
+            InputPage[] attributes = getAttributeWidgets(collection, manager);
+            widgets.addAll(Arrays.asList(attributes));
+            GridPanel p =
+                new GridPanel(attributes, 2, 200, 35, collection.getDisplayName());
+            container.add( p );
+        }
     }
     return widgets;
   }
@@ -91,7 +105,7 @@ public class AttributeGroupWidget extends GroupWidget {
    * @return array of AttributeDescriptionWidgets, one for each 
    * AttributeDescription in the collection.
    */
-  private InputPage[] getAttributeWidgets(AttributeCollection collection) {
+  private InputPage[] getAttributeWidgets(AttributeCollection collection, AdaptorManager manager) {
 
     List attributeDescriptions = collection.getAttributeDescriptions();
     List pages = new ArrayList();
@@ -102,7 +116,14 @@ public class AttributeGroupWidget extends GroupWidget {
       if (element instanceof AttributeDescription) {
 
         AttributeDescription a = (AttributeDescription) element;
-        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree, collection);
+        
+        if (a.getInternalName().indexOf('.') > 0) {
+            a.setDisplayName(manager.getPointerAttribute(a.getInternalName()).getDisplayName());
+            a.setField(a.getInternalName());
+            a.setTableConstraint(a.getInternalName());
+        }
+        
+        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree, collection, page);
         pages.add(w);
       }
       else {

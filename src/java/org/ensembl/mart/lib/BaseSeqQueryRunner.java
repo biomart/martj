@@ -25,11 +25,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import org.ensembl.mart.util.FormattedSequencePrintStream;
 
@@ -60,12 +58,6 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected Query query = null;
   protected Attribute[] attributes = null;
   protected Filter[] filters = null;
-  protected SequenceDescription seqd = null;
-  protected String dataset = null;
-  protected String species = null;
-  protected String focus = null;
-  protected String dset = null;
-  protected String structureTable = null;
   protected FormatSpec format = null;
   protected FormattedSequencePrintStream osr;
   protected SeqWriter seqWriter;
@@ -83,50 +75,24 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   // holds unique list of resultset description fields from the query
 
   // Used for colating required fields
-  protected String queryID;
+  protected String queryID, qualifiedQueryID;
   protected String coordStart, coordEnd;
-  protected List displayIDs = new ArrayList();
-  protected final String GENEID = "gene_id_key";
-  protected final String TRANID = "transcript_id_key";
-  protected final String RANK = "rank";
-  protected final String CHR = "chr_name";
-  protected final String ASSEMBLYCOLUMN = "assembly_type";
-  protected final String STRANDCOLUMN = "exon_chrom_strand";
-
-  // Strings for use in idattribute Hashtable keys
-  protected final String ASSEMBLY = "assembly";
-  protected final String DISPLAYID = "displayID";
-  protected final String DESCRIPTION = "description";
+  protected String rankField;
+  protected String chrField;
+  protected String strandField;
 
   // need to know these indexes specifically
   protected int queryIDindex = 0;
-  protected int tranIDindex = 0;
   protected int rankIndex = 0;
-  protected int assemblyIndex = 0;
   protected int startIndex = 0;
   protected int endIndex = 0;
   protected int chromIndex = 0;
   protected int strandIndex = 0;
-  protected List displayIDindices = new ArrayList();
   protected List otherIndices = new ArrayList();
+  protected DNAAdaptor dna;
 
   public BaseSeqQueryRunner(Query query) {
     this.query = new Query(query);
-    
-    //resolve dataset, species, and focus
-    String[] mainTables = query.getMainTables();
-
-    for (int i = 0; i < mainTables.length; i++) {
-      if (Pattern.matches(".*gene__main", mainTables[i]))
-        dataset = mainTables[i];
-    }
-
-    StringTokenizer tokens = new StringTokenizer(dataset, "_", false);
-    species = tokens.nextToken();
-    //focus = tokens.nextToken();
-    //dset = species + "_" + focus;
-    dset = dataset.split("__")[0];
-    structureTable = dset + "__structure__dm";
   }
 
   /**
@@ -191,12 +157,9 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     if (isSubQuery)
       throw new SequenceException("SubQuerys cannot return sequences\n");
 
+    dna = new DNAAdaptor(query.getSequenceDescription());
+    
     updateQuery();
-
-//    if (hardLimit > 0)
-//      hardLimit = Math.min(hardLimit, MAXTOTALROWS);
-//    else
-//      hardLimit = MAXTOTALROWS;
         
     Filter[] filters = query.getFilters();
 
@@ -269,6 +232,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
     } else {
       executeQuery(query, hardLimit);
     }
+    dna.close();
   }
 
   protected void executeQuery(Query curQuery, int hardLimit) throws SequenceException, InvalidQueryException {
@@ -294,7 +258,6 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
 
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
-    seqd = curQuery.getSequenceDescription();
 
     Connection conn = null;
     String sql = null;
@@ -308,9 +271,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
         sql = sqlbase;
 
         sql += " order by "
-            + structureTable
-            + "."
-            + queryID;
+            + qualifiedQueryID;
             
         int maxRows = 0;
         if (hardLimit > 0) {
@@ -320,7 +281,7 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
         } else
           maxRows = batchLength;
 
-        sql += " LIMIT " + totalRowsThisExecute + "," + maxRows; //;(maxRows - lastIDRowsProcessed);
+        sql += " LIMIT " + totalRowsThisExecute + "," + maxRows;
         
         if (logger.isLoggable(Level.INFO))
           logger.info("SQL : " + sql + "\n");
@@ -372,7 +333,6 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
 
     attributes = curQuery.getAttributes();
     filters = curQuery.getFilters();
-    seqd = curQuery.getSequenceDescription();
 
     Connection conn = null;
     String sql = null;
@@ -387,28 +347,12 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
 
         if (lastID > -1) {
           if (sqlbase.indexOf("WHERE") >= 0)
-            sql += " and " + structureTable + "." + queryID + " >= " + lastID;
+            sql += " and " + qualifiedQueryID + " >= " + lastID;
           else
-            sql += " WHERE " + structureTable + "." + queryID + " >= " + lastID;
+            sql += " WHERE " + qualifiedQueryID + " >= " + lastID;
         }
 
-//        sql += " order by  "
-//          + structureTable
-//          + "."
-//          + GENEID
-//          + ", "
-//          + structureTable
-//          + "."
-//          + TRANID
-//          + ", "
-//          + structureTable
-//          + "."
-//          + RANK;
-
-        sql += " order by "
-            + structureTable
-            + "."
-            + queryID;
+        sql += " order by " + qualifiedQueryID;
 
         if (logger.isLoggable(Level.INFO)) {
           logger.info("SQL : " + sql + "\n");

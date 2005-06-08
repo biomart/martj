@@ -184,7 +184,7 @@ public class TreeNodeData {
 
   public TreeNodeData(SequenceDescription sequenceDescription) {
     this.sequenceDescription = sequenceDescription;
-    this.rightText = sequenceDescription.getTypeAsString();
+    this.rightText = sequenceDescription.getSeqDescription();
     this.type = ATTRIBUTES;
     this.separator = "";
     useLeftText = false;

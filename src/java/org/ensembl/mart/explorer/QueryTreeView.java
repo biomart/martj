@@ -241,10 +241,13 @@ public class QueryTreeView extends JTree implements QueryListener {
       int index = parent.getIndex(child);
 
       if (parent == attributesNode) {
-        if (index < query.getAttributes().length)
-          query.removeAttribute(query.getAttributes()[index]);
-        else if (query.getSequenceDescription() != null)
-          query.setSequenceDescription(null);
+          Attribute att = query.getAttributes()[index];
+            if (query.hasAttribute(att))
+                query.removeAttribute(att);
+            else if ( ( att.getField().indexOf('.') > 0 ) && 
+                      ( query.getSequenceDescription() != null )
+                    )
+              query.setSequenceDescription(null);
       } else if (parent == filtersNode)
         query.removeFilter(query.getFilters()[index]);
 
@@ -323,6 +326,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 
   }
 
+  private static DSConfigAdaptor testAdaptor;
   /**
    * Runs an interactive test program where the user can interact
    * with the QueryTreeView.
@@ -330,11 +334,11 @@ public class QueryTreeView extends JTree implements QueryListener {
   public static void main(String[] args) throws Exception {
 
     // default adaptor for retrieving datasetconfigs
-    DSConfigAdaptor adaptor =
+    testAdaptor =
       QueryEditor.testDSConfigAdaptor(new CompositeDSConfigAdaptor());
 
     final Query query = new Query();
-    final QueryTreeView qtv = new QueryTreeView(query, adaptor);
+    final QueryTreeView qtv = new QueryTreeView(query, testAdaptor);
     Dimension d = new Dimension(500, 600);
     qtv.setPreferredSize(d);
     qtv.setMinimumSize(d);
@@ -390,9 +394,11 @@ public class QueryTreeView extends JTree implements QueryListener {
       public void actionPerformed(ActionEvent e) {
         int index = (int) (query.getAttributes().length * Math.random());
         Attribute a = new FieldAttribute("attribute" + count++);
+        
+        //TODO: remove hard-coded sequence description
         try {
           query.setSequenceDescription(
-            new SequenceDescription(SequenceDescription.TRANSCRIPTEXONS));
+            new SequenceDescription("hsapiens_genomic_sequence.coding", testAdaptor));
         } catch (InvalidQueryException e1) {
           e1.printStackTrace();
         }
@@ -639,8 +645,6 @@ public class QueryTreeView extends JTree implements QueryListener {
     Query sourceQuery,
     SequenceDescription oldSequenceDescription,
     SequenceDescription newSequenceDescription) {
-
-    System.out.println("sd = " + newSequenceDescription);
 
     if (oldSequenceDescription != null) {
       attributesNode.remove(attributesNode.getChildCount() - 1);

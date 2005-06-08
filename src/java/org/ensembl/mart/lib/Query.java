@@ -77,33 +77,35 @@ public class Query {
 	 * and copying all the properties from oq.
 	 * 
 	 * @param oq
+	 * @throws InvalidQueryException
 	 */
 	public synchronized void initialise(Query oq) {
 
 		setDataset(oq.getDataset());
 		setDataSource(oq.getDataSource());
-
-		removeAllAttributes();
+            
+		try {
+            removeAllAttributes();
+        } catch (InvalidQueryException e3) {
+            // ignore, oq would have thrown if there was a problem
+        }
+        
 		if (oq.getAttributes().length > 0) {
 			Attribute[] oatts = oq.getAttributes();
 			//    TODO copy attribute and filter by value rather than reference
 			for (int i = 0; i < oatts.length; ++i)
-				addAttribute(oatts[i]);
+                    addAttribute(oatts[i]);
 		}
 
-		removeAllFilters();
+        removeAllFilters();
+        
 		if (oq.getFilters().length > 0) {
 			Filter[] ofilts = oq.getFilters();
 			//    TODO copy attribute and filter by value rather than reference
 			for (int i = 0; i < ofilts.length; ++i)
-				addFilter(ofilts[i]);
+              addFilter(ofilts[i]);
 		}
-
-		// TODO copy other querytypes?
-		if (oq.querytype == Query.SEQUENCE)
-			setSequenceDescription(
-				new SequenceDescription(oq.getSequenceDescription()));
-
+            
 		if (oq.getMainTables().length > 0) {
 			String[] oStars = oq.getMainTables();
 			String[] nStars = new String[oStars.length];
@@ -132,7 +134,11 @@ public class Query {
         addSortByAttribute(sortAtts[i]);        
       }
     }
-
+    
+	// TODO copy other querytypes?
+	if (oq.querytype == Query.SEQUENCE)
+            setSequenceDescription(
+            	new SequenceDescription(oq.getSequenceDescription()));
 	}
 
 	/**
@@ -168,17 +174,19 @@ public class Query {
 	/**
 	 * Adds attribute to the end of the attributes array. 
 	 * @param attribute item to be added.
+	 * @throws InvalidQueryException
 	 * @throws IllegalArgumentException if attribute is 
 	 * null or already added.
 	 */
 	public synchronized void addAttribute(Attribute attribute) {
-		addAttribute(attributes.size(), attribute);
+		  addAttribute(attributes.size(), attribute);
 	}
 
 	/**
 	 * remove a Filter object from the list of Attributes
 	 * 
 	 * @param Filter filter
+	 * @throws InvalidQueryException
 	 */
 	public synchronized void removeFilter(Filter filter) {
 		int index = filters.indexOf(filter);
@@ -188,7 +196,6 @@ public class Query {
 			for (int i = 0; i < listeners.size(); ++i)
 				 ((QueryListener) listeners.get(i)).filterRemoved(this, index, filter);
 		}
-
 	}
 
 	/**
@@ -232,11 +239,12 @@ public class Query {
 	 * Add filter to end of filter list. 
 	 * 
 	 * @param Filter filter to be added.
+	 * @throws InvalidQueryException
 	 * @throws IllegalArgumentException if filter is 
 	 * null or already added.
 	 */
 	public synchronized void addFilter(Filter filter) {
-		addFilter(filters.size(), filter);
+		  addFilter(filters.size(), filter);
 	}
 
 	/**
@@ -264,6 +272,7 @@ public class Query {
 	 * Remove Attribute if present, otherwise do nothing.
 	 * 
 	 * @param Attribute attribute to be removed.
+	 * @throws InvalidQueryException
 	 */
 	public synchronized void removeAttribute(Attribute attribute) {
 		int index = attributes.indexOf(attribute);
@@ -281,28 +290,80 @@ public class Query {
 	/**
 	 * Sets a SequenceDescription to the Query, and sets querytype = SEQUENCE. 
 	* @param s A SequenceDescription object.
+	 * @throws InvalidQueryException
 	*/
 	public synchronized void setSequenceDescription(SequenceDescription s) {
 
-    
 		SequenceDescription oldSequenceDescription = this.sequenceDescription;
 		this.sequenceDescription = s;
-    
-    if (s==null) 
+	    
+    if (s==null)
       this.querytype = Query.ATTRIBUTE;
     else
       this.querytype = Query.SEQUENCE;
-
-		log();
+   
+    log();
 
 		for (int i = 0; i < listeners.size(); ++i)
 			((QueryListener) listeners.get(i)).sequenceDescriptionChanged(
 				this,
 				oldSequenceDescription,
 				this.sequenceDescription);
-
 	}
 
+	private void migrateAttributes() throws InvalidQueryException {
+	    Attribute[] oAttributes = getAttributes();
+	    removeAllAttributes();
+	    
+	    for (int i = 0, n = oAttributes.length; i < n; i++) {
+	        if (oAttributes[i].getField().indexOf(".") < 0)
+	            throw new InvalidQueryException("Sequence queries can contain gene_structure attributes only\n");
+	        if (attributes.size() == 0) {
+	    	    //must get the attribute, so that the sequenceDescription initializes properly,
+	            //but must then add the exportables before the this (first) attribute
+	            Attribute sa = sequenceDescription.getAttribute(oAttributes[i]);
+	    	    Attribute[] eAtts = sequenceDescription.getExportable();
+	    	    for (int j = 0, m = eAtts.length; j < m; j++) {
+                    addAttribute(eAtts[j]);
+                }
+	    	    addAttribute(sa);
+	        } else
+	          addAttribute( sequenceDescription.getAttribute(oAttributes[i]) );
+	    }
+	}
+
+	private void migrateFilters() throws InvalidQueryException {
+	    Filter[] oFilters = getFilters();
+        
+        // if there are no filters added, this will just be a filterless subquery
+	    if (oFilters.length > 0) {
+	        removeAllFilters();
+	        IDListFilter lastFilter = null;
+	        for (int i = 0, n = oFilters.length; i < n; i++) {
+	            lastFilter = sequenceDescription.getFilter(oFilters[i]);
+	        }
+	        addFilter(lastFilter);
+	    }
+	}
+	
+	public void initializeForSequence() throws InvalidQueryException {
+	    sequenceDescription.setSubQuery(this);
+	    
+	    //a valid sequence query must have one placeholder attribute
+	    //in order to function properly.  Throw if not.
+	    if (attributes.size() < 1)
+	        throw new InvalidQueryException("Sequence Queries must contain at least one header attribute\n");
+	    
+	    migrateAttributes();
+	    migrateFilters();
+	    setDataset(sequenceDescription.getStructDatasetName());
+	    setDatasetConfig(sequenceDescription.getStructDataset());
+	    setDataSource(sequenceDescription.getStructDataSource());
+	    setMainTables(sequenceDescription.getStructureMainTables());
+	    setPrimaryKeys(sequenceDescription.getStructurePrimaryKeys());
+	    //this query is now a structure query with a core subQuery, not the original core query
+	}
+	
 	/**
 	 * returns the SequenceDescription for this Query.
 	* @return SequenceDescription
@@ -500,8 +561,9 @@ public class Query {
 
 	/**
 	 * Convenience method that removes all attributes from the query. Notifies listeners.
+	 * @throws InvalidQueryException
 	 */
-	public synchronized void removeAllAttributes() {
+	public synchronized void removeAllAttributes() throws InvalidQueryException {
 
 		Attribute[] attributes = getAttributes();
 
@@ -514,6 +576,7 @@ public class Query {
 	/**
 	 * Removes all Filters from the query. Each removed Filter will
 	 * generate a separate property change event.
+	 * @throws InvalidQueryException
 	 */
 	public synchronized void removeAllFilters() {
 
@@ -639,7 +702,7 @@ public class Query {
 	/**
 	 * @param listener
 	 */
-	public synchronized void addQueryChangeListener(QueryListener listener) {
+	public synchronized void addQueryChangeListener(QueryListener listener) {        
 		listeners.add(listener);
 	}
 
@@ -685,8 +748,12 @@ public class Query {
 		setDataset(null);
 		setDatasetConfig(null);
 
-		removeAllAttributes();
-		removeAllFilters();
+		try {
+            removeAllAttributes();
+            removeAllFilters();
+        } catch (InvalidQueryException e) {
+            // ignore
+        }
 
 		setLimit(0);
 

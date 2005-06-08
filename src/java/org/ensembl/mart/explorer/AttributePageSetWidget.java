@@ -30,7 +30,7 @@ public class AttributePageSetWidget extends PageSetWidget {
   /**
 	 * @param query
 	 */
-	public AttributePageSetWidget(Query query, DatasetConfig dataset, QueryTreeView tree) {
+	public AttributePageSetWidget(Query query, DatasetConfig dataset, QueryTreeView tree, AdaptorManager manager) {
 		
     super(query, "Attributes", tree);
     
@@ -38,7 +38,7 @@ public class AttributePageSetWidget extends PageSetWidget {
 		for (int i = 0, n = attributePages.length; i < n; i++) {
 			AttributePage page = attributePages[i];
       String name = page.getDisplayName();
-      AttributePageWidget p = new AttributePageWidget(query, name, page, tree); 
+      AttributePageWidget p = new AttributePageWidget(query, name, page, tree, dataset, manager);
 			tabbedPane.add( name, p );
       leafWidgets.addAll( p.getLeafWidgets() );
 		}

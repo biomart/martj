@@ -141,7 +141,7 @@ public interface DSConfigAdaptor {
    * @return String[] list of dataset names
    * @throws ConfigurationException
    */
-  public String[] getDatasetNames() throws ConfigurationException;
+  public String[] getDatasetNames(boolean includeHidden) throws ConfigurationException;
   
   /**
    * Returns a list of the names of Datasets for which DatasetConfigs are held, given a particular
@@ -150,7 +150,7 @@ public interface DSConfigAdaptor {
    * @return String[] list of datatset names
    * @throws ConfigurationException
    */
-  public String[] getDatasetNames(String adaptorName) throws ConfigurationException;
+  public String[] getDatasetNames(String adaptorName, boolean includeHidden) throws ConfigurationException;
   
   /**
    * Returns all primitive DSConfigAdaptor objects contained with this Object (which may be a zero length list
