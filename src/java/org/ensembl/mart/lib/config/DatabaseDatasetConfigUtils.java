@@ -454,7 +454,9 @@ public class DatabaseDatasetConfigUtils {
 							continue;//to stop options also being assessed
 						}
 						// test has all its fields defined - if not add a message to brokenString
-						if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+						//if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+					    if ((testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+									
 							testAD.getField() == null || testAD.getField().equals("") ||
 							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
 							testAD.getKey() == null || testAD.getKey().equals("") ||	 
@@ -535,6 +537,8 @@ public class DatabaseDatasetConfigUtils {
 			}
 		} 	
 
+
+		
 		if (duplicationString != ""){	
 		  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
 		  // make unique code
@@ -1995,6 +1999,8 @@ public class DatabaseDatasetConfigUtils {
 
       String field = validatedFilter.getField();
       String tableConstraint = validatedFilter.getTableConstraint();
+      if (tableConstraint == null)
+      	return validatedFilter;
 
       // if the tableConstraint is null, this field must be available in one of the main tables
       String table = (!tableConstraint.equals("main")) ? tableConstraint : dset + "%" + MAINTABLESUFFIX;
@@ -2070,6 +2076,12 @@ public class DatabaseDatasetConfigUtils {
    	        }
    
    
+			String field = validatedFilter.getField();
+			String tableName = validatedFilter.getTableConstraint();
+			
+			if (field == null || tableName == null)
+				return validatedFilter;
+   
       		// remove all options
       		String[] oldOptionOrder = new String[options.length];
 		    for (int j = 0; j < options.length; j++) {
@@ -2078,8 +2090,7 @@ public class DatabaseDatasetConfigUtils {
 				validatedFilter.removeOption(options[j]);
 		    }  
 		    
-			String field = validatedFilter.getField();
-			String tableName = validatedFilter.getTableConstraint();
+				
 			String joinKey = validatedFilter.getKey();
 			validatedFilter.setType("list");
 			validatedFilter.setQualifier("=");
@@ -2603,6 +2614,10 @@ public class DatabaseDatasetConfigUtils {
 
 
     String field = description.getField();
+	if (field == null){
+		return validatedAttribute;
+		
+	}
     // oracle case sensitive
     if(dsource.getDatabaseType().equals("oracle")) field=field.toUpperCase();
    //System.out.println("databaseType() "+dsource.getDatabaseType()); 

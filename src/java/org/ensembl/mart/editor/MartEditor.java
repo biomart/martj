@@ -1294,7 +1294,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									continue;//to stop options also being assessed
 								}
 								// test has all its fields defined - if not add a message to brokenString
-								if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+								// only do for non-filter option filters
+								if ((testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
 									testAD.getKey() == null || testAD.getKey().equals("") ||	 
@@ -1355,6 +1356,13 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				  return;//no export performed
 				}
 
+			if (brokenString != ""){
+					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
+											  + brokenString, "ERROR", 0);
+					return;//no export performed
+			}
+
+
 			if (attributeDuplicationMap.size() > 0){
 				duplicationString = "The following attribute internal names are duplicated and will cause client problems:\n";
 				Enumeration enum = attributeDuplicationMap.keys();
@@ -1413,13 +1421,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 				return;//no export performed
 			  }
 			}			
-			
-			//if (brokenString.matches("\\w+")){
-			if (brokenString != ""){
-					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
-											  + brokenString, "ERROR", 0);
 				  
-			} 
 		} catch (Exception e) {
 		  e.printStackTrace();
 		}
