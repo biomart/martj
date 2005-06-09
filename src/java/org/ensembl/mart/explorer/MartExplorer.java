@@ -602,7 +602,7 @@ public class MartExplorer
     int n = 0;
     try {
       disableCursor();
-      n = adaptorManager.getRootAdaptor().getNumDatasetConfigs();
+      n = adaptorManager.getRootAdaptor().getNumDatasetConfigs(true);
     } finally {
       enableCursor();
     }

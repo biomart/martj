@@ -88,7 +88,7 @@ public class DatasetConfigTree extends PopUpTreeCombo {
 				if (!optional && !containsDefaultConfig(adaptor))
 					continue;
         
-        if (adaptor.getNumDatasetConfigs()==0 )
+        if (adaptor.getNumDatasetConfigs(true)==0 )
           continue;
 
 				LabelledTreeNode adaptorNode =
