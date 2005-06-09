@@ -35,9 +35,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.ensembl.mart.lib.Attribute;
 import org.ensembl.mart.lib.FieldAttribute;
 import org.ensembl.mart.lib.Query;
-import org.ensembl.mart.lib.config.AttributeCollection;
 import org.ensembl.mart.lib.config.AttributeDescription;
-import org.ensembl.mart.lib.config.AttributePage;
 
 /**
  * @author craig
@@ -49,11 +47,6 @@ public class AttributeDescriptionWidget
 	extends InputPage
 	implements TreeSelectionListener {
 
-	private AttributeCollection attrbuteCollection;
-    private int collectionAtts = 0; //number of atts added per collection
-    
-    private AttributePage page;
-    
 	private final static Logger logger =
 		Logger.getLogger(AttributeDescriptionWidget.class.getName());
 	private AttributeDescription attributeDescription;
@@ -94,9 +87,7 @@ public class AttributeDescriptionWidget
 	public AttributeDescriptionWidget(
 		final Query query,
 		AttributeDescription attributeDescription,
-		QueryTreeView tree,
-        AttributeCollection attributeCollection,
-        AttributePage page) {
+		QueryTreeView tree) {
 
 		super(query, attributeDescription.getDisplayName(), tree);
         
@@ -104,8 +95,6 @@ public class AttributeDescriptionWidget
 			tree.addTreeSelectionListener(this);
 		this.attributeDescription = attributeDescription;
 		this.query = query;
-    this.attrbuteCollection = attributeCollection;
-    this.page = page;
 
 		attribute =
 			new InputPageAwareAttribute(
@@ -135,55 +124,11 @@ public class AttributeDescriptionWidget
 	 * 
 	 */
 	private void doClick() {
-		if (button.isSelected()) {
-            if (attributesValid()) {
-                if (countsValid()) {
-                  query.addAttribute(attribute);
-                  collectionAtts++;
-                } else {
-                    button.setSelected(false);
-                    feedback.warning("Only " + attrbuteCollection.getMaxSelect() + " attributes from this collection can be chosen together.");
-                }
-            } else {
-                button.setSelected(false);
-                feedback.warning("Attributes from different AttributePages cannot be chosen together, please unselect any from other pages.");
-            }
-			
-        } else {
-            collectionAtts--;
-			query.removeAttribute(attribute);
-        }
+		if (button.isSelected())
+          query.addAttribute(attribute);
+        else
+		  query.removeAttribute(attribute);
 	}
-
-	private boolean attributesValid() {
-	    boolean valid = true;
-	    
-	    Attribute[] atts = query.getAttributes();
-	    for (int i = 0, n = atts.length; i < n; i++) {
-	        Attribute attribute = atts[i];
-	        AttributeDescription ad = null;
-	        
-	        if (attribute.getField().indexOf('.') > 0)
-	            ad = page.getAttributeDescriptionByInternalName(attribute.getField());  
-	        else
-	            ad = page.getAttributeDescriptionByFieldNameTableConstraint(attribute.getField(), attribute.getTableConstraint());
-	        
-	        if (ad == null) {
-	            valid = false;
-	            break;
-	        }
-	    }
-	    
-	    return valid;
-	}
-    
-    public boolean countsValid() {
-      int newMax = collectionAtts + 1;
-      if (attrbuteCollection.getMaxSelect() > 0)
-          return attrbuteCollection.getMaxSelect() < newMax;
-      else
-          return true;
-    }
     
     public Attribute getAttribute() {
 		return attribute;
@@ -201,7 +146,6 @@ public class AttributeDescriptionWidget
 
 		if (this.attribute.sameFieldTableConstraint(attribute))
 			button.setSelected(true);
-
 	}
 
 	/**
@@ -213,7 +157,6 @@ public class AttributeDescriptionWidget
 		Query sourceQuery,
 		int index,
 		Attribute attribute) {
-
 		if (this.attribute.sameFieldTableConstraint(attribute))
 			button.setSelected(false);
 	}
