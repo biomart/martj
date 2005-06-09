@@ -427,7 +427,7 @@ public class MartRegistryXMLUtils {
                   martreg.addMartLocation(getDBLocation(element));
                 else if (element.getName().equals(REGISTRYLOCATION))
                   martreg.addMartLocation(getRegLocation(element));
-                else if (element.equals(REGISTRYDBLOCATION))
+                else if (element.getName().equals(REGISTRYDBLOCATION))
                   martreg.addMartLocation(getRegDBLocation(element));
                 //else not needed
             }
