@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.Box;
@@ -156,7 +157,8 @@ public class FilterGroupWidget extends PageWidget {
 		} else {
 			FilterPageSetWidget.UNSUPPORTED_TYPES.add(type);
 
-			logger.warning("Unsupported filter: " + filterDescription.getClass().getName() + ", " + filterDescription);
+            if (logger.isLoggable(Level.INFO))
+			  logger.info("Unsupported filter: " + filterDescription.getClass().getName() + ", " + filterDescription);
 
 		}
 
