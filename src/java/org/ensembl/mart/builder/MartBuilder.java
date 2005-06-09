@@ -71,6 +71,11 @@ public class MartBuilder {
 			String user_dataset = getUserInput("NEW DATASET: ");
 
 			while (!(user_dataset == null || user_dataset.equals(""))) {
+				
+				
+                  //	needs new dataset here
+				// Dataset dataset = new Dataset();
+				
 				createConfiguration(user_dataset, file);
 				user_dataset = getUserInput("NEW DATASET: ");
 			}
@@ -120,6 +125,10 @@ public class MartBuilder {
 			String extension = getUserInput("Extension: ");
 
 			transformationCount++;
+			
+			// needs new transformation here
+			// Transformation transformation = new Transformation();
+			
 			writeConfigFile(output_file, user_dataset, table_name, table_type,
 					extension, transformationCount);
 			table_type = getUserInput(prompt);
@@ -128,11 +137,32 @@ public class MartBuilder {
 
 	
 	
+	private static String getUserInput(String prompt) {
+
+		BufferedReader console = new BufferedReader(new InputStreamReader(
+				System.in));
+
+		System.out.print(prompt);
+		String cardinality = null;
+
+		try {
+			cardinality = console.readLine();
+		} catch (IOException e) {
+			System.err.println("error: " + e);
+		}
+		;
+
+		return cardinality;
+
+	}
 	
 	
 	
 	
 	
+	
+	
+	// need to create here transformation units
 	
 	private static void writeConfigFile(String output_file, String dataset,
 			String table_name, String table_type, String extension,
@@ -165,24 +195,7 @@ public class MartBuilder {
 		}
 	}
 
-	private static String getUserInput(String prompt) {
-
-		BufferedReader console = new BufferedReader(new InputStreamReader(
-				System.in));
-
-		System.out.print(prompt);
-		String cardinality = null;
-
-		try {
-			cardinality = console.readLine();
-		} catch (IOException e) {
-			System.err.println("error: " + e);
-		}
-		;
-
-		return cardinality;
-
-	}
+	
 
 	private static void write(BufferedWriter out, Table[] referenced_tables,
 			String table_name, String table_type, String dataset,
@@ -219,6 +232,11 @@ public class MartBuilder {
 			if (cardinality.equals("s") || cardinality.equals("1n"))
 				continue;
 
+			
+			
+			// this needs to create TransformationUnits
+			// TransformationUnit unit = new TransforamtionUnit();
+			
 			try {
 				out.write(dataset + "\t" + table_type + "\t" + table_name
 						+ "\t" + ref_tab.status + "\t" + ref_tab.PK + "\t"
