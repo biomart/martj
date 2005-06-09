@@ -696,6 +696,25 @@ public class MartEditor extends JFrame implements ClipboardOwner {
           dbutils = new DatabaseDatasetConfigUtils(dscutils, ds);
           valid = true;
           connection = "MartEditor (CONNECTED TO " + databaseDialog.getDatabase() + "/"+databaseDialog.getSchema()+" AS "+databaseDialog.getUser()+")";		  
+        
+		  String[] schemas = databaseDialog.getSchema().split(";");
+		  for (int i = 0; i < schemas.length; i++){
+				DetailedDataSource ds1 = new DetailedDataSource(
+												   databaseDialog.getDatabaseType(),
+												   databaseDialog.getHost(),
+												   databaseDialog.getPort(),
+												   schemas[i],
+												   databaseDialog.getSchema(),
+												   databaseDialog.getUser(),
+												   databaseDialog.getPassword(),
+												   10,
+												   databaseDialog.getDriver(),
+												   defaultSourceName);
+				DatabaseDatasetConfigUtils dbutils1 = new DatabaseDatasetConfigUtils(new DatasetConfigXMLUtils(true), ds1);
+				dbutilsHash.put(schemas[i],dbutils1);
+		  }
+        
+        
         } catch (SQLException e) {
           ds = null;	
           connection = "MartEditor (NO DATABASE CONNECTION)";	
