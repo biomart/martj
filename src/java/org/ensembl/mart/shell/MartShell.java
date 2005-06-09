@@ -1359,8 +1359,9 @@ public class MartShell {
         DSConfigAdaptor[] adaptorNames = msl.adaptorManager.getLeafAdaptors();
         for (int i = 0, n = adaptorNames.length; i < n; i++) {
           DSConfigAdaptor adaptor = adaptorNames[i];
-          if (!(adaptor instanceof URLDSConfigAdaptor))
-            martNames.add( msl.canonicalizeMartName( adaptor.getName() ) );
+          if (adaptor.getNumDatasetConfigs(true) > 0)
+            if (!(adaptor instanceof URLDSConfigAdaptor))
+              martNames.add( msl.canonicalizeMartName( adaptor.getName() ) );
         }
         mcl.setMartNames(martNames);
 

@@ -516,7 +516,7 @@ public class MartShellLib {
   }
 
   public String[] listDatasetConfigs(String[] toks) throws ConfigurationException {
-    if (adaptorManager.getNumDatasetConfigs() == 0)
+    if (adaptorManager.getNumDatasetConfigs(true) == 0)
       return new String[] { "No DatasetConfigs Loaded\n" };
 
     List retList = new ArrayList();
@@ -605,13 +605,17 @@ public class MartShellLib {
       throw new ConfigurationException("No Marts have been loaded\n");
 
     String[] names = adaptorManager.getAdaptorNames();
-    String[] ret = new String[names.length];
+    ArrayList martNames = new ArrayList();
     
     for (int i = 0, n = names.length; i < n; i++) {
-      ret[i] = canonicalizeMartName( names[i] ) + "\n";
+      if (adaptorManager.getAdaptorByName( names[i] ).getNumDatasetConfigs(true) > 0)
+        martNames.add( canonicalizeMartName( names[i] ) + "\n" );
     }
 
+    String[] ret = new String[martNames.size()];
+    martNames.toArray(ret);    
     Arrays.sort(ret);
+    
     return ret;
   }
 
@@ -1116,7 +1120,7 @@ public class MartShellLib {
               while (dsvs.hasNext())
                 dbadaptor.removeDatasetConfig((DatasetConfig) dsvs.next());
 
-              if (dbadaptor.getNumDatasetConfigs() < 1)
+              if (dbadaptor.getNumDatasetConfigs(true) < 1)
                 adaptorManager.remove(dbadaptor);
             } else
               adaptorManager.remove(adaptor);
@@ -1138,7 +1142,7 @@ public class MartShellLib {
                 dbadaptor.removeDatasetConfig((DatasetConfig) dsvs.next());
               }
 
-              if (dbadaptor.getNumDatasetConfigs() < 1)
+              if (dbadaptor.getNumDatasetConfigs(true) < 1)
                 adaptorManager.remove(dbadaptor);
             } else
               adaptorManager.remove(adaptor);

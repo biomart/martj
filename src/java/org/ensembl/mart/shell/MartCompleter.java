@@ -812,7 +812,12 @@ public class MartCompleter implements ReadlineCompleter {
     currentSet = new TreeSet();
     
     //find all sequence attributes
-    AttributePage seqPage = msl.envDataset.getAttributePageByInternalName("sequences");
+    AttributePage seqPage = null;
+    
+    if (msl.usingLocalDataset)
+      seqPage = msl.localDataset.getAttributePageByInternalName("sequences");
+    else
+      seqPage = msl.envDataset.getAttributePageByInternalName("sequences");
     
     if (seqPage == null) {
       setErrorMode("No sequences loaded in dataset " + msl.envDataset.getDisplayName() + "\n");
