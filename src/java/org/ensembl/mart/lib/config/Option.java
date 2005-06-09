@@ -64,7 +64,7 @@ public class Option extends QueryFilterSettings {
     for (int i = 0, n = pas.length; i < n; i++) {
       addPushAction( new PushAction(pas[i] ) );
     }
-    if (o.getField().equals("")){
+    if (o.getField() == null || o.getField().equals("")){
     	setRequiredFields(reqFields);
     }
   }
@@ -130,7 +130,7 @@ public class Option extends QueryFilterSettings {
 
     	setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);
-		if (field.equals("")){
+		if (field == null || field.equals("")){
 			setRequiredFields(reqFields);
 		}
 		
