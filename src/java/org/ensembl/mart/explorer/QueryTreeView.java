@@ -518,7 +518,6 @@ public class QueryTreeView extends JTree implements QueryListener {
     Query sourceQuery,
     int index,
     Attribute attribute) {
-
     // Try to get a user friendly labelName, 
     // otherwise use the raw one from attribute
 
@@ -553,6 +552,7 @@ public class QueryTreeView extends JTree implements QueryListener {
 
     DefaultMutableTreeNode next = parentNode;
     int nChildren = parentNode.getChildCount();
+    
     if (nChildren > 0)
       if (selectedChildIndex < nChildren)
         next =
@@ -575,12 +575,15 @@ public class QueryTreeView extends JTree implements QueryListener {
   public void attributeRemoved(
     Query sourceQuery,
     int index,
-    Attribute attribute) {
-
+    Attribute attribute) {   
     attributesNode.remove(index);
     treeModel.reload(attributesNode);
+    
+    //sequence queries behave differently
+    if (sourceQuery.getSequenceDescription() != null)
+      index--;
+    
     select(attributesNode, index, true);
-
   }
 
   /**
