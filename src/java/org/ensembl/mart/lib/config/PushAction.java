@@ -36,7 +36,8 @@ public class PushAction extends BaseNamedConfigurationObject {
 	private List options = new ArrayList();
 	private Option lastOption = null; // cache one Option for call to containsOption/getOptionByInternalName
 	private Option lastSupportingOption = null; // cache one Option for call to supports/getOptionByFieldNameTableConstraint
-	
+	private int[] reqFields = {0,5};// rendered red in AttributeTable
+ 
 	private boolean hasBrokenOptions = false;
 
   public PushAction(PushAction pa) {
@@ -46,6 +47,7 @@ public class PushAction extends BaseNamedConfigurationObject {
   	for (int i = 0, n = ops.length; i < n; i++) {
       addOption(new Option( ops[i] ));
     }
+    setRequiredFields(reqFields);
   }
   
   /**
@@ -56,6 +58,7 @@ public class PushAction extends BaseNamedConfigurationObject {
     
     setAttribute(refKey, null);
 	setAttribute(orderByKey, null);
+	setRequiredFields(reqFields);
   }
   
 	/**
@@ -74,6 +77,7 @@ public class PushAction extends BaseNamedConfigurationObject {
 
 		setAttribute(refKey, ref);
 		setAttribute(orderByKey, orderBy);
+		setRequiredFields(reqFields);
 	}
 
   /**

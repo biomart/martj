@@ -40,7 +40,8 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	protected final String defaultValueKey = "defaultValue";
 	protected final String filterListKey = "filterList";
     //protected final String hiddenKey = "hidden";
-    
+	private int[] reqFields = {0,5,7,8,10};// rendered red in AttributeTable
+	   
   private final String[] titles = new String[] { fieldKey, 
                                                  valueKey,
                                                  tableConstraintKey,
@@ -61,6 +62,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings(BaseNamedConfigurationObject bo) {
 		super(bo);
+		setRequiredFields(reqFields);
 	}
 
 	/**
@@ -69,6 +71,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 	 */
 	public QueryFilterSettings() {
 		super();
+		setRequiredFields(reqFields);
     
     for (int i = 0, n = titles.length; i < n; i++) {
       setAttribute(titles[i], null); //establishes the order of the keys, and adds all possible attribute titles to getXMLAttributeTitles, even if never set in future
@@ -108,6 +111,7 @@ public abstract class QueryFilterSettings extends BaseNamedConfigurationObject {
 		setAttribute(regexpKey, regexp);
 		setAttribute(defaultValueKey, defaultValue);
 		setAttribute(filterListKey, filterList);
+	    setRequiredFields(reqFields);
   }
   
 	public void setField(String field) {

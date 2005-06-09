@@ -38,6 +38,7 @@ public abstract class BaseNamedConfigurationObject extends BaseConfigurationObje
                                                  hiddenKey,
                                                  displayKey
   };
+  
 
 	/**
 	 * Determines if string is an invalid attribute value.

@@ -46,7 +46,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
   private final String linkoutURLKey = "linkoutURL";
   private final String maxLengthKey = "maxLength";
   private final String defaultKey = "default";
-  
+  private int[] reqFields = {0,5,8,9};// rendered red in AttributeTable
   //private final String hiddenKey = "hidden";
   // helper field so that only setter/constructors will throw ConfigurationExceptions when string values are converted to integers
 
@@ -59,6 +59,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
    */
   public AttributeDescription(AttributeDescription a) {
     super(a);
+	setRequiredFields(reqFields);
   }
 
   /**
@@ -78,6 +79,7 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(linkoutURLKey, null);
 	setAttribute(defaultKey, null);
     //setAttribute(hiddenKey,null);
+	setRequiredFields(reqFields);
   }
 
   /**
@@ -136,6 +138,8 @@ public class AttributeDescription extends BaseNamedConfigurationObject {
     setAttribute(linkoutURLKey, linkoutURL);
     setAttribute(datasetLinkKey, datasetLink);
 	setAttribute(defaultKey, defaultString);
+	
+	setRequiredFields(reqFields);
   }
 
   /**

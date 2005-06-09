@@ -56,6 +56,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
   private final String optParameterKey = "optional_parameters";
   private final String defaultKey = "defaultDataset";
   
+  private int[] reqFields = {0,3,4,5};// rendered red in AttributeTable
+  
   private DSConfigAdaptor adaptor = null;
   private byte[] digest = null;
 
@@ -132,7 +134,8 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setDataset(ds.getDataset());
     setOptionalParameter(ds.getOptionalParameter());
 	setDefaultDataset(ds.getDefaultDataset());
-    
+	setRequiredFields(reqFields);
+	
     byte[] digest = ds.getMessageDigest();
     if (digest != null)
       setMessageDigest(digest);
@@ -189,6 +192,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
     setAttribute(optParameterKey, null);
 	setAttribute(versionKey,null);
 	setAttribute(defaultKey,null);
+	setRequiredFields(reqFields);
   }
 
   /**
@@ -271,6 +275,7 @@ public class DatasetConfig extends BaseNamedConfigurationObject {
 	setAttribute(versionKey, version);
     setAttribute(optParameterKey, optParameters);
 	setAttribute(defaultKey, defaultDataset);
+	setRequiredFields(reqFields);
   }
 
   /**

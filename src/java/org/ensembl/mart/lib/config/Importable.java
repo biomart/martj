@@ -30,7 +30,8 @@ public class Importable extends BaseNamedConfigurationObject {
   private final String nameKey = "name";
   private final String filtersKey = "filters";
   private final String orderByKey = "orderBy";
-  
+  private int[] reqFields = {0,5,8};// rendered red in AttributeTable
+ 
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
 	 * exact copy of an existing Importable.
@@ -48,6 +49,7 @@ public class Importable extends BaseNamedConfigurationObject {
     setAttribute(nameKey, null);
 	setAttribute(filtersKey, null);
     setAttribute(orderByKey, null);
+    setRequiredFields(reqFields);
   }
 
   public Importable(String linkName)  throws ConfigurationException {
@@ -80,6 +82,7 @@ public class Importable extends BaseNamedConfigurationObject {
   	setAttribute(nameKey, moduleName);
 	setAttribute(filtersKey, filters);
     setAttribute(orderByKey, orderBy);
+    setRequiredFields(reqFields);
   }
 
 	/**

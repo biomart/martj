@@ -32,6 +32,7 @@ public abstract class BaseConfigurationObject implements Comparable {
   //Properties Object holds values from XML attributes keyed to AttributeTitle returned by getXMLAttributeTitles.
   protected Properties attributes = new Properties();
   protected List xmlTitles = new ArrayList();
+  protected int[] requiredFields;
   //want to preserve the order of the titles for multiple calls to getXMLAttributeTitles
 
   /**
@@ -93,6 +94,19 @@ public abstract class BaseConfigurationObject implements Comparable {
     xmlTitles.toArray(newTitles);
 
     return newTitles;
+  }
+  
+
+  public void setRequiredFields(int[] reqFields) {
+	requiredFields = reqFields;
+  }
+
+  public int[] getRequiredFields() {
+  	if (requiredFields == null){
+  		int[] newRequiredFields = {0};
+  		return newRequiredFields;
+  	}
+	return requiredFields;
   }
 
   /**

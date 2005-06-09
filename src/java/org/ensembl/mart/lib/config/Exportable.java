@@ -31,14 +31,16 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String attributesKey = "attributes";
   private final String orderByKey = "orderBy";
   private final String defaultKey = "default";
-  
+  private int[] reqFields = {0,5,8};// rendered red in AttributeTable
+ 
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
 	 * exact copy of an existing Importable.
 	 * @param e Importable Object to copy.
 	 */ 
   public Exportable(Exportable e) {
-  	super(e); 
+  	super(e);
+  	setRequiredFields(reqFields); 
   }
   
   public Exportable() {
@@ -50,6 +52,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setAttribute(attributesKey, null);
     setAttribute(orderByKey, null);
 	setAttribute(defaultKey, null);
+	setRequiredFields(reqFields);
   }
   
   public Exportable(String linkName)  throws ConfigurationException {
@@ -83,6 +86,7 @@ public class Exportable extends BaseNamedConfigurationObject {
 	setAttribute(attributesKey, attributes);
     setAttribute(orderByKey, orderBy);
 	setAttribute(defaultKey, d);
+	setRequiredFields(reqFields);
   }
 
 	/**

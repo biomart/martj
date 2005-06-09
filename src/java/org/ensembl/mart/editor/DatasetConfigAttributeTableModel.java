@@ -65,6 +65,7 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 	protected String[] firstColumnData;
 	protected DatasetConfigTreeNode node;
 	protected DatasetConfigTreeNode parent;
+	protected int[] requiredFields;
 
 	public DatasetConfigAttributeTableModel(DatasetConfigTreeNode node, String[] firstColumnData, String objClass) {
 		this.node = node;
@@ -73,6 +74,8 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 		this.objClass = objClass;
 		tableModelListenerList = new Vector();
 		parent = (DatasetConfigTreeNode) node.getParent();
+		
+		requiredFields = obj.getRequiredFields();
 	}
 
 	public void addTableModelListener(TableModelListener l) {
@@ -92,6 +95,10 @@ public class DatasetConfigAttributeTableModel implements TableModel {
 	public int getColumnCount() {
 		//Returns the number of columns in the model.
 		return COLUMN_COUNT;
+	}
+	
+	public int[] getRequiredFields() {
+		return requiredFields;
 	}
 
 	public String getColumnName(int columnIndex) {

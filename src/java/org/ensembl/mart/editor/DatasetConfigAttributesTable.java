@@ -23,12 +23,16 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.dnd.Autoscroll;
+import java.awt.Color;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
+
 
 import org.ensembl.mart.lib.config.DatasetConfig;
 
@@ -57,6 +61,23 @@ public class DatasetConfigAttributesTable extends JTable implements Autoscroll{
         this.frame = frame;
 
      }
+
+	public TableCellRenderer getCellRenderer(int row, int column) {
+		
+		DatasetConfigAttributeTableModel model = (DatasetConfigAttributeTableModel) this.getModel();
+		int[] requiredFields = model.getRequiredFields();
+				
+				
+		for (int i = 0; i < requiredFields.length; i++){
+			if (row == requiredFields[i]){
+				DefaultTableCellRenderer newCellR = new DefaultTableCellRenderer();
+				newCellR.setForeground(Color.red);	
+				return newCellR;
+			}
+		}
+		return getDefaultRenderer(getColumnClass(column));	
+	}
+
 
      // Autoscrolling support
     public void setScrollInsets(Insets insets) {

@@ -34,7 +34,8 @@ public class Option extends QueryFilterSettings {
 
 	private final String refKey = "ref";
 	private final String isSelectableKey = "isSelectable"; 
-
+	private int[] reqFields = {0};// rendered red in AttributeTable
+ 
 	private boolean hasOptions = false;
 
 	private boolean hasBrokenOptions = false;
@@ -62,6 +63,9 @@ public class Option extends QueryFilterSettings {
     PushAction[] pas = o.getPushActions();
     for (int i = 0, n = pas.length; i < n; i++) {
       addPushAction( new PushAction(pas[i] ) );
+    }
+    if (o.getField().equals("")){
+    	setRequiredFields(reqFields);
     }
   }
 
@@ -95,6 +99,7 @@ public class Option extends QueryFilterSettings {
     
     setAttribute(isSelectableKey, null);
     setAttribute(refKey, null);
+		//setRequiredFields(reqFields);
 	}
 
 	public Option(String internalName, String isSelectable) throws ConfigurationException {
@@ -123,8 +128,12 @@ public class Option extends QueryFilterSettings {
 
 		super(internalName, displayName, description, field, value, tableConstraint, key, type, qualifier, legalQualifiers, otherFilters, buttonURL, regexp, defaultValue, filterList);
 
-    setAttribute(isSelectableKey, isSelectable );
+    	setAttribute(isSelectableKey, isSelectable );
 		setAttribute(refKey, ref);
+		if (field.equals("")){
+			setRequiredFields(reqFields);
+		}
+		
 	}
 
 	/**

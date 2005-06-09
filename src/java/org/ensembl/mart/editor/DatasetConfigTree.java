@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.awt.Color;
 
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
@@ -68,6 +69,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
@@ -288,13 +290,18 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 		}
 	}
 
-	private void doOnSelection() {
+	private void doOnSelection() {			
 		if (attrTable != null)
 			if (attrTable.getEditorComponent() != null) {
 				TableCellEditor attrTableEditor = attrTable.getCellEditor();
 				//attrTableEditor.stopCellEditing();// this was making setValueAt be called twice and breaking the duplication testing
 			}
 		lastSelectedNode = (DatasetConfigTreeNode) this.getLastSelectedPathComponent();
+		
+		
+		
+		
+		
 		if (lastSelectedNode == null)
 			return;
 		BaseConfigurationObject nodeObject = (BaseConfigurationObject) lastSelectedNode.getUserObject();
@@ -307,6 +314,13 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 				data,
 				nodeObjectClass);
 		attrTableModel.addTableModelListener(new AttrTableModelListener());
+
+		// TESTING								        
+		//DefaultTableCellRenderer tcr = (DefaultTableCellRenderer) attrTable.getCellRenderer(0,0);        
+		//tcr.setBackground(Color.red);
+		//DefaultTableCellRenderer tcr2 = (DefaultTableCellRenderer) attrTable.getCellRenderer(1,1);        
+		//tcr2.setBackground(Color.white);    
+
 
 		// model.setObject(nodeObject);
 		attrTable.setModel(attrTableModel);
