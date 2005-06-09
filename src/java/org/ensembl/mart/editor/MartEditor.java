@@ -1223,7 +1223,8 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 						  if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 							  continue;
 						  }
-						  if (testAD.getInternalName().matches("\\w+\\.\\w+")){
+						  if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
+						      testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
 							  continue;//placeholder atts can be duplicated	
 						  }
 						  
@@ -1236,16 +1237,22 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 							  attributeDuplicationMap.put(testAD.getInternalName(),dsv.getDataset());   
 							  brokenDatasets.add(dsv.getDataset());							  
 						  }
+						  descriptionsMap.put(testAD.getInternalName(),"1");
+						  
+						  if (dsv.getType().equals("GenomicSequence"))
+						  	continue;//no point in checking fields
+						  
+						  
 						// test has all its fields defined - if not add a message to brokenString
 						if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-									testAD.getKey() == null || testAD.getKey().equals("")				  
-									){
+									(dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))				  
+									){	
 									  brokenFields = brokenFields + "Attribute " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
 																						" and page " + apage.getInternalName() + "\n";	
 						}
-						  descriptionsMap.put(testAD.getInternalName(),"1");
+						  
 					 }
 				   }
 				 }
@@ -1282,6 +1289,11 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								if ((testAD.getHidden() != null) && (testAD.getHidden().equals("true"))){
 									  continue;
 								}
+								if (testAD.getInternalName().matches("\\w+\\.\\w+") ||
+									testAD.getInternalName().matches("\\w+\\.\\w+\\.\\w+")){
+									continue;		
+								}
+								
 								if (testAD.getInternalName().matches("\\w+\\s+\\w+")){
 									 spaceErrors = spaceErrors + "FilterDescription " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + "\n";
 								}	
@@ -1293,18 +1305,25 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 									brokenDatasets.add(dsv.getDataset());							  
 									continue;//to stop options also being assessed
 								}
+								
+								descriptionsMap.put(testAD.getInternalName(),"1");
+								
+								if (dsv.getType().equals("GenomicSequence"))
+								  continue;//no point in checking fields
+								
 								// test has all its fields defined - if not add a message to brokenString
 								// only do for non-filter option filters
 								if ((testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-									testAD.getKey() == null || testAD.getKey().equals("") ||	 
+									//testAD.getKey() == null || testAD.getKey().equals("") ||	
+								    (dsv.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||  
 									testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
 									)){
 									  brokenFields = brokenFields + "Filter " + testAD.getInternalName() + " in dataset " + dsv.getDataset() + 
 																						" and page " + fpage.getInternalName() + "\n";	
 								}	
-								descriptionsMap.put(testAD.getInternalName(),"1");
+								
 					  
 								// do options as well
 								Option[] ops = testAD.getOptions();
@@ -1340,27 +1359,26 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 					} catch (java.beans.PropertyVetoException e) {
 					}
 				}
+				
+				//System.out.println("!!" + dsv.getDataset()+"\nSPACE:"+spaceErrors+"\nBROKEN FIELDS:"+brokenFields+"\nBROKEN STRING"+brokenString);
+				
 			}
 		  }
 		  
-		    if (spaceErrors != ""){
+		    if (spaceErrors != "")
 			 	JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 									  + spaceErrors, "ERROR", 0);
-				return;//no export performed
-		  	}
 			
-			
-			if (brokenFields != ""){
-				  JOptionPane.showMessageDialog(null, "The following do not contain the required fields:\n"
+			if (brokenFields != "")
+				  JOptionPane.showMessageDialog(null, "The following may not contain the required fields:\n"
 											+ brokenFields, "ERROR", 0);
-				  return;//no export performed
-				}
 
-			if (brokenString != ""){
-					JOptionPane.showMessageDialog(this, "The following internal names are broken\n"
+			if (brokenString != "")
+					JOptionPane.showMessageDialog(this, "The following are no longer defined in the database\n"
 											  + brokenString, "ERROR", 0);
-					return;//no export performed
-			}
+
+			if (spaceErrors != "" || brokenFields != "" || brokenString != "")
+				return;//no export performed
 
 
 			if (attributeDuplicationMap.size() > 0){
@@ -1382,13 +1400,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 
 			if (duplicationString != ""){	
 			  int choice = JOptionPane.showConfirmDialog(null, duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);							  
-			
-			
-			//if (filterDuplicationString != "" || duplicationString != ""){
-			  //int choice = JOptionPane.showConfirmDialog(null,"The following filter/option internal names are duplicated and will cause client problems:\n"
-//					  + filterDuplicationString + "The following attribute internal names are duplicated and will cause client problems:\n"
-//	+ duplicationString, "Make Unique?", JOptionPane.YES_NO_OPTION);
-			  
+
 			  // make unique code
 			  if (choice == 0){
 				System.out.println("MAKING UNIQUE");	

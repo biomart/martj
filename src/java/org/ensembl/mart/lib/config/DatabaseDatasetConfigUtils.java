@@ -376,17 +376,22 @@ public class DatabaseDatasetConfigUtils {
 				  if (descriptionsMap.containsKey(testAD.getInternalName())){
 					 attributeDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset()); 
 				  }
+				  descriptionsMap.put(testAD.getInternalName(),"1");
+				  if (dsConfig.getType().equals("GenomicSequence"))
+				  	continue;//no point in checking fields
+				  
 				  // test has all its fields defined - if not add a message to brokenString
 				  if (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 					  testAD.getField() == null || testAD.getField().equals("") ||
 					  testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-					  testAD.getKey() == null || testAD.getKey().equals("")				  
+				      (dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals("")))
+					  //testAD.getKey() == null || testAD.getKey().equals("")				  
 				  	  ){
 						brokenString = brokenString + "Attribute " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
 																		  " and page " + apage.getInternalName() + "\n";	
 				  }
 				  
-				  descriptionsMap.put(testAD.getInternalName(),"1");
+				  
 			  }
 			 }
 		 }
@@ -453,19 +458,25 @@ public class DatabaseDatasetConfigUtils {
 							filterDuplicationMap.put(testAD.getInternalName(),dsConfig.getDataset());
 							continue;//to stop options also being assessed
 						}
+						
+						descriptionsMap.put(testAD.getInternalName(),"1");
+						if (dsConfig.getType().equals("GenomicSequence"))
+					  		continue;//no point in checking fields
+					  		
 						// test has all its fields defined - if not add a message to brokenString
 						//if (testAD.getOptions().length == 0 && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 					    if ((testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									
 							testAD.getField() == null || testAD.getField().equals("") ||
 							testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
-							testAD.getKey() == null || testAD.getKey().equals("") ||	 
+					        (dsConfig.getVisible().equals("1") && (testAD.getKey() == null || testAD.getKey().equals(""))) ||
+							//testAD.getKey() == null || testAD.getKey().equals("") ||	 
 						    testAD.getQualifier() == null || testAD.getQualifier().equals("")				  			  
 							)){
 							  brokenString = brokenString + "Filter " + testAD.getInternalName() + " in dataset " + dsConfig.getDataset() + 
 																				" and page " + fpage.getInternalName() + "\n";	
 						}
-						descriptionsMap.put(testAD.getInternalName(),"1");
+						
 					  
 						// do options as well
 						Option[] ops = testAD.getOptions();
@@ -503,17 +514,21 @@ public class DatabaseDatasetConfigUtils {
 				  brokenString = brokenString + "Importable " + exps[i].getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";	
 			}			  
 		}
+		
+		
 		if (spaceErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names contain spaces:\n"
 									+ spaceErrors, "ERROR", 0);
 		  return;//no export performed
 		}
+
 		if (brokenString != ""){
-			int choice = JOptionPane.showConfirmDialog(null,"The following do not contain the required fields:\n"
+			int choice = JOptionPane.showConfirmDialog(null,"The following may not contain the required fields:\n"
 		  							+ brokenString, "Export Anyway?", JOptionPane.YES_NO_OPTION);
 		  	if (choice != 0)									
 				return;//no export performed
 		}		
+
 		if (linkErrors != ""){
 		  JOptionPane.showMessageDialog(null, "The following internal names are incorrect in links:\n"
 									+ linkErrors, "ERROR", 0);
@@ -2050,7 +2065,7 @@ public class DatabaseDatasetConfigUtils {
       Option[] options = validatedFilter.getOptions();      
      if (options.length > 0 && options[0].getValue() != null){// UPDATE VALUE OPTIONS
       	    // regenerate options and push actions
-     		System.out.println("UPDATING OPTIONS");
+     		//System.out.println("UPDATING OPTIONS");
       		// store the option/push action structure so can recreate      		
    			PushAction[] pas = options[0].getPushActions();
    			String[] pushActions = new String[pas.length];
@@ -2159,6 +2174,14 @@ public class DatabaseDatasetConfigUtils {
 						}
 					  }
 					}
+					System.out.println("FILTER " + validatedFilter.getInternalName());
+					// needs if fd2 = null fix
+					if (fd2 == null){
+						JOptionPane.showMessageDialog(null,"Problem finding a placeholder dataset for " + validatedFilter.getInternalName() +
+							" push actions. Have you set the correct databases in the schema database connection box?");
+						return validatedFilter;
+					}
+					
 					
 					fd2.setType("drop_down_basic_filter");
 					String pushField = fd2.getField();
@@ -3520,7 +3543,7 @@ public class DatabaseDatasetConfigUtils {
         //String cname = column.name;
 		String cname = column.name.toLowerCase();
 		
-		System.out.println("TESTING COL " + cname);
+		//System.out.println("TESTING COL " + cname);
 		
         // ignore the key columns as atts and filters
         if (cname.endsWith("_key"))
@@ -4062,7 +4085,7 @@ public class DatabaseDatasetConfigUtils {
     while (rs.next()) {
       value = rs.getString(1);
       op = new Option();
-      System.out.println(value);
+      //System.out.println(value);
       op.setDisplayName(value);
       op.setInternalName(value);
       op.setValue(value);
