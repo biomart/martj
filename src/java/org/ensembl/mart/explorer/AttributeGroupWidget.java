@@ -83,8 +83,8 @@ public class AttributeGroupWidget extends GroupWidget {
         if (group.getInternalName().equals("sequence")) {
           if (collections[i].getInternalName().equals("seq_scope_type")) {
             SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), query, tree, dsv, manager);
-            container.add( w );
-            widgets.addAll(w.getLeafWidgets());
+            widgets.add( w );
+            container.add( w );            
           } else
               continue;
         } else {
@@ -123,7 +123,7 @@ public class AttributeGroupWidget extends GroupWidget {
             a.setTableConstraint(a.getInternalName());
         }
         
-        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree, collection, page);
+        AttributeDescriptionWidget w = new AttributeDescriptionWidget(query, a, tree);
         pages.add(w);
       }
       else {
