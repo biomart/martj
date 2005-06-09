@@ -1313,7 +1313,7 @@ public class MartEditor extends JFrame implements ClipboardOwner {
 								
 								// test has all its fields defined - if not add a message to brokenString
 								// only do for non-filter option filters
-								if ((testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
+								if ((testAD.getFilterList() == null || testAD.getFilterList().equals("")) && (testAD.getOptions().length == 0 || testAD.getOptions()[0].getField() == null) && (testAD.getInternalName() == null || testAD.getInternalName().equals("") ||
 									testAD.getField() == null || testAD.getField().equals("") ||
 									testAD.getTableConstraint() == null || testAD.getTableConstraint().equals("") ||
 									//testAD.getKey() == null || testAD.getKey().equals("") ||	
