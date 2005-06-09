@@ -2014,6 +2014,9 @@ public class DatabaseDatasetConfigUtils {
       boolean tableValid = false;
 
       String field = validatedFilter.getField();
+	  if(dsource.getDatabaseType().equals("oracle")) field=field.toUpperCase();
+      
+      
       String tableConstraint = validatedFilter.getTableConstraint();
       if (tableConstraint == null)
       	return validatedFilter;
@@ -2026,7 +2029,8 @@ public class DatabaseDatasetConfigUtils {
       //System.out.println("WAITING FOR CONNECTION");
       //Connection conn = dsource.getConnection();
 	  //System.out.println("GOT CONNECTION");
-      ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
+	  
+	  ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
       while (rs.next()) {
         String columnName = rs.getString(4);
         String tableName = rs.getString(3);
@@ -2158,7 +2162,7 @@ public class DatabaseDatasetConfigUtils {
 					  for (int q = 0; q < schemas.length; q++){
 					  	DatabaseDatasetConfigUtils newUtils = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]);
 						//System.out.println("NEW ONE HAS DSOURCE " + newUtils.getAllDatasetNames(null)[0]);
-						System.out.println(schemas[q] + " TEST " + otherFilters[p]);
+						//System.out.println(schemas[q] + " TEST " + otherFilters[p]);
 						otherDataset = MartEditor.getDatabaseDatasetConfigUtilsBySchema(schemas[q]).getDatasetConfigByDatasetInternalName(null,otherFilters[p].split("\\.")[0],"default",schemas[q]);  
 	
 						if (otherDataset == null){
@@ -2175,7 +2179,7 @@ public class DatabaseDatasetConfigUtils {
 						}
 					  }
 					}
-					System.out.println("FILTER " + validatedFilter.getInternalName());
+					//System.out.println("FILTER " + validatedFilter.getInternalName());
 					// needs if fd2 = null fix
 					if (fd2 == null){
 						JOptionPane.showMessageDialog(null,"Problem finding a placeholder dataset for " + validatedFilter.getInternalName() +
@@ -2670,7 +2674,8 @@ public class DatabaseDatasetConfigUtils {
     catalog=null;
     //schema=null;
     //System.out.println("schema "+schema + " catalog: "+catalog+ " table "+ table+ " field "+field);
-    ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
+
+	ResultSet rs = conn.getMetaData().getColumns(catalog, schema, table, field);
     
     
     
@@ -2679,7 +2684,7 @@ public class DatabaseDatasetConfigUtils {
       String columnName = rs.getString(4);
       String tableName = rs.getString(3);
       
-      
+      //System.out.println("ATTS:"+columnName+field+tableName+tableConstraint);
       boolean[] valid = isValidDescription(columnName, field, tableName, tableConstraint);
       fieldValid = valid[0];
       tableValid = valid[1];
@@ -3467,9 +3472,11 @@ public class DatabaseDatasetConfigUtils {
       for (int j = 0, m = table.columnDescriptions.length; j < m; j++) {
         ColumnDescription column = table.columnDescriptions[j];
         String cname = column.name;
-        if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+        //if (cname.endsWith("_key") && (!primaryKeys.contains(cname)))
+		if ((cname.endsWith("_key") || (cname.endsWith("_KEY"))) && (!primaryKeys.contains(cname)))
           primaryKeys.add(cname);
       }
+      
     }
 
     String[] sbases = new String[starbases.size()];
@@ -3581,7 +3588,6 @@ public class DatabaseDatasetConfigUtils {
 					duplicated = 1;		
 				}
 				filtMap.put(cname,"1");	
-				System.out.println("ADD FILTER " + cname);
                 fc.addFilterDescription(getFilterDescription(cname, tableName, ctype, joinKey, dsv, duplicated));
 //System.out.println("Going to null ");
               }
