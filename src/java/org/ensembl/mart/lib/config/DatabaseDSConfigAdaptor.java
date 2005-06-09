@@ -572,10 +572,22 @@ public class DatabaseDSConfigAdaptor extends LeafDSConfigAdaptor implements Mult
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
    */
-  public int getNumDatasetConfigs() {
+  public int getNumDatasetConfigs(boolean visibleOnly) {
     try {
       checkUpdateException();
-      return dsviews.size();
+      int ret = 0;
+      for (Iterator iter = dsviews.iterator(); iter.hasNext();) {
+        DatasetConfig dsv = (DatasetConfig) iter.next();
+
+        if (visibleOnly)
+          if ( (dsv.getVisible() != null) &&  (Integer.valueOf(dsv.getVisible()).intValue() > 0) )
+            ret++;
+          else
+            continue;
+        else
+          ret++;
+      }
+      return ret;
     } catch (ConfigurationException e) {
       if (logger.isLoggable(Level.FINE))
         logger.fine("Recieved Exception during update Thread: " + updateException + "\nReturning 0\n");

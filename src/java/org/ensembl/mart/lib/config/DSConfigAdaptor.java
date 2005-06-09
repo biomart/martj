@@ -51,10 +51,11 @@ public interface DSConfigAdaptor {
   public boolean containsDatasetConfig(DatasetConfig dsv) throws ConfigurationException;
   
   /**
-   * Returns a count of the number of DatasetConfigs held by this adaptor
+   * Returns a count of the number of (optionally visible) 
+   * DatasetConfigs held by this adaptor
    * @return int number of datasetviews held by the adaptor
    */
-  public int getNumDatasetConfigs();
+  public int getNumDatasetConfigs(boolean visibleOnly);
   
   /**
    * Returns a DatasetConfig[] consisting of all DatasetConfig objects provided by a particular

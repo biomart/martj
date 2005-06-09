@@ -300,8 +300,14 @@ public class URLDSConfigAdaptor extends LeafDSConfigAdaptor implements DSConfigA
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
    */
-  public int getNumDatasetConfigs() {
-    return 1;
+  public int getNumDatasetConfigs(boolean visibleOnly) {
+    if (visibleOnly)
+      if ( (dsv.getVisible() != null) &&  (Integer.valueOf(dsv.getVisible()).intValue() > 0) )
+        return 1;
+      else
+        return 0;
+    else
+      return 1;
   }
 
   /* (non-Javadoc)

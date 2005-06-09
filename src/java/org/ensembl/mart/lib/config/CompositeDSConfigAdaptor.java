@@ -439,11 +439,11 @@ public class CompositeDSConfigAdaptor implements MultiDSConfigAdaptor, Comparabl
   /* (non-Javadoc)
    * @see org.ensembl.mart.lib.config.DSConfigAdaptor#getNumDatasetConfigs()
    */
-  public int getNumDatasetConfigs() {
+  public int getNumDatasetConfigs(boolean visibleOnly) {
     int ret = 0;
     for (Iterator iter = adaptors.iterator(); iter.hasNext();) {
       DSConfigAdaptor adaptor = (DSConfigAdaptor) iter.next();
-      ret += adaptor.getNumDatasetConfigs();
+      ret += adaptor.getNumDatasetConfigs(visibleOnly);
     }
     
     return ret;
