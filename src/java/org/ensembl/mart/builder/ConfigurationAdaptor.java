@@ -1,256 +1,247 @@
 /*
- * Created on May 5, 2005
+ * Created on Jun 9, 2005
  *
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
 package org.ensembl.mart.builder;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * @author arek
- * 
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
+ *
+ * TODO To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Style - Code Templates
  */
 public class ConfigurationAdaptor {
-
-public static void main(String[] args) throws IOException {
-		
-		
-		String [] types = {
-				
-				 "DNA_motif",
-				 "RNA_motif",
-				 "aberration_junction",
-				 "enhancer",
-				 "insertion_site",
-				 "mRNA",
-				 "ncRNA",
-				 "point_mutation",
-				 "protein_binding_site",
-				 "pseudogene",
-				 "rRNA",
-				 "region",
-				 "regulatory_region",
-				 "repeat_region",
-				 "rescue_fragment",
-				 "sequence_variant",
-				 "snRNA",
-				 "snoRNA",
-				 "tRNA",
-		};
-		
-		String [] dbs = {
-				"Gadfly",
-		//		 "SO",
-		//		 "GO",
-				 "FlyBase",
-		//		 "InterPro",
-		//		 "PUBMED",	
-		};
-		
-		
-		String [] gos ={
-				
-				"cellular_component",
-				 "molecular_function",
-				 "biological_process",
-				 
-		};
-		
-		/**
-		String [] gos ={
-				
-				"Cellular Component (Gene Ontology)",
-				"Molecular Function (Gene Ontology)",
-				 "Biological Process (Gene Ontology)"
-		};
-		
-		*/
-		
-		
-		
-		
-		String configFile="/Applications/eclipse/workspace/martj-head/data/builder/new.config";
-		
 	
-		/**
-		 * 0  dataset
-		 * 9  transformation
-		 * 11 reference column names
-		 * 12 reference column aliases
-		 * 13 central column names
-		 * 14 central column aliases
-		 * 15 user table name
-		 * 16 central filter
-		 * 
-		 */
-		
-		
-		
-		File f = new File(configFile);
-		f.delete();
+	public DBAdaptor adaptor;
+	public MetaDataResolver resolver;
+	public String targetSchemaName;
+	private static ArrayList mart = new ArrayList();
+	private static Dataset dataset = null;
+	
+	
+	public void readConfiguration(String input_file) {
 
-		BufferedWriter out = null;
-		out = new BufferedWriter(new FileWriter(configFile, true));
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(input_file));
+
+			//String datasetKey=null;
+			String line;
+			String lastDatasetName = null;
+			String lastTrans = null;
+			int lines = 0;
+			int dataset_counter = 0;
+			Transformation transformation = null;
+			String datasetName = null;
+			ArrayList linkedList = new ArrayList();
+
+			while ((line = in.readLine()) != null) {
+
+				if (line.startsWith("#"))
+					continue;
+				String[] fileEntries = line.split("\t");
+
+				// new dataset
+				if (!fileEntries[0].equals(lastDatasetName)) {
+
+					
+					// finish the old dataset
+					if (lines > 0) {
+						transformation.transform();
+						dataset.setUserTableNames();
+						dataset.createTransformationsForCentralFilters();	
+						mart.add(dataset);
+					
+						
+						/**
+						Transformation[] final_transformations = dataset.getTransformations();
+						for (int i=0;i<final_transformations.length;i++){
+						Table dmFinalTable=final_transformations[i].getFinalUnit().getTemp_end();
+							
+						System.out.println(" ADDED dataset "+dmFinalTable.getName());			
+							}
+					*/
+					}
 		
-		//String dataset1 = "yeast";
-		//String dataset2="sc_gene_structure";
-		
-		String dataset1="fly";
-		String dataset2="flstructure";
-		
-		
-		int transformations=0;
-		
-		for (int i=0;i<1;i++){
-		transformations++;
-		
-		String tabledm=dataset1+"__gene__main";
-		
-		String [] first =  {dataset1,"m","feature","imported","cvterm_id","CVTERM","n1","null","name=\'gene\'",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null,null,gene_name,gene_uniquename,null,null",tabledm,"N"};
-		String [] second = {dataset1,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","gene_start,gene_end,null,null,null"};
-		String [] third =  {dataset1,"m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename","chromosome_acc,chromosome"};
-		String [] fourth = {dataset1,"m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null","null"};
-		
-		String [] [] one = {first,second,third,fourth};
-		
-		printConfig(one,tabledm,out);
-		}
-		
-		
-		/**
-		
-		for (int i=0;i<1;i++){
-		transformations++;
-		
-		String tabledm=dataset1+"__chromosomal_feature__main";
-		
-		String [] first =  {dataset1,"m","feature","imported","cvterm_id","CVTERM","n1","null","null",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null,null,feature_name,feature_uniquename,null,null",tabledm,"N"};
-		String [] second = {dataset1,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","feature_start,feature_end,null,null,null"};
-		String [] third =  {dataset1,"m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename","chromosome_acc,chromosome"};
-		String [] fourth = {dataset1,"m","feature","imported","organism_id","ORGANISM","n1","null","null",""+transformations,"organism_id","null","null"};
-		
-		String [] [] one = {first,second,third,fourth};
-		
-		//printConfig(one,tabledm,out);
-		}
-		
-		*/
-		
-		
-		
-		
-		
-		for (int i=0;i<types.length;i++){
-		
-			transformations++;
-			String tabledm = dataset1+"__"+types[i]+"__dm";
-			
-			String [] fifth =   {dataset1,"d","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+types[i]+"\'",""+transformations,"type_id","name","type","feature_id,name,uniquename,seqlen","null",tabledm,"Y"};
-			String [] sixth =   {dataset1,"d","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"subject_id","object_id","null"};
-			String [] seventh=  {dataset1,"d","feature","exported","object_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id","null"};
-			
-			String [] [] two ={fifth,sixth,seventh};			
-		   
-			printConfig(two,tabledm,out);
-		}
-		
-		
-		
-		for (int i=0;i<dbs.length;i++){
-			
-				transformations++;
-				String tabledm = dataset1+"__"+dbs[i]+"__dm";
+					// new dataset
+					dataset = new Dataset();
+					datasetName = fileEntries[0];
+					dataset.name = datasetName;
+					dataset.adaptor = adaptor;
+					dataset.targetSchemaName = targetSchemaName;
+					dataset.datasetKey = resolver.getPrimaryKeys(fileEntries[2]);
+					
+					//System.out.println("dataset "+dataset.name+" dateaset key "+dataset.datasetKey);
+				}
 				
-				String [] fifth =  {dataset1,"d","dbxref","exported","db_id","DB",	"11","null",	"name=\'"+dbs[i]+"\'",""+transformations,"db_id",	"null","null","null","null",	tabledm,"Y"};
-				String [] sixth =  {dataset1,"d","dbxref","exported",	"dbxref_id",	"FEATURE_DBXREF","11","null","null",""+transformations,	"dbxref_id",	"null","null"};
-				String [] seventh= {dataset1,"d","dbxref","exported",	"feature_id","FEATURE_RELATIONSHIP","11","null","null",	""+transformations,	"subject_id","null","null"};
-				String [] eight=   {dataset1,"d","dbxref","exported",	"object_id",	"FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id","null"};
+				// new transformation
+				if (!fileEntries[9].equals(lastTrans)) {
+					
+					
+					if (lines > 0 && fileEntries[0].equals(lastDatasetName)) transformation.transform();
 				
-				String [] [] two ={fifth,sixth,seventh,eight};			
-			 
-				printConfig(two,tabledm,out);
-			
+					transformation = new Transformation();
+					transformation.adaptor = adaptor;
+					transformation.datasetName = datasetName;
+					transformation.targetSchemaName = targetSchemaName;
+					transformation.number = fileEntries[9];
+					transformation.finalTableName = fileEntries[15];
+					transformation.userTableName = fileEntries[15];
+					if (fileEntries[16].toUpperCase().equals("Y")) transformation.central = true;
+
+					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
+					
+					StringBuffer final_table = new StringBuffer(datasetName
+							+ "__" + fileEntries[2] + "__");
+					if (fileEntries[1].toUpperCase().equals("M")) {
+
+						transformation.finalTableType = "MAIN";
+						transformation.finalTableName = final_table.append("main").toString();
+					} else {
+						transformation.finalTableType = "DM";
+						transformation.finalTableName = final_table.append("dm").toString();
+					}
+
+					String [] centralColumnNames = { "%" };
+					String [] centralColumnAliases=null;
+					
+					if (!fileEntries[13].equals("null")) centralColumnNames = fileEntries[13].split(",");
+					if (!fileEntries[14].equals("null")) centralColumnAliases = fileEntries[14].split(",");
+					
+					
+					transformation.startTable = resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
+					transformation.type = "linked";
+					transformation.column_operations = "addall";
+
+					dataset.addTransformation(transformation);
+
+				}
+
+				String [] columnNames = { "%" };
+				String [] columnAliases=null;
+				
+				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
+				if (!fileEntries[12].equals("null")) columnAliases = fileEntries[12].split(",");
+				
+				// switched off fileEntries[5].toLowerCase for oracle
+				Table ref_table = resolver.getTable(fileEntries[5], columnNames, columnAliases);
+
+				ref_table.status = fileEntries[3];
+				ref_table.cardinality = fileEntries[6];
+				if (!fileEntries[8].equals("null"))
+					ref_table.extension = fileEntries[8];
+				if (!fileEntries[7].equals("null"))
+					ref_table.central_extension = fileEntries[7];
+
+				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
+
+				dunit.cardinality = fileEntries[6];
+				dunit.column_operations = "addall";
+				dunit.adaptor = adaptor;
+				dunit.targetSchema = targetSchemaName;
+
+				if (fileEntries[3].equals("exported"))
+					dunit.TSKey = fileEntries[4];
+				else
+					dunit.TSKey = fileEntries[10];
+				if (fileEntries[3].equals("exported"))
+					dunit.RFKey = fileEntries[10];
+				else
+					dunit.RFKey = fileEntries[4];
+
+				transformation.addUnit(dunit);
+
+				lastTrans = fileEntries[9];
+				lastDatasetName = datasetName;
+				lines++;
 			}
-		
-		
 
-		
-		for (int i=0;i<gos.length;i++){
+			in.close();
+			transformation.transform();
 			
-				transformations++;
-				String tb1 = dataset1+"__"+gos[i]+"__dm";
+			dataset.setUserTableNames();
+			dataset.createTransformationsForCentralFilters();	
 			
-				String tb2 = tb1.replace(' ','_');
-				String tb3 = tb2.replace('(','1');
-				String tabledm = tb3.replace(')','1');
-				
-				String [] fifth =   {dataset1,"d","cvterm","imported","cv_id","CV","n1","null",	"name=\'"+gos[i]+"\'",""+transformations,"cv_id",	"cv_id","null","name,dbxref_id,cvterm_id","null",	tabledm,"Y"};
-				String [] sixth =   {dataset1,"d","cvterm","imported","dbxref_id",	"DBXREF","11","null",	"null",""+transformations,"dbxref_id",	"accession","null"};
-				String [] seventh=  {dataset1,"d","cvterm","exported","cvterm_id","FEATURE_CVTERM","11","null","null",""+transformations,"cvterm_id",	"cvterm_id,feature_id","null"};
-				String [] eight=    {dataset1,"d","cvterm","imported","feature_id","FEATURE","11","null","null",	""+transformations,"feature_id","feature_id","null"};
-				
-				String [] [] two ={fifth,sixth,seventh,eight};			
-				
-				printConfig(two,tabledm,out);
-			
-			}	
-		
-		
-		
-		
-		for (int i=0;i<1;i++){
-			transformations++;
-			
-			String tabledm=dataset2+"__gene_structure__main";
-			
-             String type="mRNA";
-             
-			String [] first =   {dataset2,"m","feature","imported","cvterm_id","CVTERM","n1","null","name=\'"+type+"\'",""+transformations,"type_id","null","null","feature_id,organism_id,name,uniquename,seqlen,type_id","null,null,transcript_name,transcript_uniquename,null,null",tabledm,"N"};
-			String [] second =  {dataset2,"m","feature","exported","feature_id","FEATURE_RELATIONSHIP","11",	"null",	"null",""+transformations,"object_id","subject_id","null"};
-			String [] third =   {dataset2,"m","feature","exported","subject_id","FEATURE","11","null","null",	""+transformations,"feature_id",	"feature_id,uniquename,type_id","null,exon_name,exon_type_id"};
-			String [] fourth =  {dataset2,"m","feature","exported","feature_id","FEATURELOC","11","null",	"null",""+transformations,"feature_id","fmin,fmax,strand,srcfeature_id,rank","exon_start,exon_end,null,null,null"};
-			String [] fifth =   {dataset2,"m","feature","exported","srcfeature_id","FEATURE","11","null",	"null",""+transformations,"feature_id","name,uniquename","chromosome_acc,chromosome"};
-			String [] sixth =   {dataset2,"m","feature","imported","cvterm_id","CVTERM","n1","null","null",""+transformations,"exon_type_id","name","exon_coding_type"};
-			
-			String [] [] one = {first,second,third,fourth,fifth,sixth};
-			
-			printConfig(one,tabledm,out);
-			
-			}
-		
+			mart.add(dataset);
 
-		out.close();
-		System.out.println("WRITTEN TO: "+f);
-}
-
-
-
-
-private static void printConfig(String [][] lines,String table, BufferedWriter out) throws IOException{
-	
-	
-	out.write("#"+"\n");
-	out.write("#        TABLE: "+ table.toUpperCase()+"\n");
-	out.write("#"+"\n");
-	
-	
-	for (int i = 0; i < lines.length; i++) {
-		for (int j = 0; j < lines[i].length; j++) {
-			out.write(lines[i][j].toLowerCase().concat("\t"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		out.write("\n");
+	
+		
 	}
-}
 
-
-
-}
-		
 	
+	public void writeDDL(
+			String sqlFile) throws IOException {
+
+		BufferedWriter sqlout = null;
+		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
+		
+		//f.delete();
+
+		int indexNo = 0;
+		for (int m = 0; m < mart.size(); m++) {
+			dataset = (Dataset) mart.get(m);	
+		    indexNo++;
+			Transformation[] final_transformations = dataset.getTransformations();		
+		
+		// Dump to SQL
+		for (int i = 0; i < final_transformations.length; i++) {
+
+			indexNo = 10 + indexNo;
+
+			TransformationUnit[] units = final_transformations[i].getUnits();
+
+			sqlout.write("\n--\n--       TRANSFORMATION NO "
+					+ final_transformations[i].number + "      TARGET TABLE: "
+					+ final_transformations[i].userTableName.toUpperCase()
+					+ "\n--\n");
+
+			for (int j = 0; j < units.length; j++) {
+
+				// don't want indexes before 'select distinct'
+				if (!units[j].single & j > 0)
+					sqlout.write(units[j].addIndex(indexNo + j) + "\n");
+				sqlout.write(units[j].toSQL() + "\n");
+			}
+			for (int j = 0; j < units.length; j++) {
+				sqlout.write(units[j].dropTempTable() + "\n");
+			}
+		}
+
+		// now renaming to _key and final indexes
+		for (int i = 0; i < final_transformations.length; i++) {
+
+			indexNo = 10 + indexNo;
+
+			TransformationUnit[] units = final_transformations[i].getUnits();
+
+			for (int j = 0; j < units.length; j++) {
+				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
+
+					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
+					sqlout.write(units[j].addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
+
+				}
+			}
+		}
+
+	}
+		sqlout.close();
+	}
+
+	
+
+}

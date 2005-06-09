@@ -13,17 +13,15 @@ package org.ensembl.mart.builder;
  */
 
 import java.io.*;
-import java.util.*;
+//import java.util.*;
 
 public class MartBuilder {
 
-	private static String config = "data/builder/connection.properties";
-	private static ArrayList mart = new ArrayList();
-	private static Dataset dataset = null;
 	private static final String data_dir = "data/builder/";
-	private static String targetSchemaName;
+	private static String config = data_dir+"connection.properties";
+	
 	private static MetaDataResolver resolver;
-	private static DBAdaptor adaptor;
+	//private static DBAdaptor adaptor;
 
 	
 	
@@ -50,14 +48,14 @@ public class MartBuilder {
 		}
 
 		resolver = Resolver;
-		adaptor = Adaptor;
+		//adaptor = Adaptor;
 
 	
 
 		while (tSchemaName == null || tSchemaName.equals("")) {
 			tSchemaName = getUserInput("TARGET SCHEMA: ");
 		}
-		targetSchemaName = tSchemaName;
+		//targetSchemaName = tSchemaName;
 
 		while (!(config_info.toUpperCase().equals("C") || config_info
 				.toUpperCase().equals("R"))) {
@@ -87,82 +85,22 @@ public class MartBuilder {
 		sFile.delete();
 		
 		System.out.println();
-		readConfiguration(file);
 		
-		writeDDL(ddlFile);
+		ConfigurationAdaptor configAdaptor = new ConfigurationAdaptor();
+		configAdaptor.adaptor=Adaptor;
+		configAdaptor.resolver=Resolver;
+		configAdaptor.targetSchemaName=tSchemaName;
+		
+		
+		configAdaptor.readConfiguration(file);
+		configAdaptor.writeDDL(ddlFile);
+		
 		System.out.println ("\nWritten DDLs to: "+ddlFile);
 	}
 
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	private static void writeDDL(
-			String sqlFile) throws IOException {
-
-		BufferedWriter sqlout = null;
-		sqlout = new BufferedWriter(new FileWriter(sqlFile, true));
 		
-		//f.delete();
-
-		int indexNo = 0;
-		for (int m = 0; m < mart.size(); m++) {
-			dataset = (Dataset) mart.get(m);	
-		    indexNo++;
-			Transformation[] final_transformations = dataset.getTransformations();		
-		
-		// Dump to SQL
-		for (int i = 0; i < final_transformations.length; i++) {
-
-			indexNo = 10 + indexNo;
-
-			TransformationUnit[] units = final_transformations[i].getUnits();
-
-			sqlout.write("\n--\n--       TRANSFORMATION NO "
-					+ final_transformations[i].number + "      TARGET TABLE: "
-					+ final_transformations[i].userTableName.toUpperCase()
-					+ "\n--\n");
-
-			for (int j = 0; j < units.length; j++) {
-
-				// don't want indexes before 'select distinct'
-				if (!units[j].single & j > 0)
-					sqlout.write(units[j].addIndex(indexNo + j) + "\n");
-				sqlout.write(units[j].toSQL() + "\n");
-			}
-			for (int j = 0; j < units.length; j++) {
-				sqlout.write(units[j].dropTempTable() + "\n");
-			}
-		}
-
-		// now renaming to _key and final indexes
-		for (int i = 0; i < final_transformations.length; i++) {
-
-			indexNo = 10 + indexNo;
-
-			TransformationUnit[] units = final_transformations[i].getUnits();
-
-			for (int j = 0; j < units.length; j++) {
-				if (!(units[j].tempEnd.getName().matches(".*TEMP.*"))) {
-
-					sqlout.write(units[j].renameKeyColumn(dataset.datasetKey)+ "\n");
-					sqlout.write(units[j].addFinalIndex(indexNo + j,dataset.datasetKey + "_key")+ "\n");
-
-				}
-			}
-		}
-
-	}
-		sqlout.close();
-	}
-
+	
 	private static void createConfiguration(String user_dataset,
 			String output_file) {
 
@@ -188,159 +126,14 @@ public class MartBuilder {
 		}
 	}
 
-	private static void readConfiguration(String input_file) {
-
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(input_file));
-
-			//String datasetKey=null;
-			String line;
-			String lastDatasetName = null;
-			String lastTrans = null;
-			int lines = 0;
-			int dataset_counter = 0;
-			Transformation transformation = null;
-			String datasetName = null;
-			ArrayList linkedList = new ArrayList();
-
-			while ((line = in.readLine()) != null) {
-
-				if (line.startsWith("#"))
-					continue;
-				String[] fileEntries = line.split("\t");
-
-				// new dataset
-				if (!fileEntries[0].equals(lastDatasetName)) {
-
-					
-					// finish the old dataset
-					if (lines > 0) {
-						transformation.transform();
-						dataset.setUserTableNames();
-						dataset.createTransformationsForCentralFilters();	
-						mart.add(dataset);
-					
-						
-						/**
-						Transformation[] final_transformations = dataset.getTransformations();
-						for (int i=0;i<final_transformations.length;i++){
-						Table dmFinalTable=final_transformations[i].getFinalUnit().getTemp_end();
-							
-						System.out.println(" ADDED dataset "+dmFinalTable.getName());			
-							}
-					*/
-					}
-		
-					// new dataset
-					dataset = new Dataset();
-					datasetName = fileEntries[0];
-					dataset.name = datasetName;
-					dataset.adaptor = adaptor;
-					dataset.targetSchemaName = targetSchemaName;
-					dataset.datasetKey = resolver.getPrimaryKeys(fileEntries[2]);
-					
-					//System.out.println("dataset "+dataset.name+" dateaset key "+dataset.datasetKey);
-				}
-				
-				// new transformation
-				if (!fileEntries[9].equals(lastTrans)) {
-					
-					
-					if (lines > 0 && fileEntries[0].equals(lastDatasetName)) transformation.transform();
-				
-					transformation = new Transformation();
-					transformation.adaptor = adaptor;
-					transformation.datasetName = datasetName;
-					transformation.targetSchemaName = targetSchemaName;
-					transformation.number = fileEntries[9];
-					transformation.finalTableName = fileEntries[15];
-					transformation.userTableName = fileEntries[15];
-					if (fileEntries[16].toUpperCase().equals("Y")) transformation.central = true;
-
-					System.out.println ("transforming ... "+transformation.number+" user table "+transformation.userTableName);
-					
-					StringBuffer final_table = new StringBuffer(datasetName
-							+ "__" + fileEntries[2] + "__");
-					if (fileEntries[1].toUpperCase().equals("M")) {
-
-						transformation.finalTableType = "MAIN";
-						transformation.finalTableName = final_table.append("main").toString();
-					} else {
-						transformation.finalTableType = "DM";
-						transformation.finalTableName = final_table.append("dm").toString();
-					}
-
-					String [] centralColumnNames = { "%" };
-					String [] centralColumnAliases=null;
-					
-					if (!fileEntries[13].equals("null")) centralColumnNames = fileEntries[13].split(",");
-					if (!fileEntries[14].equals("null")) centralColumnAliases = fileEntries[14].split(",");
-					
-					
-					transformation.startTable = resolver.getCentralTable(fileEntries[2],centralColumnNames,centralColumnAliases);
-					transformation.type = "linked";
-					transformation.column_operations = "addall";
-
-					dataset.addTransformation(transformation);
-
-				}
-
-				String [] columnNames = { "%" };
-				String [] columnAliases=null;
-				
-				if (!fileEntries[11].equals("null")) columnNames = fileEntries[11].split(",");
-				if (!fileEntries[12].equals("null")) columnAliases = fileEntries[12].split(",");
-				
-				// switched off fileEntries[5].toLowerCase for oracle
-				Table ref_table = resolver.getTable(fileEntries[5], columnNames, columnAliases);
-
-				ref_table.status = fileEntries[3];
-				ref_table.cardinality = fileEntries[6];
-				if (!fileEntries[8].equals("null"))
-					ref_table.extension = fileEntries[8];
-				if (!fileEntries[7].equals("null"))
-					ref_table.central_extension = fileEntries[7];
-
-				TransformationUnit dunit = new TransformationUnitDouble(ref_table);
-
-				dunit.cardinality = fileEntries[6];
-				dunit.column_operations = "addall";
-				dunit.adaptor = adaptor;
-				dunit.targetSchema = targetSchemaName;
-
-				if (fileEntries[3].equals("exported"))
-					dunit.TSKey = fileEntries[4];
-				else
-					dunit.TSKey = fileEntries[10];
-				if (fileEntries[3].equals("exported"))
-					dunit.RFKey = fileEntries[10];
-				else
-					dunit.RFKey = fileEntries[4];
-
-				transformation.addUnit(dunit);
-
-				lastTrans = fileEntries[9];
-				lastDatasetName = datasetName;
-				lines++;
-			}
-
-			in.close();
-			transformation.transform();
-			
-			dataset.setUserTableNames();
-			dataset.createTransformationsForCentralFilters();	
-			
-			mart.add(dataset);
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	
-		
-	}
-
+	
+	
+	
+	
+	
+	
+	
 	private static void writeConfigFile(String output_file, String dataset,
 			String table_name, String table_type, String extension,
 			int transformationCount) {
