@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Compiles a Query object into SQL.
@@ -241,8 +242,16 @@ public class QueryCompiler {
       // do not append for aliases, postgres does not like mixing schema and aliases
       // safe in oracle and mysql
       if (! a.getTableConstraint().equals("main")) buf.append(ds.getSchema()).append(".");
-      buf.append(a.getTableConstraint()).append(".").append(a.getField());
+      
+      if ( query.getDataSource().getDatabaseType().equals("sqlserver") &&
+      	   java.util.regex.Pattern.matches("[0-9]", a.getField().substring(0,1)) ) {
+      	buf.append(a.getTableConstraint()).append(".").append(
+      		"[").append(a.getField()).append("]");   	
+      
+      }	else
+      	buf.append(a.getTableConstraint()).append(".").append(a.getField());
 
+	
       if (i + 1 < nAttributes)
         buf.append(", ");
     }
@@ -370,9 +379,14 @@ public class QueryCompiler {
         
         // postgres does not like mixing schemas and aliases
         if (! f.getTableConstraint().equals("main")) buf.append(ds.getSchema()).append(".");
-        buf.append(f.getTableConstraint()).append(".").append(f.getField()).append(" ").append(
-          f.getRightHandClause()).append(
-          " ");
+        
+		if ( query.getDataSource().getDatabaseType().equals("sqlserver") &&
+			 java.util.regex.Pattern.matches("[0-9]", f.getField().substring(0,1)) ) {
+				buf.append(f.getTableConstraint()).append(".").append("[").append(f.getField()).append("]").append(" ").append(
+				f.getRightHandClause()).append(" "); 	
+		} else
+        	buf.append(f.getTableConstraint()).append(".").append(f.getField()).append(" ").append(
+          	f.getRightHandClause()).append(" ");
         
         //System.out.println("RIGHT HAND CLAUSE "+f.getRightHandClause());
         
@@ -413,7 +427,12 @@ public class QueryCompiler {
       lowestLevelKey = a.getField();
       qualifiedLowestLevelKey = a.getTableConstraint()+"."+lowestLevelKey;
       
-      buf.append(a.getTableConstraint()).append(".").append(a.getField());
+	  if ( query.getDataSource().getDatabaseType().equals("sqlserver") &&
+		   java.util.regex.Pattern.matches("[0-9]", a.getField().substring(0,1)) ) {
+			buf.append(a.getTableConstraint()).append(".").append("[").append(a.getField()).append("]");
+	
+	  } else
+      	buf.append(a.getTableConstraint()).append(".").append(a.getField());
 
       if (i + 1 < nAttributes)
         buf.append(", ");
