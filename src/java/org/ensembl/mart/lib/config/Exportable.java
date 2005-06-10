@@ -31,7 +31,7 @@ public class Exportable extends BaseNamedConfigurationObject {
   private final String attributesKey = "attributes";
   private final String orderByKey = "orderBy";
   private final String defaultKey = "default";
-  private int[] reqFields = {0,5,8};// rendered red in AttributeTable
+  private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
  
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a

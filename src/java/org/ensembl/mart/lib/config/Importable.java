@@ -30,7 +30,7 @@ public class Importable extends BaseNamedConfigurationObject {
   private final String nameKey = "name";
   private final String filtersKey = "filters";
   private final String orderByKey = "orderBy";
-  private int[] reqFields = {0,5,8};// rendered red in AttributeTable
+  private int[] reqFields = {0,5,7,8};// rendered red in AttributeTable
  
 	/**
 	 * Copy Constructor. Constructs a new Importable that is a
