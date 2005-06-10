@@ -111,10 +111,19 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 	 * @param url -- url refering, or to refer to this MartRegistry object
 	 * @throws ConfigurationException for all underlying Exceptions
 	 */
-	public RegistryDSConfigAdaptor(MartRegistry martreg, URL url) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(MartRegistry martreg, URL url, 
+                             boolean ignoreCache,
+                             boolean loadFully,
+                             boolean includeHiddenMembers) throws ConfigurationException {
 		super();
 		this.martreg = martreg;
-
+        this.ignoreCache = ignoreCache;
+        this.includeHiddenMembers = includeHiddenMembers;
+        this.loadFully = loadFully;
+        
+        if (loadFully)
+            this.ignoreCache = true;
+        
 		if (url != null) {
 			this.url = url;
 			adaptorName = url.toString();
@@ -123,8 +132,18 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 		loadAdaptorsFromRegistry();
 	}
 
-	public RegistryDSConfigAdaptor(MartRegistry martreg, DetailedDataSource dsource) throws ConfigurationException {
+	public RegistryDSConfigAdaptor(MartRegistry martreg, DetailedDataSource dsource,
+            boolean ignoreCache,
+            boolean loadFully,
+            boolean includeHiddenMembers) throws ConfigurationException {
 		this.martreg = martreg;
+        this.includeHiddenMembers = includeHiddenMembers;
+        this.ignoreCache = ignoreCache;
+        this.loadFully = loadFully;
+        
+        if (loadFully)
+            this.ignoreCache = true;
+        
 		if (dsource != null) {
 			this.dsource = dsource;
 			adaptorName = dsource.getName();
@@ -303,7 +322,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 								e);
 						}
 
-						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url);
+						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, url, ignoreCache, loadFully, includeHiddenMembers);
 						adaptor.setName(location.getName());
 						add(adaptor);
 						martRegs.add(subreg);
@@ -313,7 +332,7 @@ public class RegistryDSConfigAdaptor extends CompositeDSConfigAdaptor {
 						MartRegistry subreg =
 							MartRegistryXMLUtils.DataSourceToMartRegistry(((RegistryDBLocation) location).getDetailedDataSource());
 
-						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, dsource);
+						RegistryDSConfigAdaptor adaptor = new RegistryDSConfigAdaptor(subreg, dsource, ignoreCache, loadFully, includeHiddenMembers);
 						adaptor.setName(location.getName());
 						add(adaptor);
 						martRegs.add(subreg);
