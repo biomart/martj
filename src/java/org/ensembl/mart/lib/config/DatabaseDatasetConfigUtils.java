@@ -512,7 +512,7 @@ public class DatabaseDatasetConfigUtils {
 				imps[i].getName() == null || imps[i].getName().equals("") ||
 				imps[i].getFilters() == null || imps[i].getFilters().equals("")				  
 				){
-				  brokenString = brokenString + "Importable " + exps[i].getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";	
+				  brokenString = brokenString + "Importable " + imps[i].getInternalName() + " in dataset " + dsConfig.getDataset() + "\n";	
 			}			  
 		}
 		
