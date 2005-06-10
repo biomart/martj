@@ -224,14 +224,20 @@ public class DatasetConfigTree extends JTree implements Autoscroll { //, Clipboa
 					copy();
 				else if (e.getActionCommand().equals("paste"))
 					paste();
-				else if (e.getActionCommand().equals("insert importable"))
-					insert(new Importable("new"), "Importable:");
+				else if (e.getActionCommand().equals("insert importable")){	
+					Importable ad = new Importable();
+					ad.setAttribute("internalName", "new");
+					insert(ad, "Importable:");
+				}
 				else if (e.getActionCommand().equals("edit main table(s)"))
 					editMains();
 				else if (e.getActionCommand().equals("edit primary key(s)"))
 					editKeys();								
-				else if (e.getActionCommand().equals("insert exportable"))
-					insert(new Exportable("new"), "Exportable:");
+				else if (e.getActionCommand().equals("insert exportable")){
+					Exportable ad = new Exportable();
+					ad.setAttribute("internalName", "new");
+					insert(ad, "Exportable:");
+				}
 				else if (e.getActionCommand().equals("insert filter page"))
 					insert(new FilterPage("new"), "FilterPage:");
 				else if (e.getActionCommand().equals("insert attribute page"))
