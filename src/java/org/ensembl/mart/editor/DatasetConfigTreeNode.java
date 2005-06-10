@@ -42,7 +42,6 @@ import org.ensembl.mart.lib.config.Importable;
 import org.ensembl.mart.lib.config.Option;
 import org.ensembl.mart.lib.config.PushAction;
 
-import com.sun.rsasign.o;
 //import org.ensembl.mart.lib.config.SeqModule;
  
 
