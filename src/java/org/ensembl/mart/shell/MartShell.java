@@ -1200,6 +1200,10 @@ public class MartShell {
         if (thisLine != null)
           martDatabaseType = thisLine;
 
+    
+//      switched off interactive driver
+        
+        /**
         Readline.clearHistory();
         if (lastDBSettings[DRIVERITER] != null)
           Readline.addToHistory(lastDBSettings[DRIVERITER]);
@@ -1212,7 +1216,10 @@ public class MartShell {
             false);
         if (thisLine != null)
           martDriver = thisLine;
-
+*/
+    
+        
+        
         Readline.clearHistory();
         if (lastDBSettings[PORTITER] != null)
           Readline.addToHistory(lastDBSettings[PORTITER]);
@@ -1284,6 +1291,12 @@ public class MartShell {
       }
     }
 
+    
+    
+    
+    
+    
+    
     if (martDatabaseType == null)
       martDatabaseType = DetailedDataSource.DEFAULTDATABASETYPE;
 
@@ -1296,6 +1309,10 @@ public class MartShell {
     if (sourceKey == null)
       sourceKey = DetailedDataSource.defaultName(martHost, martPort, martDatabase, martSchema,martUser);
 
+    
+    //  switched off interactive driver
+    martDriver=DetailedDataSource.getJDBCDriverClassNameFor(martDatabaseType);
+    
     setLastDatabaseSettings(
       martDatabaseType,
       martHost,
