@@ -110,6 +110,8 @@ public class SequenceGroupWidget
 
   private JRadioButton gene = new JRadioButton("Genes");
   
+  private JRadioButton snp = new JRadioButton("SNPs");
+  
   private JRadioButton none = new JRadioButton();
 
   private final String[] gene_disables = new String[] {"transcript_exon_intron",
@@ -119,20 +121,22 @@ public class SequenceGroupWidget
                                                        "5utr",
                                                        "cdna", 
                                                        "coding", 
-                                                       "peptide"                                                      
+                                                       "peptide"
                                                        };
   
   private JRadioButton includeNone = new JRadioButton();
 
   private JRadioButton[] typeButtons = { transcript, gene,  none };
+  
+  private JRadioButton[] snpButtons = { snp, none };
 
   private JRadioButton[] includeButtons;
   
   private JRadioButton[] tranButtons;
 
-  private JComponent[] geneColumn;
+  private JComponent[] rightColumn;
 
-  private JComponent[] transcriptColumn;
+  private JComponent[] leftColumn;
 
   private JRadioButton[] geneButtons;
   
@@ -148,6 +152,10 @@ public class SequenceGroupWidget
   
   private JRadioButton lastButton = null;
   
+  private String iname = null;
+  
+  private boolean containsImage = false;
+  
   /**
   * @param name
   * @param query
@@ -156,6 +164,7 @@ public class SequenceGroupWidget
   */
   public SequenceGroupWidget(
     String name,
+    String iname,
     Query query,
     QueryTreeView tree,
     DatasetConfig dsv,
@@ -165,6 +174,7 @@ public class SequenceGroupWidget
     
     this.dsv = dsv;
     this.manager = manager;
+    this.iname = iname;
     
     if (tree != null)
       tree.addTreeSelectionListener(this);
@@ -174,7 +184,93 @@ public class SequenceGroupWidget
   }
 
   private void buildGUI() {
+    if (iname.matches("snp\\w*"))
+      buildGUISnp();
+    else
+      buildGUIEnsembl();
+  }
+  
+  private void buildGUISnp() {
+    snp.setToolTipText(
+    "SNP sequence");
 
+  Box b = Box.createVerticalBox();
+
+  b.add(addAll(Box.createHorizontalBox(), new JComponent[]{snp,clearButton}, true));
+  
+  containsImage = false;
+
+  Box columns = Box.createHorizontalBox();
+  
+  //need to get all sequence types from the Registry, and make JRadioButtons for them    
+  AttributePage seqPage = dsv.getAttributePageByInternalName("sequences");
+  AttributeGroup seqGroup = (AttributeGroup) seqPage.getAttributeGroupByName("sequence");
+  AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("snp_seq_scope");
+  List seq_atts = seqCol.getAttributeDescriptions();
+  includeButtons = new JRadioButton[seq_atts.size()];
+  leftColumn = new JComponent[seq_atts.size()];
+  seqTypes = new String[seq_atts.size()];
+  
+  for (int i = 0, n = seq_atts.size(); i < n; i++) {
+      AttributeDescription pointer = (AttributeDescription) seq_atts.get(i);
+      AttributeDescription realAtt =  manager.getPointerAttribute(pointer.getInternalName());
+      
+      JRadioButton button = new JRadioButton(realAtt.getDisplayName());
+      button.addActionListener(this);
+      
+      //all buttons go in includeButtons, and their root type descriptions map with them
+      includeButtons[i] = button;
+      leftColumn[i] = button;
+      seqTypes[i] = pointer.getInternalName();
+  }
+    
+  columns.add(addAll(Box.createVerticalBox(), leftColumn, true));
+  columns.add(Box.createHorizontalGlue());
+  b.add(columns);
+
+  b.add(
+    addAll(
+      Box.createHorizontalBox(),
+      new Component[] {
+        new JLabel("5' Flank (bp)"),
+        flank5,
+        Box.createHorizontalStrut(50),
+        new JLabel("3' Flank (bp)"),
+        flank3 },
+      false));
+
+  add(b);
+
+  none.setSelected(true);
+  ButtonGroup bg = new ButtonGroup();
+  for (int i = 0; i < snpButtons.length; i++) {
+    bg.add(snpButtons[i]);
+    snpButtons[i].addActionListener(this);
+  }
+
+  clearButton.addActionListener(this);
+  clearButton.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+      none.doClick();
+    }
+  });
+
+  bg = new ButtonGroup();
+  for (int i = 0; i < includeButtons.length; i++) {
+    bg.add(includeButtons[i]);
+    includeButtons[i].addActionListener(this);
+  }
+  bg.add(includeNone);
+
+  flank3.addActionListener(this);
+  flank5.addActionListener(this);
+  
+  //default state
+  setDefaultStateSNP();    
+  }
+  
+  private void buildGUIEnsembl() {
+    containsImage = true;
     gene.setToolTipText(
       " Transcript information ignored (one output per gene)");
 
@@ -222,16 +318,16 @@ public class SequenceGroupWidget
     
     geneButtons = new JRadioButton[gene_atts.size()];    
     gene_atts.toArray(geneButtons);
-    geneColumn = new JComponent[gene_atts.size()];
-    gene_atts.toArray(geneColumn);
+    rightColumn = new JComponent[gene_atts.size()];
+    gene_atts.toArray(rightColumn);
     
     tranButtons = new JRadioButton[tran_atts.size()];
     tran_atts.toArray(tranButtons);
-    transcriptColumn = new JComponent[tran_atts.size()];
-    tran_atts.toArray(transcriptColumn);
+    leftColumn = new JComponent[tran_atts.size()];
+    tran_atts.toArray(leftColumn);
     
-    columns.add(addAll(Box.createVerticalBox(), transcriptColumn, true));
-    columns.add(addAll(Box.createVerticalBox(), geneColumn, false));
+    columns.add(addAll(Box.createVerticalBox(), leftColumn, true));
+    columns.add(addAll(Box.createVerticalBox(), rightColumn, false));
     columns.add(Box.createHorizontalGlue());
     b.add(columns);
 
@@ -280,10 +376,25 @@ public class SequenceGroupWidget
     flank5.addActionListener(this);
     
     //default state
-    setDefaultState();
+    setDefaultStateEns();
   }
 
   private void setDefaultState() {
+    if (iname.matches("snp\\w+"))
+      setDefaultStateSNP();
+    else
+      setDefaultStateEns();
+  }
+  
+  private void setDefaultStateSNP() {
+    lastButton = null;
+    flank3.setEnabled(true);
+    flank5.setEnabled(true);
+    snp.setSelected(false);
+    setButtonsEnabled(includeButtons, true);    
+  }
+  
+  private void setDefaultStateEns() {
       schematicSequenceImageHolder.setIcon(blankIcon);
       lastButton = null;
       flank3.setEnabled(true);
@@ -353,20 +464,6 @@ public class SequenceGroupWidget
         transcript.setSelected(true);
         if (lastButton == null)
           changeQuery(null, 0, 0);
-//        else {
-//          String seqType = null;
-//          for (int i = 0, n = includeButtons.length; i < n; i++) {
-//            JRadioButton button = includeButtons[i];
-//            if (lastButton == button) {
-//                seqType = seqTypes[i];
-//                break;
-//            }
-//          }
-//        
-//          changeQuery( seqType, 
-//                       flank5.getTextAsInt(), 
-//                       flank3.getTextAsInt());
-//        }
         setButtonsEnabled(includeButtons, false);
         setButtonsEnabled(tranButtons, true);
 
@@ -396,6 +493,12 @@ public class SequenceGroupWidget
         }
         setButtonsEnabled(includeButtons, false);
         setButtonsEnabled(geneButtons, true);
+    } else if (src == snp) {
+      snp.setSelected(true);
+      
+      if (lastButton == null)
+        changeQuery(null, 0, 0);
+      
     } else if (src == flank5 ) {
         if (lastButton != null) {
             String seqType = null;
@@ -457,18 +560,20 @@ public class SequenceGroupWidget
     if (sd == null)      
       setDefaultState();      
     else {
-
-      //just need to know which image to load
-      String seqD = sd.getSeqDescription().split("\\.")[1];
-      if (sd.getLeftFlank() > 0)
+      if (containsImage) {
+        //just need to know which image to load
+        String seqD = sd.getSeqDescription().split("\\.")[1];
+        if (sd.getLeftFlank() > 0)
           seqD += "_5";
-      if (sd.getRightFlank() > 0)
+        if (sd.getRightFlank() > 0)
           seqD += "_3";
-      
-      String imagePath = "data/image/gene_schematic_"+seqD+".gif";
-      
-      schematicSequenceImageHolder.setIcon(
-              loadIcon(imagePath));
+        
+        
+        String imagePath = "data/image/gene_schematic_"+seqD+".gif";
+        
+        schematicSequenceImageHolder.setIcon(
+            loadIcon(imagePath));
+      }
     } 
   }
   

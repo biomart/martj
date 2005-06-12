@@ -74,6 +74,8 @@ public class QueryRunnerFactory {
                 thisQueryRunner = new DownStreamUTRSeqQueryRunner(q,f,out);
             } else if (q.getSequenceDescription().getSeqType().matches("5utr")) {
                 thisQueryRunner = new UpStreamUTRSeqQueryRunner(q,f,out);
+            } else if (q.getSequenceDescription().getSeqType().matches("snp")) { 
+                thisQueryRunner = new SNPSeqQueryRunner(q,f,out);
             } else {
                 //TODO: impliment java ClassLoader system to pull in client SeqQueryRunner object
                 throw new FormatException("Unsuported Query Type\n");							  

@@ -158,6 +158,9 @@ public final class SequenceDescription {
     }
     
     public Attribute getAttribute(Attribute attribute) throws InvalidQueryException {
+        if (attribute.getField().indexOf('.') < 1)
+            return attribute;
+        
         String[] structureAttInfo = attribute.getField().split("\\.");
         String structureAttName = structureAttInfo[1];
         
@@ -182,6 +185,10 @@ public final class SequenceDescription {
     }
     
     public IDListFilter getFilter(Filter filter) throws InvalidQueryException {
+        //for non structure intermediate queries, return null
+        if (filter.getField().indexOf('.') < 1)
+          return null;
+        
         //as new filters come through here, the IDListFilter returned will be different each time
         subQuery.addFilter(filter);
         return getSubQueryFilter();
@@ -289,6 +296,29 @@ public final class SequenceDescription {
     }
     
     public Attribute[] getExportable() {
+        //for sequence queries not involving a structure intermediate
+        if (exportable == null && visibleDataset != null) {
+            Exportable[] structExps = visibleDataset.getExportables();
+            
+            for (int i = 0, n = structExps.length; i < n; i++) {
+                if (structExps[i].getLinkName().equals(seqType)) {
+                    //this is the one we need. Split its attributes and add them to exportable
+                    String[] attNames = structExps[i].getAttributes().split("\\,");
+                    exportable = new Attribute[attNames.length];
+                    
+                    for (int j = 0, m = attNames.length; j < m; j++) {
+                        AttributeDescription att = visibleDataset.getAttributeDescriptionByInternalName(
+                                attNames[j]);
+                        
+                        exportable[j] = new FieldAttribute(att.getField(),
+                                                           att.getTableConstraint(),
+                                                           att.getKey());
+                    }
+                    break;
+                }
+            }
+        }
+        
         return exportable;
     }
     

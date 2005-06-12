@@ -82,12 +82,12 @@ public abstract class BaseSeqQueryRunner implements QueryRunner {
   protected String strandField;
 
   // need to know these indexes specifically
-  protected int queryIDindex = 0;
-  protected int rankIndex = 0;
-  protected int startIndex = 0;
-  protected int endIndex = 0;
-  protected int chromIndex = 0;
-  protected int strandIndex = 0;
+  protected int queryIDindex = -1;
+  protected int rankIndex = -1;
+  protected int startIndex = -1;
+  protected int endIndex = -1;
+  protected int chromIndex = -1;
+  protected int strandIndex = -1;
   protected List otherIndices = new ArrayList();
   protected DNAAdaptor dna;
 

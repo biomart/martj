@@ -93,17 +93,17 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 		for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
 			String column = rmeta.getColumnName(i);
 
-            if (column.equals(queryID))
+            if (column.equals(queryID) && queryIDindex < 0)
                 queryIDindex = i;
-            else if (column.equals(rankField))
+            else if (column.equals(rankField) && rankIndex < 0)
                 rankIndex = i;
-            else if (column.equals(coordStart))
+            else if (column.equals(coordStart) && startIndex < 0)
                 startIndex = i;
-            else if (column.equals(coordEnd))
+            else if (column.equals(coordEnd) && endIndex < 0)
                 endIndex = i;
-            else if (column.equals(chrField))
+            else if (column.equals(chrField) && chromIndex < 0)
                 chromIndex = i;
-            else if (column.equals(strandField))
+            else if (column.equals(strandField) && strandIndex < 0)
                 strandIndex = i;
             else
                 otherIndices.add(new Integer(i));

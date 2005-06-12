@@ -445,6 +445,21 @@ public class AttributePage extends BaseNamedConfigurationObject {
    */
   public void setOutFormats(String outFormats) {
 	 setAttribute(outFormatsKey, outFormats);
-  }  
+  }
+
+public boolean containsOnlyPointerAttributes() {
+    boolean ret = true;
+    
+    List groups = getAttributeGroups();
+    for (int i = 0, n = groups.size(); i < n; i++) {
+        AttributeGroup element = (AttributeGroup) groups.get(i);
+        if (!element.containsOnlyPointerAttributes()) {
+            ret = false;
+            break;
+        }
+    }
+    
+    return ret;
+}  
   
 }

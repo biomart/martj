@@ -342,4 +342,18 @@ public class AttributeCollection extends BaseNamedConfigurationObject {
   public boolean isBroken() {
   	return hasBrokenAttributes;
   }
+public boolean containsOnlyPointerAttributes() {
+    boolean ret = true;
+    
+    List atts = getAttributeDescriptions();
+    for (int i = 0, n = atts.size(); i < n; i++) {
+        AttributeDescription element = (AttributeDescription) atts.get(i);
+        if (element.getInternalName().indexOf('.') < 1) {
+            ret = false;
+            break;
+        }
+    }
+    
+    return ret;
+}
 }

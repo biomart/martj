@@ -391,4 +391,19 @@ public final class AttributeGroup extends BaseNamedConfigurationObject {
   public boolean isBroken() {
   	return hasBrokenCollections;
   }
+
+public boolean containsOnlyPointerAttributes() {
+   boolean ret = true;
+   
+   AttributeCollection[] acols = getAttributeCollections();
+   for (int i = 0, n = acols.length; i < n; i++) {
+    AttributeCollection collection = acols[i];
+    if (!collection.containsOnlyPointerAttributes()) {
+        ret = false;
+        break;
+    }
+   }
+   
+   return ret;
+}
 }

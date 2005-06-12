@@ -831,7 +831,15 @@ public class MartCompleter implements ReadlineCompleter {
         return;
     }
     
-    AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("seq_scope_type");
+    AttributeCollection[] cols = seqGroup.getAttributeCollections();
+    AttributeCollection seqCol = null;
+    
+    for (int i = 0; i < cols.length; i++) {
+      if (cols[i].getInternalName().matches("\\w*seq_scope\\w*")) {
+        seqCol = cols[i];
+        break;
+      }
+    }
     
     if (seqCol == null) {
         setErrorMode("No sequences loaded in dataset " + msl.envDataset.getDisplayName() + "\n");

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 
 import javax.swing.Box;
 import javax.swing.JScrollPane;
@@ -47,7 +48,7 @@ public class AttributeGroupWidget extends GroupWidget {
   private int lastWidth;
 
   private AttributeGroup group;
-  private AttributePage page;
+  private AttributePage page; 
 
   /**
    * @param query
@@ -81,8 +82,13 @@ public class AttributeGroupWidget extends GroupWidget {
     for (int i = 0; i < collections.length; i++) {
 
         if (group.getInternalName().equals("sequence")) {
-          if (collections[i].getInternalName().equals("seq_scope_type")) {
-            SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), query, tree, dsv, manager);
+          if (collections[i].getInternalName().matches("\\w*seq_scope\\w*")) {
+            SequenceGroupWidget w = new SequenceGroupWidget(collections[i].getDisplayName(), 
+                                                            collections[i].getInternalName(), 
+                                                            query,
+                                                            tree, 
+                                                            dsv, 
+                                                            manager);
             widgets.add( w );
             container.add( w );            
           } else

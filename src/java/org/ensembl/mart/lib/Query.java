@@ -316,13 +316,15 @@ public class Query {
 	    removeAllAttributes();
 	    
 	    for (int i = 0, n = oAttributes.length; i < n; i++) {
-	        if (oAttributes[i].getField().indexOf(".") < 0)
-	            throw new InvalidQueryException("Sequence queries can contain gene_structure attributes only\n");
 	        if (attributes.size() == 0) {
 	    	    //must get the attribute, so that the sequenceDescription initializes properly,
-	            //but must then add the exportables before the this (first) attribute
+	            //but must then add the exportables before this (first) attribute
 	            Attribute sa = sequenceDescription.getAttribute(oAttributes[i]);
 	    	    Attribute[] eAtts = sequenceDescription.getExportable();
+                
+                if (eAtts == null)
+                    throw new InvalidQueryException("Sequence type " + sequenceDescription.getSeqType() + " is not supported\n");
+                
 	    	    for (int j = 0, m = eAtts.length; j < m; j++) {
                     addAttribute(eAtts[j]);
                 }
@@ -337,31 +339,40 @@ public class Query {
         
         // if there are no filters added, this will just be a filterless subquery
 	    if (oFilters.length > 0) {
-	        removeAllFilters();
+	        removeAllFilters();            
 	        IDListFilter lastFilter = null;
 	        for (int i = 0, n = oFilters.length; i < n; i++) {
 	            lastFilter = sequenceDescription.getFilter(oFilters[i]);
+                
+                //add it back if this is a non subquery based sequence query
+                if (lastFilter == null)
+                    addFilter(oFilters[i]);
 	        }
-	        addFilter(lastFilter);
+            
+            if (lastFilter != null)
+	          addFilter(lastFilter);
 	    }
 	}
 	
 	public void initializeForSequence() throws InvalidQueryException {
 	    sequenceDescription.setSubQuery(this);
 	    
-	    //a valid sequence query must have one placeholder attribute
+	    //a valid sequence query must have one attribute
 	    //in order to function properly.  Throw if not.
 	    if (attributes.size() < 1)
 	        throw new InvalidQueryException("Sequence Queries must contain at least one header attribute\n");
 	    
 	    migrateAttributes();
 	    migrateFilters();
-	    setDataset(sequenceDescription.getStructDatasetName());
-	    setDatasetConfig(sequenceDescription.getStructDataset());
-	    setDataSource(sequenceDescription.getStructDataSource());
-	    setMainTables(sequenceDescription.getStructureMainTables());
-	    setPrimaryKeys(sequenceDescription.getStructurePrimaryKeys());
-	    //this query is now a structure query with a core subQuery, not the original core query
+        
+	    if (sequenceDescription.getStructDatasetName() != null) {
+	        setDataset(sequenceDescription.getStructDatasetName());
+	        setDatasetConfig(sequenceDescription.getStructDataset());
+	        setDataSource(sequenceDescription.getStructDataSource());
+	        setMainTables(sequenceDescription.getStructureMainTables());
+	        setPrimaryKeys(sequenceDescription.getStructurePrimaryKeys());
+	        //this query is now a structure query with a core subQuery, not the original core query
+	    }
 	}
 	
 	/**
@@ -717,9 +728,9 @@ public class Query {
 
 		if (attribute == null)
 			throw new IllegalArgumentException("Can not add a null attribute");
-		if (attributes.contains(attribute))
-			throw new IllegalArgumentException(
-				"attribute already present: " + attribute);
+//		if (attributes.contains(attribute))
+//			throw new IllegalArgumentException(
+//				"attribute already present: " + attribute);
 
 		attributes.add(index, attribute);
 		log();

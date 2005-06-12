@@ -22,6 +22,8 @@ import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
 
 import org.ensembl.mart.lib.Query;
+import org.ensembl.mart.lib.config.AttributeCollection;
+import org.ensembl.mart.lib.config.AttributeGroup;
 import org.ensembl.mart.lib.config.AttributePage;
 import org.ensembl.mart.lib.config.DSConfigAdaptor;
 import org.ensembl.mart.lib.config.DatasetConfig;
@@ -100,6 +102,23 @@ public class AttributesWidget extends InputPage {
        )
           skip = true;
       
+      //we only support ensembl sequences
+      if (!skip) {
+          if (page.containsOnlyPointerAttributes()) {
+              AttributeGroup seqGroup = (AttributeGroup) page.getAttributeGroupByName("sequence");
+              
+              //skip if this does not contain a sequence group (non ensembl)
+              if (seqGroup == null)
+                  skip = true;
+              else {
+                  AttributeCollection seqCol = seqGroup.getAttributeCollectionByName("seq_scope_type");
+                  
+                  //skip if the sequence group does not contain a page called "seq_scope_type" (non ensembl)
+                  if (seqCol == null)
+                      skip = true;
+              }
+          }
+      }
       return skip;
   }
 
