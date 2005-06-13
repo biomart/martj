@@ -227,6 +227,9 @@ public class IDListFilterWidget
     // add items
     for (int i = 0; i < options.length; i++) {
       Option o = options[i];
+      if (o.getHidden() != null && o.getHidden().equals("true")) continue;
+      if (o.getAttribute("hideDisplay") != null && o.getAttribute("hideDisplay").equals("true")) continue;
+      
       if (o.isSelectable())
         list.addItem(new OptionToStringWrapper(this, o));
     }

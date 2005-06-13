@@ -204,7 +204,9 @@ public class ListFilterWidget extends FilterWidget implements ActionListener {
       for (int i = 0; i < options.length; i++) {
 
         Option option = options[i];
-
+        if (option.getHidden() != null && option.getHidden().equals("true")) continue;
+        if (option.getAttribute("hideDisplay") != null && option.getAttribute("hideDisplay").equals("true")) continue;
+        
         String value = option.getValue();
         String field = option.getField();
         if (BaseNamedConfigurationObject.isInvalid(value)

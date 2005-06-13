@@ -185,7 +185,9 @@ public class TreeFilterWidget extends FilterWidget {
     for (int i = 0; options != null && i < options.length; i++) {
 
       final Option option = options[i];
-
+      if (option.getHidden() != null && option.getHidden().equals("true")) continue;
+      if (option.getAttribute("hideDisplay") != null && option.getAttribute("hideDisplay").equals("true")) continue;
+      
       String displayName = option.getDisplayName();
       String qualifiedName = prefix + " " + displayName;
 

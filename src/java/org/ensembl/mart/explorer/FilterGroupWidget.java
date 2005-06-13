@@ -78,6 +78,9 @@ public class FilterGroupWidget extends PageWidget {
 
 			FilterCollection collection = collections[i];
 
+            if (collection.getHidden() != null && collection.getHidden().equals("true")) continue;
+            if (collection.getAttribute("hideDisplay") != null && collection.getAttribute("hideDisplay").equals("true")) continue;
+            
 			if (collection.getFilterDescriptions().size() > 0) {
 				InputPage[] attributes = getFilterWidgets(collection);
 				widgets.addAll(Arrays.asList(attributes));
@@ -102,9 +105,12 @@ public class FilterGroupWidget extends PageWidget {
 			Object element = iter.next();
 
 			if (element instanceof FilterDescription) {
-
+                
 				FilterDescription a = (FilterDescription) element;
 
+                if (a.getHidden() != null && a.getHidden().equals("true")) continue;
+                if (a.getAttribute("hideDisplay") != null && a.getAttribute("hideDisplay").equals("true")) continue;
+                
 				//FilterWidget w = new FilterWidget(query, a);
 				FilterWidget w = createFilterWidget(query, a);
 				if (w != null)
