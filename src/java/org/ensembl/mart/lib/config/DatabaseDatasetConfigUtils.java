@@ -3158,18 +3158,14 @@ public class DatabaseDatasetConfigUtils {
    */
   public DatasetConfig getNaiveDatasetConfigFor(String schema, String datasetName)
     throws ConfigurationException, SQLException {
-    DatasetConfig dsv = new DatasetConfig();
-
-    
-    //System.out.println("DB FIRST "+databaseName);
-    
+    DatasetConfig dsv = new DatasetConfig("default",datasetName + " ( " + schema + " )",datasetName,"","TableSet","1","","","");
     
     //dsv.setInternalName(datasetName);
-    dsv.setInternalName("default");
-    dsv.setDisplayName(datasetName + " ( " + schema + " )");
-    dsv.setDataset(datasetName);
-    dsv.setType("TableSet");
-    dsv.setVisible("1");
+    //dsv.setInternalName("default");
+    //dsv.setDisplayName(datasetName + " ( " + schema + " )");
+    //dsv.setDataset(datasetName);
+    //dsv.setType("TableSet");
+    //dsv.setVisible("1");
     
 
     AttributePage ap = new AttributePage();
