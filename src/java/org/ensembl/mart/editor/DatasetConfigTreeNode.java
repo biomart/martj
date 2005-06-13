@@ -183,7 +183,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 								for (int y = 0; y < descriptions.size(); y++) {
 									FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
 									String desName = fiDescription.getInternalName();
-									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
+									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 									desNode.setUserObject(fiDescription);
 									
 									Option[] options = fiDescription.getOptions();
@@ -251,7 +251,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 								for (int y = 0; y < descriptions.size(); y++) {
 									AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
 									String desName = atDescription.getInternalName();
-									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
+									DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 									desNode.setUserObject(atDescription);
 								}
 							}
@@ -281,7 +281,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 						for (int y = 0; y < descriptions.size(); y++) {
 							FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
 							String desName = fiDescription.getInternalName();
-							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
+							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 							desNode.setUserObject(fiDescription);
 							
 							Option[] options = fiDescription.getOptions();
@@ -343,7 +343,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 						for (int y = 0; y < descriptions.size(); y++) {
 							AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
 							String desName = atDescription.getInternalName();
-							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
+							DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 							desNode.setUserObject(atDescription);
 						}
 					}
@@ -364,7 +364,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				for (int y = 0; y < descriptions.size(); y++) {
 					FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
 					String desName = fiDescription.getInternalName();
-					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
+					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 					desNode.setUserObject(fiDescription);
 					
 					Option[] options = fiDescription.getOptions();
@@ -414,7 +414,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 				for (int y = 0; y < descriptions.size(); y++) {
 					AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
 					String desName = atDescription.getInternalName();
-					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
+					DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 					desNode.setUserObject(atDescription);
 					//colNode.add(desNode);
 				}
@@ -430,7 +430,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			for (int y = 0; y < descriptions.size(); y++) {
 				FilterDescription fiDescription = (FilterDescription) descriptions.get(y);
 				String desName = fiDescription.getInternalName();
-				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("FilterDescription:" + desName);
+				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Filter:" + desName);
 				desNode.setUserObject(fiDescription);
 				this.add(desNode);
 				
@@ -476,13 +476,13 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 			for (int y = 0; y < descriptions.size(); y++) {
 				AttributeDescription atDescription = (AttributeDescription) descriptions.get(y);
 				String desName = atDescription.getInternalName();
-				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("AttributeDescription:" + desName);
+				DatasetConfigTreeNode desNode = new DatasetConfigTreeNode("Attribute:" + desName);
 				desNode.setUserObject(atDescription);
 				this.add(desNode);
 			}
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.FilterDescription")) {
 			//System.out.println("FILT\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
-			setName("FilterDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			setName("Filter: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 
 			//setName("FilterCollection: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 			FilterDescription fiDescription = (FilterDescription) obj;
@@ -523,7 +523,7 @@ public class DatasetConfigTreeNode extends DefaultMutableTreeNode {
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.AttributeDescription")) {
 			//System.out.println("ATT\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			//checkUniqueness((BaseNamedConfigurationObject)obj);
-			setName("AttributeDescription: " + ((BaseNamedConfigurationObject) obj).getInternalName());
+			setName("Attribute: " + ((BaseNamedConfigurationObject) obj).getInternalName());
 		} else if (nodeObjectClass.equals("org.ensembl.mart.lib.config.Exportable")) {
 			//System.out.println("EXP\t" + ((BaseNamedConfigurationObject) obj).getInternalName());
 			setName("Exportable: " + ((BaseNamedConfigurationObject) obj).getInternalName());
