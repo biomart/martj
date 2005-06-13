@@ -87,28 +87,30 @@ public final class PeptideSeqQueryRunner extends BaseSeqQueryRunner {
 	}
  
 	protected void processResultSet(Connection conn, ResultSet rs) throws IOException, SQLException {
-		ResultSetMetaData rmeta = rs.getMetaData();
-
-		// process columnNames for required attribute indices
-		for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
-			String column = rmeta.getColumnName(i);
-
-            if (column.equals(queryID) && queryIDindex < 0)
-                queryIDindex = i;
-            else if (column.equals(rankField) && rankIndex < 0)
-                rankIndex = i;
-            else if (column.equals(coordStart) && startIndex < 0)
-                startIndex = i;
-            else if (column.equals(coordEnd) && endIndex < 0)
-                endIndex = i;
-            else if (column.equals(chrField) && chromIndex < 0)
-                chromIndex = i;
-            else if (column.equals(strandField) && strandIndex < 0)
-                strandIndex = i;
-            else
-                otherIndices.add(new Integer(i));
-		}
-
+	  if (queryIDindex < 0) {
+	    ResultSetMetaData rmeta = rs.getMetaData();
+	    
+	    // process columnNames for required attribute indices
+	    for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
+	      String column = rmeta.getColumnName(i);
+	      
+	      if (column.equals(queryID) && queryIDindex < 0)
+	        queryIDindex = i;
+	      else if (column.equals(rankField) && rankIndex < 0)
+	        rankIndex = i;
+	      else if (column.equals(coordStart) && startIndex < 0)
+	        startIndex = i;
+	      else if (column.equals(coordEnd) && endIndex < 0)
+	        endIndex = i;
+	      else if (column.equals(chrField) && chromIndex < 0)
+	        chromIndex = i;
+	      else if (column.equals(strandField) && strandIndex < 0)
+	        strandIndex = i;
+	      else
+	        if (!otherIndices.contains(new Integer(i)))
+	          otherIndices.add(new Integer(i));
+	    }
+	  }
 		while (rs.next()) {
 			Integer keyID = new Integer(rs.getInt(queryIDindex));
 			Integer rank = new Integer(rs.getInt(rankIndex));

@@ -74,25 +74,27 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
 
     protected void processResultSet(Connection conn, ResultSet rs)
             throws IOException, SQLException {
-        ResultSetMetaData rmeta = rs.getMetaData();
 
+      if (queryIDindex < 0) {
+        ResultSetMetaData rmeta = rs.getMetaData();
+        
         // process columnNames for required attribute indices
         for (int i = 1, nColumns = rmeta.getColumnCount(); i <= nColumns; ++i) {
           String column = rmeta.getColumnName(i);
-            if (column.equals(queryID) && queryIDindex < 0)
-                queryIDindex = i;
-            else if (column.equals(coordStart) && startIndex < 0)
-                startIndex = i;
-            else if (column.equals(alleleField) && alleleIndex < 0)
-                alleleIndex = i;
-            else if (column.equals(chrField) && chromIndex < 0)
-                chromIndex = i;
-            else if (column.equals(strandField) && strandIndex < 0)
-                strandIndex = i;
-            else
-                otherIndices.add(new Integer(i));
+          if (column.equals(queryID) && queryIDindex < 0)
+            queryIDindex = i;
+          else if (column.equals(coordStart) && startIndex < 0)
+            startIndex = i;
+          else if (column.equals(alleleField) && alleleIndex < 0)
+            alleleIndex = i;
+          else if (column.equals(chrField) && chromIndex < 0)
+            chromIndex = i;
+          else if (column.equals(strandField) && strandIndex < 0)
+            strandIndex = i;
+          else
+            otherIndices.add(new Integer(i));
         }
-
+      }
         while (rs.next()) {
           lastID = rs.getInt(queryIDindex);
           int start = rs.getInt(startIndex);
@@ -169,8 +171,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 int start = 0;
                 int end = 0;
                 int leftFlank = 0;
-                int rightFlank = 0;
-                int offset = leftFlank;
+                int rightFlank = 0;                
                 
                 // modify snp curLocation coordinates depending on flank requested
                 if (seqd.getLeftFlank() > 0)
@@ -178,6 +179,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 if (seqd.getRightFlank() > 0)
                     rightFlank = seqd.getRightFlank();
                 
+                int offset = leftFlank;
                 if (curLocation.getStrand() < 0) {
                   start = curLocation.getStart() - rightFlank;
                   if (start < 1)
@@ -197,8 +199,8 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 byte[] sequence = dna.getSequence(thisLocation.getChr(), thisLocation.getStart(), thisLocation.getEnd());
                 
                 osr.write(sequence, 0, offset);
-                osr.print("\n" + curAllele + "\n");
-                osr.write(sequence, offset + 1, sequence.length - offset + 1);                
+                osr.print(" - " + curAllele + " - ");
+                osr.write(sequence, offset, sequence.length - offset);                
                 
                 osr.print("\n");
                 
@@ -245,8 +247,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 int start = 0;
                 int end = 0;
                 int leftFlank = 0;
-                int rightFlank = 0;
-                int offset = leftFlank;
+                int rightFlank = 0;                
                 
                 // modify snp curLocation coordinates depending on flank requested
                 if (seqd.getLeftFlank() > 0)
@@ -254,6 +255,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 if (seqd.getRightFlank() > 0)
                     rightFlank = seqd.getRightFlank();
                 
+                int offset = leftFlank;
                 if (curLocation.getStrand() < 0) {
                   start = curLocation.getStart() - rightFlank;
                   if (start < 1)
@@ -274,7 +276,7 @@ public class SNPSeqQueryRunner extends BaseSeqQueryRunner {
                 
                 osr.write(sequence, 0, offset);
                 osr.print("\n" + curAllele + "\n");
-                osr.write(sequence, offset + 1, sequence.length - offset + 1);                
+                osr.write(sequence, offset, sequence.length - offset);                
                 
                 osr.print("\n");
                 
