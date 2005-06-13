@@ -110,8 +110,6 @@ public class SequenceGroupWidget
 
   private JRadioButton gene = new JRadioButton("Genes");
   
-  private JRadioButton snp = new JRadioButton("SNPs");
-  
   private JRadioButton none = new JRadioButton();
 
   private final String[] gene_disables = new String[] {"transcript_exon_intron",
@@ -128,7 +126,7 @@ public class SequenceGroupWidget
 
   private JRadioButton[] typeButtons = { transcript, gene,  none };
   
-  private JRadioButton[] snpButtons = { snp, none };
+  private JRadioButton[] snpButtons = { none };
 
   private JRadioButton[] includeButtons;
   
@@ -191,12 +189,10 @@ public class SequenceGroupWidget
   }
   
   private void buildGUISnp() {
-    snp.setToolTipText(
-    "SNP sequence");
 
   Box b = Box.createVerticalBox();
 
-  b.add(addAll(Box.createHorizontalBox(), new JComponent[]{snp,clearButton}, true));
+  b.add(addAll(Box.createHorizontalBox(), new JComponent[]{clearButton}, true));
   
   containsImage = false;
 
@@ -388,9 +384,10 @@ public class SequenceGroupWidget
   
   private void setDefaultStateSNP() {
     lastButton = null;
+    flank3.setText("100");
+    flank5.setText("100");
     flank3.setEnabled(true);
     flank5.setEnabled(true);
-    snp.setSelected(false);
     setButtonsEnabled(includeButtons, true);    
   }
   
@@ -457,10 +454,10 @@ public class SequenceGroupWidget
 
     Object src = e.getSource();
 
-    if (src == clearButton) {
+    if (src == clearButton) {        
       changeQuery(null, 0, 0);
       setDefaultState();
-    } else if (src == transcript) {
+    } else if (src == transcript) {        
         transcript.setSelected(true);
         if (lastButton == null)
           changeQuery(null, 0, 0);
@@ -493,13 +490,7 @@ public class SequenceGroupWidget
         }
         setButtonsEnabled(includeButtons, false);
         setButtonsEnabled(geneButtons, true);
-    } else if (src == snp) {
-      snp.setSelected(true);
-      
-      if (lastButton == null)
-        changeQuery(null, 0, 0);
-      
-    } else if (src == flank5 ) {
+    } else if (src == flank5 ) {        
         if (lastButton != null) {
             String seqType = null;
             for (int i = 0, n = includeButtons.length; i < n; i++) {
@@ -515,7 +506,7 @@ public class SequenceGroupWidget
                          flank5.getTextAsInt(), 
                          flank3.getTextAsInt());
         }
-    } else if (src == flank3) {
+    } else if (src == flank3) {        
         if (lastButton != null) {
             String seqType = null;
             for (int i = 0, n = includeButtons.length; i < n; i++) {
@@ -531,7 +522,7 @@ public class SequenceGroupWidget
                          flank5.getTextAsInt(), 
                          flank3.getTextAsInt());            
         }
-    } else {
+    } else {        
           String seqType = null;
           for (int i = 0, n = includeButtons.length; i < n; i++) {
               JRadioButton button = includeButtons[i];
